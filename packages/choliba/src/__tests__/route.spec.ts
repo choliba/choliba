@@ -1,6 +1,6 @@
 import { complete, formatHelp } from '@choliba/core/cli';
 
-import { CHOLIBA_HELP, firstWordSpec, route } from '../route';
+import { CHOLIBA_HELP, firstWordSpec, route, subcommandHelp } from '../route';
 
 describe('route', () => {
   it('shows the help with no command, help, --help or -h', () => {
@@ -40,6 +40,33 @@ describe('CHOLIBA_HELP', () => {
     for (const name of ['agents', 'projects', 'tests', 'playwright-cli', 'playwright-trace', 'install']) {
       expect(help).toContain(`  ${name} `);
     }
+  });
+});
+
+describe('subcommandHelp', () => {
+  it('describes the subcommands choliba runs itself when asked with --help or -h', () => {
+    const install = subcommandHelp(route(['install', '--help']));
+    expect(install?.usage).toBe('choliba install <origem> [OPTIONS]');
+    const help = formatHelp(install ?? { usage: '' });
+    expect(help).toContain('Instala um agente');
+    expect(help).toContain('--dry-run');
+    expect(subcommandHelp(route(['install', './x', '-h']))?.usage).toBe('choliba install <origem> [OPTIONS]');
+    for (const name of ['check', 'setup', 'completion']) {
+      expect(subcommandHelp(route([name, '--help']))?.usage).toContain(`choliba ${name}`);
+    }
+  });
+
+  it('leaves --help to the CLIs and tools the other subcommands hand off to', () => {
+    for (const name of ['agents', 'projects', 'tests', 'lint', 'format', 'playwright-cli', 'playwright-trace']) {
+      expect(subcommandHelp(route([name, '--help']))).toBeUndefined();
+    }
+    expect(subcommandHelp(route(['product-owner', '--help']))).toBeUndefined();
+    expect(subcommandHelp(route(['--help']))).toBeUndefined();
+  });
+
+  it('runs the subcommand when --help is not asked', () => {
+    expect(subcommandHelp(route(['install', './x']))).toBeUndefined();
+    expect(subcommandHelp(route(['setup']))).toBeUndefined();
   });
 });
 

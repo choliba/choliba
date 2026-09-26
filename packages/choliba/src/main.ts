@@ -17,7 +17,7 @@ import { allFine, checkWorkspace, formatCheck } from './check';
 import { install, parseInstallArgs } from './install';
 import { DEFAULT_OUTPUT_DIR, intoOutputDir } from './playwright-args';
 import { COMPLETION_BASH } from './completion';
-import { CHOLIBA_HELP, firstWordSpec, route } from './route';
+import { CHOLIBA_HELP, firstWordSpec, route, subcommandHelp } from './route';
 import { setup, setupWorkspace, updatePackageWhenListed } from './setup';
 
 // Wiring only (excluded from coverage, like every main.ts): which part of choliba runs is decided
@@ -181,6 +181,11 @@ async function main(argv: readonly string[]): Promise<number> {
     return 0;
   }
   if (target.kind === '__complete') return completeWords(target.argv);
+  const help = subcommandHelp(target);
+  if (help !== undefined) {
+    writeStdout(`${formatHelp(help)}\n`);
+    return 0;
+  }
   if (target.kind === 'setup') {
     if (target.argv.includes('--deferred')) {
       await updatePackageWhenListed(process.cwd(), (ms) => Bun.sleep(ms));
