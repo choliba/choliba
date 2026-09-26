@@ -138,6 +138,22 @@ const COMMANDS: readonly CommandEntry[] = [
   },
 ];
 
+/** The subcommands choliba runs itself; the others take `--help` to the CLI or tool they hand off to. */
+const OWN_HELP: readonly Subcommand[] = ['install', 'check', 'setup', 'completion'];
+
+/**
+ * `choliba <subcommand> --help`, for the subcommands choliba runs itself: their spec, described by the
+ * same line `choliba --help` lists them with. Nothing for anything else.
+ */
+export function subcommandHelp(target: Route): CommandSpec | undefined {
+  if (!target.argv.some((arg) => arg === '--help' || arg === '-h')) return undefined;
+  const entry = COMMANDS.find(
+    (command) => command.name === target.kind && OWN_HELP.some((name) => name === command.name),
+  );
+  if (entry === undefined) return undefined;
+  return { ...entry.spec, description: entry.spec.description ?? entry.description };
+}
+
 /** `choliba --help`. */
 export const CHOLIBA_HELP: CommandSpec = {
   usage: 'choliba COMMAND [ARGS]',
