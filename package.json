@@ -32,10 +32,11 @@
     "git:clean": "bun run scripts/git-clean.ts"
   },
   "devDependencies": {
-    "choliba": "workspace:*",
     "@eslint/js": "^10.0.1",
+    "@types/bun": "^1.4.2",
     "@types/jest": "30.0.0",
     "@types/node": "^22.19.6",
+    "choliba": "workspace:*",
     "esbuild": "^0.28.2",
     "esbuild-register": "^3.6.0",
     "eslint": "^10.11.0",

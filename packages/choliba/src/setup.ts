@@ -1,6 +1,5 @@
 import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, sep } from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 import { findResource, findWorkspaceRoot } from '@choliba/core/config';
 import { createProject, projectTemplatesDir } from '@choliba/projects';
@@ -89,12 +88,23 @@ export function createExample(root: string, templatesDir: string = exampleTempla
     return [];
   }
   mkdirSync(appDir, { recursive: true });
-  copyFileSync(join(templatesDir, 'index.html'), join(appDir, 'index.html'));
-  copyFileSync(join(templatesDir, 'README.md'), join(appDir, 'README.md'));
+
+  const files = ['index.html', 'README.md', 'server.ts', 'tsconfig.json'];
+  const portExemple = '3000';
+
+  for (const file of files) {
+    let content = readFileSync(join(templatesDir, file), 'utf-8');
+
+    if (file === 'server.ts') {
+      content = content.replace('{{PORT_EXEMPLE}}', portExemple);
+    }
+
+    writeFileSync(join(appDir, file), content, 'utf-8');
+  }
 
   createProject(projectsDir, EXAMPLE, projectTemplatesDir(), {
     appDir,
-    baseUrl: pathToFileURL(join(appDir, 'index.html')).href,
+    baseUrl: `http://localhost:${portExemple}`,
   });
   const project = join(projectsDir, EXAMPLE);
   // Only Chromium, the browser the next steps install.
@@ -108,7 +118,14 @@ export function createExample(root: string, templatesDir: string = exampleTempla
   writeFileSync(join(project, '.env.json'), `${JSON.stringify({ development: {} }, null, 2)}\n`);
   copyFileSync(join(templatesDir, 'spec'), join(project, 'tests', `${EXAMPLE}.spec.ts`));
   copyFileSync(join(templatesDir, 'ticket.json'), join(project, 'tickets', '1.json'));
-  return [`${APP_DIR}/${EXAMPLE}/`, `${PROJECTS_SUBDIR}/${EXAMPLE}/`];
+  return [
+    `${APP_DIR}/${EXAMPLE}/`,
+    `${PROJECTS_SUBDIR}/${EXAMPLE}/`,
+    `config.json (Chromium only)`,
+    `.env.json (sem credenciais)`,
+    `tests/${EXAMPLE}.spec.ts`,
+    `tickets/1.json`,
+  ];
 }
 
 /** The editor settings that point every agent.yaml under app/agents at the schema shipped with choliba. */

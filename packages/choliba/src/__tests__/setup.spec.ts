@@ -2,7 +2,6 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 import { loadProjectSettings } from '@choliba/projects';
 
@@ -110,7 +109,17 @@ describe('scaffoldWorkspace', () => {
 describe('createExample', () => {
   it('creates the one-page application and a ready test project with its spec and ticket', () => {
     withDir((root) => {
-      expect(createExample(root)).toEqual(['app/exemplo/', 'projects/exemplo/']);
+      expect(createExample(root)).toEqual([
+        'app/exemplo/',
+        'projects/exemplo/',
+        'config.json (Chromium only)',
+        '.env.json (sem credenciais)',
+        'tests/exemplo.spec.ts',
+        'tickets/1.json',
+      ]);
+      const app = path.join(root, 'app', 'exemplo');
+      expect(fs.readdirSync(app).sort()).toEqual(['README.md', 'index.html', 'server.ts', 'tsconfig.json']);
+      expect(fs.readFileSync(path.join(app, 'server.ts'), 'utf8')).toContain("port: '3000'");
       const project = path.join(root, 'projects', 'exemplo');
       const config = JSON.parse(fs.readFileSync(path.join(project, 'config.json'), 'utf8')) as {
         description: string;
@@ -121,7 +130,7 @@ describe('createExample', () => {
         'Loja de exemplo: Uma página só, para experimentar o choliba: um formulário de newsletter que agradece quem assina.',
       );
       expect(config.envs[0]?.appDir).toBe(path.join(root, 'app', 'exemplo'));
-      expect(config.envs[0]?.baseURL).toBe(pathToFileURL(path.join(root, 'app', 'exemplo', 'index.html')).href);
+      expect(config.envs[0]?.baseURL).toBe('http://localhost:3000');
       expect(config.devices).toEqual({ chromium: true, firefox: false, webkit: false, 'mobile-chrome': false });
       expect(fs.readFileSync(path.join(project, '.env.json'), 'utf8')).toContain('"development": {}');
       expect(fs.readFileSync(path.join(project, 'tests', 'exemplo.spec.ts'), 'utf8')).toContain("page.goto('')");
