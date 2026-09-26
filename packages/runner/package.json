@@ -8,6 +8,7 @@
     "./shared/env": "./shared/env.ts",
     "./shared/pages/BasePage": "./shared/pages/BasePage.ts"
   },
+  "cholCompletion": true,
   "bin": {
     "playwright-tests": "./src/cli/main.ts"
   },

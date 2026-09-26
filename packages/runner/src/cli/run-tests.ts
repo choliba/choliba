@@ -3,7 +3,8 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import readline from 'node:readline/promises';
 
-import { writeStderr } from '@choliba/terminal/output';
+import { complete, describe, formatHelp, formatSuggestions, type CommandSpec } from '@choliba/core/cli';
+import { writeStderr, writeStdout } from '@choliba/terminal/output';
 import {
   fullTicket,
   listProjectNames,
@@ -99,6 +100,65 @@ export function isStdinInteractive(
   readStdinIsTTY: () => boolean = readProcessStdinIsTTY,
 ): boolean {
   return stdinIsTTY ?? readStdinIsTTY();
+}
+
+/**
+ * `choliba tests`, as `--help` shows it and completion walks: this CLI's own arguments (the projects
+ * come from `projectNames`, and after `project:` its tickets from `ticketsOf`); any other flag goes on
+ * to `playwright test`.
+ */
+export function testsCliSpec(
+  projectNames: () => readonly string[],
+  ticketsOf: (project: string) => readonly string[],
+): CommandSpec {
+  const targets = (current: string): readonly string[] => {
+    const colon = current.indexOf(':');
+    if (colon === -1) return projectNames();
+    const project = current.slice(0, colon);
+    return ticketsOf(project).map((ticket) => `${project}:${ticket}`);
+  };
+  return {
+    usage: 'choliba tests [PROJECT[:TICKET][/PATH]] [OPTIONS] [PLAYWRIGHT OPTIONS]',
+    description: [
+      'Roda os testes E2E dos projetos com o Playwright. Sem PROJECT, roda todos os projetos.',
+      '',
+      '  demo                 todos os tickets do projeto demo',
+      '  demo:T-01            os testes do ticket T-01',
+      '  demo:T-01,T-02       uma lista de tickets (também glob e intervalo)',
+      '  demo/tests/a.spec.ts um arquivo do projeto',
+    ].join('\n'),
+    flags: [
+      {
+        name: '--expect',
+        description: 'O que a execução de um ticket deve mostrar; falha se não mostrar',
+        value: { name: 'red|green', suggest: () => ({ kind: 'values', values: EXPECTATIONS }) },
+      },
+      {
+        name: '--failures',
+        description: 'Grava em FILE como os testes do ticket falharam',
+        value: { name: 'file', suggest: () => ({ kind: 'files' }) },
+      },
+      { name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true },
+    ],
+    positionals: (previous, current) => ({ kind: 'values', values: previous.length === 0 ? targets(current) : [] }),
+    footer: "Outras opções vão para o 'playwright test'; veja 'bunx playwright test --help'.",
+  };
+}
+
+/** What completion reads from PROJECTS_DIR; nothing when the workspace's locations cannot be read. */
+function fromProjects(
+  loadLocations: () => ProjectLocations,
+  read: (projectsDir: string) => readonly string[],
+): readonly string[] {
+  try {
+    return read(loadLocations().PROJECTS_DIR);
+  } catch {
+    return [];
+  }
+}
+
+function isHelpFlag(arg: string): boolean {
+  return arg === '--help' || arg === '-h';
 }
 
 function fail(message: string): never {
@@ -250,13 +310,34 @@ async function runTicketsSequentially(
 }
 
 export async function runTestsCli(options: RunTestsOptions): Promise<RunTestsResult> {
+  const [command, ...rest] = options.argv;
+  const loadConfig = options.loadConfig ?? ((root, processEnv) => resolveLocations(root, processEnv));
+  const locationsNow = (): ProjectLocations => loadConfig(options.monorepoRoot, { ...process.env, ...options.env });
+  const spec = testsCliSpec(
+    () => fromProjects(locationsNow, listProjectNames),
+    (project) =>
+      fromProjects(locationsNow, (projectsDir) => listTicketSuffixes(ticketsFolderPath(projectsDir, project))),
+  );
+  if (command === '__complete') {
+    const output = formatSuggestions(complete(spec, rest));
+    if (output !== '') writeStdout(`${output}\n`);
+    return { exitCode: 0 };
+  }
+  if (command === '__describe') {
+    // One line for `bun chol:help`; the examples below it are for `--help`.
+    writeStdout(`${describe(spec, rest).replace(/\n[\s\S]*/, '')}\n`);
+    return { exitCode: 0 };
+  }
+  if (options.argv.some(isHelpFlag)) {
+    writeStdout(`${formatHelp(spec)}\n`);
+    return { exitCode: 0 };
+  }
   // The Playwright config runs in its own process: it finds the workspace (its .env, PROJECTS_DIR) here.
   const baseEnv: NodeJS.ProcessEnv = { ...process.env, [WORKSPACE_ENV]: options.monorepoRoot, ...options.env };
   const nodePath = playwrightNodePath(options.packageRoot, baseEnv['NODE_PATH']);
   const env: NodeJS.ProcessEnv = nodePath === undefined ? baseEnv : { ...baseEnv, NODE_PATH: nodePath };
   const cwd = options.cwd ?? options.packageRoot;
   const { argv, gate } = takeGateFlags(options.argv);
-  const loadConfig = options.loadConfig ?? ((root, processEnv) => resolveLocations(root, processEnv));
   const spawnSyncFn = options.spawnSyncFn ?? spawnSync;
   const spawnPlaywrightFn =
     options.spawnPlaywright ?? ((args, processEnv, runCwd) => runPlaywright(args, processEnv, runCwd, spawnSyncFn));

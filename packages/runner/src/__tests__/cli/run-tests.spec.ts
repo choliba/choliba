@@ -127,6 +127,83 @@ describe('runTestsCli', () => {
     expect(calls[0]).toEqual(['test', '--list']);
   });
 
+  it.each([['--help'], ['-h'], ['demo:T-01', '--help']])(
+    'shows its own help for %s instead of Playwright’s',
+    async (...argv) => {
+      const stdout = jest.spyOn(terminalOutput, 'writeStdout');
+      const spawnPlaywright = jest.fn(() => 0);
+      const result = await runTestsCli({
+        ...TEST_ROOTS,
+        argv,
+        spawnPlaywright,
+        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: '/p' }),
+        stdinIsTTY: false,
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(spawnPlaywright).not.toHaveBeenCalled();
+      const [[help]] = stdout.mock.calls as [[string]];
+      expect(help).toContain('choliba tests [PROJECT');
+      expect(help).toContain('--expect');
+      expect(help).toContain('playwright test --help');
+    },
+  );
+
+  it('completes its flags, the projects, their tickets and the values of --expect', async () => {
+    await withProject(async (projectsDir) => {
+      writeProject(projectsDir, 'demo', [{ suffix: 'T-01' }, { suffix: 'T-02' }]);
+      const stdout = jest.spyOn(terminalOutput, 'writeStdout');
+      const run = (...argv: string[]): Promise<unknown> =>
+        runTestsCli({
+          ...TEST_ROOTS,
+          argv: ['__complete', ...argv],
+          loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        });
+
+      await run('--');
+      await run('');
+      await run('demo', '--expect', '');
+      await run('demo', 'x');
+      await run('demo', '--failures', '');
+      await run('demo:');
+      await run('demo:T-02');
+      await run('nope:');
+
+      expect(stdout.mock.calls).toEqual([
+        ['--expect\n--failures\n--help\n'],
+        ['demo\n'],
+        ['red\ngreen\n'],
+        [':files\n'],
+        ['demo:T-01\ndemo:T-02\n'],
+        ['demo:T-02\n'],
+      ]);
+    });
+  });
+
+  it('completes no project when the workspace locations cannot be read', async () => {
+    const stdout = jest.spyOn(terminalOutput, 'writeStdout');
+    await runTestsCli({
+      ...TEST_ROOTS,
+      argv: ['__complete', ''],
+      loadConfig: () => {
+        throw new Error('sem PROJECTS_DIR');
+      },
+    });
+    expect(stdout.mock.calls).toEqual([['--expect\n--failures\n--help\n-h\n']]);
+  });
+
+  it('describes itself in one line, for bun chol:help', async () => {
+    const stdout = jest.spyOn(terminalOutput, 'writeStdout');
+    await runTestsCli({
+      ...TEST_ROOTS,
+      argv: ['__describe'],
+      loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: '/p' }),
+    });
+    expect(stdout.mock.calls).toEqual([
+      ['Roda os testes E2E dos projetos com o Playwright. Sem PROJECT, roda todos os projetos.\n'],
+    ]);
+  });
+
   it('fails when project does not exist', async () => {
     await withProject(async (projectsDir, cwd) => {
       await expect(

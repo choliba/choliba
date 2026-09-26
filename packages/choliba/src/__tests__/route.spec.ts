@@ -53,4 +53,18 @@ describe('firstWordSpec', () => {
     expect(complete(firstWordSpec([]), ['in'])).toEqual({ kind: 'values', values: ['install'] });
     expect(complete(firstWordSpec([]), ['install', '--path', ''])).toEqual({ kind: 'files' });
   });
+
+  it('completes what each subcommand takes after its name', () => {
+    const spec = firstWordSpec([]);
+    for (const name of ['install', 'lint', 'format', 'playwright-cli', 'playwright-trace']) {
+      expect(complete(spec, [name, '..'])).toEqual({ kind: 'files' });
+    }
+    expect(complete(spec, ['install', '--'])).toEqual({ kind: 'values', values: ['--path', '--dry-run'] });
+    expect(complete(spec, ['format', '--'])).toEqual({ kind: 'values', values: ['--write'] });
+    // The projects and tickets come from the runner's own __complete, not from here.
+    expect(complete(spec, ['tests', 'demo'])).toEqual({ kind: 'values', values: [] });
+    expect(complete(spec, ['tests', 'demo:'])).toEqual({ kind: 'values', values: [] });
+    expect(complete(spec, ['completion', ''])).toEqual({ kind: 'values', values: ['bash'] });
+    expect(complete(spec, ['completion', 'bash', ''])).toEqual({ kind: 'values', values: [] });
+  });
 });

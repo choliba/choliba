@@ -46,6 +46,10 @@ function runProjects(argv: readonly string[], workspaceRoot: string): number {
   });
 }
 
+async function runTests(argv: readonly string[], workspaceRoot: string): Promise<number> {
+  return (await runTestsCli({ argv: [...argv], packageRoot: findRunnerRoot(), monorepoRoot: workspaceRoot })).exitCode;
+}
+
 /** The executable a dependency of this package declares as `bin` (resolved from its package.json). */
 function binOf(dependency: string, bin: string): string {
   const manifest = Bun.resolveSync(`${dependency}/package.json`, import.meta.dir);
@@ -158,15 +162,15 @@ async function agentNames(workspaceRoot: string | undefined): Promise<readonly s
 /** `choliba __complete <words…>`: the first word here, the rest by the part of choliba it selects. */
 async function completeWords(words: readonly string[]): Promise<number> {
   const workspaceRoot = workspaceOrNothing();
-  if (words.length <= 1) {
-    const output = formatSuggestions(complete(firstWordSpec(await agentNames(workspaceRoot)), words));
-    if (output !== '') writeStdout(`${output}\n`);
-    return 0;
-  }
   const target = route(words);
-  if (workspaceRoot === undefined) return 0;
-  if (target.kind === 'agents') return runAgents(['__complete', ...target.argv], workspaceRoot);
-  if (target.kind === 'projects') return runProjects(['__complete', ...target.argv], workspaceRoot);
+  if (words.length > 1 && workspaceRoot !== undefined) {
+    if (target.kind === 'agents') return runAgents(['__complete', ...target.argv], workspaceRoot);
+    if (target.kind === 'projects') return runProjects(['__complete', ...target.argv], workspaceRoot);
+    if (target.kind === 'tests') return runTests(['__complete', ...target.argv], workspaceRoot);
+  }
+  const spec = firstWordSpec(await agentNames(workspaceRoot));
+  const output = formatSuggestions(complete(spec, words));
+  if (output !== '') writeStdout(`${output}\n`);
   return 0;
 }
 
@@ -215,8 +219,7 @@ async function main(argv: readonly string[]): Promise<number> {
     case 'projects':
       return runProjects(target.argv, workspaceRoot);
     case 'tests':
-      return (await runTestsCli({ argv: [...target.argv], packageRoot: findRunnerRoot(), monorepoRoot: workspaceRoot }))
-        .exitCode;
+      return runTests(target.argv, workspaceRoot);
     case 'playwright-cli': {
       const outputDir = loadRepoConfig(workspaceRoot)['PLAYWRIGHT_MCP_OUTPUT_DIR'] ?? DEFAULT_OUTPUT_DIR;
       return runPlaywright('cli', intoOutputDir(target.argv, outputDir), workspaceRoot);

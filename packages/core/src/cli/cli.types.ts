@@ -46,8 +46,11 @@ export interface CommandSpec {
   readonly description?: string;
   readonly commands?: () => readonly CommandEntry[];
   readonly flags?: readonly FlagSpec[];
-  /** Suggestions for the next positional argument, given the ones already typed after the command. */
-  readonly positionals?: (previous: readonly string[]) => Suggestions;
+  /**
+   * Suggestions for the next positional argument, given the ones already typed after the command and
+   * the word being typed (`demo:` for a CLI whose argument is `project:ticket`).
+   */
+  readonly positionals?: (previous: readonly string[], current: string) => Suggestions;
   /** Last line of `--help`. */
   readonly footer?: string;
 }

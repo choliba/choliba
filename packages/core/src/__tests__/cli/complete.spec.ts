@@ -78,6 +78,15 @@ describe('complete', () => {
     expect(complete(root, ['deploy', '--unknown', ''])).toEqual(values('api', 'web'));
   });
 
+  it('gives the positionals the word being typed', () => {
+    const spec: CommandSpec = {
+      usage: 'x',
+      positionals: (_previous, current) => values(...(current.includes(':') ? ['a:1', 'a:2'] : ['a', 'b'])),
+    };
+    expect(complete(spec, ['a:'])).toEqual(values('a:1', 'a:2'));
+    expect(complete(spec, [''])).toEqual(values('a', 'b'));
+  });
+
   it('suggests nothing for a command without flags, commands or positionals', () => {
     expect(complete(root, ['status', ''])).toEqual(values());
     expect(complete(root, ['status', '-'])).toEqual(values());

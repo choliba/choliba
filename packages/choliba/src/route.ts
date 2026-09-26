@@ -1,4 +1,5 @@
-import type { CommandEntry, CommandSpec } from '@choliba/core/cli';
+import type { CommandEntry, CommandSpec, Suggestions } from '@choliba/core/cli';
+import { testsCliSpec } from '@choliba/runner';
 
 /** What `choliba` runs itself; any other first word is an agent of the workspace. */
 export const SUBCOMMANDS = [
@@ -42,6 +43,8 @@ export function route(argv: readonly string[]): Route {
   return isSubcommand(first) ? { kind: first, argv: rest } : { kind: 'agents', argv };
 }
 
+const FILES = (): Suggestions => ({ kind: 'files' });
+
 /** What `choliba --help` lists, and what its first word completes to (with the agents). */
 const COMMANDS: readonly CommandEntry[] = [
   {
@@ -60,19 +63,23 @@ const COMMANDS: readonly CommandEntry[] = [
     name: 'tests',
     description: 'Roda os testes E2E dos projetos com o Playwright',
     group: 'Commands',
-    spec: { usage: 'choliba tests [PROJECT[:TICKET]] [OPTIONS]' },
+    // Its projects and tickets are completed by the runner itself (`choliba tests __complete`).
+    spec: testsCliSpec(
+      () => [],
+      () => [],
+    ),
   },
   {
     name: 'playwright-cli',
     description: 'O navegador que os agentes usam (playwright cli)',
     group: 'Commands',
-    spec: { usage: 'choliba playwright-cli COMMAND [ARGS]' },
+    spec: { usage: 'choliba playwright-cli COMMAND [ARGS]', positionals: FILES },
   },
   {
     name: 'playwright-trace',
     description: 'Lê um trace.zip de teste que falhou (playwright trace), na versão do runner',
     group: 'Commands',
-    spec: { usage: 'choliba playwright-trace COMMAND [ARGS]' },
+    spec: { usage: 'choliba playwright-trace COMMAND [ARGS]', positionals: FILES },
   },
   {
     name: 'install',
@@ -81,6 +88,7 @@ const COMMANDS: readonly CommandEntry[] = [
     group: 'Commands',
     spec: {
       usage: 'choliba install <origem> [OPTIONS]',
+      positionals: FILES,
       flags: [
         {
           name: '--path',
@@ -101,13 +109,17 @@ const COMMANDS: readonly CommandEntry[] = [
     name: 'lint',
     description: 'ESLint na pasta de trabalho, com a configuração que vem no choliba',
     group: 'Commands',
-    spec: { usage: 'choliba lint [ESLINT_ARGS]' },
+    spec: { usage: 'choliba lint [ESLINT_ARGS]', positionals: FILES },
   },
   {
     name: 'format',
     description: 'Prettier na pasta de trabalho: confere, ou corrige com --write',
     group: 'Commands',
-    spec: { usage: 'choliba format [--write] [PATHS...]' },
+    spec: {
+      usage: 'choliba format [--write] [PATHS...]',
+      flags: [{ name: '--write', description: 'Corrige em vez de só conferir' }],
+      positionals: FILES,
+    },
   },
   {
     name: 'setup',
@@ -119,11 +131,13 @@ const COMMANDS: readonly CommandEntry[] = [
     name: 'completion',
     description: 'Imprime o script de autocomplete do bash',
     group: 'Commands',
-    spec: { usage: 'choliba completion bash' },
+    spec: {
+      usage: 'choliba completion bash',
+      positionals: (previous) => ({ kind: 'values', values: previous.length === 0 ? ['bash'] : [] }),
+    },
   },
 ];
 
-/** `choliba --help`. */
 /** `choliba --help`. */
 export const CHOLIBA_HELP: CommandSpec = {
   usage: 'choliba COMMAND [ARGS]',
@@ -136,8 +150,8 @@ export const CHOLIBA_HELP: CommandSpec = {
 };
 
 /**
- * The first word after `choliba`, for completion: the subcommands and, as shortcuts, the agents of
- * the workspace. Everything after it is completed by the part of choliba that word selects.
+ * What completion walks: the subcommands and, as shortcuts, the agents of the workspace. `agents`,
+ * `projects` and `tests` complete the rest of the line themselves.
  */
 export function firstWordSpec(agentNames: readonly string[]): CommandSpec {
   const agents = agentNames.map((name): CommandEntry => ({
