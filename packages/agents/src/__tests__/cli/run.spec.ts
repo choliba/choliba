@@ -1144,7 +1144,13 @@ describe('runAgentsCli — phases', () => {
       expect(await runAgentsCli(argv(agentsDir), deps)).toBe(0);
       expect(spawns()).toBe(2);
       expect(readFileSync(join(root, 'order.txt'), 'utf8')).toBe('red-ready-1\ngreen-ready-1\n');
-      expect(lines(stdout)).toEqual(expect.arrayContaining(['[with-phases: fase red]', '[with-phases: fase green]']));
+      // Each phase named after a color is shown in it: red in red, green in green.
+      expect(lines(stdout)).toEqual(
+        expect.arrayContaining([
+          '\u001b[31m[with-phases: fase red]\u001b[0m',
+          '\u001b[32m[with-phases: fase green]\u001b[0m',
+        ]),
+      );
     }, recordOrder);
   });
 
@@ -1180,9 +1186,10 @@ describe('runAgentsCli — phases', () => {
     await withPhases(async ({ agentsDir, projectsDir, root }) => {
       const { deps, stdout, spawns } = phasesHarness(root, projectsDir);
 
-      expect(await runAgentsCli(argv(agentsDir, '--dry-run'), deps)).toBe(0);
+      expect(await runAgentsCli(argv(agentsDir, '--dry-run', '--no-color'), deps)).toBe(0);
       const printed = lines(stdout);
       const green = printed.indexOf('[with-phases: fase green]');
+      expect(printed).toContain('[with-phases: fase red]');
       const project = join(projectsDir, 'ready');
       expect(printed.slice(0, green)).toContain(`Write(/${project}/tests/**)`);
       expect(printed.slice(green)).toContain(`Write(/${project}/app/**)`);

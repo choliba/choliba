@@ -4,8 +4,9 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, isAbsolute, join } from 'node:path';
 
-import { listAgents, runAgentsCli } from '@choliba/agents';
+import { listAgents, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir, runAgentsCli } from '@choliba/agents';
 import { complete, formatHelp, formatSuggestions } from '@choliba/core/cli';
+import { createSpawnGitRunner } from '@choliba/core/git';
 import { CHOL_AGENTS_DIR, findWorkspaceRoot, loadRepoConfig, locateResource } from '@choliba/core/config';
 import { projectTemplatesDir, resolveLocations, runProjectsCli } from '@choliba/projects';
 import { findRunnerRoot, runTestsCli } from '@choliba/runner';
@@ -13,6 +14,8 @@ import { createBunProcessSpawner, ProcessRunner } from '@choliba/terminal';
 import { writeStderr, writeStdout } from '@choliba/terminal/output';
 
 import { allFine, checkWorkspace, formatCheck } from './check';
+import { install, parseInstallArgs } from './install';
+import { DEFAULT_OUTPUT_DIR, intoOutputDir } from './playwright-args';
 import { COMPLETION_BASH } from './completion';
 import { CHOLIBA_HELP, firstWordSpec, route } from './route';
 import { setup, setupWorkspace, updatePackageWhenListed } from './setup';
@@ -77,6 +80,35 @@ function runFormat(argv: readonly string[], workspaceRoot: string): number {
     [write ? '--write' : '--check', ...(paths.length === 0 ? ['.'] : paths)],
     workspaceRoot,
   );
+}
+
+/** `choliba install <origem>`: an agent (with its skills and MCPs), a skill or an MCP, into the workspace. */
+async function runInstall(argv: readonly string[], workspaceRoot: string): Promise<number> {
+  const config = loadRepoConfig(workspaceRoot);
+  try {
+    const report = await install(parseInstallArgs(argv), {
+      workspaceRoot,
+      config,
+      targets: {
+        agentsDir: resolveAgentsDir(undefined, config, workspaceRoot),
+        skillsDir: resolveSkillsDir(config, workspaceRoot),
+        mcpsDir: resolveMcpsDir(config, workspaceRoot),
+      },
+      source: {
+        cwd: process.cwd(),
+        git: createSpawnGitRunner(),
+        bunAdd: (project, spec) => {
+          const result = spawnSync('bun', ['add', spec], { cwd: project, encoding: 'utf8' });
+          return { status: result.status, stderr: result.stderr };
+        },
+      },
+    });
+    writeStdout(`${report}\n`);
+    return 0;
+  } catch (error) {
+    writeStderr(`${(error as Error).message}\n`);
+    return 1;
+  }
 }
 
 /** `playwright cli`, from the Playwright this package depends on, run where the agents run it. */
@@ -185,8 +217,12 @@ async function main(argv: readonly string[]): Promise<number> {
     case 'tests':
       return (await runTestsCli({ argv: [...target.argv], packageRoot: findRunnerRoot(), monorepoRoot: workspaceRoot }))
         .exitCode;
-    case 'playwright-cli':
-      return runPlaywright('cli', target.argv, workspaceRoot);
+    case 'playwright-cli': {
+      const outputDir = loadRepoConfig(workspaceRoot)['PLAYWRIGHT_MCP_OUTPUT_DIR'] ?? DEFAULT_OUTPUT_DIR;
+      return runPlaywright('cli', intoOutputDir(target.argv, outputDir), workspaceRoot);
+    }
+    case 'install':
+      return runInstall(target.argv, workspaceRoot);
     case 'playwright-trace':
       return runPlaywright('trace', target.argv, workspaceRoot);
     case 'lint':

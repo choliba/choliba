@@ -32,5 +32,5 @@ export { runAgent } from './run-agent';
 export type { RunAgentDeps, RunAgentRequest } from './run-agent';
 export { runAgentsCli, type RunAgentsCliDeps } from './cli/run';
 export { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from './workspace-dirs';
-export { resolveSkills } from './skills';
-export { resolveMcps } from './mcps';
+export { resolveSkills, skillDescription } from './skills';
+export { mcpConfig, resolveMcps } from './mcps';

@@ -1,4 +1,4 @@
-import { colorForLabel, formatLine } from '../formatter';
+import { colorForLabel, formatLine, isAnsiColor, paint } from '../formatter';
 
 describe('colorForLabel', () => {
   it('is stable for the same label', () => {
@@ -73,5 +73,15 @@ describe('formatLine', () => {
     const line = formatLine('vite', 'ready', { colorize: false, timestamp: new Date('2024-05-05T10:00:00.000Z') });
 
     expect(line).toBe('[vite] 2024-05-05T10:00:00.000Z ready');
+  });
+});
+
+describe('paint', () => {
+  it('wraps the text in the color and a reset, and knows which names are colors', () => {
+    expect(paint('ok', 'green')).toBe('\u001b[32mok\u001b[0m');
+    expect(isAnsiColor('red')).toBe(true);
+    expect(isAnsiColor('blue')).toBe(true);
+    expect(isAnsiColor('review')).toBe(false);
+    expect(isAnsiColor('toString')).toBe(false);
   });
 });

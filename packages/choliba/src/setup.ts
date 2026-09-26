@@ -23,7 +23,8 @@ export const NEXT_STEPS = [
   '  1. rode o exemplo: bunx playwright install chromium (uma vez) e bun chol:tests exemplo',
   '  2. suas aplicações em app/<app>/, e um projeto de teste (em projects/) para cada uma:',
   '     bun chol:project:create --app-dir app/<app> --base-url <url>',
-  '  3. agentes em app/agents/<nome>/, skills em app/.agents/skills/<nome>/ e MCPs em app/.agents/mcps/<nome>.json',
+  '  3. instale agentes, skills e MCPs: bun chol:install <pasta, repositório git ou pacote npm> [--path agents/<nome>]',
+  '     (vão para app/agents/<nome>/, app/.agents/skills/<nome>/ e app/.agents/mcps/<nome>.json)',
   '  4. bun chol:check, bun chol:lint, bun chol:format e bun chol:help',
 ].join('\n');
 
@@ -222,6 +223,7 @@ export const WORKSPACE_SCRIPTS: Readonly<Record<string, string>> = {
   'chol:tests': 'choliba tests',
   'chol:playwright-cli': 'choliba playwright-cli',
   'chol:playwright-trace': 'choliba playwright-trace',
+  'chol:install': 'choliba install',
   'chol:lint': 'choliba lint',
   'chol:format': 'choliba format',
   'chol:format:fix': 'choliba format --write',

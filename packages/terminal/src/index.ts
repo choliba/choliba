@@ -15,7 +15,7 @@ export {
 export type { Listener } from './event-emitter';
 export { TypedEventEmitter } from './event-emitter';
 export type { AnsiColor, FormatterOptions } from './formatter';
-export { colorForLabel, formatLine } from './formatter';
+export { colorForLabel, formatLine, isAnsiColor, paint } from './formatter';
 export { ProcessRunner } from './process-runner';
 export type { ProcessRunnerOptions } from './process-runner';
 export { Session } from './session';

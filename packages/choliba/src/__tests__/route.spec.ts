@@ -14,6 +14,7 @@ describe('route', () => {
     expect(route(['tests', 'red'])).toEqual({ kind: 'tests', argv: ['red'] });
     expect(route(['playwright-cli', 'open', 'x'])).toEqual({ kind: 'playwright-cli', argv: ['open', 'x'] });
     expect(route(['playwright-trace', 'open', 't.zip'])).toEqual({ kind: 'playwright-trace', argv: ['open', 't.zip'] });
+    expect(route(['install', './agents/developer'])).toEqual({ kind: 'install', argv: ['./agents/developer'] });
     expect(route(['agents', 'list'])).toEqual({ kind: 'agents', argv: ['list'] });
   });
 
@@ -36,7 +37,7 @@ describe('CHOLIBA_HELP', () => {
     const help = formatHelp(CHOLIBA_HELP);
 
     expect(help).toContain('Usage:  choliba COMMAND [ARGS]');
-    for (const name of ['agents', 'projects', 'tests', 'playwright-cli', 'playwright-trace']) {
+    for (const name of ['agents', 'projects', 'tests', 'playwright-cli', 'playwright-trace', 'install']) {
       expect(help).toContain(`  ${name} `);
     }
   });
@@ -49,5 +50,7 @@ describe('firstWordSpec', () => {
       values: ['projects', 'playwright-cli', 'playwright-trace', 'product-owner'],
     });
     expect(complete(firstWordSpec([]), ['se'])).toEqual({ kind: 'values', values: ['setup'] });
+    expect(complete(firstWordSpec([]), ['in'])).toEqual({ kind: 'values', values: ['install'] });
+    expect(complete(firstWordSpec([]), ['install', '--path', ''])).toEqual({ kind: 'files' });
   });
 });

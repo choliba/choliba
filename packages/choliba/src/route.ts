@@ -7,6 +7,7 @@ export const SUBCOMMANDS = [
   'tests',
   'playwright-cli',
   'playwright-trace',
+  'install',
   'check',
   'lint',
   'format',
@@ -72,6 +73,23 @@ const COMMANDS: readonly CommandEntry[] = [
     description: 'Lê um trace.zip de teste que falhou (playwright trace), na versão do runner',
     group: 'Commands',
     spec: { usage: 'choliba playwright-trace COMMAND [ARGS]' },
+  },
+  {
+    name: 'install',
+    description:
+      'Instala um agente (com suas skills e MCPs), uma skill ou um MCP de uma pasta, repositório git ou pacote npm',
+    group: 'Commands',
+    spec: {
+      usage: 'choliba install <origem> [OPTIONS]',
+      flags: [
+        {
+          name: '--path',
+          value: { name: 'caminho', suggest: () => ({ kind: 'files' }) },
+          description: 'Item dentro da origem (ex.: agents/developer)',
+        },
+        { name: '--dry-run', description: 'Mostra o que instalaria, sem gravar' },
+      ],
+    },
   },
   {
     name: 'check',

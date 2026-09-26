@@ -1,6 +1,7 @@
 import { isAbsolute, join, relative } from 'node:path';
 
 import type { ProcessRunner, SignalSource, Writable } from '@choliba/terminal';
+import { isAnsiColor, paint } from '@choliba/terminal';
 import { complete, describe, formatHelp, formatSuggestions } from '@choliba/core/cli';
 import type { GitRunner } from '@choliba/core/git';
 import { createSpawnGitRunner } from '@choliba/core/git';
@@ -698,7 +699,10 @@ function runTarget(
     return { command, agent, skipPrepare: false };
   }
   const phaseAgent = agentInPhase(agent, phase);
-  context.deps.stdout.write(`[${agent.name}: fase ${phase.name}]\n`);
+  // A phase named after a color (red, green) is shown in it.
+  const header = `[${agent.name}: fase ${phase.name}]`;
+  const colored = context.parsed.colorize && isAnsiColor(phase.name) ? paint(header, phase.name) : header;
+  context.deps.stdout.write(`${colored}\n`);
   const executes = !context.parsed.dryRun && context.mode === 'execute';
   const skipPrepare = index > 0 && !executes && phase.beforeExecute !== undefined;
   if (skipPrepare) {
