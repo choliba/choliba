@@ -28,6 +28,7 @@
     "chol:project:list": "bun run chol:projects list-projects",
     "chol:ticket:create": "bun run chol:projects create-ticket",
     "chol:playwright-cli": "packages/runner/node_modules/.bin/playwright cli",
+    "chol:playwright-trace": "packages/runner/node_modules/.bin/playwright trace",
     "chol:help": "bun run scripts/help.ts",
     "chol:pack": "bun run --cwd packages/choliba build && cd packages/choliba/dist && bun pm pack --destination ..",
     "git:clean": "bun run scripts/git-clean.ts"

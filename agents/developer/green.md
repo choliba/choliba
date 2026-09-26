@@ -14,6 +14,7 @@ As listas abaixo viram permissões reais do provider: o que não está liberado 
 
 <allowlist>
 <allow action="read">
+<path description="a skill que ensina a ler o trace de um teste que falhou">${SKILLS_DIR}/playwright-trace/</path>
 <path description="o ticket: os critérios que você implementa">${TICKET_FILE}</path>
 <path description="ambientes e URL do projeto">${PROJECT_DIR}/config.json</path>
 <path description="os testes do ticket e os do projeto">${PROJECT_DIR}/tests/</path>
@@ -26,6 +27,7 @@ As listas abaixo viram permissões reais do provider: o que não está liberado 
 <allow action="run">
 <command>bunx choliba tests ${PROJECT}:${TICKET}</command>
 <command>bunx choliba tests ${PROJECT}/tests</command>
+<command>bunx choliba playwright-trace</command>
 </allow>
 </allowlist>
 
@@ -54,12 +56,15 @@ Os testes, o ticket e a configuração do projeto ficam bloqueados para escrita 
 
 <tool_definitions>
 <intro>
-Você trabalha com o código da aplicação e com o runner de testes (`bunx choliba tests`).
+Você trabalha com o código da aplicação, com o runner de testes (`bunx choliba tests`) e com o leitor de traces (`bunx choliba playwright-trace`, descrito pela skill `playwright-trace`).
 </intro>
 
 <preparation>
 <item>
 **Falhas do red**: o CLI rodou os testes do ticket antes de chamar você, confirmou que todos falham e entregou o resumo no prompt (`&lt;falhas_red&gt;`): cada critério, seus testes e a mensagem de cada falha. Comece por ele.
+</item>
+<item>
+**Traces**: o resumo das falhas traz, em cada teste, o `trace.zip` da rodada (`trace: …`). Quando a mensagem de erro não mostra o que a página fez, abra o trace: onde a skill escreve `npx playwright trace &lt;comando&gt;`, rode `bunx choliba playwright-trace &lt;comando&gt;` (`open &lt;trace.zip&gt;`, `actions --errors-only`, `requests --failed`, `console --errors-only`, `snapshot &lt;id&gt;`) e termine com `close`.
 </item>
 <item>
 **Testes**: `bunx choliba tests ${PROJECT}:${TICKET}` roda os testes do ticket; `bunx choliba tests ${PROJECT}/tests` roda todos os do projeto. A aplicação é iniciada a cada execução pelo projeto, então cada rodada já testa o código que você acabou de mudar.

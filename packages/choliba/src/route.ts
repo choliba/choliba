@@ -6,6 +6,7 @@ export const SUBCOMMANDS = [
   'projects',
   'tests',
   'playwright-cli',
+  'playwright-trace',
   'check',
   'lint',
   'format',
@@ -65,6 +66,12 @@ const COMMANDS: readonly CommandEntry[] = [
     description: 'O navegador que os agentes usam (playwright cli)',
     group: 'Commands',
     spec: { usage: 'choliba playwright-cli COMMAND [ARGS]' },
+  },
+  {
+    name: 'playwright-trace',
+    description: 'Lê um trace.zip de teste que falhou (playwright trace), na versão do runner',
+    group: 'Commands',
+    spec: { usage: 'choliba playwright-trace COMMAND [ARGS]' },
   },
   {
     name: 'check',

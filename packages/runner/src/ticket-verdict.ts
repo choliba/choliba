@@ -20,6 +20,8 @@ export interface CriterionTest {
   readonly title: string;
   readonly status: string;
   readonly error?: string;
+  /** The `trace.zip` its last run kept (the config keeps one per failed test). */
+  readonly trace?: string;
 }
 
 /** A criterion and the tests whose title starts with `<id>:`. */
@@ -36,16 +38,21 @@ const BROKEN_TEST = /^(ReferenceError|TypeError|SyntaxError)\b/;
 // eslint-disable-next-line no-control-regex
 const ANSI = /\u001b\[[0-9;]*m/g;
 
-function lastError(results: readonly unknown[]): string | undefined {
-  const last = results.at(-1) as { error?: { message?: string } } | undefined;
-  return last?.error?.message?.replaceAll(ANSI, '');
+interface RunResult {
+  readonly error?: { readonly message?: string };
+  readonly attachments?: readonly { readonly name?: string; readonly path?: string }[];
 }
 
 function toCriterionTest(row: FlatTestResult): CriterionTest {
-  const error = lastError(row.results);
-  return error === undefined
-    ? { title: row.fullTitle, status: row.status }
-    : { title: row.fullTitle, status: row.status, error };
+  const last = row.results.at(-1) as RunResult | undefined;
+  const error = last?.error?.message?.replaceAll(ANSI, '');
+  const trace = last?.attachments?.find((attachment) => attachment.name === 'trace')?.path;
+  return {
+    title: row.fullTitle,
+    status: row.status,
+    ...(error === undefined ? {} : { error }),
+    ...(trace === undefined ? {} : { trace }),
+  };
 }
 
 export function criterionRuns(ticket: TicketCriteria, report: PlaywrightReport): readonly CriterionRun[] {
@@ -98,9 +105,10 @@ export function verdictProblems(
 
 function formatTest(test: CriterionTest): readonly string[] {
   const line = `- ${test.title} (${test.status})`;
-  if (test.error === undefined) return [line, ''];
+  const trace = test.trace === undefined ? [] : [`  trace: ${test.trace}`, ''];
+  if (test.error === undefined) return [line, '', ...trace];
   const error = test.error.split('\n').map((text) => `  ${text}`);
-  return [line, '', '  ```', ...error, '  ```', ''];
+  return [line, '', '  ```', ...error, '  ```', '', ...trace];
 }
 
 /** The tests of each criterion and how they failed, in Markdown: what the green phase implements from. */

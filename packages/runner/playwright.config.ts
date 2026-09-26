@@ -124,7 +124,8 @@ export default defineConfig({
   globalTeardown: path.join(packageRoot, 'shared', `globalTeardown${EXT}`),
   use: {
     ...(baseURL ? { baseURL } : {}),
-    trace: 'on-first-retry',
+    // Kept for each failed test, so the agents (skill playwright-trace) can read what happened.
+    trace: 'retain-on-failure',
     screenshot: 'on',
   },
   projects: ENABLED_DEVICES.map((name) => ({

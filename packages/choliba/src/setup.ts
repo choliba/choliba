@@ -221,6 +221,7 @@ export const WORKSPACE_SCRIPTS: Readonly<Record<string, string>> = {
   'chol:ticket:create': 'choliba projects create-ticket',
   'chol:tests': 'choliba tests',
   'chol:playwright-cli': 'choliba playwright-cli',
+  'chol:playwright-trace': 'choliba playwright-trace',
   'chol:lint': 'choliba lint',
   'chol:format': 'choliba format',
   'chol:format:fix': 'choliba format --write',

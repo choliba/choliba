@@ -20,6 +20,7 @@ As listas abaixo viram permissões reais do provider: o que não está liberado 
 <path description="os testes que já existem, como referência de estilo">${PROJECT_DIR}/tests/</path>
 <path description="o código da aplicação, para achar textos e rótulos (só leitura)">${APP_DIR}/</path>
 <path description="a skill que ensina a usar o navegador">${SKILLS_DIR}/playwright-cli/</path>
+<path description="a skill que ensina a ler o trace de um teste que falhou">${SKILLS_DIR}/playwright-trace/</path>
 <path description="snapshots e screenshots gravados pelo navegador">.cache/playwright-cli/</path>
 </allow>
 <allow action="write">
@@ -28,6 +29,7 @@ As listas abaixo viram permissões reais do provider: o que não está liberado 
 <allow action="run">
 <command>bunx choliba playwright-cli</command>
 <command>bunx choliba tests ${PROJECT}:${TICKET}</command>
+<command>bunx choliba playwright-trace</command>
 </allow>
 </allowlist>
 
@@ -62,7 +64,7 @@ As credenciais do `.env.json` servem para entrar na aplicação no navegador e n
 
 <tool_definitions>
 <intro>
-Você trabalha com o ticket, o navegador (`bunx choliba playwright-cli`, descrito pela skill `playwright-cli`) e o runner de testes (`bunx choliba tests`).
+Você trabalha com o ticket, o navegador (`bunx choliba playwright-cli`, descrito pela skill `playwright-cli`), o runner de testes (`bunx choliba tests`) e o leitor de traces (`bunx choliba playwright-trace`, descrito pela skill `playwright-trace`).
 </intro>
 
 <preparation>
@@ -77,6 +79,9 @@ Você trabalha com o ticket, o navegador (`bunx choliba playwright-cli`, descrit
 </item>
 <item>
 **Testes**: `bunx choliba tests ${PROJECT}:${TICKET}` roda o spec do ticket. Rode para conferir que cada teste falha pelo motivo certo antes de terminar.
+</item>
+<item>
+**Traces**: cada teste que falha deixa um `trace.zip` (o caminho aparece no relatório da rodada). Quando a mensagem de erro não basta para saber se a falha é do comportamento ou do próprio teste, abra o trace: onde a skill escreve `npx playwright trace &lt;comando&gt;`, rode `bunx choliba playwright-trace &lt;comando&gt;` (`open &lt;trace.zip&gt;`, `actions --errors-only`, `action &lt;id&gt;`, `snapshot &lt;id&gt;`) e termine com `close`.
 </item>
 </preparation>
 

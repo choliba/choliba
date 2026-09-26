@@ -80,10 +80,11 @@ function runFormat(argv: readonly string[], workspaceRoot: string): number {
 }
 
 /** `playwright cli`, from the Playwright this package depends on, run where the agents run it. */
-function runPlaywrightCli(argv: readonly string[], workspaceRoot: string): number {
+/** `playwright <command> …` of the runner's own Playwright (`cli`, `trace`), so no other version is fetched. */
+function runPlaywright(command: string, argv: readonly string[], workspaceRoot: string): number {
   const cli = Bun.resolveSync('@playwright/test/cli', import.meta.dir);
   const node = Bun.which('node') ?? process.execPath;
-  return spawnSync(node, [cli, 'cli', ...argv], { stdio: 'inherit', cwd: workspaceRoot }).status ?? 1;
+  return spawnSync(node, [cli, command, ...argv], { stdio: 'inherit', cwd: workspaceRoot }).status ?? 1;
 }
 
 /** Writes straight to the terminal (`/dev/tty`); false when there is none, as in CI. */
@@ -185,7 +186,9 @@ async function main(argv: readonly string[]): Promise<number> {
       return (await runTestsCli({ argv: [...target.argv], packageRoot: findRunnerRoot(), monorepoRoot: workspaceRoot }))
         .exitCode;
     case 'playwright-cli':
-      return runPlaywrightCli(target.argv, workspaceRoot);
+      return runPlaywright('cli', target.argv, workspaceRoot);
+    case 'playwright-trace':
+      return runPlaywright('trace', target.argv, workspaceRoot);
     case 'lint':
       return runLint(target.argv, workspaceRoot);
     case 'format':

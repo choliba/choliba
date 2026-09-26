@@ -126,6 +126,31 @@ describe('formatFailures', () => {
     );
   });
 
+  it("points at each failed test's trace, for the playwright-trace skill", () => {
+    const traced = {
+      title: 'CA-01: a',
+      tests: [
+        {
+          status: 'unexpected',
+          results: [
+            {
+              status: 'failed',
+              error: { message: 'Timeout' },
+              attachments: [
+                { name: 'screenshot', path: '/r/shot.png' },
+                { name: 'trace', path: '/r/trace.zip' },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const runs = criterionRuns({ criterios: [{ id: 'CA-01' }] }, report([traced]));
+
+    expect(runs[0]?.tests[0]?.trace).toBe('/r/trace.zip');
+    expect(formatFailures('demo-2', runs)).toContain('  trace: /r/trace.zip\n');
+  });
+
   it('says when a criterion has no test', () => {
     expect(formatFailures('demo-2', [{ id: 'CA-01', tests: [] }])).toContain('- nenhum teste');
   });

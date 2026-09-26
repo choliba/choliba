@@ -7,6 +7,7 @@ supported_models:
   - Composer 2.5 Fast
 skills:
   - playwright-cli
+  - playwright-trace
 task_required: false
 default_task: Implemente o ticket.
 project_required: true
