@@ -15,6 +15,6 @@ before_execute:
   - add_files: [documentacao_atual, 'docs/**/*.md']
   - add_files: [readme_atual, README.md]
 after_execute:
-  - run: [bun, x, prettier, --write, docs, README.md]
+  - run: [bun, x, prettier, --write, --no-error-on-unmatched-pattern, docs, README.md]
   - record_git_head: [.cache/docs-updater/last-base]
   - run: [rm, -f, .cache/docs-updater/diff.patch]
