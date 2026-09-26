@@ -8,8 +8,8 @@ export const REPORT_FOLDER = 'playwright-report';
 
 /** What decides where a run without a ticket leaves its artifacts. Blank values count as absent. */
 export interface ResultsRootSources {
-  readonly globalDir: string;
-  readonly project: string;
+  /** The project's runs folder (`resolveTicketRunsFolder` without a ticket), where its ticket runs go too. */
+  readonly runsFolder: string;
   /** `resultsDir` of the active environment, from the project's `config.json`. */
   readonly environmentResultsDir?: string | undefined;
   /** `_global.resultsDir`, from the project's `.env.json`. */
@@ -23,14 +23,10 @@ function present(value: string | undefined): string | undefined {
 
 /**
  * Where a run without a ticket leaves its artifacts: `.env.json`'s `_global.resultsDir`, else the active
- * environment's `resultsDir` in `config.json`, else `{GLOBAL_DIR}/{projeto}`.
+ * environment's `resultsDir` in `config.json`, else the project's runs folder, next to its ticket runs.
  */
 export function resolveResultsRoot(sources: ResultsRootSources): string {
-  return (
-    present(sources.globalResultsDir) ??
-    present(sources.environmentResultsDir) ??
-    path.join(sources.globalDir, sources.project)
-  );
+  return present(sources.globalResultsDir) ?? present(sources.environmentResultsDir) ?? sources.runsFolder;
 }
 
 /** `test-results` inside an absolute results root, or `test-results/<root>` for a relative one. */

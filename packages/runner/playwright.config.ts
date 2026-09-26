@@ -34,11 +34,14 @@ let baseURL: string | undefined;
 if (targetProject) {
   // Fails, naming the file and the field, unless the project is complete and configured (no CHANGE_ME).
   const settings = projects.loadProjectSettings(projectsDir, targetProject);
+  // A spec reads its project's credentials (.env.json, active environment, then _global), BASE_URL and
+  // APP_DIR from process.env. The workers load this file too, so they get them as well; the project's
+  // values win over the shell's (USERNAME, for one, is usually set there).
+  Object.assign(process.env, settings.env);
   targetProjectConfig = settings.config;
   baseURL = settings.environment.baseURL;
   resultsRoot = projects.resolveResultsRoot({
-    globalDir: playwrightEnv.GLOBAL_DIR,
-    project: targetProject,
+    runsFolder: projects.resolveTicketRunsFolder(projects.resolveTicketRunsRoot(playwrightEnv), targetProject),
     environmentResultsDir: settings.environment.resultsDir,
     globalResultsDir: settings.globals['resultsDir'],
   });

@@ -51,6 +51,9 @@ As listas abaixo viram permissões reais do provider: o que não está liberado 
 <note>
 Os testes, o ticket e a configuração do projeto ficam bloqueados para escrita de propósito: esta fase só muda a aplicação. É isso que garante que o teste que passa no fim é o mesmo que falhava no red.
 </note>
+<note>
+O código do choliba (`packages/`, `agents/`, o `node_modules` do runner) fica bloqueado de propósito, e tentar ler só gasta rodadas: tudo o que você precisa saber sobre o runner (como o spec acha o ticket, a URL, as credenciais, como a falha é conferida) está nestas instruções. Se algo faltar aqui, pare e diga o quê.
+</note>
 </notes>
 </permissions>
 
@@ -65,6 +68,9 @@ Você trabalha com o código da aplicação, com o runner de testes (`bunx choli
 </item>
 <item>
 **Traces**: o resumo das falhas traz, em cada teste, o `trace.zip` da rodada (`trace: …`). Quando a mensagem de erro não mostra o que a página fez, abra o trace: onde a skill escreve `npx playwright trace &lt;comando&gt;`, rode `bunx choliba playwright-trace &lt;comando&gt;` (`open &lt;trace.zip&gt;`, `actions --errors-only`, `requests --failed`, `console --errors-only`, `snapshot &lt;id&gt;`) e termine com `close`.
+</item>
+<item>
+**Comandos**: rode só os comandos liberados, cada um como está, podendo encadear vários com `&amp;&amp;`. Nada de redirecionamento (`2&gt;&amp;1`, `2&gt;/dev/null`), pipes (`| tail`), `;`, `|| true` ou outros programas (`grep`, `ls`, `cat`…): o comando inteiro é recusado se qualquer parte dele não estiver liberada. Para ler arquivos, use as ferramentas de leitura nos caminhos liberados.
 </item>
 <item>
 **Testes**: `bunx choliba tests ${PROJECT}:${TICKET}` roda os testes do ticket; `bunx choliba tests ${PROJECT}/tests` roda todos os do projeto. A aplicação é iniciada a cada execução pelo projeto, então cada rodada já testa o código que você acabou de mudar.

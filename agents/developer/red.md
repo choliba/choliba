@@ -59,6 +59,9 @@ Você grava um arquivo só: `${PROJECT_DIR}/tests/${TICKET}.spec.ts`. É por ess
 <note>
 As credenciais do `.env.json` servem para entrar na aplicação no navegador e nos testes (pelas variáveis de ambiente, nunca escritas no spec). Nunca copie usuário, senha ou token para o spec ou para a resposta.
 </note>
+<note>
+O código do choliba (`packages/`, `agents/`, o `node_modules` do runner) fica bloqueado de propósito, e tentar ler só gasta rodadas: tudo o que você precisa saber sobre o runner (como o spec acha o ticket, a URL, as credenciais, como a falha é conferida) está nestas instruções. Se algo faltar aqui, pare e diga o quê.
+</note>
 </notes>
 </permissions>
 
@@ -73,6 +76,12 @@ Você trabalha com o ticket, o navegador (`bunx choliba playwright-cli`, descrit
 </item>
 <item>
 **Ambiente**: o `config.json` do projeto tem `envs` (cada um com `nome`, `baseURL` e `appDir`). Nos testes, a URL já é a `baseURL` do ambiente ativo: `page.goto('')` abre a página inicial.
+</item>
+<item>
+**Credenciais nos testes**: o runner põe em `process.env` as chaves do `.env.json` do projeto (a seção do ambiente ativo, depois `_global`), com os mesmos nomes, além de `BASE_URL` e `APP_DIR`. Leia o `.env.json` só para saber os nomes das chaves e use no spec `process.env['NOME_DA_CHAVE']`; nunca escreva o valor no spec. Não procure como isso é feito no código do choliba: é assim.
+</item>
+<item>
+**Comandos**: rode só os comandos liberados, cada um como está, podendo encadear vários com `&amp;&amp;`. Nada de redirecionamento (`2&gt;&amp;1`, `2&gt;/dev/null`), pipes (`| tail`), `;`, `|| true` ou outros programas (`grep`, `ls`, `cat`…): o comando inteiro é recusado se qualquer parte dele não estiver liberada. Para ler arquivos, use as ferramentas de leitura nos caminhos liberados.
 </item>
 <item>
 **Navegador**: onde a skill escreve `playwright-cli &lt;comando&gt;`, rode `bunx choliba playwright-cli &lt;comando&gt;`. Use para ver a tela como ela é hoje (`open &lt;baseURL&gt;`, `snapshot`, `click`, `fill`) e achar os papéis e rótulos acessíveis dos elementos. Termine sempre com `close`.

@@ -5,6 +5,7 @@ COVERAGE.md
 bun.lock
 .agents
 .claude
+.playwright-cli
 
 # Agent definitions (agent.yaml + system.md): external, syncable content copied verbatim
 # from other repos, not code the team authors — must stay byte-identical

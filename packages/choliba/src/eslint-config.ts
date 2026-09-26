@@ -9,7 +9,14 @@ import tseslint from 'typescript-eslint';
  */
 const config: Linter.Config[] = [
   {
-    ignores: ['**/node_modules/**', '.cache/**', '**/ticket-runs/**', '**/test-results/**', '**/playwright-report/**'],
+    ignores: [
+      '**/node_modules/**',
+      '.cache/**',
+      '.playwright-cli/**',
+      '**/ticket-runs/**',
+      '**/test-results/**',
+      '**/playwright-report/**',
+    ],
   },
   eslint.configs.recommended,
   ...(tseslint.configs.recommended as Linter.Config[]),
