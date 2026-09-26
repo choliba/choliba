@@ -19,6 +19,29 @@ export interface McpDeclaration {
 }
 
 /**
+ * One entry of `agent.yaml#phases`: a run of its own, with its own instructions (and so its own
+ * permissions) and steps. The phases run in the order declared; `--<name>` runs only that one.
+ */
+export interface PhaseDeclaration {
+  readonly name: string;
+  /** The phase's instructions: a file next to `agent.yaml`, in place of `system.md`. */
+  readonly system: string;
+  readonly description?: string;
+  /** A key of the project's `config.json`: the phase runs only for a project where it is `true`. */
+  readonly projectSwitch?: string;
+  readonly beforeExecute?: readonly AgentStep[];
+  readonly afterExecute?: readonly AgentStep[];
+}
+
+/** A phase as loaded: its declaration plus the file it names. */
+export interface AgentPhase extends PhaseDeclaration {
+  /** Absolute path to the phase's system file. */
+  readonly systemPromptPath: string;
+  readonly instructions: string;
+  readonly policy: PermissionPolicy;
+}
+
+/**
  * One agent, loaded from `<agentsDir>/<name>/agent.yaml` + `system.md` — the same on-disk
  * shape as `<agentsDir>/<name>/`. `supportedModels` and `skills` are read but not acted on in
  * this version: they exist so an agent directory authored elsewhere loads here unchanged.
@@ -50,6 +73,11 @@ export interface AgentDefinition {
   readonly beforeExecute?: readonly AgentStep[];
   /** Steps run in order after a successful `execute`. */
   readonly afterExecute?: readonly AgentStep[];
+  /**
+   * The agent's phases, in order. An agent with phases has no `system.md` and no top-level steps:
+   * the fields below (`systemPromptPath`, `instructions`, `policy`) are those of its first phase.
+   */
+  readonly phases?: readonly AgentPhase[];
   /** Absolute path to the agent's directory. */
   readonly dir: string;
   /** Absolute path to `system.md`. */

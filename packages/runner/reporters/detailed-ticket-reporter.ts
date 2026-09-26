@@ -1,4 +1,3 @@
-import fs from 'node:fs';
 import path from 'node:path';
 
 import { readAppliedLocations } from '@choliba/projects';
@@ -18,17 +17,6 @@ function markerFor(status: TestResult['status']): string {
   if (status === 'passed') return '✓';
   if (status === 'skipped') return '○';
   return '✗';
-}
-
-function embedInlineScreenshots(result: TestResult): void {
-  for (const attachment of result.attachments) {
-    if (attachment.body || !attachment.path || !attachment.contentType.startsWith('image/')) continue;
-    try {
-      attachment.body = fs.readFileSync(attachment.path);
-    } catch {
-      // missing screenshot is not fatal
-    }
-  }
 }
 
 export default class DetailedTicketReporter implements Reporter {
@@ -78,7 +66,6 @@ export default class DetailedTicketReporter implements Reporter {
   onTestEnd(test: TestCase, result: TestResult): void {
     this.clearDisplayTimer(test.id);
     this.runningTests.delete(test.id);
-    embedInlineScreenshots(result);
 
     if (result.status === 'skipped') {
       this.liveRegion.remove(test.id);

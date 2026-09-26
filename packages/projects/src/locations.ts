@@ -25,7 +25,7 @@ function pickLocations(config: Readonly<Record<string, string | undefined>>): Pr
   const globalDir = config[GLOBAL_DIR]?.trim();
   if (!globalDir) {
     throw new LocationsError(
-      `${GLOBAL_DIR} não definida. Copie .env.example para .env na raiz do monorepo e preencha.`,
+      `${GLOBAL_DIR} não definida: defina no .env da pasta de trabalho (a que depende de choliba) ou no ambiente.`,
     );
   }
 

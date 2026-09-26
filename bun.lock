@@ -6,8 +6,10 @@
       "name": "choliba",
       "devDependencies": {
         "@eslint/js": "^10.0.1",
+        "@types/bun": "^1.4.2",
         "@types/jest": "30.0.0",
         "@types/node": "^22.19.6",
+        "choliba": "workspace:*",
         "esbuild": "^0.28.2",
         "esbuild-register": "^3.6.0",
         "eslint": "^10.11.0",
@@ -36,6 +38,27 @@
       },
       "devDependencies": {
         "@types/bun": "^1.4.2",
+      },
+    },
+    "packages/choliba": {
+      "name": "choliba",
+      "version": "0.1.0",
+      "bin": {
+        "choliba": "./src/main.ts",
+      },
+      "dependencies": {
+        "@choliba/agents": "workspace:*",
+        "@choliba/core": "workspace:*",
+        "@choliba/projects": "workspace:*",
+        "@choliba/runner": "workspace:*",
+        "@choliba/terminal": "workspace:*",
+        "@eslint/js": "^10.0.1",
+        "@playwright/test": "^1.47.0",
+        "@types/bun": "^1.4.2",
+        "eslint": "^10.11.0",
+        "prettier": "^3.9.8",
+        "typescript": "~6.0.3",
+        "typescript-eslint": "^8.70.1",
       },
     },
     "packages/core": {
@@ -499,6 +522,8 @@
     "chalk": ["chalk@4.1.2", "", { "dependencies": { "ansi-styles": "^4.1.0", "supports-color": "^7.1.0" } }, "sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA=="],
 
     "char-regex": ["char-regex@1.0.2", "", {}, "sha512-kWWXztvZ5SBQV+eRgKFeh8q5sLuZY2+8WUIzlxWVTg+oGwY14qylx1KbKzHd8P6ZYkAg0xyIDU9JMHhyJMZ1jw=="],
+
+    "choliba": ["choliba@workspace:packages/choliba"],
 
     "ci-info": ["ci-info@4.4.0", "", {}, "sha512-77PSwercCZU2Fc4sX94eF8k8Pxte6JAwL4/ICZLFjJLqegs7kCuAsqqj/70NQF6TvDpgFjkubQB2FW2ZZddvQg=="],
 

@@ -16,9 +16,10 @@ jest.mock('node:readline/promises', () => ({
 }));
 
 import * as projects from '@choliba/projects';
+import * as terminalOutput from '@choliba/terminal/output';
 
 import { installSilentTerminal } from '../helpers/silent-terminal';
-import { isStdinInteractive, readProcessStdinIsTTY, runTestsCli } from '../../cli/run-tests';
+import { isStdinInteractive, playwrightNodePath, readProcessStdinIsTTY, runTestsCli } from '../../cli/run-tests';
 
 const TEST_ROOTS = { packageRoot: '/tmp/playwright-pkg', monorepoRoot: '/tmp/monorepo' };
 
@@ -82,6 +83,33 @@ describe('runTestsCli', () => {
     stdinSpy.mockRestore();
   });
 
+  it('lets a spec outside any node_modules find @playwright/test, keeping the NODE_PATH already set', async () => {
+    const runnerRoot = path.join(__dirname, '..', '..', '..');
+    const modules = path.dirname(
+      path.dirname(path.dirname(require.resolve('@playwright/test/package.json', { paths: [runnerRoot] }))),
+    );
+    expect(playwrightNodePath(runnerRoot, undefined)).toBe(modules);
+    expect(playwrightNodePath(runnerRoot, '/x')).toBe(`${modules}${path.delimiter}/x`);
+    expect(playwrightNodePath(runnerRoot, `${modules}${path.delimiter}/x`)).toBe(`${modules}${path.delimiter}/x`);
+    expect(playwrightNodePath('/nowhere', '/x')).toBe('/x');
+    expect(playwrightNodePath('/nowhere', undefined)).toBeUndefined();
+
+    const envs: NodeJS.ProcessEnv[] = [];
+    await runTestsCli({
+      packageRoot: runnerRoot,
+      monorepoRoot: '/tmp/monorepo',
+      argv: ['--list'],
+      env: { NODE_PATH: '/x' },
+      spawnPlaywright: (_args, env) => {
+        envs.push(env);
+        return 0;
+      },
+      loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: '/p' }),
+      stdinIsTTY: false,
+    });
+    expect(envs[0]?.['NODE_PATH']).toBe(`${modules}${path.delimiter}/x`);
+  });
+
   it('forwards raw playwright flags', async () => {
     const calls: string[][] = [];
     const result = await runTestsCli({
@@ -97,6 +125,83 @@ describe('runTestsCli', () => {
 
     expect(result.exitCode).toBe(0);
     expect(calls[0]).toEqual(['test', '--list']);
+  });
+
+  it.each([['--help'], ['-h'], ['demo:T-01', '--help']])(
+    'shows its own help for %s instead of Playwright’s',
+    async (...argv) => {
+      const stdout = jest.spyOn(terminalOutput, 'writeStdout');
+      const spawnPlaywright = jest.fn(() => 0);
+      const result = await runTestsCli({
+        ...TEST_ROOTS,
+        argv,
+        spawnPlaywright,
+        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: '/p' }),
+        stdinIsTTY: false,
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(spawnPlaywright).not.toHaveBeenCalled();
+      const [[help]] = stdout.mock.calls as [[string]];
+      expect(help).toContain('choliba tests [PROJECT');
+      expect(help).toContain('--expect');
+      expect(help).toContain('playwright test --help');
+    },
+  );
+
+  it('completes its flags, the projects, their tickets and the values of --expect', async () => {
+    await withProject(async (projectsDir) => {
+      writeProject(projectsDir, 'demo', [{ suffix: 'T-01' }, { suffix: 'T-02' }]);
+      const stdout = jest.spyOn(terminalOutput, 'writeStdout');
+      const run = (...argv: string[]): Promise<unknown> =>
+        runTestsCli({
+          ...TEST_ROOTS,
+          argv: ['__complete', ...argv],
+          loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        });
+
+      await run('--');
+      await run('');
+      await run('demo', '--expect', '');
+      await run('demo', 'x');
+      await run('demo', '--failures', '');
+      await run('demo:');
+      await run('demo:T-02');
+      await run('nope:');
+
+      expect(stdout.mock.calls).toEqual([
+        ['--expect\n--failures\n--help\n'],
+        ['demo\n'],
+        ['red\ngreen\n'],
+        [':files\n'],
+        ['demo:T-01\ndemo:T-02\n'],
+        ['demo:T-02\n'],
+      ]);
+    });
+  });
+
+  it('completes no project when the workspace locations cannot be read', async () => {
+    const stdout = jest.spyOn(terminalOutput, 'writeStdout');
+    await runTestsCli({
+      ...TEST_ROOTS,
+      argv: ['__complete', ''],
+      loadConfig: () => {
+        throw new Error('sem PROJECTS_DIR');
+      },
+    });
+    expect(stdout.mock.calls).toEqual([['--expect\n--failures\n--help\n-h\n']]);
+  });
+
+  it('describes itself in one line, for bun chol:help', async () => {
+    const stdout = jest.spyOn(terminalOutput, 'writeStdout');
+    await runTestsCli({
+      ...TEST_ROOTS,
+      argv: ['__describe'],
+      loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: '/p' }),
+    });
+    expect(stdout.mock.calls).toEqual([
+      ['Roda os testes E2E dos projetos com o Playwright. Sem PROJECT, roda todos os projetos.\n'],
+    ]);
   });
 
   it('fails when project does not exist', async () => {
@@ -910,5 +1015,171 @@ describe('runTestsCli', () => {
     });
 
     reportSpy.mockRestore();
+  });
+
+  describe('a ticket with no referenced test yet, and --expect', () => {
+    /** `demo` with ticket T-01 (CA-01, CA-02, no `testes`) and its spec `tests/demo-T-01.spec.ts`. */
+    function writeTicketWithSpec(projectsDir: string): void {
+      writeProject(projectsDir, 'demo');
+      const projectDir = path.join(projectsDir, 'demo');
+      fs.mkdirSync(path.join(projectDir, 'tickets'), { recursive: true });
+      fs.writeFileSync(
+        path.join(projectDir, 'tickets', 'T-01.json'),
+        JSON.stringify({
+          criterios: [
+            { id: 'CA-01', testes: [] },
+            { id: 'CA-02', testes: [] },
+          ],
+        }),
+      );
+      fs.writeFileSync(path.join(projectDir, 'tests', 'demo-T-01.spec.ts'), '// spec');
+    }
+
+    function result(title: string, status: string, message?: string) {
+      const results = message === undefined ? [{ status: 'passed' }] : [{ status: 'failed', error: { message } }];
+      return { title, tests: [{ status, results }] };
+    }
+
+    /** A `spawnPlaywright` that writes this report where the ticket's run keeps it, and exits with `status`. */
+    function playwrightReporting(
+      projectsDir: string,
+      specs: ReturnType<typeof result>[],
+      status: number,
+      calls: string[][] = [],
+    ): (args: string[]) => number {
+      return (args) => {
+        calls.push(args);
+        const folder = projects.resolveReportFolder(projectsDir, 'demo', 'demo-T-01');
+        fs.mkdirSync(folder, { recursive: true });
+        fs.writeFileSync(
+          path.join(folder, 'results.json'),
+          JSON.stringify({ suites: [{ title: 'demo-T-01.spec.ts', specs }], errors: [] }),
+        );
+        return status;
+      };
+    }
+
+    function run(projectsDir: string, cwd: string, argv: string[], spawnPlaywright: (args: string[]) => number) {
+      return runTestsCli({
+        ...TEST_ROOTS,
+        argv,
+        cwd,
+        env: {},
+        stdinIsTTY: false,
+        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }),
+        spawnPlaywright,
+      });
+    }
+
+    function stderrText(): string {
+      return (terminalOutput.writeStderr as jest.Mock).mock.calls.map(([chunk]) => String(chunk)).join('');
+    }
+
+    it('runs tests/<ticket>.spec.ts instead of the whole project', async () => {
+      await withProject(async (projectsDir, cwd) => {
+        writeTicketWithSpec(projectsDir);
+        const calls: string[][] = [];
+
+        await run(projectsDir, cwd, ['demo:T-01'], playwrightReporting(projectsDir, [], 1, calls));
+
+        expect(calls[0]?.[1]).toBe(path.join(projectsDir, 'demo', 'tests', 'demo-T-01.spec.ts'));
+      });
+    });
+
+    it('--expect red succeeds when every criterion fails, keeps the flags from Playwright and writes --failures', async () => {
+      await withProject(async (projectsDir, cwd) => {
+        writeTicketWithSpec(projectsDir);
+        const calls: string[][] = [];
+        const failures = path.join(cwd, 'out', 'falhas.md');
+        const specs = [result('CA-01: a', 'unexpected', 'Timeout'), result('CA-02: b', 'unexpected', 'toHaveText')];
+
+        const status = await run(
+          projectsDir,
+          cwd,
+          ['demo:T-01', '--expect', 'red', '--failures', failures, '--workers=1'],
+          playwrightReporting(projectsDir, specs, 1, calls),
+        );
+
+        expect(status.exitCode).toBe(0);
+        expect(calls[0]?.slice(2)).toEqual(['--workers=1']);
+        expect(fs.readFileSync(failures, 'utf8')).toContain('## CA-02');
+      });
+    });
+
+    it('--failures alone writes the failures and keeps the exit code of Playwright', async () => {
+      await withProject(async (projectsDir, cwd) => {
+        writeTicketWithSpec(projectsDir);
+        const failures = path.join(cwd, 'falhas.md');
+
+        const status = await run(
+          projectsDir,
+          cwd,
+          ['demo:T-01', `--failures=${failures}`],
+          playwrightReporting(projectsDir, [result('CA-01: a', 'unexpected', 'Timeout')], 1),
+        );
+
+        expect(status.exitCode).toBe(1);
+        expect(fs.readFileSync(failures, 'utf8')).toContain('Timeout');
+      });
+    });
+
+    it('--expect green fails naming what still fails', async () => {
+      await withProject(async (projectsDir, cwd) => {
+        writeTicketWithSpec(projectsDir);
+        const specs = [result('CA-01: a', 'expected'), result('CA-02: b', 'unexpected', 'Timeout')];
+
+        const status = await run(
+          projectsDir,
+          cwd,
+          ['demo:T-01', '--expect', 'green'],
+          playwrightReporting(projectsDir, specs, 1),
+        );
+
+        expect(status.exitCode).toBe(1);
+        expect(stderrText()).toContain('CA-02: ainda falha');
+      });
+    });
+
+    it('--expect green also fails when Playwright does, even with every criterion passing', async () => {
+      await withProject(async (projectsDir, cwd) => {
+        writeTicketWithSpec(projectsDir);
+        const specs = [result('CA-01: a', 'expected'), result('CA-02: b', 'expected')];
+
+        const status = await run(
+          projectsDir,
+          cwd,
+          ['demo:T-01', '--expect', 'green'],
+          playwrightReporting(projectsDir, specs, 1),
+        );
+
+        expect(status.exitCode).toBe(1);
+        expect(stderrText()).toContain('o Playwright terminou com 1');
+      });
+    });
+
+    it('--expect fails when the run left no report', async () => {
+      await withProject(async (projectsDir, cwd) => {
+        writeTicketWithSpec(projectsDir);
+
+        const status = await run(projectsDir, cwd, ['demo:T-01', '--expect=red'], () => 1);
+
+        expect(status.exitCode).toBe(1);
+        expect(stderrText()).toContain('results.json');
+      });
+    });
+
+    it('refuses --expect with an unknown value, without a value, or without a single ticket', async () => {
+      await withProject(async (projectsDir, cwd) => {
+        writeTicketWithSpec(projectsDir);
+        const spawn = (): number => 0;
+
+        await expect(run(projectsDir, cwd, ['demo:T-01', '--expect', 'blue'], spawn)).rejects.toThrow('--expect');
+        await expect(run(projectsDir, cwd, ['demo:T-01', '--failures'], spawn)).rejects.toThrow('--failures');
+        await expect(run(projectsDir, cwd, ['demo', '--expect', 'red'], spawn)).rejects.toThrow('um ticket');
+        await expect(run(projectsDir, cwd, ['demo/tests/a.spec.ts', '--expect', 'red'], spawn)).rejects.toThrow(
+          'um ticket',
+        );
+      });
+    });
   });
 });

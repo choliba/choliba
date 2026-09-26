@@ -1,0 +1,5 @@
+// Derruba a aplicação do exemplo que o global-setup.ts subiu; uma que já estava no ar fica.
+export default function globalTeardown(): void {
+  const pid = Number(process.env['EXEMPLO_SERVER_PID']);
+  if (pid > 0) process.kill(pid);
+}

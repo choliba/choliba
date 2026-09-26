@@ -104,15 +104,17 @@ describe('readJsonFile', () => {
 });
 
 describe('results without a ticket', () => {
-  it('prefers _global.resultsDir, then the environment resultsDir, then {GLOBAL_DIR}/{projeto}', () => {
-    const base = { globalDir: '/g', project: 'demo' };
+  it("prefers _global.resultsDir, then the environment resultsDir, then the project's own runs folder", () => {
+    const base = { runsFolder: '/p/demo/ticket-runs' };
 
     expect(resolveResultsRoot({ ...base, environmentResultsDir: '/env', globalResultsDir: ' /global ' })).toBe(
       '/global',
     );
     expect(resolveResultsRoot({ ...base, environmentResultsDir: ' /env ', globalResultsDir: '  ' })).toBe('/env');
-    expect(resolveResultsRoot({ ...base, environmentResultsDir: '', globalResultsDir: undefined })).toBe('/g/demo');
-    expect(resolveResultsRoot(base)).toBe('/g/demo');
+    expect(resolveResultsRoot({ ...base, environmentResultsDir: '', globalResultsDir: undefined })).toBe(
+      '/p/demo/ticket-runs',
+    );
+    expect(resolveResultsRoot(base)).toBe('/p/demo/ticket-runs');
   });
 
   it('puts test-results inside an absolute root, and the root inside test-results when relative', () => {

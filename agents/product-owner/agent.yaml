@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../../packages/agents/schemes/agent.schema.json
 id: product-owner-agent
 name: Product Owner
 version: 1.0.0

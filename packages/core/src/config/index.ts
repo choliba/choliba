@@ -9,3 +9,5 @@ export {
   TICKET_RUNS,
 } from './vars';
 export { loadRepoConfig, mergeConfig, parseConfigFile } from './repo-config';
+export { findWorkspaceRoot, PACKAGE_NAME, WorkspaceNotFoundError } from './workspace';
+export { findResource, locateResource } from './resources';

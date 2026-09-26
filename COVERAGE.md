@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 26/09/2026 01:18:09 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 26/09/2026 07:56:50 — não editar manualmente.
 
 ## Resumo
 
@@ -8,6 +8,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
 🟢|**Total**|100.00|100.00|100.00|100.00
 🟢|[packages/agents](packages/agents)|100.00|100.00|100.00|100.00
+🟢|[packages/choliba](packages/choliba)|100.00|100.00|100.00|100.00
 🟢|[packages/core](packages/core)|100.00|100.00|100.00|100.00
 🟢|[packages/projects](packages/projects)|100.00|100.00|100.00|100.00
 🟢|[packages/runner](packages/runner)|100.00|100.00|100.00|100.00
@@ -16,7 +17,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 35 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 37 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -34,6 +35,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/json.ts](packages/agents/src/json.ts)|100.00|100.00|100.00|100.00
 🟢|[src/mcps.ts](packages/agents/src/mcps.ts)|100.00|100.00|100.00|100.00
 🟢|[src/permissions.ts](packages/agents/src/permissions.ts)|100.00|100.00|100.00|100.00
+🟢|[src/phases.ts](packages/agents/src/phases.ts)|100.00|100.00|100.00|100.00
 🟢|[src/plan-store.ts](packages/agents/src/plan-store.ts)|100.00|100.00|100.00|100.00
 🟢|[src/prepare/actions.ts](packages/agents/src/prepare/actions.ts)|100.00|100.00|100.00|100.00
 🟢|[src/prepare/add-files.ts](packages/agents/src/prepare/add-files.ts)|100.00|100.00|100.00|100.00
@@ -55,11 +57,28 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/run-agent.ts](packages/agents/src/run-agent.ts)|100.00|100.00|100.00|100.00
 🟢|[src/skills.ts](packages/agents/src/skills.ts)|100.00|100.00|100.00|100.00
 🟢|[src/vars.ts](packages/agents/src/vars.ts)|100.00|100.00|100.00|100.00
+🟢|[src/workspace-dirs.ts](packages/agents/src/workspace-dirs.ts)|100.00|100.00|100.00|100.00
 
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 15 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 8 arquivos</summary>
+
+Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
+--|--|--|--|--|--
+🟢|[src/check.ts](packages/choliba/src/check.ts)|100.00|100.00|100.00|100.00
+🟢|[src/completion.ts](packages/choliba/src/completion.ts)|100.00|100.00|100.00|100.00
+🟢|[src/eslint-config.ts](packages/choliba/src/eslint-config.ts)|100.00|100.00|100.00|100.00
+🟢|[src/install-source.ts](packages/choliba/src/install-source.ts)|100.00|100.00|100.00|100.00
+🟢|[src/install.ts](packages/choliba/src/install.ts)|100.00|100.00|100.00|100.00
+🟢|[src/playwright-args.ts](packages/choliba/src/playwright-args.ts)|100.00|100.00|100.00|100.00
+🟢|[src/route.ts](packages/choliba/src/route.ts)|100.00|100.00|100.00|100.00
+🟢|[src/setup.ts](packages/choliba/src/setup.ts)|100.00|100.00|100.00|100.00
+
+</details>
+
+<details>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 17 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -69,7 +88,9 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/cli/scripts-help.ts](packages/core/src/cli/scripts-help.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/index.ts](packages/core/src/config/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/repo-config.ts](packages/core/src/config/repo-config.ts)|100.00|100.00|100.00|100.00
+🟢|[src/config/resources.ts](packages/core/src/config/resources.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/vars.ts](packages/core/src/config/vars.ts)|100.00|100.00|100.00|100.00
+🟢|[src/config/workspace.ts](packages/core/src/config/workspace.ts)|100.00|100.00|100.00|100.00
 🟢|[src/git/clean-branches.ts](packages/core/src/git/clean-branches.ts)|100.00|100.00|100.00|100.00
 🟢|[src/git/docs-snapshot.ts](packages/core/src/git/docs-snapshot.ts)|100.00|100.00|100.00|100.00
 🟢|[src/git/git-run.ts](packages/core/src/git/git-run.ts)|100.00|100.00|100.00|100.00
@@ -102,7 +123,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/runner</b> — 100.00% das linhas, 5 arquivos</summary>
+<summary>🟢 <b>packages/runner</b> — 100.00% das linhas, 7 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -111,6 +132,8 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/fill-ticket-tests.ts](packages/runner/src/fill-ticket-tests.ts)|100.00|100.00|100.00|100.00
 🟢|[src/index.ts](packages/runner/src/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/playwright-results.ts](packages/runner/src/playwright-results.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runner-root.ts](packages/runner/src/runner-root.ts)|100.00|100.00|100.00|100.00
+🟢|[src/ticket-verdict.ts](packages/runner/src/ticket-verdict.ts)|100.00|100.00|100.00|100.00
 
 </details>
 

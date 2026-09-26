@@ -1,0 +1,22 @@
+id: with-phases-agent
+name: With Phases
+version: 1.0.0
+description: 'Fixture agent that runs in two phases on one ticket of a project.'
+supported_models:
+  - claude-3-5-sonnet
+task_required: false
+default_task: Trabalhe no ticket.
+project_required: true
+ticket_types:
+  - story
+phases:
+  red:
+    system: red.md
+    after_execute:
+      - run: [echo, 'red ${PROJECT}:${TICKET}']
+  green:
+    system: green.md
+    description: Implementa até os testes passarem.
+    project_switch: greenHabilitado
+    before_execute:
+      - run: [echo, 'green ${PROJECT}:${TICKET}']

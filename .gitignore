@@ -10,4 +10,9 @@ coverage/
 
 trash
 .cache/
+# Traces extracted by playwright trace open (choliba playwright-trace)
+.playwright-cli/
 plans/
+
+# Pacote gerado por `bun run chol:pack` (instalação local, nunca publicado)
+*.tgz

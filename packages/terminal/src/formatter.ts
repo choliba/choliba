@@ -11,6 +11,16 @@ const ANSI_COLORS = {
 
 export type AnsiColor = keyof typeof ANSI_COLORS;
 
+/** Whether `name` is one of the colors here (own keys only, so `toString` is not). */
+export function isAnsiColor(name: string): name is AnsiColor {
+  return Object.hasOwn(ANSI_COLORS, name);
+}
+
+/** `text` in `color`, reset after it. */
+export function paint(text: string, color: AnsiColor): string {
+  return `${ANSI_COLORS[color]}${text}${ANSI_RESET}`;
+}
+
 // Keyed by every value `hash % 6` can produce, so the lookup below is total: no
 // `T | undefined` from `noUncheckedIndexedAccess`, and so no assertion is needed to
 // narrow it back (this project's lint config forbids `!`, and flags `as` casts that

@@ -121,6 +121,17 @@ export const RUN_FLAGS: readonly RunFlagDefinition[] = [
   { name: '--help', aliases: ['-h'], description: 'Mostra a ajuda do agente', terminal: true },
 ];
 
+/** Whether `flag` is one of `RUN_FLAGS` (or a `--type-<type>` shortcut): a phase must not be named after one. */
+export function isRunFlag(flag: string): boolean {
+  return (
+    flag.startsWith(TYPE_SHORTCUT_PREFIX) ||
+    RUN_FLAGS.some((known) => known.name === flag || (known.aliases ?? []).includes(flag))
+  );
+}
+
+/** A flag that may name a phase (`--red`); any other unknown flag is an error right here. */
+const PHASE_FLAG = /^--[a-z][a-z0-9-]*$/;
+
 export class AgentsArgsError extends Error {}
 
 /**
@@ -168,6 +179,11 @@ export interface ParsedRunArgs {
   readonly help: boolean;
   /** Every flag as typed (`--since-pending`, `--type-bug`, `-h`), without values: checked against the agent's own flags. */
   readonly flags: readonly string[];
+  /**
+   * The names of the other `--<name>` flags, as typed: the phases to run, for an agent with `phases`.
+   * Whether the agent has them is `cli/run.ts`'s call, like every flag an agent may not take.
+   */
+  readonly phases: readonly string[];
 }
 
 export type ParsedAgentsArgs =
@@ -266,6 +282,7 @@ export function parseAgentsArgs(argv: readonly string[]): ParsedAgentsArgs {
   };
 
   const flags: string[] = [];
+  const phases: string[] = [];
   const queue = [...rest];
   let arg: string | undefined;
   while ((arg = queue.shift()) !== undefined) {
@@ -348,6 +365,10 @@ export function parseAgentsArgs(argv: readonly string[]): ParsedAgentsArgs {
       colorize = false;
       continue;
     }
+    if (PHASE_FLAG.test(arg)) {
+      phases.push(arg.slice(2));
+      continue;
+    }
     if (arg.startsWith('--')) {
       throw new AgentsArgsError(unknownFlagMessage(arg, command));
     }
@@ -376,5 +397,6 @@ export function parseAgentsArgs(argv: readonly string[]): ParsedAgentsArgs {
     since,
     help,
     flags,
+    phases,
   };
 }

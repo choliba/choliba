@@ -1,0 +1,4 @@
+// A configuração do ESLint que vem com o choliba. Para mudar uma regra, acrescente objetos depois dela.
+import choliba from 'choliba/eslint';
+
+export default [...choliba];

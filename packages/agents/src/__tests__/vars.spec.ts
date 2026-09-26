@@ -43,6 +43,32 @@ describe('withExpandedInstructions', () => {
   });
 });
 
+describe('withExpandedInstructions — steps', () => {
+  it('fills in the variables in the arguments of before_execute and after_execute too', async () => {
+    const echo = await loadAgent(FIXTURES, 'echo');
+    const agent = {
+      ...echo,
+      beforeExecute: [{ action: 'add_files', args: ['falhas', '.cache/${TICKET}.md'] }],
+      afterExecute: [{ action: 'run', args: ['bunx', 'choliba', 'tests', '${PROJECT}:${TICKET}'] }],
+    };
+
+    const expanded = withExpandedInstructions(agent, () => ({ PROJECT: 'demo', TICKET: 'demo-2' }));
+
+    expect(expanded.beforeExecute).toEqual([{ action: 'add_files', args: ['falhas', '.cache/demo-2.md'] }]);
+    expect(expanded.afterExecute).toEqual([{ action: 'run', args: ['bunx', 'choliba', 'tests', 'demo:demo-2'] }]);
+    expect(expanded.instructions).toBe(echo.instructions);
+  });
+
+  it('stops naming agent.yaml when a step uses a variable with no value', async () => {
+    const echo = await loadAgent(FIXTURES, 'echo');
+    const agent = { ...echo, afterExecute: [{ action: 'run', args: ['echo', '${TICKET}'] }] };
+
+    expect(() => withExpandedInstructions(agent, () => ({ PROJECT: 'demo' }))).toThrow(
+      `${join(echo.dir, 'agent.yaml')} usa \${TICKET}, sem valor (disponíveis: PROJECT).`,
+    );
+  });
+});
+
 describe('pathBase', () => {
   it('is the part before the first glob segment, or the folder of a plain path', () => {
     expect(pathBase('/p/*/tickets/')).toBe('/p');

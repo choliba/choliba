@@ -107,6 +107,44 @@ describe('validateAgentFiles integration', () => {
     expect(result).toEqual({ valid: true, errors: [] });
   });
 
+  it("validates each phase's system file instead of system.md, and reports the missing ones", async () => {
+    expect(await validateAgentFiles(FIXTURES, 'with-phases')).toEqual({ valid: true, errors: [] });
+
+    const tmp = makeTmpDir('agent-validation-phases');
+    try {
+      const agentDir = join(tmp.path, 'phased');
+      mkdirSync(agentDir, { recursive: true });
+      const yaml = readFileSync(join(FIXTURES, 'with-phases', 'agent.yaml'), 'utf8');
+      writeFileSync(join(agentDir, 'agent.yaml'), yaml);
+      writeFileSync(join(agentDir, 'red.md'), '<not-xml');
+
+      const result = await validateAgentFiles(tmp.path, 'phased');
+
+      expect(result.errors.some((error) => error.includes('red.md (schema '))).toBe(true);
+      expect(result.errors).toContain(`${join(agentDir, 'green.md')}: arquivo não encontrado`);
+      expect(result.errors.some((error) => error.includes('system.md'))).toBe(false);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('falls back to system.md when agent.yaml does not parse, and skips a phase that names no file', async () => {
+    const tmp = makeTmpDir('agent-validation-odd');
+    try {
+      const agentDir = join(tmp.path, 'odd');
+      mkdirSync(agentDir, { recursive: true });
+      writeFileSync(join(agentDir, 'agent.yaml'), 'id: [unclosed');
+      const unparsable = await validateAgentFiles(tmp.path, 'odd');
+      expect(unparsable.errors).toContain(`${join(agentDir, 'system.md')}: arquivo não encontrado`);
+
+      writeFileSync(join(agentDir, 'agent.yaml'), 'phases:\n  red: x\n  green:\n    system: 3\n');
+      const malformed = await validateAgentFiles(tmp.path, 'odd');
+      expect(malformed.errors.some((error) => error.includes('.md'))).toBe(false);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
   it('prefixes schema errors with each file path when yaml or system.md is invalid', async () => {
     const tmp = makeTmpDir('agent-validation-invalid');
     try {

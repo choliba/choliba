@@ -4,12 +4,13 @@ import { join } from 'node:path';
 import { DEFAULT_DIFF_BASE } from '@choliba/core/git';
 import { parse as parseYaml } from 'yaml';
 
-import type { AgentDefinition, AgentStep, McpDeclaration } from './agent.types';
+import type { AgentDefinition, AgentPhase, AgentStep, McpDeclaration, PhaseDeclaration } from './agent.types';
 import type { ExecutionMode, PermissionPolicy } from './command.types';
 import { agentSchemaFor, validateAgentYaml, validateSystemMd } from './agent-validation';
 import { asBoolean, asString, asStringArray, isRecord } from './json';
 import { readAgentPermissions } from './permissions';
 import { checkStep, legacyStep, type StepPhase } from './prepare/actions';
+import { isRunFlag } from './cli/args';
 
 export class AgentConfigError extends Error {}
 
@@ -19,6 +20,12 @@ export class AgentConfigError extends Error {}
  * touches the filesystem.
  */
 const NAME_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
+
+/** A phase name, which is also its flag (`--red`). */
+const PHASE_PATTERN = /^[a-z][a-z0-9-]*$/;
+
+/** A phase's system file: a plain file name next to agent.yaml, never a path. */
+const PHASE_FILE_PATTERN = /^[A-Za-z0-9_.-]+\.md$/;
 
 const DEFAULT_MODE: ExecutionMode = 'execute';
 const LEGACY_PREPARE_TASK = 'Atualize a documentação com base no contexto entregue.';
@@ -44,7 +51,10 @@ type YamlFields = Pick<
   | 'defaultTask'
   | 'beforeExecute'
   | 'afterExecute'
-> & { readonly policy?: PermissionPolicy };
+> & { readonly policy?: PermissionPolicy; readonly phases?: PhaseDeclarations };
+
+/** `phases` is never empty when present. */
+type PhaseDeclarations = readonly [PhaseDeclaration, ...PhaseDeclaration[]];
 
 /** The level `<permissions>` implies: any write path means edits, otherwise read-only. */
 export function policyFromPermissions(instructions: string): PermissionPolicy {
@@ -184,6 +194,80 @@ function parseTicketTypes(
   return types;
 }
 
+function optionalString(value: unknown, field: string, fail: (reason: string) => never): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  return asString(value) ?? fail(`"${field}" must be a string when present`);
+}
+
+function phaseSystem(name: string, value: unknown, fail: (reason: string) => never): string {
+  const system = asString(value);
+  if (system === undefined || !PHASE_FILE_PATTERN.test(system)) {
+    return fail(`"phases.${name}.system" must be the name of a .md file next to agent.yaml`);
+  }
+  return system;
+}
+
+function phaseName(name: string, fail: (reason: string) => never): string {
+  if (!PHASE_PATTERN.test(name)) {
+    return fail(`invalid phase name "${name}" (expected lowercase, digits and "-")`);
+  }
+  if (isRunFlag(`--${name}`)) {
+    return fail(`phase "${name}" would clash with the flag --${name}`);
+  }
+  return name;
+}
+
+function parsePhase(
+  name: string,
+  value: unknown,
+  projectRequired: boolean,
+  fail: (reason: string) => never,
+): PhaseDeclaration {
+  if (!isRecord(value)) {
+    return fail(`"phases.${name}" must be a mapping`);
+  }
+  const description = optionalString(value['description'], `phases.${name}.description`, fail);
+  const projectSwitch = optionalString(value['project_switch'], `phases.${name}.project_switch`, fail);
+  if (projectSwitch !== undefined && !projectRequired) {
+    return fail(`"phases.${name}.project_switch" needs "project_required: true" (it is read from the project)`);
+  }
+  const beforeExecute = parseSteps(value['before_execute'], 'before_execute', fail);
+  const afterExecute = parseSteps(value['after_execute'], 'after_execute', fail);
+  return {
+    name: phaseName(name, fail),
+    system: phaseSystem(name, value['system'], fail),
+    ...(description === undefined ? {} : { description }),
+    ...(projectSwitch === undefined ? {} : { projectSwitch }),
+    ...(beforeExecute === undefined ? {} : { beforeExecute }),
+    ...(afterExecute === undefined ? {} : { afterExecute }),
+  };
+}
+
+/** `phases`: a non-empty mapping of phase name to its declaration, in the order written. */
+function parsePhases(
+  doc: Record<string, unknown>,
+  projectRequired: boolean,
+  fail: (reason: string) => never,
+): PhaseDeclarations | undefined {
+  const value = doc['phases'];
+  if (value === undefined) {
+    return undefined;
+  }
+  const entries = isRecord(value) ? Object.entries(value) : [];
+  const [first, ...rest] = entries;
+  if (first === undefined) {
+    return fail('"phases" must be a non-empty mapping when present');
+  }
+  const topLevel = ['before_execute', 'after_execute', 'prepare'].filter((key) => doc[key] !== undefined);
+  if (topLevel.length > 0) {
+    return fail(`with "phases", ${topLevel.map((key) => `"${key}"`).join(', ')} go inside each phase`);
+  }
+  const parse = ([name, phase]: [string, unknown]): PhaseDeclaration => parsePhase(name, phase, projectRequired, fail);
+  return [parse(first), ...rest.map(parse)];
+}
+
 /** One server of the map form: `{}`/null (every tool) or `{ tools: [non-empty list] }`. */
 function parseMcpEntry(name: string, value: unknown, fail: (reason: string) => never): McpDeclaration {
   if (value === null) {
@@ -292,6 +376,7 @@ export function parseAgentYaml(text: string, source: string): YamlFields {
   const beforeExecute = declaredBefore ?? prepare?.steps;
   const defaultTask = topDefaultTask ?? prepare?.defaultTask;
   const afterExecute = parseSteps(doc['after_execute'], 'after_execute', fail);
+  const phases = parsePhases(doc, projectRequired, fail);
 
   return {
     id,
@@ -309,6 +394,7 @@ export function parseAgentYaml(text: string, source: string): YamlFields {
     ...(defaultTask !== undefined ? { defaultTask } : {}),
     ...(beforeExecute !== undefined ? { beforeExecute } : {}),
     ...(afterExecute !== undefined ? { afterExecute } : {}),
+    ...(phases !== undefined ? { phases } : {}),
   };
 }
 
@@ -327,7 +413,6 @@ export async function loadAgent(agentsDir: string, name: string): Promise<AgentD
 
   const dir = join(agentsDir, name);
   const yamlPath = join(dir, 'agent.yaml');
-  const systemPromptPath = join(dir, 'system.md');
 
   let yamlText: string;
   try {
@@ -336,27 +421,52 @@ export async function loadAgent(agentsDir: string, name: string): Promise<AgentD
     throw new AgentConfigError(`agent "${name}" not found: ${yamlPath} does not exist`);
   }
 
-  let instructions: string;
-  try {
-    instructions = readFileSync(systemPromptPath, 'utf8');
-  } catch {
-    throw new AgentConfigError(`agent "${name}" is missing ${systemPromptPath}`);
-  }
-
-  const fields = parseAgentYaml(yamlText, yamlPath);
+  const { phases: declared, ...fields } = parseAgentYaml(yamlText, yamlPath);
+  const loadSystem = (file: string): { path: string; instructions: string } => {
+    const path = join(dir, file);
+    return { path, instructions: readSystemFile(name, path) };
+  };
+  // An agent with phases has one system file per phase and no system.md; its first phase stands for it.
+  const phaseSources = declared?.map((phase) => ({ phase, ...loadSystem(phase.system) }));
+  const main = loadSystem(declared === undefined ? 'system.md' : declared[0].system);
 
   const yamlValidation = validateAgentYaml(yamlText);
   const systemSchema = agentSchemaFor(dir);
-  const systemMdValidation = await validateSystemMd(instructions, systemSchema);
-  const schemaErrors = [
-    ...yamlValidation.errors.map((error) => `${yamlPath}: ${error}`),
-    ...systemMdValidation.errors.map((error) => `${systemPromptPath} (schema ${systemSchema.path}): ${error}`),
-  ];
+  const schemaErrors = yamlValidation.errors.map((error) => `${yamlPath}: ${error}`);
+  for (const source of phaseSources ?? [main]) {
+    const validation = await validateSystemMd(source.instructions, systemSchema);
+    schemaErrors.push(...validation.errors.map((error) => `${source.path} (schema ${systemSchema.path}): ${error}`));
+  }
   if (schemaErrors.length > 0) {
     throw new AgentConfigError(`agent "${name}" failed schema validation:\n${schemaErrors.join('\n')}`);
   }
 
-  return { name, dir, systemPromptPath, instructions, ...fields, policy: fields.policy ?? policyFromPermissions(instructions) };
+  const policyOf = (instructions: string): PermissionPolicy => fields.policy ?? policyFromPermissions(instructions);
+  const phases = phaseSources?.map(
+    ({ phase, path, instructions }): AgentPhase => ({
+      ...phase,
+      systemPromptPath: path,
+      instructions,
+      policy: policyOf(instructions),
+    }),
+  );
+  return {
+    name,
+    dir,
+    systemPromptPath: main.path,
+    instructions: main.instructions,
+    ...fields,
+    policy: policyOf(main.instructions),
+    ...(phases === undefined ? {} : { phases }),
+  };
+}
+
+function readSystemFile(name: string, path: string): string {
+  try {
+    return readFileSync(path, 'utf8');
+  } catch {
+    throw new AgentConfigError(`agent "${name}" is missing ${path}`);
+  }
 }
 
 /**

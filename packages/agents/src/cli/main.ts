@@ -2,7 +2,7 @@
 import { createBunProcessSpawner } from '@choliba/terminal';
 import { ProcessRunner } from '@choliba/terminal';
 
-import { loadRepoConfig } from '@choliba/core/config';
+import { findWorkspaceRoot, loadRepoConfig } from '@choliba/core/config';
 
 import { runAgentsCli } from './run';
 
@@ -12,11 +12,10 @@ import { runAgentsCli } from './run';
 // spawn.ts for why that seam matters.
 const runner = new ProcessRunner({ spawner: createBunProcessSpawner(Bun.spawn) });
 
-// A provider spawned from some other cwd would have claude prefix its commands with
-// `cd <root> &&`, which the read-only policy's allowlist does not include — see cli/run.ts's
-// `isInside`. Resolving the real repo root here means every run, wherever it was invoked from,
-// spawns providers with the same cwd.
-const repoRoot = Bun.spawnSync(['git', 'rev-parse', '--show-toplevel']).stdout.toString().trim() || process.cwd();
+// Every run, wherever it was invoked from, spawns providers from the workspace root (the folder whose
+// package.json depends on choliba): its `.env`, `agents/` and `.agents/` are the ones used, and the
+// provider's commands (`cd <root> && …`) stay inside what the agent's permissions allow.
+const repoRoot = findWorkspaceRoot(process.cwd());
 const config = loadRepoConfig(repoRoot);
 
 runAgentsCli(process.argv.slice(2), {

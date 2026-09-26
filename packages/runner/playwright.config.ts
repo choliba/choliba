@@ -9,7 +9,10 @@ import type { PlaywrightProjectConfig } from './shared/env';
 import { getTargetProject } from './shared/project-scope';
 
 const packageRoot = import.meta.dirname;
-const monorepoRoot = path.join(packageRoot, '..', '..');
+// The workspace comes from the runner CLI (`CHOLIBA_WORKSPACE`); run by hand inside this repository,
+// it is the repository root. Built, this file is `.js` next to `reporters/` and `shared/` in `.js` too.
+const monorepoRoot = process.env['CHOLIBA_WORKSPACE'] ?? path.join(packageRoot, '..', '..');
+const EXT = import.meta.url.endsWith('.ts') ? '.ts' : '.js';
 
 const playwrightEnv = resolveLocations(monorepoRoot, process.env);
 applyLocations(playwrightEnv);
@@ -19,17 +22,26 @@ if (!fs.existsSync(projectsDir)) {
   throw new Error(`PROJECTS_DIR="${projectsDir}" não existe.`);
 }
 
-const targetProject = getTargetProject(projectsDir);
+// Found from the command line in the main process; the workers, which load this file again with other
+// arguments, get it from the environment the main process leaves for them.
+const targetProject = process.env['CHOLIBA_PROJECT'] ?? getTargetProject(projectsDir);
+if (targetProject) process.env['CHOLIBA_PROJECT'] = targetProject;
 let resultsRoot: string | undefined;
 let targetProjectConfig: PlaywrightProjectConfig | undefined;
+// The active environment's URL: a spec just calls `page.goto('…')`, relative to it.
+let baseURL: string | undefined;
 
 if (targetProject) {
   // Fails, naming the file and the field, unless the project is complete and configured (no CHANGE_ME).
   const settings = projects.loadProjectSettings(projectsDir, targetProject);
+  // A spec reads its project's credentials (.env.json, active environment, then _global), BASE_URL and
+  // APP_DIR from process.env. The workers load this file too, so they get them as well; the project's
+  // values win over the shell's (USERNAME, for one, is usually set there).
+  Object.assign(process.env, settings.env);
   targetProjectConfig = settings.config;
+  baseURL = settings.environment.baseURL;
   resultsRoot = projects.resolveResultsRoot({
-    globalDir: playwrightEnv.GLOBAL_DIR,
-    project: targetProject,
+    runsFolder: projects.resolveTicketRunsFolder(projects.resolveTicketRunsRoot(playwrightEnv), targetProject),
     environmentResultsDir: settings.environment.resultsDir,
     globalResultsDir: settings.globals['resultsDir'],
   });
@@ -107,14 +119,16 @@ export default defineConfig({
   workers: process.env['CI'] ? 1 : 4,
   ...(outputDir ? { outputDir } : {}),
   reporter: [
-    ticket ? [path.join(packageRoot, 'reporters', 'detailed-ticket-reporter.ts'), ticketInfo] : ['list'],
+    ticket ? [path.join(packageRoot, 'reporters', `detailed-ticket-reporter${EXT}`), ticketInfo] : ['list'],
     ['html', { outputFolder: reportFolderResolved, open: 'never' }],
     ['json', { outputFile: path.join(reportFolderResolved, 'results.json') }],
   ],
-  globalSetup: path.join(packageRoot, 'shared', 'globalSetup.ts'),
-  globalTeardown: path.join(packageRoot, 'shared', 'globalTeardown.ts'),
+  globalSetup: path.join(packageRoot, 'shared', `globalSetup${EXT}`),
+  globalTeardown: path.join(packageRoot, 'shared', `globalTeardown${EXT}`),
   use: {
-    trace: 'on-first-retry',
+    ...(baseURL ? { baseURL } : {}),
+    // Kept for each failed test, so the agents (skill playwright-trace) can read what happened.
+    trace: 'retain-on-failure',
     screenshot: 'on',
   },
   projects: ENABLED_DEVICES.map((name) => ({

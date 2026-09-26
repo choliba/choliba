@@ -1,14 +1,12 @@
 #!/usr/bin/env bun
-import path from 'node:path';
+import { findWorkspaceRoot } from '@choliba/core/config';
 
+import { findRunnerRoot } from '../runner-root';
 import { runTestsCli } from './run-tests';
-
-const packageRoot = path.join(import.meta.dirname, '..', '..');
-const monorepoRoot = path.join(packageRoot, '..', '..');
 
 const result = await runTestsCli({
   argv: process.argv.slice(2),
-  packageRoot,
-  monorepoRoot,
+  packageRoot: findRunnerRoot(),
+  monorepoRoot: findWorkspaceRoot(process.cwd()),
 });
 process.exit(result.exitCode);

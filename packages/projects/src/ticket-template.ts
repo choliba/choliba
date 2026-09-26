@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { findResource } from '@choliba/core/config';
+
 import { ProjectsError } from './errors';
 import { readJsonFile } from './json-file';
 import { PLACEHOLDER_VALUE } from './settings';
@@ -8,9 +10,14 @@ import { fullTicket, listTicketSuffixes, resolveTicketsFolder, ticketFilePath } 
 
 const TEMPLATE_EXTENSION = '.json';
 
+/** `templates/project/` of this package: what `create-project` copies into a new project. */
+export function projectTemplatesDir(): string {
+  return findResource(path.join('templates', 'project'), __dirname);
+}
+
 /** `templates/ticket/` of this package: one `<type>.json` per ticket type. */
 export function ticketTemplatesDir(): string {
-  return path.join(__dirname, '..', 'templates', 'ticket');
+  return findResource(path.join('templates', 'ticket'), __dirname);
 }
 
 /** The ticket types there are templates for, sorted: the name of each `<type>.json`. */

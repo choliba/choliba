@@ -80,7 +80,7 @@ export function complete(root: CommandSpec, words: readonly string[]): Suggestio
   }
 
   const commands = positionals.length === 0 ? entries.map((entry) => entry.name) : [];
-  const positional = spec.positionals?.(positionals) ?? NONE;
+  const positional = spec.positionals?.(positionals, current) ?? NONE;
   if (positional.kind === 'files') {
     return commands.length === 0 ? positional : byPrefix(commands);
   }

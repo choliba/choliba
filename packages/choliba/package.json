@@ -1,0 +1,31 @@
+{
+  "name": "choliba",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "choliba": "./src/main.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "build": "bun scripts/build.ts"
+  },
+  "dependencies": {
+    "@choliba/agents": "workspace:*",
+    "@choliba/core": "workspace:*",
+    "@choliba/projects": "workspace:*",
+    "@choliba/runner": "workspace:*",
+    "@choliba/terminal": "workspace:*",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.47.0",
+    "@types/bun": "^1.4.2",
+    "eslint": "^10.11.0",
+    "prettier": "^3.9.8",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.70.1"
+  },
+  "exports": {
+    "./eslint": "./src/eslint-config.ts",
+    "./package.json": "./package.json"
+  }
+}

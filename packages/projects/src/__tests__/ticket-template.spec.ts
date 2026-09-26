@@ -11,6 +11,8 @@ import {
   planTicket,
   ticketPlaceholders,
   ticketTemplatesDir,
+  projectTemplatesDir,
+  runProjectsCli,
 } from '../index';
 
 function comDiretorio<T>(prefixo: string, fn: (dir: string) => T): T {
@@ -50,6 +52,13 @@ describe('listTicketTypes', () => {
       expect(listTicketTypes(dir)).toEqual(['a', 'b']);
       expect(listTicketTypes(path.join(dir, 'nope'))).toEqual([]);
     });
+  });
+});
+
+describe('package resources', () => {
+  it('points at the project template and exposes the CLI', () => {
+    expect(fs.existsSync(path.join(projectTemplatesDir(), 'config.json'))).toBe(true);
+    expect(typeof runProjectsCli).toBe('function');
   });
 });
 

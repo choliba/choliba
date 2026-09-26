@@ -1,0 +1,15 @@
+import { expect, test } from '@playwright/test';
+
+// A URL da página vem do projeto (config.json → envs[].baseURL): basta `page.goto('')`.
+
+test('a página mostra o título da loja', async ({ page }) => {
+  await page.goto('');
+  await expect(page.getByRole('heading', { name: 'Loja de exemplo' })).toBeVisible();
+});
+
+test('assinar a newsletter mostra o agradecimento', async ({ page }) => {
+  await page.goto('');
+  await page.getByLabel('E-mail').fill('ana@exemplo.com');
+  await page.getByRole('button', { name: 'Assinar' }).click();
+  await expect(page.getByRole('status')).toHaveText('Obrigado por assinar!');
+});

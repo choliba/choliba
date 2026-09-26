@@ -1,0 +1,34 @@
+id: developer-agent
+name: Developer
+version: 1.0.0
+description: 'Implementa um ticket por TDD, em duas fases: red escreve um teste Playwright por critério de aceite, que precisa falhar pelo comportamento; green implementa na aplicação (appDir) a partir dessas falhas até tudo passar, sem mexer nos testes. Age sobre um projeto (--project) e um ticket existente (--ticket). Use depois do product-owner.'
+supported_models:
+  - claude-sonnet-5
+  - Composer 2.5 Fast
+skills:
+  - playwright-cli
+  - playwright-trace
+task_required: false
+default_task: Implemente o ticket.
+project_required: true
+ticket_types:
+  - story
+  - bug
+  - improvement
+default_mode: execute
+phases:
+  red:
+    system: red.md
+    description: Escreve um teste por critério do ticket; o choliba confere que todos falham pelo comportamento.
+    after_execute:
+      - run: [bunx, choliba, tests, '${PROJECT}:${TICKET}', --expect, red, --failures, '.cache/developer/${TICKET}/red.md']
+  green:
+    system: green.md
+    description: Implementa na aplicação até os testes do red passarem, sem mexer neles.
+    project_switch: greenDeveloperHabilitado
+    before_execute:
+      - run: [bunx, choliba, tests, '${PROJECT}:${TICKET}', --expect, red, --failures, '.cache/developer/${TICKET}/red.md']
+      - add_files: [falhas_red, '.cache/developer/${TICKET}/red.md']
+    after_execute:
+      - run: [bunx, choliba, tests, '${PROJECT}:${TICKET}', --expect, green]
+      - run: [bunx, choliba, tests, '${PROJECT}/tests']

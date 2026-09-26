@@ -1,4 +1,4 @@
-import { cpSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import {
@@ -425,11 +425,107 @@ describe('loadAgent', () => {
   });
 });
 
+describe('phases', () => {
+  const HEAD = [
+    'id: x',
+    'name: X',
+    'version: 1.0.0',
+    'description: d',
+    'supported_models: [m]',
+    'project_required: true',
+  ].join('\n');
+  const parse = (body: string) => parseAgentYaml(`${HEAD}\n${body}\n`, 'agent.yaml');
+
+  it('reads each phase in order, with its system file, description, switch and steps', () => {
+    const fields = parse(
+      [
+        'phases:',
+        '  red:',
+        '    system: red.md',
+        '    after_execute:',
+        '      - run: [echo, a]',
+        '  green:',
+        '    system: green.md',
+        '    description: Implementa.',
+        '    project_switch: greenHabilitado',
+        '    before_execute:',
+        '      - add_files: [falhas, x.md]',
+      ].join('\n'),
+    );
+
+    expect(fields.phases).toEqual([
+      { name: 'red', system: 'red.md', afterExecute: [{ action: 'run', args: ['echo', 'a'] }] },
+      {
+        name: 'green',
+        system: 'green.md',
+        description: 'Implementa.',
+        projectSwitch: 'greenHabilitado',
+        beforeExecute: [{ action: 'add_files', args: ['falhas', 'x.md'] }],
+      },
+    ]);
+  });
+
+  it.each([
+    ['phases: []', /"phases" must be a non-empty mapping/],
+    ['phases: {}', /"phases" must be a non-empty mapping/],
+    ['phases:\n  red: {}', /"phases.red.system"/],
+    ['phases:\n  red:\n    system: ../x.md', /"phases.red.system"/],
+    ['phases:\n  Red:\n    system: r.md', /invalid phase name "Red"/],
+    ['phases:\n  mode:\n    system: r.md', /phase "mode" would clash with the flag --mode/],
+    ['phases:\n  cursor:\n    system: r.md', /phase "cursor" would clash with the flag --cursor/],
+    ['phases:\n  red:\n    system: r.md\n    project_switch: 3', /"phases.red.project_switch"/],
+    ['phases:\n  red:\n    system: r.md\n    description: [x]', /"phases.red.description"/],
+    ['phases:\n  red:\n    system: r.md\n    after_execute: [{ git_diff: [a, b] }]', /"after_execute"/],
+    ['phases:\n  red: x', /"phases.red" must be a mapping/],
+    ['phases:\n  red:\n    system: r.md\nbefore_execute:\n  - run: [a]', /"before_execute".*inside each phase/],
+  ])('rejects %j', (body, error) => {
+    expect(() => parse(body)).toThrow(error);
+  });
+
+  it('needs project_required for a phase with a project_switch', () => {
+    const yaml = [HEAD.replace('project_required: true', ''), 'phases:', '  red:', '    system: r.md', '    project_switch: s'];
+    expect(() => parseAgentYaml(`${yaml.join('\n')}\n`, 'agent.yaml')).toThrow(/project_switch.*project_required/);
+  });
+
+  it('loads each phase from its own system file, with no system.md, the first one standing for the agent', async () => {
+    const agent = await loadAgent(FIXTURES, 'with-phases');
+
+    expect(agent.phases?.map((phase) => [phase.name, phase.policy, phase.systemPromptPath])).toEqual([
+      ['red', 'edits', join(FIXTURES, 'with-phases', 'red.md')],
+      ['green', 'edits', join(FIXTURES, 'with-phases', 'green.md')],
+    ]);
+    expect(agent.phases?.[1]?.instructions).toContain('fase green');
+    expect(agent.systemPromptPath).toBe(join(FIXTURES, 'with-phases', 'red.md'));
+    expect(agent.instructions).toContain('fase red');
+  });
+
+  it('reports a missing phase file and a phase file that breaks the schema', async () => {
+    const tmp = makeTmpDir('loader-phases');
+    try {
+      cpSync(join(FIXTURES, 'with-phases'), join(tmp.path, 'with-phases'), { recursive: true });
+      writeFileSync(join(tmp.path, 'with-phases', 'green.md'), '<agent><nope/></agent>');
+      await expect(loadAgent(tmp.path, 'with-phases')).rejects.toThrow(/green\.md.*schema/s);
+
+      rmSync(join(tmp.path, 'with-phases', 'green.md'));
+      await expect(loadAgent(tmp.path, 'with-phases')).rejects.toThrow(/missing .*green\.md/);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+});
+
 describe('listAgents', () => {
   it('lists every well-formed agent, sorted, skipping "_"-prefixed, malformed and non-directory entries', async () => {
     const agents = await listAgents(FIXTURES);
 
-    expect(agents.map((a) => a.name)).toEqual(['echo', 'reviewer', 'with-prepare', 'with-project', 'with-vars']);
+    expect(agents.map((a) => a.name)).toEqual([
+      'echo',
+      'reviewer',
+      'with-phases',
+      'with-prepare',
+      'with-project',
+      'with-vars',
+    ]);
   });
 
   it('returns an empty list for a directory that does not exist', async () => {
