@@ -1,5 +1,5 @@
 {
-  "name": "choliba",
+  "name": "@choliba/monorepo",
   "private": true,
   "license": "MIT",
   "author": "Jackson Bicalho",
@@ -28,9 +28,11 @@
     "chol:ticket:create": "bun run chol:projects create-ticket",
     "chol:playwright-cli": "packages/runner/node_modules/.bin/playwright cli",
     "chol:help": "bun run scripts/help.ts",
+    "chol:pack": "bun run --cwd packages/choliba build && cd packages/choliba/dist && bun pm pack --destination ..",
     "git:clean": "bun run scripts/git-clean.ts"
   },
   "devDependencies": {
+    "choliba": "workspace:*",
     "@eslint/js": "^10.0.1",
     "@types/jest": "30.0.0",
     "@types/node": "^22.19.6",

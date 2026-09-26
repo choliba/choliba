@@ -30,6 +30,9 @@ import {
   stripProjectPrefix,
 } from './ticket-expand';
 
+/** Where the Playwright config reads the workspace root from, since it runs in a process of its own. */
+export const WORKSPACE_ENV = 'CHOLIBA_WORKSPACE';
+
 export type SpawnPlaywright = (args: string[], env: NodeJS.ProcessEnv, cwd: string) => number;
 
 export type SpawnSyncFn = (
@@ -146,7 +149,8 @@ async function runTicketsSequentially(
 }
 
 export async function runTestsCli(options: RunTestsOptions): Promise<RunTestsResult> {
-  const env = { ...process.env, ...options.env };
+  // The Playwright config runs in its own process: it finds the workspace (its .env, PROJECTS_DIR) here.
+  const env: NodeJS.ProcessEnv = { ...process.env, [WORKSPACE_ENV]: options.monorepoRoot, ...options.env };
   const cwd = options.cwd ?? options.packageRoot;
   const argv = [...options.argv];
   const loadConfig = options.loadConfig ?? ((root, processEnv) => resolveLocations(root, processEnv));

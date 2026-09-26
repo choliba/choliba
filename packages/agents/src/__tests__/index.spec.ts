@@ -7,6 +7,7 @@ describe('public entrypoint', () => {
     // touches every value export (not the type-only ones, which produce no runtime binding),
     // mirroring @choliba/terminal's own index.spec.ts.
     expect(agents.AgentConfigError).toBeDefined();
+    expect(typeof agents.runAgentsCli).toBe('function');
     expect(typeof agents.isValidAgentName).toBe('function');
     expect(typeof agents.listAgents).toBe('function');
     expect(typeof agents.loadAgent).toBe('function');

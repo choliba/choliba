@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import Ajv, { type ErrorObject } from 'ajv';
 import { validateXML } from 'xmllint-wasm';
 import { parse as parseYaml } from 'yaml';
+import { findResource } from '@choliba/core/config';
 
 /**
  * Split out of `agent-loader.ts` (which needs these to make `loadAgent` fail for real on a
@@ -11,8 +12,8 @@ import { parse as parseYaml } from 'yaml';
  * report) — living here instead of either one avoids a circular import between the two.
  */
 
-/** `schemes/` sits at the root of `@choliba/agents`, alongside `package.json`. */
-const SCHEMES_DIR = join(__dirname, '..', 'schemes');
+/** `schemes/` sits at the root of `@choliba/agents` (and of the built package), alongside `package.json`. */
+const SCHEMES_DIR = findResource('schemes', __dirname);
 const AGENT_YAML_SCHEMA = JSON.parse(readFileSync(join(SCHEMES_DIR, 'agent.schema.json'), 'utf8')) as object;
 const DEFAULT_SCHEMA_PATH = join(SCHEMES_DIR, 'agent.xsd');
 /** The types every agent schema includes (`<xs:include schemaLocation="agent-types.xsd"/>`). */

@@ -9,7 +9,10 @@ import type { PlaywrightProjectConfig } from './shared/env';
 import { getTargetProject } from './shared/project-scope';
 
 const packageRoot = import.meta.dirname;
-const monorepoRoot = path.join(packageRoot, '..', '..');
+// The workspace comes from the runner CLI (`CHOLIBA_WORKSPACE`); run by hand inside this repository,
+// it is the repository root. Built, this file is `.js` next to `reporters/` and `shared/` in `.js` too.
+const monorepoRoot = process.env['CHOLIBA_WORKSPACE'] ?? path.join(packageRoot, '..', '..');
+const EXT = import.meta.url.endsWith('.ts') ? '.ts' : '.js';
 
 const playwrightEnv = resolveLocations(monorepoRoot, process.env);
 applyLocations(playwrightEnv);
@@ -107,12 +110,12 @@ export default defineConfig({
   workers: process.env['CI'] ? 1 : 4,
   ...(outputDir ? { outputDir } : {}),
   reporter: [
-    ticket ? [path.join(packageRoot, 'reporters', 'detailed-ticket-reporter.ts'), ticketInfo] : ['list'],
+    ticket ? [path.join(packageRoot, 'reporters', `detailed-ticket-reporter${EXT}`), ticketInfo] : ['list'],
     ['html', { outputFolder: reportFolderResolved, open: 'never' }],
     ['json', { outputFile: path.join(reportFolderResolved, 'results.json') }],
   ],
-  globalSetup: path.join(packageRoot, 'shared', 'globalSetup.ts'),
-  globalTeardown: path.join(packageRoot, 'shared', 'globalTeardown.ts'),
+  globalSetup: path.join(packageRoot, 'shared', `globalSetup${EXT}`),
+  globalTeardown: path.join(packageRoot, 'shared', `globalTeardown${EXT}`),
   use: {
     trace: 'on-first-retry',
     screenshot: 'on',

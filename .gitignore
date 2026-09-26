@@ -11,3 +11,6 @@ coverage/
 trash
 .cache/
 plans/
+
+# Pacote gerado por `bun run chol:pack` (instalação local, nunca publicado)
+*.tgz

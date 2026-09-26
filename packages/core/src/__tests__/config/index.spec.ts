@@ -6,6 +6,7 @@ describe('config barrel exports', () => {
     expect(config.CHOL_AGENTS_DIR).toBe('CHOL_AGENTS_DIR');
     expect(config.CHOL_SKILLS_DIR).toBe('CHOL_SKILLS_DIR');
     expect(config.CHOL_MCPS_DIR).toBe('CHOL_MCPS_DIR');
+    expect(config.PACKAGE_NAME).toBe('choliba');
     expect(config.GLOBAL_DIR).toBe('GLOBAL_DIR');
     expect(config.PROJECTS_DIR).toBe('PROJECTS_DIR');
     expect(config.PROJECTS_SUBDIR).toBe('projects');

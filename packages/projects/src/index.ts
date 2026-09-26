@@ -66,6 +66,7 @@ export {
   type TicketJson,
 } from './ticket';
 export {
+  projectTemplatesDir,
   ticketTemplatesDir,
   listTicketTypes,
   readTicketTemplate,
@@ -79,3 +80,4 @@ export {
   type TicketTemplate,
 } from './ticket-template';
 export { findReadme, readText, readmeSummary } from './readme';
+export { runProjectsCli, type ProjectsCliDeps } from './cli';

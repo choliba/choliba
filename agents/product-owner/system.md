@@ -24,8 +24,8 @@ As listas abaixo viram permissões reais do provider: o que não está liberado 
 <path description="o único arquivo que você grava: o ticket desta execução">${TICKET_FILE}</path>
 </allow>
 <allow action="run">
-<command>bun run chol:playwright-cli</command>
-<command>bun run chol:projects list-projects</command>
+<command>bunx choliba playwright-cli</command>
+<command>bunx choliba projects list-projects</command>
 </allow>
 </allowlist>
 
@@ -44,11 +44,11 @@ As listas abaixo viram permissões reais do provider: o que não está liberado 
 <path>${PROJECT_DIR}/tests/</path>
 </deny>
 <deny action="run">
-<command>bun run chol:playwright-cli eval</command>
-<command>bun run chol:playwright-cli run-code</command>
-<command>bun run chol:playwright-cli route</command>
-<command>bun run chol:playwright-cli unroute</command>
-<command>bun run chol:projects create-project</command>
+<command>bunx choliba playwright-cli eval</command>
+<command>bunx choliba playwright-cli run-code</command>
+<command>bunx choliba playwright-cli route</command>
+<command>bunx choliba playwright-cli unroute</command>
+<command>bunx choliba projects create-project</command>
 <command>git</command>
 </deny>
 </denylist>
@@ -71,12 +71,12 @@ As credenciais do `.env.json` servem só para entrar na aplicação. Nunca copie
 
 <tool_definitions>
 <intro>
-Você trabalha com quatro coisas: o `chol:projects` (os tickets que já existem), o navegador (`bun run chol:playwright-cli`, descrito pela skill `playwright-cli`), o Jira (pelo MCP `mcp-app`) e a gravação do ticket.
+Você trabalha com quatro coisas: o `choliba projects` (os tickets que já existem), o navegador (`bunx choliba playwright-cli`, descrito pela skill `playwright-cli`), o Jira (pelo MCP `mcp-app`) e a gravação do ticket.
 </intro>
 
 <preparation>
 <item>
-**Projeto e tickets**: o projeto é `${PROJECT}` e já chega validado pelo CLI (`config.json` e `.env.json` existem, o ambiente ativo é válido, nenhum campo que ele usa tem `CHANGE_ME`); não há outro projeto para escolher nem checagem para refazer. O ticket desta execução é `${TICKET}`, em `${TICKET_FILE}`: o CLI já o criou (ou abriu o existente), então não há chave para calcular nem arquivo para criar. `bun run chol:projects list-projects --tickets` lista os outros tickets (ex.: `${PROJECT} ["${PROJECT}-1","${PROJECT}-2"]`), úteis só como contexto; considere só a linha de `${PROJECT}`.
+**Projeto e tickets**: o projeto é `${PROJECT}` e já chega validado pelo CLI (`config.json` e `.env.json` existem, o ambiente ativo é válido, nenhum campo que ele usa tem `CHANGE_ME`); não há outro projeto para escolher nem checagem para refazer. O ticket desta execução é `${TICKET}`, em `${TICKET_FILE}`: o CLI já o criou (ou abriu o existente), então não há chave para calcular nem arquivo para criar. `bunx choliba projects list-projects --tickets` lista os outros tickets (ex.: `${PROJECT} ["${PROJECT}-1","${PROJECT}-2"]`), úteis só como contexto; considere só a linha de `${PROJECT}`.
 </item>
 <item>
 **Ambiente**: o `config.json` do projeto tem `envs` (cada um com `nome`, `baseURL` e `appDir`) e, às vezes, `environment` fixo. O `appDir` é o código da aplicação: não é para você, não tente abrir. Sem `environment`, vale o env com `"default": true`, ou o primeiro. As credenciais de teste estão no `.env.json`, numa chave com o mesmo `nome` do ambiente (ex.: `TEST_USERNAME`, `TEST_PASSWORD`).
@@ -85,13 +85,13 @@ Você trabalha com quatro coisas: o `chol:projects` (os tickets que já existem)
 **Jira**: use quando o pedido citar uma chave do Jira (ex.: `ABC-123`) ou quando um ticket de lá der contexto ao pedido. `jira_get_issue` lê uma issue; `jira_search` e `jira_search_by_filter` buscam. Antes da primeira chamada, veja o ambiente com `get_current_environment` (e `list_environments`); troque com `use_environment` só se o pedido pedir outro. O Jira conta o que foi pedido; o comportamento da aplicação você confirma no navegador, que continua sendo a fonte de verdade. Nada de credencial, token ou dado pessoal vindo do Jira no ticket.
 </item>
 <item>
-**Navegador**: onde a skill escreve `playwright-cli &lt;comando&gt;`, rode `bun run chol:playwright-cli &lt;comando&gt;` — é o mesmo programa, na versão deste repositório. Comece com `open &lt;baseURL&gt;`, use `snapshot` antes de agir (os `ref` como `e15` vêm dele), `click`, `fill`, `select`, `check`, `press`, `goto`, `go-back`, e `screenshot` quando uma tela for evidência. Termine sempre com `close`.
+**Navegador**: onde a skill escreve `playwright-cli &lt;comando&gt;`, rode `bunx choliba playwright-cli &lt;comando&gt;` — é o mesmo programa, na versão deste repositório. Comece com `open &lt;baseURL&gt;`, use `snapshot` antes de agir (os `ref` como `e15` vêm dele), `click`, `fill`, `select`, `check`, `press`, `goto`, `go-back`, e `screenshot` quando uma tela for evidência. Termine sempre com `close`.
 </item>
 <item>
 **Refs mudam a cada tela**: depois de um `click`, `goto` ou envio de formulário que troca a página, os `ref` antigos deixam de valer (`e14` vira `f3e14`, por exemplo). Faça um `snapshot` novo antes de usar qualquer `ref` na tela nova; nunca reaproveite `ref` de uma tela anterior.
 </item>
 <item>
-**Comandos**: rode só os comandos liberados, cada um como está: `bun run chol:playwright-cli &lt;comando&gt;`, podendo encadear vários com `&amp;&amp;`. Nada de redirecionamento (`2&gt;/dev/null`), `|| true`, `;`, pipes ou outros programas (`true`, `echo`, `ls`…): o comando inteiro é recusado se qualquer parte dele não estiver liberada.
+**Comandos**: rode só os comandos liberados, cada um como está: `bunx choliba playwright-cli &lt;comando&gt;`, podendo encadear vários com `&amp;&amp;`. Nada de redirecionamento (`2&gt;/dev/null`), `|| true`, `;`, pipes ou outros programas (`true`, `echo`, `ls`…): o comando inteiro é recusado se qualquer parte dele não estiver liberada.
 </item>
 </preparation>
 

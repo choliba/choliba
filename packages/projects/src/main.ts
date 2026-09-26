@@ -1,17 +1,16 @@
 #!/usr/bin/env bun
-import path from 'node:path';
-
+import { findWorkspaceRoot } from '@choliba/core/config';
 import { writeStderr, writeStdout } from '@choliba/terminal/output';
 
 import { runProjectsCli } from './cli';
 import { resolveLocations } from './locations';
+import { projectTemplatesDir } from './ticket-template';
 
-const repoRoot = path.join(import.meta.dirname, '..', '..', '..');
-const templatesDir = path.join(import.meta.dirname, '..', 'templates', 'project');
+const workspaceRoot = findWorkspaceRoot(process.cwd());
 
 process.exitCode = runProjectsCli(process.argv, {
-  loadConfig: () => resolveLocations(repoRoot),
-  templatesDir,
+  loadConfig: () => resolveLocations(workspaceRoot),
+  templatesDir: projectTemplatesDir(),
   stdout: {
     write(chunk) {
       writeStdout(chunk);
