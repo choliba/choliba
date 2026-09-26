@@ -1,7 +1,17 @@
 import type { CommandEntry, CommandSpec } from '@choliba/core/cli';
 
 /** What `choliba` runs itself; any other first word is an agent of the workspace. */
-export const SUBCOMMANDS = ['agents', 'projects', 'tests', 'playwright-cli', 'check', 'setup', 'completion'] as const;
+export const SUBCOMMANDS = [
+  'agents',
+  'projects',
+  'tests',
+  'playwright-cli',
+  'check',
+  'lint',
+  'format',
+  'setup',
+  'completion',
+] as const;
 
 export type Subcommand = (typeof SUBCOMMANDS)[number];
 
@@ -61,6 +71,18 @@ const COMMANDS: readonly CommandEntry[] = [
     description: 'Confere a pasta de trabalho: agentes (schemas, skills, MCPs) e projetos',
     group: 'Commands',
     spec: { usage: 'choliba check' },
+  },
+  {
+    name: 'lint',
+    description: 'ESLint na pasta de trabalho, com a configuração que vem no choliba',
+    group: 'Commands',
+    spec: { usage: 'choliba lint [ESLINT_ARGS]' },
+  },
+  {
+    name: 'format',
+    description: 'Prettier na pasta de trabalho: confere, ou corrige com --write',
+    group: 'Commands',
+    spec: { usage: 'choliba format [--write] [PATHS...]' },
   },
   {
     name: 'setup',

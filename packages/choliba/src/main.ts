@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
 import { spawnSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { isAbsolute, join } from 'node:path';
+import { dirname, isAbsolute, join } from 'node:path';
 
 import { listAgents, runAgentsCli } from '@choliba/agents';
 import { complete, formatHelp, formatSuggestions } from '@choliba/core/cli';
-import { CHOL_AGENTS_DIR, findWorkspaceRoot, loadRepoConfig } from '@choliba/core/config';
+import { CHOL_AGENTS_DIR, findWorkspaceRoot, loadRepoConfig, locateResource } from '@choliba/core/config';
 import { projectTemplatesDir, resolveLocations, runProjectsCli } from '@choliba/projects';
 import { findRunnerRoot, runTestsCli } from '@choliba/runner';
 import { createBunProcessSpawner, ProcessRunner } from '@choliba/terminal';
@@ -15,7 +15,7 @@ import { writeStderr, writeStdout } from '@choliba/terminal/output';
 import { allFine, checkWorkspace, formatCheck } from './check';
 import { COMPLETION_BASH } from './completion';
 import { CHOLIBA_HELP, firstWordSpec, route } from './route';
-import { setup } from './setup';
+import { setup, setupWorkspace, updatePackageWhenListed } from './setup';
 
 // Wiring only (excluded from coverage, like every main.ts): which part of choliba runs is decided
 // by `route`, and each part is the same CLI the repository's own `chol:*` scripts run.
@@ -41,6 +41,42 @@ function runProjects(argv: readonly string[], workspaceRoot: string): number {
     stdout: { write: writeStdout },
     stderr: { write: writeStderr },
   });
+}
+
+/** The executable a dependency of this package declares as `bin` (resolved from its package.json). */
+function binOf(dependency: string, bin: string): string {
+  const manifest = Bun.resolveSync(`${dependency}/package.json`, import.meta.dir);
+  const declared: unknown = JSON.parse(readFileSync(manifest, 'utf8'));
+  const bins = typeof declared === 'object' && declared !== null && 'bin' in declared ? declared.bin : undefined;
+  const relative = typeof bins === 'string' ? bins : (bins as Record<string, string> | undefined)?.[bin];
+  if (relative === undefined) throw new Error(`${dependency} não declara o executável ${bin}.`);
+  return join(dirname(manifest), relative);
+}
+
+/** Runs a Node tool shipped with this package (ESLint, Prettier) in the workspace. */
+function runTool(dependency: string, bin: string, args: readonly string[], workspaceRoot: string): number {
+  const node = Bun.which('node') ?? process.execPath;
+  return spawnSync(node, [binOf(dependency, bin), ...args], { stdio: 'inherit', cwd: workspaceRoot }).status ?? 1;
+}
+
+/** `choliba lint`: ESLint on the workspace, with its own eslint.config.* or, without one, the config shipped here. */
+function runLint(argv: readonly string[], workspaceRoot: string): number {
+  const hasConfig = readdirSync(workspaceRoot).some((file) => /^eslint\.config\.[cm]?[jt]s$/.test(file));
+  const shipped = locateResource('eslint.js', import.meta.dir);
+  const config = hasConfig || shipped === undefined ? [] : ['--config', shipped];
+  return runTool('eslint', 'eslint', [...config, ...(argv.length === 0 ? ['.'] : argv)], workspaceRoot);
+}
+
+/** `choliba format [--write] [paths…]`: Prettier checks the workspace, or fixes it with --write. */
+function runFormat(argv: readonly string[], workspaceRoot: string): number {
+  const write = argv.includes('--write');
+  const paths = argv.filter((arg) => arg !== '--write');
+  return runTool(
+    'prettier',
+    'prettier',
+    [write ? '--write' : '--check', ...(paths.length === 0 ? ['.'] : paths)],
+    workspaceRoot,
+  );
 }
 
 /** `playwright cli`, from the Playwright this package depends on, run where the agents run it. */
@@ -109,7 +145,18 @@ async function main(argv: readonly string[]): Promise<number> {
   }
   if (target.kind === '__complete') return completeWords(target.argv);
   if (target.kind === 'setup') {
-    const message = `${setup(homedir(), process.cwd())}\n`;
+    if (target.argv.includes('--deferred')) {
+      await updatePackageWhenListed(process.cwd(), (ms) => Bun.sleep(ms));
+      return 0;
+    }
+    const message = `${setup(homedir(), process.cwd(), () => {
+      // Outlives the postinstall: finishes once `bun add` has written package.json.
+      const script = process.argv[1] ?? '';
+      Bun.spawn([process.execPath, script, 'setup', '--deferred'], {
+        cwd: setupWorkspace(process.cwd()),
+        stdio: ['ignore', 'ignore', 'ignore'],
+      }).unref();
+    })}\n`;
     // Bun hides a postinstall's output; the terminal itself still shows what is written to it.
     if (process.env['npm_lifecycle_event'] === 'postinstall' && writeToTerminal(message)) return 0;
     writeStdout(message);
@@ -139,6 +186,10 @@ async function main(argv: readonly string[]): Promise<number> {
         .exitCode;
     case 'playwright-cli':
       return runPlaywrightCli(target.argv, workspaceRoot);
+    case 'lint':
+      return runLint(target.argv, workspaceRoot);
+    case 'format':
+      return runFormat(target.argv, workspaceRoot);
   }
 }
 

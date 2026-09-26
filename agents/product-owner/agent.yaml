@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../../node_modules/choliba/schemes/agent.schema.json
 id: product-owner-agent
 name: Product Owner
 version: 1.0.0

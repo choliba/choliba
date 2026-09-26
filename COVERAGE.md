@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 26/09/2026 03:33:52 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 26/09/2026 04:00:44 — não editar manualmente.
 
 ## Resumo
 
@@ -61,12 +61,13 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 4 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 5 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
 🟢|[src/check.ts](packages/choliba/src/check.ts)|100.00|100.00|100.00|100.00
 🟢|[src/completion.ts](packages/choliba/src/completion.ts)|100.00|100.00|100.00|100.00
+🟢|[src/eslint-config.ts](packages/choliba/src/eslint-config.ts)|100.00|100.00|100.00|100.00
 🟢|[src/route.ts](packages/choliba/src/route.ts)|100.00|100.00|100.00|100.00
 🟢|[src/setup.ts](packages/choliba/src/setup.ts)|100.00|100.00|100.00|100.00
 

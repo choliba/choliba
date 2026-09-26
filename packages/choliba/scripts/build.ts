@@ -76,9 +76,23 @@ await bundle(
   'runner',
 );
 
+// `choliba/eslint`: the config a workspace's eslint.config.js imports, loaded by ESLint under Node.
+await bundle(
+  {
+    entrypoints: [join(packageDir, 'src', 'eslint-config.ts')],
+    outdir: out,
+    naming: 'eslint.js',
+    target: 'node',
+    format: 'esm',
+    external,
+  },
+  'eslint.js',
+);
+
 cpSync(join(packagesDir, 'agents', 'schemes'), join(out, 'schemes'), { recursive: true });
 cpSync(join(packagesDir, 'projects', 'templates'), join(out, 'templates'), { recursive: true });
 cpSync(join(packageDir, 'templates', 'workspace'), join(out, 'templates', 'workspace'), { recursive: true });
+cpSync(join(packageDir, 'templates', 'example'), join(out, 'templates', 'example'), { recursive: true });
 
 const own = manifest(packageDir);
 const root = manifest(join(packagesDir, '..'));
@@ -92,6 +106,7 @@ writeFileSync(
       license: root.license,
       type: 'module',
       bin: { choliba: 'bin/choliba.js' },
+      exports: { './eslint': './eslint.js', './package.json': './package.json' },
       // Builds the workspace (folders, .env, .gitignore) and turns bash completion on. Bun runs it only
       // for trusted packages: `bun add --trust choliba`, or `bunx choliba setup` afterwards.
       scripts: { postinstall: 'bun bin/choliba.js setup' },

@@ -297,19 +297,32 @@ function resolveAgentMcps(agent: AgentDefinition, deps: RunAgentsCliDeps): reado
 }
 
 /**
- * The project locations an agent's `system.md` may name as `${GLOBAL_DIR}`, `${PROJECTS_DIR}` and
- * `${TICKET_RUNS}`, plus `${PROJECT}`/`${PROJECT_DIR}` when the run has one, all from
- * `@choliba/projects` — this CLI works out no path itself.
+ * The folders an agent's `system.md` may name, so it never depends on the workspace layout:
+ * `${AGENTS_DIR}`, `${SKILLS_DIR}` and `${MCPS_DIR}` always; `${GLOBAL_DIR}`, `${PROJECTS_DIR}` and
+ * `${TICKET_RUNS}` once GLOBAL_DIR is configured; `${PROJECT}`/`${PROJECT_DIR}` when the run has a
+ * project — all from `@choliba/projects` and `workspace-dirs`, this CLI works out no path itself.
  */
 function locationVars(
   deps: RunAgentsCliDeps,
   projectVars: Readonly<Record<string, string>>,
+  instructions: string,
 ): Readonly<Record<string, string>> {
-  const locations = resolveLocations(deps.repoRoot, deps.config, () => undefined);
+  // Resolved only when used: an agent naming none of them runs without GLOBAL_DIR, and one that does
+  // gets the clear "GLOBAL_DIR não definida" instead of a missing variable.
+  const locations = /\$\{(GLOBAL_DIR|PROJECTS_DIR|TICKET_RUNS)\}/.test(instructions)
+    ? resolveLocations(deps.repoRoot, deps.config, () => undefined)
+    : undefined;
   return {
-    GLOBAL_DIR: locations.GLOBAL_DIR,
-    PROJECTS_DIR: locations.PROJECTS_DIR,
-    ...(locations.TICKET_RUNS === undefined ? {} : { TICKET_RUNS: locations.TICKET_RUNS }),
+    AGENTS_DIR: resolveAgentsDir(undefined, deps.config, deps.repoRoot),
+    SKILLS_DIR: resolveSkillsDir(deps.config, deps.repoRoot),
+    MCPS_DIR: resolveMcpsDir(deps.config, deps.repoRoot),
+    ...(locations === undefined
+      ? {}
+      : {
+          GLOBAL_DIR: locations.GLOBAL_DIR,
+          PROJECTS_DIR: locations.PROJECTS_DIR,
+          ...(locations.TICKET_RUNS === undefined ? {} : { TICKET_RUNS: locations.TICKET_RUNS }),
+        }),
     ...projectVars,
   };
 }
@@ -361,7 +374,7 @@ function expandAgent(
   deps: RunAgentsCliDeps,
 ): AgentDefinition | undefined {
   try {
-    return withExpandedInstructions(agent, () => locationVars(deps, projectVars));
+    return withExpandedInstructions(agent, () => locationVars(deps, projectVars, agent.instructions));
   } catch (error) {
     deps.stderr.write(`${errorMessage(error)}\n`);
     return undefined;

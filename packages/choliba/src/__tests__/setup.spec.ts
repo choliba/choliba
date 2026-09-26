@@ -2,6 +2,9 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+import { loadProjectSettings } from '@choliba/projects';
 
 import { FILES_MARKER } from '@choliba/core/cli';
 
@@ -15,6 +18,12 @@ import {
   setupWorkspace,
   sourceLine,
   trustPackage,
+  addEditorSettings,
+  createExample,
+  exampleTemplatesDir,
+  packageListsCholiba,
+  updatePackage,
+  updatePackageWhenListed,
   addScripts,
   WORKSPACE_SCRIPTS,
   workspaceTemplatesDir,
@@ -55,41 +64,109 @@ describe('COMPLETION_BASH as bash reads it', () => {
 });
 
 describe('scaffoldWorkspace', () => {
-  it('creates the folders, .env.example, .gitignore and a .env pointing GLOBAL_DIR at the workspace', () => {
+  it('creates app/ (agents, skills, mcps, projects), projects/ and the root files, with a working .env', () => {
     withDir((root) => {
       expect(scaffoldWorkspace(root)).toEqual([
-        'agents/',
-        '.agents/skills/',
-        '.agents/mcps/',
+        'app/agents/',
+        'app/.agents/skills/',
+        'app/.agents/mcps/',
         'projects/',
         '.env.example',
         '.gitignore',
         'bunfig.toml',
+        '.prettierrc.json',
+        '.prettierignore',
+        'eslint.config.mjs',
         '.env',
       ]);
-      expect(fs.readFileSync(path.join(root, 'bunfig.toml'), 'utf8')).toContain('silent = true');
-      expect(fs.existsSync(path.join(root, '.agents', 'mcps', '.gitkeep'))).toBe(true);
-      expect(fs.readFileSync(path.join(root, '.env'), 'utf8')).toContain(`\nGLOBAL_DIR=${root}\n`);
+      expect(fs.existsSync(path.join(root, 'app', '.agents', 'mcps', '.gitkeep'))).toBe(true);
+      const env = fs.readFileSync(path.join(root, '.env'), 'utf8');
+      expect(env).toContain(`\nPROJECTS_DIR=${path.join(root, 'projects')}\n`);
+      expect(env).toContain('\nCHOL_SKILLS_DIR=app/.agents/skills\n');
+      expect(env).toContain(`\nGLOBAL_DIR=${path.join(root, '.cache', 'choliba')}\n`);
+      expect(env).toContain('\nCHOL_AGENTS_DIR=app/agents\n');
       expect(fs.readFileSync(path.join(root, '.env.example'), 'utf8')).toContain('\nGLOBAL_DIR=\n');
-      expect(fs.readFileSync(path.join(root, '.gitignore'), 'utf8')).toContain('.env');
+      expect(fs.readFileSync(path.join(root, 'bunfig.toml'), 'utf8')).toContain('silent = true');
+      expect(fs.readFileSync(path.join(root, 'eslint.config.mjs'), 'utf8')).toContain("from 'choliba/eslint'");
     });
   });
 
   it('never overwrites what is already there', () => {
     withDir((root) => {
-      fs.mkdirSync(path.join(root, 'agents'));
+      fs.mkdirSync(path.join(root, 'app', 'agents'), { recursive: true });
       fs.writeFileSync(path.join(root, '.env'), 'MEU=1\n');
       fs.writeFileSync(path.join(root, '.gitignore'), 'x\n');
 
-      expect(scaffoldWorkspace(root, workspaceTemplatesDir())).toEqual([
-        '.agents/skills/',
-        '.agents/mcps/',
-        'projects/',
-        '.env.example',
-        'bunfig.toml',
-      ]);
+      const created = scaffoldWorkspace(root, workspaceTemplatesDir());
+      expect(created).not.toContain('app/agents/');
+      expect(created).not.toContain('.env');
+      expect(created).not.toContain('.gitignore');
       expect(fs.readFileSync(path.join(root, '.env'), 'utf8')).toBe('MEU=1\n');
       expect(scaffoldWorkspace(root)).toEqual([]);
+    });
+  });
+});
+
+describe('createExample', () => {
+  it('creates the one-page application and a ready test project with its spec and ticket', () => {
+    withDir((root) => {
+      expect(createExample(root)).toEqual(['app/exemplo/', 'projects/exemplo/']);
+      const project = path.join(root, 'projects', 'exemplo');
+      const config = JSON.parse(fs.readFileSync(path.join(project, 'config.json'), 'utf8')) as {
+        description: string;
+        devices: Record<string, boolean>;
+        envs: { baseURL: string; appDir: string }[];
+      };
+      expect(config.description).toBe(
+        'Loja de exemplo: Uma página só, para experimentar o choliba: um formulário de newsletter que agradece quem assina.',
+      );
+      expect(config.envs[0]?.appDir).toBe(path.join(root, 'app', 'exemplo'));
+      expect(config.envs[0]?.baseURL).toBe(pathToFileURL(path.join(root, 'app', 'exemplo', 'index.html')).href);
+      expect(config.devices).toEqual({ chromium: true, firefox: false, webkit: false, 'mobile-chrome': false });
+      expect(fs.readFileSync(path.join(project, '.env.json'), 'utf8')).toContain('"development": {}');
+      expect(fs.readFileSync(path.join(project, 'tests', 'exemplo.spec.ts'), 'utf8')).toContain("page.goto('')");
+      expect(fs.existsSync(path.join(project, 'tickets', '1.json'))).toBe(true);
+      expect(loadProjectSettings(path.join(root, 'projects'), 'exemplo').environment.nome).toBe('development');
+    });
+  });
+
+  it('creates nothing when either part already exists', () => {
+    withDir((root) => {
+      fs.mkdirSync(path.join(root, 'app', 'exemplo'), { recursive: true });
+      expect(createExample(root, exampleTemplatesDir())).toEqual([]);
+      fs.rmSync(path.join(root, 'app', 'exemplo'), { recursive: true });
+      fs.mkdirSync(path.join(root, 'projects', 'exemplo'), { recursive: true });
+      expect(createExample(root)).toEqual([]);
+    });
+  });
+});
+
+describe('addEditorSettings', () => {
+  it('creates .vscode/settings.json with the agent.yaml schema, or adds it to the settings there', () => {
+    withDir((root) => {
+      expect(addEditorSettings(root)).toBe(true);
+      const file = path.join(root, '.vscode', 'settings.json');
+      expect(fs.readFileSync(file, 'utf8')).toContain('"./node_modules/choliba/schemes/agent.schema.json"');
+      expect(addEditorSettings(root)).toBe(false);
+
+      fs.writeFileSync(file, JSON.stringify({ 'editor.tabSize': 4, 'yaml.schemas': { './outro.json': 'x.yaml' } }));
+      expect(addEditorSettings(root)).toBe(true);
+      const merged = JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, Record<string, unknown>>;
+      expect(merged['editor.tabSize']).toBe(4);
+      expect(Object.keys(merged['yaml.schemas'] ?? {})).toEqual([
+        './outro.json',
+        './node_modules/choliba/schemes/agent.schema.json',
+      ]);
+    });
+  });
+
+  it('leaves settings it cannot read as JSON alone', () => {
+    withDir((root) => {
+      fs.mkdirSync(path.join(root, '.vscode'));
+      fs.writeFileSync(path.join(root, '.vscode', 'settings.json'), '{ // comentário\n}');
+      expect(addEditorSettings(root)).toBe(false);
+      fs.writeFileSync(path.join(root, '.vscode', 'settings.json'), '[]');
+      expect(addEditorSettings(root)).toBe(false);
     });
   });
 });
@@ -149,10 +226,42 @@ describe('trustPackage', () => {
 });
 
 describe('initialEnv', () => {
-  it('fills GLOBAL_DIR and leaves the rest as the example has it', () => {
-    expect(initialEnv('# a\nGLOBAL_DIR=\n# GLOBAL_DIR=x\nB=1\n', '/w')).toBe(
-      '# a\nGLOBAL_DIR=/w\n# GLOBAL_DIR=x\nB=1\n',
+  it('points PROJECTS_DIR at projects and GLOBAL_DIR at .cache/choliba, leaving the rest as it is', () => {
+    expect(initialEnv('# a\nGLOBAL_DIR=\nPROJECTS_DIR=\n# GLOBAL_DIR=x\nB=1\n', '/w')).toBe(
+      `# a\nGLOBAL_DIR=${path.join('/w', '.cache', 'choliba')}\nPROJECTS_DIR=${path.join('/w', 'projects')}\n# GLOBAL_DIR=x\nB=1\n`,
     );
+  });
+});
+
+describe('packageListsCholiba / updatePackage / updatePackageWhenListed', () => {
+  it('updates package.json once it lists choliba, waiting for it when it does not yet', async () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'choliba-deferred-'));
+    try {
+      const file = path.join(root, 'package.json');
+      fs.writeFileSync(file, JSON.stringify({ name: 'g' }));
+      expect(packageListsCholiba(root)).toBe(false);
+
+      let waits = 0;
+      const wait = (): Promise<void> => {
+        waits += 1;
+        if (waits === 2) fs.writeFileSync(file, JSON.stringify({ name: 'g', devDependencies: { choliba: '1' } }));
+        return Promise.resolve();
+      };
+      expect(await updatePackageWhenListed(root, wait, 10_000, 1)).toBe(true);
+      const pkg = JSON.parse(fs.readFileSync(file, 'utf8')) as {
+        scripts: Record<string, string>;
+        trustedDependencies: string[];
+      };
+      expect(pkg.trustedDependencies).toEqual(['choliba']);
+      expect(pkg.scripts['chol:check']).toBe('choliba check');
+      expect(updatePackage(root)).toEqual([]);
+      expect(await updatePackageWhenListed(root, () => Promise.resolve())).toBe(true);
+
+      fs.writeFileSync(file, JSON.stringify({ name: 'g' }));
+      expect(await updatePackageWhenListed(root, () => Promise.resolve(), 3, 1)).toBe(false);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
   });
 });
 
@@ -195,7 +304,7 @@ describe('setupShell / setup', () => {
     });
   });
 
-  it('prepares the workspace, the shell and says what to do next', () => {
+  it('prepares a new workspace with the example, the shell and says what to do next', () => {
     withDir((dir) => {
       const home = path.join(dir, 'home');
       const workspace = path.join(dir, 'goiaba');
@@ -203,12 +312,42 @@ describe('setupShell / setup', () => {
       fs.mkdirSync(workspace);
       fs.writeFileSync(path.join(workspace, 'package.json'), JSON.stringify({ dependencies: { choliba: '1' } }));
 
-      const first = setup(home, workspace);
-      expect(first).toContain(`Pasta de trabalho: ${workspace}\n  criado: agents/, .agents/skills/`);
+      const first = setup(home, workspace, () => undefined);
+      expect(first).toContain(`Pasta de trabalho: ${workspace}\n  criado: app/agents/, app/.agents/skills/`);
+      expect(first).toContain('app/exemplo/, projects/exemplo/');
+      expect(first).toContain('.vscode/settings.json (schema dos agent.yaml)');
       expect(first).toContain('trustedDependencies no package.json');
       expect(first).toContain('scripts chol:help, chol:check, chol:agents');
       expect(first).toContain('Próximos passos:');
-      expect(setup(home, workspace)).toContain(`Pasta de trabalho: ${workspace} (já estava pronta).`);
+
+      fs.rmSync(path.join(workspace, 'app', 'exemplo'), { recursive: true });
+      fs.rmSync(path.join(workspace, 'projects', 'exemplo'), { recursive: true });
+      expect(setup(home, workspace, () => undefined)).toContain(`Pasta de trabalho: ${workspace} (já estava pronta).`);
+      expect(fs.existsSync(path.join(workspace, 'app', 'exemplo'))).toBe(false);
+    });
+  });
+
+  it('leaves the package.json changes for later while it does not list choliba yet', () => {
+    withDir((dir) => {
+      const home = path.join(dir, 'home');
+      const installed = path.join(dir, 'goiaba', 'node_modules', 'choliba');
+      fs.mkdirSync(home);
+      fs.mkdirSync(installed, { recursive: true });
+      fs.writeFileSync(path.join(dir, 'goiaba', 'package.json'), JSON.stringify({ name: 'goiaba' }));
+      let deferred = 0;
+
+      const message = setup(
+        home,
+        installed,
+        () => {
+          deferred += 1;
+        },
+        workspaceTemplatesDir(),
+        exampleTemplatesDir(),
+      );
+      expect(deferred).toBe(1);
+      expect(message).toContain('scripts chol:* no package.json (assim que o bun terminar)');
+      expect(fs.readFileSync(path.join(dir, 'goiaba', 'package.json'), 'utf8')).not.toContain('chol:');
     });
   });
 });

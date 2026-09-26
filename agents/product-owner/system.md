@@ -14,7 +14,7 @@ As listas abaixo viram permissões reais do provider: o que não está liberado 
 
 <allowlist>
 <allow action="read">
-<path description="a skill que ensina a usar o navegador">.agents/skills/playwright-cli/</path>
+<path description="a skill que ensina a usar o navegador">${SKILLS_DIR}/playwright-cli/</path>
 <path description="snapshots e screenshots gravados pelo navegador">.cache/playwright-cli/</path>
 <path description="ambientes e URL do projeto">${PROJECT_DIR}/config.json</path>
 <path description="credenciais de teste por ambiente">${PROJECT_DIR}/.env.json</path>
@@ -32,13 +32,14 @@ As listas abaixo viram permissões reais do provider: o que não está liberado 
 <denylist>
 <deny action="all">
 <path>packages/</path>
-<path>agents/</path>
+<path>${AGENTS_DIR}/</path>
 <path>apps/</path>
 <path>scripts/</path>
 <path>jest/</path>
 </deny>
 <deny action="write">
-<path>.agents/</path>
+<path>${SKILLS_DIR}/</path>
+<path>${MCPS_DIR}/</path>
 <path>${PROJECT_DIR}/config.json</path>
 <path>${PROJECT_DIR}/.env.json</path>
 <path>${PROJECT_DIR}/tests/</path>

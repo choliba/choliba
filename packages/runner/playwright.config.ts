@@ -22,14 +22,20 @@ if (!fs.existsSync(projectsDir)) {
   throw new Error(`PROJECTS_DIR="${projectsDir}" não existe.`);
 }
 
-const targetProject = getTargetProject(projectsDir);
+// Found from the command line in the main process; the workers, which load this file again with other
+// arguments, get it from the environment the main process leaves for them.
+const targetProject = process.env['CHOLIBA_PROJECT'] ?? getTargetProject(projectsDir);
+if (targetProject) process.env['CHOLIBA_PROJECT'] = targetProject;
 let resultsRoot: string | undefined;
 let targetProjectConfig: PlaywrightProjectConfig | undefined;
+// The active environment's URL: a spec just calls `page.goto('…')`, relative to it.
+let baseURL: string | undefined;
 
 if (targetProject) {
   // Fails, naming the file and the field, unless the project is complete and configured (no CHANGE_ME).
   const settings = projects.loadProjectSettings(projectsDir, targetProject);
   targetProjectConfig = settings.config;
+  baseURL = settings.environment.baseURL;
   resultsRoot = projects.resolveResultsRoot({
     globalDir: playwrightEnv.GLOBAL_DIR,
     project: targetProject,
@@ -117,6 +123,7 @@ export default defineConfig({
   globalSetup: path.join(packageRoot, 'shared', `globalSetup${EXT}`),
   globalTeardown: path.join(packageRoot, 'shared', `globalTeardown${EXT}`),
   use: {
+    ...(baseURL ? { baseURL } : {}),
     trace: 'on-first-retry',
     screenshot: 'on',
   },
