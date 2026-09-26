@@ -30,9 +30,23 @@ _choliba_words() {
     fi
 }
 
-# Completes the words after "choliba", which sits at index $1 of the line.
+# The words of package.json script $2 when it runs choliba ("choliba", then its arguments), one per line;
+# nothing for any other script. $1 is the workspace choliba, whose folder holds that package.json.
+_choliba_script_words() {
+    local root="\${1%/node_modules/.bin/choliba}"
+    bun -e 'const fs = require("fs");
+try {
+  const pkg = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+  const words = String((pkg.scripts || {})[process.argv[2]] || "").split(" ").filter(Boolean);
+  if (words[0] === "choliba") for (const word of words) console.log(word);
+} catch {}' "$root/package.json" "$2" 2>/dev/null
+}
+
+# Completes the words after "choliba", which sits at index $1 of the line; any further arguments go
+# first, as the arguments a package.json script already gives choliba.
 _choliba_suggest() {
     local after=$(( $1 + 1 ))
+    shift
     local bin
     if ! bin="$(_choliba_bin)"; then
         compopt -o default 2>/dev/null
@@ -40,7 +54,7 @@ _choliba_suggest() {
         return 0
     fi
     local -a suggestions
-    mapfile -t suggestions < <(bun "$bin" __complete "\${_choliba_line_words[@]:after}" 2>/dev/null)
+    mapfile -t suggestions < <(bun "$bin" __complete "$@" "\${_choliba_line_words[@]:after}" 2>/dev/null)
     if [[ "\${suggestions[0]:-}" == "${FILES_MARKER}" ]]; then
         compopt -o default 2>/dev/null
         COMPREPLY=()
@@ -75,8 +89,9 @@ _choliba_complete_bunx() {
     COMPREPLY=()
 }
 
-# bun choliba … and bun run choliba …; anything else goes to the bun completion already registered
-# (bun's own, or the choliba repository's), with "choliba" added to the first word inside a workspace.
+# bun choliba …, bun run choliba … and bun <script> … for a package.json script that runs choliba
+# (the chol:* scripts setup adds); anything else goes to the bun completion already registered (bun's
+# own, or the choliba repository's), with "choliba" added to the first word inside a workspace.
 _choliba_previous_bun="$(complete -p bun 2>/dev/null)"
 _choliba_previous_bun="\${_choliba_previous_bun#*-F }"
 _choliba_previous_bun="\${_choliba_previous_bun%% *}"
@@ -89,6 +104,15 @@ _choliba_complete_bun() {
     if [[ "\${_choliba_line_words[at]:-}" == choliba ]] && (( \${#_choliba_line_words[@]} > at + 1 )); then
         _choliba_suggest "$at"
         return 0
+    fi
+    local bin
+    if (( \${#_choliba_line_words[@]} > at + 1 )) && bin="$(_choliba_bin)"; then
+        local -a script_words
+        mapfile -t script_words < <(_choliba_script_words "$bin" "\${_choliba_line_words[at]}")
+        if [[ "\${script_words[0]:-}" == choliba ]]; then
+            _choliba_suggest "$at" "\${script_words[@]:1}"
+            return 0
+        fi
     fi
     COMPREPLY=()
     if [[ -n "$_choliba_previous_bun" ]] && declare -F "$_choliba_previous_bun" >/dev/null; then

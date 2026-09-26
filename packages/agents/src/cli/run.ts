@@ -20,9 +20,10 @@ import { parseProviderPreference, resolveProvider } from '../providers/registry'
 import { readPlan } from '../plan-store';
 import { validateExplicitModel } from '../providers/stream-json';
 import { runAgent } from '../run-agent';
-import { CHOL_AGENTS_DIR, CHOL_AGENTS_PROVIDER, CHOL_MCPS_DIR, CHOL_SKILLS_DIR } from '@choliba/core/config';
+import { CHOL_AGENTS_PROVIDER } from '@choliba/core/config';
 import { listProjectNames, listTicketKeys, loadProjectSettings, resolveLocations } from '@choliba/projects';
 import { readAgentPermissions } from '../permissions';
+import { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '../workspace-dirs';
 import { permissionDirs, withExpandedInstructions } from '../vars';
 import type { AgentsArgsError, ParsedAgentsArgs } from './args';
 import { CLI_PROGRAM_NAME, PREPARE_FLAGS, USAGE, parseAgentsArgs, unknownFlagMessage } from './args';
@@ -52,27 +53,6 @@ export interface RunAgentsCliDeps {
 
 function toAbsolute(path: string, repoRoot: string): string {
   return isAbsolute(path) ? path : join(repoRoot, path);
-}
-
-function resolveAgentsDir(
-  explicit: string | undefined,
-  config: Readonly<Record<string, string | undefined>>,
-  repoRoot: string,
-): string {
-  const dir = explicit ?? config[CHOL_AGENTS_DIR];
-  return dir === undefined ? join(repoRoot, 'agents') : toAbsolute(dir, repoRoot);
-}
-
-/** Where `agent.yaml#skills` are looked up: `CHOL_SKILLS_DIR`, else `.agents/skills` at the repo root. */
-function resolveSkillsDir(config: Readonly<Record<string, string | undefined>>, repoRoot: string): string {
-  const dir = config[CHOL_SKILLS_DIR];
-  return dir === undefined ? join(repoRoot, '.agents', 'skills') : toAbsolute(dir, repoRoot);
-}
-
-/** Where `agent.yaml#mcps` are looked up: `CHOL_MCPS_DIR`, else `.agents/mcps` at the repo root. */
-function resolveMcpsDir(config: Readonly<Record<string, string | undefined>>, repoRoot: string): string {
-  const dir = config[CHOL_MCPS_DIR];
-  return dir === undefined ? join(repoRoot, '.agents', 'mcps') : toAbsolute(dir, repoRoot);
 }
 
 /** `dir === parent` counts as inside — `relative` returns `''` for that case. */
@@ -228,7 +208,13 @@ async function resolveAgentForCommand(
   deps: RunAgentsCliDeps,
   agentsDir: string,
 ): Promise<{ command: CommandDefinition; agent: AgentDefinition } | undefined> {
-  const command = await resolveCommand(parsed.command, deps.commands, agentsDir);
+  let command: CommandDefinition | undefined;
+  try {
+    command = await resolveCommand(parsed.command, deps.commands, agentsDir);
+  } catch (error) {
+    deps.stderr.write(`${errorMessage(error)}\n`);
+    return undefined;
+  }
   if (command === undefined) {
     deps.stderr.write(
       `Unknown command "${parsed.command}". Run "${CLI_PROGRAM_NAME} list" to see available agents.\n${USAGE}\n`,
@@ -295,13 +281,6 @@ function resolveAgentSkills(
     deps.stderr.write(`${errorMessage(error)}\n`);
     return undefined;
   }
-}
-
-/** The config entries that have a value: what `${NAME}` in an MCP server's JSON may use. */
-function definedConfig(config: Readonly<Record<string, string | undefined>>): Readonly<Record<string, string>> {
-  return Object.fromEntries(
-    Object.entries(config).filter((entry): entry is [string, string] => entry[1] !== undefined),
-  );
 }
 
 /**

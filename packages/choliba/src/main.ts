@@ -12,6 +12,7 @@ import { findRunnerRoot, runTestsCli } from '@choliba/runner';
 import { createBunProcessSpawner, ProcessRunner } from '@choliba/terminal';
 import { writeStderr, writeStdout } from '@choliba/terminal/output';
 
+import { allFine, checkWorkspace, formatCheck } from './check';
 import { COMPLETION_BASH } from './completion';
 import { CHOLIBA_HELP, firstWordSpec, route } from './route';
 import { setup } from './setup';
@@ -123,6 +124,11 @@ async function main(argv: readonly string[]): Promise<number> {
     return 0;
   }
   const workspaceRoot = findWorkspaceRoot(process.cwd());
+  if (target.kind === 'check') {
+    const sections = await checkWorkspace(workspaceRoot, loadRepoConfig(workspaceRoot));
+    writeStdout(`${formatCheck(sections)}\n`);
+    return allFine(sections) ? 0 : 1;
+  }
   switch (target.kind) {
     case 'agents':
       return runAgents(target.argv, workspaceRoot);

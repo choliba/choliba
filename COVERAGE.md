@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 26/09/2026 02:13:10 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 26/09/2026 03:33:52 — não editar manualmente.
 
 ## Resumo
 
@@ -17,7 +17,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 35 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 36 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -56,14 +56,16 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/run-agent.ts](packages/agents/src/run-agent.ts)|100.00|100.00|100.00|100.00
 🟢|[src/skills.ts](packages/agents/src/skills.ts)|100.00|100.00|100.00|100.00
 🟢|[src/vars.ts](packages/agents/src/vars.ts)|100.00|100.00|100.00|100.00
+🟢|[src/workspace-dirs.ts](packages/agents/src/workspace-dirs.ts)|100.00|100.00|100.00|100.00
 
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 3 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 4 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
+🟢|[src/check.ts](packages/choliba/src/check.ts)|100.00|100.00|100.00|100.00
 🟢|[src/completion.ts](packages/choliba/src/completion.ts)|100.00|100.00|100.00|100.00
 🟢|[src/route.ts](packages/choliba/src/route.ts)|100.00|100.00|100.00|100.00
 🟢|[src/setup.ts](packages/choliba/src/setup.ts)|100.00|100.00|100.00|100.00

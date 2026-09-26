@@ -736,6 +736,15 @@ describe('runAgentsCli — run', () => {
     expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES], deps)).toBe(0);
   });
 
+  it('shows why an agent that exists does not load, instead of calling it unknown', async () => {
+    const { deps, stderr } = harness([]);
+
+    expect(await runAgentsCli(['schema-invalid-xml', '--agents-dir', FIXTURES, '--help'], deps)).toBe(1);
+    const text = stderr.chunks.join('');
+    expect(text).toContain('failed schema validation');
+    expect(text).not.toContain('Unknown command');
+  });
+
   it('reports a broken agent.yaml distinctly, after the command itself resolved', async () => {
     const { deps, stderr } = harness([], {
       commands: [defineCommand({ name: 'quick', agent: 'broken', description: 'd' })],

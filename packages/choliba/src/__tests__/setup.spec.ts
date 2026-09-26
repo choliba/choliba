@@ -15,6 +15,8 @@ import {
   setupWorkspace,
   sourceLine,
   trustPackage,
+  addScripts,
+  WORKSPACE_SCRIPTS,
   workspaceTemplatesDir,
 } from '../setup';
 
@@ -47,6 +49,8 @@ describe('COMPLETION_BASH as bash reads it', () => {
     });
     expect(COMPLETION_BASH).toContain(`printf '%s\\n' "$dir/node_modules/.bin/choliba"`);
     expect(COMPLETION_BASH).toContain('_choliba_previous_bun="${_choliba_previous_bun#*-F }"');
+    expect(COMPLETION_BASH).toContain('local root="${1%/node_modules/.bin/choliba}"');
+    expect(COMPLETION_BASH).toContain('_choliba_suggest "$at" "${script_words[@]:1}"');
   });
 });
 
@@ -60,8 +64,10 @@ describe('scaffoldWorkspace', () => {
         'projects/',
         '.env.example',
         '.gitignore',
+        'bunfig.toml',
         '.env',
       ]);
+      expect(fs.readFileSync(path.join(root, 'bunfig.toml'), 'utf8')).toContain('silent = true');
       expect(fs.existsSync(path.join(root, '.agents', 'mcps', '.gitkeep'))).toBe(true);
       expect(fs.readFileSync(path.join(root, '.env'), 'utf8')).toContain(`\nGLOBAL_DIR=${root}\n`);
       expect(fs.readFileSync(path.join(root, '.env.example'), 'utf8')).toContain('\nGLOBAL_DIR=\n');
@@ -80,9 +86,35 @@ describe('scaffoldWorkspace', () => {
         '.agents/mcps/',
         'projects/',
         '.env.example',
+        'bunfig.toml',
       ]);
       expect(fs.readFileSync(path.join(root, '.env'), 'utf8')).toBe('MEU=1\n');
       expect(scaffoldWorkspace(root)).toEqual([]);
+    });
+  });
+});
+
+describe('addScripts', () => {
+  it('adds the chol:* scripts the workspace lacks, keeping any of the same name', () => {
+    withDir((root) => {
+      const file = path.join(root, 'package.json');
+      fs.writeFileSync(file, JSON.stringify({ name: 'g', scripts: { 'chol:tests': 'meu', build: 'x' } }));
+
+      const added = addScripts(root);
+      expect(added).toEqual(Object.keys(WORKSPACE_SCRIPTS).filter((name) => name !== 'chol:tests'));
+      const scripts = (JSON.parse(fs.readFileSync(file, 'utf8')) as { scripts: Record<string, string> }).scripts;
+      expect(scripts['chol:tests']).toBe('meu');
+      expect(scripts['build']).toBe('x');
+      expect(scripts['chol:project:create']).toBe('choliba projects create-project');
+      expect(addScripts(root)).toEqual([]);
+    });
+  });
+
+  it('starts a scripts section when there is none, and skips a package.json it cannot read', () => {
+    withDir((root) => {
+      expect(addScripts(root)).toEqual([]);
+      fs.writeFileSync(path.join(root, 'package.json'), '{}');
+      expect(addScripts(root)).toHaveLength(Object.keys(WORKSPACE_SCRIPTS).length);
     });
   });
 });
@@ -174,6 +206,7 @@ describe('setupShell / setup', () => {
       const first = setup(home, workspace);
       expect(first).toContain(`Pasta de trabalho: ${workspace}\n  criado: agents/, .agents/skills/`);
       expect(first).toContain('trustedDependencies no package.json');
+      expect(first).toContain('scripts chol:help, chol:check, chol:agents');
       expect(first).toContain('Próximos passos:');
       expect(setup(home, workspace)).toContain(`Pasta de trabalho: ${workspace} (já estava pronta).`);
     });

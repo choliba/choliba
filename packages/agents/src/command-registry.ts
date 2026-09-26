@@ -1,12 +1,16 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { isValidAgentName, loadAgent } from './agent-loader';
 import type { CommandDefinition } from './command.types';
 import { commandFromAgent } from './define-command';
 
 /**
  * Resolves a CLI name to a command. An explicit entry in `builtins` wins; otherwise, if `name`
- * is a loadable agent in `agentsDir`, a command is synthesized from its `agent.yaml`. Returns
- * `undefined` when neither applies, so the caller can print a clear "unknown command" instead
- * of a stack trace.
+ * is an agent in `agentsDir`, a command is synthesized from its `agent.yaml`. Returns `undefined`
+ * when there is no such agent, so the caller can print a clear "unknown command". An agent that
+ * exists but does not load (invalid agent.yaml or system.md) throws its `AgentConfigError`: the
+ * reason, naming the file, is what the user needs, not "unknown command".
  */
 export async function resolveCommand(
   name: string,
@@ -21,9 +25,8 @@ export async function resolveCommand(
   if (!isValidAgentName(name)) {
     return undefined;
   }
-  try {
-    return commandFromAgent(await loadAgent(agentsDir, name));
-  } catch {
+  if (!existsSync(join(agentsDir, name))) {
     return undefined;
   }
+  return commandFromAgent(await loadAgent(agentsDir, name));
 }

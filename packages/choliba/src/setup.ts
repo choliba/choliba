@@ -32,10 +32,12 @@ export function workspaceTemplatesDir(): string {
 /** The folders a workspace has, each kept by a `.gitkeep` while empty; `projects` is where GLOBAL_DIR points at first. */
 const WORKSPACE_DIRS = ['agents', join('.agents', 'skills'), join('.agents', 'mcps'), 'projects'];
 
-/** Template file → workspace file (npm drops files named `.gitignore` from packages, hence no dot). */
+/** Template file → workspace file (packing drops files named `.gitignore` and `bunfig.toml`, hence other names). */
 const WORKSPACE_FILES: readonly (readonly [string, string])[] = [
   ['env', '.env.example'],
   ['gitignore', '.gitignore'],
+  // `bun chol:…` without the "$ command" echo and the "script exited" lines, as in the choliba repository.
+  ['bunfig', 'bunfig.toml'],
 ];
 
 /**
@@ -76,25 +78,65 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+/** The scripts a workspace gets, named as in the choliba repository (`bun chol:…`). */
+export const WORKSPACE_SCRIPTS: Readonly<Record<string, string>> = {
+  'chol:help': 'choliba --help',
+  'chol:check': 'choliba check',
+  'chol:agents': 'choliba agents',
+  'chol:projects': 'choliba projects',
+  'chol:project:create': 'choliba projects create-project',
+  'chol:project:list': 'choliba projects list-projects',
+  'chol:ticket:create': 'choliba projects create-ticket',
+  'chol:tests': 'choliba tests',
+  'chol:playwright-cli': 'choliba playwright-cli',
+};
+
+/** The workspace package.json as an object; undefined when missing, unreadable or not an object. */
+function readPackage(root: string): Record<string, unknown> | undefined {
+  const file = join(root, 'package.json');
+  if (!existsSync(file)) return undefined;
+  try {
+    const pkg: unknown = JSON.parse(readFileSync(file, 'utf8'));
+    return isRecord(pkg) ? pkg : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function writePackage(root: string, pkg: Readonly<Record<string, unknown>>): void {
+  writeFileSync(join(root, 'package.json'), `${JSON.stringify(pkg, null, 2)}\n`);
+}
+
+/**
+ * Adds `WORKSPACE_SCRIPTS` to the workspace package.json — only the ones it lacks, never replacing a
+ * script of the same name. Returns the names added.
+ */
+export function addScripts(root: string): readonly string[] {
+  const pkg = readPackage(root);
+  if (pkg === undefined) return [];
+  const scripts = isRecord(pkg['scripts']) ? pkg['scripts'] : {};
+  const added = Object.keys(WORKSPACE_SCRIPTS).filter((name) => !(name in scripts));
+  if (added.length > 0) {
+    writePackage(root, {
+      ...pkg,
+      scripts: { ...scripts, ...Object.fromEntries(added.map((name) => [name, WORKSPACE_SCRIPTS[name]])) },
+    });
+  }
+  return added;
+}
+
 /**
  * Lists choliba in the workspace package.json `trustedDependencies`, so Bun runs this setup on every
  * later install or upgrade instead of blocking it. Returns whether the file changed; a missing or
  * unreadable package.json is left alone.
  */
 export function trustPackage(root: string): boolean {
-  const file = join(root, 'package.json');
-  if (!existsSync(file)) return false;
-  let pkg: unknown;
-  try {
-    pkg = JSON.parse(readFileSync(file, 'utf8'));
-  } catch {
-    return false;
-  }
-  if (!isRecord(pkg)) return false;
+  const pkg = readPackage(root);
+  if (pkg === undefined) return false;
   const current = pkg['trustedDependencies'];
   const trusted = Array.isArray(current) ? current.filter((item): item is string => typeof item === 'string') : [];
   if (trusted.includes('choliba')) return false;
-  writeFileSync(file, `${JSON.stringify({ ...pkg, trustedDependencies: [...trusted, 'choliba'] }, null, 2)}\n`);
+  writePackage(root, { ...pkg, trustedDependencies: [...trusted, 'choliba'] });
   return true;
 }
 
@@ -136,9 +178,13 @@ export function setupShell(home: string): string {
 /** `choliba setup`, also the postinstall: the workspace structure, bash completion and what to do next. */
 export function setup(home: string, cwd: string, templatesDir: string = workspaceTemplatesDir()): string {
   const root = setupWorkspace(cwd);
+  const scaffolded = scaffoldWorkspace(root, templatesDir);
+  const trusted = trustPackage(root);
+  const scripts = addScripts(root);
   const created = [
-    ...scaffoldWorkspace(root, templatesDir),
-    ...(trustPackage(root) ? ['trustedDependencies no package.json'] : []),
+    ...scaffolded,
+    ...(trusted ? ['trustedDependencies no package.json'] : []),
+    ...(scripts.length === 0 ? [] : [`scripts ${scripts.join(', ')} no package.json`]),
   ];
   const structure =
     created.length === 0

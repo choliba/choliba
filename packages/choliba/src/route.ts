@@ -1,7 +1,7 @@
 import type { CommandEntry, CommandSpec } from '@choliba/core/cli';
 
 /** What `choliba` runs itself; any other first word is an agent of the workspace. */
-export const SUBCOMMANDS = ['agents', 'projects', 'tests', 'playwright-cli', 'setup', 'completion'] as const;
+export const SUBCOMMANDS = ['agents', 'projects', 'tests', 'playwright-cli', 'check', 'setup', 'completion'] as const;
 
 export type Subcommand = (typeof SUBCOMMANDS)[number];
 
@@ -55,6 +55,12 @@ const COMMANDS: readonly CommandEntry[] = [
     description: 'O navegador que os agentes usam (playwright cli)',
     group: 'Commands',
     spec: { usage: 'choliba playwright-cli COMMAND [ARGS]' },
+  },
+  {
+    name: 'check',
+    description: 'Confere a pasta de trabalho: agentes (schemas, skills, MCPs) e projetos',
+    group: 'Commands',
+    spec: { usage: 'choliba check' },
   },
   {
     name: 'setup',

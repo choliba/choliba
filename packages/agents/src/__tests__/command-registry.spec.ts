@@ -36,6 +36,10 @@ describe('resolveCommand', () => {
     expect(await resolveCommand('nope', [], FIXTURES)).toBeUndefined();
   });
 
+  it('throws the reason when the agent exists but does not load, naming the file', async () => {
+    await expect(resolveCommand('schema-invalid-xml', [], FIXTURES)).rejects.toThrow('failed schema validation');
+  });
+
   it('returns undefined for an invalid agent name, without throwing', async () => {
     expect(await resolveCommand('../etc', [], FIXTURES)).toBeUndefined();
   });
