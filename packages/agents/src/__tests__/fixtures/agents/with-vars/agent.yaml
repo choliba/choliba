@@ -1,0 +1,7 @@
+id: with-vars-agent
+name: With Vars
+version: 1.0.0
+description: 'Fixture agent whose system.md names ${PROJECTS_DIR} and has no docs_map.'
+supported_models:
+  - claude-3-5-sonnet
+task_required: false

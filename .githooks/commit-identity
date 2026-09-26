@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Barra commits cuja IDENTIDADE carrega rastro de agente/LLM. O commit-msg valida só o
+# texto da mensagem; um commit com mensagem impecável mas assinado por
+# "Claude <noreply@anthropic.com>" passava por ele, e o squash do GitHub transformava
+# essa identidade num rodapé "Co-authored-by:" gravado na branch de destino.
+# Uso:
+#   commit-identity                 valida a identidade que o git usaria agora (hook pre-commit)
+#   commit-identity <base>..<head>  valida autor e committer de cada commit do intervalo (CI)
+set -euo pipefail
+
+forbidden="$(cat "$(dirname "${BASH_SOURCE[0]}")/forbidden-text")"
+
+fail() {
+  echo "commit-identity: $1" >&2
+  echo "  Autor e committer não podem mencionar agente/LLM." >&2
+  echo "  Corrija com: git config user.name '<seu nome>' && git config user.email '<seu email>'" >&2
+  echo "  Num commit já criado, recrie a branch a partir da base com 'git merge --squash' (force-push é proibido)." >&2
+  exit 1
+}
+
+check() {
+  local label="$1" identity="$2"
+  if printf '%s\n' "$identity" | grep -Eiq "$forbidden"; then
+    fail "$label contém texto proibido: $identity"
+  fi
+}
+
+if [[ $# -eq 0 ]]; then
+  check "a identidade de autor configurada" "$(git var GIT_AUTHOR_IDENT)"
+  check "a identidade de committer configurada" "$(git var GIT_COMMITTER_IDENT)"
+  exit 0
+fi
+
+for range in "$@"; do
+  for sha in $(git rev-list --no-merges "$range"); do
+    check "o autor de $sha" "$(git log -1 --format='%an <%ae>' "$sha")"
+    check "o committer de $sha" "$(git log -1 --format='%cn <%ce>' "$sha")"
+  done
+done

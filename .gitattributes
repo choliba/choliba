@@ -1,0 +1,5 @@
+# Normaliza para LF no repositório e no checkout (casa com end_of_line = lf do .editorconfig).
+* text=auto eol=lf
+
+# Lockfile é gerado: fora de diffs e de estatísticas de linguagem.
+bun.lock linguist-generated=true -diff

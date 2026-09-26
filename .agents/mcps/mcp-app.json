@@ -1,0 +1,7 @@
+{
+  "command": "node",
+  "args": ["${MCP_APP_DIR}/dist/main.js"],
+  "env": {
+    "LOG_DIR": "${LOG_DIR}"
+  }
+}

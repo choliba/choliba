@@ -1,0 +1,15 @@
+{
+  "name": "CHANGE_ME",
+  "description": "",
+  "envs": [
+    {
+      "nome": "development",
+      "baseURL": "CHANGE_ME",
+      "appDir": "CHANGE_ME",
+      "default": true
+    }
+  ],
+  "devices": {
+    "chromium": true
+  }
+}

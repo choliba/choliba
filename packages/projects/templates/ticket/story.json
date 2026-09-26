@@ -1,0 +1,15 @@
+{
+  "description": "Valor para o usuário: uma capacidade nova, descrita pelo que ele passa a conseguir fazer.",
+  "fields": {
+    "titulo": "CHANGE_ME",
+    "contexto": "CHANGE_ME",
+    "evidencias": [],
+    "criterios": [
+      {
+        "id": "CA-01",
+        "descricao": "CHANGE_ME",
+        "testes": []
+      }
+    ]
+  }
+}

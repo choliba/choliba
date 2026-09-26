@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Impede que um commit nasça com identidade de agente/LLM, em vez de só descobrir isso
+# na CI depois do push. Ativado junto com os demais hooks pelo `prepare` (core.hooksPath).
+set -euo pipefail
+exec "$(dirname "${BASH_SOURCE[0]}")/commit-identity"

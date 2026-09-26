@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  pull_request:
+    # `edited` é essencial: sem ele, o corpo do PR pode ganhar texto proibido depois
+    # do check verde, e nada reprova. Rerodar o job antigo não resolve, porque a
+    # execução replaya o payload do evento original, com o corpo antigo.
+    types: [opened, synchronize, reopened, edited]
+    branches: [develop, master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  # O nome do job ("check") é o status check exigido pela proteção das branches.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ler a versão do Bun em package.json
+        id: bun
+        run: echo "version=$(jq -r '.packageManager | sub("^bun@"; "")' package.json)" >> "$GITHUB_OUTPUT"
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ steps.bun.outputs.version }}
+
+      - name: Instalar dependências
+        run: bun install --frozen-lockfile
+
+      # Título e corpo de PR são texto não confiável: entram só por variável de ambiente.
+      - name: Título, corpo, mensagens e autoria dos commits sem rastro de agente/LLM
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          printf '%s\n' "$PR_TITLE" > "$RUNNER_TEMP/pr-title.txt"
+          .githooks/commit-msg "$RUNNER_TEMP/pr-title.txt"
+          printf '%s\n' "$PR_BODY" > "$RUNNER_TEMP/pr-body.txt"
+          .githooks/commit-msg --no-format "$RUNNER_TEMP/pr-body.txt"
+          for sha in $(git rev-list --no-merges "$BASE_SHA..$HEAD_SHA"); do
+            git log -1 --format=%B "$sha" > "$RUNNER_TEMP/commit-msg.txt"
+            echo "commit $sha: $(head -n1 "$RUNNER_TEMP/commit-msg.txt")"
+            .githooks/commit-msg "$RUNNER_TEMP/commit-msg.txt"
+          done
+          # A mensagem não basta: um commit assinado por "Claude <noreply@anthropic.com>"
+          # tem mensagem limpa, mas vira um rodapé "Co-authored-by:" no squash do GitHub.
+          .githooks/commit-identity "$BASE_SHA..$HEAD_SHA"
+
+      - name: Typecheck, lint, formatação e testes com cobertura
+        run: bun run check
+
+      # A cobertura só pode subir. O limite anterior é o threshold commitado na branch
+      # de destino (o ratchet mantém esse valor igual à última cobertura aprovada).
+      - name: Cobertura igual ou maior que a da branch de destino
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          base="$RUNNER_TEMP/base-coverage.json"
+          if ! git show "origin/$BASE_REF:jest/jest.coverage.config.json" > "$base" 2>/dev/null; then
+            echo "A branch $BASE_REF ainda não tem jest/jest.coverage.config.json; nada a comparar."
+            exit 0
+          fi
+          regressions="$(jq -n \
+            --slurpfile base "$base" \
+            --slurpfile head jest/jest.coverage.config.json \
+            --slurpfile cov coverage/coverage-summary.json '
+              $base[0].coverageConfig.coverageThreshold.global as $b
+              | $head[0].coverageConfig.coverageThreshold.global as $h
+              | $cov[0].total as $c
+              | ["lines", "statements", "functions", "branches"]
+              | map({metric: ., base: $b[.], threshold_no_pr: $h[.], cobertura_no_pr: $c[.].pct})
+              | map(select(.threshold_no_pr < .base or .cobertura_no_pr < .base))')"
+          if [ "$regressions" != "[]" ]; then
+            echo "::error::A cobertura ou o threshold ficou abaixo do da branch $BASE_REF."
+            echo "$regressions"
+            exit 1
+          fi
+          echo "Cobertura e thresholds >= aos de $BASE_REF."
+
+      - name: Publicar relatório de cobertura (diagnóstico em caso de falha)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 5

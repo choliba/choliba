@@ -1,0 +1,21 @@
+id: with-prepare-agent
+name: With Prepare
+version: 1.0.0
+description: 'Fixture agent with working_tree_diff prepare and record_git_head after_execute.'
+supported_models:
+  - claude-3-5-sonnet
+skills: []
+policy: edits
+task_required: false
+default_mode: execute
+prepare:
+  kind: working_tree_diff
+  diff_file: .cache/with-prepare/diff.patch
+  default_base: develop
+  since_pending_state: .cache/with-prepare/last-base
+  snapshot:
+    docs: true
+    readme: true
+  default_task: 'Atualize a documentação com base no contexto entregue.'
+after_execute:
+  - record_git_head .cache/with-prepare/last-base

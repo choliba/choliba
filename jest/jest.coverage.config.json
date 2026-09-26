@@ -1,0 +1,27 @@
+{
+  "coverageConfig": {
+    "collectCoverage": true,
+    "collectCoverageFrom": ["packages/*/src/**/*.ts", "apps/*/src/**/*.ts", "!**/*.spec.ts", "!**/__tests__/**", "!**/*.d.ts", "!**/main.ts", "!**/*.interface.ts", "!**/*.types.ts"],
+    "coverageDirectory": "<rootDir>/coverage",
+    "coverageReporters": [
+      "json",
+      "json-summary",
+      "lcov",
+      [
+        "text",
+        {
+          "file": "coverage.txt"
+        }
+      ]
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 100,
+        "statements": 100,
+        "functions": 100,
+        "branches": 100
+      }
+    },
+    "globalTeardown": "<rootDir>/jest/jest.teardown.config.ts"
+  }
+}

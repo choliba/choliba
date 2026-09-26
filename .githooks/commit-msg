@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Valida mensagens de commit (Conventional Commits 1.0.0) e barra qualquer
+# rastro de agente/LLM. Usado de três formas:
+#   - hook local `commit-msg` (git passa o arquivo da mensagem);
+#   - no CI, sobre cada commit e sobre o título de um PR;
+#   - com --no-format, só a checagem de texto proibido (corpo de PR).
+# Uso: commit-msg [--no-format] <arquivo-com-a-mensagem>
+set -euo pipefail
+
+format=1
+if [[ "${1:-}" == "--no-format" ]]; then format=0; shift; fi
+file="${1:?arquivo com a mensagem de commit}"
+
+# Ignora comentários que o git injeta (linhas iniciadas por #) e o rodapé de scissors.
+message="$(sed -e '/^# ------------------------ >8 ------------------------$/,$d' -e '/^#/d' "$file")"
+header="$(printf '%s\n' "$message" | sed -n '1p')"
+
+fail() {
+  echo "commit-msg: $1" >&2
+  echo "  Regras: Conventional Commits 1.0.0, sem Co-authored-by e sem qualquer menção a agente/LLM." >&2
+  echo "  Exemplo: feat(core): add slugify" >&2
+  exit 1
+}
+
+# 1) Texto proibido: vale para o cabeçalho, o corpo e os rodapés.
+# A regex mora em .githooks/forbidden-text para que commit-identity use exatamente a mesma.
+forbidden="$(cat "$(dirname "${BASH_SOURCE[0]}")/forbidden-text")"
+if hit="$(printf '%s\n' "$message" | grep -Ein "$forbidden" | head -n1)" && [[ -n "$hit" ]]; then
+  fail "texto proibido encontrado (informação de agente/LLM ou Co-authored-by): $hit"
+fi
+
+[[ "$format" -eq 1 ]] || exit 0
+
+# 2) Merge/revert gerados pelo git passam sem checar o formato.
+if [[ "$header" =~ ^Merge\  ]] || [[ "$header" =~ ^Revert\ \" ]]; then exit 0; fi
+
+# 3) Formato: <type>[(scope)][!]: <description>
+types='feat|fix|build|chore|ci|docs|perf|refactor|revert|style|test'
+pattern="^($types)(\\([a-z0-9._/-]+\\))?!?: [^ ].*$"
+[[ "$header" =~ $pattern ]] || fail "cabeçalho fora do padrão '<tipo>[(escopo)][!]: <descrição>' (tipos: ${types//|/, }): \"$header\""
+[[ ${#header} -le 100 ]] || fail "cabeçalho com ${#header} caracteres (máximo 100)"
+[[ "$header" != *. ]] || fail "a descrição não deve terminar com ponto final"
+
+# 4) Uma linha em branco separa o cabeçalho do corpo.
+second="$(printf '%s\n' "$message" | sed -n '2p')"
+[[ -z "$second" ]] || fail "deixe uma linha em branco entre o cabeçalho e o corpo"

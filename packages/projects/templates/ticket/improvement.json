@@ -1,0 +1,17 @@
+{
+  "description": "Ajuste em algo que já existe: fluxo, texto, usabilidade ou desempenho.",
+  "fields": {
+    "titulo": "CHANGE_ME",
+    "contexto": "CHANGE_ME",
+    "comportamentoAtual": "CHANGE_ME",
+    "comportamentoEsperado": "CHANGE_ME",
+    "evidencias": [],
+    "criterios": [
+      {
+        "id": "CA-01",
+        "descricao": "CHANGE_ME",
+        "testes": []
+      }
+    ]
+  }
+}

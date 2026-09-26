@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+!.env.example.json
+.DS_Store
+
+trash
+.cache/
+plans/

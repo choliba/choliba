@@ -1,0 +1,26 @@
+{
+  "name": "@choliba/runner",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./shared/env": "./shared/env.ts",
+    "./shared/pages/BasePage": "./shared/pages/BasePage.ts"
+  },
+  "bin": {
+    "playwright-tests": "./src/cli/main.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@choliba/core": "workspace:*",
+    "@choliba/projects": "workspace:*",
+    "@choliba/terminal": "workspace:*"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.0"
+  }
+}

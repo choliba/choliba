@@ -1,0 +1,48 @@
+{
+  "name": "choliba",
+  "private": true,
+  "license": "MIT",
+  "author": "Jackson Bicalho",
+  "type": "module",
+  "packageManager": "bun@1.4.2",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "typecheck": "bun run --filter '*' typecheck && tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "test": "jest --config jest/jest.config.ts",
+    "test:watch": "jest --config jest/jest.config.ts --watch",
+    "test:cov": "jest --coverage --config jest/jest.config.ts",
+    "check": "bun run typecheck && bun run lint && bun run format && bun run test:cov",
+    "prepare": "git config core.hooksPath .githooks || true",
+    "chol:agents": "bun packages/agents/src/cli/main.ts",
+    "chol:docs": "bun chol:agents --docs-updater",
+    "chol:po": "bun chol:agents --product-owner",
+    "chol:projects": "bun packages/projects/src/main.ts",
+    "chol:project:create": "bun run chol:projects create-project",
+    "chol:project:list": "bun run chol:projects list-projects",
+    "chol:ticket:create": "bun run chol:projects create-ticket",
+    "chol:playwright-cli": "packages/runner/node_modules/.bin/playwright cli",
+    "chol:help": "bun run scripts/help.ts",
+    "git:clean": "bun run scripts/git-clean.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/jest": "30.0.0",
+    "@types/node": "^22.19.6",
+    "esbuild": "^0.28.2",
+    "esbuild-register": "^3.6.0",
+    "eslint": "^10.11.0",
+    "eslint-config-prettier": "^10.1.8",
+    "jest": "30.5.2",
+    "jiti": "^2.7.0",
+    "prettier": "^3.9.8",
+    "ts-jest": "29.4.12",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.70.1"
+  }
+}

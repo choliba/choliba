@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=../../packages/agents/schemes/agent.schema.json
+id: product-owner-agent
+name: Product Owner
+version: 1.0.0
+description: 'Especialista em negócio: transforma um problema, feature ou bug num ticket com critérios de aceite em Gherkin, usando a aplicação no navegador como fonte de verdade (nunca o código). Age sobre um projeto (--project) e preenche o ticket que o CLI cria (--type) ou abre (--ticket). Use antes do developer.'
+supported_models:
+  - claude-sonnet-5
+  - Composer 2.5 Fast
+skills:
+  - playwright-cli
+mcps:
+  mcp-app:
+    tools:
+      - jira_get_issue
+      - jira_search
+      - jira_search_by_filter
+      - use_environment
+      - list_environments
+      - get_current_environment
+task_required: true
+project_required: true
+ticket_types:
+  - epic
+  - story
+  - bug
+  - improvement
+default_mode: execute

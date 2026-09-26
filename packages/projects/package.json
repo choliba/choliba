@@ -1,0 +1,20 @@
+{
+  "name": "@choliba/projects",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "bin": {
+    "projects": "./src/main.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@choliba/core": "workspace:*",
+    "@choliba/terminal": "workspace:*"
+  },
+  "cholCompletion": true
+}

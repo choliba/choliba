@@ -1,0 +1,18 @@
+{
+  "description": "Correção de falha: a aplicação faz algo diferente do esperado.",
+  "fields": {
+    "titulo": "CHANGE_ME",
+    "contexto": "CHANGE_ME",
+    "passosParaReproduzir": ["CHANGE_ME"],
+    "comportamentoEsperado": "CHANGE_ME",
+    "comportamentoAtual": "CHANGE_ME",
+    "evidencias": [],
+    "criterios": [
+      {
+        "id": "CA-01",
+        "descricao": "CHANGE_ME",
+        "testes": []
+      }
+    ]
+  }
+}

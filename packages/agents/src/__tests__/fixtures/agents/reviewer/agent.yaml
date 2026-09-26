@@ -1,0 +1,7 @@
+id: example-reviewer-agent
+name: Reviewer
+version: 2.1.0
+description: 'Agente sem skills, para cobrir esse caso do formato.'
+supported_models:
+  - claude-3-5-sonnet
+policy: read-only

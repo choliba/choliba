@@ -1,0 +1,15 @@
+{
+  "description": "Execução técnica, sem comportamento novo visível para o usuário.",
+  "fields": {
+    "titulo": "CHANGE_ME",
+    "contexto": "CHANGE_ME",
+    "evidencias": [],
+    "criterios": [
+      {
+        "id": "CA-01",
+        "descricao": "CHANGE_ME",
+        "testes": []
+      }
+    ]
+  }
+}

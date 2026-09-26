@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=../../packages/agents/schemes/agent.schema.json
+id: docs-updater-agent
+name: Docs Updater
+version: 1.2.0
+description: "Atualiza a documentação em docs/ e o README para refletir exatamente o que mudou no código, a partir do diff calculado pelo comando (base develop por padrão, incluindo o que ainda não foi commitado). Use depois de implementar algo e antes de abrir PR, pra manter a documentação sincronizada com o repositório."
+supported_models:
+  - claude-sonnet-5
+  - Composer 2.5 Fast
+skills:
+  - documentation
+task_required: false
+default_task: Atualize a documentação com base no contexto entregue.
+default_mode: execute
+before_execute:
+  - git_diff: [develop, .cache/docs-updater/diff.patch, --pending, .cache/docs-updater/last-base]
+  - add_files: [documentacao_atual, 'docs/**/*.md']
+  - add_files: [readme_atual, README.md]
+after_execute:
+  - run: [bun, x, prettier, --write, docs, README.md]
+  - record_git_head: [.cache/docs-updater/last-base]
+  - run: [rm, -f, .cache/docs-updater/diff.patch]

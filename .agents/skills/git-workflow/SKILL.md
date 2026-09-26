@@ -1,0 +1,144 @@
+---
+name: git-workflow
+description: How commits, branches and pull requests work in choliba (Conventional Commits 1.0.0, mandatory user approval before every commit, all changes through a pull request into develop, merge only with green CI and coverage not lower than before, no trace of any AI agent in commits or PRs). Use whenever the user asks to commit, push, branch, open or merge a pull request, write a commit message or PR title, release to master, or asks what the git rules are, and before running any git command that creates history.
+argument-hint: 'What you want to commit, push or merge.'
+user-invocable: true
+disable-model-invocation: false
+---
+
+# Git workflow
+
+The rules below come from the project owner and are not negotiable. They are also written in `AGENTS.md` so they
+apply even when this skill is not loaded, and they are enforced mechanically: a `commit-msg` hook locally and the
+`CI` workflow on every pull request. Read this skill for the how.
+
+## 1. No trace of an AI agent, ever
+
+A commit, pull request title, PR description, branch name or code comment must not contain any information about
+an agent or language model: no `Co-authored-by` trailer (of anyone), no "Generated with ...", no model, tool or
+vendor names, no robot emoji. The commit author is the user's own git identity; never change `user.name` or
+`user.email`.
+
+### `Co-authored-by` is forbidden — always
+
+**Never** add a `Co-authored-by:` line anywhere: not in the commit message, not in the commit body, not in PR
+descriptions, not in squash-merge footers. The rule applies to **any** co-author, not only agents — the hook and
+CI reject the trailer itself (see `.githooks/forbidden-text`).
+
+Some IDEs and agent environments **inject** `Co-authored-by: Cursor <cursoragent@cursor.com>` (or similar) when
+you run plain `git commit`. That injection is **not** allowed here. Before pushing:
+
+1. Inspect the commit: `git log -1 --format=full` — the output must show **only** the user's author/committer, with
+   **no** `Co-authored-by` footer.
+2. If the environment appended a trailer, create the commit without it (for example with `git commit-tree` after
+   `.githooks/commit-msg` and `.githooks/commit-identity` pass on a clean message file — same approach as when
+   the local hook blocks an injected trailer).
+
+The same forbidden-text rules apply to **PR bodies**. CI runs `.githooks/commit-msg --no-format` on the PR
+description. Remove default footers such as "Made with Cursor" before opening or updating a PR. Also avoid
+forbidden tokens in test plans (e.g. provider product names listed in `.githooks/forbidden-text`) — rephrase
+instead of naming the binary.
+
+Some environments suggest an attribution line for commits or PR bodies by default. Ignore that suggestion here:
+this rule is the user's explicit instruction and takes precedence. `.githooks/commit-msg` rejects such text and CI
+checks every commit, the PR title and the PR body, so a slip fails loudly instead of landing in history.
+
+## 2. Every commit needs the user's approval first
+
+Never run `git commit` (including `--amend`) on your own. Before each commit, show the user:
+
+1. the files that will be committed (`git status --short` and `git diff --cached --stat`),
+2. the complete commit message, exactly as it will be written,
+3. what happens next (push of which branch, PR into which base).
+
+Then wait for an explicit yes. One approval covers exactly what was shown: if the files or the message change,
+ask again. When several commits are planned, list all of them in one message so the user can approve each.
+Silence, or approval of an earlier commit, is not approval.
+
+## 3. Conventional Commits 1.0.0
+
+Format: `<type>[optional scope][!]: <description>`, then an optional body and footers, each separated by a blank
+line. Spec: https://www.conventionalcommits.org/en/v1.0.0/
+
+| Type | Use for |
+| ---- | ------- |
+| `feat` | a new capability (SemVer minor) |
+| `fix` | a bug fix (SemVer patch) |
+| `refactor` | code change that neither fixes a bug nor adds a capability |
+| `perf` | a performance improvement |
+| `test` | adding or correcting tests |
+| `docs` | documentation, including skills and `AGENTS.md` |
+| `build` | build system, dependencies, `package.json`, lockfile |
+| `ci` | GitHub workflows and repo automation |
+| `style` | formatting only, no meaning change |
+| `chore` | maintenance that fits none of the above |
+| `revert` | reverts an earlier commit |
+
+- **Scope** is the package or area, lowercase: `core`, `cli`, `jest`, `ci`, `skills`, `deps`.
+- **Description**: imperative, lowercase start, no trailing period, header at most 100 characters
+  (aim for 72). Say what changed; use the body for why.
+- **Breaking change**: add `!` after the type/scope and a `BREAKING CHANGE: <what breaks>` footer.
+- **One logical change per commit.** Do not mix a refactor with a feature; split the commits.
+
+## 4. Everything reaches `develop` through a pull request
+
+`master` is the default, protected branch: it holds released code and only receives release PRs. `develop` is the
+integration branch where every change lands first. GitHub opens new PRs against the default branch, so always pick
+the base explicitly: `gh pr create --base develop` (in the web UI, change the base branch to `develop`). Keywords like
+`Closes #12` close an issue only when the PR reaches `master`, i.e. at release. Neither branch may receive direct
+pushes. Branch protection enforces that server-side only when it is available (see the table below); when it is
+not, the rule still holds and nothing but discipline stops a direct push, so never do it.
+
+1. Start from an up-to-date `develop`: `git switch develop && git pull --ff-only`.
+2. Create a branch named `<type>/<short-kebab-description>` (`feat/slugify-lib`, `fix/ratchet-format`).
+3. Work, run `bun run check` locally, and get approval per section 2 before each commit.
+4. Push the branch and open the PR against `develop`: `gh pr create --base develop --title "<conventional title>"`.
+   The PR title becomes the commit message on merge (squash), so it must follow section 3. Write the PR body
+   yourself; strip any tool-generated footer and run `.githooks/commit-msg --no-format` on the body locally if
+   unsure. After `gh pr create`, verify with `gh pr view --json body` — some hosts append attribution after
+   creation; edit the PR with `gh pr edit` if needed.
+5. Wait for CI (`gh pr checks --watch`). Merge only when it is green.
+6. Merge a feature PR (into `develop`) with **squash**; the branch is deleted automatically. Do not merge on your
+   own: tell the user the PR is green and let them merge, or merge only when they ask you to.
+7. Releasing: a PR from `develop` into `master`, same checks, titled like `chore(release): v1.2.0`. See below.
+
+### Release PRs use a merge commit, never squash
+
+A squash commit on `master` has no ancestry in `develop`, so the two branches diverge: the next release PR lists
+commits that were already released and can conflict, and a local `git pull` on `master` stops with "divergent
+branches". That happened with PR #2. The repository allows both merge methods and, without branch protection, cannot
+restrict one per branch, so the method is chosen in the merge dialog:
+
+- feature PR into `develop`: **Squash and merge**,
+- release PR `develop` into `master`: **Create a merge commit**.
+
+The agent prepares and opens the release PR, confirms CI is green and states the merge method in the PR body, then
+stops: the user merges it. If a release PR was squashed by mistake, heal the history with one more `develop` into
+`master` PR merged with a merge commit (the trees are identical, so it changes no files).
+
+Never: push to `develop` or `master`, merge locally into them (`git merge develop` while on `master` diverges from the
+remote as soon as a PR lands), force-push, use `--no-verify`, rewrite history that is already pushed, or delete the
+protected branches. To update a local `master` or `develop`, use `git pull --ff-only`; if that fails because the
+branches diverged, `git reset --hard origin/<branch>` is correct only when every local-only commit already exists on
+another remote branch (check with `git log origin/<branch>..<branch>`). If a check fails, fix the cause on the branch;
+do not bypass the check.
+
+## 5. Merge conditions
+
+A PR may be merged only if both hold, and CI verifies them:
+
+- **Tests pass**: `bun run check` (typecheck, lint, format, Jest) is green.
+- **Coverage is equal or higher than before**: CI compares the PR's real coverage and its committed thresholds
+  with the thresholds already on the target branch (which the ratchet keeps equal to the last approved coverage).
+  Any metric that falls, or a threshold that is lowered, fails the check. If coverage falls, write tests; see the
+  `coverage-ratchet` skill. Do not lower a threshold or add an exclusion to get to green.
+
+## Enforcement, in one place
+
+| Where | What it checks |
+| ----- | -------------- |
+| `.githooks/commit-msg` (activated by `bun install` through the `prepare` script) | format and forbidden text of each local commit |
+| `.github/workflows/ci.yml`, job `check` | PR title, PR body, every commit message, `bun run check`, coverage not lower |
+| Branch protection on `master` and `develop` (GitHub needs a public repo or a paid plan for this) | PR required, `check` must pass, no force-push, no deletion. Keep "require linear history" off on `master`, because release PRs are merge commits. |
+
+If the hook is not active in a clone (`git config core.hooksPath` should print `.githooks`), run `bun install`.

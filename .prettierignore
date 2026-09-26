@@ -1,0 +1,12 @@
+node_modules
+dist
+coverage
+COVERAGE.md
+bun.lock
+.agents
+.claude
+
+# Agent definitions (agent.yaml + system.md): external, syncable content copied verbatim
+# from other repos, not code the team authors — must stay byte-identical
+# to its source, so it never goes through this repo's own formatting.
+agents

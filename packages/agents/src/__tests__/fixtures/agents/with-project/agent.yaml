@@ -1,0 +1,8 @@
+id: with-project-agent
+name: With Project
+version: 1.0.0
+description: 'Fixture agent that acts on one project, given by --project.'
+supported_models:
+  - claude-3-5-sonnet
+task_required: false
+project_required: true
