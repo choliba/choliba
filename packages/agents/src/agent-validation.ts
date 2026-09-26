@@ -107,6 +107,25 @@ export async function validateSystemMd(
   };
 }
 
+/** The instruction files `agent.yaml` names: each phase's `system`, or `system.md` for an agent without phases. */
+function systemFiles(yamlText: string | undefined): readonly string[] {
+  let doc: unknown;
+  try {
+    doc = parseYaml(yamlText ?? '') as unknown;
+  } catch {
+    return ['system.md'];
+  }
+  const phases = typeof doc === 'object' && doc !== null ? (doc as { phases?: unknown }).phases : undefined;
+  if (typeof phases !== 'object' || phases === null) {
+    return ['system.md'];
+  }
+  return Object.values(phases).flatMap((phase: unknown) => {
+    const system = typeof phase === 'object' && phase !== null ? (phase as { system?: unknown }).system : undefined;
+    // Only a plain file name next to agent.yaml; anything else is left to the schema's error.
+    return typeof system === 'string' && /^[A-Za-z0-9_.-]+\.md$/.test(system) ? [system] : [];
+  });
+}
+
 /**
  * Validates every file in `{agentsDir}/{name}/` before anything else is done with that agent —
  * `agent.yaml` against `agent.schema.json`, `system.md` against its schema (`agentSchemaFor`). Reports every
@@ -115,7 +134,6 @@ export async function validateSystemMd(
 export async function validateAgentFiles(agentsDir: string, name: string): Promise<ValidationResult> {
   const dir = join(agentsDir, name);
   const yamlPath = join(dir, 'agent.yaml');
-  const systemPath = join(dir, 'system.md');
 
   const errors: string[] = [];
 
@@ -129,14 +147,15 @@ export async function validateAgentFiles(agentsDir: string, name: string): Promi
     errors.push(...validateAgentYaml(yamlText).errors.map((error) => `${yamlPath}: ${error}`));
   }
 
-  let systemText: string | undefined;
-  try {
-    systemText = readFileSync(systemPath, 'utf8');
-  } catch {
-    errors.push(`${systemPath}: arquivo não encontrado`);
-  }
-  if (systemText !== undefined) {
-    const schema = agentSchemaFor(dir);
+  const schema = agentSchemaFor(dir);
+  for (const systemPath of systemFiles(yamlText).map((file) => join(dir, file))) {
+    let systemText: string | undefined;
+    try {
+      systemText = readFileSync(systemPath, 'utf8');
+    } catch {
+      errors.push(`${systemPath}: arquivo não encontrado`);
+      continue;
+    }
     const result = await validateSystemMd(systemText, schema);
     errors.push(...result.errors.map((error) => `${systemPath} (schema ${schema.path}): ${error}`));
   }

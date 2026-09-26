@@ -4,7 +4,13 @@
   "title": "agent.yaml",
   "description": "Metadados de um agente em agents/<nome>/agent.yaml — validado por validateAgentYaml em packages/agents/src/agent-validation.ts.",
   "type": "object",
-  "required": ["id", "name", "version", "description", "supported_models"],
+  "required": [
+    "id",
+    "name",
+    "version",
+    "description",
+    "supported_models"
+  ],
   "additionalProperties": false,
   "properties": {
     "id": {
@@ -60,7 +66,10 @@
         {
           "type": "object",
           "additionalProperties": {
-            "type": ["object", "null"],
+            "type": [
+              "object",
+              "null"
+            ],
             "additionalProperties": false,
             "properties": {
               "tools": {
@@ -78,7 +87,11 @@
     },
     "policy": {
       "type": "string",
-      "enum": ["read-only", "edits", "full"],
+      "enum": [
+        "read-only",
+        "edits",
+        "full"
+      ],
       "description": "Opcional: sem ele, o nível vem do <permissions> do system.md (algum caminho de escrita = edits, senão read-only)."
     },
     "task_required": {
@@ -86,7 +99,7 @@
     },
     "project_required": {
       "type": "boolean",
-      "description": "O agente age sob um projeto: --project <nome> é obrigatório e o projects valida o projeto antes de chamar o modelo. Libera ${PROJECT} e ${PROJECT_DIR} no system.md."
+      "description": "O agente age sob um projeto: --project <nome> é obrigatório e o projects valida o projeto antes de chamar o modelo. Libera ${PROJECT}, ${PROJECT_DIR} e ${APP_DIR} no system.md."
     },
     "default_task": {
       "type": "string",
@@ -94,7 +107,11 @@
     },
     "default_mode": {
       "type": "string",
-      "enum": ["execute", "plan", "ask"]
+      "enum": [
+        "execute",
+        "plan",
+        "ask"
+      ]
     },
     "before_execute": {
       "description": "Ações rodadas pelo CLI antes de chamar o modelo, em ordem: <ação>: [args]. Podem acrescentar seções ao prompt.",
@@ -107,7 +124,11 @@
     "prepare": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "diff_file", "since_pending_state"],
+      "required": [
+        "kind",
+        "diff_file",
+        "since_pending_state"
+      ],
       "properties": {
         "kind": {
           "const": "working_tree_diff"
@@ -148,6 +169,51 @@
       "minItems": 1,
       "items": {
         "$ref": "#/definitions/afterStep"
+      }
+    },
+    "phases": {
+      "description": "Fases do agente, na ordem em que rodam: cada uma é uma execução com o seu system (no lugar do system.md), as suas permissões e os seus passos. --<fase> roda só aquela. Com phases, before_execute, after_execute e prepare vão dentro de cada fase.",
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "system"
+        ],
+        "properties": {
+          "system": {
+            "description": "Arquivo .md ao lado do agent.yaml com as instruções da fase.",
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.-]+\\.md$"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "project_switch": {
+            "description": "Chave do config.json do projeto: a fase só roda num projeto em que ela é true (ausente ou false desliga). Pede project_required: true.",
+            "type": "string",
+            "minLength": 1
+          },
+          "before_execute": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/definitions/beforeStep"
+            }
+          },
+          "after_execute": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/definitions/afterStep"
+            }
+          }
+        }
       }
     }
   },

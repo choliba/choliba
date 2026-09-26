@@ -109,8 +109,8 @@ describe('runAgentsCli — help', () => {
   it('rejects a malformed argv up front, before resolving anything', async () => {
     const { deps, stderr } = harness([]);
 
-    expect(await runAgentsCli(['developer', '--bogus'], deps)).toBe(1);
-    expect(stderr.chunks.join('')).toContain('unknown flag: --bogus');
+    expect(await runAgentsCli(['developer', '--bogus=1'], deps)).toBe(1);
+    expect(stderr.chunks.join('')).toContain('unknown flag: --bogus=1');
   });
 
   it('prints per-agent help when --help follows the command name', async () => {
@@ -480,7 +480,7 @@ describe('runAgentsCli — --project', () => {
     expect(stderr.chunks.join('')).toContain('GLOBAL_DIR não definida');
   });
 
-  it('fills in ${PROJECT} and ${PROJECT_DIR} and grants only that project', async () => {
+  it('fills in ${PROJECT}, ${PROJECT_DIR} and ${APP_DIR} and grants only that project', async () => {
     await withProjects(async (projectsDir) => {
       const { deps, stdout } = harness([], { config: { GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir } });
 
@@ -490,9 +490,10 @@ describe('runAgentsCli — --project', () => {
       const printed = lines(stdout);
       const projectDir = join(projectsDir, 'ready');
       expect(printed).toContain(`Read(/${projectDir}/config.json)`);
+      expect(printed).toContain(`Read(/${projectDir}/app/**)`);
       expect(printed).toContain(`Write(/${projectDir}/tickets/**)`);
       expect(printed.slice(printed.indexOf('--add-dir'))).toContain(projectDir);
-      expect(printed.join('\n')).not.toContain('${PROJECT');
+      expect(printed.join('\n')).not.toMatch(/\$\{(PROJECT|APP_DIR)/);
     });
   });
 
@@ -1069,3 +1070,170 @@ describe('runAgentsCli — run', () => {
     });
   });
 });
+
+describe('runAgentsCli — phases', () => {
+  /**
+   * The `with-phases` fixture, copied so a test may change it, next to a project `ready` (with ticket 1)
+   * and a workspace root where the steps run; `edit` rewrites its agent.yaml.
+   */
+  function withPhases(
+    run: (paths: { agentsDir: string; projectsDir: string; root: string }) => Promise<void>,
+    edit: (yaml: string) => string = (yaml) => yaml,
+  ): Promise<void> {
+    const tmp = makeTmpDir('cli-phases');
+    const agentsDir = join(tmp.path, 'agents');
+    cpSync(join(FIXTURES, 'with-phases'), join(agentsDir, 'with-phases'), { recursive: true });
+    const yamlPath = join(agentsDir, 'with-phases', 'agent.yaml');
+    writeFileSync(yamlPath, edit(readFileSync(yamlPath, 'utf8')));
+    const projectsDir = join(tmp.path, 'projects');
+    const project = join(projectsDir, 'ready');
+    mkdirSync(join(project, 'tickets'), { recursive: true });
+    writeFileSync(join(project, 'config.json'), JSON.stringify({ name: 'Demo', envs: [{ nome: 'qa', baseURL: 'http://x', appDir: 'app' }], greenHabilitado: true }));
+    writeFileSync(join(project, '.env.json'), JSON.stringify({ qa: {} }));
+    writeFileSync(join(project, 'tickets', '1.json'), JSON.stringify({ ticket: 'ready-1', criterios: [] }));
+    const root = join(tmp.path, 'root');
+    mkdirSync(root);
+    return run({ agentsDir, projectsDir, root }).finally(tmp.cleanup);
+  }
+
+  /** A harness whose provider answers every call with a fresh successful stream. */
+  function phasesHarness(root: string, projectsDir: string): Harness & { readonly spawns: () => number } {
+    let count = 0;
+    const spawner = {
+      spawn: () => {
+        count += 1;
+        return {
+          pid: count,
+          stdout: streamFromChunks(claudeStdout(claudeSuccessLine())),
+          stderr: streamFromChunks([]),
+          exited: Promise.resolve(0),
+          signalCode: null,
+          kill: () => undefined,
+        };
+      },
+    };
+    const base = harness([], {
+      repoRoot: root,
+      runner: new ProcessRunner({ spawner }),
+      config: { GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir },
+    });
+    return { ...base, spawns: () => count };
+  }
+
+  const argv = (agentsDir: string, ...rest: string[]): string[] => [
+    'with-phases',
+    '--agents-dir',
+    agentsDir,
+    '--project',
+    'ready',
+    '--ticket',
+    '1',
+    ...rest,
+  ];
+
+  /** Each phase's steps append its name to `order.txt` in the workspace root. */
+  const recordOrder = (yaml: string): string =>
+    yaml
+      .replace("run: [echo, 'red ${PROJECT}:${TICKET}']", "run: [sh, -c, 'echo red-${TICKET} >> order.txt']")
+      .replace("run: [echo, 'green ${PROJECT}:${TICKET}']", "run: [sh, -c, 'echo green-${TICKET} >> order.txt']");
+
+  it('runs every phase in order, each with its own permissions, one provider call each', async () => {
+    await withPhases(async ({ agentsDir, projectsDir, root }) => {
+      const { deps, stdout, spawns } = phasesHarness(root, projectsDir);
+
+      expect(await runAgentsCli(argv(agentsDir), deps)).toBe(0);
+      expect(spawns()).toBe(2);
+      expect(readFileSync(join(root, 'order.txt'), 'utf8')).toBe('red-ready-1\ngreen-ready-1\n');
+      expect(lines(stdout)).toEqual(expect.arrayContaining(['[with-phases: fase red]', '[with-phases: fase green]']));
+    }, recordOrder);
+  });
+
+  it('stops at the first phase whose steps fail, never calling the next one', async () => {
+    await withPhases(
+      async ({ agentsDir, projectsDir, root }) => {
+        const { deps, stderr, spawns } = phasesHarness(root, projectsDir);
+
+        expect(await runAgentsCli(argv(agentsDir), deps)).toBe(1);
+        expect(spawns()).toBe(1);
+        expect(stderr.chunks.join('')).toContain('falhou');
+        expect(existsSync(join(root, 'order.txt'))).toBe(false);
+      },
+      (yaml) => recordOrder(yaml).replace("run: [sh, -c, 'echo red-${TICKET} >> order.txt']", "run: [sh, -c, 'exit 3']"),
+    );
+  });
+
+  it('runs only the phases named by their flags, in the declared order', async () => {
+    await withPhases(async ({ agentsDir, projectsDir, root }) => {
+      const only = phasesHarness(root, projectsDir);
+      expect(await runAgentsCli(argv(agentsDir, '--green'), only.deps)).toBe(0);
+      expect(only.spawns()).toBe(1);
+      expect(readFileSync(join(root, 'order.txt'), 'utf8')).toBe('green-ready-1\n');
+
+      const both = phasesHarness(root, projectsDir);
+      expect(await runAgentsCli(argv(agentsDir, '--green', '--red'), both.deps)).toBe(0);
+      expect(both.spawns()).toBe(2);
+      expect(readFileSync(join(root, 'order.txt'), 'utf8')).toBe('green-ready-1\nred-ready-1\ngreen-ready-1\n');
+    }, recordOrder);
+  });
+
+  it('prints each phase on --dry-run, leaving the steps of a later phase to the real run', async () => {
+    await withPhases(async ({ agentsDir, projectsDir, root }) => {
+      const { deps, stdout, spawns } = phasesHarness(root, projectsDir);
+
+      expect(await runAgentsCli(argv(agentsDir, '--dry-run'), deps)).toBe(0);
+      const printed = lines(stdout);
+      const green = printed.indexOf('[with-phases: fase green]');
+      const project = join(projectsDir, 'ready');
+      expect(printed.slice(0, green)).toContain(`Write(/${project}/tests/**)`);
+      expect(printed.slice(green)).toContain(`Write(/${project}/app/**)`);
+      expect(printed.slice(green)).toContain('(before_execute da fase green só roda depois da fase anterior)');
+      expect(spawns()).toBe(0);
+      expect(existsSync(join(root, 'order.txt'))).toBe(false);
+    }, recordOrder);
+  });
+
+  it.each([
+    ['false', { greenHabilitado: false }],
+    ['ausente', {}],
+  ])(
+    'skips a phase whose switch is not true in the project (%s), and refuses it when asked for by its flag',
+    async (_case, switchValue) => {
+      await withPhases(async ({ agentsDir, projectsDir, root }) => {
+        const configFile = join(projectsDir, 'ready', 'config.json');
+        const { greenHabilitado: _on, ...config } = JSON.parse(readFileSync(configFile, 'utf8')) as Record<string, unknown>;
+        writeFileSync(configFile, JSON.stringify({ ...config, ...switchValue }));
+        const reason = 'desligada em "ready" (config.json: greenHabilitado precisa ser true)';
+
+        const all = phasesHarness(root, projectsDir);
+        expect(await runAgentsCli(argv(agentsDir), all.deps)).toBe(0);
+        expect(all.spawns()).toBe(1);
+        expect(all.stderr.chunks.join('')).toContain(`fase green pulada: ${reason}`);
+
+        const asked = phasesHarness(root, projectsDir);
+        expect(await runAgentsCli(argv(agentsDir, '--green'), asked.deps)).toBe(1);
+        expect(asked.spawns()).toBe(0);
+        expect(asked.stderr.chunks.join('')).toContain(`a fase green está ${reason}`);
+      }, recordOrder);
+    },
+  );
+
+  it('takes a flag per phase, listed in its help, and refuses one it does not have', async () => {
+    await withPhases(async ({ agentsDir, projectsDir, root }) => {
+      const help = phasesHarness(root, projectsDir);
+      expect(await runAgentsCli(['with-phases', '--agents-dir', agentsDir, '--help'], help.deps)).toBe(0);
+      const text = help.stdout.chunks.join('');
+      expect(text).toMatch(/--red\s+Só a fase red\n/);
+      expect(text).toMatch(/--green\s+Só a fase green: Implementa até os testes passarem\./);
+      expect(text).toContain('phases:\n  - red\n  - green');
+
+      const blue = phasesHarness(root, projectsDir);
+      expect(await runAgentsCli(argv(agentsDir, '--blue'), blue.deps)).toBe(1);
+      expect(blue.stderr.chunks.join('')).toContain('unknown flag: --blue');
+
+      const plain = harness([]);
+      expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--red', 'x'], plain.deps)).toBe(1);
+      expect(plain.stderr.chunks.join('')).toContain('unknown flag: --red');
+    });
+  });
+});
+

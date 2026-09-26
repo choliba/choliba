@@ -107,17 +107,31 @@ export function createExample(root: string, templatesDir: string = exampleTempla
     baseUrl: `http://localhost:${portExemple}`,
   });
   const project = join(projectsDir, EXAMPLE);
-  // Only Chromium, the browser the next steps install.
+  // Only Chromium, the browser the next steps install; and the developer's green phase may change the
+  // example's code, which is there to be changed (other projects have to turn it on themselves).
   const configFile = join(project, 'config.json');
   const config = JSON.parse(readFileSync(configFile, 'utf8')) as Record<string, unknown>;
   writeFileSync(
     configFile,
-    `${JSON.stringify({ ...config, devices: { chromium: true, firefox: false, webkit: false, 'mobile-chrome': false } }, null, 2)}\n`,
+    `${JSON.stringify(
+      {
+        ...config,
+        devices: { chromium: true, firefox: false, webkit: false, 'mobile-chrome': false },
+        greenDeveloperHabilitado: true,
+      },
+      null,
+      2,
+    )}\n`,
   );
   // The page has no login: the environment needs no credentials.
   writeFileSync(join(project, '.env.json'), `${JSON.stringify({ development: {} }, null, 2)}\n`);
   copyFileSync(join(templatesDir, 'spec'), join(project, 'tests', `${EXAMPLE}.spec.ts`));
   copyFileSync(join(templatesDir, 'ticket.json'), join(project, 'tickets', '1.json'));
+  // Nothing else starts the application: the project's hooks bring it up and down around each run.
+  for (const hook of ['global-setup', 'global-teardown']) {
+    const content = readFileSync(join(templatesDir, hook), 'utf8').replace('{{PORT_EXEMPLE}}', portExemple);
+    writeFileSync(join(project, `${hook}.ts`), content);
+  }
   return [
     `${APP_DIR}/${EXAMPLE}/`,
     `${PROJECTS_SUBDIR}/${EXAMPLE}/`,
@@ -125,6 +139,7 @@ export function createExample(root: string, templatesDir: string = exampleTempla
     `.env.json (sem credenciais)`,
     `tests/${EXAMPLE}.spec.ts`,
     `tickets/1.json`,
+    'global-setup.ts e global-teardown.ts (sobem e derrubam o servidor do exemplo)',
   ];
 }
 

@@ -17,12 +17,22 @@ import {
   resolveTicketRunsRoot,
   resolveTicketSpecFiles,
   TEST_RESULTS_FOLDER,
+  ticketJsonPath,
   ticketsFolderPath,
   ticketSuffix,
   type ProjectLocations,
 } from '@choliba/projects';
 
 import { fillTicketTests } from '../fill-ticket-tests';
+import {
+  EXPECTATIONS,
+  criterionRuns,
+  formatFailures,
+  verdictProblems,
+  type Expectation,
+  type PlaywrightReport,
+  type TicketCriteria,
+} from '../ticket-verdict';
 import {
   expandTicketSelector,
   isMultiTicketSelector,
@@ -58,6 +68,26 @@ export interface RunTestsOptions {
 
 export interface RunTestsResult {
   exitCode: number;
+}
+
+/**
+ * `NODE_PATH` with the `node_modules` that `@playwright/test` resolves from, seen from the runner, in
+ * front of `current`. A spec imports `@playwright/test`, but a project's folder (PROJECTS_DIR may be
+ * anywhere) has no `node_modules` of its own: this is where it finds the one the runner uses. When the
+ * runner cannot resolve it either, `current` is kept as is.
+ */
+export function playwrightNodePath(packageRoot: string, current: string | undefined): string | undefined {
+  let manifest: string;
+  try {
+    manifest = require.resolve('@playwright/test/package.json', { paths: [packageRoot] });
+  } catch {
+    return current;
+  }
+  // .../node_modules/@playwright/test/package.json → .../node_modules
+  const modules = path.dirname(path.dirname(path.dirname(manifest)));
+  if (current === undefined || current === '') return modules;
+  // A run of several tickets calls this again with the env it built: the folder is there already.
+  return current.split(path.delimiter).includes(modules) ? current : `${modules}${path.delimiter}${current}`;
 }
 
 export function readProcessStdinIsTTY(): boolean {
@@ -110,6 +140,77 @@ function openHtmlReport(
   spawn('bunx', ['playwright', 'show-report', reportDir], { stdio: 'inherit', cwd: packageRoot, env: process.env });
 }
 
+/** `--expect` and `--failures`: what a single ticket's run must show, and where to write how its tests failed. */
+interface TicketGate {
+  readonly expectation?: Expectation;
+  readonly failuresFile?: string;
+}
+
+const GATE_FLAGS = ['--expect', '--failures'] as const;
+
+/** The value of `--flag=value`, or of `--flag value` (taken from `queue`). */
+function flagValue(arg: string, queue: string[], flag: string): string {
+  if (arg.startsWith(`${flag}=`)) return arg.slice(flag.length + 1);
+  const value = queue.shift();
+  if (value === undefined || value.startsWith('-')) fail(`erro: ${flag} precisa de um valor.`);
+  return value;
+}
+
+function parseExpectation(value: string): Expectation {
+  const expectation = EXPECTATIONS.find((candidate) => candidate === value);
+  if (expectation === undefined) fail(`erro: --expect aceita ${EXPECTATIONS.join(' ou ')}, não "${value}".`);
+  return expectation;
+}
+
+/** `argv` without the gate flags, which are this CLI's and never reach Playwright. */
+function takeGateFlags(argv: readonly string[]): { argv: string[]; gate: TicketGate } {
+  const rest: string[] = [];
+  let gate: TicketGate = {};
+  const queue = [...argv];
+  let arg: string | undefined;
+  while ((arg = queue.shift()) !== undefined) {
+    const current = arg;
+    const flag = GATE_FLAGS.find((name) => current === name || current.startsWith(`${name}=`));
+    if (flag === undefined) {
+      rest.push(current);
+      continue;
+    }
+    const value = flagValue(current, queue, flag);
+    gate = flag === '--expect' ? { ...gate, expectation: parseExpectation(value) } : { ...gate, failuresFile: value };
+  }
+  return { argv: rest, gate };
+}
+
+function hasGate(gate: TicketGate): boolean {
+  return gate.expectation !== undefined || gate.failuresFile !== undefined;
+}
+
+/**
+ * After a gated run: writes `--failures` and checks `--expect` against the report the run left and
+ * the ticket's criteria. Returns the run's exit code: the verdict's when `--expect` was given.
+ */
+function checkGate(gate: TicketGate, ticketFile: string, reportFolder: string, ticket: string, status: number): number {
+  const resultsFile = path.join(reportFolder, 'results.json');
+  if (!fs.existsSync(resultsFile)) {
+    writeStderr(`erro: o Playwright não gravou ${resultsFile}; nada a conferir.\n`);
+    return 1;
+  }
+  const report = JSON.parse(fs.readFileSync(resultsFile, 'utf8')) as PlaywrightReport;
+  const criteria = JSON.parse(fs.readFileSync(ticketFile, 'utf8')) as TicketCriteria;
+  if (gate.failuresFile !== undefined) {
+    fs.mkdirSync(path.dirname(gate.failuresFile), { recursive: true });
+    fs.writeFileSync(gate.failuresFile, formatFailures(ticket, criterionRuns(criteria, report)));
+  }
+  if (gate.expectation === undefined) return status;
+  const problems = [
+    ...verdictProblems(gate.expectation, criteria, report),
+    ...(gate.expectation === 'green' && status !== 0 ? [`o Playwright terminou com ${String(status)}`] : []),
+  ];
+  if (problems.length === 0) return 0;
+  writeStderr(`${ticket} não está ${gate.expectation}:\n${problems.map((problem) => `  - ${problem}`).join('\n')}\n`);
+  return 1;
+}
+
 async function runTicketsSequentially(
   locations: ProjectLocations,
   project: string,
@@ -150,9 +251,11 @@ async function runTicketsSequentially(
 
 export async function runTestsCli(options: RunTestsOptions): Promise<RunTestsResult> {
   // The Playwright config runs in its own process: it finds the workspace (its .env, PROJECTS_DIR) here.
-  const env: NodeJS.ProcessEnv = { ...process.env, [WORKSPACE_ENV]: options.monorepoRoot, ...options.env };
+  const baseEnv: NodeJS.ProcessEnv = { ...process.env, [WORKSPACE_ENV]: options.monorepoRoot, ...options.env };
+  const nodePath = playwrightNodePath(options.packageRoot, baseEnv['NODE_PATH']);
+  const env: NodeJS.ProcessEnv = nodePath === undefined ? baseEnv : { ...baseEnv, NODE_PATH: nodePath };
   const cwd = options.cwd ?? options.packageRoot;
-  const argv = [...options.argv];
+  const { argv, gate } = takeGateFlags(options.argv);
   const loadConfig = options.loadConfig ?? ((root, processEnv) => resolveLocations(root, processEnv));
   const spawnSyncFn = options.spawnSyncFn ?? spawnSync;
   const spawnPlaywrightFn =
@@ -231,6 +334,10 @@ export async function runTestsCli(options: RunTestsOptions): Promise<RunTestsRes
       fail(`erro: ${(err as Error).message}`);
     }
 
+    if (hasGate(gate) && (!ticket || pathSuffix || isMultiTicketSelector(rawTicket))) {
+      fail(`erro: --expect e --failures valem para um ticket só (ex.: ${projectName}:T-01).`);
+    }
+
     if (ticket && !isMultiTicketSelector(rawTicket)) {
       const canonicalSuffix = resolveCanonicalSuffix(projectsDir, projectName, stripProjectPrefix(projectName, ticket));
       ticket = fullTicket(projectName, canonicalSuffix);
@@ -265,10 +372,14 @@ export async function runTestsCli(options: RunTestsOptions): Promise<RunTestsRes
         fail((err as Error).message);
       }
 
+      // Before a test passes the ticket references none: its own spec, named after it, is its test.
+      const ownSpec = path.join(projectTestsFolder(projectsDir, projectName), `${ticket}.spec.ts`);
       if (specs.length > 0) {
         for (const spec of specs) {
           targets.push(path.join(projectTestsFolder(projectsDir, projectName), spec));
         }
+      } else if (fs.existsSync(ownSpec)) {
+        targets.push(ownSpec);
       } else {
         writeStderr(`aviso: ticket "${ticket}" ainda não tem teste referenciado — rodando o projeto inteiro.\n`);
         targets.push(projectDir(projectsDir, projectName));
@@ -300,7 +411,20 @@ export async function runTestsCli(options: RunTestsOptions): Promise<RunTestsRes
       TERM_COLS: terminalColumns(),
     };
 
-    const status = spawnPlaywrightFn(playwrightArgs, runEnv, cwd);
+    const reportFolder = resolveReportFolder(resolveTicketRunsRoot(locations), projectName, ticket || undefined);
+    // A report left by an earlier run must not pass for this one's.
+    if (hasGate(gate)) fs.rmSync(path.join(reportFolder, 'results.json'), { force: true });
+
+    const playwrightStatus = spawnPlaywrightFn(playwrightArgs, runEnv, cwd);
+    const status = hasGate(gate)
+      ? checkGate(
+          gate,
+          ticketJsonPath(projectsDir, projectName, ticketSuffix(projectName, ticket)),
+          reportFolder,
+          ticket,
+          playwrightStatus,
+        )
+      : playwrightStatus;
 
     if (ticket && ranWholeProject === 0) {
       try {
@@ -310,7 +434,6 @@ export async function runTestsCli(options: RunTestsOptions): Promise<RunTestsRes
       }
     }
 
-    const reportFolder = resolveReportFolder(resolveTicketRunsRoot(locations), projectName, ticket || undefined);
     if (reportFolder !== REPORT_FOLDER) hasCustomResultsDir = 1;
 
     if (isStdinInteractive(options.stdinIsTTY) && !options.batch && !env['QA_BATCH']) {

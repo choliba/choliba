@@ -1,0 +1,32 @@
+import { spawn } from 'node:child_process';
+import path from 'node:path';
+
+// Sobe a aplicação do exemplo (app/exemplo/server.ts) antes dos testes, quando ela ainda não está no ar.
+// Cada `choliba tests` sobe uma nova, então os testes sempre veem o código atual da aplicação.
+const URL_DO_EXEMPLO = 'http://localhost:{{PORT_EXEMPLE}}';
+
+async function noAr(): Promise<boolean> {
+  try {
+    await fetch(URL_DO_EXEMPLO);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export default async function globalSetup(): Promise<void> {
+  if (await noAr()) return;
+  const workspace = process.env['CHOLIBA_WORKSPACE'] ?? process.cwd();
+  const server = spawn('bun', [path.join(workspace, 'app', 'exemplo', 'server.ts')], {
+    stdio: 'ignore',
+    detached: true,
+  });
+  server.unref();
+  // Lido pelo global-teardown.ts, que roda no mesmo processo.
+  process.env['EXEMPLO_SERVER_PID'] = String(server.pid);
+  for (let tentativa = 0; tentativa < 50; tentativa += 1) {
+    if (await noAr()) return;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error(`a aplicação do exemplo não subiu em ${URL_DO_EXEMPLO}`);
+}

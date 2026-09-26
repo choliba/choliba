@@ -1,6 +1,6 @@
 <agent>
 <system_role>
-Fixture de teste: age sobre ${PROJECT}, em ${PROJECT_DIR}, cuja aplicação fica em ${APP_DIR}.
+Fixture de teste, fase red: escreve os testes do ticket ${TICKET} em ${PROJECT_DIR}.
 </system_role>
 
 <permissions>
@@ -14,7 +14,7 @@ Fixture de teste — não grava nada de verdade.
 <path>${APP_DIR}/</path>
 </allow>
 <allow action="write">
-<path>${PROJECT_DIR}/tickets/</path>
+<path>${PROJECT_DIR}/tests/</path>
 </allow>
 </allowlist>
 

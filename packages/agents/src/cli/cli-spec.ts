@@ -3,6 +3,7 @@ import type { GitRunner } from '@choliba/core/git';
 import { readTicketTemplate, ticketTemplatesDir } from '@choliba/projects';
 
 import type { AgentDefinition } from '../agent.types';
+import { phaseFlag } from '../phases';
 import { SINCE_PENDING } from '../prepare/constants';
 import { diffBaseOf } from '../prepare/registry';
 import {
@@ -103,11 +104,19 @@ function withTicketTypes(flags: readonly FlagSpec[], agent: AgentDefinition): re
   return flags.flatMap((flag) => (flag.name === '--type' ? [{ ...flag, choices }, ...shortcuts] : [flag]));
 }
 
+/** One `--<phase>` per phase of the agent: each runs only that phase. */
+function phaseFlags(agent: AgentDefinition): readonly FlagSpec[] {
+  return (agent.phases ?? []).map((phase) => ({
+    name: phaseFlag(phase),
+    description: `Só a fase ${phase.name}${phase.description === undefined ? '' : `: ${phase.description}`}`,
+  }));
+}
+
 /**
  * `RUN_FLAGS` with value completion for this agent. The diff-base flags only appear for agents
  * with a `git_diff` in `before_execute`, `--project` only for agents with `project_required`,
- * `--type`/`--ticket` (and a `--type-<type>` per type) only for agents with `ticket_types`, and
- * `--mode`/`--since` show that agent's own defaults.
+ * `--type`/`--ticket` (and a `--type-<type>` per type) only for agents with `ticket_types`, a
+ * `--<phase>` per phase only for agents with `phases`, and `--mode`/`--since` show that agent's own defaults.
  */
 function runFlags(agent: AgentDefinition, context: AgentsCliSpecContext): readonly FlagSpec[] {
   const diffBase = diffBaseOf(agent);
@@ -129,7 +138,7 @@ function runFlags(agent: AgentDefinition, context: AgentsCliSpecContext): readon
         : { ...flag, value: { name: valueName, suggest: () => flagValueSuggestions(flag.name, agent, context) } };
     },
   );
-  return withTicketTypes(flags, agent);
+  return [...withTicketTypes(flags, agent), ...phaseFlags(agent)];
 }
 
 /** Every flag this agent takes, in each of its forms (`--help`, `-h`): exactly what its `--help` lists. */

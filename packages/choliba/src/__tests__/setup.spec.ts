@@ -116,6 +116,7 @@ describe('createExample', () => {
         '.env.json (sem credenciais)',
         'tests/exemplo.spec.ts',
         'tickets/1.json',
+        'global-setup.ts e global-teardown.ts (sobem e derrubam o servidor do exemplo)',
       ]);
       const app = path.join(root, 'app', 'exemplo');
       expect(fs.readdirSync(app).sort()).toEqual(['README.md', 'index.html', 'server.ts', 'tsconfig.json']);
@@ -125,6 +126,7 @@ describe('createExample', () => {
         description: string;
         devices: Record<string, boolean>;
         envs: { baseURL: string; appDir: string }[];
+        greenDeveloperHabilitado: boolean;
       };
       expect(config.description).toBe(
         'Loja de exemplo: Uma página só, para experimentar o choliba: um formulário de newsletter que agradece quem assina.',
@@ -132,9 +134,14 @@ describe('createExample', () => {
       expect(config.envs[0]?.appDir).toBe(path.join(root, 'app', 'exemplo'));
       expect(config.envs[0]?.baseURL).toBe('http://localhost:3000');
       expect(config.devices).toEqual({ chromium: true, firefox: false, webkit: false, 'mobile-chrome': false });
+      expect(config.greenDeveloperHabilitado).toBe(true);
       expect(fs.readFileSync(path.join(project, '.env.json'), 'utf8')).toContain('"development": {}');
       expect(fs.readFileSync(path.join(project, 'tests', 'exemplo.spec.ts'), 'utf8')).toContain("page.goto('')");
       expect(fs.existsSync(path.join(project, 'tickets', '1.json'))).toBe(true);
+      const setupHook = fs.readFileSync(path.join(project, 'global-setup.ts'), 'utf8');
+      expect(setupHook).toContain("'http://localhost:3000'");
+      expect(setupHook).not.toContain('{{');
+      expect(fs.readFileSync(path.join(project, 'global-teardown.ts'), 'utf8')).toContain('EXEMPLO_SERVER_PID');
       expect(loadProjectSettings(path.join(root, 'projects'), 'exemplo').environment.nome).toBe('development');
     });
   });
