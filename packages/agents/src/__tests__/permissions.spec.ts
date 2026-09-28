@@ -40,8 +40,13 @@ describe('readAgentPermissions', () => {
   it('allows nothing when permissions are absent, empty or partial', () => {
     expect(readAgentPermissions(undefined)).toEqual(NO_PERMISSIONS);
     expect(readAgentPermissions({})).toEqual(NO_PERMISSIONS);
-    expect(readAgentPermissions({ allow: { read: ['a'] }, deny: 'x' })).toEqual({ ...NO_PERMISSIONS, allowRead: ['a'] });
-    expect(readAgentPermissions({ allow: { execute: { './': 'git' } } }).allowExecute).toEqual([{ dir: './', commands: [] }]);
+    expect(readAgentPermissions({ allow: { read: ['a'] }, deny: 'x' })).toEqual({
+      ...NO_PERMISSIONS,
+      allowRead: ['a'],
+    });
+    expect(readAgentPermissions({ allow: { execute: { './': 'git' } } }).allowExecute).toEqual([
+      { dir: './', commands: [] },
+    ]);
   });
 });
 

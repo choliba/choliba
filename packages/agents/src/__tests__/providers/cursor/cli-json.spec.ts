@@ -13,7 +13,10 @@ const PERMISSIONS = { allow: ['Write(/repo/docs/**)'], deny: ['Shell(prettier)']
 
 describe('mergeCliJson', () => {
   it('keeps other keys and unions the permission lists', () => {
-    const existing = { editor: { vim: true }, permissions: { allow: ['Shell(ls)', 'Write(/repo/docs/**)', 1], ask: [] } };
+    const existing = {
+      editor: { vim: true },
+      permissions: { allow: ['Shell(ls)', 'Write(/repo/docs/**)', 1], ask: [] },
+    };
 
     expect(mergeCliJson(existing, PERMISSIONS)).toEqual({
       editor: { vim: true },

@@ -98,7 +98,18 @@ describe('cursorProvider.buildArgs', () => {
 
   it('approves MCP servers only when the agent lists some, and never twice', () => {
     expect(cursorProvider.buildArgs(fakeRequest({ policy: 'edits' })).includes('--approve-mcps')).toBe(false);
-    const listed = cursorProvider.buildArgs(fakeRequest({ policy: 'edits', mcpServers: [{ name: 'browser', config: { command: 'npx', args: ['browser-mcp'] }, path: '/repo/.agents/mcps/browser.json' }] }));
+    const listed = cursorProvider.buildArgs(
+      fakeRequest({
+        policy: 'edits',
+        mcpServers: [
+          {
+            name: 'browser',
+            config: { command: 'npx', args: ['browser-mcp'] },
+            path: '/repo/.agents/mcps/browser.json',
+          },
+        ],
+      }),
+    );
     expect(listed).toContain('--approve-mcps');
     expect(listed.filter((arg) => arg === '--approve-mcps')).toHaveLength(1);
   });
@@ -334,7 +345,16 @@ describe('cursorProvider.prepareWorkspace', () => {
     const tmp = makeTmpDir('cursor-prepare-mcps');
     try {
       const restore = cursorProvider.prepareWorkspace?.(
-        fakeRequest({ workspaceRoot: tmp.path, mcpServers: [{ name: 'browser', config: { command: 'npx', args: ['browser-mcp'] }, path: '/repo/.agents/mcps/browser.json' }] }),
+        fakeRequest({
+          workspaceRoot: tmp.path,
+          mcpServers: [
+            {
+              name: 'browser',
+              config: { command: 'npx', args: ['browser-mcp'] },
+              path: '/repo/.agents/mcps/browser.json',
+            },
+          ],
+        }),
       );
 
       const mcpJson: unknown = JSON.parse(readFileSync(join(tmp.path, '.cursor/mcp.json'), 'utf8'));
@@ -355,7 +375,18 @@ describe('cursorProvider.prepareWorkspace', () => {
       writeFileSync(join(tmp.path, '.cursor/mcp.json'), '{ nope');
 
       expect(() =>
-        cursorProvider.prepareWorkspace?.(fakeRequest({ workspaceRoot: tmp.path, mcpServers: [{ name: 'browser', config: { command: 'npx', args: ['browser-mcp'] }, path: '/repo/.agents/mcps/browser.json' }] })),
+        cursorProvider.prepareWorkspace?.(
+          fakeRequest({
+            workspaceRoot: tmp.path,
+            mcpServers: [
+              {
+                name: 'browser',
+                config: { command: 'npx', args: ['browser-mcp'] },
+                path: '/repo/.agents/mcps/browser.json',
+              },
+            ],
+          }),
+        ),
       ).toThrow('não é um JSON válido');
       expect(existsSync(join(tmp.path, '.cursor/cli.json'))).toBe(false);
     } finally {

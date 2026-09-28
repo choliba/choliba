@@ -42,10 +42,12 @@ describe('ticketVars', () => {
 
 describe('resolveTicketTarget', () => {
   it('refuses --type and --ticket for an agent without ticket_types', () => {
-    expect(() => resolveTicketTarget(plain, { project: 'red', ticketType: 'bug', ticket: undefined }, () => '/p')).toThrow(
-      '"echo" não trabalha com tickets: --type e --ticket não se aplicam.',
-    );
-    expect(resolveTicketTarget(plain, { project: 'red', ticketType: undefined, ticket: undefined }, () => '/p')).toBeUndefined();
+    expect(() =>
+      resolveTicketTarget(plain, { project: 'red', ticketType: 'bug', ticket: undefined }, () => '/p'),
+    ).toThrow('"echo" não trabalha com tickets: --type e --ticket não se aplicam.');
+    expect(
+      resolveTicketTarget(plain, { project: 'red', ticketType: undefined, ticket: undefined }, () => '/p'),
+    ).toBeUndefined();
   });
 
   it('needs a project for an agent with ticket_types', () => {

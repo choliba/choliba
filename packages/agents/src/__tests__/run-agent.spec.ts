@@ -314,9 +314,12 @@ describe('runAgent', () => {
       return () => events.push('restore');
     };
 
-    const ok = setup(fakeSpawner({ stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'x' }])]) }).spawner, {
-      prepareWorkspace,
-    });
+    const ok = setup(
+      fakeSpawner({ stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'x' }])]) }).spawner,
+      {
+        prepareWorkspace,
+      },
+    );
     expect(await run(ok)).toBe(0);
     const failed = setup(throwingSpawner(new Error('spawn ENOENT')), { prepareWorkspace });
     expect(await run(failed)).toBe(1);
@@ -477,7 +480,9 @@ describe('runAgent', () => {
         const exitCode = await run(s, undefined, { mode: 'plan' });
 
         expect(exitCode).toBe(0);
-        expect(readPlan(join(tmp.path, 'echo', '2026-01-01T00-00-00Z-cursor.do-it.md'))).toBe('## Docs\n- update README');
+        expect(readPlan(join(tmp.path, 'echo', '2026-01-01T00-00-00Z-cursor.do-it.md'))).toBe(
+          '## Docs\n- update README',
+        );
       } finally {
         tmp.cleanup();
       }

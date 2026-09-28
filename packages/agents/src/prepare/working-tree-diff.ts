@@ -88,7 +88,9 @@ export function runGitDiff(config: GitDiffConfig, input: GitDiffInput, deps: Git
     (deps.removeDiff ?? removeDiffFile)(input.repoRoot, config.diffFile);
     // Only for the default base: with an explicit --since the user already chose where to look.
     const hint =
-      input.since === undefined ? (deps.pendingHint ?? pendingSinceHint)(input.repoRoot, config, deps.runner) : undefined;
+      input.since === undefined
+        ? (deps.pendingHint ?? pendingSinceHint)(input.repoRoot, config, deps.runner)
+        : undefined;
     const message = `nenhuma mudança em relação a ${base}.`;
     throw new Error(hint === undefined ? message : `${message} ${hint}`);
   }

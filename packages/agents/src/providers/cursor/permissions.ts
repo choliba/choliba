@@ -17,9 +17,7 @@ export interface CursorPermissions {
 export function shellToken(command: string): string {
   const normalized = command.trim().replaceAll(/\s+/g, ' ');
   const space = normalized.indexOf(' ');
-  return space === -1
-    ? `Shell(${normalized})`
-    : `Shell(${normalized.slice(0, space)}:${normalized.slice(space + 1)}*)`;
+  return space === -1 ? `Shell(${normalized})` : `Shell(${normalized.slice(0, space)}:${normalized.slice(space + 1)}*)`;
 }
 
 /**

@@ -282,7 +282,10 @@ function withProjects(run: (projectsDir: string) => Promise<void>): Promise<void
   const write = (project: string, baseURL: string): void => {
     const dir = join(tmp.path, project);
     mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, 'config.json'), JSON.stringify({ name: 'Demo', envs: [{ nome: 'qa', baseURL, appDir: 'app' }] }));
+    writeFileSync(
+      join(dir, 'config.json'),
+      JSON.stringify({ name: 'Demo', envs: [{ nome: 'qa', baseURL, appDir: 'app' }] }),
+    );
     writeFileSync(join(dir, '.env.json'), JSON.stringify({ qa: { TEST_USERNAME: 'u' } }));
   };
   write('ready', 'http://ready.test');
@@ -322,7 +325,9 @@ describe('runAgentsCli — tickets', () => {
 
         const other = harness([], { config });
         expect(await runAgentsCli(argv(agentsDir, '--type', 'epic', '--dry-run'), other.deps)).toBe(1);
-        expect(other.stderr.chunks.join('')).toContain('"with-project" não trabalha com tickets "epic" (aceitos: bug, story).');
+        expect(other.stderr.chunks.join('')).toContain(
+          '"with-project" não trabalha com tickets "epic" (aceitos: bug, story).',
+        );
 
         const shortcut = harness([], { config });
         expect(await runAgentsCli(argv(agentsDir, '--type-epic', '--dry-run'), shortcut.deps)).toBe(1);
@@ -435,7 +440,9 @@ describe('runAgentsCli — --project', () => {
     const { deps, stdout, stderr } = harness([], { config: { GLOBAL_DIR: '/g' } });
 
     expect(await runAgentsCli(['with-project', '--agents-dir', FIXTURES, '--dry-run'], deps)).toBe(1);
-    expect(stderr.chunks.join('')).toContain('Project is required for "with-project" (it uses a project variable or ticket_types): pass --project <name>.');
+    expect(stderr.chunks.join('')).toContain(
+      'Project is required for "with-project" (it uses a project variable or ticket_types): pass --project <name>.',
+    );
     expect(stdout.chunks).toEqual([]);
   });
 
@@ -508,7 +515,9 @@ describe('runAgentsCli — --project', () => {
 
   it('completes --project with the projects on disk, and with nothing when the locations are not set', async () => {
     await withProjects(async (projectsDir) => {
-      const configured = harness([], { config: { CHOL_AGENTS_DIR: FIXTURES, GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir } });
+      const configured = harness([], {
+        config: { CHOL_AGENTS_DIR: FIXTURES, GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir },
+      });
       await runAgentsCli(['__complete', 'with-project', '--project', ''], configured.deps);
       expect(lines(configured.stdout)).toEqual(['pending', 'ready']);
 
@@ -1061,7 +1070,16 @@ function withCustomAgent(extra: string[], run: (agentsDir: string) => Promise<vo
   const tmp = makeTmpDir('cli-custom-agent');
   const dir = join(tmp.path, 'custom');
   mkdirSync(dir, { recursive: true });
-  const yaml = ['version: 1', 'agent:', '  id: custom', '  name: Custom', '  version: 1.0.0', '  description: d', 'models: [claude-3-5-sonnet]', ...extra];
+  const yaml = [
+    'version: 1',
+    'agent:',
+    '  id: custom',
+    '  name: Custom',
+    '  version: 1.0.0',
+    '  description: d',
+    'models: [claude-3-5-sonnet]',
+    ...extra,
+  ];
   writeFileSync(join(dir, 'agent.yaml'), `${yaml.join('\n')}\n`);
   writeFileSync(join(dir, 'system.md'), readFileSync(join(FIXTURES, 'reviewer', 'system.md'), 'utf8'));
   return run(tmp.path).finally(tmp.cleanup);
@@ -1083,7 +1101,9 @@ describe('runAgentsCli — modes', () => {
     await withCustomAgent(MODES, async (agentsDir) => {
       const byValue = harness([]);
       expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--mode', 'execute', 'x'], byValue.deps)).toBe(1);
-      expect(byValue.stderr.chunks.join('')).toContain('Mode "execute" is not allowed for "custom" (modes.allow: plan, ask).');
+      expect(byValue.stderr.chunks.join('')).toContain(
+        'Mode "execute" is not allowed for "custom" (modes.allow: plan, ask).',
+      );
 
       const byShortcut = harness([]);
       expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--mode-execute', 'x'], byShortcut.deps)).toBe(1);

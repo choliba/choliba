@@ -16,7 +16,13 @@ describe('shellToken', () => {
 describe('cursorPermissions', () => {
   it('anchors paths at the workspace root and maps commands to Shell tokens', () => {
     expect(cursorPermissions(DECLARED, 'edits', '/repo')).toEqual({
-      allow: ['Read(/repo/src/**)', 'Write(/repo/docs/**)', 'Write(/repo/README.md)', 'Shell(git:diff*)', 'Shell(cd:/repo)'],
+      allow: [
+        'Read(/repo/src/**)',
+        'Write(/repo/docs/**)',
+        'Write(/repo/README.md)',
+        'Shell(git:diff*)',
+        'Shell(cd:/repo)',
+      ],
       deny: ['Read(/etc/passwd)', 'Write(/repo/packages/**)', 'Shell(prettier)', 'Shell(bun:run format*)'],
     });
   });
@@ -38,7 +44,9 @@ describe('cursorPermissions', () => {
   });
 
   it('allows cd into the workspace root only to an agent that may run commands, since cursor prefixes them with it', () => {
-    expect(cursorPermissions({ ...DECLARED, allowExecute: [] }, 'edits', '/repo').allow).not.toContain('Shell(cd:/repo)');
+    expect(cursorPermissions({ ...DECLARED, allowExecute: [] }, 'edits', '/repo').allow).not.toContain(
+      'Shell(cd:/repo)',
+    );
     expect(cursorPermissions(DECLARED, 'edits', '/outro/lugar').allow).toContain('Shell(cd:/outro/lugar)');
   });
 

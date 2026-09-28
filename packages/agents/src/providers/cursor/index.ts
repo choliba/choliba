@@ -70,12 +70,7 @@ function buildArgs(request: ProviderRequest): readonly string[] {
  */
 function prepareWorkspace(request: ProviderRequest): () => void {
   const mcpServers = request.mcpServers ?? [];
-  const permissions = cursorPermissions(
-    request.agent.permissions,
-    request.policy,
-    request.workspaceRoot,
-    mcpServers,
-  );
+  const permissions = cursorPermissions(request.agent.permissions, request.policy, request.workspaceRoot, mcpServers);
   const restores: (() => void)[] = [];
   const restoreAll = (): void => {
     for (const restore of [...restores].reverse()) {

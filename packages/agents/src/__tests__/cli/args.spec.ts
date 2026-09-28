@@ -93,7 +93,9 @@ describe('parseAgentsArgs — run', () => {
     expect(() => parseAgentsArgs(['developer', '--mode', 'execute', '--mode-plan'])).toThrow(
       /Conflicting modes: execute and plan/,
     );
-    expect(() => parseAgentsArgs(['developer', '--mode-ask', '--mode-plan'])).toThrow(/Conflicting modes: ask and plan/);
+    expect(() => parseAgentsArgs(['developer', '--mode-ask', '--mode-plan'])).toThrow(
+      /Conflicting modes: ask and plan/,
+    );
   });
 
   it('refuses a flag no agent takes, --plan included (the mode is --mode plan or --mode-plan)', () => {

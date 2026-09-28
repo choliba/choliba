@@ -175,9 +175,9 @@ describe('createStreamJsonParser', () => {
     });
 
     expect(createStreamJsonParser({ planFromExitPlanMode: false }).parseLine(payload)).toEqual([]);
-    expect(createStreamJsonParser({ planFromExitPlanMode: false, planFromCreatePlanToolCall: true }).parseLine(payload)).toEqual([
-      { type: 'plan', markdown: '## Step 1\nDo x' },
-    ]);
+    expect(
+      createStreamJsonParser({ planFromExitPlanMode: false, planFromCreatePlanToolCall: true }).parseLine(payload),
+    ).toEqual([{ type: 'plan', markdown: '## Step 1\nDo x' }]);
   });
 
   it('ignores tool_call lines without createPlanToolCall even when enabled', () => {

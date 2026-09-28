@@ -31,7 +31,9 @@ function writeRules(paths: readonly string[]): string[] {
 
 /** Claude Code's rules for an MCP server: one per tool it lists, or one for the whole server. */
 export function mcpRules(server: McpServer): string[] {
-  return server.tools === undefined ? [`mcp__${server.name}`] : server.tools.map((tool) => `mcp__${server.name}__${tool}`);
+  return server.tools === undefined
+    ? [`mcp__${server.name}`]
+    : server.tools.map((tool) => `mcp__${server.name}__${tool}`);
 }
 
 function commandRule(command: string): string {
@@ -40,7 +42,9 @@ function commandRule(command: string): string {
 
 /** A deny rule in Claude's syntax: its commands, or — for `['*']` — any `cd` into the directory. */
 function denyRunRules(rule: ExecuteRule): readonly string[] {
-  return blocksEveryCommand(rule) ? [commandRule(`cd ${withoutTrailingSlash(rule.dir)}`)] : rule.commands.map(commandRule);
+  return blocksEveryCommand(rule)
+    ? [commandRule(`cd ${withoutTrailingSlash(rule.dir)}`)]
+    : rule.commands.map(commandRule);
 }
 
 /**
