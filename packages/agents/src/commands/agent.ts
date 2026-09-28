@@ -2,12 +2,7 @@ import type { Writable } from '@choliba/terminal';
 
 import { loadAgent } from '../agent-loader';
 
-export {
-  type ValidationResult,
-  validateAgentFiles,
-  validateAgentYamlV1,
-  validateSystemMd,
-} from '../agent-validation';
+export { type ValidationResult, validateAgentFiles, validateAgentYamlV1, validateSystemMd } from '../agent-validation';
 
 const SECTION_TAG = /<([a-z][a-z0-9_]*)((?:\s+[a-z][a-z0-9_]*="[^"]*")*)\s*>([\s\S]*?)<\/\1>/g;
 const ATTRIBUTE = /([a-z][a-z0-9_]*)="([^"]*)"/g;
@@ -30,7 +25,9 @@ export function parseSectionTagMatch(match: RegExpMatchArray): SectionTagMatch |
 }
 
 /** Pulls one `name="value"` pair out of an attribute regex match. */
-export function parseAttributePair(match: RegExpMatchArray): { readonly key: string; readonly value: string } | undefined {
+export function parseAttributePair(
+  match: RegExpMatchArray,
+): { readonly key: string; readonly value: string } | undefined {
   const key = match[1];
   const value = match[2];
   if (key === undefined || value === undefined) {
@@ -59,10 +56,7 @@ export function parseAttributes(raw: string): Record<string, string> | undefined
   return attributes;
 }
 
-function buildSectionValue(
-  rawAttributes: string,
-  inner: string,
-): string | Record<string, unknown> {
+function buildSectionValue(rawAttributes: string, inner: string): string | Record<string, unknown> {
   const attributes = parseAttributes(rawAttributes);
   const parsedInner = parseInstructionSections(inner);
   if (attributes === undefined) {

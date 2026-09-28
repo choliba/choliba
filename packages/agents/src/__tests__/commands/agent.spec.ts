@@ -114,7 +114,9 @@ describe('parseInstructionSections', () => {
 
 describe('parseSectionTagMatch', () => {
   it('returns undefined when capture groups are missing', () => {
-    expect(parseSectionTagMatch(['<foo>', undefined, ' attrs', 'inner'] as unknown as RegExpMatchArray)).toBeUndefined();
+    expect(
+      parseSectionTagMatch(['<foo>', undefined, ' attrs', 'inner'] as unknown as RegExpMatchArray),
+    ).toBeUndefined();
   });
 
   it('returns the groups when the match is complete', () => {
@@ -135,9 +137,7 @@ describe('parseAttributePair', () => {
 describe('collectAttributeFromMatch', () => {
   it('returns false when capture groups are missing', () => {
     const target: Record<string, string> = {};
-    expect(collectAttributeFromMatch(['bar="1"', undefined, '1'] as unknown as RegExpMatchArray, target)).toBe(
-      false,
-    );
+    expect(collectAttributeFromMatch(['bar="1"', undefined, '1'] as unknown as RegExpMatchArray, target)).toBe(false);
     expect(target).toEqual({});
   });
 
@@ -157,9 +157,7 @@ describe('collectSectionFromMatch', () => {
 
   it('merges a complete match into grouped', () => {
     const grouped = new Map<string, unknown[]>();
-    expect(
-      collectSectionFromMatch(['<foo>', 'foo', '', 'inner'] as unknown as RegExpMatchArray, grouped),
-    ).toBe(true);
+    expect(collectSectionFromMatch(['<foo>', 'foo', '', 'inner'] as unknown as RegExpMatchArray, grouped)).toBe(true);
     expect(grouped.get('foo')).toEqual(['inner']);
   });
 });
@@ -184,7 +182,6 @@ describe('unwrapAgentRoot', () => {
     expect(unwrapAgentRoot('plain text')).toBe('plain text');
   });
 });
-
 
 describe('printAgentDefinition', () => {
   // Deliberately not asserting the exact shape of `instructions` here — that's `system.md`

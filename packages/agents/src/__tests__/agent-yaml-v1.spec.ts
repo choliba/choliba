@@ -93,12 +93,18 @@ describe('validateAgentYamlV1', () => {
 
   it('requires version to be the first key', () => {
     const { version, ...rest } = minimal();
-    expect(validate({ ...rest, version })).toEqual({ valid: false, errors: ['"version" precisa ser a primeira chave'] });
+    expect(validate({ ...rest, version })).toEqual({
+      valid: false,
+      errors: ['"version" precisa ser a primeira chave'],
+    });
   });
 
   it('rejects text that is not YAML or not a map', () => {
     expect(validateAgentYamlV1('a: [', 'qa-e2e').errors[0]).toMatch(/^YAML inválido/);
-    expect(validateAgentYamlV1('- a', 'qa-e2e')).toEqual({ valid: false, errors: ['(raiz) precisa ser um mapa de chaves'] });
+    expect(validateAgentYamlV1('- a', 'qa-e2e')).toEqual({
+      valid: false,
+      errors: ['(raiz) precisa ser um mapa de chaves'],
+    });
   });
 
   it('requires agent.id to be the folder name', () => {
@@ -137,7 +143,9 @@ describe('validateAgentYamlV1', () => {
 
   describe('permissions.execute', () => {
     it('rejects a directory with no commands in allow', () => {
-      expect(errorsOf({ ...minimal(), permissions: { allow: { execute: { './': [] } } } })).toContain('/permissions/allow/execute');
+      expect(errorsOf({ ...minimal(), permissions: { allow: { execute: { './': [] } } } })).toContain(
+        '/permissions/allow/execute',
+      );
     });
 
     it("accepts '*' only as the whole list, and only in deny", () => {
@@ -150,7 +158,9 @@ describe('validateAgentYamlV1', () => {
 
   describe('modes', () => {
     it('requires the default to be one of the allowed modes', () => {
-      expect(errorsOf({ ...minimal(), modes: { allow: ['plan', 'ask'], default: 'execute' } })).toContain('/modes/default');
+      expect(errorsOf({ ...minimal(), modes: { allow: ['plan', 'ask'], default: 'execute' } })).toContain(
+        '/modes/default',
+      );
       expect(validate({ ...minimal(), modes: { allow: ['plan'], default: 'plan' } }).valid).toBe(true);
       expect(validate({ ...minimal(), modes: { default: 'ask' } }).valid).toBe(true);
     });
@@ -180,9 +190,9 @@ describe('validateAgentYamlV1', () => {
     });
 
     it('accepts each action only where it runs', () => {
-      expect(validate(steps({ before: [{ git_diff: ['develop', 'd.patch'] }], after: [{ record_git_head: ['h'] }] })).valid).toBe(
-        true,
-      );
+      expect(
+        validate(steps({ before: [{ git_diff: ['develop', 'd.patch'] }], after: [{ record_git_head: ['h'] }] })).valid,
+      ).toBe(true);
       expect(validate(steps({ after: [{ add_files: ['t', 'x'] }] })).valid).toBe(false);
       expect(validate(steps({ before: [{ record_git_head: ['h'] }] })).valid).toBe(false);
     });

@@ -26,7 +26,11 @@ export function expandVars(
   return { text: expanded, missing: [...missing] };
 }
 
-function missingError(file: string, missing: readonly string[], vars: Readonly<Record<string, string>>): AgentVarsError {
+function missingError(
+  file: string,
+  missing: readonly string[],
+  vars: Readonly<Record<string, string>>,
+): AgentVarsError {
   return new AgentVarsError(
     `${file} usa ${missing.map((name) => `\${${name}}`).join(', ')}, sem valor ` +
       `(disponíveis: ${Object.keys(vars).join(', ')}).`,
@@ -111,6 +115,8 @@ export function pathBase(path: string): string {
  */
 export function permissionDirs(permissions: AgentPermissions): readonly string[] {
   const paths = [...permissions.allowRead, ...permissions.allowWrite].filter((path) => isAbsolute(path));
-  const runDirs = permissions.allowExecute.map((rule) => withoutTrailingSlash(rule.dir)).filter((dir) => isAbsolute(dir));
+  const runDirs = permissions.allowExecute
+    .map((rule) => withoutTrailingSlash(rule.dir))
+    .filter((dir) => isAbsolute(dir));
   return [...new Set([...paths.map(pathBase), ...runDirs])];
 }

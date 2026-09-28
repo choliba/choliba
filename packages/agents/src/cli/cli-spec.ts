@@ -98,9 +98,10 @@ function ticketTypeDescription(type: string): string {
 function withTicketTypes(flags: readonly FlagSpec[], agent: AgentDefinition): readonly FlagSpec[] {
   const types = agent.ticketTypes ?? [];
   const choices = types.map((type) => ({ name: type, description: ticketTypeDescription(type) }));
-  const shortcuts = types.map(
-    (type): FlagSpec => ({ name: `${TYPE_SHORTCUT_PREFIX}${type}`, description: `Atalho para --type ${type}` }),
-  );
+  const shortcuts = types.map((type): FlagSpec => ({
+    name: `${TYPE_SHORTCUT_PREFIX}${type}`,
+    description: `Atalho para --type ${type}`,
+  }));
   return flags.flatMap((flag) => (flag.name === '--type' ? [{ ...flag, choices }, ...shortcuts] : [flag]));
 }
 
@@ -130,19 +131,17 @@ function runFlags(agent: AgentDefinition, context: AgentsCliSpecContext): readon
     ...(agent.projectRequired ? [] : PROJECT_FLAGS),
     ...(agent.ticketTypes === undefined ? TICKET_FLAGS : []),
   ];
-  const flags = RUN_FLAGS.filter((flag) => !hidden.includes(flag.name)).map(
-    ({ valueName, ...rest }) => {
-      const flag =
-        rest.name === '--mode'
-          ? { ...rest, description: modeDescription(agent.defaultMode) }
-          : rest.name === '--since' && diffBase !== undefined
-            ? { ...rest, description: sinceDescription(diffBase) }
-            : rest;
-      return valueName === undefined
-        ? flag
-        : { ...flag, value: { name: valueName, suggest: () => flagValueSuggestions(flag.name, agent, context) } };
-    },
-  );
+  const flags = RUN_FLAGS.filter((flag) => !hidden.includes(flag.name)).map(({ valueName, ...rest }) => {
+    const flag =
+      rest.name === '--mode'
+        ? { ...rest, description: modeDescription(agent.defaultMode) }
+        : rest.name === '--since' && diffBase !== undefined
+          ? { ...rest, description: sinceDescription(diffBase) }
+          : rest;
+    return valueName === undefined
+      ? flag
+      : { ...flag, value: { name: valueName, suggest: () => flagValueSuggestions(flag.name, agent, context) } };
+  });
   return withModes(withTicketTypes(flags, agent), agent);
 }
 

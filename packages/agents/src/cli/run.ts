@@ -363,7 +363,11 @@ function resolveProjectVars(
  * The ticket this run works on (`--type`/`--ticket`, see `ticket-run.ts`): `undefined` for an agent
  * without `ticket_types`, `null` when the flags do not fit the agent — the reason is already on `stderr`.
  */
-function resolveRunTicket(parsed: RunArgs, agent: AgentDefinition, deps: RunAgentsCliDeps): TicketTarget | undefined | null {
+function resolveRunTicket(
+  parsed: RunArgs,
+  agent: AgentDefinition,
+  deps: RunAgentsCliDeps,
+): TicketTarget | undefined | null {
   try {
     return resolveTicketTarget(agent, parsed, () => projectsDir(deps));
   } catch (error) {
@@ -395,7 +399,9 @@ function resolveTaskAndMode(
 ): { mode: ExecutionMode; task: string } | undefined {
   const mode: ExecutionMode = parsed.mode ?? command.defaultMode;
   if (!agent.modes.includes(mode)) {
-    deps.stderr.write(`Mode "${mode}" is not allowed for "${agent.name}" (modes.allow: ${agent.modes.join(', ')}). ${USAGE}\n`);
+    deps.stderr.write(
+      `Mode "${mode}" is not allowed for "${agent.name}" (modes.allow: ${agent.modes.join(', ')}). ${USAGE}\n`,
+    );
     return undefined;
   }
   if (parsed.planFrom !== undefined && mode !== 'execute') {

@@ -43,7 +43,12 @@ export function policyFromPermissions(permissions: AgentPermissions): Permission
  * so it is read as it is, without checking each field again.
  */
 interface AgentYamlV1 {
-  readonly agent: { readonly id: string; readonly name: string; readonly version: string; readonly description: string };
+  readonly agent: {
+    readonly id: string;
+    readonly name: string;
+    readonly version: string;
+    readonly description: string;
+  };
   readonly models: readonly string[];
   readonly skills?: readonly string[];
   readonly mcps?: McpList | McpMap;

@@ -71,7 +71,11 @@ describe('runGitDiff', () => {
       writeDiffFile(tmp.path, TEST_DIFF_FILE, 'diff --git a/old.ts b/old.ts\n');
 
       expect(() =>
-        runGitDiff(CONFIG, { repoRoot: tmp.path, since: undefined }, { getDiff: () => '', pendingHint: () => undefined }),
+        runGitDiff(
+          CONFIG,
+          { repoRoot: tmp.path, since: undefined },
+          { getDiff: () => '', pendingHint: () => undefined },
+        ),
       ).toThrow(/^nenhuma mudança em relação a develop\.$/);
       expect(existsSync(join(tmp.path, TEST_DIFF_FILE))).toBe(false);
 

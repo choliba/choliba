@@ -56,7 +56,13 @@ describe('buildPrepare / buildAfterExecute', () => {
     const base = await loadAgent(FIXTURES, 'with-prepare');
     const run = jest.spyOn(actionsModule, 'runSteps').mockReturnValue(['ctx']);
     try {
-      const result = buildPrepare(base)?.({ task: 'focar README', repoRoot: '/repo', agent: base, mode: 'execute', since: 'HEAD~1' });
+      const result = buildPrepare(base)?.({
+        task: 'focar README',
+        repoRoot: '/repo',
+        agent: base,
+        mode: 'execute',
+        since: 'HEAD~1',
+      });
 
       expect(result).toEqual({ task: 'focar README', promptBody: 'ctx\n\nFoco pedido pelo usuário: focar README' });
       expect(run).toHaveBeenCalledWith({ repoRoot: '/repo', since: 'HEAD~1' }, base.beforeExecute, 'before_execute');

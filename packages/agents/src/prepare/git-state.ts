@@ -27,10 +27,7 @@ export function writeGitState(repoRoot: string, stateFile: string, sha: string):
   writeFileSync(absolute, `${sha}\n`, 'utf8');
 }
 
-export function getHeadCommit(
-  repoRoot: string,
-  runner: GitRunner = createSpawnGitRunner(),
-): string {
+export function getHeadCommit(repoRoot: string, runner: GitRunner = createSpawnGitRunner()): string {
   const result = runner.run(['rev-parse', 'HEAD'], repoRoot);
   if (result.status !== 0) {
     throw new Error(`git rev-parse HEAD falhou: ${result.stderr.trim()}`);
@@ -91,11 +88,7 @@ export function pendingSinceHint(
 }
 
 /** Records HEAD as the base for a future `--since pending` run. */
-export function recordGitHead(
-  repoRoot: string,
-  stateFile: string,
-  runner: GitRunner = createSpawnGitRunner(),
-): void {
+export function recordGitHead(repoRoot: string, stateFile: string, runner: GitRunner = createSpawnGitRunner()): void {
   writeGitState(repoRoot, stateFile, getHeadCommit(repoRoot, runner));
 }
 

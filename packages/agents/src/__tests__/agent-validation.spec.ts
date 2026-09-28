@@ -123,7 +123,10 @@ describe('system.md schema', () => {
   });
 
   it('no longer accepts <permissions>, which moved to agent.yaml', async () => {
-    const withPermissions = docsUpdaterText.replace('<tool_definitions>', '<permissions><intro>x</intro></permissions>\n<tool_definitions>');
+    const withPermissions = docsUpdaterText.replace(
+      '<tool_definitions>',
+      '<permissions><intro>x</intro></permissions>\n<tool_definitions>',
+    );
 
     const result = await validateSystemMd(withPermissions);
     expect(result.valid).toBe(false);

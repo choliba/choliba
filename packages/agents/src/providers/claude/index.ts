@@ -18,11 +18,7 @@ function buildArgs(request: ProviderRequest): readonly string[] {
     args.push('--model', request.model);
   }
   const mcpServers = request.mcpServers ?? [];
-  const permissions = claudePermissionArgs(
-    request.agent.permissions,
-    request.policy,
-    mcpServers,
-  );
+  const permissions = claudePermissionArgs(request.agent.permissions, request.policy, mcpServers);
   args.push('--permission-mode', permissions.permissionMode);
   if (request.policy === 'read-only' && permissions.tools !== undefined) {
     args.push('--tools', permissions.tools.join(','));

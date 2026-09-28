@@ -184,7 +184,11 @@ describe('loadAgent', () => {
       expect((await loadAgent(dir, 'echo')).projectRequired).toBe(true);
     });
     await withAgentCopy('reviewer', async (dir) => {
-      const yaml = stringify({ ...head(), agent: { id: 'reviewer', name: 'R', version: '1.0.0', description: 'd' }, ticket_types: ['bug'] });
+      const yaml = stringify({
+        ...head(),
+        agent: { id: 'reviewer', name: 'R', version: '1.0.0', description: 'd' },
+        ticket_types: ['bug'],
+      });
       writeFileSync(join(dir, 'reviewer', 'agent.yaml'), yaml);
       expect((await loadAgent(dir, 'reviewer')).projectRequired).toBe(true);
     });

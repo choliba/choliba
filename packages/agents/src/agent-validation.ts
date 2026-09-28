@@ -65,7 +65,9 @@ function versionProblem(doc: Record<string, unknown>): string | undefined {
 function folderProblem(doc: Record<string, unknown>, folder: string): readonly string[] {
   const agent = doc['agent'];
   const id = isRecord(agent) ? agent['id'] : undefined;
-  return typeof id === 'string' && id !== folder ? [`/agent/id "${id}" precisa ser igual ao nome da pasta "${folder}"`] : [];
+  return typeof id === 'string' && id !== folder
+    ? [`/agent/id "${id}" precisa ser igual ao nome da pasta "${folder}"`]
+    : [];
 }
 
 /** The other rule the schema cannot state (not in plain JSON Schema): `modes.default` is one of `modes.allow`. */

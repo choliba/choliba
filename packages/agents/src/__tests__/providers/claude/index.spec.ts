@@ -99,10 +99,14 @@ describe('claudeProvider.buildArgs', () => {
   });
 
   it('maps edits with an allowlist to dontAsk, allowing the declared writes', () => {
-    const args = claudeProvider.buildArgs(fakeRequest({ policy: 'edits', agent: fakeAgent({ permissions: DECLARED }) }));
+    const args = claudeProvider.buildArgs(
+      fakeRequest({ policy: 'edits', agent: fakeAgent({ permissions: DECLARED }) }),
+    );
 
     expect(args).toEqual(expect.arrayContaining(['--permission-mode', 'dontAsk']));
-    expect(args).toEqual(expect.arrayContaining(['Edit(docs/**)', 'Write(docs/**)', 'Edit(README.md)', 'Write(README.md)']));
+    expect(args).toEqual(
+      expect.arrayContaining(['Edit(docs/**)', 'Write(docs/**)', 'Edit(README.md)', 'Write(README.md)']),
+    );
     expect(args.includes('--tools')).toBe(false);
   });
 
@@ -156,7 +160,18 @@ describe('claudeProvider.buildArgs', () => {
   });
 
   it('loads the listed MCP servers inline and allows their tools', () => {
-    const args = claudeProvider.buildArgs(fakeRequest({ policy: 'edits', mcpServers: [{ name: 'browser', config: { command: 'npx', args: ['browser-mcp'] }, path: '/repo/.agents/mcps/browser.json' }] }));
+    const args = claudeProvider.buildArgs(
+      fakeRequest({
+        policy: 'edits',
+        mcpServers: [
+          {
+            name: 'browser',
+            config: { command: 'npx', args: ['browser-mcp'] },
+            path: '/repo/.agents/mcps/browser.json',
+          },
+        ],
+      }),
+    );
 
     expect(args.at(args.indexOf('--mcp-config') + 1)).toBe(
       JSON.stringify({ mcpServers: { browser: { command: 'npx', args: ['browser-mcp'] } } }),
@@ -165,10 +180,18 @@ describe('claudeProvider.buildArgs', () => {
   });
 
   it("allows only the tools an MCP server's declaration lists", () => {
-    const server = { name: 'app', config: { command: 'x' }, path: '/a.json', tools: ['jira_search', 'use_environment'] };
+    const server = {
+      name: 'app',
+      config: { command: 'x' },
+      path: '/a.json',
+      tools: ['jira_search', 'use_environment'],
+    };
     const args = claudeProvider.buildArgs(fakeRequest({ policy: 'edits', mcpServers: [server] }));
 
-    expect(args.slice(args.indexOf('--allowedTools') + 1)).toEqual(['mcp__app__jira_search', 'mcp__app__use_environment']);
+    expect(args.slice(args.indexOf('--allowedTools') + 1)).toEqual([
+      'mcp__app__jira_search',
+      'mcp__app__use_environment',
+    ]);
   });
 
   it('adds --model only when one is given', () => {
