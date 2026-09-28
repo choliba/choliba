@@ -1,5 +1,4 @@
 import { mcpServersMap } from '../../mcps';
-import { readAgentPermissions } from '../../permissions';
 import { assertArgvFits, wrapInstructions } from '../../prompt';
 import { createStreamJsonParser } from '../stream-json';
 import type { PlanContentContext, ProviderAdapter, ProviderRequest } from '../provider.types';
@@ -25,9 +24,6 @@ function policyArgs(request: ProviderRequest): readonly string[] {
     // `-p` "has access to all tools, including write and shell". See the package README's
     // "known gaps" before trusting this for anything sensitive.
     return ['--mode', 'ask'];
-  }
-  if (request.policy === 'full') {
-    return ['--force', '--approve-mcps'];
   }
   return [];
 }
@@ -75,7 +71,7 @@ function buildArgs(request: ProviderRequest): readonly string[] {
 function prepareWorkspace(request: ProviderRequest): () => void {
   const mcpServers = request.mcpServers ?? [];
   const permissions = cursorPermissions(
-    readAgentPermissions(request.agent.instructions),
+    request.agent.permissions,
     request.policy,
     request.workspaceRoot,
     mcpServers,

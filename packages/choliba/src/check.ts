@@ -31,8 +31,8 @@ function problemOf(error: unknown): string {
 }
 
 /**
- * Every agent of the workspace, loaded as a run would load it: agent.yaml against its schema,
- * system.md against its XSD (the agent's own system.xsd or the default), the skills it lists and the
+ * Every agent of the workspace, loaded as a run would load it: agent.yaml against its standard,
+ * system.md against agent.xsd, the skills it lists and the
  * MCP servers it lists, with their `${NAME}` variables from the config.
  */
 export async function checkAgents(root: string, config: Config): Promise<CheckSection> {

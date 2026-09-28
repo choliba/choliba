@@ -3,30 +3,6 @@
 Fixture cujo problema está no agent.yaml, não aqui.
 </system_role>
 
-<permissions>
-<intro>
-Fixture de teste.
-</intro>
-
-<allowlist>
-<allow action="write">
-<path>docs/</path>
-</allow>
-</allowlist>
-
-<denylist>
-<deny action="write">
-<path>agents/</path>
-</deny>
-</denylist>
-
-<notes>
-<note>
-Fixture de teste.
-</note>
-</notes>
-</permissions>
-
 <tool_definitions>
 <intro>
 Fixture de teste.

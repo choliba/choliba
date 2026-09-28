@@ -116,19 +116,6 @@ export function checkStep(
   return { action };
 }
 
-/**
- * The format before `<action>: [args]`, still accepted: a string (`"bun x prettier --write docs"`, run
- * through the shell) or a list (run without one), where a first word naming a registered method calls it.
- */
-export function legacyStep(line: string | readonly string[]): AgentStep {
-  const argv = typeof line === 'string' ? line.trim().split(/\s+/) : line;
-  const [name = '', ...args] = argv;
-  if (findAction(name) !== undefined) {
-    return { action: name, args };
-  }
-  return typeof line === 'string' ? { action: 'run', args: ['sh', '-c', line] } : { action: 'run', args: argv };
-}
-
 /** Runs `steps` in order and returns the prompt sections they produced. The first failure throws. */
 export function runSteps(context: StepContext, steps: readonly AgentStep[], phase: StepPhase): readonly string[] {
   const sections: string[] = [];

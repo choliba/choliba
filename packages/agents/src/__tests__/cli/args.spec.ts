@@ -96,11 +96,10 @@ describe('parseAgentsArgs — run', () => {
     expect(() => parseAgentsArgs(['developer', '--mode-ask', '--mode-plan'])).toThrow(/Conflicting modes: ask and plan/);
   });
 
-  it('reads --plan as a phase, not a mode, and refuses a flag that cannot name one', () => {
-    expect(parseRun(['developer', '--plan'])).toMatchObject({ mode: undefined, phases: ['plan'] });
-    expect(parseRun(['developer', '--red', '--green', 'x']).phases).toEqual(['red', 'green']);
+  it('refuses a flag no agent takes, --plan included (the mode is --mode plan or --mode-plan)', () => {
+    expect(() => parseAgentsArgs(['developer', '--plan'])).toThrow(/unknown flag: --plan/);
+    expect(() => parseAgentsArgs(['developer', '--red'])).toThrow(/unknown flag: --red/);
     expect(() => parseAgentsArgs(['developer', '--Plan'])).toThrow(/unknown flag: --Plan/);
-    expect(() => parseAgentsArgs(['developer', '--red=1'])).toThrow(/unknown flag: --red=1/);
   });
 
   it('--since-pending is --since pending, and conflicts with another --since', () => {

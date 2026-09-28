@@ -1,7 +1,8 @@
 import type { ExecutionMode, PermissionPolicy } from './command.types';
+import type { AgentPermissions } from './permissions';
 
 /**
- * One line of `before_execute`/`after_execute`: `<action>: [args]`. `run` runs an external command
+ * One line of `steps.before`/`steps.after`: `<action>: [args]`. `run` runs an external command
  * (no shell); any other action is a method of the CLI, registered in `prepare/actions.ts`.
  */
 export interface AgentStep {
@@ -19,65 +20,47 @@ export interface McpDeclaration {
 }
 
 /**
- * One entry of `agent.yaml#phases`: a run of its own, with its own instructions (and so its own
- * permissions) and steps. The phases run in the order declared; `--<name>` runs only that one.
- */
-export interface PhaseDeclaration {
-  readonly name: string;
-  /** The phase's instructions: a file next to `agent.yaml`, in place of `system.md`. */
-  readonly system: string;
-  readonly description?: string;
-  /** A key of the project's `config.json`: the phase runs only for a project where it is `true`. */
-  readonly projectSwitch?: string;
-  readonly beforeExecute?: readonly AgentStep[];
-  readonly afterExecute?: readonly AgentStep[];
-}
-
-/** A phase as loaded: its declaration plus the file it names. */
-export interface AgentPhase extends PhaseDeclaration {
-  /** Absolute path to the phase's system file. */
-  readonly systemPromptPath: string;
-  readonly instructions: string;
-  readonly policy: PermissionPolicy;
-}
-
-/**
- * One agent, loaded from `<agentsDir>/<name>/agent.yaml` + `system.md` — the same on-disk
- * shape as `<agentsDir>/<name>/`. `supportedModels` and `skills` are read but not acted on in
- * this version: they exist so an agent directory authored elsewhere loads here unchanged.
+ * One agent, loaded from `<agentsDir>/<name>/agent.yaml` (standard 1, see
+ * `schemes/v1/agent.schema.json`) + `system.md`. `name` is the folder, which is also `agent.id`.
  */
 export interface AgentDefinition {
-  /** The directory name; also the lookup key (`agents <name> ...`). */
+  /** The directory name, equal to `agent.id`; also the lookup key (`agents <name> ...`). */
   readonly name: string;
   readonly id: string;
   readonly displayName: string;
+  /** The agent's own version (`agent.version`), not the standard's. */
   readonly version: string;
   readonly description: string;
+  /** `models`: the models the agent may run with. */
   readonly supportedModels: readonly string[];
   readonly skills: readonly string[];
   /** MCP servers the agent may use (`<mcpsDir>/<name>.json`); it gets no other. */
   readonly mcps: readonly McpDeclaration[];
+  /** What the agent may read, write and execute, and where (`permissions`). */
+  readonly permissions: AgentPermissions;
+  /** Derived from `permissions`: `edits` when something may be written, `read-only` otherwise. */
   readonly policy: PermissionPolicy;
   readonly taskRequired: boolean;
-  /** The run acts on one project, given by `--project` and checked by `@choliba/projects` first. */
+  /**
+   * The run acts on one project, given by `--project` and checked by `@choliba/projects` first.
+   * Derived: the agent uses a project variable (`${PROJECT_DIR}`...) or declares `ticket_types`.
+   */
   readonly projectRequired: boolean;
   /**
    * The ticket types the agent works on (`agent.yaml#ticket_types`). When set, a run needs `--type`
    * (the CLI creates the ticket from that type's template) or `--ticket` (an existing one).
    */
   readonly ticketTypes?: readonly string[];
+  /** `modes.allow`: the modes a run may use; any other is refused. */
+  readonly modes: readonly ExecutionMode[];
+  /** `modes.default`: the mode of a run that names none. */
   readonly defaultMode: ExecutionMode;
   /** Task used when the user gives none (only meaningful with `taskRequired: false`). */
   readonly defaultTask?: string;
-  /** Steps run in order before the provider is called; they may add sections to the prompt. */
+  /** `steps.before`: run in order before the provider is called; they may add sections to the prompt. */
   readonly beforeExecute?: readonly AgentStep[];
-  /** Steps run in order after a successful `execute`. */
+  /** `steps.after`: run in order after a successful `execute`. */
   readonly afterExecute?: readonly AgentStep[];
-  /**
-   * The agent's phases, in order. An agent with phases has no `system.md` and no top-level steps:
-   * the fields below (`systemPromptPath`, `instructions`, `policy`) are those of its first phase.
-   */
-  readonly phases?: readonly AgentPhase[];
   /** Absolute path to the agent's directory. */
   readonly dir: string;
   /** Absolute path to `system.md`. */

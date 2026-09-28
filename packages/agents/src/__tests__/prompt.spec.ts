@@ -7,6 +7,7 @@ import {
   modeInstruction,
   wrapInstructions,
 } from '../prompt';
+import { NO_PERMISSIONS } from '../permissions';
 
 function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
   return {
@@ -22,6 +23,8 @@ function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
     taskRequired: true,
     projectRequired: false,
     defaultMode: 'execute',
+    modes: ['execute', 'plan', 'ask'],
+    permissions: NO_PERMISSIONS,
     dir: '/repo/agents/echo',
     systemPromptPath: '/repo/agents/echo/system.md',
     instructions: 'Be an echo. See ./companion.md.',

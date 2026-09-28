@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 
 import { loadAgent } from '../agent-loader';
+import { readAgentPermissions } from '../permissions';
 import { AgentVarsError, expandVars, pathBase, permissionDirs, withExpandedInstructions } from '../vars';
 
 const FIXTURES = join(__dirname, 'fixtures', 'agents');
@@ -23,22 +24,38 @@ describe('withExpandedInstructions', () => {
     expect(loadVars).not.toHaveBeenCalled();
   });
 
-  it('fills in the variables, and can do so more than once', async () => {
+  it('fills in the variables of the permissions, and can do so more than once', async () => {
     const agent = await loadAgent(FIXTURES, 'with-vars');
 
     for (const root of ['/p1', '/p2']) {
       const expanded = withExpandedInstructions(agent, () => ({ PROJECTS_DIR: root }));
-      expect(expanded.instructions).toContain(`<path>${root}/*/tickets/</path>`);
-      expect(expanded.instructions).not.toContain('${');
+      expect(expanded.permissions.allowWrite).toEqual([`${root}/*/tickets/`]);
+      expect(expanded.permissions.allowRead).toEqual([`${root}/*/config.json`]);
     }
+  });
+
+  it('fills in the directories and commands of execute too', async () => {
+    const echo = await loadAgent(FIXTURES, 'echo');
+    const agent = {
+      ...echo,
+      permissions: readAgentPermissions({ allow: { execute: { '${CHOL_ROOT}/': ['bunx choliba tests ${PROJECT}'] } } }),
+    };
+
+    const expanded = withExpandedInstructions(agent, () => ({ CHOL_ROOT: '/w', PROJECT: 'demo' }));
+
+    expect(expanded.permissions.allowExecute).toEqual([{ dir: '/w/', commands: ['bunx choliba tests demo'] }]);
   });
 
   it('stops naming the file, the missing variables and the available ones', async () => {
     const agent = await loadAgent(FIXTURES, 'with-vars');
+    const onlyYaml = { ...agent, instructions: 'sem variáveis' };
 
     expect(() => withExpandedInstructions(agent, () => ({ GLOBAL_DIR: '/g' }))).toThrow(AgentVarsError);
     expect(() => withExpandedInstructions(agent, () => ({ GLOBAL_DIR: '/g' }))).toThrow(
       `${agent.systemPromptPath} usa \${PROJECTS_DIR}, sem valor (disponíveis: GLOBAL_DIR).`,
+    );
+    expect(() => withExpandedInstructions(onlyYaml, () => ({ GLOBAL_DIR: '/g' }))).toThrow(
+      `${join(agent.dir, 'agent.yaml')} usa \${PROJECTS_DIR}, sem valor (disponíveis: GLOBAL_DIR).`,
     );
   });
 });
@@ -82,15 +99,16 @@ describe('pathBase', () => {
 describe('permissionDirs', () => {
   it('lists the absolute read and write bases once, ignoring relative paths', () => {
     expect(
-      permissionDirs({
-        allowTools: [],
-        allowRead: ['/p/*/config.json', 'docs/'],
-        allowWrite: ['/p/*/tickets/'],
-        allowRun: [],
-        denyRead: ['/secret/'],
-        denyWrite: [],
-        denyRun: [],
-      }),
-    ).toEqual(['/p']);
+      permissionDirs(
+        readAgentPermissions({
+          allow: {
+            read: ['/p/*/config.json', 'docs/'],
+            write: ['/p/*/tickets/'],
+            execute: { '/app/': ['composer test'], './': ['a'], '/p/': ['b'] },
+          },
+          deny: { read: ['/secret/'] },
+        }),
+      ),
+    ).toEqual(['/p', '/app']);
   });
 });

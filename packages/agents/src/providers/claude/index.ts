@@ -1,5 +1,4 @@
 import { mcpServersMap } from '../../mcps';
-import { readAgentPermissions } from '../../permissions';
 import { assertArgvFits, wrapInstructions } from '../../prompt';
 import { createStreamJsonParser } from '../stream-json';
 import type { ProviderAdapter, ProviderRequest } from '../provider.types';
@@ -20,7 +19,7 @@ function buildArgs(request: ProviderRequest): readonly string[] {
   }
   const mcpServers = request.mcpServers ?? [];
   const permissions = claudePermissionArgs(
-    readAgentPermissions(request.agent.instructions),
+    request.agent.permissions,
     request.policy,
     mcpServers,
   );

@@ -1,12 +1,11 @@
 import { isAbsolute, join, relative } from 'node:path';
 
 import type { ProcessRunner, SignalSource, Writable } from '@choliba/terminal';
-import { isAnsiColor, paint } from '@choliba/terminal';
 import { complete, describe, formatHelp, formatSuggestions } from '@choliba/core/cli';
 import type { GitRunner } from '@choliba/core/git';
 import { createSpawnGitRunner } from '@choliba/core/git';
 
-import type { AgentDefinition, AgentPhase } from '../agent.types';
+import type { AgentDefinition } from '../agent.types';
 import { listAgents, loadAgent } from '../agent-loader';
 import { resolveCommand } from '../command-registry';
 import { commandFromAgent, effectivePolicy } from '../define-command';
@@ -22,15 +21,7 @@ import { readPlan } from '../plan-store';
 import { validateExplicitModel } from '../providers/stream-json';
 import { runAgent } from '../run-agent';
 import { CHOL_AGENTS_PROVIDER } from '@choliba/core/config';
-import {
-  listProjectNames,
-  listTicketKeys,
-  loadProjectSettings,
-  readProjectConfig,
-  resolveLocations,
-} from '@choliba/projects';
-import { readAgentPermissions } from '../permissions';
-import { agentInPhase, selectPhases } from '../phases';
+import { listProjectNames, listTicketKeys, loadProjectSettings, resolveLocations } from '@choliba/projects';
 import { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '../workspace-dirs';
 import { permissionDirs, withExpandedInstructions } from '../vars';
 import type { AgentsArgsError, ParsedAgentsArgs } from './args';
@@ -81,12 +72,12 @@ function errorMessage(error: unknown): string {
 
 const HELP_WIDTH = 80;
 
+/** The workspace root in `agent.yaml` and `system.md`; never read from the config, only found. */
+const CHOL_ROOT = 'CHOL_ROOT';
+
 /** Greedy word-wrap: never breaks a word, never exceeds `width` unless a single word already does. */
 function wrapText(text: string, width: number): readonly string[] {
   const words = text.split(/\s+/).filter((word) => word !== '');
-  if (words.length === 0) {
-    return [''];
-  }
   const lines: string[] = [];
   let current = '';
   for (const word of words) {
@@ -120,10 +111,10 @@ function formatAgentDetail(command: CommandDefinition, agent: AgentDefinition): 
     `name: ${agent.displayName}`,
     `version: ${agent.version}`,
     ...wrapText(agent.description, HELP_WIDTH),
-    formatYamlList('supported_models', agent.supportedModels),
+    formatYamlList('models', agent.supportedModels),
     formatYamlList('skills', agent.skills),
+    formatYamlList('modes', agent.modes),
     ...(agent.ticketTypes === undefined ? [] : [formatYamlList('ticket_types', agent.ticketTypes)]),
-    ...(agent.phases === undefined ? [] : [formatYamlList('phases', agent.phases.map((phase) => phase.name))]),
     formatYamlList(
       'mcps',
       agent.mcps.map((mcp) =>
@@ -257,7 +248,7 @@ function foreignFlag(
 }
 
 /**
- * Pre-flight: when `--model` is explicit, it must be one `agent.yaml#supported_models` actually
+ * Pre-flight: when `--model` is explicit, it must be one `agent.yaml#models` actually
  * declares — checked before resolving a provider or building a prompt, so a bad model never gets
  * anywhere near invoking one. An agent with no declared models (`supportedModels.length === 0`)
  * has nothing to validate against, so anything goes for it. `true` means "ok to proceed"; on
@@ -306,8 +297,8 @@ function resolveAgentMcps(agent: AgentDefinition, deps: RunAgentsCliDeps): reado
 }
 
 /**
- * The folders an agent's `system.md` may name, so it never depends on the workspace layout:
- * `${AGENTS_DIR}`, `${SKILLS_DIR}` and `${MCPS_DIR}` always; `${GLOBAL_DIR}`, `${PROJECTS_DIR}` and
+ * The folders an agent's `system.md` and `agent.yaml` may name, so it never depends on the workspace
+ * layout: `${CHOL_ROOT}` (the workspace root, always found by the application), `${AGENTS_DIR}`, `${SKILLS_DIR}` and `${MCPS_DIR}` always; `${GLOBAL_DIR}`, `${PROJECTS_DIR}` and
  * `${TICKET_RUNS}` once GLOBAL_DIR is configured; `${PROJECT}`/`${PROJECT_DIR}`/`${APP_DIR}` (the active
  * environment's application code) when the run has a project — all from `@choliba/projects` and
  * `workspace-dirs`, this CLI works out no path itself.
@@ -323,6 +314,7 @@ function locationVars(
     ? resolveLocations(deps.repoRoot, deps.config, () => undefined)
     : undefined;
   return {
+    [CHOL_ROOT]: deps.repoRoot,
     AGENTS_DIR: resolveAgentsDir(undefined, deps.config, deps.repoRoot),
     SKILLS_DIR: resolveSkillsDir(deps.config, deps.repoRoot),
     MCPS_DIR: resolveMcpsDir(deps.config, deps.repoRoot),
@@ -338,7 +330,8 @@ function locationVars(
 }
 
 /**
- * Pre-flight for `--project`: required when the agent declares `project_required`, and, when given,
+ * Pre-flight for `--project`: required when the agent acts on a project (it uses a project variable
+ * or declares `ticket_types`, see `AgentDefinition.projectRequired`), and, when given,
  * checked by `@choliba/projects` (`loadProjectSettings`: files, active environment, no
  * `CHANGE_ME`) — never by this CLI and never by the agent. A project that is not ready stops the run
  * here, with the resolver's message on `stderr`; the provider is never called.
@@ -352,7 +345,9 @@ function resolveProjectVars(
     if (!agent.projectRequired) {
       return {};
     }
-    deps.stderr.write(`Project is required for "${agent.name}": pass --project <name>. ${USAGE}\n`);
+    deps.stderr.write(
+      `Project is required for "${agent.name}" (it uses a project variable or ticket_types): pass --project <name>. ${USAGE}\n`,
+    );
     return undefined;
   }
   try {
@@ -391,13 +386,18 @@ function expandAgent(
   }
 }
 
-/** Step 2: the effective mode and task text, after the `--plan-from`/`taskRequired` checks. */
+/** Step 2: the effective mode and task text, after the `modes.allow`/`--plan-from`/`taskRequired` checks. */
 function resolveTaskAndMode(
   parsed: RunArgs,
   command: CommandDefinition,
+  agent: AgentDefinition,
   deps: RunAgentsCliDeps,
 ): { mode: ExecutionMode; task: string } | undefined {
   const mode: ExecutionMode = parsed.mode ?? command.defaultMode;
+  if (!agent.modes.includes(mode)) {
+    deps.stderr.write(`Mode "${mode}" is not allowed for "${agent.name}" (modes.allow: ${agent.modes.join(', ')}). ${USAGE}\n`);
+    return undefined;
+  }
   if (parsed.planFrom !== undefined && mode !== 'execute') {
     deps.stderr.write(
       `--plan-from can only be used with --mode execute (or no --mode, on a command whose default is execute). ${USAGE}\n`,
@@ -562,47 +562,6 @@ async function runAndRecord(
   return exitCode;
 }
 
-/**
- * Why `phase` is off for the run's project: its `project_switch` is not `true` in the project's
- * config.json. Opt-in on purpose: a phase behind a switch changes what is not the tests' (the
- * application's code), so a project that says nothing keeps it off.
- */
-function projectSwitchOff(parsed: RunArgs, deps: RunAgentsCliDeps): (phase: AgentPhase) => string | undefined {
-  return (phase) => {
-    const project = parsed.project;
-    if (phase.projectSwitch === undefined || project === undefined) {
-      return undefined;
-    }
-    const value = readProjectConfig(projectsDir(deps), project)[phase.projectSwitch];
-    return value === true ? undefined : `desligada em "${project}" (config.json: ${phase.projectSwitch} precisa ser true)`;
-  };
-}
-
-/**
- * The runs this command makes: the agent itself, or — for an agent with `phases` — one per phase
- * selected by the phase flags (all of them without one). `undefined` when the selection fails; the
- * reason is already on `stderr`, as is each phase the project turns off.
- */
-function resolvePhaseRuns(
-  parsed: RunArgs,
-  agent: AgentDefinition,
-  deps: RunAgentsCliDeps,
-): readonly (AgentPhase | undefined)[] | undefined {
-  if (agent.phases === undefined) {
-    return [undefined];
-  }
-  try {
-    const selection = selectPhases(agent.phases, parsed.phases, projectSwitchOff(parsed, deps));
-    for (const { phase, reason } of selection.skipped) {
-      deps.stderr.write(`fase ${phase.name} pulada: ${reason}\n`);
-    }
-    return selection.run;
-  } catch (error) {
-    deps.stderr.write(`${errorMessage(error)}\n`);
-    return undefined;
-  }
-}
-
 interface PreparedRun {
   readonly effectiveTask: string;
   readonly resolved: ReturnType<typeof resolveProvider>;
@@ -622,31 +581,26 @@ interface RunContext {
   readonly synthesized: boolean;
 }
 
-/** One run: its agent (the phase's, for a phase) and command, before the agent's `${…}` are filled in. */
-interface RunTarget {
-  readonly command: CommandDefinition;
-  readonly agent: AgentDefinition;
-  /** A later phase of a run that does not execute leaves its `before_execute` out. */
-  readonly skipPrepare: boolean;
-}
-
 /**
  * The command a run uses once its agent's `${…}` are filled in: one defined in code stays as is; one
  * derived from `agent.yaml` is derived again, so its steps get the filled-in arguments.
  */
-function commandFor(context: RunContext, target: RunTarget, agent: AgentDefinition): CommandDefinition {
-  const command = context.synthesized ? commandFromAgent(agent) : target.command;
-  return target.skipPrepare ? withoutPrepare(command) : command;
+function commandFor(context: RunContext, command: CommandDefinition, agent: AgentDefinition): CommandDefinition {
+  return context.synthesized ? commandFromAgent(agent) : command;
 }
 
 /** Everything one run needs before its provider starts; `undefined` when a check stops it (reason on `stderr`). */
-function prepareRun(context: RunContext, target: RunTarget): (PreparedRun & { command: CommandDefinition }) | undefined {
+function prepareRun(
+  context: RunContext,
+  declaredCommand: CommandDefinition,
+  declaredAgent: AgentDefinition,
+): (PreparedRun & { command: CommandDefinition }) | undefined {
   const { parsed, deps } = context;
-  const agent = expandAgent(target.agent, context.vars, deps);
+  const agent = expandAgent(declaredAgent, context.vars, deps);
   if (agent === undefined || !checkModelSupported(parsed, agent, deps)) {
     return undefined;
   }
-  const command = commandFor(context, target, agent);
+  const command = commandFor(context, declaredCommand, agent);
   const agentSkills = resolveAgentSkills(agent, deps);
   const mcpServers = agentSkills === undefined ? undefined : resolveAgentMcps(agent, deps);
   if (agentSkills === undefined || mcpServers === undefined) {
@@ -655,7 +609,7 @@ function prepareRun(context: RunContext, target: RunTarget): (PreparedRun & { co
   const readDirs = [
     context.agentsDir,
     ...(agentSkills.skills.length > 0 ? [agentSkills.skillsDir] : []),
-    ...permissionDirs(readAgentPermissions(agent.instructions)),
+    ...permissionDirs(agent.permissions),
   ];
   const addDirs = resolveAddDirs(command, parsed, deps, readDirs);
   const resolved = resolveProviderChoice(parsed, deps);
@@ -677,41 +631,13 @@ function prepareRun(context: RunContext, target: RunTarget): (PreparedRun & { co
   return built === undefined ? undefined : { ...built, resolved, command };
 }
 
-/** `command` without its `before_execute`: a later phase's steps need the earlier phase to have run for real. */
-function withoutPrepare(command: CommandDefinition): CommandDefinition {
-  const { prepare: _prepare, ...rest } = command;
-  return rest;
-}
-
-/**
- * The command and agent of one run: the agent's own for a plain agent; for a phase, the agent in that
- * phase. A later phase of a run that does not execute (`--dry-run`, plan, ask) skips its `before_execute`,
- * which would check work the earlier phase never did.
- */
-function runTarget(
-  context: RunContext,
-  command: CommandDefinition,
-  agent: AgentDefinition,
-  phase: AgentPhase | undefined,
-  index: number,
-): RunTarget {
-  if (phase === undefined) {
-    return { command, agent, skipPrepare: false };
-  }
-  const phaseAgent = agentInPhase(agent, phase);
-  // A phase named after a color (red, green) is shown in it.
-  const header = `[${agent.name}: fase ${phase.name}]`;
-  const colored = context.parsed.colorize && isAnsiColor(phase.name) ? paint(header, phase.name) : header;
-  context.deps.stdout.write(`${colored}\n`);
-  const executes = !context.parsed.dryRun && context.mode === 'execute';
-  const skipPrepare = index > 0 && !executes && phase.beforeExecute !== undefined;
-  if (skipPrepare) {
-    context.deps.stdout.write(`(before_execute da fase ${phase.name} só roda depois da fase anterior)\n`);
-  }
-  return { command: commandFromAgent(phaseAgent), agent: phaseAgent, skipPrepare };
-}
-
 async function runCommand(parsed: RunArgs, deps: RunAgentsCliDeps): Promise<number> {
+  if (deps.config[CHOL_ROOT] !== undefined) {
+    deps.stderr.write(
+      `${CHOL_ROOT} is found by the application (the folder whose package.json depends on choliba) and cannot be set: remove it from .env and from the environment.\n`,
+    );
+    return 1;
+  }
   const agentsDir = resolveAgentsDir(parsed.agentsDir, deps.config, deps.repoRoot);
 
   const resolvedAgent = await resolveAgentForCommand(parsed, deps, agentsDir);
@@ -720,8 +646,8 @@ async function runCommand(parsed: RunArgs, deps: RunAgentsCliDeps): Promise<numb
   }
   const { command, agent } = resolvedAgent;
 
-  // A flag this agent does not take (`--project` without `project_required`, `--since` without a
-  // `git_diff`, `--type` without `ticket_types`, a phase it does not have…) is an error, even next to
+  // A flag this agent does not take (`--project` for an agent without a project, `--since` without a
+  // `git_diff`, `--type` without `ticket_types`, a mode it does not allow…) is an error, even next to
   // `--help`: its own help is exactly the list of flags it takes, so anything outside it would be
   // silently ignored.
   const foreign = foreignFlag(parsed, command, agent, deps);
@@ -749,12 +675,7 @@ async function runCommand(parsed: RunArgs, deps: RunAgentsCliDeps): Promise<numb
     return 1;
   }
 
-  const phases = resolvePhaseRuns(parsed, agent, deps);
-  if (phases === undefined) {
-    return 1;
-  }
-
-  const taskAndMode = resolveTaskAndMode(parsed, command, deps);
+  const taskAndMode = resolveTaskAndMode(parsed, command, agent, deps);
   if (taskAndMode === undefined) {
     return 1;
   }
@@ -774,41 +695,29 @@ async function runCommand(parsed: RunArgs, deps: RunAgentsCliDeps): Promise<numb
     synthesized: !deps.commands.some((candidate) => candidate.name === parsed.command),
   };
 
-  let createdContent: string | undefined;
-  let exitCode = 0;
-  for (const [index, phase] of phases.entries()) {
-    const prepared = prepareRun(context, runTarget(context, command, agent, phase, index));
-    if (prepared === undefined) {
-      exitCode = 1;
-      break;
-    }
-    if (parsed.dryRun) {
-      exitCode = runDryRun(prepared.resolved, prepared.providerRequest, deps);
-      if (exitCode !== 0) break;
-      continue;
-    }
-    if (index === 0) {
-      try {
-        createdContent = createPlannedTicket(ticketTarget);
-      } catch (error) {
-        deps.stderr.write(`${errorMessage(error)}\n`);
-        return 1;
-      }
-    }
-    exitCode = await runAndRecord(
-      prepared.command,
-      context.mode,
-      prepared.effectiveTask,
-      prepared.resolved,
-      prepared.providerRequest,
-      parsed,
-      deps,
-    );
-    if (exitCode !== 0) break;
+  const prepared = prepareRun(context, command, agent);
+  if (prepared === undefined) {
+    return 1;
   }
   if (parsed.dryRun) {
-    return exitCode;
+    return runDryRun(prepared.resolved, prepared.providerRequest, deps);
   }
+  let createdContent: string | undefined;
+  try {
+    createdContent = createPlannedTicket(ticketTarget);
+  } catch (error) {
+    deps.stderr.write(`${errorMessage(error)}\n`);
+    return 1;
+  }
+  const exitCode = await runAndRecord(
+    prepared.command,
+    context.mode,
+    prepared.effectiveTask,
+    prepared.resolved,
+    prepared.providerRequest,
+    parsed,
+    deps,
+  );
   return finishTicket(ticketTarget, createdContent, context.mode, exitCode, deps.stderr);
 }
 

@@ -7,7 +7,6 @@
     Root element every agent's system.md must have exactly one of, wrapping the whole document
     (see agents/docs-updater/system.md) — required because plain XML has no notion of multiple
     top-level elements; everything the agent's prompt says has to live under this one root.
-    This is the default schema, for agents without their own agents/<name>/system.xsd.
   -->
   <xs:element name="agent" type="Agent"/>
 

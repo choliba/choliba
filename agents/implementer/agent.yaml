@@ -1,0 +1,61 @@
+version: 1
+
+agent:
+  id: implementer
+  name: Implementer
+  version: 1.0.0
+  description: >-
+    Implementa um ticket na aplicação (appDir do ambiente ativo) a partir dos testes
+    que o test-writer escreveu: o mínimo para cada critério de aceite passar, sem
+    quebrar o que já funciona e sem mexer nos testes. Só começa se os testes do
+    ticket falham pelo comportamento; no fim, o choliba confere que eles passam e
+    que os testes do projeto continuam passando. Age sobre um projeto (--project) e
+    um ticket (--ticket). Use depois do test-writer.
+
+models:
+  - claude-sonnet-5
+  - Composer 2.5 Fast
+skills:
+  - playwright-trace
+
+permissions:
+  allow:
+    read:
+      - '${SKILLS_DIR}/playwright-trace/'
+      - '${TICKET_FILE}'
+      - '${PROJECT_DIR}/config.json'
+      - '${PROJECT_DIR}/tests/'
+      - .cache/test-writer/${TICKET}/
+      - '${APP_DIR}/'
+    write:
+      - '${APP_DIR}/'
+    execute:
+      '${CHOL_ROOT}/':
+        - bunx choliba tests ${PROJECT}:${TICKET}
+        - bunx choliba tests ${PROJECT}/tests
+        - bunx choliba playwright-trace
+  deny:
+    read: [packages/, '${AGENTS_DIR}/', scripts/, jest/]
+    write: [packages/, '${AGENTS_DIR}/', scripts/, jest/, '${PROJECT_DIR}/', '${SKILLS_DIR}/']
+    execute:
+      '${CHOL_ROOT}/': [git]
+      '${APP_DIR}/': [git]
+
+modes:
+  allow: [execute, plan, ask]
+  default: execute
+
+task:
+  required: false
+  default: Implemente o ticket.
+
+ticket_types: [story, bug, improvement]
+
+steps:
+  before:
+    - run:
+        [bunx, choliba, tests, '${PROJECT}:${TICKET}', --expect, red, --failures, '.cache/test-writer/${TICKET}/red.md']
+    - add_files: [falhas_red, '.cache/test-writer/${TICKET}/red.md']
+  after:
+    - run: [bunx, choliba, tests, '${PROJECT}:${TICKET}', --expect, green]
+    - run: [bunx, choliba, tests, '${PROJECT}/tests']

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import type { AgentDefinition } from '../../agent.types';
 import { createPlannedTicket, finishTicket, resolveTicketTarget, ticketVars } from '../../cli/ticket-run';
 import { makeTmpDir } from '../helpers/tmp';
+import { NO_PERMISSIONS } from '../../permissions';
 
 function fakeWritable(): { chunks: string[]; write: (chunk: string) => void } {
   const chunks: string[] = [];
@@ -23,6 +24,8 @@ const plain: AgentDefinition = {
   taskRequired: true,
   projectRequired: true,
   defaultMode: 'execute',
+  modes: ['execute', 'plan', 'ask'],
+  permissions: NO_PERMISSIONS,
   dir: '/repo/agents/po',
   systemPromptPath: '/repo/agents/po/system.md',
   instructions: '',
