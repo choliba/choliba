@@ -81,6 +81,64 @@ export function validateAgentYaml(yamlText: string): ValidationResult {
   return { valid: false, errors: mapAgentYamlSchemaErrors(validateAgainstAgentYamlSchema.errors) };
 }
 
+/** The `agent.yaml` standards this version reads; `version:` (the first key) names one of them. */
+export const SUPPORTED_AGENT_YAML_VERSIONS: readonly number[] = [1];
+
+const AGENT_YAML_V1_SCHEMA = JSON.parse(readFileSync(join(SCHEMES_DIR, 'v1', 'agent.schema.json'), 'utf8')) as object;
+// `$data` lets `modes.default` be checked against `modes.allow`.
+const validateAgainstAgentYamlV1Schema = new Ajv({ allErrors: true, $data: true }).compile(AGENT_YAML_V1_SCHEMA);
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function invalid(...errors: string[]): ValidationResult {
+  return { valid: false, errors };
+}
+
+/** Why `doc`'s `version` is not a standard this reads, or `undefined` when it is. */
+function versionProblem(doc: Record<string, unknown>): string | undefined {
+  const version = doc['version'];
+  if (typeof version !== 'number' || !SUPPORTED_AGENT_YAML_VERSIONS.includes(version)) {
+    const named = version === undefined ? '(ausente)' : JSON.stringify(version);
+    return `padrão ${named} não suportado; suportados: ${SUPPORTED_AGENT_YAML_VERSIONS.join(', ')}`;
+  }
+  return Object.keys(doc)[0] === 'version' ? undefined : '"version" precisa ser a primeira chave';
+}
+
+/** The rule the schema cannot state: `agent.id` is the agent's folder name. */
+function folderProblem(doc: Record<string, unknown>, folder: string): readonly string[] {
+  const agent = doc['agent'];
+  const id = isRecord(agent) ? agent['id'] : undefined;
+  return typeof id === 'string' && id !== folder ? [`/agent/id "${id}" precisa ser igual ao nome da pasta "${folder}"`] : [];
+}
+
+/**
+ * Validates an `agent.yaml` of standard 1 (`schemes/v1/agent.schema.json`) found in the folder `folder`
+ * (`agents/<folder>/`): the version first, since a file of another standard would only yield noise
+ * against this schema, then the schema and the folder name, reporting every problem.
+ */
+export function validateAgentYamlV1(yamlText: string, folder: string): ValidationResult {
+  let doc: unknown;
+  try {
+    doc = parseYaml(yamlText);
+  } catch (error) {
+    return invalid(`YAML inválido: ${String(error)}`);
+  }
+  if (!isRecord(doc)) {
+    return invalid('(raiz) precisa ser um mapa de chaves');
+  }
+  const problem = versionProblem(doc);
+  if (problem !== undefined) {
+    return invalid(problem);
+  }
+  const schemaErrors = validateAgainstAgentYamlV1Schema(doc)
+    ? []
+    : mapAgentYamlSchemaErrors(validateAgainstAgentYamlV1Schema.errors);
+  const errors = [...schemaErrors, ...folderProblem(doc, folder)];
+  return { valid: errors.length === 0, errors };
+}
+
 /** Maps AJV errors to strings; `undefined`/`null` yields an empty list (defensive — AJV normally sets `.errors` on failure). */
 export function mapAgentYamlSchemaErrors(errors: readonly ErrorObject[] | null | undefined): readonly string[] {
   return (errors ?? []).map(formatAgentYamlSchemaError);
