@@ -13,6 +13,7 @@ import type { RunAgentRequest } from '../run-agent';
 import { runAgent } from '../run-agent';
 import { erroringStream, fakeSpawner, streamFromChunks, throwingSpawner } from './helpers/fake-spawner';
 import { makeTmpDir } from './helpers/tmp';
+import { NO_PERMISSIONS } from '../permissions';
 
 function cursorResolvePlan(context: PlanContentContext): string | undefined {
   const content = context.planMarkdown?.trim();
@@ -67,6 +68,8 @@ function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
     taskRequired: true,
     projectRequired: false,
     defaultMode: 'execute',
+    modes: ['execute', 'plan', 'ask'],
+    permissions: NO_PERMISSIONS,
     dir: '/repo/agents/echo',
     systemPromptPath: '/repo/agents/echo/system.md',
     instructions: 'be an echo',

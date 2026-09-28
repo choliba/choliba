@@ -66,7 +66,6 @@ export interface ProjectInfo {
 }
 
 export interface ProjectConfig {
-  greenDeveloperHabilitado?: boolean;
   devices?: unknown;
   [key: string]: unknown;
 }

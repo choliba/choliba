@@ -1,8 +1,16 @@
-id: product-owner-agent
-name: Product Owner
-version: 1.0.0
-description: 'Especialista em negócio: transforma um problema, feature ou bug num ticket com critérios de aceite em Gherkin, usando a aplicação no navegador como fonte de verdade (nunca o código). Age sobre um projeto (--project) e preenche o ticket que o CLI cria (--type) ou abre (--ticket). Use antes do developer.'
-supported_models:
+version: 1
+
+agent:
+  id: product-owner
+  name: Product Owner
+  version: 1.1.0
+  description: >-
+    Especialista em negócio: transforma um problema, feature ou bug num ticket com
+    critérios de aceite em Gherkin, usando a aplicação no navegador como fonte de
+    verdade (nunca o código). Age sobre um projeto (--project) e preenche o ticket
+    que o CLI cria (--type) ou abre (--ticket). Use antes do test-writer.
+
+models:
   - claude-sonnet-5
   - Composer 2.5 Fast
 skills:
@@ -16,11 +24,41 @@ mcps:
       - use_environment
       - list_environments
       - get_current_environment
-task_required: true
-project_required: true
-ticket_types:
-  - epic
-  - story
-  - bug
-  - improvement
-default_mode: execute
+
+permissions:
+  allow:
+    read:
+      - '${SKILLS_DIR}/playwright-cli/'
+      - .cache/playwright-cli/
+      - '${PROJECT_DIR}/config.json'
+      - '${PROJECT_DIR}/.env.json'
+      - '${PROJECT_DIR}/tickets/'
+    write:
+      - '${TICKET_FILE}'
+    execute:
+      '${CHOL_ROOT}/':
+        - bunx choliba playwright-cli
+        - bunx choliba projects list-projects
+  deny:
+    read: [packages/, '${AGENTS_DIR}/', apps/, scripts/, jest/]
+    write:
+      - packages/
+      - '${AGENTS_DIR}/'
+      - apps/
+      - scripts/
+      - jest/
+      - '${SKILLS_DIR}/'
+      - '${MCPS_DIR}/'
+      - '${PROJECT_DIR}/config.json'
+      - '${PROJECT_DIR}/.env.json'
+      - '${PROJECT_DIR}/tests/'
+    execute:
+      '${CHOL_ROOT}/':
+        - bunx choliba playwright-cli eval
+        - bunx choliba playwright-cli run-code
+        - bunx choliba playwright-cli route
+        - bunx choliba playwright-cli unroute
+        - bunx choliba projects create-project
+        - git
+
+ticket_types: [epic, story, bug, improvement]

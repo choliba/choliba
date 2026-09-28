@@ -93,7 +93,7 @@ const COMMANDS: readonly CommandEntry[] = [
         {
           name: '--path',
           value: { name: 'caminho', suggest: () => ({ kind: 'files' }) },
-          description: 'Item dentro da origem (ex.: agents/developer)',
+          description: 'Item dentro da origem (ex.: agents/test-writer)',
         },
         { name: '--dry-run', description: 'Mostra o que instalaria, sem gravar' },
       ],

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://choliba.internal/schemas/v1/agent.yaml.schema.json",
   "title": "agent.yaml (padrão 1)",
-  "description": "Padrão 1 do agents/<id>/agent.yaml — validado por validateAgentYamlV1 em packages/agents/src/agent-validation.ts. Regras que o schema não expressa ficam no código: version é a primeira chave e agent.id é igual ao nome da pasta.",
+  "description": "Padrão 1 do agents/<id>/agent.yaml — validado por validateAgentYamlV1 em packages/agents/src/agent-validation.ts. Regras que o schema não expressa ficam no código: version é a primeira chave, agent.id é igual ao nome da pasta e modes.default está em modes.allow.",
   "type": "object",
   "required": ["version", "agent", "models"],
   "additionalProperties": false,
@@ -133,7 +133,8 @@
           "items": { "$ref": "#/definitions/mode" }
         },
         "default": {
-          "allOf": [{ "$ref": "#/definitions/mode" }, { "enum": { "$data": "1/allow" } }]
+          "description": "Um dos modos de modes.allow (conferido pelo validateAgentYamlV1).",
+          "$ref": "#/definitions/mode"
         }
       }
     },
@@ -149,7 +150,7 @@
         "required": ["required"],
         "properties": { "required": { "const": false } }
       },
-      "then": { "required": ["default"] }
+      "then": { "required": ["default"], "properties": { "default": { "$ref": "#/definitions/text" } } }
     },
     "ticket_types": {
       "description": "Tipos de ticket com que o agente trabalha (templates em packages/projects/templates/ticket/); exige --type ou --ticket, e portanto --project.",

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import * as coreGit from '@choliba/core/git';
 
 import type { StepSpawn } from '../../prepare/actions';
-import { ACTIONS, checkStep, findAction, legacyStep, runSteps } from '../../prepare/actions';
+import { ACTIONS, checkStep, findAction, runSteps } from '../../prepare/actions';
 import { readGitState } from '../../prepare/git-state';
 import { makeTmpGitRepo } from '../helpers/git-repo';
 import { makeTmpDir } from '../helpers/tmp';
@@ -42,22 +42,6 @@ describe('checkStep', () => {
     expect(checkStep({ action: 'add_files', args: ['tag'] }, 'before_execute')).toEqual({
       error: 'esperado "add_files <tag> <glob...>"',
     });
-  });
-});
-
-describe('legacyStep', () => {
-  it('calls a registered method named by the first word, in either form', () => {
-    expect(legacyStep('  record_git_head   a  ')).toEqual({ action: 'record_git_head', args: ['a'] });
-    expect(legacyStep(['record_git_head', 'a'])).toEqual({ action: 'record_git_head', args: ['a'] });
-  });
-
-  it('runs a string through the shell and a list without one', () => {
-    expect(legacyStep('bun x prettier --write docs')).toEqual({
-      action: 'run',
-      args: ['sh', '-c', 'bun x prettier --write docs'],
-    });
-    expect(legacyStep(['bun', 'x', 'a b'])).toEqual({ action: 'run', args: ['bun', 'x', 'a b'] });
-    expect(legacyStep([])).toEqual({ action: 'run', args: [] });
   });
 });
 

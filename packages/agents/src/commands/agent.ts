@@ -2,7 +2,12 @@ import type { Writable } from '@choliba/terminal';
 
 import { loadAgent } from '../agent-loader';
 
-export { type ValidationResult, validateAgentFiles, validateAgentYaml, validateSystemMd } from '../agent-validation';
+export {
+  type ValidationResult,
+  validateAgentFiles,
+  validateAgentYamlV1,
+  validateSystemMd,
+} from '../agent-validation';
 
 const SECTION_TAG = /<([a-z][a-z0-9_]*)((?:\s+[a-z][a-z0-9_]*="[^"]*")*)\s*>([\s\S]*?)<\/\1>/g;
 const ATTRIBUTE = /([a-z][a-z0-9_]*)="([^"]*)"/g;

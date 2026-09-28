@@ -1,0 +1,68 @@
+version: 1
+
+agent:
+  id: test-writer
+  name: Test Writer
+  version: 1.0.0
+  description: >-
+    Escreve os testes antes da implementação: um teste Playwright por critério de
+    aceite do ticket, nomeado pelo id do critério (CA-01, CA-02...), usando a
+    aplicação no navegador como fonte de verdade. Grava só o spec do ticket e nunca
+    altera a aplicação; o choliba confere que todo critério tem teste e que todos
+    falham pelo comportamento. Age sobre um projeto (--project) e um ticket
+    (--ticket). Use depois do product-owner e antes do implementer.
+
+models:
+  - claude-sonnet-5
+  - Composer 2.5 Fast
+skills:
+  - playwright-cli
+  - playwright-trace
+
+permissions:
+  allow:
+    read:
+      - '${TICKET_FILE}'
+      - '${PROJECT_DIR}/config.json'
+      - '${PROJECT_DIR}/.env.json'
+      - '${PROJECT_DIR}/tests/'
+      - '${APP_DIR}/'
+      - '${SKILLS_DIR}/playwright-cli/'
+      - '${SKILLS_DIR}/playwright-trace/'
+      - .cache/playwright-cli/
+    write:
+      - '${PROJECT_DIR}/tests/${TICKET}.spec.ts'
+    execute:
+      '${CHOL_ROOT}/':
+        - bunx choliba playwright-cli
+        - bunx choliba tests ${PROJECT}:${TICKET}
+        - bunx choliba playwright-trace
+  deny:
+    read: [packages/, '${AGENTS_DIR}/', scripts/, jest/]
+    write:
+      - packages/
+      - '${AGENTS_DIR}/'
+      - scripts/
+      - jest/
+      - '${APP_DIR}/'
+      - '${TICKET_FILE}'
+      - '${PROJECT_DIR}/config.json'
+      - '${PROJECT_DIR}/.env.json'
+      - '${SKILLS_DIR}/'
+    execute:
+      '${CHOL_ROOT}/': [git]
+
+modes:
+  allow: [execute, plan, ask]
+  default: execute
+
+task:
+  required: false
+  default: Escreva os testes do ticket.
+
+ticket_types: [story, bug, improvement]
+
+steps:
+  after:
+    - run:
+        [bunx, choliba, tests, '${PROJECT}:${TICKET}', --expect, red, --failures, '.cache/test-writer/${TICKET}/red.md']

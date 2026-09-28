@@ -13,8 +13,12 @@ function withWorkspace(run: (root: string) => Promise<void> | void): Promise<voi
   });
 }
 
+/** A fixture agent under `agents/<as>`, its `agent.id` renamed to match the folder. */
 function copyAgent(root: string, fixture: string, as = fixture): void {
-  fs.cpSync(path.join(FIXTURES, fixture), path.join(root, 'agents', as), { recursive: true });
+  const dir = path.join(root, 'agents', as);
+  fs.cpSync(path.join(FIXTURES, fixture), dir, { recursive: true });
+  const yaml = path.join(dir, 'agent.yaml');
+  fs.writeFileSync(yaml, fs.readFileSync(yaml, 'utf8').replace(`  id: ${fixture}\n`, `  id: ${as}\n`));
 }
 
 function writeProject(projectsDir: string, name: string, baseURL: string): void {

@@ -1,66 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Types shared by every agent schema: agent.xsd (the default) and any agents/<name>/system.xsd, which
-  include this file and may restrict the Agent type. Loaded under the name agent-types.xsd.
+  Types of an agent's system.md, included by agent.xsd. Loaded under the name agent-types.xsd.
+  What the agent may read, write and run is not here: it is agent.yaml#permissions, which the
+  command enforces and writes into the prompt itself.
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
-
-  <xs:simpleType name="Action">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="write"/>
-      <xs:enumeration value="read"/>
-      <xs:enumeration value="all"/>
-      <xs:enumeration value="run"/>
-    </xs:restriction>
-  </xs:simpleType>
-
-  <!-- A path (docs/, README.md, tsconfig*.json); a trailing "/" means everything under it. -->
-  <xs:complexType name="PathEntry">
-    <xs:simpleContent>
-      <xs:extension base="xs:string">
-        <xs:attribute name="description" type="xs:string"/>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-
-  <!--
-    One allow/deny group. Besides being read by the model, it is translated into the provider's own
-    permissions (packages/agents/src/permissions.ts): <path> for read/write/all, <command> for run
-    (a command prefix, e.g. "git diff"), <tool> for read (a provider tool such as Read or Grep).
-  -->
-  <xs:complexType name="PermissionGroup">
-    <xs:choice minOccurs="1" maxOccurs="unbounded">
-      <xs:element name="path" type="PathEntry"/>
-      <xs:element name="command" type="xs:string"/>
-      <xs:element name="tool" type="xs:string"/>
-    </xs:choice>
-    <xs:attribute name="action" type="Action" use="required"/>
-  </xs:complexType>
 
   <xs:complexType name="Notes">
     <xs:sequence>
       <xs:element name="note" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
-    </xs:sequence>
-  </xs:complexType>
-
-  <xs:complexType name="Permissions">
-    <xs:sequence>
-      <xs:element name="intro" type="xs:string"/>
-      <xs:element name="allowlist">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element name="allow" type="PermissionGroup" minOccurs="1" maxOccurs="unbounded"/>
-          </xs:sequence>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="denylist">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element name="deny" type="PermissionGroup" minOccurs="1" maxOccurs="unbounded"/>
-          </xs:sequence>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="notes" type="Notes"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -79,14 +27,12 @@
   </xs:complexType>
 
   <!--
-    The sections of an agent's system.md, in order. docs_map is optional here: it only means something
-    to the docs-updater, whose own schema (agents/docs-updater/system.xsd) restricts this type to make
-    it required. Any agent may do the same with agents/<name>/system.xsd.
+    The sections of an agent's system.md, in order. docs_map is optional: it only means something to
+    an agent that maps changes to docs (the docs-updater).
   -->
   <xs:complexType name="Agent">
     <xs:sequence>
       <xs:element name="system_role" type="xs:string"/>
-      <xs:element name="permissions" type="Permissions"/>
       <xs:element name="tool_definitions" type="ToolDefinitions"/>
       <xs:element name="input_contract" type="xs:string"/>
       <xs:element name="docs_map" type="xs:string" minOccurs="0"/>

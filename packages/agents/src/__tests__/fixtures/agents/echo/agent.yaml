@@ -1,10 +1,17 @@
-id: example-echo-agent
-name: Echo Agent
-version: 1.0.0
-description: 'Repete a tarefa recebida, usado nos testes deste pacote.'
-supported_models:
+version: 1
+
+agent:
+  id: echo
+  name: Echo Agent
+  version: 1.0.0
+  description: Repete a tarefa recebida, usado nos testes deste pacote.
+
+models:
   - claude-3-5-sonnet
   - gpt-4o
 skills:
   - dummy-skill
-policy: read-only
+
+permissions:
+  deny:
+    write: [agents/]

@@ -50,6 +50,94 @@ ele:
 
 `choliba --help` (ou `choliba COMMAND --help`) lista o mesmo, sempre a partir do binário instalado.
 
+## Escrevendo um agente
+
+Um agente é uma pasta `agents/<id>/` com dois arquivos:
+
+- `agent.yaml`: o que o choliba lê e aplica (identidade, modelos, permissões, modos, passos);
+- `system.md`: as instruções que o modelo lê, em XML com as seções `system_role`, `tool_definitions`,
+  `input_contract`, `docs_map` (opcional), `execution_flow` e `output_contract`, validadas por
+  `schemes/agent.xsd`.
+
+O `agent.yaml` segue um padrão versionado. A primeira chave, `version`, é a versão do padrão (hoje só `1`); um
+arquivo sem ela ou de outra versão não carrega. O schema é `schemes/v1/agent.schema.json`.
+
+```yaml
+version: 1
+
+agent:
+  id: qa-e2e # igual ao nome da pasta
+  name: QA E2E
+  version: 1.0.0 # versão do agente
+  description: >-
+    O que o agente faz, o que não faz e quando usar.
+
+models: [claude-sonnet-5]
+skills: [playwright-cli]
+mcps:
+  mcp-app:
+    tools: [jira_get_issue]
+
+permissions:
+  allow:
+    read: ['${PROJECT_DIR}/', '${APP_DIR}/']
+    write: ['${PROJECT_DIR}/tests/']
+    execute:
+      '${CHOL_ROOT}/': [bunx choliba tests, bunx choliba playwright-cli]
+      '${APP_DIR}/': [git log, git diff]
+  deny:
+    write: ['${APP_DIR}/']
+    execute:
+      /etc/: ['*']
+
+modes:
+  allow: [execute, plan]
+  default: execute
+
+task:
+  required: false
+  default: Escreva os testes do ticket.
+
+ticket_types: [story, bug, improvement]
+
+steps:
+  before:
+    - add_files: [ticket, '${TICKET_FILE}']
+  after:
+    - run: [bunx, choliba, tests, '${PROJECT}:${TICKET}']
+```
+
+| Chave                        | Obrigatória | Padrão              | O que é                                                                                                                             |
+| ---------------------------- | ----------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `version`                    | sim         | —                   | Versão do padrão: `1`.                                                                                                              |
+| `agent`                      | sim         | —                   | `id` (igual à pasta, é o nome do comando), `name`, `version` (semver do agente) e `description`.                                    |
+| `models`                     | sim         | —                   | Modelos com que o agente pode rodar, pelo id que o provider informa.                                                                |
+| `skills`                     | não         | `[]`                | Pastas em `.agents/skills/`.                                                                                                        |
+| `mcps`                       | não         | nenhum              | Lista de nomes de `.agents/mcps/<nome>.json` (todas as tools) ou mapa `nome: { tools: [...] }`.                                     |
+| `permissions.allow`/`.deny`  | não         | nada liberado       | `read` e `write`: caminhos (terminado em `/` = tudo abaixo). `execute`: diretório → comandos (prefixos com argumentos).             |
+| `modes.allow` / `.default`   | não         | os três / `execute` | Modos aceitos (`execute`, `plan`, `ask`) e o usado quando a linha de comando não diz.                                               |
+| `task.required` / `.default` | não         | `true` / —          | Se a tarefa é obrigatória e, quando não é, qual usar (`default` passa a ser obrigatório).                                           |
+| `ticket_types`               | não         | agente sem ticket   | Tipos de ticket aceitos (`epic`, `story`, `bug`, `improvement`, `task`); a execução pede `--type` ou `--ticket`.                    |
+| `steps.before` / `.after`    | não         | nenhum              | Ações do choliba antes do modelo (`run`, `git_diff`, `add_files`) e depois de um `execute` bem-sucedido (`run`, `record_git_head`). |
+
+Regras que valem para qualquer agente:
+
+- **Negado por padrão.** O que não está em `permissions.allow` é negado; `deny` prevalece sobre `allow`. O choliba
+  traduz as permissões para o provider (flags do Claude, `.cursor/cli.json` do Cursor) e as escreve no prompt. Onde as
+  listas não dizem nada, o provider ainda pode cair no próprio padrão (o Claude, por exemplo, lê a pasta de
+  trabalho sem pedir); fechar isso é o próximo passo.
+- **Execução por diretório.** Os providers aplicam em que diretórios o agente entra e quais comandos roda, mas não
+  o vínculo "este comando só neste diretório": na prática vale a união dos dois.
+- **`steps` não passam pelas permissões.** Os passos são executados pelo choliba, fora da sessão do modelo: um
+  passo pode fazer o que o modelo não pode (o `docs-updater` proíbe o modelo de rodar o Prettier e o roda num
+  `steps.after`).
+- **Variáveis.** Caminhos, comandos e argumentos de passos aceitam `${CHOL_ROOT}` (a pasta de trabalho, sempre
+  encontrada pelo choliba: definir `CHOL_ROOT` no `.env` ou no ambiente é erro), `${AGENTS_DIR}`, `${SKILLS_DIR}`,
+  `${MCPS_DIR}`, `${GLOBAL_DIR}`, `${PROJECTS_DIR}`, `${PROJECT}`, `${PROJECT_DIR}`, `${APP_DIR}`, `${TICKET}` e
+  `${TICKET_FILE}`. Uma variável sem valor interrompe a execução.
+- **Projeto.** Um agente que usa uma variável de projeto (`${PROJECT}`, `${PROJECT_DIR}`, `${APP_DIR}`,
+  `${TICKET}`, `${TICKET_FILE}`) no `agent.yaml` ou no `system.md`, ou declara `ticket_types`, exige `--project`.
+
 ## `choliba install`
 
 Traz um agente (com as skills e os MCPs que ele declara), uma skill ou um MCP para a pasta de trabalho,
@@ -61,7 +149,7 @@ choliba install <origem> [--path <item na origem>] [--dry-run]
 
 - `<origem>` é uma pasta local, um repositório git (`https://…`, `git@…`, `github:dono/repo[#ref]`, ...) ou um
   pacote npm (nome ou `nome@versão`).
-- `--path` escolhe o item dentro da origem (ex.: `--path agents/developer`), para origens com mais de um agente,
+- `--path` escolhe o item dentro da origem (ex.: `--path agents/test-writer`), para origens com mais de um agente,
   skill ou MCP. Sem `--path`, a origem já precisa ser o item: uma pasta com `agent.yaml` ou `SKILL.md`, ou um
   arquivo `.json`.
 - `--dry-run` mostra o que seria instalado, sem gravar nada.

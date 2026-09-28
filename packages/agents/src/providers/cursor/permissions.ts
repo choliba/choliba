@@ -2,8 +2,8 @@ import { isAbsolute, join } from 'node:path';
 
 import type { PermissionPolicy } from '../../command.types';
 import type { McpServer } from '../../mcps';
-import type { AgentPermissions } from '../../permissions';
-import { pathGlob } from '../../permissions';
+import type { AgentPermissions, ExecuteRule } from '../../permissions';
+import { allowedCommands, blocksEveryCommand, pathGlob, withoutTrailingSlash } from '../../permissions';
 
 export interface CursorPermissions {
   readonly allow: readonly string[];
@@ -32,14 +32,30 @@ function fileToken(kind: 'Read' | 'Write', path: string, workspaceRoot: string):
   return `${kind}(${isAbsolute(glob) ? glob : join(workspaceRoot, glob)})`;
 }
 
+/** A directory of `execute` as an absolute path: relative ones are relative to the workspace root. */
+function absoluteDir(dir: string, workspaceRoot: string): string {
+  return withoutTrailingSlash(isAbsolute(dir) ? dir : join(workspaceRoot, dir));
+}
+
 /**
  * Cursor prefixes commands with `cd <workspace> &&` on its own, and checks each part of a compound
  * command: without that `cd` allowed, every allowed command came back rejected. Only the `cd` into
- * the workspace root is allowed, so the agent cannot run its commands from anywhere else —
- * `cd /tmp && …` stays rejected (both checked with real runs).
+ * the workspace root and into the directories `execute` names is allowed, so the agent cannot run its
+ * commands from anywhere else — `cd /tmp && …` stays rejected (both checked with real runs).
  */
-function cdToken(workspaceRoot: string): string {
-  return `Shell(cd:${workspaceRoot})`;
+function cdTokens(permissions: AgentPermissions, workspaceRoot: string): readonly string[] {
+  if (permissions.allowExecute.length === 0) {
+    return [];
+  }
+  const dirs = [workspaceRoot, ...permissions.allowExecute.map((rule) => absoluteDir(rule.dir, workspaceRoot))];
+  return [...new Set(dirs)].map((dir) => `Shell(cd:${dir})`);
+}
+
+/** A deny rule in cursor's syntax: its commands, or — for `['*']` — the `cd` into the directory. */
+function denyShellTokens(rule: ExecuteRule, workspaceRoot: string): readonly string[] {
+  return blocksEveryCommand(rule)
+    ? [`Shell(cd:${absoluteDir(rule.dir, workspaceRoot)})`]
+    : rule.commands.map(shellToken);
 }
 
 /** Cursor's tokens for an MCP server: one per tool it lists, or one for the whole server. */
@@ -48,10 +64,9 @@ export function mcpTokens(server: McpServer): string[] {
 }
 
 /**
- * Translates what system.md declares (and the MCP servers agent.yaml lists) into cursor's
+ * Translates what agent.yaml declares (`permissions` and the MCP servers in `mcps`) into cursor's
  * `permissions` (the `.cursor/cli.json` format). Nothing is hardcoded: an agent gets exactly what
- * it declares. Cursor has no per-tool switch, so `<tool>` entries only matter to Claude; write
- * permissions only apply outside read-only runs.
+ * it declares. Write permissions only apply outside read-only runs.
  */
 export function cursorPermissions(
   permissions: AgentPermissions,
@@ -63,14 +78,14 @@ export function cursorPermissions(
     allow: [
       ...permissions.allowRead.map((path) => fileToken('Read', path, workspaceRoot)),
       ...(policy === 'read-only' ? [] : permissions.allowWrite.map((path) => fileToken('Write', path, workspaceRoot))),
-      ...permissions.allowRun.map(shellToken),
-      ...(permissions.allowRun.length > 0 ? [cdToken(workspaceRoot)] : []),
+      ...allowedCommands(permissions).map(shellToken),
+      ...cdTokens(permissions, workspaceRoot),
       ...mcpServers.flatMap(mcpTokens),
     ],
     deny: [
       ...permissions.denyRead.map((path) => fileToken('Read', path, workspaceRoot)),
       ...permissions.denyWrite.map((path) => fileToken('Write', path, workspaceRoot)),
-      ...permissions.denyRun.map(shellToken),
+      ...permissions.denyExecute.flatMap((rule) => denyShellTokens(rule, workspaceRoot)),
     ],
   };
 }

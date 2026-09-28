@@ -8,14 +8,14 @@ const FIXTURES = join(__dirname, '..', '..', '..', 'agents', 'src', '__tests__',
 
 /**
  * A source laid out like the choliba repo — `agents/echo` (declaring the skill `dummy-skill`, a skill
- * `ausente` that is not there and the MCP `with-var`), `agents/with-phases`, `.agents/skills/dummy-skill`
+ * `ausente` that is not there and the MCP `with-var`), `agents/with-prepare`, `.agents/skills/dummy-skill`
  * and `.agents/mcps/with-var.json` — and an empty workspace.
  */
 function withSource(run: (source: string, workspace: string, targets: InstallTargets) => Promise<void>): Promise<void> {
   const dir = mkdtempSync(join(tmpdir(), 'install-'));
   const source = join(dir, 'src');
   cpSync(join(FIXTURES, 'agents', 'echo'), join(source, 'agents', 'echo'), { recursive: true });
-  cpSync(join(FIXTURES, 'agents', 'with-phases'), join(source, 'agents', 'with-phases'), { recursive: true });
+  cpSync(join(FIXTURES, 'agents', 'with-prepare'), join(source, 'agents', 'with-prepare'), { recursive: true });
   cpSync(join(FIXTURES, 'skills', 'dummy-skill'), join(source, '.agents', 'skills', 'dummy-skill'), {
     recursive: true,
   });
@@ -77,9 +77,9 @@ describe('planInstall', () => {
     });
   });
 
-  it('takes an agent with phases, and a skill or an MCP alone', async () => {
+  it('takes an agent with steps, and a skill or an MCP alone', async () => {
     await withSource(async (source) => {
-      expect((await planInstall(join(source, 'agents', 'with-phases'), source)).items).toHaveLength(1);
+      expect((await planInstall(join(source, 'agents', 'with-prepare'), source)).items).toHaveLength(1);
       expect((await planInstall(join(source, '.agents', 'skills', 'dummy-skill'), source)).items[0]).toMatchObject({
         kind: 'skill',
         name: 'dummy-skill',
@@ -97,7 +97,7 @@ describe('planInstall', () => {
         [
           `${source} não é um agente (agent.yaml), uma skill (SKILL.md) nem um MCP (.json). Escolha um com --path:`,
           '  agents/echo',
-          '  agents/with-phases',
+          '  agents/with-prepare',
           '  .agents/skills/dummy-skill',
           '  .agents/mcps/with-var.json',
         ].join('\n'),

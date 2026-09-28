@@ -1,7 +1,12 @@
-id: schema-invalid-yaml-agent
-name: Schema Invalid Yaml
-version: 1.0.0
-description: 'Fixture com campo extra não permitido pelo schema.'
-supported_models:
+version: 1
+
+agent:
+  id: schema-invalid-yaml
+  name: Schema Invalid Yaml
+  version: 1.0.0
+  description: Fixture com campo extra não permitido pelo schema.
+
+models:
   - claude-3-5-sonnet
+
 bogus_field: nope

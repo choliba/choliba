@@ -108,8 +108,7 @@ export function createExample(root: string, templatesDir: string = exampleTempla
     baseUrl: `http://localhost:${portExemple}`,
   });
   const project = join(projectsDir, EXAMPLE);
-  // Only Chromium, the browser the next steps install; and the developer's green phase may change the
-  // example's code, which is there to be changed (other projects have to turn it on themselves).
+  // Only Chromium, the browser the next steps install.
   const configFile = join(project, 'config.json');
   const config = JSON.parse(readFileSync(configFile, 'utf8')) as Record<string, unknown>;
   writeFileSync(
@@ -118,7 +117,6 @@ export function createExample(root: string, templatesDir: string = exampleTempla
       {
         ...config,
         devices: { chromium: true, firefox: false, webkit: false, 'mobile-chrome': false },
-        greenDeveloperHabilitado: true,
       },
       null,
       2,

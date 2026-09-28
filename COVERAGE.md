@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 26/09/2026 07:56:50 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 28/09/2026 20:26:50 — não editar manualmente.
 
 ## Resumo
 
@@ -17,7 +17,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 37 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 36 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -35,7 +35,6 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/json.ts](packages/agents/src/json.ts)|100.00|100.00|100.00|100.00
 🟢|[src/mcps.ts](packages/agents/src/mcps.ts)|100.00|100.00|100.00|100.00
 🟢|[src/permissions.ts](packages/agents/src/permissions.ts)|100.00|100.00|100.00|100.00
-🟢|[src/phases.ts](packages/agents/src/phases.ts)|100.00|100.00|100.00|100.00
 🟢|[src/plan-store.ts](packages/agents/src/plan-store.ts)|100.00|100.00|100.00|100.00
 🟢|[src/prepare/actions.ts](packages/agents/src/prepare/actions.ts)|100.00|100.00|100.00|100.00
 🟢|[src/prepare/add-files.ts](packages/agents/src/prepare/add-files.ts)|100.00|100.00|100.00|100.00
