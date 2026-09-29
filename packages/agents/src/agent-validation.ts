@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import Ajv, { type ErrorObject } from 'ajv';
 import { validateXML } from 'xmllint-wasm';
 import { parse as parseYaml } from 'yaml';
-import { findResource } from '@choliba/core/config';
+import { AGENT_FILE, SYSTEM_FILE, findResource } from '@choliba/core/config';
 
 /**
  * Split out of `agent-loader.ts` (which needs these to make `loadAgent` fail for real on a
@@ -120,7 +120,7 @@ export function mapAgentYamlSchemaErrors(errors: readonly ErrorObject[] | null |
  */
 export async function validateSystemMd(xmlText: string): Promise<ValidationResult> {
   const result = await validateXML({
-    xml: { fileName: 'system.md', contents: xmlText },
+    xml: { fileName: SYSTEM_FILE, contents: xmlText },
     schema: SYSTEM_SCHEMA,
     preload: AGENT_TYPES_XSD,
   });
@@ -137,8 +137,8 @@ export async function validateSystemMd(xmlText: string): Promise<ValidationResul
  */
 export async function validateAgentFiles(agentsDir: string, name: string): Promise<ValidationResult> {
   const dir = join(agentsDir, name);
-  const yaml = readAgentFile(join(dir, 'agent.yaml'));
-  const system = readAgentFile(join(dir, 'system.md'));
+  const yaml = readAgentFile(join(dir, AGENT_FILE));
+  const system = readAgentFile(join(dir, SYSTEM_FILE));
   const errors = [
     ...located(yaml, (text) => validateAgentYamlV1(text, name)),
     ...located(system, () => ({ valid: true, errors: [] })),

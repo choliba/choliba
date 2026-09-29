@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
+import { PACKAGE_FILE } from './files';
 
 /** The package every workspace depends on; its own repository is a workspace too (`workspace:*`). */
 export const PACKAGE_NAME = 'choliba';
@@ -12,7 +13,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 /** Whether `dir/package.json` lists choliba in `dependencies` or `devDependencies`; false when unreadable. */
 function dependsOnPackage(dir: string): boolean {
-  const file = join(dir, 'package.json');
+  const file = join(dir, PACKAGE_FILE);
   if (!existsSync(file)) {
     return false;
   }

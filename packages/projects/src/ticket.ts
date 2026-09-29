@@ -5,6 +5,7 @@ import { readJsonFile } from './json-file';
 import type { ProjectLocations } from './locations';
 import { assertProjectExists, projectDir } from './project';
 import { REPORT_FOLDER, TEST_RESULTS_FOLDER } from './results';
+import { TICKETS_SUBDIR, TICKET_RUNS_SUBDIR } from '@choliba/core/config';
 
 /** The part of a ticket JSON this package reads: which spec tests cover each acceptance criterion. */
 export interface TicketJson {
@@ -33,7 +34,7 @@ export function parseTarget(target: string): { project: string; rawTicket: strin
 
 /** `{projeto}/tickets`, without checking that the project exists. */
 export function ticketsFolderPath(projectsDir: string, project: string): string {
-  return path.join(projectDir(projectsDir, project), 'tickets');
+  return path.join(projectDir(projectsDir, project), TICKETS_SUBDIR);
 }
 
 /** The file of the ticket whose suffix is `suffix` (`tickets/<suffix>.json`), exact case, not checked. */
@@ -104,7 +105,7 @@ export function resolveTicketRunsRoot(
 }
 
 export function resolveTicketRunsFolder(ticketRunsRoot: string, project: string, ticket?: string): string {
-  const base = path.join(ticketRunsRoot, project, 'ticket-runs');
+  const base = path.join(ticketRunsRoot, project, TICKET_RUNS_SUBDIR);
   return ticket ? path.join(base, ticket) : base;
 }
 

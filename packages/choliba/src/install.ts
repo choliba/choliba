@@ -4,6 +4,7 @@ import { basename, dirname, join, relative } from 'node:path';
 import { isValidAgentName, loadAgent, mcpConfig, skillDescription } from '@choliba/agents';
 
 import { fetchSource, type FetchedSource, type SourceDeps } from './install-source';
+import { AGENTS_SUBDIR, AGENT_FILE, MCPS_SUBDIR, SKILLS_SUBDIR, SKILL_FILE } from '@choliba/core/config';
 
 /** What `choliba install` installs, named as the report shows it. */
 export type ItemKind = 'agente' | 'skill' | 'MCP';
@@ -82,9 +83,9 @@ function isDir(path: string): boolean {
 
 /** The item `target` is, by what it holds: `agent.yaml`, `SKILL.md` or a `.json` file. */
 function itemAt(target: string): PlannedItem | undefined {
-  if (isDir(target) && existsSync(join(target, 'agent.yaml')))
+  if (isDir(target) && existsSync(join(target, AGENT_FILE)))
     return { kind: 'agente', name: basename(target), from: target };
-  if (isDir(target) && existsSync(join(target, 'SKILL.md')))
+  if (isDir(target) && existsSync(join(target, SKILL_FILE)))
     return { kind: 'skill', name: basename(target), from: target };
   if (target.endsWith('.json') && existsSync(target))
     return { kind: 'MCP', name: basename(target, '.json'), from: target };
@@ -101,9 +102,9 @@ function itemsUnder(root: string): readonly string[] {
           .map((name) => `${dir}/${name}`)
       : [];
   return [
-    ...entries('agents', (name) => existsSync(join(root, 'agents', name, 'agent.yaml'))),
-    ...entries('.agents/skills', (name) => existsSync(join(root, '.agents', 'skills', name, 'SKILL.md'))),
-    ...entries('.agents/mcps', (name) => name.endsWith('.json')),
+    ...entries(AGENTS_SUBDIR, (name) => existsSync(join(root, AGENTS_SUBDIR, name, AGENT_FILE))),
+    ...entries(SKILLS_SUBDIR, (name) => existsSync(join(root, SKILLS_SUBDIR, name, SKILL_FILE))),
+    ...entries(MCPS_SUBDIR, (name) => name.endsWith('.json')),
   ];
 }
 
@@ -111,11 +112,11 @@ function itemsUnder(root: string): readonly string[] {
 function notAnItem(target: string, shownAs: string): InstallError {
   const found = itemsUnder(target);
   if (found.length === 0) {
-    return new InstallError(`${shownAs}: nenhum item no formato do choliba (agent.yaml, SKILL.md ou .json).`);
+    return new InstallError(`${shownAs}: nenhum item no formato do choliba (${AGENT_FILE}, ${SKILL_FILE} ou .json).`);
   }
   return new InstallError(
     [
-      `${shownAs} não é um agente (agent.yaml), uma skill (SKILL.md) nem um MCP (.json). Escolha um com --path:`,
+      `${shownAs} não é um agente (${AGENT_FILE}), uma skill (${SKILL_FILE}) nem um MCP (.json). Escolha um com --path:`,
       ...found.map((path) => `  ${path}`),
     ].join('\n'),
   );
@@ -129,17 +130,17 @@ async function checkItem(item: PlannedItem): Promise<void> {
   if (item.kind === 'agente') {
     await loadAgent(dirname(item.from), item.name);
   } else if (item.kind === 'skill') {
-    const file = join(item.from, 'SKILL.md');
+    const file = join(item.from, SKILL_FILE);
     skillDescription(readFileSync(file, 'utf8'), file);
   } else {
     mcpConfig(readFileSync(item.from, 'utf8'), item.from);
   }
 }
 
-/** `relative` in the nearest `.agents/` from `start` up to `searchUpTo` (inclusive). */
+/** `relativePath` in the nearest folder that has it, from `start` up to `searchUpTo` (inclusive). */
 function findUpTo(start: string, searchUpTo: string, relativePath: string): string | undefined {
   for (let dir = start; ; dir = dirname(dir)) {
-    const candidate = join(dir, '.agents', relativePath);
+    const candidate = join(dir, relativePath);
     if (existsSync(candidate)) return candidate;
     if (dir === searchUpTo || dir === dirname(dir)) return undefined;
   }
@@ -152,8 +153,8 @@ async function dependencies(
 ): Promise<{ items: readonly PlannedItem[]; warnings: readonly string[] }> {
   const agent = await loadAgent(dirname(agentDir), basename(agentDir));
   const wanted: readonly (readonly [ItemKind, string, string])[] = [
-    ...agent.skills.map((name) => ['skill', name, join('skills', name)] as const),
-    ...agent.mcps.map((mcp) => ['MCP', mcp.name, join('mcps', `${mcp.name}.json`)] as const),
+    ...agent.skills.map((name) => ['skill', name, join(SKILLS_SUBDIR, name)] as const),
+    ...agent.mcps.map((mcp) => ['MCP', mcp.name, join(MCPS_SUBDIR, `${mcp.name}.json`)] as const),
   ];
   const items: PlannedItem[] = [];
   const warnings: string[] = [];

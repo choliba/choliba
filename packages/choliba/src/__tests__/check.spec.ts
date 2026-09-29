@@ -13,9 +13,9 @@ function withWorkspace(run: (root: string) => Promise<void> | void): Promise<voi
   });
 }
 
-/** A fixture agent under `agents/<as>`, its `agent.id` renamed to match the folder. */
+/** A fixture agent under `app/agents/<as>` (the default agents folder), its `agent.id` renamed to match the folder. */
 function copyAgent(root: string, fixture: string, as = fixture): void {
-  const dir = path.join(root, 'agents', as);
+  const dir = path.join(root, 'app', 'agents', as);
   fs.cpSync(path.join(FIXTURES, fixture), dir, { recursive: true });
   const yaml = path.join(dir, 'agent.yaml');
   fs.writeFileSync(yaml, fs.readFileSync(yaml, 'utf8').replace(`  id: ${fixture}\n`, `  id: ${as}\n`));
@@ -38,13 +38,16 @@ describe('checkAgents', () => {
       copyAgent(root, 'schema-invalid-xml', 'invalido');
       copyAgent(root, 'echo', 'sem-skill');
       copyAgent(root, 'reviewer', 'com-mcp');
-      fs.appendFileSync(path.join(root, 'agents', 'com-mcp', 'agent.yaml'), 'mcps: [app]\n');
-      fs.mkdirSync(path.join(root, '.agents', 'mcps'), { recursive: true });
-      fs.writeFileSync(path.join(root, '.agents', 'mcps', 'app.json'), JSON.stringify({ command: '${APP_DIR}/x' }));
-      fs.mkdirSync(path.join(root, 'agents', '_rascunho'));
+      fs.appendFileSync(path.join(root, 'app', 'agents', 'com-mcp', 'agent.yaml'), 'mcps: [app]\n');
+      fs.mkdirSync(path.join(root, 'app', '.agents', 'mcps'), { recursive: true });
+      fs.writeFileSync(
+        path.join(root, 'app', '.agents', 'mcps', 'app.json'),
+        JSON.stringify({ command: '${APP_DIR}/x' }),
+      );
+      fs.mkdirSync(path.join(root, 'app', 'agents', '_rascunho'));
 
       const section = await checkAgents(root, {});
-      expect(section.title).toBe(`Agentes (${path.join(root, 'agents')})`);
+      expect(section.title).toBe(`Agentes (${path.join(root, 'app', 'agents')})`);
       expect(section.items.map((item) => item.name)).toEqual(['com-mcp', 'invalido', 'reviewer', 'sem-skill']);
       const problem = (name: string): string | undefined => section.items.find((item) => item.name === name)?.problem;
       expect(problem('reviewer')).toBeUndefined();
@@ -61,23 +64,23 @@ describe('checkAgents', () => {
   it('says when the agents folder does not exist', async () => {
     await withWorkspace(async (root) => {
       expect((await checkAgents(root, {})).items).toEqual([
-        { name: path.join(root, 'agents'), problem: 'a pasta não existe' },
+        { name: path.join(root, 'app', 'agents'), problem: 'a pasta não existe' },
       ]);
     });
   });
 });
 
 describe('checkProjects', () => {
-  it('checks each project, and reports a missing GLOBAL_DIR or projects folder', async () => {
+  it('checks each project, and reports a missing CHOL_GLOBAL_DIR or projects folder', async () => {
     await withWorkspace((root) => {
-      expect(checkProjects(root, {}).items[0]?.problem).toContain('GLOBAL_DIR não definida');
-      expect(checkProjects(root, { GLOBAL_DIR: root }).items).toEqual([
+      expect(checkProjects(root, {}).items[0]?.problem).toContain('CHOL_GLOBAL_DIR não definida');
+      expect(checkProjects(root, { CHOL_GLOBAL_DIR: root }).items).toEqual([
         { name: path.join(root, 'projects'), problem: 'a pasta não existe' },
       ]);
 
       writeProject(path.join(root, 'projects'), 'pronto', 'http://x');
       writeProject(path.join(root, 'projects'), 'pendente', 'CHANGE_ME');
-      const section = checkProjects(root, { GLOBAL_DIR: root });
+      const section = checkProjects(root, { CHOL_GLOBAL_DIR: root });
       expect(section.title).toBe(`Projetos (${path.join(root, 'projects')})`);
       expect(section.items[0]).toEqual({ name: 'pendente', problem: expect.stringContaining('CHANGE_ME') as unknown });
       expect(section.items[1]).toEqual({ name: 'pronto' });
@@ -91,11 +94,11 @@ describe('checkWorkspace / formatCheck / allFine', () => {
       copyAgent(root, 'reviewer');
       fs.mkdirSync(path.join(root, 'projects'));
 
-      const fine = await checkWorkspace(root, { GLOBAL_DIR: root });
+      const fine = await checkWorkspace(root, { CHOL_GLOBAL_DIR: root });
       expect(allFine(fine)).toBe(true);
       expect(formatCheck(fine)).toBe(
         [
-          `Agentes (${path.join(root, 'agents')})`,
+          `Agentes (${path.join(root, 'app', 'agents')})`,
           '  ✓ reviewer',
           '',
           `Projetos (${path.join(root, 'projects')})`,

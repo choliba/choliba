@@ -21,7 +21,7 @@ skills:
 permissions:
   allow:
     read:
-      - '${SKILLS_DIR}/playwright-trace/'
+      - '${CHOL_SKILLS_DIR}/playwright-trace/'
       - '${TICKET_FILE}'
       - '${PROJECT_DIR}/config.json'
       - '${PROJECT_DIR}/tests/'
@@ -35,8 +35,8 @@ permissions:
         - bunx choliba tests ${PROJECT}/tests
         - bunx choliba playwright-trace
   deny:
-    read: [packages/, '${AGENTS_DIR}/', scripts/, jest/]
-    write: [packages/, '${AGENTS_DIR}/', scripts/, jest/, '${PROJECT_DIR}/', '${SKILLS_DIR}/']
+    read: [packages/, '${CHOL_AGENTS_DIR}/', scripts/, jest/]
+    write: [packages/, '${CHOL_AGENTS_DIR}/', scripts/, jest/, '${PROJECT_DIR}/', '${CHOL_SKILLS_DIR}/']
     execute:
       '${CHOL_ROOT}/': [git]
       '${APP_DIR}/': [git]

@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 
 import type { CommandEntry, CommandSpec } from './cli.types';
+import { PACKAGE_FILE } from '../config/files';
 
 export interface PackageScripts {
   readonly scripts: Readonly<Record<string, string>>;
@@ -105,13 +106,13 @@ export function resolveScriptCli(
 function optedInPackage(file: string, repoRoot: string): string | undefined {
   const root = resolve(repoRoot);
   let dir = dirname(resolve(file));
-  while (!existsSync(join(dir, 'package.json')) && dir !== root) {
+  while (!existsSync(join(dir, PACKAGE_FILE)) && dir !== root) {
     dir = dirname(dir);
   }
-  if (!existsSync(join(dir, 'package.json'))) {
+  if (!existsSync(join(dir, PACKAGE_FILE))) {
     return undefined;
   }
-  const pkg: unknown = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
+  const pkg: unknown = JSON.parse(readFileSync(join(dir, PACKAGE_FILE), 'utf8'));
   if (!isRecord(pkg) || pkg['cholCompletion'] !== true) {
     return undefined;
   }

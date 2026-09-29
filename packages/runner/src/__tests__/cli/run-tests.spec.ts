@@ -104,7 +104,7 @@ describe('runTestsCli', () => {
         envs.push(env);
         return 0;
       },
-      loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: '/p' }),
+      loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: '/p' }),
       stdinIsTTY: false,
     });
     expect(envs[0]?.['NODE_PATH']).toBe(`${modules}${path.delimiter}/x`);
@@ -119,7 +119,7 @@ describe('runTestsCli', () => {
         calls.push(args);
         return 0;
       },
-      loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: '/p' }),
+      loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: '/p' }),
       stdinIsTTY: false,
     });
 
@@ -136,7 +136,7 @@ describe('runTestsCli', () => {
         ...TEST_ROOTS,
         argv,
         spawnPlaywright,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: '/p' }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: '/p' }),
         stdinIsTTY: false,
       });
 
@@ -157,7 +157,7 @@ describe('runTestsCli', () => {
         runTestsCli({
           ...TEST_ROOTS,
           argv: ['__complete', ...argv],
-          loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+          loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         });
 
       await run('--');
@@ -197,7 +197,7 @@ describe('runTestsCli', () => {
     await runTestsCli({
       ...TEST_ROOTS,
       argv: ['__describe'],
-      loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: '/p' }),
+      loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: '/p' }),
     });
     expect(stdout.mock.calls).toEqual([
       ['Roda os testes E2E dos projetos com o Playwright. Sem PROJECT, roda todos os projetos.\n'],
@@ -212,7 +212,7 @@ describe('runTestsCli', () => {
           argv: ['missing:T-01'],
           cwd,
           env: {},
-          loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+          loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
           spawnPlaywright: () => 0,
           stdinIsTTY: false,
         }),
@@ -229,7 +229,7 @@ describe('runTestsCli', () => {
           ...TEST_ROOTS,
           argv: ['demo', 'demo-T-01'],
           cwd,
-          loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+          loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
           spawnPlaywright: () => 0,
           stdinIsTTY: false,
         }),
@@ -248,7 +248,7 @@ describe('runTestsCli', () => {
         cwd,
         env: { TICKET_RUNS: projectsDir },
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }),
         spawnPlaywright: (args) => {
           calls.push(args);
           return 0;
@@ -270,7 +270,7 @@ describe('runTestsCli', () => {
         argv: ['demo:T-01'],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: (args) => {
           calls.push(args);
           return 0;
@@ -294,7 +294,7 @@ describe('runTestsCli', () => {
         argv: ['demo:T-01,T-02'],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: (args) => {
           calls.push(args);
           return 0;
@@ -319,7 +319,7 @@ describe('runTestsCli', () => {
         argv: ['demo'],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: (args) => {
           calls.push(args);
           return 0;
@@ -341,7 +341,7 @@ describe('runTestsCli', () => {
         argv: [],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: (args) => {
           calls.push(args);
           return 0;
@@ -362,7 +362,7 @@ describe('runTestsCli', () => {
         argv: ['demo:T-01'],
         cwd,
         stdinIsTTY: true,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: () => 0,
         promptOpenReport: () => Promise.resolve(true),
         openHtmlReport: (_projectsDir, project, ticket) => {
@@ -383,7 +383,7 @@ describe('runTestsCli', () => {
           ...TEST_ROOTS,
           argv: ['demo:T-*,T-02/tests/foo.spec.ts'],
           cwd,
-          loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+          loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
           spawnPlaywright: () => 0,
           stdinIsTTY: false,
         }),
@@ -396,7 +396,7 @@ describe('runTestsCli', () => {
     await runTestsCli({
       ...TEST_ROOTS,
       argv: ['--list'],
-      loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: '/p' }),
+      loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: '/p' }),
       spawnSyncFn: (command, args) => {
         spawnCalls.push({ command, args });
         return { status: 0 };
@@ -421,7 +421,7 @@ describe('runTestsCli', () => {
         cwd,
         stdinIsTTY: true,
         env: { TICKET_RUNS: projectsDir },
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }),
         promptOpenReport: () => Promise.resolve(true),
         spawnSyncFn: (command, args) => {
           spawnCalls.push({ command, args });
@@ -447,7 +447,7 @@ describe('runTestsCli', () => {
         argv: ['demo:CAD-01', '-', 'CAD-02'],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: (args) => {
           calls.push(args);
           return 0;
@@ -462,7 +462,7 @@ describe('runTestsCli', () => {
         argv: ['demo:CAD-01,CAD-02'],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: (args) => {
           calls.push(args);
           return 0;
@@ -477,7 +477,7 @@ describe('runTestsCli', () => {
         argv: ['demo:CAD-01,', 'CAD-02'],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: (args) => {
           calls.push(args);
           return 0;
@@ -492,7 +492,7 @@ describe('runTestsCli', () => {
         argv: ['demo:CAD-01,', 'CAD-02', 'CAD-03'],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: (args) => {
           calls.push(args);
           return 0;
@@ -513,7 +513,7 @@ describe('runTestsCli', () => {
           argv: [''],
           cwd,
           stdinIsTTY: false,
-          loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+          loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
           spawnPlaywright: (args) => {
             calls.push(args);
             return 0;
@@ -538,7 +538,7 @@ describe('runTestsCli', () => {
           argv: ['demo'],
           cwd,
           stdinIsTTY: false,
-          loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+          loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
           spawnPlaywright: () => 0,
         }),
       ).rejects.toThrow('troque CHANGE_ME em:');
@@ -555,7 +555,7 @@ describe('runTestsCli', () => {
         argv: ['demo/tests/a.spec.ts'],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: (args) => {
           calls.push(args);
           return 0;
@@ -576,7 +576,7 @@ describe('runTestsCli', () => {
           argv: ['demo:demo-MISSING'],
           cwd,
           stdinIsTTY: false,
-          loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+          loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
           spawnPlaywright: () => 0,
         }),
       ).rejects.toThrow('Ticket');
@@ -595,7 +595,7 @@ describe('runTestsCli', () => {
         argv: ['demo:T-01,T-02'],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: () => 1,
       });
 
@@ -615,7 +615,7 @@ describe('runTestsCli', () => {
         cwd,
         stdinIsTTY: false,
         env: { TICKET_RUNS: projectsDir },
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }),
         spawnPlaywright: () => 0,
       });
 
@@ -627,7 +627,7 @@ describe('runTestsCli', () => {
   it('uses resolveLocations when loadConfig is omitted', async () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'run-tests-env-'));
     try {
-      fs.writeFileSync(path.join(tmp, '.env'), 'GLOBAL_DIR=/tmp/global\n');
+      fs.writeFileSync(path.join(tmp, '.env'), 'CHOL_GLOBAL_DIR=/tmp/global\n');
       await runTestsCli({
         packageRoot: TEST_ROOTS.packageRoot,
         monorepoRoot: tmp,
@@ -651,7 +651,7 @@ describe('runTestsCli', () => {
         cwd,
         stdinIsTTY: true,
         env: { TICKET_RUNS: projectsDir },
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }),
         promptOpenReport: () => Promise.resolve(true),
         spawnPlaywright: () => 0,
         spawnSyncFn: (command, args) => {
@@ -682,7 +682,7 @@ describe('runTestsCli', () => {
         cwd,
         stdinIsTTY: true,
         env: { TICKET_RUNS: projectsDir },
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }),
         spawnPlaywright: () => 0,
         spawnSyncFn: (command, args) => {
           spawnCalls.push({ command, args });
@@ -710,7 +710,7 @@ describe('runTestsCli', () => {
         argv: ['demo:T-01'],
         cwd,
         stdinIsTTY: true,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: () => 0,
         spawnSyncFn: (command, args) => {
           spawnCalls.push({ command, args });
@@ -729,7 +729,7 @@ describe('runTestsCli', () => {
       ...TEST_ROOTS,
       argv: ['--list'],
       stdinIsTTY: false,
-      loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: '/p' }),
+      loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: '/p' }),
       spawnSyncFn: () => ({ status: null }),
     });
 
@@ -753,7 +753,7 @@ describe('runTestsCli', () => {
         argv: ['demo:CAD-01,', 'CAD-02', '--headed'],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: (args, env) => {
           capturedEnv = env;
           calls.push(args);
@@ -781,7 +781,7 @@ describe('runTestsCli', () => {
         argv: ['demo:T-01'],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: (_args, env) => {
           capturedEnv = env;
           return 0;
@@ -810,7 +810,7 @@ describe('runTestsCli', () => {
         argv: ['demo'],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: (args) => {
           calls.push(args);
           return 0;
@@ -831,7 +831,7 @@ describe('runTestsCli', () => {
         argv: [],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: () => 1,
       });
 
@@ -849,7 +849,7 @@ describe('runTestsCli', () => {
         argv: ['demo'],
         cwd,
         stdinIsTTY: true,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         promptOpenReport: () => Promise.resolve(false),
         spawnPlaywright: () => 0,
         spawnSyncFn: (command, args) => {
@@ -873,7 +873,7 @@ describe('runTestsCli', () => {
         cwd,
         stdinIsTTY: true,
         env: { TICKET_RUNS: '   ' },
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         promptOpenReport: () => Promise.resolve(true),
         spawnPlaywright: () => 0,
         spawnSyncFn: (command, args) => {
@@ -897,7 +897,7 @@ describe('runTestsCli', () => {
         argv: ['demo'],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: (args) => {
           calls.push(args);
           return 0;
@@ -918,7 +918,7 @@ describe('runTestsCli', () => {
         argv: ['demo'],
         cwd,
         stdinIsTTY: true,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: () => 0,
         promptOpenReport: () => Promise.resolve(true),
         openHtmlReport: (_projectsDir, project, ticket) => {
@@ -943,7 +943,7 @@ describe('runTestsCli', () => {
         argv: ['demo:CAD-01,', 'CAD/02'],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: (args) => {
           calls.push(args);
           return 0;
@@ -957,7 +957,7 @@ describe('runTestsCli', () => {
         argv: ['demo:CAD-01,', 'CAD-02', ''],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: (args) => {
           calls.push(args);
           return 0;
@@ -981,7 +981,7 @@ describe('runTestsCli', () => {
         argv: ['demo:CAD-01,', 'CAD-02', '-g'],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: (args) => {
           calls.push(args);
           return 0;
@@ -1006,7 +1006,7 @@ describe('runTestsCli', () => {
         argv: ['demo:T-01'],
         cwd,
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir }),
         spawnPlaywright: () => 0,
       });
 
@@ -1066,7 +1066,7 @@ describe('runTestsCli', () => {
         cwd,
         env: {},
         stdinIsTTY: false,
-        loadConfig: () => ({ GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }),
         spawnPlaywright,
       });
     }

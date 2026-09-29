@@ -1,4 +1,4 @@
-import { cpSync, writeFileSync } from 'node:fs';
+import { cpSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { stringify } from 'yaml';
@@ -179,7 +179,7 @@ describe('loadAgent', () => {
       const system = join(dir, 'echo', 'system.md');
       writeFileSync(
         system,
-        '<agent><system_role>Leia ${TICKET_FILE}.</system_role><tool_definitions><intro>i</intro><preparation><item>p</item></preparation><notes><note>n</note></notes></tool_definitions><input_contract>i</input_contract><execution_flow>e</execution_flow><output_contract>o</output_contract></agent>',
+        '<agent><system_role>Leia ${PROJECT_DIR}/config.json.</system_role><tool_definitions><intro>i</intro><preparation><item>p</item></preparation><notes><note>n</note></notes></tool_definitions><input_contract>i</input_contract><execution_flow>e</execution_flow><output_contract>o</output_contract></agent>',
       );
       expect((await loadAgent(dir, 'echo')).projectRequired).toBe(true);
     });
@@ -191,6 +191,19 @@ describe('loadAgent', () => {
       });
       writeFileSync(join(dir, 'reviewer', 'agent.yaml'), yaml);
       expect((await loadAgent(dir, 'reviewer')).projectRequired).toBe(true);
+    });
+  });
+
+  it('refuses an agent that uses a ticket variable but declares no ticket_types, saying why', async () => {
+    await withAgentCopy('with-project', async (dir) => {
+      const yaml = join(dir, 'with-project', 'agent.yaml');
+      writeFileSync(yaml, readFileSync(yaml, 'utf8').replace('${PROJECT_DIR}/tickets/', '${TICKET_FILE}'));
+
+      await expect(loadAgent(dir, 'with-project')).rejects.toThrow(
+        /agent "with-project" usa \$\{TICKET\} ou \$\{TICKET_FILE\}, mas não declara ticket_types/,
+      );
+      writeFileSync(yaml, `${readFileSync(yaml, 'utf8')}ticket_types: [bug]\n`);
+      await expect(loadAgent(dir, 'with-project')).resolves.toMatchObject({ ticketTypes: ['bug'] });
     });
   });
 

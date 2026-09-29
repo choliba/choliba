@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join, parse, resolve } from 'node:path';
 
 import type { GitRunner } from '@choliba/core/git';
+import { PACKAGE_FILE } from '@choliba/core/config';
 
 /** Where an install comes from: a folder or file on disk, a git repository or an npm package. */
 export type SourceKind = 'local' | 'git' | 'npm';
@@ -63,13 +64,13 @@ function cloneGit(spec: string, deps: SourceDeps): FetchedSource {
 /** `bun add <spec>` in a scratch project; the source is the folder the package lands in. */
 function addNpm(spec: string, deps: SourceDeps): FetchedSource {
   const scratch = scratchDir();
-  writeFileSync(join(scratch, 'package.json'), '{ "name": "choliba-install", "private": true }\n');
+  writeFileSync(join(scratch, PACKAGE_FILE), '{ "name": "choliba-install", "private": true }\n');
   const result = deps.bunAdd(scratch, spec);
   if (result.status !== 0) {
     rmSync(scratch, { recursive: true, force: true });
     throw new Error(`bun add ${spec} falhou: ${result.stderr.trim()}`);
   }
-  const manifest = JSON.parse(readFileSync(join(scratch, 'package.json'), 'utf8')) as {
+  const manifest = JSON.parse(readFileSync(join(scratch, PACKAGE_FILE), 'utf8')) as {
     dependencies?: Record<string, string>;
   };
   // A spec that is a file or folder does not say the package's name: the scratch project does.

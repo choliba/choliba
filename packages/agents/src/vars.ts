@@ -2,6 +2,7 @@ import { join } from 'node:path';
 
 import type { AgentDefinition, AgentStep } from './agent.types';
 import { mapPermissions, permissionTexts } from './permissions';
+import { AGENT_FILE } from '@choliba/core/config';
 
 const VAR_PATTERN = /\$\{([A-Z_][A-Z0-9_]*)\}/g;
 /** Same pattern without `g`: `test` on a global regex keeps `lastIndex` between calls. */
@@ -88,7 +89,7 @@ export function withExpandedInstructions(
     return expanded.text;
   });
   if (yamlMissing.size > 0) {
-    throw missingError(join(agent.dir, 'agent.yaml'), [...yamlMissing], vars);
+    throw missingError(join(agent.dir, AGENT_FILE), [...yamlMissing], vars);
   }
   return {
     ...agent,
