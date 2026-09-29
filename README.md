@@ -4,17 +4,23 @@ Testes E2E multiprojeto com Playwright, operados por agentes.
 
 ## Instalação
 
+O choliba não está no npm: o pacote é o `.tgz` da pré-release
+[`v0.0.1-dev`](https://github.com/jacksonbicalho/choliba/releases/tag/v0.0.1-dev), que é refeita a cada merge na
+`master` (o endereço não muda).
+
 ```
-bun add --trust choliba
+bun add --trust https://github.com/jacksonbicalho/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
 ```
 
 O `--trust` deixa o Bun rodar o `postinstall` do pacote, que já executa `choliba setup` (veja abaixo). Sem
 `--trust`, instale e rode o setup à mão:
 
 ```
-bun add choliba
+bun add https://github.com/jacksonbicalho/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
 bunx choliba setup
 ```
+
+Para pegar a versão mais nova depois de um merge na `master`, rode o mesmo `bun add` de novo.
 
 ## A pasta de trabalho
 
@@ -176,5 +182,9 @@ uma linha ao `~/.bashrc` que o carrega. Para imprimir o script sem rodar o setup
 ## Desenvolvendo este repositório
 
 Este repositório é, ele mesmo, uma pasta de trabalho do choliba (`choliba` está no `package.json` da raiz como
-`devDependency: workspace:*`). Para testar o pacote instalável sem publicá-lo, `bun run chol:pack` builda
-`packages/choliba` e empacota o resultado num `.tgz` local (ignorado pelo git).
+`devDependency: workspace:*`). Para testar o pacote instalável sem esperar um release, `bun run chol:pack`
+builda `packages/choliba` e empacota o resultado num `.tgz` local (ignorado pelo git), que outra pasta de trabalho
+instala pelo caminho do arquivo.
+
+O release é o PR de `develop` para `master` (merge commit). O merge dispara o workflow `release-dev.yml`, que roda
+o mesmo `chol:pack`, move a tag `v0.0.1-dev` para o novo commit e troca o `.tgz` e as notas da pré-release.
