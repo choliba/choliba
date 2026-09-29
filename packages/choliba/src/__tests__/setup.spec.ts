@@ -126,7 +126,7 @@ describe('createExample', () => {
         description: string;
         devices: Record<string, boolean>;
         envs: { baseURL: string; appDir: string }[];
-        greenDeveloperHabilitado: boolean;
+        greenDeveloperHabilitado?: boolean;
       };
       expect(config.description).toBe(
         'Loja de exemplo: Uma página só, para experimentar o choliba: um formulário de newsletter que agradece quem assina.',
@@ -134,7 +134,7 @@ describe('createExample', () => {
       expect(config.envs[0]?.appDir).toBe(path.join(root, 'app', 'exemplo'));
       expect(config.envs[0]?.baseURL).toBe('http://localhost:3000');
       expect(config.devices).toEqual({ chromium: true, firefox: false, webkit: false, 'mobile-chrome': false });
-      expect(config.greenDeveloperHabilitado).toBe(true);
+      expect(config.greenDeveloperHabilitado).toBeUndefined();
       expect(fs.readFileSync(path.join(project, '.env.json'), 'utf8')).toContain('"development": {}');
       expect(fs.readFileSync(path.join(project, 'tests', 'exemplo.spec.ts'), 'utf8')).toContain("page.goto('')");
       expect(fs.existsSync(path.join(project, 'tickets', '1.json'))).toBe(true);
@@ -162,7 +162,7 @@ describe('addEditorSettings', () => {
     withDir((root) => {
       expect(addEditorSettings(root)).toBe(true);
       const file = path.join(root, '.vscode', 'settings.json');
-      expect(fs.readFileSync(file, 'utf8')).toContain('"./node_modules/choliba/schemes/agent.schema.json"');
+      expect(fs.readFileSync(file, 'utf8')).toContain('"./node_modules/choliba/schemes/v1/agent.schema.json"');
       expect(addEditorSettings(root)).toBe(false);
 
       fs.writeFileSync(file, JSON.stringify({ 'editor.tabSize': 4, 'yaml.schemas': { './outro.json': 'x.yaml' } }));
@@ -171,7 +171,7 @@ describe('addEditorSettings', () => {
       expect(merged['editor.tabSize']).toBe(4);
       expect(Object.keys(merged['yaml.schemas'] ?? {})).toEqual([
         './outro.json',
-        './node_modules/choliba/schemes/agent.schema.json',
+        './node_modules/choliba/schemes/v1/agent.schema.json',
       ]);
     });
   });

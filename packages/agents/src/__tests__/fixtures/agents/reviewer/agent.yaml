@@ -1,7 +1,14 @@
-id: example-reviewer-agent
-name: Reviewer
-version: 2.1.0
-description: 'Agente sem skills, para cobrir esse caso do formato.'
-supported_models:
+version: 1
+
+agent:
+  id: reviewer
+  name: Reviewer
+  version: 2.1.0
+  description: Agente sem skills, para cobrir esse caso do formato.
+
+models:
   - claude-3-5-sonnet
-policy: read-only
+
+permissions:
+  deny:
+    write: [agents/]

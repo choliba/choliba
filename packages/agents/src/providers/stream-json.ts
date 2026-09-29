@@ -195,9 +195,10 @@ export function createStreamJsonParser(options: StreamJsonParserOptions): Stream
       if (type === 'tool_call') {
         const events: AgentEvent[] = options.toolCallEvents === true ? [...parseCursorToolCall(parsed)] : [];
         // The plan call arrives twice (started, then completed, both with the plan); one is enough.
-        const plan = options.planFromCreatePlanToolCall === true && asString(parsed['subtype']) !== 'completed'
-          ? extractCreatePlanToolPlan(parsed)
-          : undefined;
+        const plan =
+          options.planFromCreatePlanToolCall === true && asString(parsed['subtype']) !== 'completed'
+            ? extractCreatePlanToolPlan(parsed)
+            : undefined;
         if (plan !== undefined) {
           events.push({ type: 'plan', markdown: plan });
         }

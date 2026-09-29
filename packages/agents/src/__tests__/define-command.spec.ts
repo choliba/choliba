@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import type { AgentDefinition } from '../agent.types';
 import { loadAgent } from '../agent-loader';
 import { commandFromAgent, defineCommand, effectivePolicy, implicitCommand } from '../define-command';
+import { NO_PERMISSIONS } from '../permissions';
 
 const FIXTURES = join(__dirname, 'fixtures/agents');
 
@@ -20,6 +21,8 @@ function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
     taskRequired: true,
     projectRequired: false,
     defaultMode: 'execute',
+    modes: ['execute', 'plan', 'ask'],
+    permissions: NO_PERMISSIONS,
     dir: '/tmp/agents/echo',
     systemPromptPath: '/tmp/agents/echo/system.md',
     instructions: 'be an echo',
@@ -49,7 +52,7 @@ describe('defineCommand', () => {
       name: 'x',
       agent: 'echo',
       description: 'd',
-      policy: 'full',
+      policy: 'edits',
       defaultMode: 'plan',
       taskRequired: false,
       addDirs: ['/extra'],
@@ -57,7 +60,7 @@ describe('defineCommand', () => {
     });
 
     expect(command).toMatchObject({
-      policy: 'full',
+      policy: 'edits',
       defaultMode: 'plan',
       taskRequired: false,
       addDirs: ['/extra'],
@@ -117,13 +120,13 @@ describe('implicitCommand', () => {
 
 describe('effectivePolicy', () => {
   it('uses the command policy in execute mode', () => {
-    const command = defineCommand({ name: 'x', agent: 'echo', description: 'd', policy: 'full' });
+    const command = defineCommand({ name: 'x', agent: 'echo', description: 'd', policy: 'edits' });
 
-    expect(effectivePolicy(command, 'execute')).toBe('full');
+    expect(effectivePolicy(command, 'execute')).toBe('edits');
   });
 
   it.each(['plan', 'ask'] as const)('forces read-only in %s mode, regardless of the command policy', (mode) => {
-    const command = defineCommand({ name: 'x', agent: 'echo', description: 'd', policy: 'full' });
+    const command = defineCommand({ name: 'x', agent: 'echo', description: 'd', policy: 'edits' });
 
     expect(effectivePolicy(command, mode)).toBe('read-only');
   });

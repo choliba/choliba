@@ -86,8 +86,7 @@ line. Spec: https://www.conventionalcommits.org/en/v1.0.0/
 integration branch where every change lands first. GitHub opens new PRs against the default branch, so always pick
 the base explicitly: `gh pr create --base develop` (in the web UI, change the base branch to `develop`). Keywords like
 `Closes #12` close an issue only when the PR reaches `master`, i.e. at release. Neither branch may receive direct
-pushes. Branch protection enforces that server-side only when it is available (see the table below); when it is
-not, the rule still holds and nothing but discipline stops a direct push, so never do it.
+pushes, and GitHub refuses them: a ruleset on each branch (see the table below) requires a PR, for the owner too.
 
 1. Start from an up-to-date `develop`: `git switch develop && git pull --ff-only`.
 2. Create a branch named `<type>/<short-kebab-description>` (`feat/slugify-lib`, `fix/ratchet-format`).
@@ -97,7 +96,8 @@ not, the rule still holds and nothing but discipline stops a direct push, so nev
    yourself; strip any tool-generated footer and run `.githooks/commit-msg --no-format` on the body locally if
    unsure. After `gh pr create`, verify with `gh pr view --json body` — some hosts append attribution after
    creation; edit the PR with `gh pr edit` if needed.
-5. Wait for CI (`gh pr checks --watch`). Merge only when it is green.
+5. Wait for CI (`gh pr checks --watch`). GitHub keeps the merge button blocked until `check` is green and the
+   branch is up to date with its base.
 6. Merge a feature PR (into `develop`) with **squash**; the branch is deleted automatically. Do not merge on your
    own: tell the user the PR is green and let them merge, or merge only when they ask you to.
 7. Releasing: a PR from `develop` into `master`, same checks, titled like `chore(release): v1.2.0`. See below.
@@ -106,15 +106,18 @@ not, the rule still holds and nothing but discipline stops a direct push, so nev
 
 A squash commit on `master` has no ancestry in `develop`, so the two branches diverge: the next release PR lists
 commits that were already released and can conflict, and a local `git pull` on `master` stops with "divergent
-branches". That happened with PR #2. The repository allows both merge methods and, without branch protection, cannot
-restrict one per branch, so the method is chosen in the merge dialog:
+branches". The rulesets fix the method per branch, so the merge dialog offers only the right one:
 
-- feature PR into `develop`: **Squash and merge**,
-- release PR `develop` into `master`: **Create a merge commit**.
+- feature PR into `develop`: **Squash and merge** only,
+- release PR `develop` into `master`: **Create a merge commit** only.
 
-The agent prepares and opens the release PR, confirms CI is green and states the merge method in the PR body, then
-stops: the user merges it. If a release PR was squashed by mistake, heal the history with one more `develop` into
-`master` PR merged with a merge commit (the trees are identical, so it changes no files).
+The agent prepares and opens the release PR (`gh pr create --base master --head develop`), confirms CI is green,
+then stops: the user merges it. A local `git merge` into `master` is refused on push.
+
+Until the first production version there is a single pre-release, `v0.0.1-dev`: the merge into `master` runs
+`.github/workflows/release-dev.yml`, which moves that tag to the new commit (`git push --force` of the tag, the one
+exception to "no force-push", which is about branches) and replaces the `.tgz` and the notes of the same release.
+Never create another tag or release by hand; the version in `packages/choliba/package.json` stays `0.0.1-dev`.
 
 Never: push to `develop` or `master`, merge locally into them (`git merge develop` while on `master` diverges from the
 remote as soon as a PR lands), force-push, use `--no-verify`, rewrite history that is already pushed, or delete the
@@ -139,6 +142,6 @@ A PR may be merged only if both hold, and CI verifies them:
 | ----- | -------------- |
 | `.githooks/commit-msg` (activated by `bun install` through the `prepare` script) | format and forbidden text of each local commit |
 | `.github/workflows/ci.yml`, job `check` | PR title, PR body, every commit message, `bun run check`, coverage not lower |
-| Branch protection on `master` and `develop` (GitHub needs a public repo or a paid plan for this) | PR required, `check` must pass, no force-push, no deletion. Keep "require linear history" off on `master`, because release PRs are merge commits. |
+| Rulesets `develop` and `master` (repository settings → Rules; no bypass, so they bind the owner too) | PR required, `check` must pass with the branch up to date, no force-push, no deletion; `develop` allows only squash merges, `master` only merge commits. To step outside them in an emergency, disable the ruleset in the settings, then turn it back on. |
 
 If the hook is not active in a clone (`git config core.hooksPath` should print `.githooks`), run `bun install`.

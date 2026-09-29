@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import type { AgentDefinition } from '../../agent.types';
 import { createPlannedTicket, finishTicket, resolveTicketTarget, ticketVars } from '../../cli/ticket-run';
 import { makeTmpDir } from '../helpers/tmp';
+import { NO_PERMISSIONS } from '../../permissions';
 
 function fakeWritable(): { chunks: string[]; write: (chunk: string) => void } {
   const chunks: string[] = [];
@@ -23,6 +24,8 @@ const plain: AgentDefinition = {
   taskRequired: true,
   projectRequired: true,
   defaultMode: 'execute',
+  modes: ['execute', 'plan', 'ask'],
+  permissions: NO_PERMISSIONS,
   dir: '/repo/agents/po',
   systemPromptPath: '/repo/agents/po/system.md',
   instructions: '',
@@ -39,10 +42,12 @@ describe('ticketVars', () => {
 
 describe('resolveTicketTarget', () => {
   it('refuses --type and --ticket for an agent without ticket_types', () => {
-    expect(() => resolveTicketTarget(plain, { project: 'red', ticketType: 'bug', ticket: undefined }, () => '/p')).toThrow(
-      '"echo" não trabalha com tickets: --type e --ticket não se aplicam.',
-    );
-    expect(resolveTicketTarget(plain, { project: 'red', ticketType: undefined, ticket: undefined }, () => '/p')).toBeUndefined();
+    expect(() =>
+      resolveTicketTarget(plain, { project: 'red', ticketType: 'bug', ticket: undefined }, () => '/p'),
+    ).toThrow('"echo" não trabalha com tickets: --type e --ticket não se aplicam.');
+    expect(
+      resolveTicketTarget(plain, { project: 'red', ticketType: undefined, ticket: undefined }, () => '/p'),
+    ).toBeUndefined();
   });
 
   it('needs a project for an agent with ticket_types', () => {

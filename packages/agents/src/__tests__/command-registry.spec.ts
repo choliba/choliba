@@ -7,7 +7,7 @@ const FIXTURES = join(__dirname, 'fixtures/agents');
 
 describe('resolveCommand', () => {
   it('returns the explicit command when its name matches, without touching the agents dir', async () => {
-    const explicit = defineCommand({ name: 'echo', agent: 'echo', description: 'explicit', policy: 'full' });
+    const explicit = defineCommand({ name: 'echo', agent: 'echo', description: 'explicit', policy: 'edits' });
 
     const resolved = await resolveCommand('echo', [explicit], '/nonexistent-dir');
 
@@ -45,10 +45,10 @@ describe('resolveCommand', () => {
   });
 
   it('prefers the explicit command over an agent of the same name', async () => {
-    const explicit = defineCommand({ name: 'echo', agent: 'echo', description: 'explicit', policy: 'full' });
+    const explicit = defineCommand({ name: 'echo', agent: 'echo', description: 'explicit', policy: 'edits' });
 
     const resolved = await resolveCommand('echo', [explicit], FIXTURES);
 
-    expect(resolved?.policy).toBe('full');
+    expect(resolved?.policy).toBe('edits');
   });
 });

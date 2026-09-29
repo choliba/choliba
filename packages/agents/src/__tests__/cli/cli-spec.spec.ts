@@ -14,7 +14,9 @@ describe('agentsCliSpec', () => {
     const echo = await loadAgent(FIXTURES, 'echo');
     const agent = { ...echo, description: 'Primeira frase.   Segunda\n frase.' };
 
-    const help = formatHelp(agentsCliSpec({ agents: [agent], repoRoot: '/repo', git, projects: () => [], tickets: () => [] }));
+    const help = formatHelp(
+      agentsCliSpec({ agents: [agent], repoRoot: '/repo', git, projects: () => [], tickets: () => [] }),
+    );
 
     expect(help).toContain('  echo   Primeira frase.\n');
     expect(help).not.toContain('Segunda');
@@ -24,7 +26,10 @@ describe('agentsCliSpec', () => {
     const echo = await loadAgent(FIXTURES, 'echo');
     const spec = agentsCliSpec({ agents: [echo], repoRoot: '/repo', git, projects: () => [], tickets: () => [] });
 
-    expect(complete(spec, ['echo', '--provider', ''])).toEqual({ kind: 'values', values: ['auto', 'claude', 'cursor'] });
+    expect(complete(spec, ['echo', '--provider', ''])).toEqual({
+      kind: 'values',
+      values: ['auto', 'claude', 'cursor'],
+    });
     expect(complete(spec, ['echo', '--agents-dir', ''])).toEqual({ kind: 'files' });
     expect(complete(spec, ['echo', '--add-dir', ''])).toEqual({ kind: 'files' });
     expect(complete(spec, ['list', '--agents-dir', ''])).toEqual({ kind: 'files' });
@@ -35,7 +40,15 @@ describe('agentsCliSpec', () => {
 
   it('suggests nothing for a flag without known values', async () => {
     const echo = await loadAgent(FIXTURES, 'echo');
-    expect(flagValueSuggestions('--unknown', echo, { agents: [], repoRoot: '/repo', git, projects: () => [], tickets: () => [] })).toEqual({
+    expect(
+      flagValueSuggestions('--unknown', echo, {
+        agents: [],
+        repoRoot: '/repo',
+        git,
+        projects: () => [],
+        tickets: () => [],
+      }),
+    ).toEqual({
       kind: 'values',
       values: [],
     });
@@ -61,7 +74,13 @@ describe('agentsCliSpec', () => {
   it('offers --project, completed with the project names, only to agents that require a project', async () => {
     const echo = await loadAgent(FIXTURES, 'echo');
     const withProject = await loadAgent(FIXTURES, 'with-project');
-    const context = { agents: [echo, withProject], repoRoot: '/repo', git, projects: () => ['blue', 'red'], tickets: () => ['red-1', 'red-2'] };
+    const context = {
+      agents: [echo, withProject],
+      repoRoot: '/repo',
+      git,
+      projects: () => ['blue', 'red'],
+      tickets: () => ['red-1', 'red-2'],
+    };
     const spec = agentsCliSpec(context);
 
     expect(formatHelp(agentCommandSpec(withProject, context))).toContain('--project name');

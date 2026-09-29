@@ -1,5 +1,6 @@
 import type { AgentDefinition } from './agent.types';
 import type { ExecutionMode } from './command.types';
+import { formatPermissions } from './permissions';
 
 /**
  * Linux's `MAX_ARG_STRLEN` is 128 KiB (131072 bytes) per argument, NUL included. One byte is
@@ -17,13 +18,16 @@ export class PromptTooLargeError extends Error {}
  * equivalent for every provider — see `providers/cursor/index.ts`). States the agent's directory
  * explicitly, because `system.md` files may contain relative paths that only resolve if the model
  * knows where "here" is. The order to use the agent's skills (`formatSkillsInstruction`), when there
- * is one, comes first.
+ * is one, comes first; then what the agent may read, write and run (`agent.yaml#permissions`, the
+ * same data the provider enforces).
  */
 export function wrapInstructions(agent: AgentDefinition, skillsInstruction = ''): string {
   const attr = (value: string): string => value.replaceAll('"', '&quot;');
   return [
     `<agent_instructions id="${attr(agent.id)}" name="${attr(agent.displayName)}" version="${attr(agent.version)}" source="${attr(agent.systemPromptPath)}">`,
     ...(skillsInstruction === '' ? [] : [skillsInstruction, '']),
+    formatPermissions(agent.permissions),
+    '',
     `Relative paths in the instructions below are relative to ${agent.dir}/.`,
     '',
     agent.instructions,

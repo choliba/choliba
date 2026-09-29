@@ -3,30 +3,6 @@
 Fixture agent with prepare hooks — used only in package tests.
 </system_role>
 
-<permissions>
-<intro>
-Fixture de teste — não grava nada de verdade.
-</intro>
-
-<allowlist>
-<allow action="write">
-<path>docs/</path>
-</allow>
-</allowlist>
-
-<denylist>
-<deny action="write">
-<path>agents/</path>
-</deny>
-</denylist>
-
-<notes>
-<note>
-Sem regra real; só cobre o formato exigido pelo schema.
-</note>
-</notes>
-</permissions>
-
 <tool_definitions>
 <intro>
 Nenhuma ferramenta real é usada por este agente de teste.

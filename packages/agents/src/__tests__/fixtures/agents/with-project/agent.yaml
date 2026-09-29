@@ -1,8 +1,21 @@
-id: with-project-agent
-name: With Project
-version: 1.0.0
-description: 'Fixture agent that acts on one project, given by --project.'
-supported_models:
+version: 1
+
+agent:
+  id: with-project
+  name: With Project
+  version: 1.0.0
+  description: Fixture agent that acts on one project, given by --project.
+
+models:
   - claude-3-5-sonnet
-task_required: false
-project_required: true
+
+permissions:
+  allow:
+    read: ['${PROJECT_DIR}/config.json', '${APP_DIR}/']
+    write: ['${PROJECT_DIR}/tickets/']
+  deny:
+    write: [agents/]
+
+task:
+  required: false
+  default: Trabalhe no projeto.

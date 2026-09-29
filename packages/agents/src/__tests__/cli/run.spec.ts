@@ -118,7 +118,7 @@ describe('runAgentsCli — help', () => {
 
     expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--help'], deps)).toBe(0);
     const text = stdout.chunks.join('');
-    expect(text).toContain('id: example-echo-agent');
+    expect(text).toContain('id: echo');
     expect(text).toContain('Policy: read-only');
     expect(text).toContain('Usage:  agents echo [OPTIONS] [TASK...]');
     expect(text).toContain('--dry-run');
@@ -133,46 +133,32 @@ describe('runAgentsCli — help', () => {
     expect(text).toContain('Task obrigatória: não');
   });
 
-  it('wraps long descriptions and handles whitespace-only descriptions in per-agent help', async () => {
+  it('wraps long descriptions in per-agent help', async () => {
     const tmp = makeTmpDir('cli-help-wrap');
     try {
       const agentsDir = join(tmp.path, 'agents');
-      const agentDir = join(agentsDir, 'wrap-help');
-      mkdirSync(agentDir, { recursive: true });
-      writeFileSync(
-        join(agentDir, 'agent.yaml'),
-        [
-          'id: wrap-help-agent',
-          'name: Wrap Help',
-          'version: 1.0.0',
-          'description: "   "',
-          'supported_models:',
-          '  - claude-3-5-sonnet',
-          'skills: []',
-        ].join('\n'),
-      );
-      writeFileSync(join(agentDir, 'system.md'), readFileSync(join(FIXTURES, 'reviewer', 'system.md'), 'utf8'));
-
       const longDir = join(agentsDir, 'long-help');
       mkdirSync(longDir, { recursive: true });
       writeFileSync(
         join(longDir, 'agent.yaml'),
         [
-          'id: long-help-agent',
-          'name: Long Help',
-          'version: 1.0.0',
-          'description: "Esta descrição é propositalmente longa o suficiente para forçar quebra de linha no help do agente quando exibida no terminal estreito do CLI."',
-          'supported_models:',
+          'version: 1',
+          'agent:',
+          '  id: long-help',
+          '  name: Long Help',
+          '  version: 1.0.0',
+          '  description: "Esta descrição é propositalmente longa o suficiente para forçar quebra de linha no help do agente quando exibida no terminal estreito do CLI."',
+          'models:',
           '  - claude-3-5-sonnet',
-          'skills: []',
         ].join('\n'),
       );
       writeFileSync(join(longDir, 'system.md'), readFileSync(join(FIXTURES, 'reviewer', 'system.md'), 'utf8'));
 
       const { deps, stdout } = harness([]);
-      expect(await runAgentsCli(['wrap-help', '--agents-dir', agentsDir, '--help'], deps)).toBe(0);
       expect(await runAgentsCli(['long-help', '--agents-dir', agentsDir, '--help'], deps)).toBe(0);
-      expect(stdout.chunks.join('')).toContain('Usage:  agents long-help');
+      const text = stdout.chunks.join('');
+      expect(text).toContain('Usage:  agents long-help');
+      expect(text).toContain('Esta descrição é propositalmente longa');
     } finally {
       tmp.cleanup();
     }
@@ -286,7 +272,7 @@ describe('runAgentsCli — ${VAR} in system.md', () => {
     const { deps, stdout } = harness([]);
 
     expect(await runAgentsCli(['with-vars', '--agents-dir', FIXTURES, '--help'], deps)).toBe(0);
-    expect(stdout.chunks.join('')).toContain('id: with-vars-agent');
+    expect(stdout.chunks.join('')).toContain('id: with-vars');
   });
 });
 
@@ -296,7 +282,10 @@ function withProjects(run: (projectsDir: string) => Promise<void>): Promise<void
   const write = (project: string, baseURL: string): void => {
     const dir = join(tmp.path, project);
     mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, 'config.json'), JSON.stringify({ name: 'Demo', envs: [{ nome: 'qa', baseURL, appDir: 'app' }] }));
+    writeFileSync(
+      join(dir, 'config.json'),
+      JSON.stringify({ name: 'Demo', envs: [{ nome: 'qa', baseURL, appDir: 'app' }] }),
+    );
     writeFileSync(join(dir, '.env.json'), JSON.stringify({ qa: { TEST_USERNAME: 'u' } }));
   };
   write('ready', 'http://ready.test');
@@ -310,9 +299,8 @@ describe('runAgentsCli — tickets', () => {
     const tmp = makeTmpDir('cli-ticket-agent');
     const dir = join(tmp.path, 'with-project');
     cpSync(join(FIXTURES, 'with-project'), dir, { recursive: true });
-    writeFileSync(join(dir, 'agent.yaml'), `${readFileSync(join(dir, 'agent.yaml'), 'utf8')}ticket_types: [bug, story]\n`);
-    const system = readFileSync(join(dir, 'system.md'), 'utf8').replace('${PROJECT_DIR}/tickets/', '${TICKET_FILE}');
-    writeFileSync(join(dir, 'system.md'), system);
+    const yaml = readFileSync(join(dir, 'agent.yaml'), 'utf8').replace('${PROJECT_DIR}/tickets/', '${TICKET_FILE}');
+    writeFileSync(join(dir, 'agent.yaml'), `${yaml}ticket_types: [bug, story]\n`);
     return run(tmp.path).finally(tmp.cleanup);
   }
 
@@ -337,7 +325,9 @@ describe('runAgentsCli — tickets', () => {
 
         const other = harness([], { config });
         expect(await runAgentsCli(argv(agentsDir, '--type', 'epic', '--dry-run'), other.deps)).toBe(1);
-        expect(other.stderr.chunks.join('')).toContain('"with-project" não trabalha com tickets "epic" (aceitos: bug, story).');
+        expect(other.stderr.chunks.join('')).toContain(
+          '"with-project" não trabalha com tickets "epic" (aceitos: bug, story).',
+        );
 
         const shortcut = harness([], { config });
         expect(await runAgentsCli(argv(agentsDir, '--type-epic', '--dry-run'), shortcut.deps)).toBe(1);
@@ -450,7 +440,9 @@ describe('runAgentsCli — --project', () => {
     const { deps, stdout, stderr } = harness([], { config: { GLOBAL_DIR: '/g' } });
 
     expect(await runAgentsCli(['with-project', '--agents-dir', FIXTURES, '--dry-run'], deps)).toBe(1);
-    expect(stderr.chunks.join('')).toContain('Project is required for "with-project": pass --project <name>.');
+    expect(stderr.chunks.join('')).toContain(
+      'Project is required for "with-project" (it uses a project variable or ticket_types): pass --project <name>.',
+    );
     expect(stdout.chunks).toEqual([]);
   });
 
@@ -523,7 +515,9 @@ describe('runAgentsCli — --project', () => {
 
   it('completes --project with the projects on disk, and with nothing when the locations are not set', async () => {
     await withProjects(async (projectsDir) => {
-      const configured = harness([], { config: { CHOL_AGENTS_DIR: FIXTURES, GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir } });
+      const configured = harness([], {
+        config: { CHOL_AGENTS_DIR: FIXTURES, GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir },
+      });
       await runAgentsCli(['__complete', 'with-project', '--project', ''], configured.deps);
       expect(lines(configured.stdout)).toEqual(['pending', 'ready']);
 
@@ -640,12 +634,12 @@ describe('runAgentsCli — list', () => {
 
     expect(await runAgentsCli(['list', '--agents-dir', FIXTURES], deps)).toBe(0);
     const printed = stdout.chunks.join('');
-    expect(printed).toContain('id: example-echo-agent');
+    expect(printed).toContain('id: echo');
     expect(printed).toContain('name: Echo Agent');
-    expect(printed).toContain('id: with-prepare-agent');
+    expect(printed).toContain('id: with-prepare');
     expect(printed).toContain('Policy: read-only | Modo padrão: execute | Task obrigatória: sim');
     expect(printed).toContain('Policy: edits | Modo padrão: execute | Task obrigatória: não');
-    expect(printed).toContain('supported_models:');
+    expect(printed).toContain('models:');
     expect(printed).not.toContain('Usage:');
   });
 
@@ -654,7 +648,7 @@ describe('runAgentsCli — list', () => {
 
     await runAgentsCli(['list'], deps);
 
-    expect(stdout.chunks.join('')).toContain('id: example-echo-agent');
+    expect(stdout.chunks.join('')).toContain('id: echo');
   });
 
   it('reports no agents found, rather than an empty list, when the directory has none', async () => {
@@ -948,8 +942,8 @@ describe('runAgentsCli — run', () => {
 
       await runAgentsCli(['quick', '--agents-dir', FIXTURES, '--dry-run', 'x'], deps);
 
-      expect(lines(stdout)).toContain('dontAsk');
-      expect(lines(stdout)).toContain('Write(docs/**)');
+      // echo declares nothing to write: an edits command with no allowlist accepts the edits.
+      expect(lines(stdout)).toContain('acceptEdits');
     });
   });
 
@@ -1071,176 +1065,79 @@ describe('runAgentsCli — run', () => {
   });
 });
 
-describe('runAgentsCli — phases', () => {
-  /**
-   * The `with-phases` fixture, copied so a test may change it, next to a project `ready` (with ticket 1)
-   * and a workspace root where the steps run; `edit` rewrites its agent.yaml.
-   */
-  function withPhases(
-    run: (paths: { agentsDir: string; projectsDir: string; root: string }) => Promise<void>,
-    edit: (yaml: string) => string = (yaml) => yaml,
-  ): Promise<void> {
-    const tmp = makeTmpDir('cli-phases');
-    const agentsDir = join(tmp.path, 'agents');
-    cpSync(join(FIXTURES, 'with-phases'), join(agentsDir, 'with-phases'), { recursive: true });
-    const yamlPath = join(agentsDir, 'with-phases', 'agent.yaml');
-    writeFileSync(yamlPath, edit(readFileSync(yamlPath, 'utf8')));
-    const projectsDir = join(tmp.path, 'projects');
-    const project = join(projectsDir, 'ready');
-    mkdirSync(join(project, 'tickets'), { recursive: true });
-    writeFileSync(join(project, 'config.json'), JSON.stringify({ name: 'Demo', envs: [{ nome: 'qa', baseURL: 'http://x', appDir: 'app' }], greenHabilitado: true }));
-    writeFileSync(join(project, '.env.json'), JSON.stringify({ qa: {} }));
-    writeFileSync(join(project, 'tickets', '1.json'), JSON.stringify({ ticket: 'ready-1', criterios: [] }));
-    const root = join(tmp.path, 'root');
-    mkdirSync(root);
-    return run({ agentsDir, projectsDir, root }).finally(tmp.cleanup);
-  }
-
-  /** A harness whose provider answers every call with a fresh successful stream. */
-  function phasesHarness(root: string, projectsDir: string): Harness & { readonly spawns: () => number } {
-    let count = 0;
-    const spawner = {
-      spawn: () => {
-        count += 1;
-        return {
-          pid: count,
-          stdout: streamFromChunks(claudeStdout(claudeSuccessLine())),
-          stderr: streamFromChunks([]),
-          exited: Promise.resolve(0),
-          signalCode: null,
-          kill: () => undefined,
-        };
-      },
-    };
-    const base = harness([], {
-      repoRoot: root,
-      runner: new ProcessRunner({ spawner }),
-      config: { GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir },
-    });
-    return { ...base, spawns: () => count };
-  }
-
-  const argv = (agentsDir: string, ...rest: string[]): string[] => [
-    'with-phases',
-    '--agents-dir',
-    agentsDir,
-    '--project',
-    'ready',
-    '--ticket',
-    '1',
-    ...rest,
+/** An agent `custom` in a temp agents dir, with the given `agent.yaml` keys on top of the required ones. */
+function withCustomAgent(extra: string[], run: (agentsDir: string) => Promise<void>): Promise<void> {
+  const tmp = makeTmpDir('cli-custom-agent');
+  const dir = join(tmp.path, 'custom');
+  mkdirSync(dir, { recursive: true });
+  const yaml = [
+    'version: 1',
+    'agent:',
+    '  id: custom',
+    '  name: Custom',
+    '  version: 1.0.0',
+    '  description: d',
+    'models: [claude-3-5-sonnet]',
+    ...extra,
   ];
+  writeFileSync(join(dir, 'agent.yaml'), `${yaml.join('\n')}\n`);
+  writeFileSync(join(dir, 'system.md'), readFileSync(join(FIXTURES, 'reviewer', 'system.md'), 'utf8'));
+  return run(tmp.path).finally(tmp.cleanup);
+}
 
-  /** Each phase's steps append its name to `order.txt` in the workspace root. */
-  const recordOrder = (yaml: string): string =>
-    yaml
-      .replace("run: [echo, 'red ${PROJECT}:${TICKET}']", "run: [sh, -c, 'echo red-${TICKET} >> order.txt']")
-      .replace("run: [echo, 'green ${PROJECT}:${TICKET}']", "run: [sh, -c, 'echo green-${TICKET} >> order.txt']");
+describe('runAgentsCli — modes', () => {
+  const MODES = ['modes:', '  allow: [plan, ask]'];
 
-  it('runs every phase in order, each with its own permissions, one provider call each', async () => {
-    await withPhases(async ({ agentsDir, projectsDir, root }) => {
-      const { deps, stdout, spawns } = phasesHarness(root, projectsDir);
+  it('runs in modes.default, the first allowed mode when execute is not', async () => {
+    await withCustomAgent(MODES, async (agentsDir) => {
+      const { deps, stdout } = harness([]);
 
-      expect(await runAgentsCli(argv(agentsDir), deps)).toBe(0);
-      expect(spawns()).toBe(2);
-      expect(readFileSync(join(root, 'order.txt'), 'utf8')).toBe('red-ready-1\ngreen-ready-1\n');
-      // Each phase named after a color is shown in it: red in red, green in green.
-      expect(lines(stdout)).toEqual(
-        expect.arrayContaining([
-          '\u001b[31m[with-phases: fase red]\u001b[0m',
-          '\u001b[32m[with-phases: fase green]\u001b[0m',
-        ]),
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(0);
+      expect(stdout.chunks.join('')).toContain('You have read-only tools in this session');
+    });
+  });
+
+  it('refuses a mode the agent does not allow, by value or by shortcut', async () => {
+    await withCustomAgent(MODES, async (agentsDir) => {
+      const byValue = harness([]);
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--mode', 'execute', 'x'], byValue.deps)).toBe(1);
+      expect(byValue.stderr.chunks.join('')).toContain(
+        'Mode "execute" is not allowed for "custom" (modes.allow: plan, ask).',
       );
-    }, recordOrder);
+
+      const byShortcut = harness([]);
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--mode-execute', 'x'], byShortcut.deps)).toBe(1);
+      expect(byShortcut.stderr.chunks.join('')).toContain('unknown flag: --mode-execute');
+    });
   });
 
-  it('stops at the first phase whose steps fail, never calling the next one', async () => {
-    await withPhases(
-      async ({ agentsDir, projectsDir, root }) => {
-        const { deps, stderr, spawns } = phasesHarness(root, projectsDir);
+  it('lists only the allowed modes in the agent help', async () => {
+    await withCustomAgent(MODES, async (agentsDir) => {
+      const { deps, stdout } = harness([]);
 
-        expect(await runAgentsCli(argv(agentsDir), deps)).toBe(1);
-        expect(spawns()).toBe(1);
-        expect(stderr.chunks.join('')).toContain('falhou');
-        expect(existsSync(join(root, 'order.txt'))).toBe(false);
-      },
-      (yaml) => recordOrder(yaml).replace("run: [sh, -c, 'echo red-${TICKET} >> order.txt']", "run: [sh, -c, 'exit 3']"),
-    );
-  });
-
-  it('runs only the phases named by their flags, in the declared order', async () => {
-    await withPhases(async ({ agentsDir, projectsDir, root }) => {
-      const only = phasesHarness(root, projectsDir);
-      expect(await runAgentsCli(argv(agentsDir, '--green'), only.deps)).toBe(0);
-      expect(only.spawns()).toBe(1);
-      expect(readFileSync(join(root, 'order.txt'), 'utf8')).toBe('green-ready-1\n');
-
-      const both = phasesHarness(root, projectsDir);
-      expect(await runAgentsCli(argv(agentsDir, '--green', '--red'), both.deps)).toBe(0);
-      expect(both.spawns()).toBe(2);
-      expect(readFileSync(join(root, 'order.txt'), 'utf8')).toBe('green-ready-1\nred-ready-1\ngreen-ready-1\n');
-    }, recordOrder);
-  });
-
-  it('prints each phase on --dry-run, leaving the steps of a later phase to the real run', async () => {
-    await withPhases(async ({ agentsDir, projectsDir, root }) => {
-      const { deps, stdout, spawns } = phasesHarness(root, projectsDir);
-
-      expect(await runAgentsCli(argv(agentsDir, '--dry-run', '--no-color'), deps)).toBe(0);
-      const printed = lines(stdout);
-      const green = printed.indexOf('[with-phases: fase green]');
-      expect(printed).toContain('[with-phases: fase red]');
-      const project = join(projectsDir, 'ready');
-      expect(printed.slice(0, green)).toContain(`Write(/${project}/tests/**)`);
-      expect(printed.slice(green)).toContain(`Write(/${project}/app/**)`);
-      expect(printed.slice(green)).toContain('(before_execute da fase green só roda depois da fase anterior)');
-      expect(spawns()).toBe(0);
-      expect(existsSync(join(root, 'order.txt'))).toBe(false);
-    }, recordOrder);
-  });
-
-  it.each([
-    ['false', { greenHabilitado: false }],
-    ['ausente', {}],
-  ])(
-    'skips a phase whose switch is not true in the project (%s), and refuses it when asked for by its flag',
-    async (_case, switchValue) => {
-      await withPhases(async ({ agentsDir, projectsDir, root }) => {
-        const configFile = join(projectsDir, 'ready', 'config.json');
-        const { greenHabilitado: _on, ...config } = JSON.parse(readFileSync(configFile, 'utf8')) as Record<string, unknown>;
-        writeFileSync(configFile, JSON.stringify({ ...config, ...switchValue }));
-        const reason = 'desligada em "ready" (config.json: greenHabilitado precisa ser true)';
-
-        const all = phasesHarness(root, projectsDir);
-        expect(await runAgentsCli(argv(agentsDir), all.deps)).toBe(0);
-        expect(all.spawns()).toBe(1);
-        expect(all.stderr.chunks.join('')).toContain(`fase green pulada: ${reason}`);
-
-        const asked = phasesHarness(root, projectsDir);
-        expect(await runAgentsCli(argv(agentsDir, '--green'), asked.deps)).toBe(1);
-        expect(asked.spawns()).toBe(0);
-        expect(asked.stderr.chunks.join('')).toContain(`a fase green está ${reason}`);
-      }, recordOrder);
-    },
-  );
-
-  it('takes a flag per phase, listed in its help, and refuses one it does not have', async () => {
-    await withPhases(async ({ agentsDir, projectsDir, root }) => {
-      const help = phasesHarness(root, projectsDir);
-      expect(await runAgentsCli(['with-phases', '--agents-dir', agentsDir, '--help'], help.deps)).toBe(0);
-      const text = help.stdout.chunks.join('');
-      expect(text).toMatch(/--red\s+Só a fase red\n/);
-      expect(text).toMatch(/--green\s+Só a fase green: Implementa até os testes passarem\./);
-      expect(text).toContain('phases:\n  - red\n  - green');
-
-      const blue = phasesHarness(root, projectsDir);
-      expect(await runAgentsCli(argv(agentsDir, '--blue'), blue.deps)).toBe(1);
-      expect(blue.stderr.chunks.join('')).toContain('unknown flag: --blue');
-
-      const plain = harness([]);
-      expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--red', 'x'], plain.deps)).toBe(1);
-      expect(plain.stderr.chunks.join('')).toContain('unknown flag: --red');
+      await runAgentsCli(['custom', '--agents-dir', agentsDir, '--help'], deps);
+      const text = stdout.chunks.join('');
+      expect(text).toContain('modes:\n  - plan\n  - ask\n');
+      expect(text).toContain('--mode-ask');
+      expect(text).not.toContain('--mode-execute');
     });
   });
 });
 
+describe('runAgentsCli — ${CHOL_ROOT}', () => {
+  it('is the workspace root, found by the application, in the permissions', async () => {
+    await withCustomAgent(['permissions:', '  allow:', "    read: ['${CHOL_ROOT}/docs/']"], async (agentsDir) => {
+      const { deps, stdout } = harness([]);
+
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(0);
+      expect(lines(stdout)).toContain('Read(//repo/docs/**)');
+    });
+  });
+
+  it('cannot be set in the config, stopping before anything else', async () => {
+    const { deps, stderr } = harness([], { config: { CHOL_ROOT: '/outro' } });
+
+    expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, 'x'], deps)).toBe(1);
+    expect(stderr.chunks.join('')).toContain('CHOL_ROOT is found by the application');
+  });
+});

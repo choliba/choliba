@@ -16,7 +16,7 @@ const {
   printAgentDefinition,
   unwrapAgentRoot,
   validateAgentFiles,
-  validateAgentYaml,
+  validateAgentYamlV1,
   validateSystemMd,
 } = agentModule;
 
@@ -114,7 +114,9 @@ describe('parseInstructionSections', () => {
 
 describe('parseSectionTagMatch', () => {
   it('returns undefined when capture groups are missing', () => {
-    expect(parseSectionTagMatch(['<foo>', undefined, ' attrs', 'inner'] as unknown as RegExpMatchArray)).toBeUndefined();
+    expect(
+      parseSectionTagMatch(['<foo>', undefined, ' attrs', 'inner'] as unknown as RegExpMatchArray),
+    ).toBeUndefined();
   });
 
   it('returns the groups when the match is complete', () => {
@@ -135,9 +137,7 @@ describe('parseAttributePair', () => {
 describe('collectAttributeFromMatch', () => {
   it('returns false when capture groups are missing', () => {
     const target: Record<string, string> = {};
-    expect(collectAttributeFromMatch(['bar="1"', undefined, '1'] as unknown as RegExpMatchArray, target)).toBe(
-      false,
-    );
+    expect(collectAttributeFromMatch(['bar="1"', undefined, '1'] as unknown as RegExpMatchArray, target)).toBe(false);
     expect(target).toEqual({});
   });
 
@@ -157,9 +157,7 @@ describe('collectSectionFromMatch', () => {
 
   it('merges a complete match into grouped', () => {
     const grouped = new Map<string, unknown[]>();
-    expect(
-      collectSectionFromMatch(['<foo>', 'foo', '', 'inner'] as unknown as RegExpMatchArray, grouped),
-    ).toBe(true);
+    expect(collectSectionFromMatch(['<foo>', 'foo', '', 'inner'] as unknown as RegExpMatchArray, grouped)).toBe(true);
     expect(grouped.get('foo')).toEqual(['inner']);
   });
 });
@@ -185,7 +183,6 @@ describe('unwrapAgentRoot', () => {
   });
 });
 
-
 describe('printAgentDefinition', () => {
   // Deliberately not asserting the exact shape of `instructions` here — that's `system.md`
   // content, and pinning it in this test would mean every future edit to a fixture's sections
@@ -200,7 +197,7 @@ describe('printAgentDefinition', () => {
     const raw = stdout.chunks.join('');
     const printed = JSON.parse(raw) as Record<string, unknown>;
     expect(printed).toMatchObject({
-      id: 'example-echo-agent',
+      id: 'echo',
       name: 'echo',
       displayName: 'Echo Agent',
       version: '1.0.0',
@@ -231,84 +228,6 @@ describe('printAgentDefinition', () => {
   });
 });
 
-describe('validateAgentYaml', () => {
-  it('accepts a well-formed agent.yaml', () => {
-    const result = validateAgentYaml(
-      [
-        'id: demo-agent',
-        'name: Demo',
-        'version: 1.0.0',
-        'description: d',
-        'supported_models:',
-        '  - claude-3-5-sonnet',
-      ].join('\n'),
-    );
-
-    expect(result).toEqual({ valid: true, errors: [] });
-  });
-
-  it('reports root-level schema errors with a (raiz) path prefix', () => {
-    const result = validateAgentYaml('{}');
-
-    expect(result.valid).toBe(false);
-    expect(result.errors.join(' | ')).toMatch(/\(raiz\)/);
-  });
-
-  it('rejects unknown fields, instead of silently letting them through', () => {
-    const result = validateAgentYaml(
-      [
-        'id: demo-agent',
-        'name: Demo',
-        'version: 1.0.0',
-        'description: d',
-        'goiaba:',
-        '  - name: bogus',
-        'supported_models:',
-        '  - claude-3-5-sonnet',
-      ].join('\n'),
-    );
-
-    expect(result.valid).toBe(false);
-    expect(result.errors.join(' | ')).toContain('goiaba');
-  });
-
-  it('reports each missing required field', () => {
-    const result = validateAgentYaml('id: demo-agent\n');
-
-    expect(result.valid).toBe(false);
-    expect(result.errors.join(' | ')).toContain('name');
-    expect(result.errors.join(' | ')).toContain('supported_models');
-  });
-
-  it('reports non-additionalProperties schema errors with their JSON path', () => {
-    const result = validateAgentYaml(
-      ['id: demo-agent', 'name: Demo', 'version: 1.0.0', 'description: d', 'policy: bogus', 'supported_models: [m]'].join(
-        '\n',
-      ),
-    );
-
-    expect(result.valid).toBe(false);
-    expect(result.errors.join(' | ')).toContain('/policy');
-  });
-
-  it('rejects supported_models that is not an array of strings', () => {
-    const result = validateAgentYaml(
-      ['id: demo-agent', 'name: Demo', 'version: 1.0.0', 'description: d', 'supported_models: not-an-array'].join(
-        '\n',
-      ),
-    );
-
-    expect(result.valid).toBe(false);
-  });
-
-  it('rejects invalid YAML outright', () => {
-    const result = validateAgentYaml('id: [unclosed');
-
-    expect(result.valid).toBe(false);
-    expect(result.errors).toHaveLength(1);
-  });
-});
-
 describe('validateSystemMd', () => {
   it('accepts a well-formed system.md with a single <agent> root matching the XSD', async () => {
     const text = readFileSync(join(FIXTURES, 'with-prepare', 'system.md'), 'utf8');
@@ -330,32 +249,14 @@ describe('validateSystemMd', () => {
 
     expect(result.valid).toBe(false);
   });
+});
 
-  it('rejects an <allow> missing its required action attribute', async () => {
-    const text = [
-      '<agent>',
-      '<system_role>s</system_role>',
-      '<permissions>',
-      '<intro>i</intro>',
-      '<allowlist><allow><path>docs/</path></allow></allowlist>',
-      '<denylist><deny action="write"><path>agents/</path></deny></denylist>',
-      '<notes><note>n</note></notes>',
-      '</permissions>',
-      '<tool_definitions>',
-      '<intro>i</intro>',
-      '<preparation><item>x</item></preparation>',
-      '<notes><note>n</note></notes>',
-      '</tool_definitions>',
-      '<input_contract>c</input_contract>',
-      '<docs_map>m</docs_map>',
-      '<execution_flow>f</execution_flow>',
-      '<output_contract>o</output_contract>',
-      '</agent>',
-    ].join('\n');
+describe('validateAgentYamlV1', () => {
+  it('validates the agent.yaml of a fixture against its folder', () => {
+    const text = readFileSync(join(FIXTURES, 'reviewer', 'agent.yaml'), 'utf8');
 
-    const result = await validateSystemMd(text);
-
-    expect(result.valid).toBe(false);
+    expect(validateAgentYamlV1(text, 'reviewer')).toEqual({ valid: true, errors: [] });
+    expect(validateAgentYamlV1(text, 'outro').valid).toBe(false);
   });
 });
 

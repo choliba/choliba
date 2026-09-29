@@ -19,7 +19,12 @@ export class TicketRunError extends Error {}
 export interface TicketTarget {
   readonly ticket: string;
   readonly file: string;
-  readonly create?: { readonly projectsDir: string; readonly project: string; readonly type: string; readonly environment: string };
+  readonly create?: {
+    readonly projectsDir: string;
+    readonly project: string;
+    readonly type: string;
+    readonly environment: string;
+  };
 }
 
 export interface TicketArgs {
@@ -33,7 +38,13 @@ export function ticketVars(target: TicketTarget | undefined): Readonly<Record<st
   return target === undefined ? {} : { TICKET: target.ticket, TICKET_FILE: target.file };
 }
 
-function newTicket(agent: AgentDefinition, types: readonly string[], project: string, type: string, projectsDir: string) {
+function newTicket(
+  agent: AgentDefinition,
+  types: readonly string[],
+  project: string,
+  type: string,
+  projectsDir: string,
+) {
   if (!types.includes(type)) {
     throw new TicketRunError(`"${agent.name}" não trabalha com tickets "${type}" (aceitos: ${types.join(', ')}).`);
   }

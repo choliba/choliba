@@ -13,6 +13,7 @@ import type { RunAgentRequest } from '../run-agent';
 import { runAgent } from '../run-agent';
 import { erroringStream, fakeSpawner, streamFromChunks, throwingSpawner } from './helpers/fake-spawner';
 import { makeTmpDir } from './helpers/tmp';
+import { NO_PERMISSIONS } from '../permissions';
 
 function cursorResolvePlan(context: PlanContentContext): string | undefined {
   const content = context.planMarkdown?.trim();
@@ -67,6 +68,8 @@ function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
     taskRequired: true,
     projectRequired: false,
     defaultMode: 'execute',
+    modes: ['execute', 'plan', 'ask'],
+    permissions: NO_PERMISSIONS,
     dir: '/repo/agents/echo',
     systemPromptPath: '/repo/agents/echo/system.md',
     instructions: 'be an echo',
@@ -311,9 +314,12 @@ describe('runAgent', () => {
       return () => events.push('restore');
     };
 
-    const ok = setup(fakeSpawner({ stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'x' }])]) }).spawner, {
-      prepareWorkspace,
-    });
+    const ok = setup(
+      fakeSpawner({ stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'x' }])]) }).spawner,
+      {
+        prepareWorkspace,
+      },
+    );
     expect(await run(ok)).toBe(0);
     const failed = setup(throwingSpawner(new Error('spawn ENOENT')), { prepareWorkspace });
     expect(await run(failed)).toBe(1);
@@ -474,7 +480,9 @@ describe('runAgent', () => {
         const exitCode = await run(s, undefined, { mode: 'plan' });
 
         expect(exitCode).toBe(0);
-        expect(readPlan(join(tmp.path, 'echo', '2026-01-01T00-00-00Z-cursor.do-it.md'))).toBe('## Docs\n- update README');
+        expect(readPlan(join(tmp.path, 'echo', '2026-01-01T00-00-00Z-cursor.do-it.md'))).toBe(
+          '## Docs\n- update README',
+        );
       } finally {
         tmp.cleanup();
       }

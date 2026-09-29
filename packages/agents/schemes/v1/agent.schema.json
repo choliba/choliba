@@ -1,0 +1,219 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://choliba.internal/schemas/v1/agent.yaml.schema.json",
+  "title": "agent.yaml (padrão 1)",
+  "description": "Padrão 1 do agents/<id>/agent.yaml — validado por validateAgentYamlV1 em packages/agents/src/agent-validation.ts. Regras que o schema não expressa ficam no código: version é a primeira chave, agent.id é igual ao nome da pasta e modes.default está em modes.allow.",
+  "type": "object",
+  "required": ["version", "agent", "models"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "description": "Versão do padrão do agent.yaml. Primeira chave do arquivo.",
+      "const": 1
+    },
+    "agent": {
+      "description": "Identidade do agente.",
+      "type": "object",
+      "required": ["id", "name", "version", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Identificador do agente e nome do comando (choliba <id>); igual ao nome da pasta agents/<id>/.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "name": {
+          "description": "Nome exibido, em uma linha.",
+          "type": "string",
+          "pattern": "^[^\\n]*\\S[^\\n]*$"
+        },
+        "version": {
+          "description": "Versão do agente, semver MAJOR.MINOR.PATCH.",
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+        },
+        "description": {
+          "description": "O que faz, o que não faz e quando usar (aparece na ajuda).",
+          "type": "string",
+          "pattern": "\\S"
+        }
+      }
+    },
+    "models": {
+      "description": "Modelos com que o agente pode rodar, pelo id que o provider informa.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/definitions/text" }
+    },
+    "skills": {
+      "description": "Skills que o agente recebe: pastas em .agents/skills/ (ou CHOL_SKILLS_DIR) com SKILL.md.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/definitions/name" }
+    },
+    "mcps": {
+      "description": "Servidores MCP liberados, por .agents/mcps/<nome>.json (ou CHOL_MCPS_DIR). Lista de nomes (todas as tools) ou mapa nome -> { tools: [...] } (só essas) / null (todas).",
+      "oneOf": [
+        {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/name" }
+        },
+        {
+          "type": "object",
+          "propertyNames": { "$ref": "#/definitions/name" },
+          "additionalProperties": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "required": ["tools"],
+                "additionalProperties": false,
+                "properties": {
+                  "tools": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": { "$ref": "#/definitions/text" }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "permissions": {
+      "description": "O que o agente pode fazer e onde. O que não está em allow é negado; deny prevalece sobre allow.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "read": { "$ref": "#/definitions/paths" },
+            "write": { "$ref": "#/definitions/paths" },
+            "execute": {
+              "description": "Diretório -> comandos (prefixos com argumentos) que pode executar ali.",
+              "type": "object",
+              "propertyNames": { "$ref": "#/definitions/text" },
+              "additionalProperties": { "$ref": "#/definitions/commands" }
+            }
+          }
+        },
+        "deny": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "read": { "$ref": "#/definitions/paths" },
+            "write": { "$ref": "#/definitions/paths" },
+            "execute": {
+              "description": "Diretório -> comandos bloqueados ali; ['*'] = nada executa ali.",
+              "type": "object",
+              "propertyNames": { "$ref": "#/definitions/text" },
+              "additionalProperties": {
+                "oneOf": [{ "const": ["*"] }, { "$ref": "#/definitions/commands" }]
+              }
+            }
+          }
+        }
+      }
+    },
+    "modes": {
+      "description": "Modos em que o agente pode rodar e o usado quando a linha de comando não diz.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/mode" }
+        },
+        "default": {
+          "description": "Um dos modos de modes.allow (conferido pelo validateAgentYamlV1).",
+          "$ref": "#/definitions/mode"
+        }
+      }
+    },
+    "task": {
+      "description": "A tarefa: o texto da linha de comando que entra no prompt.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": { "type": "boolean" },
+        "default": { "$ref": "#/definitions/text" }
+      },
+      "if": {
+        "required": ["required"],
+        "properties": { "required": { "const": false } }
+      },
+      "then": { "required": ["default"], "properties": { "default": { "$ref": "#/definitions/text" } } }
+    },
+    "ticket_types": {
+      "description": "Tipos de ticket com que o agente trabalha (templates em packages/projects/templates/ticket/); exige --type ou --ticket, e portanto --project.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["epic", "story", "bug", "improvement", "task"] }
+    },
+    "steps": {
+      "description": "Ações do CLI, em ordem: <ação>: [args].",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "before": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 1,
+            "additionalProperties": false,
+            "properties": {
+              "run": { "$ref": "#/definitions/args" },
+              "git_diff": { "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "minItems": 2, "maxItems": 4 }] },
+              "add_files": { "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "minItems": 2 }] }
+            }
+          }
+        },
+        "after": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 1,
+            "additionalProperties": false,
+            "properties": {
+              "run": { "$ref": "#/definitions/args" },
+              "record_git_head": { "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "maxItems": 1 }] }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "text": { "type": "string", "pattern": "\\S" },
+    "name": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$" },
+    "mode": { "enum": ["execute", "plan", "ask"] },
+    "paths": {
+      "description": "Caminhos: absolutos, relativos a ${CHOL_ROOT} ou com ${VAR}; terminado em / = tudo abaixo.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/definitions/text" }
+    },
+    "commands": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "allOf": [{ "$ref": "#/definitions/text" }, { "not": { "const": "*" } }] }
+    },
+    "args": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    }
+  }
+}

@@ -8,7 +8,7 @@ import type { AgentDefinition } from './agent.types';
 export type ExecutionMode = 'execute' | 'plan' | 'ask';
 
 /** Neutral, provider-agnostic permission level. Each provider adapter maps this to its own flags. */
-export type PermissionPolicy = 'read-only' | 'edits' | 'full';
+export type PermissionPolicy = 'read-only' | 'edits';
 
 export interface PromptInput {
   readonly task: string;

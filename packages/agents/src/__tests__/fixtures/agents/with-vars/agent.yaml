@@ -1,7 +1,21 @@
-id: with-vars-agent
-name: With Vars
-version: 1.0.0
-description: 'Fixture agent whose system.md names ${PROJECTS_DIR} and has no docs_map.'
-supported_models:
+version: 1
+
+agent:
+  id: with-vars
+  name: With Vars
+  version: 1.0.0
+  description: Fixture agent whose permissions name ${PROJECTS_DIR} and whose system.md has no docs_map.
+
+models:
   - claude-3-5-sonnet
-task_required: false
+
+permissions:
+  allow:
+    read: ['${PROJECTS_DIR}/*/config.json']
+    write: ['${PROJECTS_DIR}/*/tickets/']
+  deny:
+    write: [agents/]
+
+task:
+  required: false
+  default: Trabalhe no projeto.

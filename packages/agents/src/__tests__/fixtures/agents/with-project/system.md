@@ -3,34 +3,6 @@
 Fixture de teste: age sobre ${PROJECT}, em ${PROJECT_DIR}, cuja aplicação fica em ${APP_DIR}.
 </system_role>
 
-<permissions>
-<intro>
-Fixture de teste — não grava nada de verdade.
-</intro>
-
-<allowlist>
-<allow action="read">
-<path>${PROJECT_DIR}/config.json</path>
-<path>${APP_DIR}/</path>
-</allow>
-<allow action="write">
-<path>${PROJECT_DIR}/tickets/</path>
-</allow>
-</allowlist>
-
-<denylist>
-<deny action="write">
-<path>agents/</path>
-</deny>
-</denylist>
-
-<notes>
-<note>
-Só cobre o --project.
-</note>
-</notes>
-</permissions>
-
 <tool_definitions>
 <intro>
 Nenhuma ferramenta real.

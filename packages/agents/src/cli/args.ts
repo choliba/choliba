@@ -25,8 +25,8 @@ export interface RunFlagDefinition {
   readonly choices?: readonly { readonly name: string; readonly description: string }[];
 }
 
-/** `--mode` in words; `defaultMode` is the agent's `default_mode` when known. The values are `MODE_CHOICES`. */
-export function modeDescription(defaultMode = 'default_mode do agente'): string {
+/** `--mode` in words; `defaultMode` is the agent's `modes.default` when known. The values are `MODE_CHOICES`. */
+export function modeDescription(defaultMode = 'modes.default do agente'): string {
   return `Modo de execução (padrão: ${defaultMode}):`;
 }
 
@@ -63,7 +63,7 @@ export function sinceDescription(defaultBase = 'base do git_diff do agente'): st
 /** Flags that only matter for agents with a `git_diff` in `before_execute` (they pick the diff base). */
 export const PREPARE_FLAGS: readonly string[] = ['--since', `--since-${SINCE_PENDING}`];
 
-/** Flags that only matter for agents with `project_required: true`. */
+/** Flags that only matter for agents that act on a project (`AgentDefinition.projectRequired`). */
 export const PROJECT_FLAGS: readonly string[] = ['--project'];
 
 /** Flags that only matter for agents with `ticket_types`; each type is also its own `--type-<type>` shortcut. */
@@ -108,7 +108,7 @@ export const RUN_FLAGS: readonly RunFlagDefinition[] = [
     choices: PROVIDER_DESCRIPTIONS,
   },
   ...PROVIDER_CHOICES.map((choice) => ({ name: `--${choice}`, description: `Atalho para --provider ${choice}` })),
-  { name: '--model', valueName: 'string', description: 'Modelo; precisa estar em supported_models do agente' },
+  { name: '--model', valueName: 'string', description: 'Modelo; precisa estar em models do agente' },
   { name: '--agents-dir', valueName: 'dir', description: 'Pasta dos agentes (padrão: agents/)' },
   {
     name: '--add-dir',
@@ -120,17 +120,6 @@ export const RUN_FLAGS: readonly RunFlagDefinition[] = [
   { name: '--no-color', description: 'Saída sem cores' },
   { name: '--help', aliases: ['-h'], description: 'Mostra a ajuda do agente', terminal: true },
 ];
-
-/** Whether `flag` is one of `RUN_FLAGS` (or a `--type-<type>` shortcut): a phase must not be named after one. */
-export function isRunFlag(flag: string): boolean {
-  return (
-    flag.startsWith(TYPE_SHORTCUT_PREFIX) ||
-    RUN_FLAGS.some((known) => known.name === flag || (known.aliases ?? []).includes(flag))
-  );
-}
-
-/** A flag that may name a phase (`--red`); any other unknown flag is an error right here. */
-const PHASE_FLAG = /^--[a-z][a-z0-9-]*$/;
 
 export class AgentsArgsError extends Error {}
 
@@ -156,7 +145,7 @@ export interface ParsedRunArgs {
   /** `undefined` when `--mode` was not given — the command's own `defaultMode` applies then. */
   readonly mode: ExecutionMode | undefined;
   readonly planFrom: string | undefined;
-  /** `--project`; required only by agents with `project_required: true`, which `cli/run.ts` checks. */
+  /** `--project`; required only by agents that use a project (see `AgentDefinition.projectRequired`), which `cli/run.ts` checks. */
   readonly project: string | undefined;
   /** `--type` or `--type-<type>`: a new ticket of that type; only for agents with `ticket_types`. */
   readonly ticketType: string | undefined;
@@ -179,11 +168,6 @@ export interface ParsedRunArgs {
   readonly help: boolean;
   /** Every flag as typed (`--since-pending`, `--type-bug`, `-h`), without values: checked against the agent's own flags. */
   readonly flags: readonly string[];
-  /**
-   * The names of the other `--<name>` flags, as typed: the phases to run, for an agent with `phases`.
-   * Whether the agent has them is `cli/run.ts`'s call, like every flag an agent may not take.
-   */
-  readonly phases: readonly string[];
 }
 
 export type ParsedAgentsArgs =
@@ -282,7 +266,6 @@ export function parseAgentsArgs(argv: readonly string[]): ParsedAgentsArgs {
   };
 
   const flags: string[] = [];
-  const phases: string[] = [];
   const queue = [...rest];
   let arg: string | undefined;
   while ((arg = queue.shift()) !== undefined) {
@@ -365,10 +348,6 @@ export function parseAgentsArgs(argv: readonly string[]): ParsedAgentsArgs {
       colorize = false;
       continue;
     }
-    if (PHASE_FLAG.test(arg)) {
-      phases.push(arg.slice(2));
-      continue;
-    }
     if (arg.startsWith('--')) {
       throw new AgentsArgsError(unknownFlagMessage(arg, command));
     }
@@ -397,6 +376,5 @@ export function parseAgentsArgs(argv: readonly string[]): ParsedAgentsArgs {
     since,
     help,
     flags,
-    phases,
   };
 }

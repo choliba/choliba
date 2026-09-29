@@ -1,15 +1,10 @@
-import type { AgentPermissions } from '../../../permissions';
+import { readAgentPermissions } from '../../../permissions';
 import { cursorPermissions, shellToken } from '../../../providers/cursor/permissions';
 
-const DECLARED: AgentPermissions = {
-  allowTools: ['Read'],
-  allowRead: ['src/'],
-  allowWrite: ['docs/', 'README.md'],
-  allowRun: ['git diff'],
-  denyRead: ['/etc/passwd'],
-  denyWrite: ['packages/'],
-  denyRun: ['prettier', 'bun run format'],
-};
+const DECLARED = readAgentPermissions({
+  allow: { read: ['src/'], write: ['docs/', 'README.md'], execute: { './': ['git diff'] } },
+  deny: { read: ['/etc/passwd'], write: ['packages/'], execute: { './': ['prettier', 'bun run format'] } },
+});
 
 describe('shellToken', () => {
   it('uses the first word, with the rest as word:args', () => {
@@ -21,7 +16,13 @@ describe('shellToken', () => {
 describe('cursorPermissions', () => {
   it('anchors paths at the workspace root and maps commands to Shell tokens', () => {
     expect(cursorPermissions(DECLARED, 'edits', '/repo')).toEqual({
-      allow: ['Read(/repo/src/**)', 'Write(/repo/docs/**)', 'Write(/repo/README.md)', 'Shell(git:diff*)', 'Shell(cd:/repo)'],
+      allow: [
+        'Read(/repo/src/**)',
+        'Write(/repo/docs/**)',
+        'Write(/repo/README.md)',
+        'Shell(git:diff*)',
+        'Shell(cd:/repo)',
+      ],
       deny: ['Read(/etc/passwd)', 'Write(/repo/packages/**)', 'Shell(prettier)', 'Shell(bun:run format*)'],
     });
   });
@@ -43,7 +44,9 @@ describe('cursorPermissions', () => {
   });
 
   it('allows cd into the workspace root only to an agent that may run commands, since cursor prefixes them with it', () => {
-    expect(cursorPermissions({ ...DECLARED, allowRun: [] }, 'edits', '/repo').allow).not.toContain('Shell(cd:/repo)');
+    expect(cursorPermissions({ ...DECLARED, allowExecute: [] }, 'edits', '/repo').allow).not.toContain(
+      'Shell(cd:/repo)',
+    );
     expect(cursorPermissions(DECLARED, 'edits', '/outro/lugar').allow).toContain('Shell(cd:/outro/lugar)');
   });
 
@@ -52,5 +55,17 @@ describe('cursorPermissions', () => {
 
     expect(permissions.allow).toEqual(['Read(/repo/src/**)', 'Shell(git:diff*)', 'Shell(cd:/repo)']);
     expect(permissions.deny).toContain('Write(/repo/packages/**)');
+  });
+
+  it('allows cd into each directory execute names, once, and blocks the cd into a directory denied whole', () => {
+    const permissions = readAgentPermissions({
+      allow: { execute: { './': ['a'], '/app/': ['composer test', 'a'], '/repo/': ['b'] } },
+      deny: { execute: { '/etc/': ['*'], 'tmp/': ['*'] } },
+    });
+
+    expect(cursorPermissions(permissions, 'edits', '/repo')).toEqual({
+      allow: ['Shell(a)', 'Shell(composer:test*)', 'Shell(b)', 'Shell(cd:/repo)', 'Shell(cd:/app)'],
+      deny: ['Shell(cd:/etc)', 'Shell(cd:/repo/tmp)'],
+    });
   });
 });

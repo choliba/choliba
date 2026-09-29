@@ -56,9 +56,9 @@ describe('parseCursorToolCall', () => {
     expect(parseCursorToolCall({ type: 'tool_call' })).toEqual([]);
     expect(parseCursorToolCall({ type: 'tool_call', tool_call: {} })).toEqual([]);
     expect(parseCursorToolCall({ type: 'tool_call', tool_call: { readToolCall: 'x' } })).toEqual([]);
-    expect(parseCursorToolCall({ tool_call: { createPlanToolCall: { args: { plan: 'p' } } }, subtype: 'started' })).toEqual(
-      [],
-    );
+    expect(
+      parseCursorToolCall({ tool_call: { createPlanToolCall: { args: { plan: 'p' } } }, subtype: 'started' }),
+    ).toEqual([]);
     expect(parseCursorToolCall({ tool_call: { readToolCall: {} }, subtype: 'updated' })).toEqual([]);
     expect(parseCursorToolCall({ tool_call: { readToolCall: {} }, subtype: 'completed' })).toEqual([]);
   });
@@ -68,11 +68,18 @@ describe('parseCursorToolCall', () => {
       { type: 'tool-call', id: '', name: 'Foo', summary: '' },
     ]);
     expect(
-      parseCursorToolCall({ call_id: 'c', tool_call: { fooToolCall: { result: { error: 'x' } } }, subtype: 'completed' }),
+      parseCursorToolCall({
+        call_id: 'c',
+        tool_call: { fooToolCall: { result: { error: 'x' } } },
+        subtype: 'completed',
+      }),
     ).toEqual([{ type: 'tool-result', id: 'c', name: 'Foo', isError: true, denied: false, text: 'error' }]);
-    expect(parseCursorToolCall({ tool_call: { fooToolCall: { result: { error: { reason: 'why' } } } }, subtype: 'completed' })).toEqual([
-      { type: 'tool-result', id: '', name: 'Foo', isError: true, denied: false, text: 'why' },
-    ]);
+    expect(
+      parseCursorToolCall({
+        tool_call: { fooToolCall: { result: { error: { reason: 'why' } } } },
+        subtype: 'completed',
+      }),
+    ).toEqual([{ type: 'tool-result', id: '', name: 'Foo', isError: true, denied: false, text: 'why' }]);
     expect(parseCursorToolCall({ tool_call: { fooToolCall: { result: {} } }, subtype: 'completed' })).toEqual([
       { type: 'tool-result', id: '', name: 'Foo', isError: true, denied: false, text: '' },
     ]);
@@ -88,7 +95,12 @@ describe('cursor plan call', () => {
   it('emits the plan once, from started, even though completed repeats it', () => {
     const parser = cursorProvider.createParser();
     const event = (subtype: string): string =>
-      JSON.stringify({ type: 'tool_call', subtype, call_id: 'p', tool_call: { createPlanToolCall: { args: { plan: '# Plano' } } } });
+      JSON.stringify({
+        type: 'tool_call',
+        subtype,
+        call_id: 'p',
+        tool_call: { createPlanToolCall: { args: { plan: '# Plano' } } },
+      });
 
     expect(parser.parseLine(event('started'))).toEqual([{ type: 'plan', markdown: '# Plano' }]);
     expect(parser.parseLine(event('completed'))).toEqual([]);

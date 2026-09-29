@@ -113,18 +113,14 @@ describe('readGitState / writeGitState / recordGitHead', () => {
   it('records HEAD via recordGitHead', () => {
     const tmp = makeTmpDir('git-state-record');
     try {
-      recordGitHead(
-        tmp.path,
-        TEST_STATE_FILE,
-        {
-          run(args: readonly string[]) {
-            if (args[0] === 'rev-parse' && args[1] === 'HEAD') {
-              return { stdout: 'cafebabe\n', stderr: '', status: 0 };
-            }
-            throw new Error('unexpected');
-          },
+      recordGitHead(tmp.path, TEST_STATE_FILE, {
+        run(args: readonly string[]) {
+          if (args[0] === 'rev-parse' && args[1] === 'HEAD') {
+            return { stdout: 'cafebabe\n', stderr: '', status: 0 };
+          }
+          throw new Error('unexpected');
         },
-      );
+      });
       expect(readGitState(tmp.path, TEST_STATE_FILE)).toBe('cafebabe');
     } finally {
       tmp.cleanup();

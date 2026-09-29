@@ -1,7 +1,7 @@
 import { dirname, isAbsolute, join } from 'node:path';
 
 import type { AgentDefinition, AgentStep } from './agent.types';
-import type { AgentPermissions } from './permissions';
+import { type AgentPermissions, mapPermissions, permissionTexts, withoutTrailingSlash } from './permissions';
 
 const VAR_PATTERN = /\$\{([A-Z_][A-Z0-9_]*)\}/g;
 /** Same pattern without `g`: `test` on a global regex keeps `lastIndex` between calls. */
@@ -26,16 +26,25 @@ export function expandVars(
   return { text: expanded, missing: [...missing] };
 }
 
-function missingError(file: string, missing: readonly string[], vars: Readonly<Record<string, string>>): AgentVarsError {
+function missingError(
+  file: string,
+  missing: readonly string[],
+  vars: Readonly<Record<string, string>>,
+): AgentVarsError {
   return new AgentVarsError(
     `${file} usa ${missing.map((name) => `\${${name}}`).join(', ')}, sem valor ` +
       `(disponíveis: ${Object.keys(vars).join(', ')}).`,
   );
 }
 
-function usesVars(agent: AgentDefinition): boolean {
+/** The texts of `agent.yaml` that may hold `${NAME}`: step arguments, permission paths and commands. */
+function yamlTexts(agent: AgentDefinition): readonly string[] {
   const steps = [...(agent.beforeExecute ?? []), ...(agent.afterExecute ?? [])];
-  return HAS_VAR.test(agent.instructions) || steps.some((step) => step.args.some((arg) => HAS_VAR.test(arg)));
+  return [...steps.flatMap((step) => step.args), ...permissionTexts(agent.permissions)];
+}
+
+function usesVars(agent: AgentDefinition): boolean {
+  return HAS_VAR.test(agent.instructions) || yamlTexts(agent).some((text) => HAS_VAR.test(text));
 }
 
 function expandSteps(
@@ -54,9 +63,8 @@ function expandSteps(
 }
 
 /**
- * The agent with `${NAME}` replaced in its `system.md` — in the text the model reads and in the
- * `<permissions>` the providers enforce alike — and in the arguments of its `before_execute` and
- * `after_execute` steps. `loadVars` only runs when one of them uses a variable, so an agent that uses
+ * The agent with `${NAME}` replaced in its `system.md`, in the arguments of its steps and in its
+ * `permissions` (paths, directories and commands, which the providers enforce and the prompt shows). `loadVars` only runs when one of them uses a variable, so an agent that uses
  * none never needs them to be configured. A variable with no value stops the run.
  */
 export function withExpandedInstructions(
@@ -71,15 +79,21 @@ export function withExpandedInstructions(
   if (missing.length > 0) {
     throw missingError(agent.systemPromptPath, missing, vars);
   }
-  const stepsMissing = new Set<string>();
-  const beforeExecute = expandSteps(agent.beforeExecute, vars, stepsMissing);
-  const afterExecute = expandSteps(agent.afterExecute, vars, stepsMissing);
-  if (stepsMissing.size > 0) {
-    throw missingError(join(agent.dir, 'agent.yaml'), [...stepsMissing], vars);
+  const yamlMissing = new Set<string>();
+  const beforeExecute = expandSteps(agent.beforeExecute, vars, yamlMissing);
+  const afterExecute = expandSteps(agent.afterExecute, vars, yamlMissing);
+  const permissions = mapPermissions(agent.permissions, (value) => {
+    const expanded = expandVars(value, vars);
+    expanded.missing.forEach((name) => yamlMissing.add(name));
+    return expanded.text;
+  });
+  if (yamlMissing.size > 0) {
+    throw missingError(join(agent.dir, 'agent.yaml'), [...yamlMissing], vars);
   }
   return {
     ...agent,
     instructions: text,
+    permissions,
     ...(beforeExecute === undefined ? {} : { beforeExecute }),
     ...(afterExecute === undefined ? {} : { afterExecute }),
   };
@@ -96,10 +110,13 @@ export function pathBase(path: string): string {
 }
 
 /**
- * The absolute directories the agent's `<permissions>` let it read or write. A provider only reaches a
- * directory outside the workspace when it is granted (`--add-dir`), so these go there.
+ * The absolute directories the agent's `permissions` let it read, write or run commands in. A provider
+ * only reaches a directory outside the workspace when it is granted (`--add-dir`), so these go there.
  */
 export function permissionDirs(permissions: AgentPermissions): readonly string[] {
   const paths = [...permissions.allowRead, ...permissions.allowWrite].filter((path) => isAbsolute(path));
-  return [...new Set(paths.map(pathBase))];
+  const runDirs = permissions.allowExecute
+    .map((rule) => withoutTrailingSlash(rule.dir))
+    .filter((dir) => isAbsolute(dir));
+  return [...new Set([...paths.map(pathBase), ...runDirs])];
 }

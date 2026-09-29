@@ -3,12 +3,12 @@ import type { GitRunner } from '@choliba/core/git';
 import { readTicketTemplate, ticketTemplatesDir } from '@choliba/projects';
 
 import type { AgentDefinition } from '../agent.types';
-import { phaseFlag } from '../phases';
 import { SINCE_PENDING } from '../prepare/constants';
 import { diffBaseOf } from '../prepare/registry';
 import {
   CLI_PROGRAM_NAME,
   EXECUTION_MODES,
+  MODE_CHOICES,
   PREPARE_FLAGS,
   PROJECT_FLAGS,
   PROVIDER_CHOICES,
@@ -60,7 +60,7 @@ export function flagValueSuggestions(
 ): Suggestions {
   switch (flagName) {
     case '--mode':
-      return values(EXECUTION_MODES);
+      return values(agent.modes);
     case '--provider':
       return values(PROVIDER_CHOICES);
     case '--model':
@@ -98,25 +98,31 @@ function ticketTypeDescription(type: string): string {
 function withTicketTypes(flags: readonly FlagSpec[], agent: AgentDefinition): readonly FlagSpec[] {
   const types = agent.ticketTypes ?? [];
   const choices = types.map((type) => ({ name: type, description: ticketTypeDescription(type) }));
-  const shortcuts = types.map(
-    (type): FlagSpec => ({ name: `${TYPE_SHORTCUT_PREFIX}${type}`, description: `Atalho para --type ${type}` }),
-  );
+  const shortcuts = types.map((type): FlagSpec => ({
+    name: `${TYPE_SHORTCUT_PREFIX}${type}`,
+    description: `Atalho para --type ${type}`,
+  }));
   return flags.flatMap((flag) => (flag.name === '--type' ? [{ ...flag, choices }, ...shortcuts] : [flag]));
 }
 
-/** One `--<phase>` per phase of the agent: each runs only that phase. */
-function phaseFlags(agent: AgentDefinition): readonly FlagSpec[] {
-  return (agent.phases ?? []).map((phase) => ({
-    name: phaseFlag(phase),
-    description: `Só a fase ${phase.name}${phase.description === undefined ? '' : `: ${phase.description}`}`,
-  }));
+/** `--mode` with only the modes the agent allows as values, and a `--mode-<mode>` shortcut only for those. */
+function withModes(flags: readonly FlagSpec[], agent: AgentDefinition): readonly FlagSpec[] {
+  const refused = EXECUTION_MODES.filter((mode) => !agent.modes.includes(mode)).map((mode) => `--mode-${mode}`);
+  return flags
+    .filter((flag) => !refused.includes(flag.name))
+    .map((flag) =>
+      flag.name === '--mode'
+        ? { ...flag, choices: agent.modes.map((mode) => ({ name: mode, description: MODE_CHOICES[mode] })) }
+        : flag,
+    );
 }
 
 /**
  * `RUN_FLAGS` with value completion for this agent. The diff-base flags only appear for agents
- * with a `git_diff` in `before_execute`, `--project` only for agents with `project_required`,
- * `--type`/`--ticket` (and a `--type-<type>` per type) only for agents with `ticket_types`, a
- * `--<phase>` per phase only for agents with `phases`, and `--mode`/`--since` show that agent's own defaults.
+ * with a `git_diff` in `steps.before`, `--project` only for agents that act on a project,
+ * `--type`/`--ticket` (and a `--type-<type>` per type) only for agents with `ticket_types`,
+ * `--mode` and its shortcuts only with the modes the agent allows, and `--mode`/`--since` show that
+ * agent's own defaults.
  */
 function runFlags(agent: AgentDefinition, context: AgentsCliSpecContext): readonly FlagSpec[] {
   const diffBase = diffBaseOf(agent);
@@ -125,20 +131,18 @@ function runFlags(agent: AgentDefinition, context: AgentsCliSpecContext): readon
     ...(agent.projectRequired ? [] : PROJECT_FLAGS),
     ...(agent.ticketTypes === undefined ? TICKET_FLAGS : []),
   ];
-  const flags = RUN_FLAGS.filter((flag) => !hidden.includes(flag.name)).map(
-    ({ valueName, ...rest }) => {
-      const flag =
-        rest.name === '--mode'
-          ? { ...rest, description: modeDescription(agent.defaultMode) }
-          : rest.name === '--since' && diffBase !== undefined
-            ? { ...rest, description: sinceDescription(diffBase) }
-            : rest;
-      return valueName === undefined
-        ? flag
-        : { ...flag, value: { name: valueName, suggest: () => flagValueSuggestions(flag.name, agent, context) } };
-    },
-  );
-  return [...withTicketTypes(flags, agent), ...phaseFlags(agent)];
+  const flags = RUN_FLAGS.filter((flag) => !hidden.includes(flag.name)).map(({ valueName, ...rest }) => {
+    const flag =
+      rest.name === '--mode'
+        ? { ...rest, description: modeDescription(agent.defaultMode) }
+        : rest.name === '--since' && diffBase !== undefined
+          ? { ...rest, description: sinceDescription(diffBase) }
+          : rest;
+    return valueName === undefined
+      ? flag
+      : { ...flag, value: { name: valueName, suggest: () => flagValueSuggestions(flag.name, agent, context) } };
+  });
+  return withModes(withTicketTypes(flags, agent), agent);
 }
 
 /** Every flag this agent takes, in each of its forms (`--help`, `-h`): exactly what its `--help` lists. */

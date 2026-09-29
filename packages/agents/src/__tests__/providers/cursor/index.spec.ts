@@ -7,6 +7,7 @@ import type { ProviderRequest } from '../../../providers/provider.types';
 import { cursorProvider } from '../../../providers/cursor';
 import { PromptTooLargeError, MAX_ARG_BYTES } from '../../../prompt';
 import { makeTmpDir } from '../../helpers/tmp';
+import { NO_PERMISSIONS, readAgentPermissions } from '../../../permissions';
 
 const CURSOR_PLAN_FIXTURE = join(__dirname, '..', '..', 'fixtures', 'streams', 'cursor-create-plan-tool-call.jsonl');
 
@@ -24,6 +25,8 @@ function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
     taskRequired: true,
     projectRequired: false,
     defaultMode: 'execute',
+    modes: ['execute', 'plan', 'ask'],
+    permissions: NO_PERMISSIONS,
     dir: '/repo/agents/echo',
     systemPromptPath: '/repo/agents/echo/system.md',
     instructions: 'be an echo',
@@ -93,18 +96,22 @@ describe('cursorProvider.buildArgs', () => {
     expect(args.includes('--force')).toBe(false);
   });
 
-  it('maps execute + full to --force --approve-mcps', () => {
-    const args = cursorProvider.buildArgs(fakeRequest({ mode: 'execute', policy: 'full' }));
-
-    expect(args).toEqual(expect.arrayContaining(['--force', '--approve-mcps']));
-  });
-
   it('approves MCP servers only when the agent lists some, and never twice', () => {
     expect(cursorProvider.buildArgs(fakeRequest({ policy: 'edits' })).includes('--approve-mcps')).toBe(false);
-    const listed = cursorProvider.buildArgs(fakeRequest({ policy: 'edits', mcpServers: [{ name: 'browser', config: { command: 'npx', args: ['browser-mcp'] }, path: '/repo/.agents/mcps/browser.json' }] }));
+    const listed = cursorProvider.buildArgs(
+      fakeRequest({
+        policy: 'edits',
+        mcpServers: [
+          {
+            name: 'browser',
+            config: { command: 'npx', args: ['browser-mcp'] },
+            path: '/repo/.agents/mcps/browser.json',
+          },
+        ],
+      }),
+    );
     expect(listed).toContain('--approve-mcps');
-    const full = cursorProvider.buildArgs(fakeRequest({ policy: 'full', mcpServers: [{ name: 'browser', config: { command: 'npx', args: ['browser-mcp'] }, path: '/repo/.agents/mcps/browser.json' }] }));
-    expect(full.filter((arg) => arg === '--approve-mcps')).toHaveLength(1);
+    expect(listed.filter((arg) => arg === '--approve-mcps')).toHaveLength(1);
   });
 
   it('adds --model only when one is given', () => {
@@ -320,10 +327,9 @@ describe('cursorProvider.prepareWorkspace', () => {
   it("writes the agent's declared permissions for the run and removes them afterwards", () => {
     const tmp = makeTmpDir('cursor-prepare');
     try {
-      const instructions =
-        '<permissions><denylist><deny action="run"><command>prettier</command></deny></denylist></permissions>';
+      const permissions = readAgentPermissions({ deny: { execute: { './': ['prettier'] } } });
       const restore = cursorProvider.prepareWorkspace?.(
-        fakeRequest({ workspaceRoot: tmp.path, agent: fakeAgent({ instructions }) }),
+        fakeRequest({ workspaceRoot: tmp.path, agent: fakeAgent({ permissions }) }),
       );
 
       const written: unknown = JSON.parse(readFileSync(join(tmp.path, '.cursor/cli.json'), 'utf8'));
@@ -339,7 +345,16 @@ describe('cursorProvider.prepareWorkspace', () => {
     const tmp = makeTmpDir('cursor-prepare-mcps');
     try {
       const restore = cursorProvider.prepareWorkspace?.(
-        fakeRequest({ workspaceRoot: tmp.path, mcpServers: [{ name: 'browser', config: { command: 'npx', args: ['browser-mcp'] }, path: '/repo/.agents/mcps/browser.json' }] }),
+        fakeRequest({
+          workspaceRoot: tmp.path,
+          mcpServers: [
+            {
+              name: 'browser',
+              config: { command: 'npx', args: ['browser-mcp'] },
+              path: '/repo/.agents/mcps/browser.json',
+            },
+          ],
+        }),
       );
 
       const mcpJson: unknown = JSON.parse(readFileSync(join(tmp.path, '.cursor/mcp.json'), 'utf8'));
@@ -360,7 +375,18 @@ describe('cursorProvider.prepareWorkspace', () => {
       writeFileSync(join(tmp.path, '.cursor/mcp.json'), '{ nope');
 
       expect(() =>
-        cursorProvider.prepareWorkspace?.(fakeRequest({ workspaceRoot: tmp.path, mcpServers: [{ name: 'browser', config: { command: 'npx', args: ['browser-mcp'] }, path: '/repo/.agents/mcps/browser.json' }] })),
+        cursorProvider.prepareWorkspace?.(
+          fakeRequest({
+            workspaceRoot: tmp.path,
+            mcpServers: [
+              {
+                name: 'browser',
+                config: { command: 'npx', args: ['browser-mcp'] },
+                path: '/repo/.agents/mcps/browser.json',
+              },
+            ],
+          }),
+        ),
       ).toThrow('não é um JSON válido');
       expect(existsSync(join(tmp.path, '.cursor/cli.json'))).toBe(false);
     } finally {

@@ -2,6 +2,7 @@ import type { AgentDefinition } from '../../../agent.types';
 import type { ProviderRequest } from '../../../providers/provider.types';
 import { claudeProvider } from '../../../providers/claude';
 import { PromptTooLargeError, MAX_ARG_BYTES } from '../../../prompt';
+import { NO_PERMISSIONS, readAgentPermissions } from '../../../permissions';
 
 function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
   return {
@@ -17,6 +18,8 @@ function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
     taskRequired: true,
     projectRequired: false,
     defaultMode: 'execute',
+    modes: ['execute', 'plan', 'ask'],
+    permissions: NO_PERMISSIONS,
     dir: '/repo/agents/echo',
     systemPromptPath: '/repo/agents/echo/system.md',
     instructions: 'be an echo',
@@ -58,36 +61,31 @@ describe('claudeProvider.buildArgs', () => {
     expect(args[1]).toBe('do the task');
   });
 
-  const DECLARED = [
-    '<agent><permissions>',
-    '<allowlist>',
-    '<allow action="read"><tool>Read</tool><tool>Grep</tool><path>src/</path></allow>',
-    '<allow action="write"><path>docs/</path><path>README.md</path></allow>',
-    '<allow action="run"><command>git diff</command></allow>',
-    '</allowlist>',
-    '<denylist>',
-    '<deny action="read"><path>.env</path></deny>',
-    '<deny action="write"><path>packages/</path></deny>',
-    '<deny action="run"><command>prettier</command></deny>',
-    '</denylist>',
-    '</permissions></agent>',
-  ].join('\n');
+  const DECLARED = readAgentPermissions({
+    allow: {
+      read: ['src/'],
+      write: ['docs/', 'README.md'],
+      execute: { './': ['git diff'], '/app/': ['git diff', 'composer test'] },
+    },
+    deny: { read: ['.env'], write: ['packages/'], execute: { './': ['prettier'], '/etc/': ['*'] } },
+  });
 
-  it('maps read-only to dontAsk with only the declared read tools, rules at the end of the argv', () => {
+  it('maps read-only to dontAsk with only the read tools (and Bash), rules at the end of the argv', () => {
     const args = claudeProvider.buildArgs(
-      fakeRequest({ policy: 'read-only', agent: fakeAgent({ instructions: DECLARED }) }),
+      fakeRequest({ policy: 'read-only', agent: fakeAgent({ permissions: DECLARED }) }),
     );
 
     expect(args).toEqual(
-      expect.arrayContaining(['--permission-mode', 'dontAsk', '--tools', 'Read,Grep,Bash', '--strict-mcp-config']),
+      expect.arrayContaining(['--permission-mode', 'dontAsk', '--tools', 'Read,Grep,Glob,Bash', '--strict-mcp-config']),
     );
     const allowed = args.slice(args.indexOf('--allowedTools') + 1, args.indexOf('--disallowedTools'));
-    expect(allowed).toEqual(['Read', 'Grep', 'Read(src/**)', 'Bash(git diff:*)']);
+    expect(allowed).toEqual(['Read(src/**)', 'Bash(git diff:*)', 'Bash(composer test:*)']);
     expect(args.slice(args.indexOf('--disallowedTools') + 1)).toEqual([
       'Read(.env)',
       'Edit(packages/**)',
       'Write(packages/**)',
       'Bash(prettier:*)',
+      'Bash(cd /etc:*)',
     ]);
   });
 
@@ -101,21 +99,23 @@ describe('claudeProvider.buildArgs', () => {
   });
 
   it('maps edits with an allowlist to dontAsk, allowing the declared writes', () => {
-    const args = claudeProvider.buildArgs(fakeRequest({ policy: 'edits', agent: fakeAgent({ instructions: DECLARED }) }));
+    const args = claudeProvider.buildArgs(
+      fakeRequest({ policy: 'edits', agent: fakeAgent({ permissions: DECLARED }) }),
+    );
 
     expect(args).toEqual(expect.arrayContaining(['--permission-mode', 'dontAsk']));
-    expect(args).toEqual(expect.arrayContaining(['Edit(docs/**)', 'Write(docs/**)', 'Edit(README.md)', 'Write(README.md)']));
+    expect(args).toEqual(
+      expect.arrayContaining(['Edit(docs/**)', 'Write(docs/**)', 'Edit(README.md)', 'Write(README.md)']),
+    );
     expect(args.includes('--tools')).toBe(false);
   });
 
   it('writes a filesystem-absolute path with two slashes, as Claude Code rules expect', () => {
-    const instructions = [
-      '<agent><permissions><allowlist>',
-      '<allow action="read"><path>/p/*/config.json</path></allow>',
-      '<allow action="write"><path>/p/*/tickets/</path></allow>',
-      '</allowlist><denylist><deny action="all"><path>/p/secret/</path></deny></denylist></permissions></agent>',
-    ].join('');
-    const args = claudeProvider.buildArgs(fakeRequest({ policy: 'edits', agent: fakeAgent({ instructions }) }));
+    const permissions = readAgentPermissions({
+      allow: { read: ['/p/*/config.json'], write: ['/p/*/tickets/'] },
+      deny: { read: ['/p/secret/'], write: ['/p/secret/'] },
+    });
+    const args = claudeProvider.buildArgs(fakeRequest({ policy: 'edits', agent: fakeAgent({ permissions }) }));
 
     expect(args).toEqual(
       expect.arrayContaining([
@@ -136,21 +136,23 @@ describe('claudeProvider.buildArgs', () => {
     expect(args.includes('--tools')).toBe(false);
   });
 
-  it('maps full to bypassPermissions, still passing the deny rules', () => {
-    const args = claudeProvider.buildArgs(fakeRequest({ policy: 'full', agent: fakeAgent({ instructions: DECLARED }) }));
+  it('keeps only the read tools when read-only declares no commands', () => {
+    const permissions = readAgentPermissions({ allow: { read: ['src/'] } });
+    const args = claudeProvider.buildArgs(fakeRequest({ policy: 'read-only', agent: fakeAgent({ permissions }) }));
 
-    expect(args).toEqual(expect.arrayContaining(['--permission-mode', 'bypassPermissions', '--disallowedTools']));
+    expect(args).toEqual(expect.arrayContaining(['--tools', 'Read,Grep,Glob']));
   });
 
-  it('keeps only the read tools when read-only declares no commands', () => {
-    const instructions = '<permissions><allowlist><allow action="read"><tool>Read</tool></allow></allowlist></permissions>';
-    const args = claudeProvider.buildArgs(fakeRequest({ policy: 'read-only', agent: fakeAgent({ instructions }) }));
+  it('writes the permissions into the system prompt, ahead of the instructions', () => {
+    const args = claudeProvider.buildArgs(fakeRequest({ agent: fakeAgent({ permissions: DECLARED }) }));
+    const system = String(args.at(args.indexOf('--append-system-prompt') + 1));
 
-    expect(args).toEqual(expect.arrayContaining(['--tools', 'Read']));
+    expect(system).toContain('- in /app/: git diff, composer test');
+    expect(system.indexOf('<permissions>')).toBeLessThan(system.indexOf('be an echo'));
   });
 
   it('keeps every MCP server but the listed ones out of the session, whatever the policy', () => {
-    for (const policy of ['read-only', 'edits', 'full'] as const) {
+    for (const policy of ['read-only', 'edits'] as const) {
       const args = claudeProvider.buildArgs(fakeRequest({ policy }));
       expect(args).toContain('--strict-mcp-config');
       expect(args.includes('--mcp-config')).toBe(false);
@@ -158,7 +160,18 @@ describe('claudeProvider.buildArgs', () => {
   });
 
   it('loads the listed MCP servers inline and allows their tools', () => {
-    const args = claudeProvider.buildArgs(fakeRequest({ policy: 'edits', mcpServers: [{ name: 'browser', config: { command: 'npx', args: ['browser-mcp'] }, path: '/repo/.agents/mcps/browser.json' }] }));
+    const args = claudeProvider.buildArgs(
+      fakeRequest({
+        policy: 'edits',
+        mcpServers: [
+          {
+            name: 'browser',
+            config: { command: 'npx', args: ['browser-mcp'] },
+            path: '/repo/.agents/mcps/browser.json',
+          },
+        ],
+      }),
+    );
 
     expect(args.at(args.indexOf('--mcp-config') + 1)).toBe(
       JSON.stringify({ mcpServers: { browser: { command: 'npx', args: ['browser-mcp'] } } }),
@@ -167,10 +180,18 @@ describe('claudeProvider.buildArgs', () => {
   });
 
   it("allows only the tools an MCP server's declaration lists", () => {
-    const server = { name: 'app', config: { command: 'x' }, path: '/a.json', tools: ['jira_search', 'use_environment'] };
+    const server = {
+      name: 'app',
+      config: { command: 'x' },
+      path: '/a.json',
+      tools: ['jira_search', 'use_environment'],
+    };
     const args = claudeProvider.buildArgs(fakeRequest({ policy: 'edits', mcpServers: [server] }));
 
-    expect(args.slice(args.indexOf('--allowedTools') + 1)).toEqual(['mcp__app__jira_search', 'mcp__app__use_environment']);
+    expect(args.slice(args.indexOf('--allowedTools') + 1)).toEqual([
+      'mcp__app__jira_search',
+      'mcp__app__use_environment',
+    ]);
   });
 
   it('adds --model only when one is given', () => {

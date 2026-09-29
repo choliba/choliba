@@ -1,5 +1,10 @@
-id: example-no-system-md-agent
-name: No System
-version: 1.0.0
-description: 'Tem agent.yaml valido mas sem system.md.'
-supported_models: []
+version: 1
+
+agent:
+  id: no-system-md
+  name: No System
+  version: 1.0.0
+  description: Tem agent.yaml valido mas sem system.md.
+
+models:
+  - claude-3-5-sonnet
