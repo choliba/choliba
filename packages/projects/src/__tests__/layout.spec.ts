@@ -129,19 +129,19 @@ describe('readAppliedLocations', () => {
   it('reads back what applyLocations set, from process.env by default', () => {
     const previous = { ...process.env };
     try {
-      applyLocations({ GLOBAL_DIR: '/g', PROJECTS_DIR: '/p', TICKET_RUNS: '/r' });
-      expect(readAppliedLocations()).toEqual({ GLOBAL_DIR: '/g', PROJECTS_DIR: '/p', TICKET_RUNS: '/r' });
+      applyLocations({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: '/p', TICKET_RUNS: '/r' });
+      expect(readAppliedLocations()).toEqual({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: '/p', TICKET_RUNS: '/r' });
     } finally {
       process.env = previous;
     }
   });
 
   it('leaves TICKET_RUNS out when absent and fails when the locations were not applied', () => {
-    expect(readAppliedLocations({ GLOBAL_DIR: '/g', PROJECTS_DIR: '/p', TICKET_RUNS: ' ' })).toEqual({
-      GLOBAL_DIR: '/g',
+    expect(readAppliedLocations({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: '/p', TICKET_RUNS: ' ' })).toEqual({
+      CHOL_GLOBAL_DIR: '/g',
       PROJECTS_DIR: '/p',
     });
-    expect(() => readAppliedLocations({ GLOBAL_DIR: '/g' })).toThrow(LocationsError);
+    expect(() => readAppliedLocations({ CHOL_GLOBAL_DIR: '/g' })).toThrow(LocationsError);
     expect(() => readAppliedLocations({ PROJECTS_DIR: '/p' })).toThrow(
       'aplique as localizações (applyLocations) antes',
     );

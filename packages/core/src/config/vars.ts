@@ -11,9 +11,9 @@ export const CHOL_SKILLS_DIR = 'CHOL_SKILLS_DIR';
 export const CHOL_MCPS_DIR = 'CHOL_MCPS_DIR';
 
 /** External workspace root (artifacts and, by default, projects under test). */
-export const GLOBAL_DIR = 'GLOBAL_DIR';
+export const CHOL_GLOBAL_DIR = 'CHOL_GLOBAL_DIR';
 
-/** Override for the projects folder when it is not `{GLOBAL_DIR}/projects`. */
+/** Override for the projects folder when it is not `{CHOL_GLOBAL_DIR}/projects`. */
 export const PROJECTS_DIR = 'PROJECTS_DIR';
 
 /** Optional ticket-runs/ root when different from PROJECTS_DIR. */

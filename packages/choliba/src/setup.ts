@@ -2,22 +2,22 @@ import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, writ
 import { dirname, join, sep } from 'node:path';
 
 import {
-  AGENTS_SUBDIR,
   APP_DIR,
   ARTIFACTS_DIR,
   BUNFIG_FILE,
+  DEFAULT_AGENTS_DIR,
+  DEFAULT_MCPS_DIR,
+  DEFAULT_SKILLS_DIR,
   ENV_EXAMPLE_FILE,
   ENV_FILE,
   ESLINT_CONFIG_FILE,
   GITIGNORE_FILE,
-  MCPS_SUBDIR,
   PACKAGE_FILE,
   PRETTIERIGNORE_FILE,
   PRETTIERRC_FILE,
   PROJECTS_SUBDIR,
   PROJECT_CONFIG_FILE,
   PROJECT_ENV_FILE,
-  SKILLS_SUBDIR,
   TESTS_SUBDIR,
   TICKETS_SUBDIR,
   findResource,
@@ -65,12 +65,7 @@ export function exampleTemplatesDir(): string {
  */
 
 /** The folders a workspace has, each kept by a `.gitkeep` while empty. */
-const WORKSPACE_DIRS = [
-  join(APP_DIR, AGENTS_SUBDIR),
-  join(APP_DIR, SKILLS_SUBDIR),
-  join(APP_DIR, MCPS_SUBDIR),
-  PROJECTS_SUBDIR,
-];
+const WORKSPACE_DIRS = [DEFAULT_AGENTS_DIR, DEFAULT_SKILLS_DIR, DEFAULT_MCPS_DIR, PROJECTS_SUBDIR];
 
 /** Template file → workspace file (packing drops `.gitignore`, `bunfig.toml` and dot files, hence other names). */
 const WORKSPACE_FILES: readonly (readonly [string, string])[] = [
@@ -90,7 +85,7 @@ const WORKSPACE_FILES: readonly (readonly [string, string])[] = [
  */
 export function initialEnv(example: string, root: string): string {
   return example
-    .replace(/^GLOBAL_DIR=.*$/m, `GLOBAL_DIR=${join(root, ARTIFACTS_DIR)}`)
+    .replace(/^CHOL_GLOBAL_DIR=.*$/m, `CHOL_GLOBAL_DIR=${join(root, ARTIFACTS_DIR)}`)
     .replace(/^PROJECTS_DIR=.*$/m, `PROJECTS_DIR=${join(root, PROJECTS_SUBDIR)}`);
 }
 

@@ -50,12 +50,12 @@ describe('withExpandedInstructions', () => {
     const agent = await loadAgent(FIXTURES, 'with-vars');
     const onlyYaml = { ...agent, instructions: 'sem variáveis' };
 
-    expect(() => withExpandedInstructions(agent, () => ({ GLOBAL_DIR: '/g' }))).toThrow(AgentVarsError);
-    expect(() => withExpandedInstructions(agent, () => ({ GLOBAL_DIR: '/g' }))).toThrow(
-      `${agent.systemPromptPath} usa \${PROJECTS_DIR}, sem valor (disponíveis: GLOBAL_DIR).`,
+    expect(() => withExpandedInstructions(agent, () => ({ CHOL_GLOBAL_DIR: '/g' }))).toThrow(AgentVarsError);
+    expect(() => withExpandedInstructions(agent, () => ({ CHOL_GLOBAL_DIR: '/g' }))).toThrow(
+      `${agent.systemPromptPath} usa \${PROJECTS_DIR}, sem valor (disponíveis: CHOL_GLOBAL_DIR).`,
     );
-    expect(() => withExpandedInstructions(onlyYaml, () => ({ GLOBAL_DIR: '/g' }))).toThrow(
-      `${join(agent.dir, 'agent.yaml')} usa \${PROJECTS_DIR}, sem valor (disponíveis: GLOBAL_DIR).`,
+    expect(() => withExpandedInstructions(onlyYaml, () => ({ CHOL_GLOBAL_DIR: '/g' }))).toThrow(
+      `${join(agent.dir, 'agent.yaml')} usa \${PROJECTS_DIR}, sem valor (disponíveis: CHOL_GLOBAL_DIR).`,
     );
   });
 });

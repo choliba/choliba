@@ -247,7 +247,7 @@ describe('runAgentsCli — global help and completion', () => {
 
 describe('runAgentsCli — ${VAR} in system.md', () => {
   it('fills in the project locations and grants them by rules, never as a folder the provider reads freely', async () => {
-    const { deps, stdout } = harness([], { config: { GLOBAL_DIR: '/g' } });
+    const { deps, stdout } = harness([], { config: { CHOL_GLOBAL_DIR: '/g' } });
 
     expect(await runAgentsCli(['with-vars', '--agents-dir', FIXTURES, '--dry-run'], deps)).toBe(0);
     const printed = lines(stdout);
@@ -258,7 +258,7 @@ describe('runAgentsCli — ${VAR} in system.md', () => {
   });
 
   it('honors PROJECTS_DIR and TICKET_RUNS from the config', async () => {
-    const { deps, stdout } = harness([], { config: { GLOBAL_DIR: '/g', PROJECTS_DIR: '/p', TICKET_RUNS: '/r' } });
+    const { deps, stdout } = harness([], { config: { CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: '/p', TICKET_RUNS: '/r' } });
 
     expect(await runAgentsCli(['with-vars', '--agents-dir', FIXTURES, '--dry-run'], deps)).toBe(0);
     expect(lines(stdout)).toContain('Write(//p/*/tickets/**)');
@@ -268,7 +268,7 @@ describe('runAgentsCli — ${VAR} in system.md', () => {
     const { deps, stdout, stderr } = harness([]);
 
     expect(await runAgentsCli(['with-vars', '--agents-dir', FIXTURES, '--dry-run'], deps)).toBe(1);
-    expect(stderr.chunks.join('')).toContain('GLOBAL_DIR não definida');
+    expect(stderr.chunks.join('')).toContain('CHOL_GLOBAL_DIR não definida');
     expect(stdout.chunks.join('')).not.toContain('claude');
   });
 
@@ -320,7 +320,7 @@ describe('runAgentsCli — tickets', () => {
   it('asks for --type or --ticket, and refuses a type the agent does not take', async () => {
     await withProjects((projectsDir) =>
       withTicketAgent(async (agentsDir) => {
-        const config = { GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir };
+        const config = { CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir };
         const none = harness([], { config });
         expect(await runAgentsCli(argv(agentsDir, '--dry-run'), none.deps)).toBe(1);
         expect(none.stderr.chunks.join('')).toContain(
@@ -343,7 +343,7 @@ describe('runAgentsCli — tickets', () => {
   it('plans the new ticket on --dry-run without writing it, and scopes the writes to its file', async () => {
     await withProjects((projectsDir) =>
       withTicketAgent(async (agentsDir) => {
-        const { deps, stdout } = harness([], { config: { GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir } });
+        const { deps, stdout } = harness([], { config: { CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir } });
 
         expect(await runAgentsCli(argv(agentsDir, '--type-bug', '--dry-run'), deps)).toBe(0);
         const file = join(projectsDir, 'ready', 'tickets', '1.json');
@@ -361,7 +361,7 @@ describe('runAgentsCli — tickets', () => {
     await withProjects((projectsDir) =>
       withTicketAgent(async (agentsDir) => {
         const { deps, stderr } = harness(claudeStdout(claudeSuccessLine()), {
-          config: { GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir },
+          config: { CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir },
         });
 
         expect(await runAgentsCli(argv(agentsDir, '--type', 'story', 'x'), deps)).toBe(0);
@@ -375,7 +375,7 @@ describe('runAgentsCli — tickets', () => {
   it('opens an existing ticket with --ticket, and stops when it does not exist', async () => {
     await withProjects((projectsDir) =>
       withTicketAgent(async (agentsDir) => {
-        const config = { GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir };
+        const config = { CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir };
         const file = join(projectsDir, 'ready', 'tickets', '7.json');
         mkdirSync(join(projectsDir, 'ready', 'tickets'), { recursive: true });
         writeFileSync(file, '{}');
@@ -399,7 +399,7 @@ describe('runAgentsCli — tickets', () => {
         const complete = ['__complete', 'with-project', '--ticket', ''];
 
         const configured = harness([], {
-          config: { CHOL_AGENTS_DIR: agentsDir, GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir },
+          config: { CHOL_AGENTS_DIR: agentsDir, CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir },
         });
         await runAgentsCli(complete, configured.deps);
         expect(lines(configured.stdout)).toEqual(['ready-2']);
@@ -419,7 +419,7 @@ describe('runAgentsCli — tickets', () => {
         });
         try {
           const { deps, stderr } = harness(claudeStdout(claudeSuccessLine()), {
-            config: { GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir },
+            config: { CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir },
           });
 
           expect(await runAgentsCli(argv(agentsDir, '--type-bug', 'x'), deps)).toBe(1);
@@ -441,7 +441,7 @@ describe('runAgentsCli — tickets', () => {
 
 describe('runAgentsCli — --project', () => {
   it('requires --project from an agent with project_required, before anything else', async () => {
-    const { deps, stdout, stderr } = harness([], { config: { GLOBAL_DIR: '/g' } });
+    const { deps, stdout, stderr } = harness([], { config: { CHOL_GLOBAL_DIR: '/g' } });
 
     expect(await runAgentsCli(['with-project', '--agents-dir', FIXTURES, '--dry-run'], deps)).toBe(1);
     expect(stderr.chunks.join('')).toContain(
@@ -452,7 +452,7 @@ describe('runAgentsCli — --project', () => {
 
   it('stops with the projects message when the project is not ready', async () => {
     await withProjects(async (projectsDir) => {
-      const { deps, stdout, stderr } = harness([], { config: { GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir } });
+      const { deps, stdout, stderr } = harness([], { config: { CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir } });
 
       expect(
         await runAgentsCli(['with-project', '--agents-dir', FIXTURES, '--project', 'pending', '--dry-run'], deps),
@@ -473,12 +473,12 @@ describe('runAgentsCli — --project', () => {
     expect(await runAgentsCli(['with-project', '--agents-dir', FIXTURES, '--project', 'red', '--dry-run'], deps)).toBe(
       1,
     );
-    expect(stderr.chunks.join('')).toContain('GLOBAL_DIR não definida');
+    expect(stderr.chunks.join('')).toContain('CHOL_GLOBAL_DIR não definida');
   });
 
   it('fills in ${PROJECT}, ${PROJECT_DIR} and ${APP_DIR} and grants only that project, by rules', async () => {
     await withProjects(async (projectsDir) => {
-      const { deps, stdout } = harness([], { config: { GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir } });
+      const { deps, stdout } = harness([], { config: { CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir } });
 
       expect(
         await runAgentsCli(['with-project', '--agents-dir', FIXTURES, '--project', 'ready', '--dry-run'], deps),
@@ -520,7 +520,7 @@ describe('runAgentsCli — --project', () => {
   it('completes --project with the projects on disk, and with nothing when the locations are not set', async () => {
     await withProjects(async (projectsDir) => {
       const configured = harness([], {
-        config: { CHOL_AGENTS_DIR: FIXTURES, GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir },
+        config: { CHOL_AGENTS_DIR: FIXTURES, CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir },
       });
       await runAgentsCli(['__complete', 'with-project', '--project', ''], configured.deps);
       expect(lines(configured.stdout)).toEqual(['pending', 'ready']);
@@ -547,7 +547,9 @@ describe('runAgentsCli — skills', () => {
     const { deps, stdout, stderr } = harness([], { config: { CHOL_SKILLS_DIR: undefined } });
 
     expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'x'], deps)).toBe(1);
-    expect(stderr.chunks.join('')).toContain('skill "dummy-skill" não encontrada: /repo/.agents/skills/dummy-skill');
+    expect(stderr.chunks.join('')).toContain(
+      'skill "dummy-skill" não encontrada: /repo/app/.agents/skills/dummy-skill',
+    );
     expect(stdout.chunks).toEqual([]);
   });
 
@@ -596,7 +598,7 @@ describe('runAgentsCli — mcps', () => {
       const { deps, stdout, stderr } = harness([]);
 
       expect(await runAgentsCli(['echo', '--agents-dir', agents.agentsDir, '--dry-run', 'x'], deps)).toBe(1);
-      expect(stderr.chunks.join('')).toContain('mcp "nope" não encontrado: /repo/.agents/mcps/nope.json');
+      expect(stderr.chunks.join('')).toContain('mcp "nope" não encontrado: /repo/app/.agents/mcps/nope.json');
       expect(stdout.chunks).toEqual([]);
     } finally {
       agents.cleanup();
@@ -1190,5 +1192,43 @@ describe('runAgentsCli — run dir', () => {
     expect(printed.at(printed.indexOf('--workspace') + 1)).toBe(
       `/repo/.cache/runs/2026-01-01T00-00-00.000Z-${String(process.pid)}`,
     );
+  });
+});
+
+describe('runAgentsCli — folder variables', () => {
+  it('fills in ${CHOL_AGENTS_DIR} and the others under the same names as in .env', async () => {
+    const yaml = [
+      'permissions:',
+      '  deny:',
+      "    read: ['${CHOL_AGENTS_DIR}/', '${CHOL_SKILLS_DIR}/', '${CHOL_MCPS_DIR}/']",
+    ];
+    await withCustomAgent(yaml, async (agentsDir) => {
+      const { deps, stdout } = harness([], { config: { CHOL_SKILLS_DIR: '/s', CHOL_MCPS_DIR: '/m' } });
+
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(0);
+      expect(lines(stdout)).toEqual(
+        expect.arrayContaining(['Read(//repo/app/agents/**)', 'Read(//s/**)', 'Read(//m/**)']),
+      );
+    });
+  });
+
+  it('knows no ${AGENTS_DIR}: it stops as a variable with no value, listing the ones there are', async () => {
+    await withCustomAgent(['permissions:', '  deny:', "    read: ['${AGENTS_DIR}/']"], async (agentsDir) => {
+      const { deps, stderr } = harness([]);
+
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(1);
+      expect(stderr.chunks.join('')).toMatch(
+        /usa \$\{AGENTS_DIR\}, sem valor \(disponíveis: CHOL_ROOT, CHOL_AGENTS_DIR/,
+      );
+    });
+  });
+
+  it('resolves the project locations when only agent.yaml names one of them', async () => {
+    await withCustomAgent(['permissions:', '  allow:', "    read: ['${PROJECTS_DIR}/']"], async (agentsDir) => {
+      const { deps, stdout } = harness([], { config: { CHOL_GLOBAL_DIR: '/g' } });
+
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(0);
+      expect(lines(stdout)).toContain('Read(//g/projects/**)');
+    });
   });
 });

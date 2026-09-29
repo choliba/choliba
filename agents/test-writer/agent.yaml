@@ -27,8 +27,8 @@ permissions:
       - '${PROJECT_DIR}/.env.json'
       - '${PROJECT_DIR}/tests/'
       - '${APP_DIR}/'
-      - '${SKILLS_DIR}/playwright-cli/'
-      - '${SKILLS_DIR}/playwright-trace/'
+      - '${CHOL_SKILLS_DIR}/playwright-cli/'
+      - '${CHOL_SKILLS_DIR}/playwright-trace/'
       - .cache/playwright-cli/
     write:
       - '${PROJECT_DIR}/tests/${TICKET}.spec.ts'
@@ -38,17 +38,17 @@ permissions:
         - bunx choliba tests ${PROJECT}:${TICKET}
         - bunx choliba playwright-trace
   deny:
-    read: [packages/, '${AGENTS_DIR}/', scripts/, jest/]
+    read: [packages/, '${CHOL_AGENTS_DIR}/', scripts/, jest/]
     write:
       - packages/
-      - '${AGENTS_DIR}/'
+      - '${CHOL_AGENTS_DIR}/'
       - scripts/
       - jest/
       - '${APP_DIR}/'
       - '${TICKET_FILE}'
       - '${PROJECT_DIR}/config.json'
       - '${PROJECT_DIR}/.env.json'
-      - '${SKILLS_DIR}/'
+      - '${CHOL_SKILLS_DIR}/'
     execute:
       '${CHOL_ROOT}/': [git]
 

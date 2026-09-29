@@ -20,10 +20,19 @@ import { parseProviderPreference, resolveProvider } from '../providers/registry'
 import { readPlan } from '../plan-store';
 import { validateExplicitModel } from '../providers/stream-json';
 import { runAgent } from '../run-agent';
-import { CHOL_AGENTS_PROVIDER, RUNS_DIR } from '@choliba/core/config';
+import {
+  CHOL_AGENTS_DIR,
+  CHOL_AGENTS_PROVIDER,
+  CHOL_GLOBAL_DIR,
+  CHOL_MCPS_DIR,
+  CHOL_SKILLS_DIR,
+  PROJECTS_DIR,
+  RUNS_DIR,
+  TICKET_RUNS,
+} from '@choliba/core/config';
 import { listProjectNames, listTicketKeys, loadProjectSettings, resolveLocations } from '@choliba/projects';
 import { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '../workspace-dirs';
-import { absolutePermissions, canRead, outsideExecuteDirs } from '../permissions';
+import { absolutePermissions, canRead, outsideExecuteDirs, permissionTexts } from '../permissions';
 import { withExpandedInstructions } from '../vars';
 import type { AgentsArgsError, ParsedAgentsArgs } from './args';
 import { CLI_PROGRAM_NAME, PREPARE_FLAGS, USAGE, parseAgentsArgs, unknownFlagMessage } from './args';
@@ -293,34 +302,39 @@ function resolveAgentMcps(agent: AgentDefinition, deps: RunAgentsCliDeps): reado
   }
 }
 
+/** The variables that name the projects' locations, resolved only when the agent uses one. */
+const LOCATION_VAR = new RegExp(`\\$\\{(${CHOL_GLOBAL_DIR}|${PROJECTS_DIR}|${TICKET_RUNS})\\}`);
+
 /**
  * The folders an agent's `system.md` and `agent.yaml` may name, so it never depends on the workspace
- * layout: `${CHOL_ROOT}` (the workspace root, always found by the application), `${AGENTS_DIR}`, `${SKILLS_DIR}` and `${MCPS_DIR}` always; `${GLOBAL_DIR}`, `${PROJECTS_DIR}` and
- * `${TICKET_RUNS}` once GLOBAL_DIR is configured; `${PROJECT}`/`${PROJECT_DIR}`/`${APP_DIR}` (the active
- * environment's application code) when the run has a project — all from `@choliba/projects` and
- * `workspace-dirs`, this CLI works out no path itself.
+ * layout, each under the same name as in `.env`: `${CHOL_ROOT}` (the workspace root, always found by the
+ * application), `${CHOL_AGENTS_DIR}`, `${CHOL_SKILLS_DIR}` and `${CHOL_MCPS_DIR}` always;
+ * `${CHOL_GLOBAL_DIR}`, `${PROJECTS_DIR}` and `${TICKET_RUNS}` once CHOL_GLOBAL_DIR is configured;
+ * `${PROJECT}`/`${PROJECT_DIR}`/`${APP_DIR}` (the active environment's application code) when the run has
+ * a project — all from `@choliba/projects` and `workspace-dirs`, this CLI works out no path itself.
  */
 function locationVars(
   deps: RunAgentsCliDeps,
   projectVars: Readonly<Record<string, string>>,
-  instructions: string,
+  agent: AgentDefinition,
 ): Readonly<Record<string, string>> {
-  // Resolved only when used: an agent naming none of them runs without GLOBAL_DIR, and one that does
-  // gets the clear "GLOBAL_DIR não definida" instead of a missing variable.
-  const locations = /\$\{(GLOBAL_DIR|PROJECTS_DIR|TICKET_RUNS)\}/.test(instructions)
+  // Resolved only when used: an agent naming none of them runs without CHOL_GLOBAL_DIR, and one that does
+  // gets the clear "CHOL_GLOBAL_DIR não definida" instead of a missing variable.
+  const texts = [agent.instructions, ...permissionTexts(agent.permissions)];
+  const locations = texts.some((text) => LOCATION_VAR.test(text))
     ? resolveLocations(deps.repoRoot, deps.config, () => undefined)
     : undefined;
   return {
     [CHOL_ROOT]: deps.repoRoot,
-    AGENTS_DIR: resolveAgentsDir(undefined, deps.config, deps.repoRoot),
-    SKILLS_DIR: resolveSkillsDir(deps.config, deps.repoRoot),
-    MCPS_DIR: resolveMcpsDir(deps.config, deps.repoRoot),
+    [CHOL_AGENTS_DIR]: resolveAgentsDir(undefined, deps.config, deps.repoRoot),
+    [CHOL_SKILLS_DIR]: resolveSkillsDir(deps.config, deps.repoRoot),
+    [CHOL_MCPS_DIR]: resolveMcpsDir(deps.config, deps.repoRoot),
     ...(locations === undefined
       ? {}
       : {
-          GLOBAL_DIR: locations.GLOBAL_DIR,
-          PROJECTS_DIR: locations.PROJECTS_DIR,
-          ...(locations.TICKET_RUNS === undefined ? {} : { TICKET_RUNS: locations.TICKET_RUNS }),
+          [CHOL_GLOBAL_DIR]: locations.CHOL_GLOBAL_DIR,
+          [PROJECTS_DIR]: locations.PROJECTS_DIR,
+          ...(locations.TICKET_RUNS === undefined ? {} : { [TICKET_RUNS]: locations.TICKET_RUNS }),
         }),
     ...projectVars,
   };
@@ -380,7 +394,7 @@ function expandAgent(
   deps: RunAgentsCliDeps,
 ): AgentDefinition | undefined {
   try {
-    return withExpandedInstructions(agent, () => locationVars(deps, projectVars, agent.instructions));
+    return withExpandedInstructions(agent, () => locationVars(deps, projectVars, agent));
   } catch (error) {
     deps.stderr.write(`${errorMessage(error)}\n`);
     return undefined;

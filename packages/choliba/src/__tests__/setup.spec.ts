@@ -81,10 +81,11 @@ describe('scaffoldWorkspace', () => {
       expect(fs.existsSync(path.join(root, 'app', '.agents', 'mcps', '.gitkeep'))).toBe(true);
       const env = fs.readFileSync(path.join(root, '.env'), 'utf8');
       expect(env).toContain(`\nPROJECTS_DIR=${path.join(root, 'projects')}\n`);
-      expect(env).toContain('\nCHOL_SKILLS_DIR=app/.agents/skills\n');
-      expect(env).toContain(`\nGLOBAL_DIR=${path.join(root, '.cache', 'choliba')}\n`);
-      expect(env).toContain('\nCHOL_AGENTS_DIR=app/agents\n');
-      expect(fs.readFileSync(path.join(root, '.env.example'), 'utf8')).toContain('\nGLOBAL_DIR=\n');
+      // The agents' folders are the defaults: the .env names them only as a commented example.
+      expect(env).toContain('\n# CHOL_SKILLS_DIR=app/.agents/skills\n');
+      expect(env).not.toMatch(/^CHOL_(AGENTS|SKILLS|MCPS)_DIR=/m);
+      expect(env).toContain(`\nCHOL_GLOBAL_DIR=${path.join(root, '.cache', 'choliba')}\n`);
+      expect(fs.readFileSync(path.join(root, '.env.example'), 'utf8')).toContain('\nCHOL_GLOBAL_DIR=\n');
       expect(fs.readFileSync(path.join(root, 'bunfig.toml'), 'utf8')).toContain('silent = true');
       expect(fs.readFileSync(path.join(root, 'eslint.config.mjs'), 'utf8')).toContain("from 'choliba/eslint'");
     });
@@ -242,9 +243,9 @@ describe('trustPackage', () => {
 });
 
 describe('initialEnv', () => {
-  it('points PROJECTS_DIR at projects and GLOBAL_DIR at .cache/choliba, leaving the rest as it is', () => {
-    expect(initialEnv('# a\nGLOBAL_DIR=\nPROJECTS_DIR=\n# GLOBAL_DIR=x\nB=1\n', '/w')).toBe(
-      `# a\nGLOBAL_DIR=${path.join('/w', '.cache', 'choliba')}\nPROJECTS_DIR=${path.join('/w', 'projects')}\n# GLOBAL_DIR=x\nB=1\n`,
+  it('points PROJECTS_DIR at projects and CHOL_GLOBAL_DIR at .cache/choliba, leaving the rest as it is', () => {
+    expect(initialEnv('# a\nCHOL_GLOBAL_DIR=\nPROJECTS_DIR=\n# CHOL_GLOBAL_DIR=x\nB=1\n', '/w')).toBe(
+      `# a\nCHOL_GLOBAL_DIR=${path.join('/w', '.cache', 'choliba')}\nPROJECTS_DIR=${path.join('/w', 'projects')}\n# CHOL_GLOBAL_DIR=x\nB=1\n`,
     );
   });
 });
