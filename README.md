@@ -26,17 +26,19 @@ Para pegar a versão mais nova depois de um merge na `master`, rode o mesmo `bun
 
 `choliba` roda sempre numa **pasta de trabalho**: a pasta, subindo a partir de onde o comando é chamado, cujo
 `package.json` depende de `choliba` (é o que `bun add choliba` cria). É nela que ficam o `.env`, os agentes
-(`agents/`), as skills (`.agents/skills/`) e os MCPs (`.agents/mcps/`) usados pelos comandos. Rodar `choliba` de
-qualquer subpasta dela funciona do mesmo jeito.
+(`app/agents/`), as skills (`app/.agents/skills/`) e os MCPs (`app/.agents/mcps/`) usados pelos comandos. Rodar
+`choliba` de qualquer subpasta dela funciona do mesmo jeito. Essas três pastas são o padrão; `CHOL_AGENTS_DIR`,
+`CHOL_SKILLS_DIR` e `CHOL_MCPS_DIR` no `.env` apontam para outras.
 
 ## `choliba setup`
 
 Roda sozinho no `postinstall` (com `--trust`) ou à mão (`bunx choliba setup`). Sem sobrescrever o que já existe,
 ele:
 
-- cria `agents/`, `.agents/skills/`, `.agents/mcps/` e `projects/` na pasta de trabalho;
-- copia `.env.example` e `.gitignore` de um template, e cria o `.env` inicial com `GLOBAL_DIR` já apontando para
-  a própria pasta de trabalho;
+- cria `app/agents/`, `app/.agents/skills/`, `app/.agents/mcps/` e `projects/` na pasta de trabalho;
+- copia de um template `.env.example`, `.gitignore`, `.editorconfig` (largura e indentação, que o Prettier lê) e os
+  arquivos do Prettier e do ESLint, e cria o `.env` inicial com `CHOL_GLOBAL_DIR` apontando para
+  `.cache/choliba` e `PROJECTS_DIR` para `projects/`, os dois da própria pasta de trabalho;
 - lista `choliba` em `trustedDependencies` do `package.json`, para que instalações futuras rodem o setup de novo
   sem pedir `--trust`;
 - liga o autocomplete do bash (veja abaixo).
@@ -118,31 +120,51 @@ steps:
 | `version`                    | sim         | —                   | Versão do padrão: `1`.                                                                                                              |
 | `agent`                      | sim         | —                   | `id` (igual à pasta, é o nome do comando), `name`, `version` (semver do agente) e `description`.                                    |
 | `models`                     | sim         | —                   | Modelos com que o agente pode rodar, pelo id que o provider informa.                                                                |
-| `skills`                     | não         | `[]`                | Pastas em `.agents/skills/`.                                                                                                        |
-| `mcps`                       | não         | nenhum              | Lista de nomes de `.agents/mcps/<nome>.json` (todas as tools) ou mapa `nome: { tools: [...] }`.                                     |
+| `skills`                     | não         | `[]`                | Pastas em `app/.agents/skills/`.                                                                                                    |
+| `mcps`                       | não         | nenhum              | Lista de nomes de `app/.agents/mcps/<nome>.json` (todas as tools) ou mapa `nome: { tools: [...] }`.                                 |
 | `permissions.allow`/`.deny`  | não         | nada liberado       | `read` e `write`: caminhos (terminado em `/` = tudo abaixo). `execute`: diretório → comandos (prefixos com argumentos).             |
 | `modes.allow` / `.default`   | não         | os três / `execute` | Modos aceitos (`execute`, `plan`, `ask`) e o usado quando a linha de comando não diz.                                               |
 | `task.required` / `.default` | não         | `true` / —          | Se a tarefa é obrigatória e, quando não é, qual usar (`default` passa a ser obrigatório).                                           |
-| `ticket_types`               | não         | agente sem ticket   | Tipos de ticket aceitos (`epic`, `story`, `bug`, `improvement`, `task`); a execução pede `--type` ou `--ticket`.                    |
+| `ticket_types`               | não         | agente sem ticket   | Tipos de ticket aceitos (`story`, `bug`, `improvement`, `task`); a execução pede `--type` ou `--ticket`.                            |
 | `steps.before` / `.after`    | não         | nenhum              | Ações do choliba antes do modelo (`run`, `git_diff`, `add_files`) e depois de um `execute` bem-sucedido (`run`, `record_git_head`). |
 
 Regras que valem para qualquer agente:
 
-- **Negado por padrão.** O que não está em `permissions.allow` é negado; `deny` prevalece sobre `allow`. O choliba
-  traduz as permissões para o provider (flags do Claude, `.cursor/cli.json` do Cursor) e as escreve no prompt. Onde as
-  listas não dizem nada, o provider ainda pode cair no próprio padrão (o Claude, por exemplo, lê a pasta de
-  trabalho sem pedir); fechar isso é o próximo passo.
-- **Execução por diretório.** Os providers aplicam em que diretórios o agente entra e quais comandos roda, mas não
-  o vínculo "este comando só neste diretório": na prática vale a união dos dois.
+- **Negado por padrão, em qualquer lugar.** O agente só lê, escreve e roda o que está em `permissions.allow`, no
+  workspace ou fora dele; `deny` prevalece sobre `allow`. O choliba escreve as permissões no prompt e as aplica no
+  provider. Cada execução roda numa pasta vazia, `.cache/runs/<id>/`, criada antes e apagada depois, porque os dois
+  providers liberam tudo na pasta em que rodam. No Claude, as regras dizem exatamente onde ele lê e escreve, e ele
+  só tem as ferramentas que as permissões pedem. No Cursor, que não trata `allow` como limite, o choliba gera um
+  `deny` para todo o resto do disco. Limite do Cursor: um arquivo **novo**, criado direto numa pasta do caminho até
+  um item liberado (a raiz do workspace, por exemplo), não é bloqueado.
+- **Caminhos.** Caminho relativo é relativo à raiz do workspace. As pastas das skills declaradas ficam liberadas para
+  leitura sozinhas. Num glob, o Cursor libera a pasta antes dele inteira.
+- **Execução por diretório.** Os comandos rodam a partir da pasta da execução, dentro do workspace (por isso
+  `bunx choliba ...` funciona sem `cd`). Um diretório de `execute` fora do workspace precisa estar em `allow.read`,
+  porque rodar comandos nele já dá acesso ao que há lá. Os providers aplicam em que diretórios o agente entra e
+  quais comandos roda, mas não o vínculo "este comando só neste diretório": na prática vale a união dos dois.
 - **`steps` não passam pelas permissões.** Os passos são executados pelo choliba, fora da sessão do modelo: um
   passo pode fazer o que o modelo não pode (o `docs-updater` proíbe o modelo de rodar o Prettier e o roda num
   `steps.after`).
 - **Variáveis.** Caminhos, comandos e argumentos de passos aceitam `${CHOL_ROOT}` (a pasta de trabalho, sempre
-  encontrada pelo choliba: definir `CHOL_ROOT` no `.env` ou no ambiente é erro), `${AGENTS_DIR}`, `${SKILLS_DIR}`,
-  `${MCPS_DIR}`, `${GLOBAL_DIR}`, `${PROJECTS_DIR}`, `${PROJECT}`, `${PROJECT_DIR}`, `${APP_DIR}`, `${TICKET}` e
+  encontrada pelo choliba: definir `CHOL_ROOT` no `.env` ou no ambiente é erro), `${CHOL_AGENTS_DIR}`,
+  `${CHOL_SKILLS_DIR}`, `${CHOL_MCPS_DIR}`, `${CHOL_GLOBAL_DIR}`, `${PROJECTS_DIR}`, `${PROJECT}`, `${PROJECT_DIR}`, `${APP_DIR}`, `${TICKET}` e
   `${TICKET_FILE}`. Uma variável sem valor interrompe a execução.
 - **Projeto.** Um agente que usa uma variável de projeto (`${PROJECT}`, `${PROJECT_DIR}`, `${APP_DIR}`,
   `${TICKET}`, `${TICKET_FILE}`) no `agent.yaml` ou no `system.md`, ou declara `ticket_types`, exige `--project`.
+
+## Portões dos testes de um ticket
+
+`choliba tests PROJECT:TICKET --expect red|green [--failures ARQUIVO]` roda os testes de um ticket e confere o que
+eles mostram. É assim que os agentes `test-writer` e `implementer` garantem o TDD:
+
+- **`--expect red`**: todo critério do ticket tem teste, nenhum quebra no próprio código nem é pulado, e **pelo
+  menos um falha pelo comportamento** (há o que implementar). Um critério cujos testes já passam fica como **já
+  atendido**: o teste continua valendo como proteção contra regressão. Se todos passam, o portão recusa (nada a
+  implementar).
+- **`--expect green`**: todos os testes do ticket passam, inclusive os dos critérios já atendidos.
+- **`--failures ARQUIVO`**: grava, em Markdown, os critérios a implementar com a falha de cada teste e, por último,
+  os já atendidos. O `test-writer` grava esse arquivo, e o `implementer` começa por ele.
 
 ## `choliba install`
 
@@ -168,10 +190,13 @@ também aparece como aviso.
 
 | Variável                    | Para quê                                                                                                                                                                      |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GLOBAL_DIR`                | Raiz de onde os projetos são lidos (`GLOBAL_DIR/projects`), a menos que `PROJECTS_DIR` aponte para outro lugar. Preenchida pelo `setup` com a própria pasta de trabalho.      |
-| `PROJECTS_DIR`              | Opcional: outro lugar para os projetos, no lugar de `GLOBAL_DIR/projects`.                                                                                                    |
+| `CHOL_GLOBAL_DIR`           | Raiz dos artefatos das execuções e, sem `PROJECTS_DIR`, dos projetos (`CHOL_GLOBAL_DIR/projects`). Preenchida pelo `setup` com `.cache/choliba` da pasta de trabalho.         |
+| `PROJECTS_DIR`              | Onde ficam os projetos, se não em `CHOL_GLOBAL_DIR/projects`. Preenchida pelo `setup` com `projects/` da pasta de trabalho.                                                   |
 | `TICKET_RUNS`               | Opcional: raiz de `ticket-runs/`, se não for `PROJECTS_DIR`.                                                                                                                  |
-| `CHOL_AGENTS_PROVIDER`      | Provider padrão dos agentes (`auto`, `claude` ou `cursor`); um `--provider` na linha de comando ganha deste.                                                                  |
+| `CHOL_AGENTS_DIR`           | Opcional: pasta dos agentes (padrão `app/agents`).                                                                                                                            |
+| `CHOL_SKILLS_DIR`           | Opcional: pasta das skills (padrão `app/.agents/skills`).                                                                                                                     |
+| `CHOL_MCPS_DIR`             | Opcional: pasta dos MCPs (padrão `app/.agents/mcps`).                                                                                                                         |
+| `CHOL_AGENTS_PROVIDER`      | Opcional: provider padrão dos agentes (`auto`, `claude` ou `cursor`; padrão `auto`); um `--provider` na linha de comando ganha deste.                                         |
 | `PLAYWRIGHT_MCP_OUTPUT_DIR` | Opcional: onde o `choliba playwright-cli` grava os arquivos que nomeia sozinho ou que recebem `--filename` relativo (snapshots, screenshots); padrão `.cache/playwright-cli`. |
 
 ## Autocomplete

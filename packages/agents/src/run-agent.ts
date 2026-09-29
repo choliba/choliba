@@ -1,3 +1,5 @@
+import { mkdirSync, rmSync } from 'node:fs';
+
 import type { ProcessRunner, Session, SessionExitEvent, SignalSource, Writable } from '@choliba/terminal';
 import { exitCodeFor } from '@choliba/terminal';
 
@@ -50,13 +52,16 @@ function errorMessage(error: unknown): string {
  * JSON object per line. Prefixing that would print JSON at the user, not a conversation.
  */
 export async function runAgent(request: RunAgentRequest, deps: RunAgentDeps): Promise<number> {
-  // Whatever the adapter sets up in the workspace for this run (cursor's .cursor/cli.json) is put
-  // back however the session ends: success, failure, or SIGINT/SIGTERM, which only kill the child
-  // and still let `runSession` return.
+  // The empty folder the provider runs in, and whatever the adapter sets up for the run (cursor's
+  // .cursor/cli.json), are removed however the session ends: success, failure, or SIGINT/SIGTERM,
+  // which only kill the child and still let `runSession` return.
+  const runDir = request.providerRequest.runDir;
   let restore: () => void;
   try {
+    mkdirSync(runDir, { recursive: true });
     restore = request.provider.adapter.prepareWorkspace?.(request.providerRequest) ?? noop;
   } catch (error) {
+    rmSync(runDir, { recursive: true, force: true });
     deps.stderr.write(`${errorMessage(error)}\n`);
     return 1;
   }
@@ -64,6 +69,7 @@ export async function runAgent(request: RunAgentRequest, deps: RunAgentDeps): Pr
     return await runSession(request, deps);
   } finally {
     restore();
+    rmSync(runDir, { recursive: true, force: true });
   }
 }
 
@@ -89,7 +95,7 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
     session = deps.runner.start({
       label,
       command: [...request.provider.command, ...args],
-      cwd: request.providerRequest.workspaceRoot,
+      cwd: request.providerRequest.runDir,
     });
   } catch (error) {
     deps.stderr.write(`Failed to start ${providerId}: ${errorMessage(error)}\n`);

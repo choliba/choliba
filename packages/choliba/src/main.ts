@@ -2,12 +2,12 @@
 import { spawnSync } from 'node:child_process';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { dirname, isAbsolute, join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import { listAgents, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir, runAgentsCli } from '@choliba/agents';
 import { complete, formatHelp, formatSuggestions } from '@choliba/core/cli';
 import { createSpawnGitRunner } from '@choliba/core/git';
-import { CHOL_AGENTS_DIR, findWorkspaceRoot, loadRepoConfig, locateResource } from '@choliba/core/config';
+import { findWorkspaceRoot, loadRepoConfig, locateResource } from '@choliba/core/config';
 import { projectTemplatesDir, resolveLocations, runProjectsCli } from '@choliba/projects';
 import { findRunnerRoot, runTestsCli } from '@choliba/runner';
 import { createBunProcessSpawner, ProcessRunner } from '@choliba/terminal';
@@ -142,17 +142,11 @@ function workspaceOrNothing(): string | undefined {
   }
 }
 
-/** The agents of the workspace (its `agents/`, or `CHOL_AGENTS_DIR`), which `choliba <agent>` runs. */
+/** The agents of the workspace (`resolveAgentsDir`: `CHOL_AGENTS_DIR`, or the default), which `choliba <agent>` runs. */
 async function agentNames(workspaceRoot: string | undefined): Promise<readonly string[]> {
   if (workspaceRoot === undefined) return [];
-  const configured = loadRepoConfig(workspaceRoot)[CHOL_AGENTS_DIR];
-  const dir =
-    configured === undefined
-      ? join(workspaceRoot, 'agents')
-      : isAbsolute(configured)
-        ? configured
-        : join(workspaceRoot, configured);
   try {
+    const dir = resolveAgentsDir(undefined, loadRepoConfig(workspaceRoot), workspaceRoot);
     return (await listAgents(dir)).map((agent) => agent.name);
   } catch {
     return [];

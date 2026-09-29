@@ -8,6 +8,7 @@ import type { ExecutionMode, PermissionPolicy } from './command.types';
 import { validateAgentYamlV1, validateSystemMd } from './agent-validation';
 import { type AgentPermissions, readAgentPermissions } from './permissions';
 import { checkStep, type StepPhase } from './prepare/actions';
+import { AGENT_FILE, SYSTEM_FILE } from '@choliba/core/config';
 
 export class AgentConfigError extends Error {}
 
@@ -25,6 +26,9 @@ const ALL_MODES: Modes = ['execute', 'plan', 'ask'];
 
 /** The variables that only have a value when the run has a project (and, for the ticket ones, a ticket). */
 const PROJECT_VAR = /\$\{(PROJECT|PROJECT_DIR|APP_DIR|TICKET|TICKET_FILE)\}/;
+
+/** The variables that only have a value when the run has a ticket, which needs `ticket_types`. */
+const TICKET_VAR = /\$\{(TICKET|TICKET_FILE)\}/;
 
 export function isValidAgentName(name: string): boolean {
   return NAME_PATTERN.test(name);
@@ -156,8 +160,8 @@ export async function loadAgent(agentsDir: string, name: string): Promise<AgentD
   }
 
   const dir = join(agentsDir, name);
-  const yamlPath = join(dir, 'agent.yaml');
-  const systemPromptPath = join(dir, 'system.md');
+  const yamlPath = join(dir, AGENT_FILE);
+  const systemPromptPath = join(dir, SYSTEM_FILE);
 
   let yamlText: string;
   try {
@@ -172,6 +176,12 @@ export async function loadAgent(agentsDir: string, name: string): Promise<AgentD
     instructions = readFileSync(systemPromptPath, 'utf8');
   } catch {
     throw new AgentConfigError(`agent "${name}" is missing ${systemPromptPath}`);
+  }
+  if (fields.ticketTypes === undefined && (TICKET_VAR.test(yamlText) || TICKET_VAR.test(instructions))) {
+    throw new AgentConfigError(
+      `agent "${name}" usa \${TICKET} ou \${TICKET_FILE}, mas não declara ticket_types: é por eles que o CLI ` +
+        `resolve o ticket da execução (${yamlPath})`,
+    );
   }
   const validation = await validateSystemMd(instructions);
   if (!validation.valid) {

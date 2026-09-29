@@ -1,7 +1,8 @@
-import { dirname, isAbsolute, join } from 'node:path';
+import { join } from 'node:path';
 
 import type { AgentDefinition, AgentStep } from './agent.types';
-import { type AgentPermissions, mapPermissions, permissionTexts, withoutTrailingSlash } from './permissions';
+import { mapPermissions, permissionTexts } from './permissions';
+import { AGENT_FILE } from '@choliba/core/config';
 
 const VAR_PATTERN = /\$\{([A-Z_][A-Z0-9_]*)\}/g;
 /** Same pattern without `g`: `test` on a global regex keeps `lastIndex` between calls. */
@@ -88,7 +89,7 @@ export function withExpandedInstructions(
     return expanded.text;
   });
   if (yamlMissing.size > 0) {
-    throw missingError(join(agent.dir, 'agent.yaml'), [...yamlMissing], vars);
+    throw missingError(join(agent.dir, AGENT_FILE), [...yamlMissing], vars);
   }
   return {
     ...agent,
@@ -97,26 +98,4 @@ export function withExpandedInstructions(
     ...(beforeExecute === undefined ? {} : { beforeExecute }),
     ...(afterExecute === undefined ? {} : { afterExecute }),
   };
-}
-
-/** The directory a declared path lives under: the part before the first glob segment, or its folder. */
-export function pathBase(path: string): string {
-  const segments = path.split('/');
-  const globAt = segments.findIndex((segment) => /[*?[\]]/.test(segment));
-  if (globAt !== -1) {
-    return segments.slice(0, globAt).join('/') || '/';
-  }
-  return path.endsWith('/') ? path.slice(0, -1) || '/' : dirname(path);
-}
-
-/**
- * The absolute directories the agent's `permissions` let it read, write or run commands in. A provider
- * only reaches a directory outside the workspace when it is granted (`--add-dir`), so these go there.
- */
-export function permissionDirs(permissions: AgentPermissions): readonly string[] {
-  const paths = [...permissions.allowRead, ...permissions.allowWrite].filter((path) => isAbsolute(path));
-  const runDirs = permissions.allowExecute
-    .map((rule) => withoutTrailingSlash(rule.dir))
-    .filter((dir) => isAbsolute(dir));
-  return [...new Set([...paths.map(pathBase), ...runDirs])];
 }

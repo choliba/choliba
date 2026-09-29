@@ -28,7 +28,7 @@ mcps:
 permissions:
   allow:
     read:
-      - '${SKILLS_DIR}/playwright-cli/'
+      - '${CHOL_SKILLS_DIR}/playwright-cli/'
       - .cache/playwright-cli/
       - '${PROJECT_DIR}/config.json'
       - '${PROJECT_DIR}/.env.json'
@@ -40,15 +40,15 @@ permissions:
         - bunx choliba playwright-cli
         - bunx choliba projects list-projects
   deny:
-    read: [packages/, '${AGENTS_DIR}/', apps/, scripts/, jest/]
+    read: [packages/, '${CHOL_AGENTS_DIR}/', apps/, scripts/, jest/]
     write:
       - packages/
-      - '${AGENTS_DIR}/'
+      - '${CHOL_AGENTS_DIR}/'
       - apps/
       - scripts/
       - jest/
-      - '${SKILLS_DIR}/'
-      - '${MCPS_DIR}/'
+      - '${CHOL_SKILLS_DIR}/'
+      - '${CHOL_MCPS_DIR}/'
       - '${PROJECT_DIR}/config.json'
       - '${PROJECT_DIR}/.env.json'
       - '${PROJECT_DIR}/tests/'
@@ -61,4 +61,4 @@ permissions:
         - bunx choliba projects create-project
         - git
 
-ticket_types: [epic, story, bug, improvement]
+ticket_types: [story, bug, improvement]

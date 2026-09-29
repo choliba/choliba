@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
 
-import { GLOBAL_DIR, PROJECTS_DIR, PROJECTS_SUBDIR, TICKET_RUNS } from '@choliba/core/config';
+import { CHOL_GLOBAL_DIR, PROJECTS_DIR, PROJECTS_SUBDIR, TICKET_RUNS } from '@choliba/core/config';
 
 import { applyLocations, LocationsError, resolveLocations, resolveProjectsDir } from '../index';
 
@@ -18,7 +18,7 @@ function makeTmpDir(prefix: string): { path: string; cleanup: () => void } {
 }
 
 describe('resolveProjectsDir', () => {
-  it('defaults to {GLOBAL_DIR}/projects', () => {
+  it('defaults to {CHOL_GLOBAL_DIR}/projects', () => {
     expect(resolveProjectsDir('/tmp/global')).toBe(join('/tmp/global', PROJECTS_SUBDIR));
   });
 
@@ -28,15 +28,15 @@ describe('resolveProjectsDir', () => {
 });
 
 describe('resolveLocations', () => {
-  it('derives PROJECTS_DIR when only GLOBAL_DIR is set', () => {
+  it('derives PROJECTS_DIR when only CHOL_GLOBAL_DIR is set', () => {
     const tmp = makeTmpDir('playwright-config');
     try {
       const configPath = join(tmp.path, '.env');
       const readFile = (path: string): string | undefined =>
-        path === configPath ? 'GLOBAL_DIR=/tmp/global\n' : undefined;
+        path === configPath ? 'CHOL_GLOBAL_DIR=/tmp/global\n' : undefined;
 
       expect(resolveLocations(tmp.path, {}, readFile)).toEqual({
-        GLOBAL_DIR: '/tmp/global',
+        CHOL_GLOBAL_DIR: '/tmp/global',
         PROJECTS_DIR: join('/tmp/global', PROJECTS_SUBDIR),
       });
     } finally {
@@ -49,10 +49,10 @@ describe('resolveLocations', () => {
     try {
       const configPath = join(tmp.path, '.env');
       const readFile = (path: string): string | undefined =>
-        path === configPath ? 'GLOBAL_DIR=/tmp/global\nPROJECTS_DIR=/tmp/projetos\n' : undefined;
+        path === configPath ? 'CHOL_GLOBAL_DIR=/tmp/global\nPROJECTS_DIR=/tmp/projetos\n' : undefined;
 
       expect(resolveLocations(tmp.path, {}, readFile)).toEqual({
-        GLOBAL_DIR: '/tmp/global',
+        CHOL_GLOBAL_DIR: '/tmp/global',
         PROJECTS_DIR: '/tmp/projetos',
       });
     } finally {
@@ -65,10 +65,10 @@ describe('resolveLocations', () => {
     try {
       const configPath = join(tmp.path, '.env');
       const readFile = (path: string): string | undefined =>
-        path === configPath ? 'GLOBAL_DIR=/tmp/global\nTICKET_RUNS=/tmp/runs\n' : undefined;
+        path === configPath ? 'CHOL_GLOBAL_DIR=/tmp/global\nTICKET_RUNS=/tmp/runs\n' : undefined;
 
       expect(resolveLocations(tmp.path, {}, readFile)).toEqual({
-        GLOBAL_DIR: '/tmp/global',
+        CHOL_GLOBAL_DIR: '/tmp/global',
         PROJECTS_DIR: join('/tmp/global', PROJECTS_SUBDIR),
         TICKET_RUNS: '/tmp/runs',
       });
@@ -82,10 +82,12 @@ describe('resolveLocations', () => {
     try {
       const configPath = join(tmp.path, '.env');
       const readFile = (path: string): string | undefined =>
-        path === configPath ? 'GLOBAL_DIR=/file\nPROJECTS_DIR=/file-projetos\n' : undefined;
+        path === configPath ? 'CHOL_GLOBAL_DIR=/file\nPROJECTS_DIR=/file-projetos\n' : undefined;
 
-      expect(resolveLocations(tmp.path, { GLOBAL_DIR: '/shell', PROJECTS_DIR: '/shell-projetos' }, readFile)).toEqual({
-        GLOBAL_DIR: '/shell',
+      expect(
+        resolveLocations(tmp.path, { CHOL_GLOBAL_DIR: '/shell', PROJECTS_DIR: '/shell-projetos' }, readFile),
+      ).toEqual({
+        CHOL_GLOBAL_DIR: '/shell',
         PROJECTS_DIR: '/shell-projetos',
       });
     } finally {
@@ -93,52 +95,52 @@ describe('resolveLocations', () => {
     }
   });
 
-  it('erra quando GLOBAL_DIR falta', () => {
+  it('erra quando CHOL_GLOBAL_DIR falta', () => {
     expect(() => resolveLocations('/missing', {}, () => undefined)).toThrow(LocationsError);
   });
 
-  it('erra quando GLOBAL_DIR está vazia', () => {
-    expect(() => resolveLocations('/missing', { GLOBAL_DIR: '  ' }, () => undefined)).toThrow(LocationsError);
+  it('erra quando CHOL_GLOBAL_DIR está vazia', () => {
+    expect(() => resolveLocations('/missing', { CHOL_GLOBAL_DIR: '  ' }, () => undefined)).toThrow(LocationsError);
   });
 
   it('usa process.env por padrão como fonte de configuração', () => {
-    const previous = process.env[GLOBAL_DIR];
-    process.env[GLOBAL_DIR] = '/from-process-env';
+    const previous = process.env[CHOL_GLOBAL_DIR];
+    process.env[CHOL_GLOBAL_DIR] = '/from-process-env';
     try {
-      expect(resolveLocations('/missing', process.env, () => undefined).GLOBAL_DIR).toBe('/from-process-env');
+      expect(resolveLocations('/missing', process.env, () => undefined).CHOL_GLOBAL_DIR).toBe('/from-process-env');
     } finally {
-      process.env[GLOBAL_DIR] = previous;
+      process.env[CHOL_GLOBAL_DIR] = previous;
     }
   });
 
   it('defaults to process.env when processConfig is omitted', () => {
-    const previous = process.env[GLOBAL_DIR];
-    process.env[GLOBAL_DIR] = '/default-process-env';
+    const previous = process.env[CHOL_GLOBAL_DIR];
+    process.env[CHOL_GLOBAL_DIR] = '/default-process-env';
     try {
-      expect(resolveLocations('/missing', undefined, () => undefined).GLOBAL_DIR).toBe('/default-process-env');
+      expect(resolveLocations('/missing', undefined, () => undefined).CHOL_GLOBAL_DIR).toBe('/default-process-env');
     } finally {
-      process.env[GLOBAL_DIR] = previous;
+      process.env[CHOL_GLOBAL_DIR] = previous;
     }
   });
 });
 
 describe('applyLocations', () => {
-  it('grava GLOBAL_DIR, PROJECTS_DIR e TICKET_RUNS em process.env', () => {
-    const previousGlobal = process.env[GLOBAL_DIR];
+  it('grava CHOL_GLOBAL_DIR, PROJECTS_DIR e TICKET_RUNS em process.env', () => {
+    const previousGlobal = process.env[CHOL_GLOBAL_DIR];
     const previousProjetos = process.env[PROJECTS_DIR];
     const previousRuns = process.env[TICKET_RUNS];
 
     applyLocations({
-      GLOBAL_DIR: '/global',
+      CHOL_GLOBAL_DIR: '/global',
       PROJECTS_DIR: '/projetos',
       TICKET_RUNS: '/runs',
     });
 
-    expect(process.env[GLOBAL_DIR]).toBe('/global');
+    expect(process.env[CHOL_GLOBAL_DIR]).toBe('/global');
     expect(process.env[PROJECTS_DIR]).toBe('/projetos');
     expect(process.env[TICKET_RUNS]).toBe('/runs');
 
-    process.env[GLOBAL_DIR] = previousGlobal;
+    process.env[CHOL_GLOBAL_DIR] = previousGlobal;
     process.env[PROJECTS_DIR] = previousProjetos;
     process.env[TICKET_RUNS] = previousRuns;
   });
@@ -146,7 +148,7 @@ describe('applyLocations', () => {
   it('remove TICKET_RUNS de process.env quando ausente na config', () => {
     process.env[TICKET_RUNS] = '/old';
     applyLocations({
-      GLOBAL_DIR: '/global',
+      CHOL_GLOBAL_DIR: '/global',
       PROJECTS_DIR: '/projetos',
     });
     expect(process.env[TICKET_RUNS]).toBeUndefined();

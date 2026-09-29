@@ -1,11 +1,17 @@
 /** What a CLI answers to `__complete`: a list of words, or "let the shell complete file names". */
 export type Suggestions = { readonly kind: 'values'; readonly values: readonly string[] } | { readonly kind: 'files' };
 
+/** The value each flag typed so far on the command line got, by the flag's long name (the last one wins). */
+export type TypedFlags = ReadonlyMap<string, string>;
+
 export interface FlagValueSpec {
   /** Shown in `--help` after the flag, e.g. `string` in `--mode string`. */
   readonly name: string;
-  /** Computed on every completion, so the values always reflect the repository as it is now. */
-  readonly suggest?: () => Suggestions;
+  /**
+   * Computed on every completion, so the values always reflect the repository as it is now. Gets the
+   * values of the flags already typed, so one flag can depend on another (`--ticket` on `--project`).
+   */
+  readonly suggest?: (typed: TypedFlags) => Suggestions;
 }
 
 export interface FlagChoice {

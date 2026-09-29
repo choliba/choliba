@@ -1,5 +1,3 @@
-import { isAbsolute } from 'node:path';
-
 import type { PermissionPolicy } from '../../command.types';
 import type { McpServer } from '../../mcps';
 import type { AgentPermissions, ExecuteRule } from '../../permissions';
@@ -8,21 +6,23 @@ import { allowedCommands, blocksEveryCommand, pathGlob, withoutTrailingSlash } f
 /** The tools that read files, which the session gets once the agent may read somewhere. */
 const READ_TOOLS: readonly string[] = ['Read', 'Grep', 'Glob'];
 
+/** The tools that write files, which the session gets once the agent may write somewhere. */
+const WRITE_TOOLS: readonly string[] = ['Edit', 'Write'];
+
 export interface ClaudePermissionArgs {
   readonly permissionMode: string;
-  /** `--tools`: the tools the session has at all; `undefined` leaves Claude's default set. */
-  readonly tools: readonly string[] | undefined;
+  /** `--tools`: the only built-in tools the session has; empty when the agent may do nothing itself. */
+  readonly tools: readonly string[];
   readonly allowedTools: readonly string[];
   readonly disallowedTools: readonly string[];
 }
 
 /**
- * A declared path in Claude Code's rule syntax, where `/x` means "relative to the project root" and a
- * filesystem-absolute path needs two slashes (`//home/...`): so an absolute path gets one more `/`.
+ * A declared path (always absolute here, see `absolutePermissions`) in Claude Code's rule syntax, where
+ * `/x` means "relative to the project root" and a filesystem-absolute path needs two slashes.
  */
 export function claudePath(path: string): string {
-  const glob = pathGlob(path);
-  return isAbsolute(glob) ? `/${glob}` : glob;
+  return `/${pathGlob(path)}`;
 }
 
 function writeRules(paths: readonly string[]): string[] {
@@ -48,43 +48,40 @@ function denyRunRules(rule: ExecuteRule): readonly string[] {
 }
 
 /**
- * Translates what agent.yaml declares (`permissions` and the MCP servers in `mcps`) into Claude Code's
- * permission flags — nothing is hardcoded here, so an agent gets exactly what it declares. The
- * permission mode is always explicit (this session's own claude defaults to a permissive "auto" mode):
- * read-only is `dontAsk` (anything not allowed is denied without prompting, which a headless run could
- * never answer); edits is `dontAsk` too once the agent declares an allowlist, so writes outside it are
- * really blocked, and `acceptEdits` otherwise. Deny rules always apply.
+ * Translates what agent.yaml declares (`permissions`, already absolute, and the MCP servers in `mcps`)
+ * into Claude Code's permission flags — nothing is hardcoded here, so an agent gets exactly what it
+ * declares. The mode is always `dontAsk`: anything not allowed is denied without prompting (a headless
+ * run could never answer). The session only has the tools the permissions need, none when they allow
+ * nothing; and since it runs in an empty folder (`ProviderRequest.runDir`), the only files it may read
+ * or write are the ones the `Read`/`Edit`/`Write` rules name. Deny rules always apply.
  */
 export function claudePermissionArgs(
   permissions: AgentPermissions,
   policy: PermissionPolicy,
   mcpServers: readonly McpServer[],
 ): ClaudePermissionArgs {
-  const readTools = permissions.allowRead.length > 0 ? READ_TOOLS : [];
+  const writes = policy === 'read-only' ? [] : permissions.allowWrite;
   const commands = allowedCommands(permissions);
-  // The read tools are never allowed bare (that would be anywhere): the session has them (`--tools`),
-  // and the `Read(<path>)` rules, which Claude applies to Grep and Glob too, say where.
-  const allowedTools = [
-    ...permissions.allowRead.map((path) => `Read(${claudePath(path)})`),
-    ...(policy === 'read-only' ? [] : writeRules(permissions.allowWrite)),
-    ...commands.map(commandRule),
-    ...mcpServers.flatMap(mcpRules),
+  // The read tools are never allowed bare (that would be anywhere): the session has them, and the
+  // `Read(<path>)` rules, which Claude applies to Grep and Glob too, say where.
+  const tools = [
+    ...(permissions.allowRead.length > 0 ? READ_TOOLS : []),
+    ...(writes.length > 0 ? WRITE_TOOLS : []),
+    ...(commands.length > 0 ? ['Bash'] : []),
   ];
-  const disallowedTools = [
-    ...permissions.denyRead.map((path) => `Read(${claudePath(path)})`),
-    ...writeRules(permissions.denyWrite),
-    ...permissions.denyExecute.flatMap(denyRunRules),
-  ];
-
-  if (policy === 'read-only') {
-    // Only the read tools (plus Bash when commands are allowed) exist in the session.
-    const tools = [...readTools, ...(commands.length > 0 ? ['Bash'] : [])];
-    return { permissionMode: 'dontAsk', tools: tools.length > 0 ? tools : undefined, allowedTools, disallowedTools };
-  }
   return {
-    permissionMode: allowedTools.length > 0 ? 'dontAsk' : 'acceptEdits',
-    tools: undefined,
-    allowedTools,
-    disallowedTools,
+    permissionMode: 'dontAsk',
+    tools,
+    allowedTools: [
+      ...permissions.allowRead.map((path) => `Read(${claudePath(path)})`),
+      ...writeRules(writes),
+      ...commands.map(commandRule),
+      ...mcpServers.flatMap(mcpRules),
+    ],
+    disallowedTools: [
+      ...permissions.denyRead.map((path) => `Read(${claudePath(path)})`),
+      ...writeRules(permissions.denyWrite),
+      ...permissions.denyExecute.flatMap(denyRunRules),
+    ],
   };
 }

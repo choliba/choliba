@@ -4,9 +4,10 @@ import { join } from 'node:path';
 
 import type { GitRunResult, GitRunner } from './git-run';
 import { createSpawnGitRunner } from './git-run';
+import { CACHE_DIR } from '../config/layout';
 
 export const DEFAULT_DIFF_BASE = 'develop';
-export const DEFAULT_DIFF_EXCLUDES = ['trash', 'plans', '.cache'] as const;
+export const DEFAULT_DIFF_EXCLUDES = ['trash', 'plans', CACHE_DIR] as const;
 
 function git(
   runner: GitRunner,

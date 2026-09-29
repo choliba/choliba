@@ -1,6 +1,9 @@
 import { flattenResults, isRealFailure, type FlatTestResult } from './playwright-results';
 
-/** What a ticket's tests must show: `red` (all fail, on the behavior) or `green` (all pass). */
+/**
+ * What a ticket's tests must show: `red` (something to implement: at least one fails on the behavior, and the
+ * ones that pass are criteria the application already meets) or `green` (all pass).
+ */
 export type Expectation = 'red' | 'green';
 
 export const EXPECTATIONS: readonly Expectation[] = ['red', 'green'];
@@ -63,8 +66,13 @@ export function criterionRuns(ticket: TicketCriteria, report: PlaywrightReport):
   }));
 }
 
+function passed(test: CriterionTest): boolean {
+  return PASSED.includes(test.status);
+}
+
+/** A test that passes is no problem in red: its criterion is already met, and stays as a regression test. */
 function redProblem(test: CriterionTest): string | undefined {
-  if (PASSED.includes(test.status)) return `já passa (o comportamento já existe?): ${test.title}`;
+  if (passed(test)) return undefined;
   if (!isRealFailure(test.status)) return `teste pulado: ${test.title}`;
   if (test.error !== undefined && BROKEN_TEST.test(test.error)) {
     return `o teste quebra no próprio código, não no comportamento: ${test.error}`;
@@ -88,9 +96,15 @@ function runProblems(expectation: Expectation, run: CriterionRun): readonly stri
   });
 }
 
+/** A criterion is met when it has tests and all of them pass; otherwise it is still to implement. */
+export function isMet(run: CriterionRun): boolean {
+  return run.tests.length > 0 && run.tests.every(passed);
+}
+
 /**
- * Why the ticket's tests do not show `expectation`; empty when they do. Red: every criterion has a
- * test and every one of them fails on the behavior. Green: every criterion has a test and all pass.
+ * Why the ticket's tests do not show `expectation`; empty when they do. Red: every criterion has a test, none
+ * is broken or skipped, and at least one fails on the behavior (the ones that pass are criteria already met).
+ * Green: every criterion has a test and all pass.
  */
 export function verdictProblems(
   expectation: Expectation,
@@ -100,7 +114,12 @@ export function verdictProblems(
   const loadErrors = (report.errors ?? []).map((error) => `o spec não carregou: ${error.message ?? ''}`);
   if (loadErrors.length > 0) return loadErrors;
   if ((ticket.criterios ?? []).length === 0) return ['o ticket não tem critérios'];
-  return criterionRuns(ticket, report).flatMap((run) => runProblems(expectation, run));
+  const runs = criterionRuns(ticket, report);
+  const problems = runs.flatMap((run) => runProblems(expectation, run));
+  if (expectation === 'red' && runs.every(isMet)) {
+    return [...problems, 'todos os critérios já passam: nada a implementar (é um ticket de regressão?)'];
+  }
+  return problems;
 }
 
 function formatTest(test: CriterionTest): readonly string[] {
@@ -111,12 +130,26 @@ function formatTest(test: CriterionTest): readonly string[] {
   return [line, '', '  ```', ...error, '  ```', '', ...trace];
 }
 
-/** The tests of each criterion and how they failed, in Markdown: what the green phase implements from. */
+/** One line naming the criteria still to implement and the ones already met, e.g. for the red gate's output. */
+export function formatCriteriaSummary(runs: readonly CriterionRun[]): string {
+  const pending = runs.filter((run) => !isMet(run)).map((run) => run.id);
+  const met = runs.filter(isMet).map((run) => run.id);
+  const list = (ids: readonly string[]): string => (ids.length === 0 ? 'nenhum' : ids.join(', '));
+  return `A implementar: ${list(pending)}. Já atendidos (regressão): ${list(met)}.`;
+}
+
+function formatSection(run: CriterionRun): readonly string[] {
+  const title = isMet(run) ? `## ${run.id} — já atendido (regressão)` : `## ${run.id}`;
+  return [title, '', ...(run.tests.length === 0 ? ['- nenhum teste', ''] : run.tests.flatMap(formatTest))];
+}
+
+/**
+ * The tests of each criterion and how they failed, in Markdown: what the implementer works from. The criteria
+ * still to implement come first; the ones already met come last, marked as such, since they are no failure.
+ */
 export function formatFailures(ticket: string, runs: readonly CriterionRun[]): string {
-  const sections = runs.flatMap((run) => [
-    `## ${run.id}`,
-    '',
-    ...(run.tests.length === 0 ? ['- nenhum teste', ''] : run.tests.flatMap(formatTest)),
-  ]);
-  return [`# Falhas do ticket ${ticket}`, '', ...sections].join('\n');
+  const ordered = [...runs.filter((run) => !isMet(run)), ...runs.filter(isMet)];
+  return [`# Falhas do ticket ${ticket}`, '', formatCriteriaSummary(runs), '', ...ordered.flatMap(formatSection)].join(
+    '\n',
+  );
 }

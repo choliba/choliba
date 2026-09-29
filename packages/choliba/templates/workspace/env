@@ -1,22 +1,25 @@
 # Configuração do choliba nesta pasta de trabalho. Os valores do shell ganham destes.
 
-# Onde ficam os agentes, as skills e os MCPs (relativos a esta pasta).
-CHOL_AGENTS_DIR=app/agents
-CHOL_SKILLS_DIR=app/.agents/skills
-CHOL_MCPS_DIR=app/.agents/mcps
+# Onde ficam os agentes, as skills e os MCPs, relativos a esta pasta. Sem estas linhas, valem os padrões
+# app/agents, app/.agents/skills e app/.agents/mcps; defina só para usar outra pasta.
+# CHOL_AGENTS_DIR=app/agents
+# CHOL_SKILLS_DIR=app/.agents/skills
+# CHOL_MCPS_DIR=app/.agents/mcps
 
-# Os projetos de teste (PROJECTS_DIR) e os artefatos das execuções (GLOBAL_DIR). O `choliba setup`
+# Os projetos de teste (PROJECTS_DIR) e os artefatos das execuções (CHOL_GLOBAL_DIR). O `choliba setup`
 # preenche os dois no .env com caminhos absolutos: projects e .cache/choliba desta pasta.
-GLOBAL_DIR=
+CHOL_GLOBAL_DIR=
 PROJECTS_DIR=
 # TICKET_RUNS=
 
-# Provider padrão dos agentes: auto, claude ou cursor (--provider na linha de comando ganha deste).
-CHOL_AGENTS_PROVIDER=auto
+# Opcional: provider padrão dos agentes, auto, claude ou cursor (padrão: auto; --provider na linha de comando
+# ganha deste).
+# CHOL_AGENTS_PROVIDER=auto
 
-# Onde o `choliba playwright-cli` grava snapshots e screenshots que os agentes leem.
-PLAYWRIGHT_MCP_OUTPUT_DIR=.cache/playwright-cli
+# Opcional: onde o `choliba playwright-cli` grava snapshots e screenshots que os agentes leem (padrão:
+# .cache/playwright-cli).
+# PLAYWRIGHT_MCP_OUTPUT_DIR=.cache/playwright-cli
 
 # Variáveis usadas por ${NOME} nos seus app/.agents/mcps/*.json, por exemplo:
 # MCP_APP_DIR=
-# LOG_DIR=
+# MCP_APP_LOG_DIR=

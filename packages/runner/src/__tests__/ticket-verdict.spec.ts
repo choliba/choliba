@@ -1,4 +1,10 @@
-import { criterionRuns, formatFailures, verdictProblems, type PlaywrightReport } from '../ticket-verdict';
+import {
+  criterionRuns,
+  formatCriteriaSummary,
+  formatFailures,
+  verdictProblems,
+  type PlaywrightReport,
+} from '../ticket-verdict';
 
 function test(title: string, status: string, message?: string) {
   return {
@@ -56,7 +62,7 @@ describe('verdictProblems', () => {
     expect(verdictProblems('red', TICKET, red)).toEqual([]);
   });
 
-  it('refuses red for a criterion without a test, one that already passes, one skipped and one broken by its own code', () => {
+  it('refuses red for a criterion without a test, one skipped and one broken by its own code', () => {
     const ticket = { criterios: [{ id: 'CA-01' }, { id: 'CA-02' }, { id: 'CA-03' }, { id: 'CA-04' }] };
     const red = report([
       test('CA-02: b', 'expected'),
@@ -66,10 +72,36 @@ describe('verdictProblems', () => {
 
     expect(verdictProblems('red', ticket, red)).toEqual([
       'CA-01: nenhum teste (o título precisa começar com "CA-01:")',
-      'CA-02: já passa (o comportamento já existe?): demo-2.spec.ts › CA-02: b',
       'CA-03: teste pulado: demo-2.spec.ts › CA-03: c',
       'CA-04: o teste quebra no próprio código, não no comportamento: ReferenceError: page2 is not defined',
     ]);
+  });
+
+  it('accepts red with a criterion that already passes: it is met, and stays as a regression test', () => {
+    const partial = report([test('CA-01: a', 'expected'), test('CA-02: b', 'unexpected', 'toBeVisible')]);
+
+    expect(verdictProblems('red', TICKET, partial)).toEqual([]);
+  });
+
+  it('refuses red when every criterion already passes: there is nothing to implement', () => {
+    const allMet = report([test('CA-01: a', 'expected'), test('CA-02: b', 'flaky')]);
+
+    expect(verdictProblems('red', TICKET, allMet)).toEqual([
+      'todos os critérios já passam: nada a implementar (é um ticket de regressão?)',
+    ]);
+  });
+
+  it('counts a criterion with a passing and a failing test as still to implement', () => {
+    const mixed = report([
+      test('CA-01: a', 'expected'),
+      test('CA-01: a2', 'unexpected', 'Timeout'),
+      test('CA-02: b', 'expected'),
+    ]);
+
+    expect(verdictProblems('red', TICKET, mixed)).toEqual([]);
+    expect(formatCriteriaSummary(criterionRuns(TICKET, mixed))).toBe(
+      'A implementar: CA-01. Já atendidos (regressão): CA-02.',
+    );
   });
 
   it('refuses any verdict when the spec does not load, and a ticket without criteria', () => {
@@ -110,6 +142,8 @@ describe('formatFailures', () => {
       [
         '# Falhas do ticket demo-2',
         '',
+        'A implementar: CA-01. Já atendidos (regressão): CA-02.',
+        '',
         '## CA-01',
         '',
         '- demo-2.spec.ts › CA-01: a (unexpected)',
@@ -118,7 +152,7 @@ describe('formatFailures', () => {
         '  Timeout 5000ms',
         '  ```',
         '',
-        '## CA-02',
+        '## CA-02 — já atendido (regressão)',
         '',
         '- demo-2.spec.ts › CA-02: b (expected)',
         '',
@@ -151,7 +185,11 @@ describe('formatFailures', () => {
     expect(formatFailures('demo-2', runs)).toContain('  trace: /r/trace.zip\n');
   });
 
-  it('says when a criterion has no test', () => {
+  it('says when a criterion has no test, and puts the criteria already met last', () => {
     expect(formatFailures('demo-2', [{ id: 'CA-01', tests: [] }])).toContain('- nenhum teste');
+    const runs = criterionRuns(TICKET, report([test('CA-01: a', 'expected'), test('CA-02: b', 'unexpected', 'x')]));
+    const text = formatFailures('demo-2', runs);
+    expect(text.indexOf('## CA-02')).toBeLessThan(text.indexOf('## CA-01 — já atendido (regressão)'));
+    expect(formatCriteriaSummary([])).toBe('A implementar: nenhum. Já atendidos (regressão): nenhum.');
   });
 });

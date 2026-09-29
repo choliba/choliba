@@ -29,6 +29,7 @@ import {
   EXPECTATIONS,
   criterionRuns,
   formatFailures,
+  formatCriteriaSummary,
   verdictProblems,
   type Expectation,
   type PlaywrightReport,
@@ -266,7 +267,12 @@ function checkGate(gate: TicketGate, ticketFile: string, reportFolder: string, t
     ...verdictProblems(gate.expectation, criteria, report),
     ...(gate.expectation === 'green' && status !== 0 ? [`o Playwright terminou com ${String(status)}`] : []),
   ];
-  if (problems.length === 0) return 0;
+  if (problems.length === 0) {
+    if (gate.expectation === 'red') {
+      writeStdout(`${ticket} está red. ${formatCriteriaSummary(criterionRuns(criteria, report))}\n`);
+    }
+    return 0;
+  }
   writeStderr(`${ticket} não está ${gate.expectation}:\n${problems.map((problem) => `  - ${problem}`).join('\n')}\n`);
   return 1;
 }

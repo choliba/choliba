@@ -1,7 +1,29 @@
 import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, sep } from 'node:path';
 
-import { findResource, findWorkspaceRoot } from '@choliba/core/config';
+import {
+  APP_DIR,
+  ARTIFACTS_DIR,
+  BUNFIG_FILE,
+  DEFAULT_AGENTS_DIR,
+  DEFAULT_MCPS_DIR,
+  DEFAULT_SKILLS_DIR,
+  EDITORCONFIG_FILE,
+  ENV_EXAMPLE_FILE,
+  ENV_FILE,
+  ESLINT_CONFIG_FILE,
+  GITIGNORE_FILE,
+  PACKAGE_FILE,
+  PRETTIERIGNORE_FILE,
+  PRETTIERRC_FILE,
+  PROJECTS_SUBDIR,
+  PROJECT_CONFIG_FILE,
+  PROJECT_ENV_FILE,
+  TESTS_SUBDIR,
+  TICKETS_SUBDIR,
+  findResource,
+  findWorkspaceRoot,
+} from '@choliba/core/config';
 import { createProject, projectTemplatesDir } from '@choliba/projects';
 
 import { COMPLETION_BASH } from './completion';
@@ -39,30 +61,25 @@ export function exampleTemplatesDir(): string {
 }
 
 /**
- * `app/` holds the applications being tested and choliba's agents (`app/agents`, `app/.agents/skills`,
- * `app/.agents/mcps`); `projects/`, beside it, holds the test projects.
+ * `app/` (`APP_DIR`) holds the applications being tested and choliba's agents (`app/agents`, `app/.agents/skills`,
+ * `app/.agents/mcps`); `projects/`, beside it, holds the test projects. The names come from `@choliba/core/config`.
  */
-export const APP_DIR = 'app';
-const PROJECTS_SUBDIR = 'projects';
 
 /** The folders a workspace has, each kept by a `.gitkeep` while empty. */
-const WORKSPACE_DIRS = [
-  join(APP_DIR, 'agents'),
-  join(APP_DIR, '.agents', 'skills'),
-  join(APP_DIR, '.agents', 'mcps'),
-  PROJECTS_SUBDIR,
-];
+const WORKSPACE_DIRS = [DEFAULT_AGENTS_DIR, DEFAULT_SKILLS_DIR, DEFAULT_MCPS_DIR, PROJECTS_SUBDIR];
 
 /** Template file → workspace file (packing drops `.gitignore`, `bunfig.toml` and dot files, hence other names). */
 const WORKSPACE_FILES: readonly (readonly [string, string])[] = [
-  ['env', '.env.example'],
-  ['gitignore', '.gitignore'],
+  ['env', ENV_EXAMPLE_FILE],
+  ['gitignore', GITIGNORE_FILE],
   // `bun chol:…` without the "$ command" echo and the "script exited" lines, as in the choliba repository.
-  ['bunfig', 'bunfig.toml'],
-  ['prettierrc', '.prettierrc.json'],
-  ['prettierignore', '.prettierignore'],
+  ['bunfig', BUNFIG_FILE],
+  // Width and indentation live here; Prettier reads them, so .prettierrc.json does not repeat them.
+  ['editorconfig', EDITORCONFIG_FILE],
+  ['prettierrc', PRETTIERRC_FILE],
+  ['prettierignore', PRETTIERIGNORE_FILE],
   // .mjs: the workspace package.json has no "type", and the config is an ES module.
-  ['eslint-config', 'eslint.config.mjs'],
+  ['eslint-config', ESLINT_CONFIG_FILE],
 ];
 
 /**
@@ -71,7 +88,7 @@ const WORKSPACE_FILES: readonly (readonly [string, string])[] = [
  */
 export function initialEnv(example: string, root: string): string {
   return example
-    .replace(/^GLOBAL_DIR=.*$/m, `GLOBAL_DIR=${join(root, '.cache', 'choliba')}`)
+    .replace(/^CHOL_GLOBAL_DIR=.*$/m, `CHOL_GLOBAL_DIR=${join(root, ARTIFACTS_DIR)}`)
     .replace(/^PROJECTS_DIR=.*$/m, `PROJECTS_DIR=${join(root, PROJECTS_SUBDIR)}`);
 }
 
@@ -109,7 +126,7 @@ export function createExample(root: string, templatesDir: string = exampleTempla
   });
   const project = join(projectsDir, EXAMPLE);
   // Only Chromium, the browser the next steps install.
-  const configFile = join(project, 'config.json');
+  const configFile = join(project, PROJECT_CONFIG_FILE);
   const config = JSON.parse(readFileSync(configFile, 'utf8')) as Record<string, unknown>;
   writeFileSync(
     configFile,
@@ -123,9 +140,9 @@ export function createExample(root: string, templatesDir: string = exampleTempla
     )}\n`,
   );
   // The page has no login: the environment needs no credentials.
-  writeFileSync(join(project, '.env.json'), `${JSON.stringify({ development: {} }, null, 2)}\n`);
-  copyFileSync(join(templatesDir, 'spec'), join(project, 'tests', `${EXAMPLE}.spec.ts`));
-  copyFileSync(join(templatesDir, 'ticket.json'), join(project, 'tickets', '1.json'));
+  writeFileSync(join(project, PROJECT_ENV_FILE), `${JSON.stringify({ development: {} }, null, 2)}\n`);
+  copyFileSync(join(templatesDir, 'spec'), join(project, TESTS_SUBDIR, `${EXAMPLE}.spec.ts`));
+  copyFileSync(join(templatesDir, 'ticket.json'), join(project, TICKETS_SUBDIR, '1.json'));
   // Nothing else starts the application: the project's hooks bring it up and down around each run.
   for (const hook of ['global-setup', 'global-teardown']) {
     const content = readFileSync(join(templatesDir, hook), 'utf8').replace('{{PORT_EXEMPLE}}', portExemple);
@@ -198,9 +215,9 @@ export function scaffoldWorkspace(root: string, templatesDir: string = workspace
       created.push(file);
     }
   }
-  if (!existsSync(join(root, '.env'))) {
-    writeFileSync(join(root, '.env'), initialEnv(readFileSync(join(templatesDir, 'env'), 'utf8'), root));
-    created.push('.env');
+  if (!existsSync(join(root, ENV_FILE))) {
+    writeFileSync(join(root, ENV_FILE), initialEnv(readFileSync(join(templatesDir, 'env'), 'utf8'), root));
+    created.push(ENV_FILE);
   }
   return created;
 }
@@ -229,7 +246,7 @@ export const WORKSPACE_SCRIPTS: Readonly<Record<string, string>> = {
 
 /** The workspace package.json as an object; undefined when missing, unreadable or not an object. */
 function readPackage(root: string): Record<string, unknown> | undefined {
-  const file = join(root, 'package.json');
+  const file = join(root, PACKAGE_FILE);
   if (!existsSync(file)) return undefined;
   try {
     const pkg: unknown = JSON.parse(readFileSync(file, 'utf8'));
@@ -240,7 +257,7 @@ function readPackage(root: string): Record<string, unknown> | undefined {
 }
 
 function writePackage(root: string, pkg: Readonly<Record<string, unknown>>): void {
-  writeFileSync(join(root, 'package.json'), `${JSON.stringify(pkg, null, 2)}\n`);
+  writeFileSync(join(root, PACKAGE_FILE), `${JSON.stringify(pkg, null, 2)}\n`);
 }
 
 /**
