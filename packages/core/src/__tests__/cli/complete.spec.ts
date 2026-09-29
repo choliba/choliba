@@ -45,6 +45,53 @@ describe('complete', () => {
     expect(complete(root, ['-v', 'deploy', ''])).toEqual(values('api', 'web'));
   });
 
+  it('gives a suggestion the values of the flags typed before it, by long name, the last one winning', () => {
+    const seen: string[] = [];
+    const tool: CommandSpec = {
+      usage: 'tool [OPTIONS]',
+      flags: [
+        { name: '--project', aliases: ['-p'], description: 'Project', value: { name: 'name' } },
+        {
+          name: '--ticket',
+          description: 'Ticket',
+          value: {
+            name: 'key',
+            suggest: (typed) => {
+              seen.push(typed.get('--project') ?? '(none)');
+              return values(`${typed.get('--project') ?? 'all'}-1`);
+            },
+          },
+        },
+      ],
+      commands: () => [{ name: 'run', description: 'Run', group: 'Commands', spec: { usage: 'tool run' } }],
+    };
+
+    expect(complete(tool, ['--project', 'a', '--ticket', ''])).toEqual(values('a-1'));
+    expect(complete(tool, ['-p', 'a', '-p', 'b', '--ticket', ''])).toEqual(values('b-1'));
+    expect(complete(tool, ['--ticket', ''])).toEqual(values('all-1'));
+    expect(seen).toEqual(['a', 'b', '(none)']);
+  });
+
+  it('forgets the values typed before a command once it descends into it', () => {
+    const inner: CommandSpec = {
+      usage: 'tool run',
+      flags: [
+        {
+          name: '--x',
+          description: 'X',
+          value: { name: 'v', suggest: (typed) => values(typed.get('--x') ?? 'fresh') },
+        },
+      ],
+    };
+    const outer: CommandSpec = {
+      usage: 'tool',
+      flags: [{ name: '--x', description: 'X', value: { name: 'v' } }],
+      commands: () => [{ name: 'run', description: 'Run', group: 'Commands', spec: inner }],
+    };
+
+    expect(complete(outer, ['--x', 'old', 'run', '--x', ''])).toEqual(values('fresh'));
+  });
+
   it('suggests the values of a flag that takes one', () => {
     expect(complete(root, ['deploy', '--env', ''])).toEqual(values('dev', 'prod'));
     expect(complete(root, ['deploy', '--env', 'p'])).toEqual(values('prod'));

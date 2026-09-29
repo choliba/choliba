@@ -1,4 +1,4 @@
-import type { CommandEntry, CommandSpec, FlagSpec, Suggestions } from '@choliba/core/cli';
+import type { CommandEntry, CommandSpec, FlagSpec, Suggestions, TypedFlags } from '@choliba/core/cli';
 import type { GitRunner } from '@choliba/core/git';
 import { readTicketTemplate, ticketTemplatesDir } from '@choliba/projects';
 
@@ -25,8 +25,8 @@ export interface AgentsCliSpecContext {
   readonly git: GitRunner;
   /** The project names `--project` completes to, read when asked (none when the locations are not set). */
   readonly projects: () => readonly string[];
-  /** The ticket keys `--ticket` completes to, across every project, read when asked. */
-  readonly tickets: () => readonly string[];
+  /** The ticket keys `--ticket` completes to: of `project` when given, else of every project; read when asked. */
+  readonly tickets: (project?: string) => readonly string[];
 }
 
 const FILES: Suggestions = { kind: 'files' };
@@ -57,6 +57,7 @@ export function flagValueSuggestions(
   flagName: string,
   agent: AgentDefinition,
   context: AgentsCliSpecContext,
+  typed: TypedFlags = new Map(),
 ): Suggestions {
   switch (flagName) {
     case '--mode':
@@ -72,7 +73,7 @@ export function flagValueSuggestions(
     case '--type':
       return values(agent.ticketTypes ?? []);
     case '--ticket':
-      return values(context.tickets());
+      return values(context.tickets(typed.get('--project')));
     case '--plan-from':
     case '--agents-dir':
     case '--add-dir':
@@ -140,7 +141,13 @@ function runFlags(agent: AgentDefinition, context: AgentsCliSpecContext): readon
           : rest;
     return valueName === undefined
       ? flag
-      : { ...flag, value: { name: valueName, suggest: () => flagValueSuggestions(flag.name, agent, context) } };
+      : {
+          ...flag,
+          value: {
+            name: valueName,
+            suggest: (typed: TypedFlags) => flagValueSuggestions(flag.name, agent, context, typed),
+          },
+        };
   });
   return withModes(withTicketTypes(flags, agent), agent);
 }

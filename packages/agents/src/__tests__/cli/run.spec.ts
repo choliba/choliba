@@ -411,6 +411,28 @@ describe('runAgentsCli — tickets', () => {
     );
   });
 
+  it('completes --ticket with only the tickets of the --project already typed', async () => {
+    await withProjects((projectsDir) =>
+      withTicketAgent(async (agentsDir) => {
+        mkdirSync(join(projectsDir, 'ready', 'tickets'), { recursive: true });
+        writeFileSync(join(projectsDir, 'ready', 'tickets', '2.json'), '{}');
+        mkdirSync(join(projectsDir, 'pending', 'tickets'), { recursive: true });
+        writeFileSync(join(projectsDir, 'pending', 'tickets', '5.json'), '{}');
+        const config = { CHOL_AGENTS_DIR: agentsDir, CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir };
+        const suggest = async (...words: string[]): Promise<readonly string[]> => {
+          const { deps, stdout } = harness([], { config });
+          await runAgentsCli(['__complete', 'with-project', ...words, ''], deps);
+          return lines(stdout);
+        };
+
+        expect(await suggest('--project', 'pending', '--ticket')).toEqual(['pending-5']);
+        expect(await suggest('--project', 'ready', '--ticket')).toEqual(['ready-2']);
+        expect(await suggest('--ticket')).toEqual(['pending-5', 'ready-2']);
+        expect(await suggest('--project', 'nope', '--ticket')).toEqual([]);
+      }),
+    );
+  });
+
   it('stops before the provider when the ticket cannot be created', async () => {
     await withProjects((projectsDir) =>
       withTicketAgent(async (agentsDir) => {
