@@ -79,7 +79,9 @@ Checks and tooling notes: `references/docs-as-code.md`.
 ## Special documents
 
 - **README** — the front door: what the project is, who it is for, how to install and run it in minutes, where
-  to go next. Link to the docs instead of duplicating them.
+  to go next. Structured by the Standard Readme specification (section order, exact titles, short description equal
+  to the package's, table of contents, no broken links) unless the project follows another convention. Link to the
+  docs instead of duplicating them.
 - **Architecture decision record (ADR)** — one significant, hard-to-reverse decision per record: context,
   decision, consequences. Accepted records are not edited; a new record supersedes an old one.
 - **Changelog** — for humans: grouped by version, newest first, with dates and the change types Added, Changed,

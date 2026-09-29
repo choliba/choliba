@@ -9,6 +9,7 @@ import { join } from 'node:path';
 interface Manifest {
   readonly name: string;
   readonly version?: string;
+  readonly description?: string;
   readonly license?: string;
   readonly dependencies?: Readonly<Record<string, string>>;
 }
@@ -102,7 +103,7 @@ writeFileSync(
     {
       name: own.name,
       version: own.version,
-      description: 'Testes E2E multiprojeto com Playwright, operados por agentes.',
+      description: own.description,
       license: root.license,
       type: 'module',
       bin: { choliba: 'bin/choliba.js' },
