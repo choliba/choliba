@@ -145,11 +145,16 @@ function projectNames(deps: RunAgentsCliDeps): readonly string[] {
   }
 }
 
-/** The ticket keys `--ticket` completes to, of every project; none when the projects are not reachable. */
-function ticketKeys(deps: RunAgentsCliDeps): readonly string[] {
+/**
+ * The ticket keys `--ticket` completes to: those of `project` when one was typed (none when it is not a
+ * project), else those of every project; none when the projects are not reachable.
+ */
+function ticketKeys(deps: RunAgentsCliDeps, project: string | undefined): readonly string[] {
   try {
     const dir = projectsDir(deps);
-    return listProjectNames(dir).flatMap((project) => listTicketKeys(dir, project));
+    const names = listProjectNames(dir);
+    const projects = project === undefined ? names : names.filter((name) => name === project);
+    return projects.flatMap((name) => listTicketKeys(dir, name));
   } catch {
     return [];
   }
@@ -161,7 +166,7 @@ function specContext(agents: readonly AgentDefinition[], deps: RunAgentsCliDeps)
     repoRoot: deps.repoRoot,
     git: deps.git ?? createSpawnGitRunner(),
     projects: () => projectNames(deps),
-    tickets: () => ticketKeys(deps),
+    tickets: (project) => ticketKeys(deps, project),
   };
 }
 

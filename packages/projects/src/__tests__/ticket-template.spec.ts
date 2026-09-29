@@ -39,7 +39,7 @@ function lerJson(file: string): unknown {
 
 describe('listTicketTypes', () => {
   it('lists the types this package ships a template for', () => {
-    expect(listTicketTypes(ticketTemplatesDir())).toEqual(['bug', 'epic', 'improvement', 'story', 'task']);
+    expect(listTicketTypes(ticketTemplatesDir())).toEqual(['bug', 'improvement', 'story', 'task']);
   });
 
   it('lists only .json files, and nothing for a missing folder', () => {
@@ -66,7 +66,7 @@ describe('describeTicketTypes', () => {
   it('says what each shipped type is for', () => {
     const described = describeTicketTypes(ticketTemplatesDir());
 
-    expect(described.map(({ type }) => type)).toEqual(['bug', 'epic', 'improvement', 'story', 'task']);
+    expect(described.map(({ type }) => type)).toEqual(['bug', 'improvement', 'story', 'task']);
     for (const { description } of described) {
       expect(description.length).toBeGreaterThan(10);
     }
@@ -137,7 +137,7 @@ describe('planTicket / createTicket', () => {
         fs.writeFileSync(path.join(templatesDir, 'sem-campos.json'), JSON.stringify({ description: 'x', fields: [] }));
 
         expect(() => planTicket(projetosDir, 'demo', 'spike', ticketTemplatesDir())).toThrow(
-          'Tipo de ticket "spike" não existe (disponíveis: bug, epic, improvement, story, task).',
+          'Tipo de ticket "spike" não existe (disponíveis: bug, improvement, story, task).',
         );
         for (const type of ['lista', 'vazio', 'sem-campos']) {
           expect(() => planTicket(projetosDir, 'demo', type, templatesDir)).toThrow(

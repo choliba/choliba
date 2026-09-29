@@ -672,7 +672,7 @@ describe('runProjectsCli — help and completion', () => {
 
       expect(run(['__complete', 'create-ticket', ''], config(projectsDir)).out).toBe('demo\n');
       expect(run(['__complete', 'create-ticket', 'demo', ''], config(projectsDir)).out).toBe(
-        'bug\nepic\nimprovement\nstory\ntask\n',
+        'bug\nimprovement\nstory\ntask\n',
       );
       expect(run(['__complete', 'create-ticket', 'demo', 'bug', ''], config(projectsDir)).out).toBe('');
       expect(run(['__complete', 'create-project', 'novo', '--app-dir', ''], config(projectsDir)).out).toBe(

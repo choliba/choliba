@@ -27,9 +27,12 @@ export function complete(root: CommandSpec, words: readonly string[]): Suggestio
   let used = new Set<string>();
   let positionals: string[] = [];
   let pendingValue: FlagValueSpec | undefined;
+  let pendingFlag = '';
+  let values = new Map<string, string>();
 
   for (const word of typed) {
     if (pendingValue !== undefined) {
+      values.set(pendingFlag, word);
       pendingValue = undefined;
       continue;
     }
@@ -40,6 +43,7 @@ export function complete(root: CommandSpec, words: readonly string[]): Suggestio
     if (flag !== undefined) {
       used.add(flag.name);
       pendingValue = flag.value;
+      pendingFlag = flag.name;
       continue;
     }
     const entry = positionals.length === 0 ? findCommand(entries, word) : undefined;
@@ -47,6 +51,7 @@ export function complete(root: CommandSpec, words: readonly string[]): Suggestio
       spec = entry.spec;
       entries = spec.commands?.() ?? [];
       used = new Set();
+      values = new Map();
       positionals = [];
       continue;
     }
@@ -61,7 +66,7 @@ export function complete(root: CommandSpec, words: readonly string[]): Suggestio
   });
 
   if (pendingValue !== undefined) {
-    const suggestions = pendingValue.suggest?.() ?? NONE;
+    const suggestions = pendingValue.suggest?.(values) ?? NONE;
     return suggestions.kind === 'files' ? suggestions : byPrefix(suggestions.values);
   }
 

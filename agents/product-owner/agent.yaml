@@ -61,4 +61,4 @@ permissions:
         - bunx choliba projects create-project
         - git
 
-ticket_types: [epic, story, bug, improvement]
+ticket_types: [story, bug, improvement]

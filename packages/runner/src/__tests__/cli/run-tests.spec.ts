@@ -1075,6 +1075,10 @@ describe('runTestsCli', () => {
       return (terminalOutput.writeStderr as jest.Mock).mock.calls.map(([chunk]) => String(chunk)).join('');
     }
 
+    function stdoutText(): string {
+      return (terminalOutput.writeStdout as jest.Mock).mock.calls.map(([chunk]) => String(chunk)).join('');
+    }
+
     it('runs tests/<ticket>.spec.ts instead of the whole project', async () => {
       await withProject(async (projectsDir, cwd) => {
         writeTicketWithSpec(projectsDir);
@@ -1103,6 +1107,26 @@ describe('runTestsCli', () => {
         expect(status.exitCode).toBe(0);
         expect(calls[0]?.slice(2)).toEqual(['--workers=1']);
         expect(fs.readFileSync(failures, 'utf8')).toContain('## CA-02');
+        expect(stdoutText()).toContain(
+          'demo-T-01 está red. A implementar: CA-01, CA-02. Já atendidos (regressão): nenhum.',
+        );
+      });
+    });
+
+    it('--expect green succeeds when every criterion passes and Playwright does, printing no red summary', async () => {
+      await withProject(async (projectsDir, cwd) => {
+        writeTicketWithSpec(projectsDir);
+        const specs = [result('CA-01: a', 'expected'), result('CA-02: b', 'expected')];
+
+        const status = await run(
+          projectsDir,
+          cwd,
+          ['demo:T-01', '--expect', 'green'],
+          playwrightReporting(projectsDir, specs, 0),
+        );
+
+        expect(status.exitCode).toBe(0);
+        expect(stdoutText()).not.toContain('está red');
       });
     });
 

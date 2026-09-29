@@ -125,7 +125,7 @@ steps:
 | `permissions.allow`/`.deny`  | não         | nada liberado       | `read` e `write`: caminhos (terminado em `/` = tudo abaixo). `execute`: diretório → comandos (prefixos com argumentos).             |
 | `modes.allow` / `.default`   | não         | os três / `execute` | Modos aceitos (`execute`, `plan`, `ask`) e o usado quando a linha de comando não diz.                                               |
 | `task.required` / `.default` | não         | `true` / —          | Se a tarefa é obrigatória e, quando não é, qual usar (`default` passa a ser obrigatório).                                           |
-| `ticket_types`               | não         | agente sem ticket   | Tipos de ticket aceitos (`epic`, `story`, `bug`, `improvement`, `task`); a execução pede `--type` ou `--ticket`.                    |
+| `ticket_types`               | não         | agente sem ticket   | Tipos de ticket aceitos (`story`, `bug`, `improvement`, `task`); a execução pede `--type` ou `--ticket`.                            |
 | `steps.before` / `.after`    | não         | nenhum              | Ações do choliba antes do modelo (`run`, `git_diff`, `add_files`) e depois de um `execute` bem-sucedido (`run`, `record_git_head`). |
 
 Regras que valem para qualquer agente:
@@ -152,6 +152,19 @@ Regras que valem para qualquer agente:
   `${TICKET_FILE}`. Uma variável sem valor interrompe a execução.
 - **Projeto.** Um agente que usa uma variável de projeto (`${PROJECT}`, `${PROJECT_DIR}`, `${APP_DIR}`,
   `${TICKET}`, `${TICKET_FILE}`) no `agent.yaml` ou no `system.md`, ou declara `ticket_types`, exige `--project`.
+
+## Portões dos testes de um ticket
+
+`choliba tests PROJECT:TICKET --expect red|green [--failures ARQUIVO]` roda os testes de um ticket e confere o que
+eles mostram. É assim que os agentes `test-writer` e `implementer` garantem o TDD:
+
+- **`--expect red`**: todo critério do ticket tem teste, nenhum quebra no próprio código nem é pulado, e **pelo
+  menos um falha pelo comportamento** (há o que implementar). Um critério cujos testes já passam fica como **já
+  atendido**: o teste continua valendo como proteção contra regressão. Se todos passam, o portão recusa (nada a
+  implementar).
+- **`--expect green`**: todos os testes do ticket passam, inclusive os dos critérios já atendidos.
+- **`--failures ARQUIVO`**: grava, em Markdown, os critérios a implementar com a falha de cada teste e, por último,
+  os já atendidos. O `test-writer` grava esse arquivo, e o `implementer` começa por ele.
 
 ## `choliba install`
 

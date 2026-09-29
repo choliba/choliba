@@ -328,14 +328,14 @@ describe('runAgentsCli — tickets', () => {
         );
 
         const other = harness([], { config });
-        expect(await runAgentsCli(argv(agentsDir, '--type', 'epic', '--dry-run'), other.deps)).toBe(1);
+        expect(await runAgentsCli(argv(agentsDir, '--type', 'task', '--dry-run'), other.deps)).toBe(1);
         expect(other.stderr.chunks.join('')).toContain(
-          '"with-project" não trabalha com tickets "epic" (aceitos: bug, story).',
+          '"with-project" não trabalha com tickets "task" (aceitos: bug, story).',
         );
 
         const shortcut = harness([], { config });
-        expect(await runAgentsCli(argv(agentsDir, '--type-epic', '--dry-run'), shortcut.deps)).toBe(1);
-        expect(shortcut.stderr.chunks.join('')).toContain('unknown flag: --type-epic');
+        expect(await runAgentsCli(argv(agentsDir, '--type-task', '--dry-run'), shortcut.deps)).toBe(1);
+        expect(shortcut.stderr.chunks.join('')).toContain('unknown flag: --type-task');
       }),
     );
   });
@@ -407,6 +407,28 @@ describe('runAgentsCli — tickets', () => {
         const bare = harness([], { config: { CHOL_AGENTS_DIR: agentsDir } });
         await runAgentsCli(complete, bare.deps);
         expect(lines(bare.stdout)).toEqual([]);
+      }),
+    );
+  });
+
+  it('completes --ticket with only the tickets of the --project already typed', async () => {
+    await withProjects((projectsDir) =>
+      withTicketAgent(async (agentsDir) => {
+        mkdirSync(join(projectsDir, 'ready', 'tickets'), { recursive: true });
+        writeFileSync(join(projectsDir, 'ready', 'tickets', '2.json'), '{}');
+        mkdirSync(join(projectsDir, 'pending', 'tickets'), { recursive: true });
+        writeFileSync(join(projectsDir, 'pending', 'tickets', '5.json'), '{}');
+        const config = { CHOL_AGENTS_DIR: agentsDir, CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir };
+        const suggest = async (...words: string[]): Promise<readonly string[]> => {
+          const { deps, stdout } = harness([], { config });
+          await runAgentsCli(['__complete', 'with-project', ...words, ''], deps);
+          return lines(stdout);
+        };
+
+        expect(await suggest('--project', 'pending', '--ticket')).toEqual(['pending-5']);
+        expect(await suggest('--project', 'ready', '--ticket')).toEqual(['ready-2']);
+        expect(await suggest('--ticket')).toEqual(['pending-5', 'ready-2']);
+        expect(await suggest('--project', 'nope', '--ticket')).toEqual([]);
       }),
     );
   });
