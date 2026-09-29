@@ -20,7 +20,7 @@ import { parseProviderPreference, resolveProvider } from '../providers/registry'
 import { readPlan } from '../plan-store';
 import { validateExplicitModel } from '../providers/stream-json';
 import { runAgent } from '../run-agent';
-import { CHOL_AGENTS_PROVIDER } from '@choliba/core/config';
+import { CHOL_AGENTS_PROVIDER, RUNS_DIR } from '@choliba/core/config';
 import { listProjectNames, listTicketKeys, loadProjectSettings, resolveLocations } from '@choliba/projects';
 import { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '../workspace-dirs';
 import { absolutePermissions, canRead, outsideExecuteDirs } from '../permissions';
@@ -502,7 +502,7 @@ function buildProviderRequest(
     userPrompt: buildUserPrompt({ templateOutput, mode, planContent }),
     workspaceRoot: deps.repoRoot,
     runDir: join(
-      deps.runsDir ?? join(deps.repoRoot, '.cache', 'runs'),
+      deps.runsDir ?? join(deps.repoRoot, RUNS_DIR),
       `${deps.now().toISOString().replaceAll(':', '-')}-${String(process.pid)}`,
     ),
     addDirs: [...addDirs],

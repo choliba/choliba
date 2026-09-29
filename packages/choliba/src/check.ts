@@ -11,6 +11,7 @@ import {
   resolveSkillsDir,
 } from '@choliba/agents';
 import { listProjectNames, loadProjectSettings, resolveLocations } from '@choliba/projects';
+import { ENV_FILE } from '@choliba/core/config';
 
 type Config = Readonly<Record<string, string | undefined>>;
 
@@ -65,7 +66,7 @@ export function checkProjects(root: string, config: Config): CheckSection {
   try {
     projectsDir = resolveLocations(root, config, () => undefined).PROJECTS_DIR;
   } catch (error) {
-    return { title: 'Projetos', items: [{ name: '.env', problem: problemOf(error) }] };
+    return { title: 'Projetos', items: [{ name: ENV_FILE, problem: problemOf(error) }] };
   }
   const title = `Projetos (${projectsDir})`;
   if (!existsSync(projectsDir)) {

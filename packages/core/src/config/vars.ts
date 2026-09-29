@@ -16,8 +16,5 @@ export const GLOBAL_DIR = 'GLOBAL_DIR';
 /** Override for the projects folder when it is not `{GLOBAL_DIR}/projects`. */
 export const PROJECTS_DIR = 'PROJECTS_DIR';
 
-/** Default subdirectory of GLOBAL_DIR where projects live. */
-export const PROJECTS_SUBDIR = 'projects';
-
 /** Optional ticket-runs/ root when different from PROJECTS_DIR. */
 export const TICKET_RUNS = 'TICKET_RUNS';

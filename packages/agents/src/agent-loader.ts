@@ -8,6 +8,7 @@ import type { ExecutionMode, PermissionPolicy } from './command.types';
 import { validateAgentYamlV1, validateSystemMd } from './agent-validation';
 import { type AgentPermissions, readAgentPermissions } from './permissions';
 import { checkStep, type StepPhase } from './prepare/actions';
+import { AGENT_FILE, SYSTEM_FILE } from '@choliba/core/config';
 
 export class AgentConfigError extends Error {}
 
@@ -156,8 +157,8 @@ export async function loadAgent(agentsDir: string, name: string): Promise<AgentD
   }
 
   const dir = join(agentsDir, name);
-  const yamlPath = join(dir, 'agent.yaml');
-  const systemPromptPath = join(dir, 'system.md');
+  const yamlPath = join(dir, AGENT_FILE);
+  const systemPromptPath = join(dir, SYSTEM_FILE);
 
   let yamlText: string;
   try {

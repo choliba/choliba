@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { ENV_FILE } from './files';
 
 /** Parses a `.env` file body into key/value pairs (no variable expansion). */
 export function parseConfigFile(content: string): Record<string, string> {
@@ -37,7 +38,7 @@ export function loadRepoConfig(
   processConfig: Readonly<Record<string, string | undefined>> = process.env,
   readFile: (path: string) => string | undefined = readConfigFile,
 ): Readonly<Record<string, string | undefined>> {
-  const content = readFile(join(repoRoot, '.env'));
+  const content = readFile(join(repoRoot, ENV_FILE));
   if (content === undefined) {
     return { ...processConfig };
   }

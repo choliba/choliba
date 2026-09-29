@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 28/09/2026 20:26:50 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 28/09/2026 22:35:23 — não editar manualmente.
 
 ## Resumo
 
@@ -77,7 +77,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 17 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 19 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -85,7 +85,9 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/cli/help.ts](packages/core/src/cli/help.ts)|100.00|100.00|100.00|100.00
 🟢|[src/cli/index.ts](packages/core/src/cli/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/cli/scripts-help.ts](packages/core/src/cli/scripts-help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/config/files.ts](packages/core/src/config/files.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/index.ts](packages/core/src/config/index.ts)|100.00|100.00|100.00|100.00
+🟢|[src/config/layout.ts](packages/core/src/config/layout.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/repo-config.ts](packages/core/src/config/repo-config.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/resources.ts](packages/core/src/config/resources.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/vars.ts](packages/core/src/config/vars.ts)|100.00|100.00|100.00|100.00

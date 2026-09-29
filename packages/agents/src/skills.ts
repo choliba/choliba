@@ -4,6 +4,7 @@ import { isAbsolute, join, relative } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
 import { asString, isRecord } from './json';
+import { SKILL_FILE } from '@choliba/core/config';
 
 /** One skill an agent declares; the agent reads the skill itself from `path`. */
 export interface SkillSummary {
@@ -41,7 +42,7 @@ export function skillDescription(text: string, source: string): string {
  */
 export function resolveSkills(skillsDir: string, names: readonly string[]): readonly SkillSummary[] {
   return names.map((name) => {
-    const path = join(skillsDir, name, 'SKILL.md');
+    const path = join(skillsDir, name, SKILL_FILE);
     let text: string;
     try {
       text = readFileSync(path, 'utf8');

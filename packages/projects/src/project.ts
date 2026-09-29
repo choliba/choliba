@@ -3,6 +3,7 @@ import path from 'node:path';
 import { ProjectsError } from './errors';
 import { findReadme, readmeSummary, readText } from './readme';
 import { readJsonFile } from './json-file';
+import { PROJECT_CONFIG_FILE, PROJECT_ENV_EXAMPLE_FILE, PROJECT_ENV_FILE, TESTS_SUBDIR } from '@choliba/core/config';
 
 export function projectDir(projectsDir: string, project: string): string {
   return path.join(projectsDir, project);
@@ -10,17 +11,17 @@ export function projectDir(projectsDir: string, project: string): string {
 
 /** `config.json` of the project at `projectPath` — what makes a folder a project. */
 export function projectConfigFile(projectPath: string): string {
-  return path.join(projectPath, 'config.json');
+  return path.join(projectPath, PROJECT_CONFIG_FILE);
 }
 
 /** `.env.json` (credentials per environment) of the project at `projectPath`. */
 export function projectEnvFile(projectPath: string): string {
-  return path.join(projectPath, '.env.json');
+  return path.join(projectPath, PROJECT_ENV_FILE);
 }
 
 /** `.env.example.json`, the model for `.env.json`, of the project at `projectPath`. */
 export function projectEnvExampleFile(projectPath: string): string {
-  return path.join(projectPath, '.env.example.json');
+  return path.join(projectPath, PROJECT_ENV_EXAMPLE_FILE);
 }
 
 /** A hook a project may ship at its root, run once before or after all tests. */
@@ -33,7 +34,7 @@ export function projectHookFile(projectsDir: string, project: string, hook: Proj
 
 /** `tests/`, where the project's specs live. */
 export function projectTestsFolder(projectsDir: string, project: string): string {
-  return path.join(projectDir(projectsDir, project), 'tests');
+  return path.join(projectDir(projectsDir, project), TESTS_SUBDIR);
 }
 
 export function configJsonPath(projectsDir: string, project: string): string {
