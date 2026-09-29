@@ -114,6 +114,11 @@ branches". The rulesets fix the method per branch, so the merge dialog offers on
 The agent prepares and opens the release PR (`gh pr create --base master --head develop`), confirms CI is green,
 then stops: the user merges it. A local `git merge` into `master` is refused on push.
 
+Until the first production version there is a single pre-release, `v0.0.1-dev`: the merge into `master` runs
+`.github/workflows/release-dev.yml`, which moves that tag to the new commit (`git push --force` of the tag, the one
+exception to "no force-push", which is about branches) and replaces the `.tgz` and the notes of the same release.
+Never create another tag or release by hand; the version in `packages/choliba/package.json` stays `0.0.1-dev`.
+
 Never: push to `develop` or `master`, merge locally into them (`git merge develop` while on `master` diverges from the
 remote as soon as a PR lands), force-push, use `--no-verify`, rewrite history that is already pushed, or delete the
 protected branches. To update a local `master` or `develop`, use `git pull --ff-only`; if that fails because the
