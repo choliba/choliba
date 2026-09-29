@@ -34,6 +34,7 @@ function fakeRequest(overrides: Partial<ProviderRequest> = {}): ProviderRequest 
     policy: 'read-only',
     userPrompt: 'do the task',
     workspaceRoot: '/repo',
+    runDir: '/repo/.cache/runs/x',
     addDirs: [],
     model: undefined,
     ...overrides,
@@ -79,21 +80,22 @@ describe('claudeProvider.buildArgs', () => {
       expect.arrayContaining(['--permission-mode', 'dontAsk', '--tools', 'Read,Grep,Glob,Bash', '--strict-mcp-config']),
     );
     const allowed = args.slice(args.indexOf('--allowedTools') + 1, args.indexOf('--disallowedTools'));
-    expect(allowed).toEqual(['Read(src/**)', 'Bash(git diff:*)', 'Bash(composer test:*)']);
+    // Relative paths become absolute from the workspace root: the provider runs in its run dir.
+    expect(allowed).toEqual(['Read(//repo/src/**)', 'Bash(git diff:*)', 'Bash(composer test:*)']);
     expect(args.slice(args.indexOf('--disallowedTools') + 1)).toEqual([
-      'Read(.env)',
-      'Edit(packages/**)',
-      'Write(packages/**)',
+      'Read(//repo/.env)',
+      'Edit(//repo/packages/**)',
+      'Write(//repo/packages/**)',
       'Bash(prettier:*)',
       'Bash(cd /etc:*)',
     ]);
   });
 
-  it('maps read-only without declarations to dontAsk with no tool list and no rules', () => {
+  it('gives an agent that declares nothing no tool at all, and no rules', () => {
     const args = claudeProvider.buildArgs(fakeRequest({ policy: 'read-only' }));
 
     expect(args).toEqual(expect.arrayContaining(['--permission-mode', 'dontAsk', '--strict-mcp-config']));
-    expect(args.includes('--tools')).toBe(false);
+    expect(args.at(args.indexOf('--tools') + 1)).toBe('');
     expect(args.includes('--allowedTools')).toBe(false);
     expect(args.includes('--disallowedTools')).toBe(false);
   });
@@ -103,11 +105,17 @@ describe('claudeProvider.buildArgs', () => {
       fakeRequest({ policy: 'edits', agent: fakeAgent({ permissions: DECLARED }) }),
     );
 
-    expect(args).toEqual(expect.arrayContaining(['--permission-mode', 'dontAsk']));
     expect(args).toEqual(
-      expect.arrayContaining(['Edit(docs/**)', 'Write(docs/**)', 'Edit(README.md)', 'Write(README.md)']),
+      expect.arrayContaining(['--permission-mode', 'dontAsk', '--tools', 'Read,Grep,Glob,Edit,Write,Bash']),
     );
-    expect(args.includes('--tools')).toBe(false);
+    expect(args).toEqual(
+      expect.arrayContaining([
+        'Edit(//repo/docs/**)',
+        'Write(//repo/docs/**)',
+        'Edit(//repo/README.md)',
+        'Write(//repo/README.md)',
+      ]),
+    );
   });
 
   it('writes a filesystem-absolute path with two slashes, as Claude Code rules expect', () => {
@@ -128,12 +136,12 @@ describe('claudeProvider.buildArgs', () => {
     );
   });
 
-  it('maps edits without declarations to acceptEdits, with no extra tool scoping', () => {
+  it('denies without asking in edits too, when the agent declares nothing to write', () => {
     const args = claudeProvider.buildArgs(fakeRequest({ policy: 'edits' }));
 
-    expect(args).toEqual(expect.arrayContaining(['--permission-mode', 'acceptEdits']));
+    expect(args).toEqual(expect.arrayContaining(['--permission-mode', 'dontAsk']));
+    expect(args.at(args.indexOf('--tools') + 1)).toBe('');
     expect(args.includes('--allowedTools')).toBe(false);
-    expect(args.includes('--tools')).toBe(false);
   });
 
   it('keeps only the read tools when read-only declares no commands', () => {

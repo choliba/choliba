@@ -41,6 +41,7 @@ function fakeRequest(overrides: Partial<ProviderRequest> = {}): ProviderRequest 
     policy: 'read-only',
     userPrompt: 'do the task',
     workspaceRoot: '/repo',
+    runDir: '/repo/.cache/runs/x',
     addDirs: [],
     model: undefined,
     ...overrides,
@@ -64,10 +65,10 @@ describe('cursorProvider.buildArgs', () => {
   });
 
   it('always sends --trust, stream-json output and the workspace', () => {
-    const args = cursorProvider.buildArgs(fakeRequest({ workspaceRoot: '/repo/root' }));
+    const args = cursorProvider.buildArgs(fakeRequest({ runDir: '/repo/root/.cache/runs/x' }));
 
     expect(args).toEqual(
-      expect.arrayContaining(['--trust', '--output-format', 'stream-json', '--workspace', '/repo/root']),
+      expect.arrayContaining(['--trust', '--output-format', 'stream-json', '--workspace', '/repo/root/.cache/runs/x']),
     );
   });
 
@@ -323,19 +324,42 @@ describe('cursorProvider.createParser', () => {
   });
 });
 
+/** The cli.json written into `dir/.cursor`, as allow and deny lists. */
+function cliJsonIn(dir: string): { allow: string[]; deny: string[] } {
+  const written = JSON.parse(readFileSync(join(dir, '.cursor/cli.json'), 'utf8')) as {
+    permissions: { allow: string[]; deny: string[] };
+  };
+  return written.permissions;
+}
+
 describe('cursorProvider.prepareWorkspace', () => {
-  it("writes the agent's declared permissions for the run and removes them afterwards", () => {
+  it("writes the agent's permissions into its run dir for the run and removes them afterwards", () => {
     const tmp = makeTmpDir('cursor-prepare');
     try {
       const permissions = readAgentPermissions({ deny: { execute: { './': ['prettier'] } } });
       const restore = cursorProvider.prepareWorkspace?.(
-        fakeRequest({ workspaceRoot: tmp.path, agent: fakeAgent({ permissions }) }),
+        fakeRequest({ workspaceRoot: '/', runDir: tmp.path, agent: fakeAgent({ permissions }) }),
       );
 
-      const written: unknown = JSON.parse(readFileSync(join(tmp.path, '.cursor/cli.json'), 'utf8'));
-      expect(written).toEqual({ permissions: { allow: [], deny: ['Shell(prettier)'] } });
+      const { allow, deny } = cliJsonIn(tmp.path);
+      expect(allow).toEqual([]);
+      expect(deny[0]).toBe('Shell(prettier)');
       restore?.();
       expect(existsSync(join(tmp.path, '.cursor'))).toBe(false);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('denies the rest of the disk even to an agent that declares no permissions', () => {
+    const tmp = makeTmpDir('cursor-prepare-none');
+    try {
+      const restore = cursorProvider.prepareWorkspace?.(fakeRequest({ workspaceRoot: '/', runDir: tmp.path }));
+
+      const { allow, deny } = cliJsonIn(tmp.path);
+      expect(allow).toEqual([]);
+      expect(deny).toEqual(expect.arrayContaining(['Read(/etc/**)', 'Write(/etc/**)']));
+      restore?.();
     } finally {
       tmp.cleanup();
     }
@@ -346,7 +370,8 @@ describe('cursorProvider.prepareWorkspace', () => {
     try {
       const restore = cursorProvider.prepareWorkspace?.(
         fakeRequest({
-          workspaceRoot: tmp.path,
+          workspaceRoot: '/',
+          runDir: tmp.path,
           mcpServers: [
             {
               name: 'browser',
@@ -359,8 +384,7 @@ describe('cursorProvider.prepareWorkspace', () => {
 
       const mcpJson: unknown = JSON.parse(readFileSync(join(tmp.path, '.cursor/mcp.json'), 'utf8'));
       expect(mcpJson).toEqual({ mcpServers: { browser: { command: 'npx', args: ['browser-mcp'] } } });
-      const cliJson: unknown = JSON.parse(readFileSync(join(tmp.path, '.cursor/cli.json'), 'utf8'));
-      expect(cliJson).toEqual({ permissions: { allow: ['Mcp(browser:*)'], deny: [] } });
+      expect(cliJsonIn(tmp.path).allow).toEqual(['Mcp(browser:*)']);
       restore?.();
       expect(existsSync(join(tmp.path, '.cursor'))).toBe(false);
     } finally {
@@ -377,7 +401,8 @@ describe('cursorProvider.prepareWorkspace', () => {
       expect(() =>
         cursorProvider.prepareWorkspace?.(
           fakeRequest({
-            workspaceRoot: tmp.path,
+            workspaceRoot: '/',
+            runDir: tmp.path,
             mcpServers: [
               {
                 name: 'browser',
@@ -389,17 +414,6 @@ describe('cursorProvider.prepareWorkspace', () => {
         ),
       ).toThrow('não é um JSON válido');
       expect(existsSync(join(tmp.path, '.cursor/cli.json'))).toBe(false);
-    } finally {
-      tmp.cleanup();
-    }
-  });
-
-  it('touches nothing for an agent that declares no permissions', () => {
-    const tmp = makeTmpDir('cursor-prepare-none');
-    try {
-      const restore = cursorProvider.prepareWorkspace?.(fakeRequest({ workspaceRoot: tmp.path }));
-      expect(existsSync(join(tmp.path, '.cursor'))).toBe(false);
-      restore?.();
     } finally {
       tmp.cleanup();
     }

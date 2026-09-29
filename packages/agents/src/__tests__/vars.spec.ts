@@ -2,7 +2,7 @@ import { join } from 'node:path';
 
 import { loadAgent } from '../agent-loader';
 import { readAgentPermissions } from '../permissions';
-import { AgentVarsError, expandVars, pathBase, permissionDirs, withExpandedInstructions } from '../vars';
+import { AgentVarsError, expandVars, withExpandedInstructions } from '../vars';
 
 const FIXTURES = join(__dirname, 'fixtures', 'agents');
 
@@ -83,32 +83,5 @@ describe('withExpandedInstructions — steps', () => {
     expect(() => withExpandedInstructions(agent, () => ({ PROJECT: 'demo' }))).toThrow(
       `${join(echo.dir, 'agent.yaml')} usa \${TICKET}, sem valor (disponíveis: PROJECT).`,
     );
-  });
-});
-
-describe('pathBase', () => {
-  it('is the part before the first glob segment, or the folder of a plain path', () => {
-    expect(pathBase('/p/*/tickets/')).toBe('/p');
-    expect(pathBase('/p/demo/tickets/')).toBe('/p/demo/tickets');
-    expect(pathBase('/p/demo/config.json')).toBe('/p/demo');
-    expect(pathBase('/*.md')).toBe('/');
-    expect(pathBase('/')).toBe('/');
-  });
-});
-
-describe('permissionDirs', () => {
-  it('lists the absolute read and write bases once, ignoring relative paths', () => {
-    expect(
-      permissionDirs(
-        readAgentPermissions({
-          allow: {
-            read: ['/p/*/config.json', 'docs/'],
-            write: ['/p/*/tickets/'],
-            execute: { '/app/': ['composer test'], './': ['a'], '/p/': ['b'] },
-          },
-          deny: { read: ['/secret/'] },
-        }),
-      ),
-    ).toEqual(['/p', '/app']);
   });
 });

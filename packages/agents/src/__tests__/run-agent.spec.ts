@@ -1,4 +1,5 @@
-import { constants } from 'node:os';
+import { existsSync } from 'node:fs';
+import { constants, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import type { ProcessSpawner, SignalSource, Writable } from '@choliba/terminal';
@@ -14,6 +15,13 @@ import { runAgent } from '../run-agent';
 import { erroringStream, fakeSpawner, streamFromChunks, throwingSpawner } from './helpers/fake-spawner';
 import { makeTmpDir } from './helpers/tmp';
 import { NO_PERMISSIONS } from '../permissions';
+
+/** A run dir of its own per request: `runAgent` creates it and removes it. */
+let runDirCount = 0;
+function freshRunDir(): string {
+  runDirCount += 1;
+  return join(tmpdir(), `run-agent-spec-${String(process.pid)}-${String(runDirCount)}`, 'runs', 'x');
+}
 
 function cursorResolvePlan(context: PlanContentContext): string | undefined {
   const content = context.planMarkdown?.trim();
@@ -145,6 +153,7 @@ function setup(spawner: ProcessSpawner, adapterOverrides: Partial<ProviderAdapte
         policy: 'read-only',
         userPrompt: 'do it',
         workspaceRoot: '/repo',
+        runDir: freshRunDir(),
         addDirs: [],
         model: undefined,
         ...providerOverrides,
@@ -307,6 +316,26 @@ describe('runAgent', () => {
     expect(s.stdout.chunks).toEqual([]);
   });
 
+  it('runs the provider in its run dir, created before and removed after, whatever the outcome', async () => {
+    const handle = fakeSpawner({ stdout: streamFromChunks([]) });
+    const seen: boolean[] = [];
+    const prepareWorkspace = (request: ProviderRequest): (() => void) => {
+      seen.push(existsSync(request.runDir));
+      return () => undefined;
+    };
+    const runDir = freshRunDir();
+
+    await run(setup(handle.spawner, { prepareWorkspace }), {}, { runDir });
+
+    expect(seen).toEqual([true]);
+    expect(handle.spawnCalls.at(-1)?.cwd).toBe(runDir);
+    expect(existsSync(runDir)).toBe(false);
+
+    const failedDir = freshRunDir();
+    await run(setup(throwingSpawner(new Error('spawn ENOENT'))), {}, { runDir: failedDir });
+    expect(existsSync(failedDir)).toBe(false);
+  });
+
   it('prepares the workspace before the run and restores it after, whatever the outcome', async () => {
     const events: string[] = [];
     const prepareWorkspace = (): (() => void) => {
@@ -375,6 +404,7 @@ describe('runAgent', () => {
           policy: 'read-only',
           userPrompt: 'do it',
           workspaceRoot: '/repo',
+          runDir: freshRunDir(),
           addDirs: [],
           model: undefined,
         },

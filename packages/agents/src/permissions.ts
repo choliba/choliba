@@ -1,3 +1,5 @@
+import { dirname, isAbsolute, join } from 'node:path';
+
 import { asStringArray, isRecord } from './json';
 
 /** One entry of `permissions.allow.execute`/`.deny.execute`: a directory and the commands that go with it. */
@@ -111,6 +113,52 @@ export function withoutTrailingSlash(dir: string): string {
   return dir.length > 1 && dir.endsWith('/') ? dir.slice(0, -1) : dir;
 }
 
+/** `path` as an absolute path: a relative one is relative to the workspace root. */
+function absolute(path: string, root: string): string {
+  return isAbsolute(path) ? path : join(root, path);
+}
+
+/**
+ * `permissions` with every path and directory absolute (commands untouched): the provider does not run in
+ * the workspace root, so a relative path would be read from the wrong place.
+ */
+export function absolutePermissions(permissions: AgentPermissions, root: string): AgentPermissions {
+  const paths = (items: readonly string[]): readonly string[] => items.map((path) => absolute(path, root));
+  const rules = (items: readonly ExecuteRule[]): readonly ExecuteRule[] =>
+    items.map((rule) => ({ dir: absolute(rule.dir, root), commands: rule.commands }));
+  return {
+    allowRead: paths(permissions.allowRead),
+    allowWrite: paths(permissions.allowWrite),
+    allowExecute: rules(permissions.allowExecute),
+    denyRead: paths(permissions.denyRead),
+    denyWrite: paths(permissions.denyWrite),
+    denyExecute: rules(permissions.denyExecute),
+  };
+}
+
+/** The directory a declared path lives under: the part before the first glob segment, or its folder. */
+export function pathBase(path: string): string {
+  const segments = path.split('/');
+  const globAt = segments.findIndex((segment) => /[*?[\]]/.test(segment));
+  if (globAt !== -1) {
+    return segments.slice(0, globAt).join('/') || '/';
+  }
+  return path.endsWith('/') ? path.slice(0, -1) || '/' : dirname(path);
+}
+
+/** The directories `execute` names (absolute) other than the workspace root, where commands run anyway. */
+export function outsideExecuteDirs(permissions: AgentPermissions, root: string): readonly string[] {
+  const dirs = permissions.allowExecute.map((rule) => withoutTrailingSlash(rule.dir));
+  return [...new Set(dirs)].filter((dir) => dir !== withoutTrailingSlash(root));
+}
+
+/** Whether `dir` is inside a folder `allow.read` names (a path ending in `/`). */
+export function canRead(permissions: AgentPermissions, dir: string): boolean {
+  return permissions.allowRead.some(
+    (path) => path.endsWith('/') && (dir === withoutTrailingSlash(path) || dir.startsWith(path)),
+  );
+}
+
 /** A declared path as a glob: `docs/` covers everything under it, anything else stays as written. */
 export function pathGlob(path: string): string {
   return path.endsWith('/') ? `${path}**` : path;
@@ -130,7 +178,13 @@ function ruleLines(label: string, items: readonly ExecuteRule[]): readonly strin
  * The permissions in words, for the prompt: the model reads what it may do from the same data the
  * provider enforces, so the two never disagree.
  */
-export function formatPermissions(permissions: AgentPermissions): string {
+/** Where a run happens: the empty folder the provider runs in, inside the workspace root. */
+export interface RunPlace {
+  readonly runDir: string;
+  readonly root: string;
+}
+
+export function formatPermissions(permissions: AgentPermissions, place?: RunPlace): string {
   const lines = [
     ...pathLines('You may read', permissions.allowRead),
     ...pathLines('You may write', permissions.allowWrite),
@@ -139,10 +193,19 @@ export function formatPermissions(permissions: AgentPermissions): string {
     ...pathLines('You may not write', permissions.denyWrite),
     ...ruleLines('You may not run', permissions.denyExecute),
   ];
+  const commands =
+    permissions.allowExecute.length === 0
+      ? []
+      : [
+          place === undefined
+            ? 'Run each command exactly as listed, from where you are (a folder inside the workspace, where it works as is):'
+            : `You run in ${place.runDir}, an empty folder inside the workspace ${place.root}. Run each command exactly as listed, from there: it finds the workspace by itself. Never cd, not even to ${place.root} (it is refused):`,
+          'chaining listed commands with && works, but any other part (cd, a pipe, a redirection, another program) gets the whole command refused.',
+        ];
   const body =
     lines.length === 0
       ? ['Nothing is allowed: you may not read, write or run anything yourself; work with what this prompt gives you.']
-      : lines;
+      : [...lines, ...commands];
   return [
     '<permissions>',
     'Enforced by the command, not only asked: anything not allowed below is blocked. Relative paths are relative to the workspace root; paths ending in / cover everything under them.',

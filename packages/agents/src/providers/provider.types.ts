@@ -13,6 +13,13 @@ export interface ProviderRequest {
   /** The full prompt body (mode notice + saved plan + task), already assembled by `buildUserPrompt`. */
   readonly userPrompt: string;
   readonly workspaceRoot: string;
+  /**
+   * Where the provider runs: an empty folder inside the workspace (`.cache/runs/<id>/`), created before
+   * the session and removed after it. Both providers let the agent read and write freely in the folder
+   * they run in, so running in an empty one leaves `permissions` as the only thing that grants access;
+   * being inside the workspace, `bunx choliba ...` still finds it from there.
+   */
+  readonly runDir: string;
   readonly addDirs: readonly string[];
   readonly model: string | undefined;
   /** The order to use the agent's skills (`formatSkillsInstruction`), put atop its instructions; absent when it lists none. */

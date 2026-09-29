@@ -128,12 +128,19 @@ steps:
 
 Regras que valem para qualquer agente:
 
-- **Negado por padrão.** O que não está em `permissions.allow` é negado; `deny` prevalece sobre `allow`. O choliba
-  traduz as permissões para o provider (flags do Claude, `.cursor/cli.json` do Cursor) e as escreve no prompt. Onde as
-  listas não dizem nada, o provider ainda pode cair no próprio padrão (o Claude, por exemplo, lê a pasta de
-  trabalho sem pedir); fechar isso é o próximo passo.
-- **Execução por diretório.** Os providers aplicam em que diretórios o agente entra e quais comandos roda, mas não
-  o vínculo "este comando só neste diretório": na prática vale a união dos dois.
+- **Negado por padrão, em qualquer lugar.** O agente só lê, escreve e roda o que está em `permissions.allow`, no
+  workspace ou fora dele; `deny` prevalece sobre `allow`. O choliba escreve as permissões no prompt e as aplica no
+  provider. Cada execução roda numa pasta vazia, `.cache/runs/<id>/`, criada antes e apagada depois, porque os dois
+  providers liberam tudo na pasta em que rodam. No Claude, as regras dizem exatamente onde ele lê e escreve, e ele
+  só tem as ferramentas que as permissões pedem. No Cursor, que não trata `allow` como limite, o choliba gera um
+  `deny` para todo o resto do disco. Limite do Cursor: um arquivo **novo**, criado direto numa pasta do caminho até
+  um item liberado (a raiz do workspace, por exemplo), não é bloqueado.
+- **Caminhos.** Caminho relativo é relativo à raiz do workspace. As pastas das skills declaradas ficam liberadas para
+  leitura sozinhas. Num glob, o Cursor libera a pasta antes dele inteira.
+- **Execução por diretório.** Os comandos rodam a partir da pasta da execução, dentro do workspace (por isso
+  `bunx choliba ...` funciona sem `cd`). Um diretório de `execute` fora do workspace precisa estar em `allow.read`,
+  porque rodar comandos nele já dá acesso ao que há lá. Os providers aplicam em que diretórios o agente entra e
+  quais comandos roda, mas não o vínculo "este comando só neste diretório": na prática vale a união dos dois.
 - **`steps` não passam pelas permissões.** Os passos são executados pelo choliba, fora da sessão do modelo: um
   passo pode fazer o que o modelo não pode (o `docs-updater` proíbe o modelo de rodar o Prettier e o roda num
   `steps.after`).

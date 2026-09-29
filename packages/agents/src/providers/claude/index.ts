@@ -1,4 +1,5 @@
 import { mcpServersMap } from '../../mcps';
+import { absolutePermissions } from '../../permissions';
 import { assertArgvFits, wrapInstructions } from '../../prompt';
 import { createStreamJsonParser } from '../stream-json';
 import type { ProviderAdapter, ProviderRequest } from '../provider.types';
@@ -12,17 +13,22 @@ function buildArgs(request: ProviderRequest): readonly string[] {
     'stream-json',
     '--verbose',
     '--append-system-prompt',
-    wrapInstructions(request.agent, request.skillsInstruction),
+    wrapInstructions(request.agent, request.skillsInstruction, {
+      runDir: request.runDir,
+      root: request.workspaceRoot,
+    }),
   ];
   if (request.model !== undefined) {
     args.push('--model', request.model);
   }
   const mcpServers = request.mcpServers ?? [];
-  const permissions = claudePermissionArgs(request.agent.permissions, request.policy, mcpServers);
+  const permissions = claudePermissionArgs(
+    absolutePermissions(request.agent.permissions, request.workspaceRoot),
+    request.policy,
+    mcpServers,
+  );
   args.push('--permission-mode', permissions.permissionMode);
-  if (request.policy === 'read-only' && permissions.tools !== undefined) {
-    args.push('--tools', permissions.tools.join(','));
-  }
+  args.push('--tools', permissions.tools.join(','));
   // Only the MCP servers agent.yaml lists, whatever the policy: without `--strict-mcp-config` the
   // user's own servers and connectors (which `--tools` does not remove) would join the session.
   args.push('--strict-mcp-config');

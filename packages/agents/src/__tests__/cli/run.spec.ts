@@ -1,5 +1,6 @@
 import { execSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import * as coreGit from '@choliba/core/git';
@@ -18,6 +19,8 @@ import { makeTmpDir } from '../helpers/tmp';
 const FIXTURES = join(__dirname, '..', 'fixtures', 'agents');
 const SKILLS = join(__dirname, '..', 'fixtures', 'skills');
 const MCPS = join(__dirname, '..', 'fixtures', 'mcps');
+/** Where the runs of these cases make their empty folder: `/repo` is not a real folder. */
+const RUNS = join(tmpdir(), `cli-run-spec-${String(process.pid)}`);
 
 function fakeWritable(): Writable & { chunks: string[] } {
   const chunks: string[] = [];
@@ -91,6 +94,7 @@ function harness(stdoutLines: readonly string[], overrides: Partial<RunAgentsCli
     stdout,
     stderr,
     signals: fakeSignalSource(),
+    runsDir: RUNS,
     ...overrides,
     // The fixture agents' skills live next to them; a test may still point elsewhere.
     config: { CHOL_SKILLS_DIR: SKILLS, ...overrides.config },
@@ -242,14 +246,14 @@ describe('runAgentsCli — global help and completion', () => {
 });
 
 describe('runAgentsCli — ${VAR} in system.md', () => {
-  it('fills in the project locations and grants their directory outside the workspace', async () => {
+  it('fills in the project locations and grants them by rules, never as a folder the provider reads freely', async () => {
     const { deps, stdout } = harness([], { config: { GLOBAL_DIR: '/g' } });
 
     expect(await runAgentsCli(['with-vars', '--agents-dir', FIXTURES, '--dry-run'], deps)).toBe(0);
     const printed = lines(stdout);
     expect(printed).toContain('Write(//g/projects/*/tickets/**)');
     expect(printed).toContain('Read(//g/projects/*/config.json)');
-    expect(printed.slice(printed.indexOf('--add-dir'))).toContain('/g/projects');
+    expect(printed).not.toContain('--add-dir');
     expect(printed.join('\n')).not.toContain('${PROJECTS_DIR}');
   });
 
@@ -472,7 +476,7 @@ describe('runAgentsCli — --project', () => {
     expect(stderr.chunks.join('')).toContain('GLOBAL_DIR não definida');
   });
 
-  it('fills in ${PROJECT}, ${PROJECT_DIR} and ${APP_DIR} and grants only that project', async () => {
+  it('fills in ${PROJECT}, ${PROJECT_DIR} and ${APP_DIR} and grants only that project, by rules', async () => {
     await withProjects(async (projectsDir) => {
       const { deps, stdout } = harness([], { config: { GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir } });
 
@@ -484,7 +488,7 @@ describe('runAgentsCli — --project', () => {
       expect(printed).toContain(`Read(/${projectDir}/config.json)`);
       expect(printed).toContain(`Read(/${projectDir}/app/**)`);
       expect(printed).toContain(`Write(/${projectDir}/tickets/**)`);
-      expect(printed.slice(printed.indexOf('--add-dir'))).toContain(projectDir);
+      expect(printed).not.toContain('--add-dir');
       expect(printed.join('\n')).not.toMatch(/\$\{(PROJECT|APP_DIR)/);
     });
   });
@@ -529,13 +533,14 @@ describe('runAgentsCli — --project', () => {
 });
 
 describe('runAgentsCli — skills', () => {
-  it("lists the agent's skills in the prompt and grants a skills dir outside the workspace", async () => {
+  it("lists the agent's skills in the prompt and lets it read the folder of each one", async () => {
     const { deps, stdout } = harness([]);
 
     expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'x'], deps)).toBe(0);
     const printed = lines(stdout);
     expect(printed.at(printed.indexOf('-p') + 1)).toContain('Task:');
-    expect(printed).toContain(SKILLS);
+    expect(printed).toContain(`Read(/${SKILLS}/dummy-skill/**)`);
+    expect(printed).not.toContain('--add-dir');
   });
 
   it('stops before the provider when a listed skill does not exist', async () => {
@@ -550,7 +555,7 @@ describe('runAgentsCli — skills', () => {
     const { deps, stdout } = harness([]);
 
     await runAgentsCli(['with-prepare', '--agents-dir', FIXTURES, '--dry-run'], deps);
-    expect(lines(stdout)).not.toContain(SKILLS);
+    expect(lines(stdout).join('\n')).not.toContain(SKILLS);
   });
 });
 
@@ -713,9 +718,9 @@ describe('runAgentsCli — run', () => {
     try {
       expect(await runAgentsCli(['with-prepare', '--agents-dir', FIXTURES, '--dry-run'], deps)).toBe(0);
       expect(stdout.chunks.join('')).toContain('diff calculado por quem chamou este comando');
-      // The fixture's system.md allows writing docs/, so edits run under that allowlist.
+      // The fixture's agent.yaml allows writing docs/, which becomes absolute from the workspace root.
       expect(stdout.chunks.join('')).toContain('dontAsk');
-      expect(stdout.chunks.join('')).toContain('Edit(docs/**)');
+      expect(stdout.chunks.join('')).toContain(`Edit(/${tmp.path}/docs/**)`);
     } finally {
       tmp.cleanup();
       getDiff.mockRestore();
@@ -915,15 +920,12 @@ describe('runAgentsCli — run', () => {
       expect(lines(stdout).includes('--add-dir')).toBe(false);
     });
 
-    it('adds the agents dir to --add-dir when it lies outside the workspace root', async () => {
+    it('never adds the agents dir, even outside the workspace root: an added folder is read freely', async () => {
       const { deps, stdout } = harness([], { repoRoot: '/repo' });
 
       await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'x'], deps);
 
-      const printed = lines(stdout);
-      const index = printed.indexOf('--add-dir');
-      expect(index).toBeGreaterThan(-1);
-      expect(printed[index + 1]).toBe(FIXTURES);
+      expect(lines(stdout)).not.toContain('--add-dir');
     });
 
     it('reports an oversized prompt cleanly instead of crashing', async () => {
@@ -942,8 +944,8 @@ describe('runAgentsCli — run', () => {
 
       await runAgentsCli(['quick', '--agents-dir', FIXTURES, '--dry-run', 'x'], deps);
 
-      // echo declares nothing to write: an edits command with no allowlist accepts the edits.
-      expect(lines(stdout)).toContain('acceptEdits');
+      // echo declares nothing to write: even an edits command denies what is not allowed.
+      expect(lines(stdout)).toContain('dontAsk');
     });
   });
 
@@ -1139,5 +1141,54 @@ describe('runAgentsCli — ${CHOL_ROOT}', () => {
 
     expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, 'x'], deps)).toBe(1);
     expect(stderr.chunks.join('')).toContain('CHOL_ROOT is found by the application');
+  });
+});
+
+describe('runAgentsCli — execute outside the workspace', () => {
+  it('refuses a folder execute names that allow.read does not cover', async () => {
+    await withCustomAgent(
+      ['permissions:', '  allow:', '    execute:', '      /opt/app/: [composer test]'],
+      async (agentsDir) => {
+        const { deps, stderr } = harness([]);
+
+        expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(1);
+        expect(stderr.chunks.join('')).toContain(
+          '"custom" runs commands in /opt/app, which permissions.allow.read does not cover',
+        );
+      },
+    );
+  });
+
+  it('lets the provider enter a readable folder execute names', async () => {
+    const yaml = [
+      'permissions:',
+      '  allow:',
+      '    read: [/opt/app/]',
+      '    execute:',
+      '      /opt/app/: [composer test]',
+    ];
+    await withCustomAgent(yaml, async (agentsDir) => {
+      const { deps, stdout } = harness([]);
+
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(0);
+      const printed = lines(stdout);
+      expect(printed.at(printed.indexOf('--add-dir') + 1)).toBe('/opt/app');
+      expect(printed).toContain('Bash(composer test:*)');
+    });
+  });
+});
+
+describe('runAgentsCli — run dir', () => {
+  it('makes each run folder under <repoRoot>/.cache/runs by default, and runs the provider there', async () => {
+    const { deps: withRuns, stdout } = harness([], { which: whichOf(['cursor-agent']) });
+    const { runsDir: _runsDir, ...deps } = withRuns;
+
+    expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--provider', 'cursor', '--dry-run', 'x'], deps)).toBe(
+      0,
+    );
+    const printed = lines(stdout);
+    expect(printed.at(printed.indexOf('--workspace') + 1)).toBe(
+      `/repo/.cache/runs/2026-01-01T00-00-00.000Z-${String(process.pid)}`,
+    );
   });
 });
