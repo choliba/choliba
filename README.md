@@ -125,7 +125,7 @@ steps:
 | `permissions.allow`/`.deny`  | não         | nada liberado       | `read` e `write`: caminhos (terminado em `/` = tudo abaixo). `execute`: diretório → comandos (prefixos com argumentos).             |
 | `modes.allow` / `.default`   | não         | os três / `execute` | Modos aceitos (`execute`, `plan`, `ask`) e o usado quando a linha de comando não diz.                                               |
 | `task.required` / `.default` | não         | `true` / —          | Se a tarefa é obrigatória e, quando não é, qual usar (`default` passa a ser obrigatório).                                           |
-| `ticket_types`               | não         | agente sem ticket   | Tipos de ticket aceitos (`epic`, `story`, `bug`, `improvement`, `task`); a execução pede `--type` ou `--ticket`.                    |
+| `ticket_types`               | não         | agente sem ticket   | Tipos de ticket aceitos (`story`, `bug`, `improvement`, `task`); a execução pede `--type` ou `--ticket`.                            |
 | `steps.before` / `.after`    | não         | nenhum              | Ações do choliba antes do modelo (`run`, `git_diff`, `add_files`) e depois de um `execute` bem-sucedido (`run`, `record_git_head`). |
 
 Regras que valem para qualquer agente:

@@ -328,14 +328,14 @@ describe('runAgentsCli — tickets', () => {
         );
 
         const other = harness([], { config });
-        expect(await runAgentsCli(argv(agentsDir, '--type', 'epic', '--dry-run'), other.deps)).toBe(1);
+        expect(await runAgentsCli(argv(agentsDir, '--type', 'task', '--dry-run'), other.deps)).toBe(1);
         expect(other.stderr.chunks.join('')).toContain(
-          '"with-project" não trabalha com tickets "epic" (aceitos: bug, story).',
+          '"with-project" não trabalha com tickets "task" (aceitos: bug, story).',
         );
 
         const shortcut = harness([], { config });
-        expect(await runAgentsCli(argv(agentsDir, '--type-epic', '--dry-run'), shortcut.deps)).toBe(1);
-        expect(shortcut.stderr.chunks.join('')).toContain('unknown flag: --type-epic');
+        expect(await runAgentsCli(argv(agentsDir, '--type-task', '--dry-run'), shortcut.deps)).toBe(1);
+        expect(shortcut.stderr.chunks.join('')).toContain('unknown flag: --type-task');
       }),
     );
   });

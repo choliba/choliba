@@ -178,7 +178,7 @@ describe('validateAgentYamlV1', () => {
   });
 
   it('accepts only the ticket types that have a template', () => {
-    expect(validate({ ...minimal(), ticket_types: ['epic', 'task'] }).valid).toBe(true);
+    expect(validate({ ...minimal(), ticket_types: ['bug', 'task'] }).valid).toBe(true);
     expect(errorsOf({ ...minimal(), ticket_types: ['feature'] })).toContain('/ticket_types/0');
   });
 

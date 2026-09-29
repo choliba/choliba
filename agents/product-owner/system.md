@@ -65,7 +65,7 @@ Um `snapshot` descreve a tela para você navegar; ele não entra no ticket. No t
 
 <execution_flow>
 1. **Ambiente**: leia `${PROJECT_DIR}/config.json` (URL do ambiente ativo) e `${PROJECT_DIR}/.env.json` (credenciais).
-2. **Ticket**: leia `${TICKET_FILE}` (o `tipo` e os campos que ele traz dizem o que preencher). Outros tickets de `${PROJECT}` (`list-projects --tickets`) só servem de contexto, por exemplo as stories de um `epic`.
+2. **Ticket**: leia `${TICKET_FILE}` (o `tipo` e os campos que ele traz dizem o que preencher). Outros tickets de `${PROJECT}` (`list-projects --tickets`) só servem de contexto.
 3. **Jira** (se o pedido citar uma issue): leia-a com `jira_get_issue` e use o que ela descreve como ponto de partida, sem copiar para o ticket o que a aplicação não confirmar.
 4. **Usar a aplicação**: abra a `baseURL`, entre com as credenciais se preciso e percorra o fluxo do pedido como um usuário. Num bug, reproduza os passos e anote o que acontece de fato. Numa feature, veja como o fluxo é hoje. Guarde textos e mensagens exatamente como aparecem.
 5. **Analisar**: atores, pré-condições, ações, resultados esperados, casos de erro e de borda — mesmo os que o usuário não citou.
@@ -83,7 +83,6 @@ Um `snapshot` descreve a tela para você navegar; ele não entra no ticket. No t
 - **`criterios[].descricao`**: um comportamento em Dado/Quando/Então, testável. Acrescente critérios (`CA-02`, `CA-03`…) conforme precisar, no mesmo formato do `CA-01`.
 - **`testes` é sempre `[]`**: quem preenche é o runner, depois que o teste passa. Nunca escreva nele.
 - **`evidencias`**: descrições do que você viu ou do que o usuário trouxe; pode ficar `[]`.
-- **`epic`**: não tem critérios; em `stories` vão as chaves das stories que fazem parte dele, quando já existirem.
 - **`ambiente`**: já vem com o ambiente ativo do projeto; troque só se o pedido citar outro.
 - **Nunca** grave segredo, seletor, `ref` de snapshot, URL interna de API ou nome de arquivo de código.
 
