@@ -36,7 +36,8 @@ Roda sozinho no `postinstall` (com `--trust`) ou à mão (`bunx choliba setup`).
 ele:
 
 - cria `app/agents/`, `app/.agents/skills/`, `app/.agents/mcps/` e `projects/` na pasta de trabalho;
-- copia `.env.example` e `.gitignore` de um template, e cria o `.env` inicial com `CHOL_GLOBAL_DIR` apontando para
+- copia de um template `.env.example`, `.gitignore`, `.editorconfig` (largura e indentação, que o Prettier lê) e os
+  arquivos do Prettier e do ESLint, e cria o `.env` inicial com `CHOL_GLOBAL_DIR` apontando para
   `.cache/choliba` e `PROJECTS_DIR` para `projects/`, os dois da própria pasta de trabalho;
 - lista `choliba` em `trustedDependencies` do `package.json`, para que instalações futuras rodem o setup de novo
   sem pedir `--trust`;

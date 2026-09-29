@@ -1,0 +1,33 @@
+# https://editorconfig.org — fonte única de verdade para indentação, quebra de
+# linha e largura. O Prettier lê indent_style/indent_size/end_of_line/
+# max_line_length daqui, então esses valores NÃO se repetem no .prettierrc.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+max_line_length = 120
+
+# Espaços no fim da linha são quebra de linha forçada em Markdown.
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# Lockfiles e JSON gerados por ferramentas não seguem a largura de código.
+[*.{json,jsonc,lock}]
+max_line_length = off
+
+[*.{yml,yaml}]
+indent_size = 2
+
+# Makefiles exigem tabs de verdade.
+[Makefile]
+indent_style = tab
+
+# Scripts do Windows esperam CRLF.
+[*.{bat,cmd,ps1}]
+end_of_line = crlf

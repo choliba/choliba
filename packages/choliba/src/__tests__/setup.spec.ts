@@ -73,6 +73,7 @@ describe('scaffoldWorkspace', () => {
         '.env.example',
         '.gitignore',
         'bunfig.toml',
+        '.editorconfig',
         '.prettierrc.json',
         '.prettierignore',
         'eslint.config.mjs',

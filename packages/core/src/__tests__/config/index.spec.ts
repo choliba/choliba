@@ -47,6 +47,7 @@ describe('config barrel exports', () => {
       config.PRETTIERRC_FILE,
       config.PRETTIERIGNORE_FILE,
       config.ESLINT_CONFIG_FILE,
+      config.EDITORCONFIG_FILE,
     ]).toEqual([
       '.env.example',
       '.gitignore',
@@ -54,6 +55,7 @@ describe('config barrel exports', () => {
       '.prettierrc.json',
       '.prettierignore',
       'eslint.config.mjs',
+      '.editorconfig',
     ]);
     expect([config.PROJECT_CONFIG_FILE, config.PROJECT_ENV_FILE, config.PROJECT_ENV_EXAMPLE_FILE]).toEqual([
       'config.json',

@@ -34,3 +34,4 @@ export const BUNFIG_FILE = 'bunfig.toml';
 export const PRETTIERRC_FILE = '.prettierrc.json';
 export const PRETTIERIGNORE_FILE = '.prettierignore';
 export const ESLINT_CONFIG_FILE = 'eslint.config.mjs';
+export const EDITORCONFIG_FILE = '.editorconfig';

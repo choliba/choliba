@@ -8,6 +8,7 @@ import {
   DEFAULT_AGENTS_DIR,
   DEFAULT_MCPS_DIR,
   DEFAULT_SKILLS_DIR,
+  EDITORCONFIG_FILE,
   ENV_EXAMPLE_FILE,
   ENV_FILE,
   ESLINT_CONFIG_FILE,
@@ -73,6 +74,8 @@ const WORKSPACE_FILES: readonly (readonly [string, string])[] = [
   ['gitignore', GITIGNORE_FILE],
   // `bun chol:…` without the "$ command" echo and the "script exited" lines, as in the choliba repository.
   ['bunfig', BUNFIG_FILE],
+  // Width and indentation live here; Prettier reads them, so .prettierrc.json does not repeat them.
+  ['editorconfig', EDITORCONFIG_FILE],
   ['prettierrc', PRETTIERRC_FILE],
   ['prettierignore', PRETTIERIGNORE_FILE],
   // .mjs: the workspace package.json has no "type", and the config is an ES module.

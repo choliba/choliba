@@ -13,6 +13,7 @@ export { findResource, locateResource } from './resources';
 export {
   AGENT_FILE,
   BUNFIG_FILE,
+  EDITORCONFIG_FILE,
   ENV_EXAMPLE_FILE,
   ENV_FILE,
   ESLINT_CONFIG_FILE,
