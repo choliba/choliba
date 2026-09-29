@@ -2,18 +2,34 @@
 
 ## README
 
+Source: the Standard Readme specification, <https://github.com/RichardLitt/standard-readme> (`spec.md`).
+
 The README is the front door. A new reader should know within a minute what the project is, whether it is for
-them, and how to get it running.
+them, and how to get it running. Unless the project already follows another convention, structure it by the
+Standard Readme specification: sections in this order, optional ones omitted when they do not apply, titles exactly
+as below (translated when the README is in another language, e.g. `Instalação`, `Uso`, `Contribuindo`, `Licença`).
 
-Suggested order (keep only what applies):
+| Section | Status | Rules |
+| --- | --- | --- |
+| Title | required | Matches the repository, folder and package names (or explains the difference in the long description). |
+| Banner | optional | No title; a local image right after the title. |
+| Badges | optional | No title; one per line; each says something (CI, coverage, release, license). |
+| Short description | required | No title; one line, at most 120 characters; the same text as the package's `description` and the repository's description. |
+| Long description | optional | No title; why the project exists and how its parts fit, in a few paragraphs. |
+| Table of Contents | required over 100 lines | Links to every level-2 section after it. |
+| Security | optional | Here when security matters to using the project; otherwise an extra section. |
+| Background | optional | Motivation, abstract dependencies, "See also". |
+| Install | required (not for docs repos) | A code block; a Dependencies subsection for anything installed by hand; an Updating subsection when versions change. |
+| Usage | required (not for docs repos) | A code block of common use; a CLI subsection when there is a CLI. |
+| Extra sections | optional | Custom titles, between Usage and API. |
+| API | optional | Exported functions and objects, or a link to generated API docs. |
+| Maintainers | optional | Titled Maintainer(s); each with a contact. |
+| Thanks | optional | Titled Thanks, Credits or Acknowledgements. |
+| Contributing | required | Where to ask questions, whether PRs are accepted, what they must meet; link CONTRIBUTING and the code of conduct when they exist. |
+| License | required, last | SPDX name (or `UNLICENSED`) and owner; link the license file. |
 
-1. **Name and one-sentence purpose** — what it does and for whom.
-2. **Requirements** — runtime and tool versions.
-3. **Quick start** — the shortest path from clone to a working result, with real commands.
-4. **Common commands** — a short table of the everyday ones; link to the full reference.
-5. **Structure** — where the main parts live (for monorepos: one line per package/app, each with its own README
-   when it has users of its own).
-6. **Where to go next** — links to the docs, contributing guide, changelog, license.
+The whole file: valid Markdown, no broken links (anchors, local files and URLs), code examples in the project's own
+style. When a change adds a section, put it in its place in this order and add it to the table of contents.
 
 Avoid: long feature essays, duplicated reference material, badges that say nothing, instructions that only work
 on the author's machine.
