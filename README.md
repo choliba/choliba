@@ -153,6 +153,19 @@ Regras que valem para qualquer agente:
 - **Projeto.** Um agente que usa uma variável de projeto (`${PROJECT}`, `${PROJECT_DIR}`, `${APP_DIR}`,
   `${TICKET}`, `${TICKET_FILE}`) no `agent.yaml` ou no `system.md`, ou declara `ticket_types`, exige `--project`.
 
+## Portões dos testes de um ticket
+
+`choliba tests PROJECT:TICKET --expect red|green [--failures ARQUIVO]` roda os testes de um ticket e confere o que
+eles mostram. É assim que os agentes `test-writer` e `implementer` garantem o TDD:
+
+- **`--expect red`**: todo critério do ticket tem teste, nenhum quebra no próprio código nem é pulado, e **pelo
+  menos um falha pelo comportamento** (há o que implementar). Um critério cujos testes já passam fica como **já
+  atendido**: o teste continua valendo como proteção contra regressão. Se todos passam, o portão recusa (nada a
+  implementar).
+- **`--expect green`**: todos os testes do ticket passam, inclusive os dos critérios já atendidos.
+- **`--failures ARQUIVO`**: grava, em Markdown, os critérios a implementar com a falha de cada teste e, por último,
+  os já atendidos. O `test-writer` grava esse arquivo, e o `implementer` começa por ele.
+
 ## `choliba install`
 
 Traz um agente (com as skills e os MCPs que ele declara), uma skill ou um MCP para a pasta de trabalho,
