@@ -1,4 +1,5 @@
 import { mcpServersMap } from '../../mcps';
+import { absolutePermissions } from '../../permissions';
 import { assertArgvFits, wrapInstructions } from '../../prompt';
 import { createStreamJsonParser } from '../stream-json';
 import type { PlanContentContext, ProviderAdapter, ProviderRequest } from '../provider.types';
@@ -35,16 +36,11 @@ function policyArgs(request: ProviderRequest): readonly string[] {
  * front of the prompt instead of appended as a separate flag.
  */
 function buildArgs(request: ProviderRequest): readonly string[] {
-  const prompt = `${wrapInstructions(request.agent, request.skillsInstruction)}\n\n${request.userPrompt}`;
-  const args: string[] = [
-    '-p',
-    prompt,
-    '--trust',
-    '--output-format',
-    'stream-json',
-    '--workspace',
-    request.workspaceRoot,
-  ];
+  const prompt = `${wrapInstructions(request.agent, request.skillsInstruction, {
+    runDir: request.runDir,
+    root: request.workspaceRoot,
+  })}\n\n${request.userPrompt}`;
+  const args: string[] = ['-p', prompt, '--trust', '--output-format', 'stream-json', '--workspace', request.runDir];
   if (request.model !== undefined) {
     args.push('--model', request.model);
   }
@@ -64,25 +60,29 @@ function buildArgs(request: ProviderRequest): readonly string[] {
 }
 
 /**
- * The agent's declared permissions and MCP servers, written into `.cursor/cli.json` and
- * `.cursor/mcp.json` for the run (nothing when it declares neither). Undone in reverse order, so
+ * The agent's permissions and MCP servers, written into `.cursor/cli.json` and `.cursor/mcp.json` of the
+ * folder the run happens in (the permissions always: even an agent that declares none is denied the rest). Undone in reverse order, so
  * the `.cursor/` dir created for the first file is removed only once both are gone.
  */
 function prepareWorkspace(request: ProviderRequest): () => void {
   const mcpServers = request.mcpServers ?? [];
-  const permissions = cursorPermissions(request.agent.permissions, request.policy, request.workspaceRoot, mcpServers);
+  const permissions = cursorPermissions(
+    absolutePermissions(request.agent.permissions, request.workspaceRoot),
+    request.policy,
+    request.workspaceRoot,
+    request.runDir,
+    mcpServers,
+  );
   const restores: (() => void)[] = [];
   const restoreAll = (): void => {
     for (const restore of [...restores].reverse()) {
       restore();
     }
   };
-  if (permissions.allow.length > 0 || permissions.deny.length > 0) {
-    restores.push(applyCursorPermissions(request.workspaceRoot, permissions));
-  }
+  restores.push(applyCursorPermissions(request.runDir, permissions));
   if (mcpServers.length > 0) {
     try {
-      restores.push(applyCursorMcpServers(request.workspaceRoot, mcpServersMap(mcpServers)));
+      restores.push(applyCursorMcpServers(request.runDir, mcpServersMap(mcpServers)));
     } catch (error) {
       restoreAll();
       throw error;

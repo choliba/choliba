@@ -1,4 +1,4 @@
-import { isAbsolute, join, relative } from 'node:path';
+import { dirname, isAbsolute, join } from 'node:path';
 
 import type { ProcessRunner, SignalSource, Writable } from '@choliba/terminal';
 import { complete, describe, formatHelp, formatSuggestions } from '@choliba/core/cli';
@@ -23,7 +23,8 @@ import { runAgent } from '../run-agent';
 import { CHOL_AGENTS_PROVIDER } from '@choliba/core/config';
 import { listProjectNames, listTicketKeys, loadProjectSettings, resolveLocations } from '@choliba/projects';
 import { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '../workspace-dirs';
-import { permissionDirs, withExpandedInstructions } from '../vars';
+import { absolutePermissions, canRead, outsideExecuteDirs } from '../permissions';
+import { withExpandedInstructions } from '../vars';
 import type { AgentsArgsError, ParsedAgentsArgs } from './args';
 import { CLI_PROGRAM_NAME, PREPARE_FLAGS, USAGE, parseAgentsArgs, unknownFlagMessage } from './args';
 import type { TicketTarget } from './ticket-run';
@@ -48,16 +49,12 @@ export interface RunAgentsCliDeps {
   readonly signals: SignalSource;
   /** Reads branches and tags for `--since` completion; defaults to spawning the real `git`. */
   readonly git?: GitRunner;
+  /** Where each run's empty folder is made (`ProviderRequest.runDir`); defaults to `<repoRoot>/.cache/runs`. */
+  readonly runsDir?: string;
 }
 
 function toAbsolute(path: string, repoRoot: string): string {
   return isAbsolute(path) ? path : join(repoRoot, path);
-}
-
-/** `dir === parent` counts as inside — `relative` returns `''` for that case. */
-function isInside(parent: string, dir: string): boolean {
-  const rel = relative(parent, dir);
-  return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel));
 }
 
 /** Trims a long argument for `--dry-run` output — nobody needs the full 30 KB system prompt on screen. */
@@ -432,26 +429,23 @@ function resolvePlanContent(parsed: RunArgs, deps: RunAgentsCliDeps): { planCont
   }
 }
 
-/** Step 4: extra directories the provider may touch — the command's own, `--add-dir`, and the agents dir itself when it sits outside the workspace root. Never fails. */
+/**
+ * Step 4: extra directories the provider may enter — the command's own, `--add-dir`, and the directories
+ * `execute` names outside the workspace root (the provider cannot run a command in a folder it may not
+ * enter). The agent's own and its skills' folders are not among them: those are granted by rules only,
+ * since an added folder is one the provider reads freely. Never fails.
+ */
 function resolveAddDirs(
   command: CommandDefinition,
   parsed: RunArgs,
   deps: RunAgentsCliDeps,
-  readDirs: readonly string[],
+  executeDirs: readonly string[],
 ): string[] {
-  const addDirs = [
+  return [
     ...command.addDirs.map((dir) => toAbsolute(dir, deps.repoRoot)),
     ...parsed.addDirs.map((dir) => toAbsolute(dir, deps.repoRoot)),
+    ...executeDirs,
   ];
-  // Directories the agent must read (its own dir, its skills) that live outside the workspace
-  // root (e.g. --agents-dir or CHOL_SKILLS_DIR pointing at another repo): the provider cannot read
-  // files there unless each is explicitly granted — the workspace root alone is not enough.
-  for (const dir of readDirs) {
-    if (!isInside(deps.repoRoot, dir)) {
-      addDirs.push(dir);
-    }
-  }
-  return addDirs;
 }
 
 /** Step 5: which provider binary this run actually talks to. */
@@ -507,6 +501,10 @@ function buildProviderRequest(
     policy: effectivePolicy(command, mode),
     userPrompt: buildUserPrompt({ templateOutput, mode, planContent }),
     workspaceRoot: deps.repoRoot,
+    runDir: join(
+      deps.runsDir ?? join(deps.repoRoot, '.cache', 'runs'),
+      `${deps.now().toISOString().replaceAll(':', '-')}-${String(process.pid)}`,
+    ),
     addDirs: [...addDirs],
     model: parsed.model,
     ...(skillsInstruction === '' ? {} : { skillsInstruction }),
@@ -595,6 +593,33 @@ function commandFor(context: RunContext, command: CommandDefinition, agent: Agen
   return context.synthesized ? commandFromAgent(agent) : command;
 }
 
+/** The agent with the folder of each skill it lists added to what it may read: using a skill is reading it. */
+function withSkillReads(agent: AgentDefinition, skills: readonly SkillSummary[]): AgentDefinition {
+  const folders = skills.map((skill) => `${dirname(skill.path)}/`);
+  return folders.length === 0
+    ? agent
+    : { ...agent, permissions: { ...agent.permissions, allowRead: [...agent.permissions.allowRead, ...folders] } };
+}
+
+/**
+ * The directories `execute` names outside the workspace root, each of which must be readable: a command
+ * run in a folder reaches what is in it anyway, and a provider can only enter a folder it may read freely.
+ * `undefined` when one is not; the reason is already on `stderr`.
+ */
+function checkedExecuteDirs(agent: AgentDefinition, deps: RunAgentsCliDeps): readonly string[] | undefined {
+  const permissions = absolutePermissions(agent.permissions, deps.repoRoot);
+  const dirs = outsideExecuteDirs(permissions, deps.repoRoot);
+  const unreadable = dirs.filter((dir) => !canRead(permissions, dir));
+  if (unreadable.length === 0) {
+    return dirs;
+  }
+  deps.stderr.write(
+    `"${agent.name}" runs commands in ${unreadable.join(', ')}, which permissions.allow.read does not cover: ` +
+      'add the folder to allow.read (running commands in it reaches what is there anyway).\n',
+  );
+  return undefined;
+}
+
 /** Everything one run needs before its provider starts; `undefined` when a check stops it (reason on `stderr`). */
 function prepareRun(
   context: RunContext,
@@ -612,19 +637,19 @@ function prepareRun(
   if (agentSkills === undefined || mcpServers === undefined) {
     return undefined;
   }
-  const readDirs = [
-    context.agentsDir,
-    ...(agentSkills.skills.length > 0 ? [agentSkills.skillsDir] : []),
-    ...permissionDirs(agent.permissions),
-  ];
-  const addDirs = resolveAddDirs(command, parsed, deps, readDirs);
+  const withSkills = withSkillReads(agent, agentSkills.skills);
+  const executeDirs = checkedExecuteDirs(withSkills, deps);
+  if (executeDirs === undefined) {
+    return undefined;
+  }
+  const addDirs = resolveAddDirs(command, parsed, deps, executeDirs);
   const resolved = resolveProviderChoice(parsed, deps);
   if (resolved === undefined) {
     return undefined;
   }
   const built = buildProviderRequest(
     command,
-    agent,
+    withSkills,
     context.mode,
     context.task,
     context.planContent,
