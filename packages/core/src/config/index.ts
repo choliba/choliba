@@ -1,4 +1,5 @@
 export {
+  CHOL_ROOT,
   CHOL_GLOBAL_DIR,
   PROJECTS_DIR,
   CHOL_AGENTS_DIR,
@@ -25,7 +26,6 @@ export {
   PROJECT_ENV_EXAMPLE_FILE,
   PROJECT_ENV_FILE,
   SKILL_FILE,
-  SYSTEM_FILE,
 } from './files';
 export {
   AGENTS_SUBDIR,

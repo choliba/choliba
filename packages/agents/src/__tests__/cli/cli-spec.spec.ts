@@ -10,8 +10,8 @@ const FIXTURES = join(__dirname, '..', 'fixtures', 'agents');
 const git: GitRunner = { run: () => ({ stdout: '', stderr: '', status: 0 }) };
 
 describe('agentsCliSpec', () => {
-  it('shows only the first sentence of an agent description in the help', async () => {
-    const echo = await loadAgent(FIXTURES, 'echo');
+  it('shows only the first sentence of an agent description in the help', () => {
+    const echo = loadAgent(FIXTURES, 'echo');
     const agent = { ...echo, description: 'Primeira frase.   Segunda\n frase.' };
 
     const help = formatHelp(
@@ -22,8 +22,8 @@ describe('agentsCliSpec', () => {
     expect(help).not.toContain('Segunda');
   });
 
-  it('completes providers and asks for files for directory flags', async () => {
-    const echo = await loadAgent(FIXTURES, 'echo');
+  it('completes providers and asks for files for directory flags', () => {
+    const echo = loadAgent(FIXTURES, 'echo');
     const spec = agentsCliSpec({ agents: [echo], repoRoot: '/repo', git, projects: () => [], tickets: () => [] });
 
     expect(complete(spec, ['echo', '--provider', ''])).toEqual({
@@ -38,8 +38,8 @@ describe('agentsCliSpec', () => {
     expect(complete(spec, ['-h', ''])).toEqual({ kind: 'values', values: [] });
   });
 
-  it('suggests nothing for a flag without known values', async () => {
-    const echo = await loadAgent(FIXTURES, 'echo');
+  it('suggests nothing for a flag without known values', () => {
+    const echo = loadAgent(FIXTURES, 'echo');
     expect(
       flagValueSuggestions('--unknown', echo, {
         agents: [],
@@ -54,9 +54,9 @@ describe('agentsCliSpec', () => {
     });
   });
 
-  it("shows each agent's own defaults and hides diff-base flags without prepare", async () => {
-    const echo = await loadAgent(FIXTURES, 'echo');
-    const prepared = await loadAgent(FIXTURES, 'with-prepare');
+  it("shows each agent's own defaults and hides diff-base flags without prepare", () => {
+    const echo = loadAgent(FIXTURES, 'echo');
+    const prepared = loadAgent(FIXTURES, 'with-prepare');
     const context = { agents: [echo, prepared], repoRoot: '/repo', git, projects: () => [], tickets: () => [] };
 
     const withPrepare = formatHelp(agentCommandSpec(prepared, context));
@@ -71,9 +71,9 @@ describe('agentsCliSpec', () => {
     expect(withoutPrepare).toContain('--mode-plan');
   });
 
-  it('offers --project, completed with the project names, only to agents that require a project', async () => {
-    const echo = await loadAgent(FIXTURES, 'echo');
-    const withProject = await loadAgent(FIXTURES, 'with-project');
+  it('offers --project, completed with the project names, only to agents that require a project', () => {
+    const echo = loadAgent(FIXTURES, 'echo');
+    const withProject = loadAgent(FIXTURES, 'with-project');
     const context = {
       agents: [echo, withProject],
       repoRoot: '/repo',
@@ -88,9 +88,9 @@ describe('agentsCliSpec', () => {
     expect(complete(spec, ['with-project', '--project', ''])).toEqual({ kind: 'values', values: ['blue', 'red'] });
   });
 
-  it('offers --type, a --type-<type> per ticket type and --ticket only to agents with ticket_types', async () => {
-    const echo = await loadAgent(FIXTURES, 'echo');
-    const withTickets = { ...(await loadAgent(FIXTURES, 'with-project')), ticketTypes: ['bug', 'story'] };
+  it('offers --type, a --type-<type> per ticket type and --ticket only to agents with ticket_types', () => {
+    const echo = loadAgent(FIXTURES, 'echo');
+    const withTickets = { ...loadAgent(FIXTURES, 'with-project'), ticketTypes: ['bug', 'story'] };
     const context = {
       agents: [echo, withTickets],
       repoRoot: '/repo',

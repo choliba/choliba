@@ -32,11 +32,10 @@ function problemOf(error: unknown): string {
 }
 
 /**
- * Every agent of the workspace, loaded as a run would load it: agent.yaml against its standard,
- * system.md against agent.xsd, the skills it lists and the
- * MCP servers it lists, with their `${NAME}` variables from the config.
+ * Every agent of the workspace, loaded as a run would load it: its agent.yaml against its standard,
+ * the skills it lists and the MCP servers it lists, with their `${NAME}` variables from the config.
  */
-export async function checkAgents(root: string, config: Config): Promise<CheckSection> {
+export function checkAgents(root: string, config: Config): CheckSection {
   const dir = resolveAgentsDir(undefined, config, root);
   const title = `Agentes (${dir})`;
   if (!existsSync(dir)) {
@@ -49,7 +48,7 @@ export async function checkAgents(root: string, config: Config): Promise<CheckSe
   const items: CheckItem[] = [];
   for (const name of names) {
     try {
-      const agent = await loadAgent(dir, name);
+      const agent = loadAgent(dir, name);
       resolveSkills(resolveSkillsDir(config, root), agent.skills);
       resolveMcps(resolveMcpsDir(config, root), agent.mcps, definedConfig(config));
       items.push({ name });
@@ -84,8 +83,8 @@ export function checkProjects(root: string, config: Config): CheckSection {
 }
 
 /** `choliba check`: agents, then projects. */
-export async function checkWorkspace(root: string, config: Config): Promise<readonly CheckSection[]> {
-  return [await checkAgents(root, config), checkProjects(root, config)];
+export function checkWorkspace(root: string, config: Config): readonly CheckSection[] {
+  return [checkAgents(root, config), checkProjects(root, config)];
 }
 
 /** Whether nothing in the sections has a problem. */

@@ -1,6 +1,6 @@
 import type { AgentDefinition } from './agent.types';
 import type { CommandDefinition, ExecutionMode, PermissionPolicy } from './command.types';
-import { buildAfterExecute, buildPrepare } from './prepare/registry';
+import { buildAfter, buildPrepare } from './prepare/registry';
 
 export type CommandSpec = Pick<CommandDefinition, 'name' | 'agent' | 'description'> &
   Partial<Omit<CommandDefinition, 'name' | 'agent' | 'description'>>;
@@ -27,15 +27,15 @@ export function defineCommand(spec: CommandSpec): CommandDefinition {
   if (spec.prepare !== undefined) {
     result = { ...result, prepare: spec.prepare };
   }
-  if (spec.afterExecuteSuccess !== undefined) {
-    result = { ...result, afterExecuteSuccess: spec.afterExecuteSuccess };
+  if (spec.after !== undefined) {
+    result = { ...result, after: spec.after };
   }
   return result;
 }
 
 /**
- * Builds a runnable command from an agent loaded via `agent.yaml` + `system.md`: policy, mode,
- * task requirement and optional prepare/after_execute hooks come from the YAML definition.
+ * Builds a runnable command from an agent loaded from its `agent.yaml`: policy, mode, task
+ * requirement and the optional `prepare`/`after` hooks (its `steps`) come from the declaration.
  */
 export function commandFromAgent(agent: AgentDefinition): CommandDefinition {
   const spec: CommandSpec = {
@@ -47,13 +47,13 @@ export function commandFromAgent(agent: AgentDefinition): CommandDefinition {
     taskRequired: agent.taskRequired,
   };
   const prepare = buildPrepare(agent);
-  const afterExecuteSuccess = buildAfterExecute(agent);
+  const after = buildAfter(agent);
   let result = defineCommand(spec);
   if (prepare !== undefined) {
     result = { ...result, prepare };
   }
-  if (afterExecuteSuccess !== undefined) {
-    result = { ...result, afterExecuteSuccess };
+  if (after !== undefined) {
+    result = { ...result, after };
   }
   return result;
 }

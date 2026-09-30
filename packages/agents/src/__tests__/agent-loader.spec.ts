@@ -18,24 +18,33 @@ const FIXTURES = join(__dirname, 'fixtures/agents');
 
 type Doc = Record<string, unknown>;
 
+const SECTIONS = { role: 'Papel.', input: 'Entrada.', flow: '1. Faça.', output: 'Saída.' };
+
 function head(extra: Doc = {}): Doc {
   return {
     version: 1,
     agent: { id: 'x', name: 'X', version: '1.0.0', description: 'd' },
     models: ['m'],
+    ...SECTIONS,
     ...extra,
   };
 }
+
+const NO_STEPS = { before: [], after: { success: [], failure: [], always: [] } };
 
 function parse(extra: Doc = {}) {
   return parseAgentYaml(stringify(head(extra)), 'agent.yaml', 'x');
 }
 
 /** A copy of `agents/<name>` from the fixtures, whose files a test may change. */
-function withAgentCopy(name: string, test: (dir: string) => Promise<void>): Promise<void> {
+function withAgentCopy(name: string, test: (dir: string) => void): void {
   const tmp = makeTmpDir('loader');
   cpSync(join(FIXTURES, name), join(tmp.path, name), { recursive: true });
-  return test(tmp.path).finally(tmp.cleanup);
+  try {
+    test(tmp.path);
+  } finally {
+    tmp.cleanup();
+  }
 }
 
 describe('isValidAgentName', () => {
@@ -62,6 +71,7 @@ describe('parseAgentYaml', () => {
       version: '1.0.0',
       description: 'd',
       supportedModels: ['m'],
+      sections: { role: 'Papel.', context: [], input: 'Entrada.', flow: '1. Faça.', output: 'Saída.', notes: [] },
       skills: [],
       mcps: [],
       permissions: NO_PERMISSIONS,
@@ -69,13 +79,16 @@ describe('parseAgentYaml', () => {
       taskRequired: true,
       modes: ['execute', 'plan', 'ask'],
       defaultMode: 'execute',
+      steps: { execute: NO_STEPS, plan: NO_STEPS, ask: NO_STEPS },
     });
   });
 
   it('reads every key of the standard', () => {
     const fields = parse({
-      skills: ['s'],
-      mcps: { app: { tools: ['t'] }, other: null },
+      context: ['Contexto.'],
+      notes: ['Nota.'],
+      skills: { s: { instructions: 'Use s.' }, plain: null },
+      mcps: { app: { tools: ['t'], instructions: 'Use app.' }, other: null, docs: { instructions: 'Use docs.' } },
       permissions: {
         allow: { read: ['r/'], write: ['w/'], execute: { './': ['git diff'] } },
         deny: { read: ['nr/'], write: ['nw/'], execute: { '/etc/': ['*'] } },
@@ -83,12 +96,20 @@ describe('parseAgentYaml', () => {
       modes: { allow: ['plan', 'ask'], default: 'ask' },
       task: { required: false, default: 'Faça.' },
       ticket_types: ['story'],
-      steps: { before: [{ add_files: ['t', 'x.md'] }], after: [{ run: ['echo', 'a'] }] },
+      steps: {
+        plan: { before: [{ add_files: ['t', 'x.md'] }], after: [{ run: ['echo', 'a'] }] },
+        ask: { after: { success: [{ run: ['ok'] }], failure: [{ run: ['ko', '${AGENT_EXIT_CODE}'] }] } },
+      },
     });
 
     expect(fields).toMatchObject({
-      skills: ['s'],
-      mcps: [{ name: 'app', tools: ['t'] }, { name: 'other' }],
+      sections: { context: ['Contexto.'], notes: ['Nota.'] },
+      skills: [{ name: 's', instructions: 'Use s.' }, { name: 'plain' }],
+      mcps: [
+        { name: 'app', tools: ['t'], instructions: 'Use app.' },
+        { name: 'other' },
+        { name: 'docs', instructions: 'Use docs.' },
+      ],
       permissions: {
         allowRead: ['r/'],
         allowWrite: ['w/'],
@@ -103,13 +124,54 @@ describe('parseAgentYaml', () => {
       ticketTypes: ['story'],
       modes: ['plan', 'ask'],
       defaultMode: 'ask',
-      beforeExecute: [{ action: 'add_files', args: ['t', 'x.md'] }],
-      afterExecute: [{ action: 'run', args: ['echo', 'a'] }],
+      steps: {
+        execute: NO_STEPS,
+        plan: {
+          before: [{ action: 'add_files', args: ['t', 'x.md'] }],
+          after: { success: [], failure: [], always: [{ action: 'run', args: ['echo', 'a'] }] },
+        },
+        ask: {
+          before: [],
+          after: {
+            success: [{ action: 'run', args: ['ok'] }],
+            failure: [{ action: 'run', args: ['ko', '${AGENT_EXIT_CODE}'] }],
+            always: [],
+          },
+        },
+      },
     });
   });
 
-  it('reads mcps given as a list of names', () => {
+  it('reads skills and mcps given as lists of names', () => {
+    expect(parse({ skills: ['s'] }).skills).toEqual([{ name: 's' }]);
     expect(parse({ mcps: ['app'] }).mcps).toEqual([{ name: 'app' }]);
+  });
+
+  it('rejects a file without the text of the agent', () => {
+    expect(() => parseAgentYaml(stringify({ ...head(), role: undefined, flow: undefined }), 'agent.yaml', 'x')).toThrow(
+      /'role'[\s\S]*'flow'/,
+    );
+  });
+
+  it('rejects a ${NAME} that is not in the catalog, or not valid where it is, naming the field', () => {
+    expect(() => parse({ role: 'Use ${NOPE}.' })).toThrow(/\$\{NOPE\} \(em role\) não é uma variável do agent\.yaml/);
+    expect(() => parse({ skills: { s: { instructions: '${AGENT_EXIT_CODE}' } } })).toThrow(
+      /\$\{AGENT_EXIT_CODE\} só vale em steps\.<modo>\.after \(está em skills\.s\.instructions\)/,
+    );
+    expect(() => parse({ steps: { execute: { before: [{ run: ['x', '${AGENT_EXIT_CODE}'] }] } } })).toThrow(
+      /está em steps\.execute\.before/,
+    );
+  });
+
+  it('rejects a ${NAME} in a fixed value of the declaration', () => {
+    expect(() =>
+      parse({
+        agent: { id: 'x', name: 'X', version: '1.0.0', description: 'Em ${PROJECT_DIR}.' },
+        models: ['${CHOL_ROOT}'],
+        task: { required: false, default: '${TICKET}' },
+        mcps: { app: { tools: ['${PROJECT}'] } },
+      }),
+    ).toThrow(/agent não aceita[\s\S]*models não aceita[\s\S]*task não aceita[\s\S]*mcps\.tools não aceita/);
   });
 
   it('defaults the mode to execute when allowed, else to the first allowed', () => {
@@ -134,7 +196,7 @@ describe('parseAgentYaml', () => {
   });
 
   it("rejects a step the action's own rules refuse", () => {
-    expect(() => parse({ steps: { before: [{ git_diff: ['develop', 'd.patch', '--bogus'] }] } })).toThrow(
+    expect(() => parse({ steps: { execute: { before: [{ git_diff: ['develop', 'd.patch', '--bogus'] }] } } })).toThrow(
       /"steps": esperado "git_diff/,
     );
   });
@@ -148,98 +210,91 @@ describe('policyFromPermissions', () => {
 });
 
 describe('loadAgent', () => {
-  it('loads an agent with skills', async () => {
-    const agent = await loadAgent(FIXTURES, 'echo');
+  it('loads an agent with skills, its text and where its agent.yaml is', () => {
+    const agent = loadAgent(FIXTURES, 'echo');
 
     expect(agent).toMatchObject({
       name: 'echo',
       id: 'echo',
       displayName: 'Echo Agent',
       version: '1.0.0',
-      skills: ['dummy-skill'],
+      skills: [{ name: 'dummy-skill' }],
       policy: 'read-only',
       projectRequired: false,
     });
-    expect(agent.instructions).toContain('agente de eco');
+    expect(agent.sections.role).toContain('agente de eco');
     expect(agent.dir).toBe(join(FIXTURES, 'echo'));
-    expect(agent.systemPromptPath).toBe(join(FIXTURES, 'echo', 'system.md'));
+    expect(agent.sourcePath).toBe(join(FIXTURES, 'echo', 'agent.yaml'));
   });
 
-  it('loads an agent with no skills as an empty array', async () => {
-    expect((await loadAgent(FIXTURES, 'reviewer')).skills).toEqual([]);
+  it('loads an agent with no skills as an empty array', () => {
+    expect(loadAgent(FIXTURES, 'reviewer').skills).toEqual([]);
   });
 
-  it('needs a project when agent.yaml uses a project variable', async () => {
-    expect((await loadAgent(FIXTURES, 'with-project')).projectRequired).toBe(true);
-    expect((await loadAgent(FIXTURES, 'with-vars')).projectRequired).toBe(false);
+  it('needs a project when agent.yaml uses a project variable', () => {
+    expect(loadAgent(FIXTURES, 'with-project').projectRequired).toBe(true);
+    expect(loadAgent(FIXTURES, 'with-vars').projectRequired).toBe(false);
   });
 
-  it('needs a project when system.md uses a project variable or the agent works on tickets', async () => {
-    await withAgentCopy('echo', async (dir) => {
-      const system = join(dir, 'echo', 'system.md');
-      writeFileSync(
-        system,
-        '<agent><system_role>Leia ${PROJECT_DIR}/config.json.</system_role><tool_definitions><intro>i</intro><preparation><item>p</item></preparation><notes><note>n</note></notes></tool_definitions><input_contract>i</input_contract><execution_flow>e</execution_flow><output_contract>o</output_contract></agent>',
-      );
-      expect((await loadAgent(dir, 'echo')).projectRequired).toBe(true);
+  it('needs a project when the text uses a project variable or the agent works on tickets', () => {
+    withAgentCopy('echo', (dir) => {
+      const yaml = join(dir, 'echo', 'agent.yaml');
+      writeFileSync(yaml, readFileSync(yaml, 'utf8').replace('agente de eco', 'agente de eco de ${PROJECT_DIR}'));
+      expect(loadAgent(dir, 'echo').projectRequired).toBe(true);
     });
-    await withAgentCopy('reviewer', async (dir) => {
+    withAgentCopy('reviewer', (dir) => {
       const yaml = stringify({
         ...head(),
         agent: { id: 'reviewer', name: 'R', version: '1.0.0', description: 'd' },
         ticket_types: ['bug'],
       });
       writeFileSync(join(dir, 'reviewer', 'agent.yaml'), yaml);
-      expect((await loadAgent(dir, 'reviewer')).projectRequired).toBe(true);
+      expect(loadAgent(dir, 'reviewer').projectRequired).toBe(true);
     });
   });
 
-  it('refuses an agent that uses a ticket variable but declares no ticket_types, saying why', async () => {
-    await withAgentCopy('with-project', async (dir) => {
+  it('refuses an agent that uses a ticket variable but declares no ticket_types, saying why', () => {
+    withAgentCopy('with-project', (dir) => {
       const yaml = join(dir, 'with-project', 'agent.yaml');
       writeFileSync(yaml, readFileSync(yaml, 'utf8').replace('${PROJECT_DIR}/tickets/', '${TICKET_FILE}'));
 
-      await expect(loadAgent(dir, 'with-project')).rejects.toThrow(
+      expect(() => loadAgent(dir, 'with-project')).toThrow(
         /agent "with-project" usa \$\{TICKET\} ou \$\{TICKET_FILE\}, mas não declara ticket_types/,
       );
       writeFileSync(yaml, `${readFileSync(yaml, 'utf8')}ticket_types: [bug]\n`);
-      await expect(loadAgent(dir, 'with-project')).resolves.toMatchObject({ ticketTypes: ['bug'] });
+      expect(loadAgent(dir, 'with-project')).toMatchObject({ ticketTypes: ['bug'] });
     });
   });
 
-  it('rejects an invalid name before touching the filesystem', async () => {
-    await expect(loadAgent(FIXTURES, '../etc')).rejects.toThrow(/invalid agent name/);
+  it('rejects an invalid name before touching the filesystem', () => {
+    expect(() => loadAgent(FIXTURES, '../etc')).toThrow(/invalid agent name/);
   });
 
-  it('reports a missing agent directory', async () => {
-    await expect(loadAgent(FIXTURES, 'does-not-exist')).rejects.toThrow(/not found/);
+  it('reports a missing agent directory', () => {
+    expect(() => loadAgent(FIXTURES, 'does-not-exist')).toThrow(/not found/);
   });
 
-  it('reports which keys are missing, naming the file', async () => {
-    await expect(loadAgent(FIXTURES, 'broken')).rejects.toThrow(/broken\/agent\.yaml: .*'models'/);
+  it('reports which keys are missing, naming the file', () => {
+    expect(() => loadAgent(FIXTURES, 'broken')).toThrow(/broken\/agent\.yaml: .*'models'/);
   });
 
-  it('reports a missing system.md, distinct from a missing agent.yaml', async () => {
-    await expect(loadAgent(FIXTURES, 'no-system-md')).rejects.toThrow(/is missing .*system\.md/);
+  it('reports the sections an agent.yaml lacks', () => {
+    expect(() => loadAgent(FIXTURES, 'missing-sections')).toThrow(/missing-sections\/agent\.yaml: .*'role'/);
   });
 
-  it('rejects an agent whose agent.yaml has a key the standard does not allow', async () => {
-    await expect(loadAgent(FIXTURES, 'schema-invalid-yaml')).rejects.toThrow(/"bogus_field"/);
-  });
-
-  it('rejects an agent whose system.md is not valid per the XSD', async () => {
-    await expect(loadAgent(FIXTURES, 'schema-invalid-xml')).rejects.toThrow(/failed schema validation/);
+  it('rejects an agent whose agent.yaml has a key the standard does not allow', () => {
+    expect(() => loadAgent(FIXTURES, 'schema-invalid-yaml')).toThrow(/"bogus_field"/);
   });
 });
 
 describe('listAgents', () => {
-  it('lists every well-formed agent, sorted, skipping "_"-prefixed, malformed and non-directory entries', async () => {
-    const agents = await listAgents(FIXTURES);
+  it('lists every well-formed agent, sorted, skipping "_"-prefixed, malformed and non-directory entries', () => {
+    const agents = listAgents(FIXTURES);
 
     expect(agents.map((a) => a.name)).toEqual(['echo', 'reviewer', 'with-prepare', 'with-project', 'with-vars']);
   });
 
-  it('returns an empty list for a directory that does not exist', async () => {
-    expect(await listAgents(join(FIXTURES, 'nope'))).toEqual([]);
+  it('returns an empty list for a directory that does not exist', () => {
+    expect(listAgents(join(FIXTURES, 'nope'))).toEqual([]);
   });
 });

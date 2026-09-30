@@ -33,7 +33,6 @@
         "@choliba/projects": "workspace:*",
         "@choliba/terminal": "workspace:*",
         "ajv": "^8.20.0",
-        "xmllint-wasm": "^5.3.0",
         "yaml": "^2.8.1",
       },
       "devDependencies": {
@@ -42,7 +41,7 @@
     },
     "packages/choliba": {
       "name": "choliba",
-      "version": "0.1.0",
+      "version": "0.0.1-dev",
       "bin": {
         "choliba": "./src/main.ts",
       },
@@ -922,8 +921,6 @@
     "wrap-ansi-cjs": ["wrap-ansi@7.0.0", "", { "dependencies": { "ansi-styles": "^4.0.0", "string-width": "^4.1.0", "strip-ansi": "^6.0.0" } }, "sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q=="],
 
     "write-file-atomic": ["write-file-atomic@5.0.1", "", { "dependencies": { "imurmurhash": "^0.1.4", "signal-exit": "^4.0.1" } }, "sha512-+QU2zd6OTD8XWIJCbffaiQeH9U73qIqafo1x6V1snCWYGJf6cVE0cDR4D8xRzcEnfI21IFrUPzPGtcPf8AC+Rw=="],
-
-    "xmllint-wasm": ["xmllint-wasm@5.3.0", "", { "peerDependencies": { "@types/node": ">=16" } }, "sha512-sEgRXdf2t13eYCFCURmCE6h2hwleEOIS9VL/jOh9JJJnez2YXIooi2Ghm05/JZEPXyPawN8sMASPVZlmh8Sd6A=="],
 
     "y18n": ["y18n@5.0.8", "", {}, "sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA=="],
 

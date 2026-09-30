@@ -244,10 +244,20 @@ describe('RUN_FLAGS', () => {
   it('lists only flags the parser accepts after a command name', () => {
     for (const flag of RUN_FLAGS) {
       const value = flag.name === '--mode' ? ['plan'] : flag.valueName === undefined ? [] : ['x'];
+      // --show-prompt only makes sense with --dry-run, which it needs.
+      const needs = flag.name === '--show-prompt' ? ['--dry-run'] : [];
       for (const form of [flag.name, ...(flag.aliases ?? [])]) {
-        expect(() => parseAgentsArgs(['echo', form, ...value])).not.toThrow();
+        expect(() => parseAgentsArgs(['echo', form, ...value, ...needs])).not.toThrow();
       }
     }
+  });
+
+  it('takes --show-prompt only together with --dry-run', () => {
+    expect(parseRun(['echo', '--dry-run', '--show-prompt'])).toMatchObject({ dryRun: true, showPrompt: true });
+    expect(parseRun(['echo', '--dry-run'])).toMatchObject({ dryRun: true, showPrompt: false });
+    expect(() => parseAgentsArgs(['echo', '--show-prompt'])).toThrow(
+      new AgentsArgsError(`--show-prompt only works with --dry-run. ${USAGE}`),
+    );
   });
 
   it('points argument errors at --help', () => {

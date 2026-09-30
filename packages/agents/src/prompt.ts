@@ -1,11 +1,11 @@
-import type { AgentDefinition } from './agent.types';
+import type { AgentDefinition, AgentSections, McpDeclaration } from './agent.types';
 import type { ExecutionMode } from './command.types';
 import { type RunPlace, formatPermissions } from './permissions';
 
 /**
  * Linux's `MAX_ARG_STRLEN` is 128 KiB (131072 bytes) per argument, NUL included. One byte is
  * reserved for that terminator. The largest agent this package ships with compatibility for
- * (a typical agent's `system.md`) is ~31 KB, comfortably under this — but a large
+ * (a typical agent's system prompt) is ~31 KB, comfortably under this — but a large
  * `--plan-from` file added on top of the instructions could approach it, so every provider
  * adapter checks before spawning rather than letting the OS reject the call.
  */
@@ -13,24 +13,73 @@ export const MAX_ARG_BYTES = 131_072 - 1;
 
 export class PromptTooLargeError extends Error {}
 
+/** One tag around `body`, on lines of their own. */
+function tag(name: string, body: string): string {
+  return [`<${name}>`, body.trim(), `</${name}>`].join('\n');
+}
+
+/** A list section: each entry in its own `<item>`-like tag; nothing when the list is empty. */
+function listTag(name: string, itemName: string, items: readonly string[]): readonly string[] {
+  return items.length === 0 ? [] : [tag(name, items.map((item) => tag(itemName, item)).join('\n'))];
+}
+
 /**
- * Wraps an agent's `system.md` for inlining into a prompt (there is no `--system-prompt`
- * equivalent for every provider — see `providers/cursor/index.ts`). States the agent's directory
- * explicitly, because `system.md` files may contain relative paths that only resolve if the model
- * knows where "here" is. The order to use the agent's skills (`formatSkillsInstruction`), when there
- * is one, comes first; then what the agent may read, write and run (`agent.yaml#permissions`, the
- * same data the provider enforces).
+ * The agent's text (`agent.yaml`'s `role`, `context`, `input`, `flow`, `output`, `notes`) as the
+ * prompt's sections, in that order; `context` and `notes` only when the agent has them.
+ */
+export function formatSections(sections: AgentSections): string {
+  return [
+    tag('system_role', sections.role),
+    ...listTag('context', 'item', sections.context),
+    tag('input_contract', sections.input),
+    tag('execution_flow', sections.flow),
+    tag('output_contract', sections.output),
+    ...listTag('notes', 'note', sections.notes),
+  ].join('\n\n');
+}
+
+function mcpBlock(mcp: McpDeclaration): string {
+  const tools = mcp.tools === undefined ? 'every tool' : mcp.tools.join(', ');
+  const open = `<mcp name="${mcp.name}" tools="${tools}">`;
+  return mcp.instructions === undefined ? `${open}</mcp>` : [open, mcp.instructions.trim(), '</mcp>'].join('\n');
+}
+
+/**
+ * The agent's MCP servers (`agent.yaml#mcps`): each with the tools it may call and how this agent
+ * uses it (`instructions`). Nothing when the agent declares none: then nothing in the prompt names
+ * a server or a tool.
+ */
+export function formatMcps(mcps: readonly McpDeclaration[]): string {
+  if (mcps.length === 0) {
+    return '';
+  }
+  return [
+    '<mcps>',
+    'Enforced by the command: these are the only MCP servers of this session, and each only has the tools listed.',
+    ...mcps.map(mcpBlock),
+    '</mcps>',
+  ].join('\n');
+}
+
+/**
+ * The agent's system prompt, built from `agent.yaml` alone: the order to use its skills
+ * (`formatSkillsInstruction`), what it may read, write and run (`agent.yaml#permissions`, the same
+ * data the provider enforces), its MCP servers (`formatMcps`), then its text (`formatSections`).
+ * Only what the agent declares is there. States the agent's directory explicitly, because a text
+ * may name relative paths that only resolve if the model knows where "here" is.
  */
 export function wrapInstructions(agent: AgentDefinition, skillsInstruction = '', place?: RunPlace): string {
   const attr = (value: string): string => value.replaceAll('"', '&quot;');
+  const mcps = formatMcps(agent.mcps);
   return [
-    `<agent_instructions id="${attr(agent.id)}" name="${attr(agent.displayName)}" version="${attr(agent.version)}" source="${attr(agent.systemPromptPath)}">`,
+    `<agent_instructions id="${attr(agent.id)}" name="${attr(agent.displayName)}" version="${attr(agent.version)}" source="${attr(agent.sourcePath)}">`,
     ...(skillsInstruction === '' ? [] : [skillsInstruction, '']),
     formatPermissions(agent.permissions, place),
     '',
+    ...(mcps === '' ? [] : [mcps, '']),
     `Relative paths in the instructions below are relative to ${agent.dir}/.`,
     '',
-    agent.instructions,
+    formatSections(agent.sections),
     '</agent_instructions>',
   ].join('\n');
 }

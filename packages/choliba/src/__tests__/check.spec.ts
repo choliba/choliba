@@ -33,9 +33,9 @@ function writeProject(projectsDir: string, name: string, baseURL: string): void 
 
 describe('checkAgents', () => {
   it('loads every agent as a run would, reporting what is wrong with each', async () => {
-    await withWorkspace(async (root) => {
+    await withWorkspace((root) => {
       copyAgent(root, 'reviewer');
-      copyAgent(root, 'schema-invalid-xml', 'invalido');
+      copyAgent(root, 'missing-sections', 'invalido');
       copyAgent(root, 'echo', 'sem-skill');
       copyAgent(root, 'reviewer', 'com-mcp');
       fs.appendFileSync(path.join(root, 'app', 'agents', 'com-mcp', 'agent.yaml'), 'mcps: [app]\n');
@@ -46,24 +46,24 @@ describe('checkAgents', () => {
       );
       fs.mkdirSync(path.join(root, 'app', 'agents', '_rascunho'));
 
-      const section = await checkAgents(root, {});
+      const section = checkAgents(root, {});
       expect(section.title).toBe(`Agentes (${path.join(root, 'app', 'agents')})`);
       expect(section.items.map((item) => item.name)).toEqual(['com-mcp', 'invalido', 'reviewer', 'sem-skill']);
       const problem = (name: string): string | undefined => section.items.find((item) => item.name === name)?.problem;
       expect(problem('reviewer')).toBeUndefined();
-      expect(problem('invalido')).toContain('failed schema validation');
+      expect(problem('invalido')).toContain("must have required property 'role'");
       expect(problem('sem-skill')).toContain('skill "dummy-skill" não encontrada');
       expect(problem('com-mcp')).toContain('usa ${APP_DIR}, sem valor');
 
-      expect(
-        (await checkAgents(root, { APP_DIR: '/opt' })).items.find((item) => item.name === 'com-mcp')?.problem,
-      ).toBe(undefined);
+      expect(checkAgents(root, { APP_DIR: '/opt' }).items.find((item) => item.name === 'com-mcp')?.problem).toBe(
+        undefined,
+      );
     });
   });
 
   it('says when the agents folder does not exist', async () => {
-    await withWorkspace(async (root) => {
-      expect((await checkAgents(root, {})).items).toEqual([
+    await withWorkspace((root) => {
+      expect(checkAgents(root, {}).items).toEqual([
         { name: path.join(root, 'app', 'agents'), problem: 'a pasta não existe' },
       ]);
     });
@@ -90,11 +90,11 @@ describe('checkProjects', () => {
 
 describe('checkWorkspace / formatCheck / allFine', () => {
   it('reports agents then projects, with problems indented under their item', async () => {
-    await withWorkspace(async (root) => {
+    await withWorkspace((root) => {
       copyAgent(root, 'reviewer');
       fs.mkdirSync(path.join(root, 'projects'));
 
-      const fine = await checkWorkspace(root, { CHOL_GLOBAL_DIR: root });
+      const fine = checkWorkspace(root, { CHOL_GLOBAL_DIR: root });
       expect(allFine(fine)).toBe(true);
       expect(formatCheck(fine)).toBe(
         [

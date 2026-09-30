@@ -11,7 +11,7 @@ const FIXTURES = join(__dirname, '..', '..', '..', 'agents', 'src', '__tests__',
  * `ausente` that is not there and the MCP `with-var`), `agents/with-prepare`, `.agents/skills/dummy-skill`
  * and `.agents/mcps/with-var.json` — and an empty workspace.
  */
-function withSource(run: (source: string, workspace: string, targets: InstallTargets) => Promise<void>): Promise<void> {
+function withSource(run: (source: string, workspace: string, targets: InstallTargets) => void): void {
   const dir = mkdtempSync(join(tmpdir(), 'install-'));
   const source = join(dir, 'src');
   cpSync(join(FIXTURES, 'agents', 'echo'), join(source, 'agents', 'echo'), { recursive: true });
@@ -36,9 +36,11 @@ function withSource(run: (source: string, workspace: string, targets: InstallTar
     skillsDir: join(workspace, 'app', '.agents', 'skills'),
     mcpsDir: join(workspace, 'app', '.agents', 'mcps'),
   };
-  return run(source, workspace, targets).finally(() => {
+  try {
+    run(source, workspace, targets);
+  } finally {
     rmSync(dir, { recursive: true, force: true });
-  });
+  }
 }
 
 describe('parseInstallArgs', () => {
@@ -61,9 +63,9 @@ describe('parseInstallArgs', () => {
 });
 
 describe('planInstall', () => {
-  it('takes an agent with the skills and MCPs it declares that the source has, warning about the rest', async () => {
-    await withSource(async (source) => {
-      const plan = await planInstall(join(source, 'agents', 'echo'), '/');
+  it('takes an agent with the skills and MCPs it declares that the source has, warning about the rest', () => {
+    withSource((source) => {
+      const plan = planInstall(join(source, 'agents', 'echo'), '/');
 
       expect(plan.items.map((item) => `${item.kind} ${item.name}`)).toEqual([
         'agente echo',
@@ -77,23 +79,23 @@ describe('planInstall', () => {
     });
   });
 
-  it('takes an agent with steps, and a skill or an MCP alone', async () => {
-    await withSource(async (source) => {
-      expect((await planInstall(join(source, 'agents', 'with-prepare'), source)).items).toHaveLength(1);
-      expect((await planInstall(join(source, '.agents', 'skills', 'dummy-skill'), source)).items[0]).toMatchObject({
+  it('takes an agent with steps, and a skill or an MCP alone', () => {
+    withSource((source) => {
+      expect(planInstall(join(source, 'agents', 'with-prepare'), source).items).toHaveLength(1);
+      expect(planInstall(join(source, '.agents', 'skills', 'dummy-skill'), source).items[0]).toMatchObject({
         kind: 'skill',
         name: 'dummy-skill',
       });
-      expect((await planInstall(join(source, '.agents', 'mcps', 'with-var.json'), source)).items[0]).toMatchObject({
+      expect(planInstall(join(source, '.agents', 'mcps', 'with-var.json'), source).items[0]).toMatchObject({
         kind: 'MCP',
         name: 'with-var',
       });
     });
   });
 
-  it('refuses what is not an item, listing what the source has for --path', async () => {
-    await withSource(async (source) => {
-      await expect(planInstall(source, source)).rejects.toThrow(
+  it('refuses what is not an item, listing what the source has for --path', () => {
+    withSource((source) => {
+      expect(() => planInstall(source, source)).toThrow(
         [
           `${source} não é um agente (agent.yaml), uma skill (SKILL.md) nem um MCP (.json). Escolha um com --path:`,
           '  agents/echo',
@@ -102,29 +104,29 @@ describe('planInstall', () => {
           '  .agents/mcps/with-var.json',
         ].join('\n'),
       );
-      await expect(planInstall(join(source, 'nada'), source)).rejects.toThrow('nenhum item no formato do choliba');
+      expect(() => planInstall(join(source, 'nada'), source)).toThrow('nenhum item no formato do choliba');
     });
   });
 
-  it('refuses an item that breaks its format, naming the file', async () => {
-    await withSource(async (source) => {
+  it('refuses an item that breaks its format, naming the file', () => {
+    withSource((source) => {
       writeFileSync(join(source, 'agents', 'echo', 'agent.yaml'), 'id: x\n');
       writeFileSync(join(source, '.agents', 'skills', 'dummy-skill', 'SKILL.md'), '# sem frontmatter\n');
       writeFileSync(join(source, '.agents', 'mcps', 'with-var.json'), '{}');
 
-      await expect(planInstall(join(source, 'agents', 'echo'), source)).rejects.toThrow('agent.yaml');
-      await expect(planInstall(join(source, '.agents', 'skills', 'dummy-skill'), source)).rejects.toThrow('SKILL.md');
-      await expect(planInstall(join(source, '.agents', 'mcps', 'with-var.json'), source)).rejects.toThrow(
+      expect(() => planInstall(join(source, 'agents', 'echo'), source)).toThrow('agent.yaml');
+      expect(() => planInstall(join(source, '.agents', 'skills', 'dummy-skill'), source)).toThrow('SKILL.md');
+      expect(() => planInstall(join(source, '.agents', 'mcps', 'with-var.json'), source)).toThrow(
         'falta "command" ou "url"',
       );
     });
   });
 
-  it('refuses an item whose name is not a valid agent, skill or MCP name', async () => {
-    await withSource(async (source) => {
+  it('refuses an item whose name is not a valid agent, skill or MCP name', () => {
+    withSource((source) => {
       cpSync(join(source, 'agents', 'echo'), join(source, 'agents', 'Echo'), { recursive: true });
 
-      await expect(planInstall(join(source, 'agents', 'Echo'), source)).rejects.toThrow('nome inválido "Echo"');
+      expect(() => planInstall(join(source, 'agents', 'Echo'), source)).toThrow('nome inválido "Echo"');
     });
   });
 });
@@ -136,12 +138,12 @@ describe('install', () => {
     bunAdd: () => ({ status: 1, stderr: '' }),
   };
 
-  it('copies the agent and what it brings into the workspace, replacing what was there, and reports it', async () => {
-    await withSource(async (source, workspace, targets) => {
+  it('copies the agent and what it brings into the workspace, replacing what was there, and reports it', () => {
+    withSource((source, workspace, targets) => {
       mkdirSync(join(targets.agentsDir, 'echo'), { recursive: true });
       writeFileSync(join(targets.agentsDir, 'echo', 'velho.md'), 'x');
 
-      const text = await install(
+      const text = install(
         { spec: join(source, 'agents', 'echo'), dryRun: false },
         { workspaceRoot: workspace, targets, config: { SERVER_DIR: undefined }, source: noSource },
       );
@@ -157,9 +159,9 @@ describe('install', () => {
     });
   });
 
-  it('writes nothing on --dry-run, and cleans the fetched source up even when the install fails', async () => {
-    await withSource(async (source, workspace, targets) => {
-      const dry = await install(
+  it('writes nothing on --dry-run, and cleans the fetched source up even when the install fails', () => {
+    withSource((source, workspace, targets) => {
+      const dry = install(
         { spec: source, path: 'agents/echo', dryRun: true },
         { workspaceRoot: workspace, targets, config: { SERVER_DIR: '/s' }, source: noSource },
       );
@@ -173,12 +175,12 @@ describe('install', () => {
         searchUpTo: source,
         cleanup: () => cleaned.push('ok'),
       });
-      await expect(
+      expect(() =>
         install(
           { spec: 'x', dryRun: false },
           { workspaceRoot: workspace, targets, config: {}, source: noSource, fetch },
         ),
-      ).rejects.toThrow(/^x não é um agente .* Escolha um com --path:/);
+      ).toThrow(/^x não é um agente .* Escolha um com --path:/);
       expect(cleaned).toEqual(['ok']);
     });
   });

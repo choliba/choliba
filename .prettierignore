@@ -6,8 +6,3 @@ bun.lock
 .agents
 .claude
 .playwright-cli
-
-# An agent's system.md is XML inside Markdown: Prettier's Markdown parser indents the closing tags
-# that follow a list. agent.yaml is formatted like any other YAML.
-/agents/*/system.md
-/packages/agents/src/__tests__/fixtures/**/system.md

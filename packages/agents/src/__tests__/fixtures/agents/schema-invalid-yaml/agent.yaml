@@ -9,4 +9,17 @@ agent:
 models:
   - claude-3-5-sonnet
 
+role: |
+  Fixture cujo problema está no agent.yaml, não aqui.
+context:
+  - Nenhum preparo necessário.
+input: |
+  Não aplicável.
+flow: |
+  1. Não aplicável.
+output: |
+  Não aplicável.
+notes:
+  - Fixture de teste.
+
 bogus_field: nope

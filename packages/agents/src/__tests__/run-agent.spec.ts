@@ -15,6 +15,7 @@ import { runAgent } from '../run-agent';
 import { erroringStream, fakeSpawner, streamFromChunks, throwingSpawner } from './helpers/fake-spawner';
 import { makeTmpDir } from './helpers/tmp';
 import { NO_PERMISSIONS } from '../permissions';
+import { NO_MODE_STEPS, fakeSections } from './helpers/agent';
 
 /** A run dir of its own per request: `runAgent` creates it and removes it. */
 let runDirCount = 0;
@@ -79,8 +80,9 @@ function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
     modes: ['execute', 'plan', 'ask'],
     permissions: NO_PERMISSIONS,
     dir: '/repo/agents/echo',
-    systemPromptPath: '/repo/agents/echo/system.md',
-    instructions: 'be an echo',
+    sections: fakeSections('be an echo'),
+    steps: NO_MODE_STEPS,
+    sourcePath: '/repo/agents/echo/agent.yaml',
     ...overrides,
   };
 }
