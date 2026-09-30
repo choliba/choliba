@@ -5,6 +5,7 @@ import {
   createTicket,
   loadProjectSettings,
   planTicket,
+  ticketCriteriaProblems,
   ticketJsonPath,
   ticketPlaceholders,
   ticketTemplatesDir,
@@ -131,9 +132,21 @@ export function finishTicket(
     return exitCode;
   }
   const pending = ticketPlaceholders(target.file);
-  if (pending.length === 0) {
+  if (pending.length > 0) {
+    stderr.write(`Ticket "${target.ticket}" ainda tem CHANGE_ME em: ${pending.join(', ')} (${target.file}).\n`);
+    return 1;
+  }
+  const problems = ticketCriteriaProblems(target.file);
+  if (problems.length === 0) {
     return exitCode;
   }
-  stderr.write(`Ticket "${target.ticket}" ainda tem CHANGE_ME em: ${pending.join(', ')} (${target.file}).\n`);
+  stderr.write(
+    [
+      `Ticket "${target.ticket}" tem critérios fora do formato (${target.file}):`,
+      ...problems.map((problem) => `  ${problem}`),
+    ]
+      .join('\n')
+      .concat('\n'),
+  );
   return 1;
 }

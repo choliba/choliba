@@ -35,6 +35,7 @@ o pacote cria ao ser instalado.
   - [Steps](#steps)
 - [O que acontece numa execução](#o-que-acontece-numa-execução)
 - [`--dry-run`](#--dry-run)
+- [Critérios de aceite](#critérios-de-aceite)
 - [Portões dos testes de um ticket](#portões-dos-testes-de-um-ticket)
 - [`choliba install`](#choliba-install)
   - [O que o repositório do choliba oferece](#o-que-o-repositório-do-choliba-oferece)
@@ -625,6 +626,23 @@ Sem --dry-run, faria nesta ordem:
 Com `--show-prompt` (só junto de `--dry-run`), a saída segue com os dois prompts completos, a linha de comando
 completa (em JSON, um argumento por item) e, no Cursor, os arquivos `.cursor/cli.json` e `.cursor/mcp.json` como
 seriam gravados.
+
+## Critérios de aceite
+
+Cada critério do ticket (`criterios[]`) tem um `id` (`CA-01`, `CA-02`…) e uma `descricao` em Gherkin: uma lista de
+frases, uma por passo. A primeira começa com `Dado`, depois vêm um `Quando` e um `Então`, nessa ordem; `E` e `Mas`
+continuam qualquer um deles:
+
+```json
+{
+  "id": "CA-01",
+  "descricao": ["Dado que estou na página da loja", "E ainda não assinei a newsletter", "Quando informo meu e-mail e clico em Assinar", "Então vejo a mensagem \"Obrigado por assinar!\"", "Mas não recebo nenhum aviso de erro"],
+  "testes": []
+}
+```
+
+Não existe `Ou`: um resultado com "ou" são dois comportamentos, e cada um vira um critério. Uma execução que deixa um
+critério fora desse formato (ou com `CHANGE_ME`) falha, dizendo qual frase corrigir.
 
 ## Portões dos testes de um ticket
 
