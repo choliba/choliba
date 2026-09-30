@@ -1,3 +1,9 @@
+/**
+ * A raiz da pasta de trabalho no `agent.yaml` (`${CHOL_ROOT}`): sempre descoberta pelo choliba (a pasta cujo
+ * `package.json` depende dele), nunca lida do `.env` nem do ambiente.
+ */
+export const CHOL_ROOT = 'CHOL_ROOT';
+
 /** Nome da variável de ambiente para o provider padrão do CLI de agentes. */
 export const CHOL_AGENTS_PROVIDER = 'CHOL_AGENTS_PROVIDER';
 

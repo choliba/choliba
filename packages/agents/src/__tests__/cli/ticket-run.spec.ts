@@ -5,6 +5,7 @@ import type { AgentDefinition } from '../../agent.types';
 import { createPlannedTicket, finishTicket, resolveTicketTarget, ticketVars } from '../../cli/ticket-run';
 import { makeTmpDir } from '../helpers/tmp';
 import { NO_PERMISSIONS } from '../../permissions';
+import { NO_MODE_STEPS, fakeSections } from '../helpers/agent';
 
 function fakeWritable(): { chunks: string[]; write: (chunk: string) => void } {
   const chunks: string[] = [];
@@ -27,8 +28,9 @@ const plain: AgentDefinition = {
   modes: ['execute', 'plan', 'ask'],
   permissions: NO_PERMISSIONS,
   dir: '/repo/agents/po',
-  systemPromptPath: '/repo/agents/po/system.md',
-  instructions: '',
+  sections: fakeSections(''),
+  steps: NO_MODE_STEPS,
+  sourcePath: '/repo/agents/po/agent.yaml',
 };
 
 const agent: AgentDefinition = { ...plain, name: 'po', ticketTypes: ['bug'] };

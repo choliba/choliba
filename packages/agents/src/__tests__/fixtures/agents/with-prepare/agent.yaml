@@ -9,6 +9,19 @@ agent:
 models:
   - claude-3-5-sonnet
 
+role: |
+  Fixture agent with prepare hooks — used only in package tests.
+context:
+  - O comando prepara diff e snapshot antes de invocar o agente.
+input: |
+  Recebe diff e snapshots no prompt.
+flow: |
+  1. Leia o diff entregue.
+output: |
+  Devolve um resumo das alterações.
+notes:
+  - Fixture de teste.
+
 permissions:
   allow:
     write: [docs/]
@@ -20,9 +33,11 @@ task:
   default: Atualize a documentação com base no contexto entregue.
 
 steps:
-  before:
-    - git_diff: [develop, .cache/with-prepare/diff.patch, --pending, .cache/with-prepare/last-base]
-    - add_files: [documentacao_atual, 'docs/**/*.md']
-    - add_files: [readme_atual, README.md]
-  after:
-    - record_git_head: [.cache/with-prepare/last-base]
+  execute:
+    before:
+      - git_diff: [develop, .cache/with-prepare/diff.patch, --pending, .cache/with-prepare/last-base]
+      - add_files: [documentacao_atual, 'docs/**/*.md']
+      - add_files: [readme_atual, README.md]
+    after:
+      success:
+        - record_git_head: [.cache/with-prepare/last-base]

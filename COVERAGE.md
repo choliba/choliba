@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 28/09/2026 22:35:23 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 29/09/2026 21:58:37 — não editar manualmente.
 
 ## Resumo
 
@@ -17,7 +17,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 36 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 37 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -25,6 +25,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agent-validation.ts](packages/agents/src/agent-validation.ts)|100.00|100.00|100.00|100.00
 🟢|[src/cli/args.ts](packages/agents/src/cli/args.ts)|100.00|100.00|100.00|100.00
 🟢|[src/cli/cli-spec.ts](packages/agents/src/cli/cli-spec.ts)|100.00|100.00|100.00|100.00
+🟢|[src/cli/dry-run.ts](packages/agents/src/cli/dry-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/cli/run.ts](packages/agents/src/cli/run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/cli/ticket-run.ts](packages/agents/src/cli/ticket-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/command-registry.ts](packages/agents/src/command-registry.ts)|100.00|100.00|100.00|100.00

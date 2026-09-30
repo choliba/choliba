@@ -15,12 +15,30 @@ agent:
 
 models:
   - claude-sonnet-5
+
+role: |
+  Você escreve os testes E2E do ticket \${TICKET}.
+context:
+  - O projeto é \${PROJECT}.
+input: |
+  O ticket e os critérios.
+flow: |
+  1. Leia o ticket.
+  2. Escreva os testes.
+output: |
+  Um spec por ticket.
+notes:
+  - Nada de seletor CSS.
+
 skills:
-  - playwright-cli
-  - playwright-trace
+  playwright-cli:
+    instructions: |
+      Rode bunx choliba playwright-cli.
+  playwright-trace:
 mcps:
   mcp-app:
     tools: [jira_get_issue]
+    instructions: Use quando o pedido citar uma issue.
 
 permissions:
   allow:
@@ -45,10 +63,19 @@ task:
 ticket_types: [story, bug, improvement]
 
 steps:
-  before:
-    - add_files: [ticket, '\${TICKET_FILE}']
-  after:
-    - run: [bunx, choliba, tests, '\${PROJECT}:\${TICKET}']
+  execute:
+    before:
+      - add_files: [ticket, '\${TICKET_FILE}']
+    after:
+      success:
+        - run: [bunx, choliba, tests, '\${PROJECT}:\${TICKET}']
+      failure:
+        - run: [bunx, choliba, report, '\${AGENT_EXIT_CODE}']
+      always:
+        - run: [rm, -f, .cache/qa-e2e/tmp]
+  plan:
+    after:
+      - run: [rm, -f, .cache/qa-e2e/tmp]
 `;
 
 type Doc = Record<string, unknown>;
@@ -58,6 +85,10 @@ function minimal(): Doc {
     version: 1,
     agent: { id: 'qa-e2e', name: 'QA E2E', version: '1.0.0', description: 'Escreve testes.' },
     models: ['claude-sonnet-5'],
+    role: 'Papel.',
+    input: 'Entrada.',
+    flow: '1. Faça.',
+    output: 'Saída.',
   };
 }
 
@@ -131,14 +162,32 @@ describe('validateAgentYamlV1', () => {
     expect(errorsOf({ ...minimal(), ...extra })).toContain(`"${key}"`);
   });
 
+  it('requires the text of the agent, each section with some text', () => {
+    const { role: _role, output: _output, ...rest } = minimal();
+    expect(errorsOf(rest)).toContain("must have required property 'role'");
+    expect(errorsOf(rest)).toContain("must have required property 'output'");
+    expect(validate({ ...minimal(), flow: '  ' }).valid).toBe(false);
+    expect(validate({ ...minimal(), context: [] }).valid).toBe(false);
+    expect(validate({ ...minimal(), notes: ['Uma nota.'] }).valid).toBe(true);
+  });
+
   it('rejects unknown keys below the root too', () => {
     expect(errorsOf({ ...minimal(), permissions: { allow: { tools: ['Read'] } } })).toContain('"tools"');
   });
 
-  it('accepts mcps as a list of names or a map to tools or null', () => {
+  it('accepts mcps as a list of names or a map to tools, instructions or null', () => {
     expect(validate({ ...minimal(), mcps: ['mcp-app'] }).valid).toBe(true);
     expect(validate({ ...minimal(), mcps: { 'mcp-app': null, other: { tools: ['a'] } } }).valid).toBe(true);
+    expect(validate({ ...minimal(), mcps: { 'mcp-app': { instructions: 'Use.' } } }).valid).toBe(true);
     expect(validate({ ...minimal(), mcps: { 'mcp-app': { tools: [] } } }).valid).toBe(false);
+    expect(validate({ ...minimal(), mcps: { 'mcp-app': {} } }).valid).toBe(false);
+  });
+
+  it('accepts skills as a list of names or a map to instructions or null', () => {
+    expect(validate({ ...minimal(), skills: ['s'] }).valid).toBe(true);
+    expect(validate({ ...minimal(), skills: { s: null, t: { instructions: 'Use t.' } } }).valid).toBe(true);
+    expect(validate({ ...minimal(), skills: { s: {} } }).valid).toBe(false);
+    expect(validate({ ...minimal(), skills: { s: { tools: ['a'] } } }).valid).toBe(false);
   });
 
   describe('permissions.execute', () => {
@@ -185,22 +234,47 @@ describe('validateAgentYamlV1', () => {
   describe('steps', () => {
     const steps = (value: Doc) => ({ ...minimal(), steps: value });
 
+    it('are declared per mode', () => {
+      expect(validate(steps({ execute: { before: [{ run: ['a'] }] }, ask: {} })).valid).toBe(true);
+      expect(errorsOf(steps({ before: [{ run: ['a'] }] }))).toContain('"before"');
+      expect(errorsOf(steps({ run: {} }))).toContain('"run"');
+    });
+
+    it('require each mode they name to be one of the allowed modes', () => {
+      const doc = { ...steps({ plan: { after: [{ run: ['a'] }] } }), modes: { allow: ['execute'] } };
+      expect(errorsOf(doc)).toBe('/steps/plan: o modo "plan" não está em modes.allow');
+    });
+
+    it('take after as a list or as success, failure and always blocks', () => {
+      expect(validate(steps({ execute: { after: [{ run: ['a'] }] } })).valid).toBe(true);
+      expect(validate(steps({ execute: { after: { failure: [{ run: ['a'] }] } } })).valid).toBe(true);
+      expect(validate(steps({ execute: { after: {} } })).valid).toBe(false);
+      expect(validate(steps({ execute: { after: { finally: [{ run: ['a'] }] } } })).valid).toBe(false);
+    });
+
     it('rejects a step with two actions', () => {
-      expect(validate(steps({ before: [{ run: ['a'], add_files: ['t', 'x'] }] })).valid).toBe(false);
+      expect(validate(steps({ execute: { before: [{ run: ['a'], add_files: ['t', 'x'] }] } })).valid).toBe(false);
     });
 
     it('accepts each action only where it runs', () => {
       expect(
-        validate(steps({ before: [{ git_diff: ['develop', 'd.patch'] }], after: [{ record_git_head: ['h'] }] })).valid,
+        validate(
+          steps({
+            execute: {
+              before: [{ git_diff: ['develop', 'd.patch'] }],
+              after: { success: [{ record_git_head: ['h'] }] },
+            },
+          }),
+        ).valid,
       ).toBe(true);
-      expect(validate(steps({ after: [{ add_files: ['t', 'x'] }] })).valid).toBe(false);
-      expect(validate(steps({ before: [{ record_git_head: ['h'] }] })).valid).toBe(false);
+      expect(validate(steps({ execute: { after: [{ add_files: ['t', 'x'] }] } })).valid).toBe(false);
+      expect(validate(steps({ execute: { before: [{ record_git_head: ['h'] }] } })).valid).toBe(false);
     });
 
     it('checks the number of arguments of each action', () => {
-      expect(validate(steps({ before: [{ add_files: ['t'] }] })).valid).toBe(false);
-      expect(validate(steps({ after: [{ record_git_head: ['a', 'b'] }] })).valid).toBe(false);
-      expect(validate(steps({ before: [{ run: [] }] })).valid).toBe(false);
+      expect(validate(steps({ execute: { before: [{ add_files: ['t'] }] } })).valid).toBe(false);
+      expect(validate(steps({ execute: { after: [{ record_git_head: ['a', 'b'] }] } })).valid).toBe(false);
+      expect(validate(steps({ execute: { before: [{ run: [] }] } })).valid).toBe(false);
     });
   });
 });

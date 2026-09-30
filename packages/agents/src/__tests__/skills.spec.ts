@@ -20,19 +20,21 @@ describe('skillDescription', () => {
 });
 
 describe('resolveSkills', () => {
-  it('finds each listed skill as <skillsDir>/<name>/SKILL.md', () => {
-    expect(resolveSkills(SKILLS, ['dummy-skill'])).toEqual([
-      {
-        name: 'dummy-skill',
-        description: 'Skill de teste, usada pelo agente echo das fixtures.',
-        path: join(SKILLS, 'dummy-skill', 'SKILL.md'),
-      },
+  it('finds each listed skill as <skillsDir>/<name>/SKILL.md, with how the agent uses it', () => {
+    const skill = {
+      name: 'dummy-skill',
+      description: 'Skill de teste, usada pelo agente echo das fixtures.',
+      path: join(SKILLS, 'dummy-skill', 'SKILL.md'),
+    };
+    expect(resolveSkills(SKILLS, [{ name: 'dummy-skill' }])).toEqual([skill]);
+    expect(resolveSkills(SKILLS, [{ name: 'dummy-skill', instructions: 'Use.' }])).toEqual([
+      { ...skill, instructions: 'Use.' },
     ]);
     expect(resolveSkills(SKILLS, [])).toEqual([]);
   });
 
   it('fails naming the missing file', () => {
-    expect(() => resolveSkills(SKILLS, ['nope'])).toThrow(
+    expect(() => resolveSkills(SKILLS, [{ name: 'nope' }])).toThrow(
       `skill "nope" não encontrada: ${join(SKILLS, 'nope', 'SKILL.md')} não existe.`,
     );
   });
@@ -54,5 +56,25 @@ describe('formatSkillsInstruction', () => {
       'Esses caminhos partem da raiz do repositório. Abra os arquivos que uma skill indicar (ex.: references/) só quando ela mandar.',
     ]);
     expect(formatSkillsInstruction([], '/repo')).toBe('');
+  });
+
+  it('follows the order to read a skill with how this agent uses it, when agent.yaml says', () => {
+    const instruction = formatSkillsInstruction(
+      [
+        {
+          name: 'cli',
+          description: 'Browser.',
+          path: '/repo/s/cli/SKILL.md',
+          instructions: 'Rode bunx choliba cli.\n',
+        },
+      ],
+      '/repo',
+    );
+
+    expect(instruction.split('\n').slice(1, 4)).toEqual([
+      '<skill_instructions name="cli">',
+      'Rode bunx choliba cli.',
+      '</skill_instructions>',
+    ]);
   });
 });

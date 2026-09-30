@@ -3,11 +3,8 @@
  * e todo pacote que o usa importa daqui.
  */
 
-/** Os metadados de um agente, em `<pasta dos agentes>/<id>/`. */
+/** A declaração de um agente, em `<pasta dos agentes>/<id>/`. */
 export const AGENT_FILE = 'agent.yaml';
-
-/** As instruções de um agente, ao lado do `agent.yaml`. */
-export const SYSTEM_FILE = 'system.md';
 
 /** A descrição de uma skill, em `<pasta das skills>/<nome>/`. */
 export const SKILL_FILE = 'SKILL.md';

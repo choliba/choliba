@@ -1,0 +1,10 @@
+version: 1
+
+agent:
+  id: missing-sections
+  name: Missing Sections
+  version: 1.0.0
+  description: Tem agent.yaml com identidade e modelos, mas sem role, input, flow e output.
+
+models:
+  - claude-3-5-sonnet

@@ -123,12 +123,12 @@ function notAnItem(target: string, shownAs: string): InstallError {
 }
 
 /** Checks `item` as a run would load it; throws naming the file. */
-async function checkItem(item: PlannedItem): Promise<void> {
+function checkItem(item: PlannedItem): void {
   if (!isValidAgentName(item.name)) {
     throw new InstallError(`${item.from}: nome inválido "${item.name}" (letras minúsculas, dígitos, "-" e "_").`);
   }
   if (item.kind === 'agente') {
-    await loadAgent(dirname(item.from), item.name);
+    loadAgent(dirname(item.from), item.name);
   } else if (item.kind === 'skill') {
     const file = join(item.from, SKILL_FILE);
     skillDescription(readFileSync(file, 'utf8'), file);
@@ -147,13 +147,13 @@ function findUpTo(start: string, searchUpTo: string, relativePath: string): stri
 }
 
 /** The skills and MCPs an agent declares, found in its source; the ones missing become warnings. */
-async function dependencies(
+function dependencies(
   agentDir: string,
   searchUpTo: string,
-): Promise<{ items: readonly PlannedItem[]; warnings: readonly string[] }> {
-  const agent = await loadAgent(dirname(agentDir), basename(agentDir));
+): { items: readonly PlannedItem[]; warnings: readonly string[] } {
+  const agent = loadAgent(dirname(agentDir), basename(agentDir));
   const wanted: readonly (readonly [ItemKind, string, string])[] = [
-    ...agent.skills.map((name) => ['skill', name, join(SKILLS_SUBDIR, name)] as const),
+    ...agent.skills.map((skill) => ['skill', skill.name, join(SKILLS_SUBDIR, skill.name)] as const),
     ...agent.mcps.map((mcp) => ['MCP', mcp.name, join(MCPS_SUBDIR, `${mcp.name}.json`)] as const),
   ];
   const items: PlannedItem[] = [];
@@ -174,18 +174,18 @@ async function dependencies(
  * What installing `target` means: the item there (an agent comes with the skills and MCPs it declares
  * that the source has, looked for up to `searchUpTo`), every one checked. Nothing is written.
  */
-export async function planInstall(
+export function planInstall(
   target: string,
   searchUpTo: string,
   shownAs: string = target,
-): Promise<{ items: readonly PlannedItem[]; warnings: readonly string[] }> {
+): { items: readonly PlannedItem[]; warnings: readonly string[] } {
   const item = itemAt(target);
   if (item === undefined) throw notAnItem(target, shownAs);
-  await checkItem(item);
+  checkItem(item);
   if (item.kind !== 'agente') return { items: [item], warnings: [] };
-  const deps = await dependencies(item.from, searchUpTo);
+  const deps = dependencies(item.from, searchUpTo);
   for (const dependency of deps.items) {
-    await checkItem(dependency);
+    checkItem(dependency);
   }
   return { items: [item, ...deps.items], warnings: deps.warnings };
 }
@@ -249,12 +249,12 @@ export function formatInstall(
 }
 
 /** `choliba install`: fetches the source, plans, copies and reports; the fetched source is always cleaned up. */
-export async function install(args: InstallArgs, deps: InstallDeps): Promise<string> {
+export function install(args: InstallArgs, deps: InstallDeps): string {
   const fetched = (deps.fetch ?? fetchSource)(args.spec, deps.source);
   try {
     const target = args.path === undefined ? fetched.root : join(fetched.root, args.path);
     const shownAs = args.path === undefined ? args.spec : `${args.spec} --path ${args.path}`;
-    const plan = await planInstall(target, fetched.searchUpTo, shownAs);
+    const plan = planInstall(target, fetched.searchUpTo, shownAs);
     const installed = copyItems(plan.items, deps.targets, args.dryRun);
     return formatInstall(
       deps.workspaceRoot,

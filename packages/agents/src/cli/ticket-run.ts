@@ -33,7 +33,7 @@ export interface TicketArgs {
   readonly ticket: string | undefined;
 }
 
-/** `${TICKET}` and `${TICKET_FILE}` for the agent's system.md; none without a ticket. */
+/** `${TICKET}` and `${TICKET_FILE}` for the agent's agent.yaml; none without a ticket. */
 export function ticketVars(target: TicketTarget | undefined): Readonly<Record<string, string>> {
   return target === undefined ? {} : { TICKET: target.ticket, TICKET_FILE: target.file };
 }

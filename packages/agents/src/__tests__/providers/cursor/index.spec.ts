@@ -8,6 +8,7 @@ import { cursorProvider } from '../../../providers/cursor';
 import { PromptTooLargeError, MAX_ARG_BYTES } from '../../../prompt';
 import { makeTmpDir } from '../../helpers/tmp';
 import { NO_PERMISSIONS, readAgentPermissions } from '../../../permissions';
+import { NO_MODE_STEPS, fakeSections } from '../../helpers/agent';
 
 const CURSOR_PLAN_FIXTURE = join(__dirname, '..', '..', 'fixtures', 'streams', 'cursor-create-plan-tool-call.jsonl');
 
@@ -28,8 +29,9 @@ function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
     modes: ['execute', 'plan', 'ask'],
     permissions: NO_PERMISSIONS,
     dir: '/repo/agents/echo',
-    systemPromptPath: '/repo/agents/echo/system.md',
-    instructions: 'be an echo',
+    sections: fakeSections('be an echo'),
+    steps: NO_MODE_STEPS,
+    sourcePath: '/repo/agents/echo/agent.yaml',
     ...overrides,
   };
 }
@@ -414,6 +416,32 @@ describe('cursorProvider.prepareWorkspace', () => {
         ),
       ).toThrow('não é um JSON válido');
       expect(existsSync(join(tmp.path, '.cursor/cli.json'))).toBe(false);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+});
+
+describe('cursorProvider.previewWorkspace', () => {
+  it('shows what prepareWorkspace would write, without writing anything', () => {
+    const tmp = makeTmpDir('cursor-preview');
+    try {
+      const browser = { name: 'browser', config: { command: 'npx' }, path: '/repo/.agents/mcps/browser.json' };
+      const request = fakeRequest({ workspaceRoot: '/', runDir: tmp.path, mcpServers: [browser] });
+
+      const files = cursorProvider.previewWorkspace?.(request) ?? [];
+
+      expect(files.map((file) => file.path)).toEqual([
+        join(tmp.path, '.cursor', 'cli.json'),
+        join(tmp.path, '.cursor', 'mcp.json'),
+      ]);
+      expect(JSON.parse(files[1]?.content ?? '')).toEqual({ mcpServers: { browser: { command: 'npx' } } });
+      expect(existsSync(join(tmp.path, '.cursor'))).toBe(false);
+
+      const restore = cursorProvider.prepareWorkspace?.(request);
+      expect(readFileSync(join(tmp.path, '.cursor', 'cli.json'), 'utf8')).toBe(files[0]?.content);
+      restore?.();
+      expect(cursorProvider.previewWorkspace?.(fakeRequest({ workspaceRoot: '/', runDir: tmp.path }))).toHaveLength(1);
     } finally {
       tmp.cleanup();
     }

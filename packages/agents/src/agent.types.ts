@@ -2,7 +2,7 @@ import type { ExecutionMode, PermissionPolicy } from './command.types';
 import type { AgentPermissions } from './permissions';
 
 /**
- * One line of `steps.before`/`steps.after`: `<action>: [args]`. `run` runs an external command
+ * One line of `steps.<mode>.before`/`.after`: `<action>: [args]`. `run` runs an external command
  * (no shell); any other action is a method of the CLI, registered in `prepare/actions.ts`.
  */
 export interface AgentStep {
@@ -10,18 +10,57 @@ export interface AgentStep {
   readonly args: readonly string[];
 }
 
+/** `steps.<mode>.after`: after the agent, `success` (it exited with 0) or `failure`, then `always`. */
+export interface AgentAfterSteps {
+  readonly success: readonly AgentStep[];
+  readonly failure: readonly AgentStep[];
+  readonly always: readonly AgentStep[];
+}
+
+/** `steps.<mode>`: what the CLI runs around the agent in that mode; a mode with no steps runs nothing. */
+export interface AgentModeSteps {
+  /** Run in order before the agent; the first failure stops the run. They may add sections to the prompt. */
+  readonly before: readonly AgentStep[];
+  readonly after: AgentAfterSteps;
+}
+
 /**
- * One entry of `agent.yaml#mcps`: a server, and the only tools of it the agent may call. Without
- * `tools` (the plain list form, or a server with no `tools` key) every tool of the server is allowed.
+ * The text of the agent, from `agent.yaml`: each field becomes one section of the prompt
+ * (`role` → `<system_role>`, `context` → `<context>`, `input` → `<input_contract>`, `flow` →
+ * `<execution_flow>`, `output` → `<output_contract>`, `notes` → `<notes>`).
+ */
+export interface AgentSections {
+  readonly role: string;
+  readonly context: readonly string[];
+  readonly input: string;
+  readonly flow: string;
+  readonly output: string;
+  readonly notes: readonly string[];
+}
+
+/**
+ * One entry of `agent.yaml#skills`: a skill, and how this agent uses it (`instructions`, which goes
+ * into the prompt only with the skill).
+ */
+export interface SkillDeclaration {
+  readonly name: string;
+  readonly instructions?: string;
+}
+
+/**
+ * One entry of `agent.yaml#mcps`: a server, the only tools of it the agent may call, and how this
+ * agent uses it (`instructions`, which goes into the prompt only with the server). Without `tools`
+ * (the plain list form, or a server with no `tools` key) every tool of the server is allowed.
  */
 export interface McpDeclaration {
   readonly name: string;
   readonly tools?: readonly string[];
+  readonly instructions?: string;
 }
 
 /**
  * One agent, loaded from `<agentsDir>/<name>/agent.yaml` (standard 1, see
- * `schemes/v1/agent.schema.json`) + `system.md`. `name` is the folder, which is also `agent.id`.
+ * `schemes/v1/agent.schema.json`), its whole declaration. `name` is the folder, which is also `agent.id`.
  */
 export interface AgentDefinition {
   /** The directory name, equal to `agent.id`; also the lookup key (`agents <name> ...`). */
@@ -33,7 +72,7 @@ export interface AgentDefinition {
   readonly description: string;
   /** `models`: the models the agent may run with. */
   readonly supportedModels: readonly string[];
-  readonly skills: readonly string[];
+  readonly skills: readonly SkillDeclaration[];
   /** MCP servers the agent may use (`<mcpsDir>/<name>.json`); it gets no other. */
   readonly mcps: readonly McpDeclaration[];
   /** What the agent may read, write and execute, and where (`permissions`). */
@@ -57,14 +96,12 @@ export interface AgentDefinition {
   readonly defaultMode: ExecutionMode;
   /** Task used when the user gives none (only meaningful with `taskRequired: false`). */
   readonly defaultTask?: string;
-  /** `steps.before`: run in order before the provider is called; they may add sections to the prompt. */
-  readonly beforeExecute?: readonly AgentStep[];
-  /** `steps.after`: run in order after a successful `execute`. */
-  readonly afterExecute?: readonly AgentStep[];
+  /** `steps`, one entry per mode (empty lists for a mode that declares none). */
+  readonly steps: Readonly<Record<ExecutionMode, AgentModeSteps>>;
+  /** The text of the agent, which the CLI turns into the prompt's sections. */
+  readonly sections: AgentSections;
   /** Absolute path to the agent's directory. */
   readonly dir: string;
-  /** Absolute path to `system.md`. */
-  readonly systemPromptPath: string;
-  /** The verbatim contents of `system.md` — the instructions sent to the provider. */
-  readonly instructions: string;
+  /** Absolute path to `agent.yaml`. */
+  readonly sourcePath: string;
 }

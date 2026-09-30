@@ -4,6 +4,7 @@ import type { AgentDefinition } from '../agent.types';
 import { loadAgent } from '../agent-loader';
 import { commandFromAgent, defineCommand, effectivePolicy, implicitCommand } from '../define-command';
 import { NO_PERMISSIONS } from '../permissions';
+import { NO_MODE_STEPS, fakeSections } from './helpers/agent';
 
 const FIXTURES = join(__dirname, 'fixtures/agents');
 
@@ -24,8 +25,9 @@ function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
     modes: ['execute', 'plan', 'ask'],
     permissions: NO_PERMISSIONS,
     dir: '/tmp/agents/echo',
-    systemPromptPath: '/tmp/agents/echo/system.md',
-    instructions: 'be an echo',
+    sections: fakeSections('be an echo'),
+    steps: NO_MODE_STEPS,
+    sourcePath: '/tmp/agents/echo/agent.yaml',
     ...overrides,
   };
 }
@@ -84,11 +86,11 @@ describe('commandFromAgent', () => {
       defaultMode: 'execute',
     });
     expect(command.prepare).toBeUndefined();
-    expect(command.afterExecuteSuccess).toBeUndefined();
+    expect(command.after).toBeUndefined();
   });
 
-  it('wires prepare and afterExecuteSuccess from agent.yaml fields', async () => {
-    const agent = await loadAgent(FIXTURES, 'with-prepare');
+  it('wires prepare and after from the steps of agent.yaml', () => {
+    const agent = loadAgent(FIXTURES, 'with-prepare');
 
     const command = commandFromAgent(agent);
 
@@ -99,7 +101,7 @@ describe('commandFromAgent', () => {
       defaultMode: 'execute',
     });
     expect(typeof command.prepare).toBe('function');
-    expect(typeof command.afterExecuteSuccess).toBe('function');
+    expect(typeof command.after).toBe('function');
   });
 });
 
@@ -114,7 +116,7 @@ describe('implicitCommand', () => {
     expect(implicit.taskRequired).toBe(fromAgent.taskRequired);
     expect(implicit.defaultMode).toBe(fromAgent.defaultMode);
     expect(implicit.prepare).toBe(fromAgent.prepare);
-    expect(implicit.afterExecuteSuccess).toBe(fromAgent.afterExecuteSuccess);
+    expect(implicit.after).toBe(fromAgent.after);
   });
 });
 

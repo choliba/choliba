@@ -10,9 +10,11 @@ import type { SignalSource, Writable } from '@choliba/terminal';
 import { ProcessRunner } from '@choliba/terminal';
 
 import { defineCommand } from '../../define-command';
+import { StepFailedError } from '../../prepare/actions';
 import { readPlan } from '../../plan-store';
 import type { RunAgentsCliDeps } from '../../cli/run';
 import { runAgentsCli } from '../../cli/run';
+import { COMMAND_LINE_TITLE } from '../../cli/dry-run';
 import { fakeSpawner, streamFromChunks } from '../helpers/fake-spawner';
 import { makeTmpDir } from '../helpers/tmp';
 
@@ -21,6 +23,8 @@ const SKILLS = join(__dirname, '..', 'fixtures', 'skills');
 const MCPS = join(__dirname, '..', 'fixtures', 'mcps');
 /** Where the runs of these cases make their empty folder: `/repo` is not a real folder. */
 const RUNS = join(tmpdir(), `cli-run-spec-${String(process.pid)}`);
+/** The text an agent.yaml of these cases needs (`role`, `input`, `flow`, `output`), one YAML line each. */
+const SECTIONS = ['role: Revisa código.', 'input: Um diff.', 'flow: 1. Revise.', 'output: Comentários.'];
 
 function fakeWritable(): Writable & { chunks: string[] } {
   const chunks: string[] = [];
@@ -72,6 +76,17 @@ function lines(writable: Writable & { chunks: string[] }): readonly string[] {
     .join('')
     .split('\n')
     .filter((line) => line !== '');
+}
+
+/** The provider's command line, one argument each, that `--dry-run --show-prompt` prints in full. */
+function dryRunArgv(writable: Writable & { chunks: string[] }): readonly string[] {
+  const text = writable.chunks.join('');
+  const marker = `── ${COMMAND_LINE_TITLE} ──\n`;
+  const start = text.indexOf(marker);
+  if (start === -1) {
+    throw new Error(`no command line in:\n${text}`);
+  }
+  return JSON.parse(text.slice(start + marker.length).split('\n')[0] ?? '') as string[];
 }
 
 interface Harness {
@@ -154,9 +169,9 @@ describe('runAgentsCli — help', () => {
           '  description: "Esta descrição é propositalmente longa o suficiente para forçar quebra de linha no help do agente quando exibida no terminal estreito do CLI."',
           'models:',
           '  - claude-3-5-sonnet',
+          ...SECTIONS,
         ].join('\n'),
       );
-      writeFileSync(join(longDir, 'system.md'), readFileSync(join(FIXTURES, 'reviewer', 'system.md'), 'utf8'));
 
       const { deps, stdout } = harness([]);
       expect(await runAgentsCli(['long-help', '--agents-dir', agentsDir, '--help'], deps)).toBe(0);
@@ -245,12 +260,12 @@ describe('runAgentsCli — global help and completion', () => {
   });
 });
 
-describe('runAgentsCli — ${VAR} in system.md', () => {
+describe('runAgentsCli — ${VAR} in the text of the agent', () => {
   it('fills in the project locations and grants them by rules, never as a folder the provider reads freely', async () => {
     const { deps, stdout } = harness([], { config: { CHOL_GLOBAL_DIR: '/g' } });
 
-    expect(await runAgentsCli(['with-vars', '--agents-dir', FIXTURES, '--dry-run'], deps)).toBe(0);
-    const printed = lines(stdout);
+    expect(await runAgentsCli(['with-vars', '--agents-dir', FIXTURES, '--dry-run', '--show-prompt'], deps)).toBe(0);
+    const printed = dryRunArgv(stdout);
     expect(printed).toContain('Write(//g/projects/*/tickets/**)');
     expect(printed).toContain('Read(//g/projects/*/config.json)');
     expect(printed).not.toContain('--add-dir');
@@ -260,8 +275,8 @@ describe('runAgentsCli — ${VAR} in system.md', () => {
   it('honors PROJECTS_DIR and TICKET_RUNS from the config', async () => {
     const { deps, stdout } = harness([], { config: { CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: '/p', TICKET_RUNS: '/r' } });
 
-    expect(await runAgentsCli(['with-vars', '--agents-dir', FIXTURES, '--dry-run'], deps)).toBe(0);
-    expect(lines(stdout)).toContain('Write(//p/*/tickets/**)');
+    expect(await runAgentsCli(['with-vars', '--agents-dir', FIXTURES, '--dry-run', '--show-prompt'], deps)).toBe(0);
+    expect(dryRunArgv(stdout)).toContain('Write(//p/*/tickets/**)');
   });
 
   it('stops before the provider when the locations are not configured', async () => {
@@ -345,9 +360,9 @@ describe('runAgentsCli — tickets', () => {
       withTicketAgent(async (agentsDir) => {
         const { deps, stdout } = harness([], { config: { CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir } });
 
-        expect(await runAgentsCli(argv(agentsDir, '--type-bug', '--dry-run'), deps)).toBe(0);
+        expect(await runAgentsCli(argv(agentsDir, '--type-bug', '--dry-run', '--show-prompt'), deps)).toBe(0);
         const file = join(projectsDir, 'ready', 'tickets', '1.json');
-        expect(lines(stdout)).toContain(`Edit(/${file})`);
+        expect(dryRunArgv(stdout)).toContain(`Edit(/${file})`);
         expect(existsSync(file)).toBe(false);
 
         const help = harness([]);
@@ -381,11 +396,15 @@ describe('runAgentsCli — tickets', () => {
         writeFileSync(file, '{}');
 
         const found = harness([], { config });
-        expect(await runAgentsCli(argv(agentsDir, '--ticket', 'ready-7', '--dry-run'), found.deps)).toBe(0);
-        expect(lines(found.stdout)).toContain(`Edit(/${file})`);
+        expect(
+          await runAgentsCli(argv(agentsDir, '--ticket', 'ready-7', '--dry-run', '--show-prompt'), found.deps),
+        ).toBe(0);
+        expect(dryRunArgv(found.stdout)).toContain(`Edit(/${file})`);
 
         const missing = harness([], { config });
-        expect(await runAgentsCli(argv(agentsDir, '--ticket', 'ready-8', '--dry-run'), missing.deps)).toBe(1);
+        expect(
+          await runAgentsCli(argv(agentsDir, '--ticket', 'ready-8', '--dry-run', '--show-prompt'), missing.deps),
+        ).toBe(1);
         expect(missing.stderr.chunks.join('')).toContain('Ticket "ready-8" não encontrado');
       }),
     );
@@ -503,9 +522,12 @@ describe('runAgentsCli — --project', () => {
       const { deps, stdout } = harness([], { config: { CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: projectsDir } });
 
       expect(
-        await runAgentsCli(['with-project', '--agents-dir', FIXTURES, '--project', 'ready', '--dry-run'], deps),
+        await runAgentsCli(
+          ['with-project', '--agents-dir', FIXTURES, '--project', 'ready', '--dry-run', '--show-prompt'],
+          deps,
+        ),
       ).toBe(0);
-      const printed = lines(stdout);
+      const printed = dryRunArgv(stdout);
       const projectDir = join(projectsDir, 'ready');
       expect(printed).toContain(`Read(/${projectDir}/config.json)`);
       expect(printed).toContain(`Read(/${projectDir}/app/**)`);
@@ -558,8 +580,8 @@ describe('runAgentsCli — skills', () => {
   it("lists the agent's skills in the prompt and lets it read the folder of each one", async () => {
     const { deps, stdout } = harness([]);
 
-    expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'x'], deps)).toBe(0);
-    const printed = lines(stdout);
+    expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', '--show-prompt', 'x'], deps)).toBe(0);
+    const printed = dryRunArgv(stdout);
     expect(printed.at(printed.indexOf('-p') + 1)).toContain('Task:');
     expect(printed).toContain(`Read(/${SKILLS}/dummy-skill/**)`);
     expect(printed).not.toContain('--add-dir');
@@ -578,8 +600,8 @@ describe('runAgentsCli — skills', () => {
   it('does not grant the skills dir to an agent without skills', async () => {
     const { deps, stdout } = harness([]);
 
-    await runAgentsCli(['with-prepare', '--agents-dir', FIXTURES, '--dry-run'], deps);
-    expect(lines(stdout).join('\n')).not.toContain(SKILLS);
+    await runAgentsCli(['with-prepare', '--agents-dir', FIXTURES, '--dry-run', '--show-prompt'], deps);
+    expect(dryRunArgv(stdout).join('\n')).not.toContain(SKILLS);
   });
 });
 
@@ -598,8 +620,10 @@ describe('runAgentsCli — mcps', () => {
     try {
       const { deps, stdout } = harness([], { config: { CHOL_MCPS_DIR: MCPS } });
 
-      expect(await runAgentsCli(['echo', '--agents-dir', agents.agentsDir, '--dry-run', 'x'], deps)).toBe(0);
-      const printed = lines(stdout);
+      expect(
+        await runAgentsCli(['echo', '--agents-dir', agents.agentsDir, '--dry-run', '--show-prompt', 'x'], deps),
+      ).toBe(0);
+      const printed = dryRunArgv(stdout);
       expect(printed).toContain('--strict-mcp-config');
       expect(printed.at(printed.indexOf('--mcp-config') + 1)).toBe(
         JSON.stringify({ mcpServers: { 'dummy-mcp': { command: 'npx', args: ['dummy-mcp-server'] } } }),
@@ -632,8 +656,10 @@ describe('runAgentsCli — mcps', () => {
     try {
       const { deps, stdout } = harness([], { config: { CHOL_MCPS_DIR: MCPS } });
 
-      expect(await runAgentsCli(['echo', '--agents-dir', agents.agentsDir, '--dry-run', 'x'], deps)).toBe(0);
-      const printed = lines(stdout);
+      expect(
+        await runAgentsCli(['echo', '--agents-dir', agents.agentsDir, '--dry-run', '--show-prompt', 'x'], deps),
+      ).toBe(0);
+      const printed = dryRunArgv(stdout);
       expect(printed).toContain('mcp__dummy-mcp__jira_search');
       expect(printed).toContain('mcp__dummy-mcp__use_environment');
       expect(printed).not.toContain('mcp__dummy-mcp');
@@ -651,9 +677,9 @@ describe('runAgentsCli — mcps', () => {
   it('gives an agent without mcps no server at all', async () => {
     const { deps, stdout } = harness([]);
 
-    await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'x'], deps);
-    expect(lines(stdout)).toContain('--strict-mcp-config');
-    expect(lines(stdout)).not.toContain('--mcp-config');
+    await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', '--show-prompt', 'x'], deps);
+    expect(dryRunArgv(stdout)).toContain('--strict-mcp-config');
+    expect(dryRunArgv(stdout)).not.toContain('--mcp-config');
   });
 });
 
@@ -740,11 +766,17 @@ describe('runAgentsCli — run', () => {
     const { deps, stdout } = harness(claudeStdout(claudeSuccessLine()), { repoRoot: tmp.path });
 
     try {
-      expect(await runAgentsCli(['with-prepare', '--agents-dir', FIXTURES, '--dry-run'], deps)).toBe(0);
-      expect(stdout.chunks.join('')).toContain('diff calculado por quem chamou este comando');
+      expect(await runAgentsCli(['with-prepare', '--agents-dir', FIXTURES, '--dry-run', '--show-prompt'], deps)).toBe(
+        0,
+      );
+      // --dry-run runs none of the steps: it shows where what they produce would go.
+      expect(getDiff).not.toHaveBeenCalled();
+      expect(stdout.chunks.join('')).toContain(' 1. [CLI]    execute.before 1/3 — git_diff: develop');
+      expect(stdout.chunks.join('')).toContain('[execute.before 1/3 — git_diff: develop');
+      expect(existsSync(join(tmp.path, '.cache'))).toBe(false);
       // The fixture's agent.yaml allows writing docs/, which becomes absolute from the workspace root.
-      expect(stdout.chunks.join('')).toContain('dontAsk');
-      expect(stdout.chunks.join('')).toContain(`Edit(/${tmp.path}/docs/**)`);
+      expect(dryRunArgv(stdout)).toContain('dontAsk');
+      expect(dryRunArgv(stdout)).toContain(`Edit(/${tmp.path}/docs/**)`);
     } finally {
       tmp.cleanup();
       getDiff.mockRestore();
@@ -763,9 +795,9 @@ describe('runAgentsCli — run', () => {
   it('shows why an agent that exists does not load, instead of calling it unknown', async () => {
     const { deps, stderr } = harness([]);
 
-    expect(await runAgentsCli(['schema-invalid-xml', '--agents-dir', FIXTURES, '--help'], deps)).toBe(1);
+    expect(await runAgentsCli(['missing-sections', '--agents-dir', FIXTURES, '--help'], deps)).toBe(1);
     const text = stderr.chunks.join('');
-    expect(text).toContain('failed schema validation');
+    expect(text).toContain("must have required property 'role'");
     expect(text).not.toContain('Unknown command');
   });
 
@@ -842,7 +874,7 @@ describe('runAgentsCli — run', () => {
       ],
     });
 
-    await runAgentsCli(['prepped', '--agents-dir', FIXTURES, '--since', 'HEAD~1', '--dry-run'], deps);
+    await runAgentsCli(['prepped', '--agents-dir', FIXTURES, '--since', 'HEAD~1', '--dry-run', '--show-prompt'], deps);
 
     expect(sinceValues).toEqual(['HEAD~1']);
     expect(stdout.chunks.join('')).toContain('preloaded context');
@@ -861,7 +893,7 @@ describe('runAgentsCli — run', () => {
       ],
     });
 
-    await runAgentsCli(['prepped', '--agents-dir', FIXTURES, '--dry-run'], deps);
+    await runAgentsCli(['prepped', '--agents-dir', FIXTURES, '--dry-run', '--show-prompt'], deps);
 
     expect(stdout.chunks.join('')).toContain('preloaded context');
   });
@@ -890,9 +922,11 @@ describe('runAgentsCli — run', () => {
       config: { CHOL_AGENTS_PROVIDER: 'cursor' },
     });
 
-    await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'x'], deps);
+    await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', '--show-prompt', 'x'], deps);
 
-    expect(lines(stdout)[0]).toBe('cursor-agent');
+    expect(dryRunArgv(stdout)[0]).toBe('cursor-agent');
+    // cursor's permissions go into a file, which --show-prompt shows as it would be written.
+    expect(stdout.chunks.join('')).toMatch(/── .*\.cursor\/cli\.json ──\n\{/);
   });
 
   it('prefers --provider over CHOL_AGENTS_PROVIDER', async () => {
@@ -901,23 +935,36 @@ describe('runAgentsCli — run', () => {
       config: { CHOL_AGENTS_PROVIDER: 'cursor' },
     });
 
-    await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--provider', 'claude', '--dry-run', 'x'], deps);
+    await runAgentsCli(
+      ['echo', '--agents-dir', FIXTURES, '--provider', 'claude', '--dry-run', '--show-prompt', 'x'],
+      deps,
+    );
 
-    expect(lines(stdout)[0]).toBe('claude');
+    expect(dryRunArgv(stdout)[0]).toBe('claude');
   });
 
   describe('--dry-run', () => {
-    it('prints the resolved argv, one part per line, and never spawns', async () => {
+    it('prints what would run, in order, and never spawns', async () => {
       const spawnerHandle = fakeSpawner();
       const { deps, stdout } = harness([], { runner: new ProcessRunner({ spawner: spawnerHandle.spawner }) });
 
-      const exitCode = await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'a task'], deps);
-
-      expect(exitCode).toBe(0);
-      const printed = lines(stdout);
-      expect(printed[0]).toBe('claude');
-      expect(printed).toContain('-p');
+      expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'a task'], deps)).toBe(0);
+      const text = stdout.chunks.join('');
+      expect(text.startsWith('Sem --dry-run, faria nesta ordem:\n')).toBe(true);
+      expect(text).toContain(' 2. [agente] claude · modelo padrão do provider · modo execute');
+      expect(text).toContain('comando: claude -p <prompt do usuário>');
+      expect(text).not.toContain(COMMAND_LINE_TITLE);
       expect(spawnerHandle.spawnCalls).toEqual([]);
+    });
+
+    it('prints the command line in full with --show-prompt', async () => {
+      const { deps, stdout } = harness([]);
+
+      await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', '--show-prompt', 'a task'], deps);
+
+      const printed = dryRunArgv(stdout);
+      expect(printed[0]).toBe('claude');
+      expect(printed.at(printed.indexOf('-p') + 1)).toBe('Task:\na task');
     });
 
     it("resolves a command's own addDirs relative to repoRoot, alongside --add-dir", async () => {
@@ -926,30 +973,34 @@ describe('runAgentsCli — run', () => {
         commands: [defineCommand({ name: 'quick', agent: 'echo', description: 'd', addDirs: ['extra'] })],
       });
 
-      await runAgentsCli(['quick', '--agents-dir', FIXTURES, '--dry-run', '--add-dir', '/cli-extra', 'x'], deps);
+      await runAgentsCli(
+        ['quick', '--agents-dir', FIXTURES, '--dry-run', '--show-prompt', '--add-dir', '/cli-extra', 'x'],
+        deps,
+      );
 
-      const printed = lines(stdout);
+      const printed = dryRunArgv(stdout);
       expect(printed).toEqual(expect.arrayContaining(['--add-dir', join(FIXTURES, 'extra'), '/cli-extra']));
     });
 
-    it('defaults agentsDir to <repoRoot>/agents, and does not re-add it when already inside repoRoot', async () => {
-      // FIXTURES is literally "<parent>/agents", so using its parent as repoRoot makes the
-      // *default* agentsDir resolve to FIXTURES exactly — this is what exercises the default
-      // (no --agents-dir, no CHOL_AGENTS_DIR) path, as opposed to every other test in this file.
-      const repoRoot = join(FIXTURES, '..');
-      const { deps, stdout } = harness([], { repoRoot });
+    it('defaults agentsDir to <repoRoot>/app/agents, and does not add it as a folder the provider reads', async () => {
+      const tmp = makeTmpDir('cli-default-agents-dir');
+      try {
+        cpSync(join(FIXTURES, 'echo'), join(tmp.path, 'app', 'agents', 'echo'), { recursive: true });
+        const { deps, stdout } = harness([], { repoRoot: tmp.path });
 
-      await runAgentsCli(['echo', '--dry-run', 'x'], deps);
-
-      expect(lines(stdout).includes('--add-dir')).toBe(false);
+        expect(await runAgentsCli(['echo', '--dry-run', '--show-prompt', 'x'], deps)).toBe(0);
+        expect(dryRunArgv(stdout)).not.toContain('--add-dir');
+      } finally {
+        tmp.cleanup();
+      }
     });
 
     it('never adds the agents dir, even outside the workspace root: an added folder is read freely', async () => {
       const { deps, stdout } = harness([], { repoRoot: '/repo' });
 
-      await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'x'], deps);
+      await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', '--show-prompt', 'x'], deps);
 
-      expect(lines(stdout)).not.toContain('--add-dir');
+      expect(dryRunArgv(stdout)).not.toContain('--add-dir');
     });
 
     it('reports an oversized prompt cleanly instead of crashing', async () => {
@@ -966,95 +1017,120 @@ describe('runAgentsCli — run', () => {
         commands: [defineCommand({ name: 'quick', agent: 'echo', description: 'd', policy: 'edits' })],
       });
 
-      await runAgentsCli(['quick', '--agents-dir', FIXTURES, '--dry-run', 'x'], deps);
+      await runAgentsCli(['quick', '--agents-dir', FIXTURES, '--dry-run', '--show-prompt', 'x'], deps);
 
       // echo declares nothing to write: even an edits command denies what is not allowed.
-      expect(lines(stdout)).toContain('dontAsk');
+      expect(dryRunArgv(stdout)).toContain('dontAsk');
     });
   });
 
-  it('runs afterExecuteSuccess after a successful execute run', async () => {
-    const tmp = makeTmpDir('cli-after-execute-success');
+  /** A command `sync-docs` on the echo agent, with the given `after` hook and a prepare that runs nothing. */
+  function syncDocs(after: NonNullable<Parameters<typeof defineCommand>[0]['after']>) {
+    return defineCommand({
+      name: 'sync-docs',
+      agent: 'echo',
+      description: 'd',
+      taskRequired: false,
+      policy: 'edits',
+      prepare: () => ({ task: 'sync', promptBody: 'ctx' }),
+      after,
+    });
+  }
+
+  const failedStep = (status: number | undefined) => ({
+    label: 'execute.after.success 1/1',
+    step: { action: 'run', args: ['bunx', 'choliba', 'tests', 'x'] },
+    status,
+    output: 'CA-01 falhou',
+  });
+
+  it('runs the after hook once the agent is done, in every mode, with how the agent ended', async () => {
+    const tmp = makeTmpDir('cli-after');
     try {
-      const afterSuccess = jest.fn();
-      const { deps } = harness(claudeStdout(claudeSuccessLine()), {
+      const after = jest.fn(() => []);
+      const { deps } = harness(claudeStdout(claudeSuccessLine('1. plan step')), {
         repoRoot: tmp.path,
-        commands: [
-          defineCommand({
-            name: 'sync-docs',
-            agent: 'echo',
-            description: 'd',
-            taskRequired: false,
-            policy: 'edits',
-            prepare: () => ({ task: 'sync', promptBody: 'ctx' }),
-            afterExecuteSuccess: afterSuccess,
-          }),
-        ],
+        commands: [syncDocs(after)],
       });
 
-      const exitCode = await runAgentsCli(['sync-docs', '--agents-dir', FIXTURES], deps);
-
-      expect(exitCode).toBe(0);
-      expect(afterSuccess).toHaveBeenCalledWith(tmp.path);
+      expect(await runAgentsCli(['sync-docs', '--agents-dir', FIXTURES, '--mode-plan'], deps)).toBe(0);
+      expect(after).toHaveBeenCalledWith({ repoRoot: tmp.path, mode: 'plan', exitCode: 0 });
     } finally {
       tmp.cleanup();
     }
   });
 
-  it('reports when afterExecuteSuccess throws after a successful execute run', async () => {
-    const tmp = makeTmpDir('cli-after-execute-success-fail');
+  it('reports each after step that failed, and ends with its status when the agent succeeded', async () => {
+    const tmp = makeTmpDir('cli-after-fail');
     try {
       const { deps, stderr } = harness(claudeStdout(claudeSuccessLine()), {
         repoRoot: tmp.path,
-        commands: [
-          defineCommand({
-            name: 'sync-docs',
-            agent: 'echo',
-            description: 'd',
-            taskRequired: false,
-            policy: 'edits',
-            prepare: () => ({ task: 'sync', promptBody: 'ctx' }),
-            afterExecuteSuccess: () => {
-              throw new Error('cannot write last-base');
-            },
-          }),
-        ],
+        commands: [syncDocs(() => [failedStep(3), failedStep(undefined)])],
       });
 
-      const exitCode = await runAgentsCli(['sync-docs', '--agents-dir', FIXTURES], deps);
-
-      expect(exitCode).toBe(1);
-      expect(stderr.chunks.join('')).toContain('cannot write last-base');
+      expect(await runAgentsCli(['sync-docs', '--agents-dir', FIXTURES], deps)).toBe(3);
+      expect(stderr.chunks.join('')).toContain(
+        [
+          '✗ execute.after.success 1/1 falhou — run: bunx choliba tests x (código 3)',
+          '  CA-01 falhou',
+          '  O agente terminou com código 0.',
+        ].join('\n'),
+      );
+      expect(stderr.chunks.join('')).toContain('✗ execute.after.success 1/1 falhou — run: bunx choliba tests x\n');
     } finally {
       tmp.cleanup();
     }
   });
 
-  it('does not run afterExecuteSuccess in plan mode', async () => {
-    const tmp = makeTmpDir('cli-after-execute-plan-no-hook');
+  it("keeps the agent's exit code when the agent failed, even if an after step failed too", async () => {
+    const tmp = makeTmpDir('cli-after-agent-fail');
     try {
-      const afterSuccess = jest.fn();
-      const { deps } = harness(claudeStdout(claudeSuccessLine('1. plan step')), {
-        repoRoot: tmp.path,
-        commands: [
-          defineCommand({
-            name: 'sync-docs',
-            agent: 'echo',
-            description: 'd',
-            taskRequired: false,
-            policy: 'edits',
-            prepare: () => ({ task: 'sync', promptBody: 'ctx' }),
-            afterExecuteSuccess: afterSuccess,
-          }),
-        ],
-      });
+      const failing = `${JSON.stringify({ type: 'result', is_error: true, result: 'boom' })}\n`;
+      const after = jest.fn(() => [failedStep(3)]);
+      const { deps } = harness(claudeStdout(failing), { repoRoot: tmp.path, commands: [syncDocs(after)] });
 
-      await runAgentsCli(['sync-docs', '--agents-dir', FIXTURES, '--mode-plan'], deps);
+      const exitCode = await runAgentsCli(['sync-docs', '--agents-dir', FIXTURES], deps);
 
-      expect(afterSuccess).not.toHaveBeenCalled();
+      expect(exitCode).not.toBe(0);
+      expect(exitCode).not.toBe(3);
+      expect(after).toHaveBeenCalledWith({ repoRoot: tmp.path, mode: 'execute', exitCode });
     } finally {
       tmp.cleanup();
     }
+  });
+
+  it('stops before the agent when a before step fails, with the status of that step', async () => {
+    const spawnerHandle = fakeSpawner();
+    const { deps, stderr } = harness([], {
+      runner: new ProcessRunner({ spawner: spawnerHandle.spawner }),
+      commands: [
+        defineCommand({
+          name: 'guarded',
+          agent: 'echo',
+          description: 'd',
+          taskRequired: false,
+          prepare: () => {
+            throw new StepFailedError({
+              label: 'execute.before 1/2',
+              step: { action: 'run', args: ['bunx', 'choliba', 'tests', 'x', '--expect', 'red'] },
+              status: 2,
+              output: 'nada a implementar',
+            });
+          },
+        }),
+      ],
+    });
+
+    expect(await runAgentsCli(['guarded', '--agents-dir', FIXTURES], deps)).toBe(2);
+    expect(stderr.chunks.join('')).toBe(
+      [
+        '✗ execute.before 1/2 falhou — run: bunx choliba tests x --expect red (código 2)',
+        '  nada a implementar',
+        '  O agente não foi executado.',
+        '',
+      ].join('\n'),
+    );
+    expect(spawnerHandle.spawnCalls).toEqual([]);
   });
 
   describe('--plan mode', () => {
@@ -1104,10 +1180,10 @@ function withCustomAgent(extra: string[], run: (agentsDir: string) => Promise<vo
     '  version: 1.0.0',
     '  description: d',
     'models: [claude-3-5-sonnet]',
+    ...SECTIONS,
     ...extra,
   ];
   writeFileSync(join(dir, 'agent.yaml'), `${yaml.join('\n')}\n`);
-  writeFileSync(join(dir, 'system.md'), readFileSync(join(FIXTURES, 'reviewer', 'system.md'), 'utf8'));
   return run(tmp.path).finally(tmp.cleanup);
 }
 
@@ -1118,7 +1194,9 @@ describe('runAgentsCli — modes', () => {
     await withCustomAgent(MODES, async (agentsDir) => {
       const { deps, stdout } = harness([]);
 
-      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(0);
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', '--show-prompt', 'x'], deps)).toBe(
+        0,
+      );
       expect(stdout.chunks.join('')).toContain('You have read-only tools in this session');
     });
   });
@@ -1155,8 +1233,10 @@ describe('runAgentsCli — ${CHOL_ROOT}', () => {
     await withCustomAgent(['permissions:', '  allow:', "    read: ['${CHOL_ROOT}/docs/']"], async (agentsDir) => {
       const { deps, stdout } = harness([]);
 
-      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(0);
-      expect(lines(stdout)).toContain('Read(//repo/docs/**)');
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', '--show-prompt', 'x'], deps)).toBe(
+        0,
+      );
+      expect(dryRunArgv(stdout)).toContain('Read(//repo/docs/**)');
     });
   });
 
@@ -1194,8 +1274,10 @@ describe('runAgentsCli — execute outside the workspace', () => {
     await withCustomAgent(yaml, async (agentsDir) => {
       const { deps, stdout } = harness([]);
 
-      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(0);
-      const printed = lines(stdout);
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', '--show-prompt', 'x'], deps)).toBe(
+        0,
+      );
+      const printed = dryRunArgv(stdout);
       expect(printed.at(printed.indexOf('--add-dir') + 1)).toBe('/opt/app');
       expect(printed).toContain('Bash(composer test:*)');
     });
@@ -1207,10 +1289,13 @@ describe('runAgentsCli — run dir', () => {
     const { deps: withRuns, stdout } = harness([], { which: whichOf(['cursor-agent']) });
     const { runsDir: _runsDir, ...deps } = withRuns;
 
-    expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--provider', 'cursor', '--dry-run', 'x'], deps)).toBe(
-      0,
-    );
-    const printed = lines(stdout);
+    expect(
+      await runAgentsCli(
+        ['echo', '--agents-dir', FIXTURES, '--provider', 'cursor', '--dry-run', '--show-prompt', 'x'],
+        deps,
+      ),
+    ).toBe(0);
+    const printed = dryRunArgv(stdout);
     expect(printed.at(printed.indexOf('--workspace') + 1)).toBe(
       `/repo/.cache/runs/2026-01-01T00-00-00.000Z-${String(process.pid)}`,
     );
@@ -1227,20 +1312,22 @@ describe('runAgentsCli — folder variables', () => {
     await withCustomAgent(yaml, async (agentsDir) => {
       const { deps, stdout } = harness([], { config: { CHOL_SKILLS_DIR: '/s', CHOL_MCPS_DIR: '/m' } });
 
-      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(0);
-      expect(lines(stdout)).toEqual(
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', '--show-prompt', 'x'], deps)).toBe(
+        0,
+      );
+      expect(dryRunArgv(stdout)).toEqual(
         expect.arrayContaining(['Read(//repo/app/agents/**)', 'Read(//s/**)', 'Read(//m/**)']),
       );
     });
   });
 
-  it('knows no ${AGENTS_DIR}: it stops as a variable with no value, listing the ones there are', async () => {
+  it('knows no ${AGENTS_DIR}: the agent does not load, and the error lists the variables there are', async () => {
     await withCustomAgent(['permissions:', '  deny:', "    read: ['${AGENTS_DIR}/']"], async (agentsDir) => {
       const { deps, stderr } = harness([]);
 
       expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(1);
       expect(stderr.chunks.join('')).toMatch(
-        /usa \$\{AGENTS_DIR\}, sem valor \(disponíveis: CHOL_ROOT, CHOL_AGENTS_DIR/,
+        /\$\{AGENTS_DIR\} \(em permissions\) não é uma variável do agent\.yaml; as que existem: CHOL_ROOT, CHOL_AGENTS_DIR/,
       );
     });
   });
@@ -1249,8 +1336,10 @@ describe('runAgentsCli — folder variables', () => {
     await withCustomAgent(['permissions:', '  allow:', "    read: ['${PROJECTS_DIR}/']"], async (agentsDir) => {
       const { deps, stdout } = harness([], { config: { CHOL_GLOBAL_DIR: '/g' } });
 
-      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(0);
-      expect(lines(stdout)).toContain('Read(//g/projects/**)');
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', '--show-prompt', 'x'], deps)).toBe(
+        0,
+      );
+      expect(dryRunArgv(stdout)).toContain('Read(//g/projects/**)');
     });
   });
 });
