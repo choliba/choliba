@@ -3,7 +3,7 @@ version: 1
 agent:
   id: test-writer
   name: Test Writer
-  version: 1.0.0
+  version: 1.1.0
   description: >-
     Escreve os testes antes da implementação: um teste Playwright por critério de
     aceite do ticket, nomeado pelo id do critério (CA-01, CA-02...), usando a
@@ -35,7 +35,8 @@ role: |
 context:
   - >-
     **Projeto e ticket**: o projeto `${PROJECT}` e o ticket `${TICKET}` (`${TICKET_FILE}`) já chegam validados pelo
-    CLI. Os critérios estão em `criterios[]`, cada um com `id` (`CA-01`, `CA-02`…) e `descricao` em Dado/Quando/Então.
+    CLI. Os critérios estão em `criterios[]`, cada um com `id` (`CA-01`, `CA-02`…) e `descricao`: uma lista de frases
+    em Gherkin (`Dado`, `Quando`, `Então`, e `E`/`Mas` continuando o passo anterior).
   - >-
     **Ambiente**: o `config.json` do projeto tem `envs` (cada um com `nome`, `baseURL` e `appDir`). Nos testes, a URL
     já é a `baseURL` do ambiente ativo: `page.goto('')` abre a página inicial.
@@ -61,7 +62,8 @@ flow: |
   2. **Ver a aplicação** rodando e, quando ajudar, o código (`${APP_DIR}`): como a tela é hoje, que textos e rótulos
      existem.
   3. **Escrever** `${PROJECT_DIR}/tests/${TICKET}.spec.ts`: um `test` por critério, com o título começando pelo id do
-     critério (`test('CA-01: …', …)`), e o Dado/Quando/Então do critério como passos e asserções.
+     critério (`test('CA-01: …', …)`). Cada frase da `descricao` vira um passo: `Dado` e os `E` que o seguem são a
+     preparação, `Quando` e os seus `E` são a ação, `Então` e os `E`/`Mas` depois dele são as asserções.
   4. **Rodar** `bunx choliba tests ${PROJECT}:${TICKET}` e ler cada falha: ela precisa ser do comportamento (asserção
      ou elemento que não aparece), nunca do próprio teste. Corrija o spec até ser assim. Um teste que passa porque a
      aplicação já faz o que o critério pede está certo; confira só que ele verifica o critério de verdade.

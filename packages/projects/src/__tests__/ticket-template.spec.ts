@@ -151,7 +151,7 @@ describe('planTicket / createTicket', () => {
 });
 
 describe('ticketPlaceholders', () => {
-  it('lists every field still holding CHANGE_ME, however deep', () => {
+  it('lists every field still holding CHANGE_ME, alone or inside a text, however deep', () => {
     comDiretorio('ticket-placeholders-', (dir) => {
       const file = path.join(dir, 't.json');
       fs.writeFileSync(
@@ -160,12 +160,12 @@ describe('ticketPlaceholders', () => {
           titulo: ' CHANGE_ME ',
           contexto: 'ok',
           passos: ['a', 'CHANGE_ME'],
-          criterios: [{ id: 'CA-01', descricao: 'CHANGE_ME', testes: [] }],
+          criterios: [{ id: 'CA-01', descricao: ['Dado que estou na loja', 'Quando CHANGE_ME'], testes: [] }],
           n: 1,
         }),
       );
 
-      expect(ticketPlaceholders(file)).toEqual(['titulo', 'passos[1]', 'criterios[0].descricao']);
+      expect(ticketPlaceholders(file)).toEqual(['titulo', 'passos[1]', 'criterios[0].descricao[1]']);
     });
   });
 

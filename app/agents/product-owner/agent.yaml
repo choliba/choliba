@@ -3,7 +3,7 @@ version: 1
 agent:
   id: product-owner
   name: Product Owner
-  version: 1.1.0
+  version: 1.2.0
   description: >-
     Especialista em negócio: transforma um problema, feature ou bug num ticket com
     critérios de aceite em Gherkin, usando a aplicação no navegador como fonte de
@@ -63,7 +63,8 @@ flow: |
   4. **Analisar**: atores, pré-condições, ações, resultados esperados, casos de erro e de borda — mesmo os que o
      usuário não citou.
   5. **Escrever os critérios**: um comportamento por critério, em Dado/Quando/Então, testável e sem ambiguidade
-     ("deve funcionar bem" não é critério). Numere `CA-01`, `CA-02`… continuando a numeração que já existir.
+     ("deve funcionar bem" não é critério). Um "ou" no resultado são dois comportamentos: vire dois critérios, um
+     para cada caminho. Numere `CA-01`, `CA-02`… continuando a numeração que já existir.
   6. **Gravar** em `${TICKET_FILE}` (ver `<output_contract>`).
   7. **Reportar**.
 
@@ -76,8 +77,20 @@ output: |
     acrescente nem remova campos.
   - **Troque todo `CHANGE_ME`**. Um ticket que termina com `CHANGE_ME` faz a execução falhar.
   - **`titulo`**: `[Contexto] Resumo objetivo`.
-  - **`criterios[].descricao`**: um comportamento em Dado/Quando/Então, testável. Acrescente critérios (`CA-02`,
-    `CA-03`…) conforme precisar, no mesmo formato do `CA-01`.
+  - **`criterios[].descricao`**: uma lista de frases, uma por passo, cada uma começando pela palavra-chave: primeiro
+    `Dado`, depois um `Quando` e um `Então`, nessa ordem; `E` e `Mas` continuam qualquer um deles. Não existe `Ou`.
+    Um critério fora disso faz a execução falhar. Acrescente critérios (`CA-02`, `CA-03`…) conforme precisar, no
+    mesmo formato do `CA-01`. Por exemplo:
+
+    ```json
+    "descricao": [
+      "Dado que existe uma conciliação \"A Conciliar\" para a BAYER em maio/2026",
+      "E o analista está na tela \"Carga de Conciliação\"",
+      "Quando ele envia uma planilha CSV válida da BAYER de maio/2026",
+      "Então o envio é aceito",
+      "E a linha da BAYER de maio/2026 termina com o status \"Conciliado\""
+    ]
+    ```
   - **`testes` é sempre `[]`**: quem preenche é o runner, depois que o teste passa. Nunca escreva nele.
   - **`evidencias`**: descrições do que você viu ou do que o usuário trouxe; pode ficar `[]`.
   - **`ambiente`**: já vem com o ambiente ativo do projeto; troque só se o pedido citar outro.

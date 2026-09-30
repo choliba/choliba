@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 29/09/2026 21:58:37 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 30/09/2026 12:29:10 — não editar manualmente.
 
 ## Resumo
 
@@ -105,7 +105,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 12 arquivos</summary>
+<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 13 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -119,6 +119,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/readme.ts](packages/projects/src/readme.ts)|100.00|100.00|100.00|100.00
 🟢|[src/results.ts](packages/projects/src/results.ts)|100.00|100.00|100.00|100.00
 🟢|[src/settings.ts](packages/projects/src/settings.ts)|100.00|100.00|100.00|100.00
+🟢|[src/ticket-criteria.ts](packages/projects/src/ticket-criteria.ts)|100.00|100.00|100.00|100.00
 🟢|[src/ticket-template.ts](packages/projects/src/ticket-template.ts)|100.00|100.00|100.00|100.00
 🟢|[src/ticket.ts](packages/projects/src/ticket.ts)|100.00|100.00|100.00|100.00
 
