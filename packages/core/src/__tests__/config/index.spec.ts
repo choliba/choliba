@@ -21,8 +21,8 @@ describe('config barrel exports', () => {
     expect([config.APP_DIR, config.AGENTS_SUBDIR, config.SKILLS_SUBDIR, config.MCPS_SUBDIR]).toEqual([
       'app',
       'agents',
-      '.agents/skills',
-      '.agents/mcps',
+      'skills',
+      'mcps',
     ]);
     expect([config.TICKETS_SUBDIR, config.TESTS_SUBDIR, config.TICKET_RUNS_SUBDIR]).toEqual([
       'tickets',

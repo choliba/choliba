@@ -21,13 +21,13 @@ export function resolveAgentsDir(explicit: string | undefined, config: Config, r
   return dir === undefined ? join(root, DEFAULT_AGENTS_DIR) : toAbsolute(dir, root);
 }
 
-/** Where `agent.yaml#skills` are looked up: `CHOL_SKILLS_DIR`, else `app/.agents/skills` at the workspace root. */
+/** Where `agent.yaml#skills` are looked up: `CHOL_SKILLS_DIR`, else `app/skills` at the workspace root. */
 export function resolveSkillsDir(config: Config, root: string): string {
   const dir = config[CHOL_SKILLS_DIR];
   return dir === undefined ? join(root, DEFAULT_SKILLS_DIR) : toAbsolute(dir, root);
 }
 
-/** Where `agent.yaml#mcps` are looked up: `CHOL_MCPS_DIR`, else `app/.agents/mcps` at the workspace root. */
+/** Where `agent.yaml#mcps` are looked up: `CHOL_MCPS_DIR`, else `app/mcps` at the workspace root. */
 export function resolveMcpsDir(config: Config, root: string): string {
   const dir = config[CHOL_MCPS_DIR];
   return dir === undefined ? join(root, DEFAULT_MCPS_DIR) : toAbsolute(dir, root);

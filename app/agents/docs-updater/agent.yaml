@@ -11,6 +11,7 @@ agent:
     de abrir PR, pra manter a documentação sincronizada com o repositório.
 models:
   - claude-sonnet-5
+  - claude-opus-5-5-sonnet
   - Composer 2.5 Fast
 
 role: |
@@ -47,8 +48,8 @@ flow: |
      |---|---|
      | Estrutura do monorepo, pacotes novos, workspaces | `README.md` (raiz) e docs de arquitetura |
      | `package.json` (campo `scripts`), novos comandos `bun run` | docs de comandos + `README.md` se for comando de uso frequente |
-     | Arquivos em `agents/` (novo agente, mudança de contrato) | doc de agentes |
-     | Arquivos em `.agents/skills/` (nova skill, mudança de contrato) | doc de skills |
+     | Arquivos em `app/agents/` (novo agente, mudança de contrato) | doc de agentes |
+     | Arquivos em `app/skills/` ou `.agents/skills/` (nova skill, mudança de contrato) | doc de skills |
      | Config de CI (`.github/workflows/`), hooks (`.githooks/`) | doc de qualidade/CI |
      | Instalação, setup inicial, visão geral do projeto | `README.md` (raiz) |
      | Mudança em fluxo de teste ("como rodar") | guia rápido em `docs/` |
@@ -95,7 +96,7 @@ permissions:
     write: [docs/, README.md]
   deny:
     write:
-      - agents/
+      - '${CHOL_AGENTS_DIR}/'
       - packages/
       - apps/
       - scripts/

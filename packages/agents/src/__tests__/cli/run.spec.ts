@@ -591,9 +591,7 @@ describe('runAgentsCli — skills', () => {
     const { deps, stdout, stderr } = harness([], { config: { CHOL_SKILLS_DIR: undefined } });
 
     expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'x'], deps)).toBe(1);
-    expect(stderr.chunks.join('')).toContain(
-      'skill "dummy-skill" não encontrada: /repo/app/.agents/skills/dummy-skill',
-    );
+    expect(stderr.chunks.join('')).toContain('skill "dummy-skill" não encontrada: /repo/app/skills/dummy-skill');
     expect(stdout.chunks).toEqual([]);
   });
 
@@ -644,7 +642,7 @@ describe('runAgentsCli — mcps', () => {
       const { deps, stdout, stderr } = harness([]);
 
       expect(await runAgentsCli(['echo', '--agents-dir', agents.agentsDir, '--dry-run', 'x'], deps)).toBe(1);
-      expect(stderr.chunks.join('')).toContain('mcp "nope" não encontrado: /repo/app/.agents/mcps/nope.json');
+      expect(stderr.chunks.join('')).toContain('mcp "nope" não encontrado: /repo/app/mcps/nope.json');
       expect(stdout.chunks).toEqual([]);
     } finally {
       agents.cleanup();
