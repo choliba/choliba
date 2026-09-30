@@ -4,7 +4,7 @@ import { basename, dirname, join, relative } from 'node:path';
 import { isValidAgentName, loadAgent, mcpConfig, skillDescription } from '@choliba/agents';
 
 import { fetchSource, type FetchedSource, type SourceDeps } from './install-source';
-import { AGENTS_SUBDIR, AGENT_FILE, MCPS_SUBDIR, SKILLS_SUBDIR, SKILL_FILE } from '@choliba/core/config';
+import { AGENTS_SUBDIR, AGENT_FILE, APP_DIR, MCPS_SUBDIR, SKILLS_SUBDIR, SKILL_FILE } from '@choliba/core/config';
 
 /** What `choliba install` installs, named as the report shows it. */
 export type ItemKind = 'agente' | 'skill' | 'MCP';
@@ -92,20 +92,23 @@ function itemAt(target: string): PlannedItem | undefined {
   return undefined;
 }
 
-/** The items under `root` laid out like the choliba repo, relative to it, for `--path`. */
+/**
+ * The items under `root`, relative to it, for `--path`: laid out like a workspace (`app/agents`,
+ * `app/skills`, `app/mcps`, as the choliba repo is) and at the root itself (`agents`, `skills`, `mcps`).
+ */
 function itemsUnder(root: string): readonly string[] {
-  const entries = (dir: string, keep: (name: string) => boolean): readonly string[] =>
+  const entries = (dir: string, keep: (dir: string, name: string) => boolean): readonly string[] =>
     isDir(join(root, dir))
       ? readdirSync(join(root, dir))
-          .filter(keep)
+          .filter((name) => keep(dir, name))
           .sort()
           .map((name) => `${dir}/${name}`)
       : [];
-  return [
-    ...entries(AGENTS_SUBDIR, (name) => existsSync(join(root, AGENTS_SUBDIR, name, AGENT_FILE))),
-    ...entries(SKILLS_SUBDIR, (name) => existsSync(join(root, SKILLS_SUBDIR, name, SKILL_FILE))),
-    ...entries(MCPS_SUBDIR, (name) => name.endsWith('.json')),
-  ];
+  return [APP_DIR, ''].flatMap((base) => [
+    ...entries(join(base, AGENTS_SUBDIR), (dir, name) => existsSync(join(root, dir, name, AGENT_FILE))),
+    ...entries(join(base, SKILLS_SUBDIR), (dir, name) => existsSync(join(root, dir, name, SKILL_FILE))),
+    ...entries(join(base, MCPS_SUBDIR), (_dir, name) => name.endsWith('.json')),
+  ]);
 }
 
 /** Why `target` cannot be installed, naming it as the user wrote it (`shownAs`), not as a scratch folder. */

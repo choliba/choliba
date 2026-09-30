@@ -5,17 +5,17 @@ import { join } from 'node:path';
  * pasta de trabalho, de um projeto ou de uma origem de `choliba install`).
  */
 
-/** Onde ficam as aplicações testadas e os agentes do choliba (`app/agents`, `app/.agents/*`). */
+/** Onde ficam as aplicações testadas e os agentes do choliba (`app/agents`, `app/skills`, `app/mcps`). */
 export const APP_DIR = 'app';
 
 /** Os agentes, em qualquer raiz que os tenha (a pasta da aplicação, uma origem de `choliba install`). */
 export const AGENTS_SUBDIR = 'agents';
 
 /** As skills, ao lado dos agentes. */
-export const SKILLS_SUBDIR = join('.agents', 'skills');
+export const SKILLS_SUBDIR = 'skills';
 
 /** Os servidores MCP, ao lado dos agentes. */
-export const MCPS_SUBDIR = join('.agents', 'mcps');
+export const MCPS_SUBDIR = 'mcps';
 
 /** Default subdirectory of CHOL_GLOBAL_DIR where projects live. */
 export const PROJECTS_SUBDIR = 'projects';
