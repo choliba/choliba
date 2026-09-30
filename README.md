@@ -21,6 +21,7 @@ o pacote cria ao ser instalado.
 
 - [Segurança](#segurança)
 - [Contexto](#contexto)
+  - [Filosofia](#filosofia)
 - [Instalação](#instalação)
   - [Dependências](#dependências)
   - [`choliba setup`](#choliba-setup)
@@ -77,8 +78,25 @@ por projeto e ticket e divide o trabalho entre agentes com papéis e permissões
 red e do green feita pelo próprio CLI.
 
 Ele depende do [Playwright](https://playwright.dev) (os testes e o navegador que os agentes usam, via
-`playwright cli`), do [Bun](https://bun.sh) e de um provider de agente: o [Claude Code](https://claude.com/claude-code)
-ou o Cursor (`cursor-agent`). Agentes podem usar skills e servidores MCP, instalados na pasta de trabalho.
+`playwright cli`), do [Bun](https://bun.sh) e de um provider de agente:
+
+- [Claude Code](https://claude.com/claude-code) (`claude`)
+- [Cursor CLI](https://cursor.com/cli) (`cursor-agent`)
+
+Agentes podem usar skills e servidores MCP, instalados na pasta de trabalho.
+
+### Filosofia
+
+O nome vem da _Megascops choliba_, a corujinha-do-mato. Assim como ela observa antes de agir e ataca um alvo
+específico com precisão, o choliba procura transformar mudanças de software num processo observável, delimitado e
+verificável.
+
+Um agente não recebe liberdade irrestrita para "resolver o problema". Cada agente tem um papel, um contexto, um alvo
+e permissões definidos. A ferramenta controla o processo e verifica os resultados; o prompt orienta o trabalho, mas
+não garante que as regras foram cumpridas.
+
+Em resumo: observar antes de agir, limitar antes de executar e verificar antes de concluir. Esses princípios e as
+decisões de projeto que derivam deles estão em [PHILOSOPHY.md](PHILOSOPHY.md).
 
 ## Instalação
 
