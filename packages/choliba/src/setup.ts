@@ -46,7 +46,7 @@ export const NEXT_STEPS = [
   '  2. suas aplicações em app/<app>/, e um projeto de teste (em projects/) para cada uma:',
   '     bun chol:project:create --app-dir app/<app> --base-url <url>',
   '  3. instale agentes, skills e MCPs: bun chol:install <pasta, repositório git ou pacote npm> [--path agents/<nome>]',
-  '     (vão para app/agents/<nome>/, app/.agents/skills/<nome>/ e app/.agents/mcps/<nome>.json)',
+  '     (vão para app/agents/<nome>/, app/skills/<nome>/ e app/mcps/<nome>.json)',
   '  4. bun chol:check, bun chol:lint, bun chol:format e bun chol:help',
 ].join('\n');
 
@@ -61,8 +61,8 @@ export function exampleTemplatesDir(): string {
 }
 
 /**
- * `app/` (`APP_DIR`) holds the applications being tested and choliba's agents (`app/agents`, `app/.agents/skills`,
- * `app/.agents/mcps`); `projects/`, beside it, holds the test projects. The names come from `@choliba/core/config`.
+ * `app/` (`APP_DIR`) holds the applications being tested and choliba's agents (`app/agents`, `app/skills`,
+ * `app/mcps`); `projects/`, beside it, holds the test projects. The names come from `@choliba/core/config`.
  */
 
 /** The folders a workspace has, each kept by a `.gitkeep` while empty. */

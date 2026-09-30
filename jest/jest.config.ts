@@ -13,7 +13,7 @@ const config: Config = {
   roots: ['<rootDir>'],
   // Padrão do projeto: specs vivem em src/__tests__/ (ver skill add-workspace-package).
   testMatch: ['<rootDir>/{packages,apps}/*/src/__tests__/**/*.spec.ts'],
-  modulePathIgnorePatterns: ['<rootDir>/coverage', '<rootDir>/.agents', '<rootDir>/.claude'],
+  modulePathIgnorePatterns: ['<rootDir>/coverage', '<rootDir>/.agents', '<rootDir>/app/skills', '<rootDir>/.claude'],
   detectOpenHandles: true,
 };
 

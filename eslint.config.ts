@@ -5,7 +5,15 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default defineConfig(
   {
-    ignores: ['**/node_modules/**', '**/dist/**', 'coverage/**', '.agents/**', '.claude/**', '.playwright-cli/**'],
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      'coverage/**',
+      '.agents/**',
+      'app/skills/**',
+      '.claude/**',
+      '.playwright-cli/**',
+    ],
   },
   eslint.configs.recommended,
   // Regras com informação de tipo: sem elas `no-explicit-any` não pega `any`

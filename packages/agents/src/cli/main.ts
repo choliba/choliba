@@ -13,7 +13,7 @@ import { runAgentsCli } from './run';
 const runner = new ProcessRunner({ spawner: createBunProcessSpawner(Bun.spawn) });
 
 // Every run, wherever it was invoked from, spawns providers from the workspace root (the folder whose
-// package.json depends on choliba): its `.env`, `agents/` and `.agents/` are the ones used, and the
+// package.json depends on choliba): its `.env`, `app/agents/` and `app/skills/` and `app/mcps/` are the ones used, and the
 // provider's commands (`cd <root> && …`) stay inside what the agent's permissions allow.
 const repoRoot = findWorkspaceRoot(process.cwd());
 const config = loadRepoConfig(repoRoot);

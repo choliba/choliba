@@ -7,20 +7,20 @@ import { formatInstall, install, parseInstallArgs, planInstall, type InstallTarg
 const FIXTURES = join(__dirname, '..', '..', '..', 'agents', 'src', '__tests__', 'fixtures');
 
 /**
- * A source laid out like the choliba repo — `agents/echo` (declaring the skill `dummy-skill`, a skill
- * `ausente` that is not there and the MCP `with-var`), `agents/with-prepare`, `.agents/skills/dummy-skill`
- * and `.agents/mcps/with-var.json` — and an empty workspace.
+ * A source laid out at its root — `agents/echo` (declaring the skill `dummy-skill`, a skill
+ * `ausente` that is not there and the MCP `with-var`), `agents/with-prepare`, `skills/dummy-skill`
+ * and `mcps/with-var.json` — and an empty workspace.
  */
 function withSource(run: (source: string, workspace: string, targets: InstallTargets) => void): void {
   const dir = mkdtempSync(join(tmpdir(), 'install-'));
   const source = join(dir, 'src');
   cpSync(join(FIXTURES, 'agents', 'echo'), join(source, 'agents', 'echo'), { recursive: true });
   cpSync(join(FIXTURES, 'agents', 'with-prepare'), join(source, 'agents', 'with-prepare'), { recursive: true });
-  cpSync(join(FIXTURES, 'skills', 'dummy-skill'), join(source, '.agents', 'skills', 'dummy-skill'), {
+  cpSync(join(FIXTURES, 'skills', 'dummy-skill'), join(source, 'skills', 'dummy-skill'), {
     recursive: true,
   });
-  mkdirSync(join(source, '.agents', 'mcps'), { recursive: true });
-  cpSync(join(FIXTURES, 'mcps', 'with-var.json'), join(source, '.agents', 'mcps', 'with-var.json'));
+  mkdirSync(join(source, 'mcps'), { recursive: true });
+  cpSync(join(FIXTURES, 'mcps', 'with-var.json'), join(source, 'mcps', 'with-var.json'));
   const yaml = join(source, 'agents', 'echo', 'agent.yaml');
   writeFileSync(
     yaml,
@@ -33,8 +33,8 @@ function withSource(run: (source: string, workspace: string, targets: InstallTar
   mkdirSync(workspace);
   const targets = {
     agentsDir: join(workspace, 'app', 'agents'),
-    skillsDir: join(workspace, 'app', '.agents', 'skills'),
-    mcpsDir: join(workspace, 'app', '.agents', 'mcps'),
+    skillsDir: join(workspace, 'app', 'skills'),
+    mcpsDir: join(workspace, 'app', 'mcps'),
   };
   try {
     run(source, workspace, targets);
@@ -82,11 +82,11 @@ describe('planInstall', () => {
   it('takes an agent with steps, and a skill or an MCP alone', () => {
     withSource((source) => {
       expect(planInstall(join(source, 'agents', 'with-prepare'), source).items).toHaveLength(1);
-      expect(planInstall(join(source, '.agents', 'skills', 'dummy-skill'), source).items[0]).toMatchObject({
+      expect(planInstall(join(source, 'skills', 'dummy-skill'), source).items[0]).toMatchObject({
         kind: 'skill',
         name: 'dummy-skill',
       });
-      expect(planInstall(join(source, '.agents', 'mcps', 'with-var.json'), source).items[0]).toMatchObject({
+      expect(planInstall(join(source, 'mcps', 'with-var.json'), source).items[0]).toMatchObject({
         kind: 'MCP',
         name: 'with-var',
       });
@@ -100,25 +100,49 @@ describe('planInstall', () => {
           `${source} não é um agente (agent.yaml), uma skill (SKILL.md) nem um MCP (.json). Escolha um com --path:`,
           '  agents/echo',
           '  agents/with-prepare',
-          '  .agents/skills/dummy-skill',
-          '  .agents/mcps/with-var.json',
+          '  skills/dummy-skill',
+          '  mcps/with-var.json',
         ].join('\n'),
       );
       expect(() => planInstall(join(source, 'nada'), source)).toThrow('nenhum item no formato do choliba');
     });
   });
 
+  it('reads a source laid out like a workspace, under app/', () => {
+    withSource((source) => {
+      const app = join(source, 'app');
+      mkdirSync(app);
+      for (const dir of ['agents', 'skills', 'mcps']) {
+        cpSync(join(source, dir), join(app, dir), { recursive: true });
+        rmSync(join(source, dir), { recursive: true });
+      }
+
+      expect(() => planInstall(source, source)).toThrow(
+        [
+          'Escolha um com --path:',
+          '  app/agents/echo',
+          '  app/agents/with-prepare',
+          '  app/skills/dummy-skill',
+          '  app/mcps/with-var.json',
+        ].join('\n'),
+      );
+      expect(planInstall(join(app, 'agents', 'echo'), source).items.map((item) => item.from)).toEqual([
+        join(app, 'agents', 'echo'),
+        join(app, 'skills', 'dummy-skill'),
+        join(app, 'mcps', 'with-var.json'),
+      ]);
+    });
+  });
+
   it('refuses an item that breaks its format, naming the file', () => {
     withSource((source) => {
       writeFileSync(join(source, 'agents', 'echo', 'agent.yaml'), 'id: x\n');
-      writeFileSync(join(source, '.agents', 'skills', 'dummy-skill', 'SKILL.md'), '# sem frontmatter\n');
-      writeFileSync(join(source, '.agents', 'mcps', 'with-var.json'), '{}');
+      writeFileSync(join(source, 'skills', 'dummy-skill', 'SKILL.md'), '# sem frontmatter\n');
+      writeFileSync(join(source, 'mcps', 'with-var.json'), '{}');
 
       expect(() => planInstall(join(source, 'agents', 'echo'), source)).toThrow('agent.yaml');
-      expect(() => planInstall(join(source, '.agents', 'skills', 'dummy-skill'), source)).toThrow('SKILL.md');
-      expect(() => planInstall(join(source, '.agents', 'mcps', 'with-var.json'), source)).toThrow(
-        'falta "command" ou "url"',
-      );
+      expect(() => planInstall(join(source, 'skills', 'dummy-skill'), source)).toThrow('SKILL.md');
+      expect(() => planInstall(join(source, 'mcps', 'with-var.json'), source)).toThrow('falta "command" ou "url"');
     });
   });
 
@@ -153,7 +177,7 @@ describe('install', () => {
       expect(existsSync(join(targets.skillsDir, 'dummy-skill', 'SKILL.md'))).toBe(true);
       expect(existsSync(join(targets.mcpsDir, 'with-var.json'))).toBe(true);
       expect(text).toContain('  agente echo → app/agents/echo');
-      expect(text).toContain('  MCP with-var → app/.agents/mcps/with-var.json');
+      expect(text).toContain('  MCP with-var → app/mcps/with-var.json');
       expect(text).toContain('o MCP with-var usa ${SERVER_DIR}, sem valor no .env: defina antes de rodar o agente.');
       expect(text).toContain('Confira com: choliba check');
     });
@@ -186,8 +210,8 @@ describe('install', () => {
   });
 
   it('formats a plan with no warnings', () => {
-    expect(
-      formatInstall('/w', [{ kind: 'skill', name: 's', from: '/o/s', to: '/w/app/.agents/skills/s' }], [], false),
-    ).toBe(['Instalado:', '  skill s → app/.agents/skills/s', '', 'Confira com: choliba check'].join('\n'));
+    expect(formatInstall('/w', [{ kind: 'skill', name: 's', from: '/o/s', to: '/w/app/skills/s' }], [], false)).toBe(
+      ['Instalado:', '  skill s → app/skills/s', '', 'Confira com: choliba check'].join('\n'),
+    );
   });
 });
