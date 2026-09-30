@@ -39,6 +39,7 @@ o pacote cria ao ser instalado.
 - [`choliba install`](#choliba-install)
   - [O que o repositório do choliba oferece](#o-que-o-repositório-do-choliba-oferece)
   - [Exemplos](#exemplos)
+    - [Skills oficiais do Playwright](#skills-oficiais-do-playwright)
 - [`.env` da pasta de trabalho](#env-da-pasta-de-trabalho)
 - [Autocomplete](#autocomplete)
 - [Mantenedores](#mantenedores)
@@ -673,16 +674,21 @@ também aparece como aviso.
 | skill  | `.agents/skills/documentation`                | Boas práticas de documentação (usada pelo `docs-updater`).                          |
 | MCP    | `.agents/mcps/mcp-app.json`                   | O servidor [mcp-app](https://github.com/jacksonbicalho/mcp-app) (Jira e ambientes). |
 
+As três skills `playwright-*` são cópias das skills oficiais do Playwright, na versão do `@playwright/test` que o
+choliba usa (1.63.0). Para instalá-las direto da fonte oficial, veja
+[Skills oficiais do Playwright](#skills-oficiais-do-playwright).
+
 ### Exemplos
 
-Um agente, com as skills e os MCPs que ele declara (o `product-owner` traz a skill `playwright-cli` e o MCP
-`mcp-app`):
+As saídas abaixo são de execuções reais, numa pasta de trabalho recém-criada com `bun add --trust` (veja
+[Instalação](#instalação)).
 
-```sh
-bunx choliba install github:jacksonbicalho/choliba --path agents/product-owner
-```
+#### Os agentes do choliba
+
+Cada agente traz as skills e os MCPs que declara, do mesmo repositório:
 
 ```
+$ bunx choliba install github:jacksonbicalho/choliba --path agents/product-owner
 Instalado:
   agente product-owner → app/agents/product-owner
   skill playwright-cli → app/.agents/skills/playwright-cli
@@ -694,30 +700,159 @@ Avisos:
 Confira com: choliba check
 ```
 
-Uma skill sozinha:
+```
+$ bunx choliba install github:jacksonbicalho/choliba --path agents/test-writer
+Instalado:
+  agente test-writer → app/agents/test-writer
+  skill playwright-cli → app/.agents/skills/playwright-cli
+  skill playwright-trace → app/.agents/skills/playwright-trace
 
-```sh
-bunx choliba install github:jacksonbicalho/choliba --path .agents/skills/playwright-trace
+Confira com: choliba check
 ```
 
-Um MCP sozinho, e as variáveis que o `.json` dele usa, no `.env` da pasta de trabalho:
+```
+$ bunx choliba install github:jacksonbicalho/choliba --path agents/implementer
+Instalado:
+  agente implementer → app/agents/implementer
+  skill playwright-trace → app/.agents/skills/playwright-trace
 
-```sh
-bunx choliba install github:jacksonbicalho/choliba --path .agents/mcps/mcp-app.json
+Confira com: choliba check
 ```
 
+```
+$ bunx choliba install github:jacksonbicalho/choliba --path agents/docs-updater
+Instalado:
+  agente docs-updater → app/agents/docs-updater
+  skill documentation → app/.agents/skills/documentation
+
+Confira com: choliba check
+```
+
+#### Uma skill ou um MCP sozinho
+
+```
+$ bunx choliba install github:jacksonbicalho/choliba --path .agents/skills/playwright-trace
+Instalado:
+  skill playwright-trace → app/.agents/skills/playwright-trace
+
+Confira com: choliba check
+```
+
+```
+$ bunx choliba install github:jacksonbicalho/choliba --path .agents/mcps/mcp-app.json
+Instalado:
+  MCP mcp-app → app/.agents/mcps/mcp-app.json
+
+Avisos:
+  - o MCP mcp-app usa ${MCP_APP_DIR}, ${MCP_APP_LOG_DIR}, sem valor no .env: defina antes de rodar o agente.
+
+Confira com: choliba check
+```
+
+#### O servidor do MCP `mcp-app`
+
+O `mcp-app.json` só diz como iniciar o servidor: `node ${MCP_APP_DIR}/dist/main.js`. O servidor é outro
+repositório, [jacksonbicalho/mcp-app](https://github.com/jacksonbicalho/mcp-app), que você clona e compila uma vez
+(os passos são os do README dele):
+
 ```sh
-# .env
+git clone https://github.com/jacksonbicalho/mcp-app ~/mcp-app
+cd ~/mcp-app
+yarn install
+yarn build
+```
+
+A configuração do Jira e dos ambientes (`.env` e `environments.json` do próprio mcp-app) está no
+[README do mcp-app](https://github.com/jacksonbicalho/mcp-app#configura%C3%A7%C3%A3o). Na pasta de trabalho do
+choliba, o `.env` diz onde ele está:
+
+```sh
+# .env da pasta de trabalho
 MCP_APP_DIR=/home/voce/mcp-app
 MCP_APP_LOG_DIR=/home/voce/mcp-app/logs
 ```
 
-A mesma origem numa branch ou tag, num clone local, ou só para ver o que seria instalado:
+Sem essas duas variáveis, o `check` marca o `product-owner` com `✗` e diz que o `mcp-app.json` usa
+`${MCP_APP_DIR}` e `${MCP_APP_LOG_DIR}` sem valor. Com elas, tudo carrega:
 
-```sh
-bunx choliba install github:jacksonbicalho/choliba#develop --path agents/test-writer
-bunx choliba install ../choliba --path agents/test-writer
-bunx choliba install github:jacksonbicalho/choliba --path agents/implementer --dry-run
+```
+$ bunx choliba check
+Agentes (<pasta de trabalho>/app/agents)
+  ✓ docs-updater
+  ✓ implementer
+  ✓ product-owner
+  ✓ test-writer
+
+Projetos (<pasta de trabalho>/projects)
+  ✓ exemplo
+```
+
+#### Skills oficiais do Playwright
+
+As skills oficiais estão em dois lugares, e o `install` aceita os dois:
+
+| Fonte                                                                               | `--path`                   |
+| ----------------------------------------------------------------------------------- | -------------------------- |
+| repositório [microsoft/playwright-cli](https://github.com/microsoft/playwright-cli) | `skills/playwright-cli`    |
+| pacote npm `@playwright/cli`, do mesmo repositório                                  | `skills/playwright-cli`    |
+| pacote npm `playwright-core@<versão>`                                               | `lib/tools/skills/<skill>` |
+
+O `playwright-core` traz as três (`playwright-cli`, `playwright-trace` e `playwright-component-testing`). Fixe a
+versão igual à do Playwright da pasta de trabalho (`bunx playwright --version`), para a skill descrever os comandos
+que você tem.
+
+```
+$ bunx choliba install github:microsoft/playwright-cli --path skills/playwright-cli
+Instalado:
+  skill playwright-cli → app/.agents/skills/playwright-cli
+
+Confira com: choliba check
+```
+
+```
+$ bunx choliba install playwright-core@1.63.0 --path lib/tools/skills/playwright-trace
+Instalado:
+  skill playwright-trace → app/.agents/skills/playwright-trace
+
+Confira com: choliba check
+```
+
+```
+$ bunx choliba install @playwright/cli --path skills/playwright-cli --dry-run
+Instalaria (--dry-run, nada foi gravado):
+  skill playwright-cli → app/.agents/skills/playwright-cli
+
+Confira com: choliba check
+```
+
+Nessas origens o `--path` é obrigatório: o `install` só lista sozinho os itens de uma origem organizada como o
+choliba (`agents/`, `.agents/skills/`, `.agents/mcps/`).
+
+O texto das skills oficiais usa `playwright-cli` e `npx playwright trace`. Os agentes do choliba traduzem isso na
+instrução de cada skill no `agent.yaml` (`bunx choliba playwright-cli`, `bunx choliba playwright-trace`), que roda a
+versão do Playwright do choliba (veja [Skills e MCPs](#skills-e-mcps)).
+
+#### Outras origens
+
+Uma branch ou tag, um clone local, ou só para ver o que seria instalado (`--dry-run`):
+
+```
+$ bunx choliba install github:jacksonbicalho/choliba#develop --path agents/test-writer --dry-run
+Instalaria (--dry-run, nada foi gravado):
+  agente test-writer → app/agents/test-writer
+  skill playwright-cli → app/.agents/skills/playwright-cli
+  skill playwright-trace → app/.agents/skills/playwright-trace
+
+Confira com: choliba check
+```
+
+```
+$ bunx choliba install ../choliba --path agents/implementer --dry-run
+Instalaria (--dry-run, nada foi gravado):
+  agente implementer → app/agents/implementer
+  skill playwright-trace → app/.agents/skills/playwright-trace
+
+Confira com: choliba check
 ```
 
 ## `.env` da pasta de trabalho
