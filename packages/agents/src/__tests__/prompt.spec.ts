@@ -4,10 +4,13 @@ import {
   PromptTooLargeError,
   assertArgvFits,
   buildUserPrompt,
+  formatMcps,
+  formatSections,
   modeInstruction,
   wrapInstructions,
 } from '../prompt';
 import { NO_PERMISSIONS } from '../permissions';
+import { NO_MODE_STEPS, fakeSections } from './helpers/agent';
 
 function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
   return {
@@ -26,20 +29,86 @@ function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
     modes: ['execute', 'plan', 'ask'],
     permissions: NO_PERMISSIONS,
     dir: '/repo/agents/echo',
-    systemPromptPath: '/repo/agents/echo/system.md',
-    instructions: 'Be an echo. See ./companion.md.',
+    sections: fakeSections('Be an echo. See ./companion.md.'),
+    steps: NO_MODE_STEPS,
+    sourcePath: '/repo/agents/echo/agent.yaml',
     ...overrides,
   };
 }
 
+describe('formatSections', () => {
+  it('turns the text of agent.yaml into the sections of the prompt, in order', () => {
+    const text = formatSections({
+      role: 'Papel.\n',
+      context: ['Um.', 'Dois.'],
+      input: 'Entrada.',
+      flow: '1. Faça.',
+      output: 'Saída.',
+      notes: ['Nota.'],
+    });
+
+    expect(text).toBe(
+      [
+        '<system_role>\nPapel.\n</system_role>',
+        '<context>\n<item>\nUm.\n</item>\n<item>\nDois.\n</item>\n</context>',
+        '<input_contract>\nEntrada.\n</input_contract>',
+        '<execution_flow>\n1. Faça.\n</execution_flow>',
+        '<output_contract>\nSaída.\n</output_contract>',
+        '<notes>\n<note>\nNota.\n</note>\n</notes>',
+      ].join('\n\n'),
+    );
+  });
+
+  it('leaves out context and notes when the agent has none', () => {
+    const text = formatSections({ role: 'r', context: [], input: 'i', flow: 'f', output: 'o', notes: [] });
+
+    expect(text).not.toContain('<context>');
+    expect(text).not.toContain('<notes>');
+  });
+});
+
+describe('formatMcps', () => {
+  it('lists each server with its tools and how the agent uses it', () => {
+    expect(
+      formatMcps([
+        { name: 'mcp-app', tools: ['jira_get_issue', 'jira_search'], instructions: 'Use for Jira.\n' },
+        { name: 'docs' },
+      ]),
+    ).toBe(
+      [
+        '<mcps>',
+        'Enforced by the command: these are the only MCP servers of this session, and each only has the tools listed.',
+        '<mcp name="mcp-app" tools="jira_get_issue, jira_search">',
+        'Use for Jira.',
+        '</mcp>',
+        '<mcp name="docs" tools="every tool"></mcp>',
+        '</mcps>',
+      ].join('\n'),
+    );
+  });
+
+  it('is empty when the agent declares no server', () => {
+    expect(formatMcps([])).toBe('');
+  });
+});
+
 describe('wrapInstructions', () => {
-  it('states the agent directory and includes the instructions verbatim', () => {
+  it('states the agent directory and where the agent.yaml is, and includes its text', () => {
     const wrapped = wrapInstructions(fakeAgent());
 
     expect(wrapped).toContain('relative to /repo/agents/echo/');
-    expect(wrapped).toContain('Be an echo. See ./companion.md.');
+    expect(wrapped).toContain('source="/repo/agents/echo/agent.yaml"');
+    expect(wrapped).toContain('<system_role>\nBe an echo. See ./companion.md.\n</system_role>');
     expect(wrapped).toContain('<agent_instructions');
     expect(wrapped).toContain('</agent_instructions>');
+    expect(wrapped).not.toContain('<mcps>');
+  });
+
+  it('puts the MCP servers after the permissions and before the text', () => {
+    const wrapped = wrapInstructions(fakeAgent({ mcps: [{ name: 'mcp-app' }] }));
+
+    expect(wrapped.indexOf('</permissions>')).toBeLessThan(wrapped.indexOf('<mcps>'));
+    expect(wrapped.indexOf('</mcps>')).toBeLessThan(wrapped.indexOf('<system_role>'));
   });
 
   it("opens with the order to use the agent's skills, when there is one", () => {

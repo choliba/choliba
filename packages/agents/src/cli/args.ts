@@ -1,4 +1,4 @@
-import type { ExecutionMode } from '../command.types';
+import { EXECUTION_MODES, type ExecutionMode } from '../command.types';
 import { SINCE_PENDING } from '../prepare/constants';
 import { AUTO_ORDER, PROVIDERS } from '../providers/registry';
 
@@ -11,7 +11,7 @@ export const USAGE = `Run '${CLI_PROGRAM_NAME} --help' for usage.`;
 /** Providers selectable by name, each also accepted as its own shortcut flag (`--cursor`). */
 export const PROVIDER_CHOICES: readonly string[] = ['auto', ...PROVIDERS.map((provider) => provider.id)];
 
-export const EXECUTION_MODES: readonly ExecutionMode[] = ['execute', 'plan', 'ask'];
+export { EXECUTION_MODES };
 
 export interface RunFlagDefinition {
   readonly name: string;
@@ -116,7 +116,12 @@ export const RUN_FLAGS: readonly RunFlagDefinition[] = [
     repeatable: true,
     description: 'Pasta extra liberada para o provider (pode repetir)',
   },
-  { name: '--dry-run', description: 'Mostra os argumentos que iriam ao provider, sem executar' },
+  { name: '--dry-run', description: 'Mostra o que seria executado, na ordem, sem executar nada' },
+  {
+    name: '--show-prompt',
+    description:
+      'Com --dry-run: mostra os prompts e a linha de comando completos (e, no cursor, os arquivos de .cursor/)',
+  },
   { name: '--no-color', description: 'Saída sem cores' },
   { name: '--help', aliases: ['-h'], description: 'Mostra a ajuda do agente', terminal: true },
 ];
@@ -156,6 +161,8 @@ export interface ParsedRunArgs {
   readonly agentsDir: string | undefined;
   readonly addDirs: readonly string[];
   readonly dryRun: boolean;
+  /** `--show-prompt`: with `--dry-run`, the prompts in full instead of their sizes. */
+  readonly showPrompt: boolean;
   readonly colorize: boolean;
   /** Git ref for diff base; meaningful only for agents with a `git_diff` in `before_execute`. */
   readonly since: string | undefined;
@@ -237,6 +244,7 @@ export function parseAgentsArgs(argv: readonly string[]): ParsedAgentsArgs {
   let agentsDir: string | undefined;
   const addDirs: string[] = [];
   let dryRun = false;
+  let showPrompt = false;
   let colorize = true;
   let since: string | undefined;
   let help = false;
@@ -344,6 +352,10 @@ export function parseAgentsArgs(argv: readonly string[]): ParsedAgentsArgs {
       dryRun = true;
       continue;
     }
+    if (arg === '--show-prompt') {
+      showPrompt = true;
+      continue;
+    }
     if (arg === '--no-color') {
       colorize = false;
       continue;
@@ -356,6 +368,9 @@ export function parseAgentsArgs(argv: readonly string[]): ParsedAgentsArgs {
 
   if (ticketType !== undefined && ticket !== undefined) {
     throw new AgentsArgsError(`--type creates a new ticket and --ticket opens an existing one: use only one. ${USAGE}`);
+  }
+  if (showPrompt && !dryRun) {
+    throw new AgentsArgsError(`--show-prompt only works with --dry-run. ${USAGE}`);
   }
 
   return {
@@ -372,6 +387,7 @@ export function parseAgentsArgs(argv: readonly string[]): ParsedAgentsArgs {
     agentsDir,
     addDirs,
     dryRun,
+    showPrompt,
     colorize,
     since,
     help,

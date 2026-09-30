@@ -2,9 +2,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import Ajv, { type ErrorObject } from 'ajv';
-import { validateXML } from 'xmllint-wasm';
 import { parse as parseYaml } from 'yaml';
-import { AGENT_FILE, SYSTEM_FILE, findResource } from '@choliba/core/config';
+import { AGENT_FILE, findResource } from '@choliba/core/config';
 
 /**
  * Split out of `agent-loader.ts` (which needs these to make `loadAgent` fail for real on a
@@ -14,13 +13,6 @@ import { AGENT_FILE, SYSTEM_FILE, findResource } from '@choliba/core/config';
 
 /** `schemes/` sits at the root of `@choliba/agents` (and of the built package), alongside `package.json`. */
 const SCHEMES_DIR = findResource('schemes', __dirname);
-const SYSTEM_SCHEMA_PATH = join(SCHEMES_DIR, 'agent.xsd');
-/** The types `agent.xsd` includes (`<xs:include schemaLocation="agent-types.xsd"/>`). */
-const AGENT_TYPES_XSD = {
-  fileName: 'agent-types.xsd',
-  contents: readFileSync(join(SCHEMES_DIR, 'agent-types.xsd'), 'utf8'),
-};
-const SYSTEM_SCHEMA = { fileName: 'agent.xsd', contents: readFileSync(SYSTEM_SCHEMA_PATH, 'utf8') };
 
 export interface ValidationResult {
   readonly valid: boolean;
@@ -70,15 +62,30 @@ function folderProblem(doc: Record<string, unknown>, folder: string): readonly s
     : [];
 }
 
-/** The other rule the schema cannot state (not in plain JSON Schema): `modes.default` is one of `modes.allow`. */
-function modeProblem(doc: Record<string, unknown>): readonly string[] {
+/** `modes.allow`, or every mode when the file does not restrict them. */
+function allowedModes(doc: Record<string, unknown>): readonly unknown[] {
   const modes = doc['modes'];
-  if (!isRecord(modes) || !Array.isArray(modes['allow']) || modes['default'] === undefined) {
-    return [];
-  }
-  return modes['allow'].includes(modes['default'])
-    ? []
-    : [`/modes/default ${JSON.stringify(modes['default'])} precisa estar em modes.allow`];
+  return isRecord(modes) && Array.isArray(modes['allow']) ? modes['allow'] : ['execute', 'plan', 'ask'];
+}
+
+/**
+ * The other rules the schema cannot state (not in plain JSON Schema): `modes.default` and every mode
+ * `steps` names are in `modes.allow` — steps for a mode the agent never runs in would never run.
+ */
+function modeProblem(doc: Record<string, unknown>): readonly string[] {
+  const allowed = allowedModes(doc);
+  const modes = doc['modes'];
+  const defaultMode = isRecord(modes) ? modes['default'] : undefined;
+  const steps = doc['steps'];
+  const stepModes = isRecord(steps) ? Object.keys(steps) : [];
+  return [
+    ...(defaultMode === undefined || allowed.includes(defaultMode)
+      ? []
+      : [`/modes/default ${JSON.stringify(defaultMode)} precisa estar em modes.allow`]),
+    ...stepModes
+      .filter((mode) => !allowed.includes(mode))
+      .map((mode) => `/steps/${mode}: o modo "${mode}" não está em modes.allow`),
+  ];
 }
 
 /**
@@ -113,39 +120,11 @@ export function mapAgentYamlSchemaErrors(errors: readonly ErrorObject[] | null |
 }
 
 /**
- * Validates `system.md`'s text as XML against `agent.xsd` — real libxml2 (compiled to WebAssembly via
- * `xmllint-wasm`, no native bindings needed), not just a well-formedness check: this also enforces
- * which tags are allowed where, per the XSD's content model. Every agent's `system.md` needs exactly
- * one `<agent>` root (see `agent.xsd`'s own comment on why).
+ * Validates `{agentsDir}/{name}/agent.yaml`, the agent's whole declaration, against its standard
+ * (`validateAgentYamlV1`), reporting every problem (never throws), unlike `loadAgent`, which throws.
  */
-export async function validateSystemMd(xmlText: string): Promise<ValidationResult> {
-  const result = await validateXML({
-    xml: { fileName: SYSTEM_FILE, contents: xmlText },
-    schema: SYSTEM_SCHEMA,
-    preload: AGENT_TYPES_XSD,
-  });
-  return {
-    valid: result.valid,
-    errors: result.errors.map((error) => error.message),
-  };
-}
-
-/**
- * Validates every file in `{agentsDir}/{name}/` before anything else is done with that agent —
- * `agent.yaml` against its standard (`validateAgentYamlV1`), `system.md` against `agent.xsd`. Reports
- * every problem across both files (never throws), unlike `loadAgent`, which stops at the first file.
- */
-export async function validateAgentFiles(agentsDir: string, name: string): Promise<ValidationResult> {
-  const dir = join(agentsDir, name);
-  const yaml = readAgentFile(join(dir, AGENT_FILE));
-  const system = readAgentFile(join(dir, SYSTEM_FILE));
-  const errors = [
-    ...located(yaml, (text) => validateAgentYamlV1(text, name)),
-    ...located(system, () => ({ valid: true, errors: [] })),
-  ];
-  if (system.text !== undefined) {
-    errors.push(...(await validateSystemMd(system.text)).errors.map((error) => `${system.path}: ${error}`));
-  }
+export function validateAgentFiles(agentsDir: string, name: string): ValidationResult {
+  const errors = located(readAgentFile(join(agentsDir, name, AGENT_FILE)), (text) => validateAgentYamlV1(text, name));
   return { valid: errors.length === 0, errors };
 }
 

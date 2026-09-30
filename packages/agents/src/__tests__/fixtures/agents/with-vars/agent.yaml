@@ -4,10 +4,23 @@ agent:
   id: with-vars
   name: With Vars
   version: 1.0.0
-  description: Fixture agent whose permissions name ${PROJECTS_DIR} and whose system.md has no docs_map.
+  description: Fixture agent whose permissions and text name the projects folder.
 
 models:
   - claude-3-5-sonnet
+
+role: |
+  Fixture de teste: grava tickets em ${PROJECTS_DIR}.
+context:
+  - Nada.
+input: |
+  Qualquer texto.
+flow: |
+  1. Nada.
+output: |
+  Nada.
+notes:
+  - Fixture de teste.
 
 permissions:
   allow:

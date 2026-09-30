@@ -2,9 +2,9 @@ import { mcpServersMap } from '../../mcps';
 import { absolutePermissions } from '../../permissions';
 import { assertArgvFits, wrapInstructions } from '../../prompt';
 import { createStreamJsonParser } from '../stream-json';
-import type { PlanContentContext, ProviderAdapter, ProviderRequest } from '../provider.types';
-import { applyCursorMcpServers, applyCursorPermissions } from './cli-json';
-import { cursorPermissions } from './permissions';
+import type { PlanContentContext, PlannedFile, ProviderAdapter, ProviderRequest } from '../provider.types';
+import { applyCursorMcpServers, applyCursorPermissions, planCursorMcpServers, planCursorPermissions } from './cli-json';
+import { type CursorPermissions, cursorPermissions } from './permissions';
 
 function resolvePlanContent(context: PlanContentContext): string | undefined {
   const content = context.planMarkdown?.trim();
@@ -64,15 +64,19 @@ function buildArgs(request: ProviderRequest): readonly string[] {
  * folder the run happens in (the permissions always: even an agent that declares none is denied the rest). Undone in reverse order, so
  * the `.cursor/` dir created for the first file is removed only once both are gone.
  */
-function prepareWorkspace(request: ProviderRequest): () => void {
-  const mcpServers = request.mcpServers ?? [];
-  const permissions = cursorPermissions(
+function requestPermissions(request: ProviderRequest): CursorPermissions {
+  return cursorPermissions(
     absolutePermissions(request.agent.permissions, request.workspaceRoot),
     request.policy,
     request.workspaceRoot,
     request.runDir,
-    mcpServers,
+    request.mcpServers ?? [],
   );
+}
+
+function prepareWorkspace(request: ProviderRequest): () => void {
+  const mcpServers = request.mcpServers ?? [];
+  const permissions = requestPermissions(request);
   const restores: (() => void)[] = [];
   const restoreAll = (): void => {
     for (const restore of [...restores].reverse()) {
@@ -91,11 +95,21 @@ function prepareWorkspace(request: ProviderRequest): () => void {
   return restoreAll;
 }
 
+/** What `prepareWorkspace` would write, for `--dry-run --show-prompt`: `cli.json` always, `mcp.json` with servers. */
+function previewWorkspace(request: ProviderRequest): readonly PlannedFile[] {
+  const mcpServers = request.mcpServers ?? [];
+  const permissions = planCursorPermissions(request.runDir, requestPermissions(request));
+  return mcpServers.length === 0
+    ? [permissions]
+    : [permissions, planCursorMcpServers(request.runDir, mcpServersMap(mcpServers))];
+}
+
 export const cursorProvider: ProviderAdapter = {
   id: 'cursor',
   binaries: [['agent'], ['cursor-agent'], ['cursor', 'agent']],
   buildArgs,
   prepareWorkspace,
+  previewWorkspace,
   createParser: () =>
     createStreamJsonParser({ planFromExitPlanMode: false, planFromCreatePlanToolCall: true, toolCallEvents: true }),
   resolvePlanContent,

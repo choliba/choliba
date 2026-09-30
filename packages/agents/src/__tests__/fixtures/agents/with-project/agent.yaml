@@ -9,6 +9,19 @@ agent:
 models:
   - claude-3-5-sonnet
 
+role: |
+  Fixture de teste: age sobre ${PROJECT}, em ${PROJECT_DIR}, cuja aplicação fica em ${APP_DIR}.
+context:
+  - Nada.
+input: |
+  Qualquer texto.
+flow: |
+  1. Nada.
+output: |
+  Nada.
+notes:
+  - Fixture de teste.
+
 permissions:
   allow:
     read: ['${PROJECT_DIR}/config.json', '${APP_DIR}/']

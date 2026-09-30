@@ -9,6 +9,19 @@ agent:
 models:
   - claude-3-5-sonnet
   - gpt-4o
+
+role: |
+  Você é um agente de eco, usado só nos testes deste pacote.
+context:
+  - Nenhum preparo necessário.
+input: |
+  Recebe a tarefa como texto e a repete de volta, sem transformação.
+flow: |
+  1. Repita a tarefa recebida, sem alteração.
+output: |
+  Devolve exatamente a tarefa recebida.
+notes:
+  - Fixture de teste.
 skills:
   - dummy-skill
 

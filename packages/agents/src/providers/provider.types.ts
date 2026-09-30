@@ -67,4 +67,12 @@ export interface ProviderAdapter {
    * it, which `runAgent` always calls once the session ends.
    */
   prepareWorkspace?(request: ProviderRequest): () => void;
+  /** `--dry-run --show-prompt`: the files `prepareWorkspace` would write, with their content, writing nothing. */
+  previewWorkspace?(request: ProviderRequest): readonly PlannedFile[];
+}
+
+/** A file a provider would write for a run, and what it would hold. */
+export interface PlannedFile {
+  readonly path: string;
+  readonly content: string;
 }

@@ -2,6 +2,7 @@ import * as config from '../../config/index';
 
 describe('config barrel exports', () => {
   it('re-exports config var names and repo config helpers', () => {
+    expect(config.CHOL_ROOT).toBe('CHOL_ROOT');
     expect(config.CHOL_AGENTS_PROVIDER).toBe('CHOL_AGENTS_PROVIDER');
     expect(config.CHOL_AGENTS_DIR).toBe('CHOL_AGENTS_DIR');
     expect(config.CHOL_SKILLS_DIR).toBe('CHOL_SKILLS_DIR');
@@ -33,9 +34,8 @@ describe('config barrel exports', () => {
       '.cache/runs',
       '.cache/choliba',
     ]);
-    expect([config.AGENT_FILE, config.SYSTEM_FILE, config.SKILL_FILE, config.ENV_FILE, config.PACKAGE_FILE]).toEqual([
+    expect([config.AGENT_FILE, config.SKILL_FILE, config.ENV_FILE, config.PACKAGE_FILE]).toEqual([
       'agent.yaml',
-      'system.md',
       'SKILL.md',
       '.env',
       'package.json',

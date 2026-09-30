@@ -6,22 +6,22 @@ import { defineCommand } from '../define-command';
 const FIXTURES = join(__dirname, 'fixtures/agents');
 
 describe('resolveCommand', () => {
-  it('returns the explicit command when its name matches, without touching the agents dir', async () => {
+  it('returns the explicit command when its name matches, without touching the agents dir', () => {
     const explicit = defineCommand({ name: 'echo', agent: 'echo', description: 'explicit', policy: 'edits' });
 
-    const resolved = await resolveCommand('echo', [explicit], '/nonexistent-dir');
+    const resolved = resolveCommand('echo', [explicit], '/nonexistent-dir');
 
     expect(resolved).toBe(explicit);
   });
 
-  it('falls back to a command built from a loadable agent', async () => {
-    const resolved = await resolveCommand('reviewer', [], FIXTURES);
+  it('falls back to a command built from a loadable agent', () => {
+    const resolved = resolveCommand('reviewer', [], FIXTURES);
 
     expect(resolved).toMatchObject({ name: 'reviewer', agent: 'reviewer', policy: 'read-only' });
   });
 
-  it('builds prepare hooks for agents that declare them in agent.yaml', async () => {
-    const resolved = await resolveCommand('with-prepare', [], FIXTURES);
+  it('builds prepare hooks for agents that declare them in agent.yaml', () => {
+    const resolved = resolveCommand('with-prepare', [], FIXTURES);
 
     expect(resolved).toMatchObject({
       name: 'with-prepare',
@@ -29,25 +29,25 @@ describe('resolveCommand', () => {
       taskRequired: false,
     });
     expect(typeof resolved?.prepare).toBe('function');
-    expect(typeof resolved?.afterExecuteSuccess).toBe('function');
+    expect(typeof resolved?.after).toBe('function');
   });
 
-  it('returns undefined for a name that is neither an explicit command nor a loadable agent', async () => {
-    expect(await resolveCommand('nope', [], FIXTURES)).toBeUndefined();
+  it('returns undefined for a name that is neither an explicit command nor a loadable agent', () => {
+    expect(resolveCommand('nope', [], FIXTURES)).toBeUndefined();
   });
 
-  it('throws the reason when the agent exists but does not load, naming the file', async () => {
-    await expect(resolveCommand('schema-invalid-xml', [], FIXTURES)).rejects.toThrow('failed schema validation');
+  it('throws the reason when the agent exists but does not load, naming the file', () => {
+    expect(() => resolveCommand('missing-sections', [], FIXTURES)).toThrow(/missing-sections\/agent\.yaml: .*'role'/);
   });
 
-  it('returns undefined for an invalid agent name, without throwing', async () => {
-    expect(await resolveCommand('../etc', [], FIXTURES)).toBeUndefined();
+  it('returns undefined for an invalid agent name, without throwing', () => {
+    expect(resolveCommand('../etc', [], FIXTURES)).toBeUndefined();
   });
 
-  it('prefers the explicit command over an agent of the same name', async () => {
+  it('prefers the explicit command over an agent of the same name', () => {
     const explicit = defineCommand({ name: 'echo', agent: 'echo', description: 'explicit', policy: 'edits' });
 
-    const resolved = await resolveCommand('echo', [explicit], FIXTURES);
+    const resolved = resolveCommand('echo', [explicit], FIXTURES);
 
     expect(resolved?.policy).toBe('edits');
   });

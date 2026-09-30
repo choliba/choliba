@@ -87,10 +87,10 @@ function runFormat(argv: readonly string[], workspaceRoot: string): number {
 }
 
 /** `choliba install <origem>`: an agent (with its skills and MCPs), a skill or an MCP, into the workspace. */
-async function runInstall(argv: readonly string[], workspaceRoot: string): Promise<number> {
+function runInstall(argv: readonly string[], workspaceRoot: string): number {
   const config = loadRepoConfig(workspaceRoot);
   try {
-    const report = await install(parseInstallArgs(argv), {
+    const report = install(parseInstallArgs(argv), {
       workspaceRoot,
       config,
       targets: {
@@ -143,11 +143,11 @@ function workspaceOrNothing(): string | undefined {
 }
 
 /** The agents of the workspace (`resolveAgentsDir`: `CHOL_AGENTS_DIR`, or the default), which `choliba <agent>` runs. */
-async function agentNames(workspaceRoot: string | undefined): Promise<readonly string[]> {
+function agentNames(workspaceRoot: string | undefined): readonly string[] {
   if (workspaceRoot === undefined) return [];
   try {
     const dir = resolveAgentsDir(undefined, loadRepoConfig(workspaceRoot), workspaceRoot);
-    return (await listAgents(dir)).map((agent) => agent.name);
+    return listAgents(dir).map((agent) => agent.name);
   } catch {
     return [];
   }
@@ -162,7 +162,7 @@ async function completeWords(words: readonly string[]): Promise<number> {
     if (target.kind === 'projects') return runProjects(['__complete', ...target.argv], workspaceRoot);
     if (target.kind === 'tests') return runTests(['__complete', ...target.argv], workspaceRoot);
   }
-  const spec = firstWordSpec(await agentNames(workspaceRoot));
+  const spec = firstWordSpec(agentNames(workspaceRoot));
   const output = formatSuggestions(complete(spec, words));
   if (output !== '') writeStdout(`${output}\n`);
   return 0;
@@ -208,7 +208,7 @@ async function main(argv: readonly string[]): Promise<number> {
   }
   const workspaceRoot = findWorkspaceRoot(process.cwd());
   if (target.kind === 'check') {
-    const sections = await checkWorkspace(workspaceRoot, loadRepoConfig(workspaceRoot));
+    const sections = checkWorkspace(workspaceRoot, loadRepoConfig(workspaceRoot));
     writeStdout(`${formatCheck(sections)}\n`);
     return allFine(sections) ? 0 : 1;
   }

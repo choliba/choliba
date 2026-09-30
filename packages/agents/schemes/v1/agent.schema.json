@@ -2,15 +2,12 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://choliba.internal/schemas/v1/agent.yaml.schema.json",
   "title": "agent.yaml (padrão 1)",
-  "description": "Padrão 1 do agents/<id>/agent.yaml — validado por validateAgentYamlV1 em packages/agents/src/agent-validation.ts. Regras que o schema não expressa ficam no código: version é a primeira chave, agent.id é igual ao nome da pasta e modes.default está em modes.allow.",
+  "description": "Padrão 1 do agents/<id>/agent.yaml, a declaração completa do agente — validado por validateAgentYamlV1 em packages/agents/src/agent-validation.ts. Regras que o schema não expressa ficam no código: version é a primeira chave, agent.id é igual ao nome da pasta, modes.default e cada modo de steps estão em modes.allow, e cada ${VAR} é do catálogo e vale onde está.",
   "type": "object",
-  "required": ["version", "agent", "models"],
+  "required": ["version", "agent", "models", "role", "input", "flow", "output"],
   "additionalProperties": false,
   "properties": {
-    "version": {
-      "description": "Versão do padrão do agent.yaml. Primeira chave do arquivo.",
-      "const": 1
-    },
+    "version": { "description": "Versão do padrão do agent.yaml. Primeira chave do arquivo.", "const": 1 },
     "agent": {
       "description": "Identidade do agente.",
       "type": "object",
@@ -46,20 +43,34 @@
       "uniqueItems": true,
       "items": { "$ref": "#/definitions/text" }
     },
-    "skills": {
-      "description": "Skills que o agente recebe: pastas em .agents/skills/ (ou CHOL_SKILLS_DIR) com SKILL.md.",
-      "type": "array",
-      "uniqueItems": true,
-      "items": { "$ref": "#/definitions/name" }
+    "role": {
+      "description": "Quem o agente é e o que faz; entra no prompt como <system_role>.",
+      "$ref": "#/definitions/text"
     },
-    "mcps": {
-      "description": "Servidores MCP liberados, por .agents/mcps/<nome>.json (ou CHOL_MCPS_DIR). Lista de nomes (todas as tools) ou mapa nome -> { tools: [...] } (só essas) / null (todas).",
+    "context": {
+      "description": "O que o agente precisa saber antes de começar; cada item entra no prompt dentro de <context>.",
+      "$ref": "#/definitions/texts"
+    },
+    "input": {
+      "description": "O que o agente recebe e as regras sobre isso; entra no prompt como <input_contract>.",
+      "$ref": "#/definitions/text"
+    },
+    "flow": {
+      "description": "Os passos do trabalho; entra no prompt como <execution_flow>.",
+      "$ref": "#/definitions/text"
+    },
+    "output": {
+      "description": "O que o agente entrega; entra no prompt como <output_contract>.",
+      "$ref": "#/definitions/text"
+    },
+    "notes": {
+      "description": "Observações; cada item entra no prompt dentro de <notes>.",
+      "$ref": "#/definitions/texts"
+    },
+    "skills": {
+      "description": "Skills que o agente recebe: pastas em .agents/skills/ (ou CHOL_SKILLS_DIR) com SKILL.md. Lista de nomes, ou mapa nome -> null / { instructions } (como este agente usa a skill; entra no prompt só com a skill).",
       "oneOf": [
-        {
-          "type": "array",
-          "uniqueItems": true,
-          "items": { "$ref": "#/definitions/name" }
-        },
+        { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/name" } },
         {
           "type": "object",
           "propertyNames": { "$ref": "#/definitions/name" },
@@ -68,7 +79,27 @@
               { "type": "null" },
               {
                 "type": "object",
-                "required": ["tools"],
+                "required": ["instructions"],
+                "additionalProperties": false,
+                "properties": { "instructions": { "$ref": "#/definitions/text" } }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "mcps": {
+      "description": "Servidores MCP liberados, por .agents/mcps/<nome>.json (ou CHOL_MCPS_DIR). Lista de nomes (todas as tools) ou mapa nome -> null (todas) / { tools?, instructions? } (só essas tools; como este agente usa o servidor, que entra no prompt só com ele).",
+      "oneOf": [
+        { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/name" } },
+        {
+          "type": "object",
+          "propertyNames": { "$ref": "#/definitions/name" },
+          "additionalProperties": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
                 "additionalProperties": false,
                 "properties": {
                   "tools": {
@@ -76,8 +107,10 @@
                     "minItems": 1,
                     "uniqueItems": true,
                     "items": { "$ref": "#/definitions/text" }
-                  }
-                }
+                  },
+                  "instructions": { "$ref": "#/definitions/text" }
+                },
+                "minProperties": 1
               }
             ]
           }
@@ -113,9 +146,7 @@
               "description": "Diretório -> comandos bloqueados ali; ['*'] = nada executa ali.",
               "type": "object",
               "propertyNames": { "$ref": "#/definitions/text" },
-              "additionalProperties": {
-                "oneOf": [{ "const": ["*"] }, { "$ref": "#/definitions/commands" }]
-              }
+              "additionalProperties": { "oneOf": [{ "const": ["*"] }, { "$ref": "#/definitions/commands" }] }
             }
           }
         }
@@ -142,14 +173,8 @@
       "description": "A tarefa: o texto da linha de comando que entra no prompt.",
       "type": "object",
       "additionalProperties": false,
-      "properties": {
-        "required": { "type": "boolean" },
-        "default": { "$ref": "#/definitions/text" }
-      },
-      "if": {
-        "required": ["required"],
-        "properties": { "required": { "const": false } }
-      },
+      "properties": { "required": { "type": "boolean" }, "default": { "$ref": "#/definitions/text" } },
+      "if": { "required": ["required"], "properties": { "required": { "const": false } } },
       "then": { "required": ["default"], "properties": { "default": { "$ref": "#/definitions/text" } } }
     },
     "ticket_types": {
@@ -160,37 +185,13 @@
       "items": { "enum": ["story", "bug", "improvement", "task"] }
     },
     "steps": {
-      "description": "Ações do CLI, em ordem: <ação>: [args].",
+      "description": "Ações do CLI por modo, em ordem: <ação>: [args]. before roda antes do agente e para tudo na primeira falha; after roda sempre depois dele: success (agente saiu com 0) ou failure, e depois always. Um modo sem steps não roda nada.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "before": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "minProperties": 1,
-            "maxProperties": 1,
-            "additionalProperties": false,
-            "properties": {
-              "run": { "$ref": "#/definitions/args" },
-              "git_diff": { "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "minItems": 2, "maxItems": 4 }] },
-              "add_files": { "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "minItems": 2 }] }
-            }
-          }
-        },
-        "after": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "minProperties": 1,
-            "maxProperties": 1,
-            "additionalProperties": false,
-            "properties": {
-              "run": { "$ref": "#/definitions/args" },
-              "record_git_head": { "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "maxItems": 1 }] }
-            }
-          }
-        }
+        "execute": { "$ref": "#/definitions/modeSteps" },
+        "plan": { "$ref": "#/definitions/modeSteps" },
+        "ask": { "$ref": "#/definitions/modeSteps" }
       }
     }
   },
@@ -210,10 +211,59 @@
       "uniqueItems": true,
       "items": { "allOf": [{ "$ref": "#/definitions/text" }, { "not": { "const": "*" } }] }
     },
-    "args": {
+    "args": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "texts": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/text" } },
+    "beforeSteps": {
       "type": "array",
-      "minItems": 1,
-      "items": { "type": "string" }
+      "items": {
+        "type": "object",
+        "minProperties": 1,
+        "maxProperties": 1,
+        "additionalProperties": false,
+        "properties": {
+          "run": { "$ref": "#/definitions/args" },
+          "git_diff": {
+            "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "minItems": 2, "maxItems": 4 }]
+          },
+          "add_files": { "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "minItems": 2 }] }
+        }
+      }
+    },
+    "afterSteps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "minProperties": 1,
+        "maxProperties": 1,
+        "additionalProperties": false,
+        "properties": {
+          "run": { "$ref": "#/definitions/args" },
+          "record_git_head": { "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "maxItems": 1 }] }
+        }
+      }
+    },
+    "modeSteps": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "before": { "$ref": "#/definitions/beforeSteps" },
+        "after": {
+          "description": "Lista (= always) ou { success?, failure?, always? }.",
+          "oneOf": [
+            { "$ref": "#/definitions/afterSteps" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "properties": {
+                "success": { "$ref": "#/definitions/afterSteps" },
+                "failure": { "$ref": "#/definitions/afterSteps" },
+                "always": { "$ref": "#/definitions/afterSteps" }
+              }
+            }
+          ]
+        }
+      }
     }
   }
 }

@@ -2,31 +2,36 @@ import { join } from 'node:path';
 
 import * as coreGit from '@choliba/core/git';
 
-import type { AgentDefinition } from '../../agent.types';
+import type { AgentDefinition, AgentModeSteps } from '../../agent.types';
 import { loadAgent } from '../../agent-loader';
 import * as actionsModule from '../../prepare/actions';
-import { buildAfterExecute, buildPrepare, diffBaseOf } from '../../prepare/registry';
+import { buildAfter, buildPrepare, diffBaseOf } from '../../prepare/registry';
 import { readGitState } from '../../prepare/git-state';
+import { NO_MODE_STEPS, NO_STEPS } from '../helpers/agent';
 import { makeTmpGitRepo } from '../helpers/git-repo';
 import { makeTmpDir } from '../helpers/tmp';
 
 const FIXTURES = join(__dirname, '..', 'fixtures', 'agents');
 
-describe('buildPrepare / buildAfterExecute', () => {
-  it('returns undefined for agents without hooks', async () => {
-    const agent = await loadAgent(FIXTURES, 'echo');
+function withSteps(agent: AgentDefinition, mode: 'execute' | 'plan' | 'ask', steps: AgentModeSteps): AgentDefinition {
+  return { ...agent, steps: { ...NO_MODE_STEPS, [mode]: steps } };
+}
+
+describe('buildPrepare / buildAfter', () => {
+  it('returns undefined for agents without steps nor a default task', () => {
+    const agent = loadAgent(FIXTURES, 'echo');
 
     expect(buildPrepare(agent)).toBeUndefined();
-    expect(buildAfterExecute(agent)).toBeUndefined();
+    expect(buildAfter(agent)).toBeUndefined();
   });
 
-  it('wires the legacy prepare and after_execute of with-prepare', async () => {
-    const agent = await loadAgent(FIXTURES, 'with-prepare');
+  it('wires the steps of with-prepare: its before in execute, and its after.success', () => {
+    const agent = loadAgent(FIXTURES, 'with-prepare');
     const prepare = buildPrepare(agent);
-    const afterExecute = buildAfterExecute(agent);
+    const after = buildAfter(agent);
 
-    if (prepare === undefined || afterExecute === undefined) {
-      throw new Error('expected prepare and afterExecute hooks');
+    if (prepare === undefined || after === undefined) {
+      throw new Error('expected prepare and after hooks');
     }
 
     const getDiff = jest.spyOn(coreGit, 'getWorkingTreeDiff').mockReturnValue('diff --git a/a.ts b/a.ts\n');
@@ -41,7 +46,7 @@ describe('buildPrepare / buildAfterExecute', () => {
 
       const gitRepo = makeTmpGitRepo();
       try {
-        afterExecute(gitRepo.path);
+        expect(after({ repoRoot: gitRepo.path, mode: 'execute', exitCode: 0 })).toEqual([]);
         expect(readGitState(gitRepo.path, '.cache/with-prepare/last-base')).toMatch(/^[0-9a-f]{40}$/);
       } finally {
         gitRepo.cleanup();
@@ -52,9 +57,9 @@ describe('buildPrepare / buildAfterExecute', () => {
     }
   });
 
-  it('adds the user task as focus and passes --since to the steps', async () => {
-    const base = await loadAgent(FIXTURES, 'with-prepare');
-    const run = jest.spyOn(actionsModule, 'runSteps').mockReturnValue(['ctx']);
+  it('runs only the before steps of the run mode, adds the user task as focus and passes --since', () => {
+    const base = loadAgent(FIXTURES, 'with-prepare');
+    const run = jest.spyOn(actionsModule, 'runBeforeSteps').mockReturnValue(['ctx']);
     try {
       const result = buildPrepare(base)?.({
         task: 'focar README',
@@ -63,37 +68,84 @@ describe('buildPrepare / buildAfterExecute', () => {
         mode: 'execute',
         since: 'HEAD~1',
       });
+      const plan = buildPrepare(base)?.({ task: 'x', repoRoot: '/repo', agent: base, mode: 'plan' });
 
       expect(result).toEqual({ task: 'focar README', promptBody: 'ctx\n\nFoco pedido pelo usuário: focar README' });
-      expect(run).toHaveBeenCalledWith({ repoRoot: '/repo', since: 'HEAD~1' }, base.beforeExecute, 'before_execute');
+      expect(run).toHaveBeenNthCalledWith(
+        1,
+        { repoRoot: '/repo', since: 'HEAD~1' },
+        base.steps.execute.before,
+        'execute.before',
+      );
+      expect(run).toHaveBeenNthCalledWith(2, { repoRoot: '/repo', since: undefined }, [], 'plan.before');
+      expect(plan).toEqual({ task: 'x', promptBody: 'ctx\n\nFoco pedido pelo usuário: x' });
     } finally {
       run.mockRestore();
     }
   });
 
-  it('builds a prepare from default_task alone, whose prompt is the task', async () => {
-    const echo = await loadAgent(FIXTURES, 'echo');
+  it('runs nothing on --dry-run, marking what each step would add', () => {
+    const base = loadAgent(FIXTURES, 'with-prepare');
+    const run = jest.spyOn(actionsModule, 'runBeforeSteps');
+    try {
+      const result = buildPrepare(base)?.({ task: '', repoRoot: '/repo', agent: base, mode: 'execute', dryRun: true });
+
+      expect(run).not.toHaveBeenCalled();
+      expect(result?.promptBody.split('\n\n')).toEqual([
+        '[execute.before 1/3 — git_diff: develop .cache/with-prepare/diff.patch --pending .cache/with-prepare/last-base: produzido aqui na execução real]',
+        '[execute.before 2/3 — add_files: documentacao_atual docs/**/*.md: produzido aqui na execução real]',
+        '[execute.before 3/3 — add_files: readme_atual README.md: produzido aqui na execução real]',
+      ]);
+    } finally {
+      run.mockRestore();
+    }
+  });
+
+  it('builds a prepare from default_task alone, whose prompt is the task', () => {
+    const echo = loadAgent(FIXTURES, 'echo');
     const agent: AgentDefinition = { ...echo, defaultTask: 'padrão' };
 
     expect(buildPrepare(agent)?.({ task: ' ', repoRoot: '/repo', agent, mode: 'execute' })).toEqual({
       task: 'padrão',
       promptBody: 'padrão',
     });
-    const { defaultTask: _unused, ...withoutDefault } = { ...agent, beforeExecute: [] };
+    const { defaultTask: _unused, ...withoutDefault } = withSteps(agent, 'ask', {
+      ...NO_STEPS,
+      before: [{ action: 'run', args: ['x'] }],
+    });
     expect(buildPrepare(withoutDefault)?.({ task: '', repoRoot: '/repo', agent, mode: 'execute' })).toEqual({
       task: '',
       promptBody: '',
     });
   });
 
-  it('hands the after_execute steps to runSteps', async () => {
-    const base = await loadAgent(FIXTURES, 'with-prepare');
-    const run = jest.spyOn(actionsModule, 'runSteps').mockReturnValue([]);
+  it('runs success or failure after the agent, then always, each with the exit code filled in', () => {
+    const echo = loadAgent(FIXTURES, 'echo');
+    const agent = withSteps(echo, 'plan', {
+      before: [],
+      after: {
+        success: [{ action: 'run', args: ['ok', '${AGENT_EXIT_CODE}'] }],
+        failure: [{ action: 'run', args: ['ko', '${AGENT_EXIT_CODE}'] }],
+        always: [{ action: 'run', args: ['clean'] }],
+      },
+    });
+    const failure = { label: 'x', step: { action: 'run', args: [] }, status: 1, output: '' };
+    const run = jest.spyOn(actionsModule, 'runAfterSteps').mockReturnValue([failure]);
     try {
-      const steps = [{ action: 'run', args: ['bun', 'x', 'prettier'] }];
-      buildAfterExecute({ ...base, afterExecute: steps })?.('/repo');
+      const after = buildAfter(agent);
 
-      expect(run).toHaveBeenCalledWith({ repoRoot: '/repo', since: undefined }, steps, 'after_execute');
+      expect(after?.({ repoRoot: '/repo', mode: 'plan', exitCode: 0 })).toEqual([failure, failure]);
+      expect(after?.({ repoRoot: '/repo', mode: 'plan', exitCode: 3 })).toHaveLength(2);
+      expect(after?.({ repoRoot: '/repo', mode: 'execute', exitCode: 0 })).toHaveLength(2);
+      const context = { repoRoot: '/repo', since: undefined };
+      expect(run.mock.calls).toEqual([
+        [context, [{ action: 'run', args: ['ok', '0'] }], 'plan.after.success'],
+        [context, [{ action: 'run', args: ['clean'] }], 'plan.after.always'],
+        [context, [{ action: 'run', args: ['ko', '3'] }], 'plan.after.failure'],
+        [context, [{ action: 'run', args: ['clean'] }], 'plan.after.always'],
+        [context, [], 'execute.after.success'],
+        [context, [], 'execute.after.always'],
+      ]);
     } finally {
       run.mockRestore();
     }
@@ -101,11 +153,14 @@ describe('buildPrepare / buildAfterExecute', () => {
 });
 
 describe('diffBaseOf', () => {
-  it("reads the base of the agent's git_diff", async () => {
-    const agent = await loadAgent(FIXTURES, 'with-prepare');
+  it("reads the base of the agent's git_diff, in any mode", () => {
+    const agent = loadAgent(FIXTURES, 'with-prepare');
+    const gitDiffIn = (args: readonly string[]) =>
+      withSteps(agent, 'ask', { ...NO_STEPS, before: [{ action: 'git_diff', args }] });
 
     expect(diffBaseOf(agent)).toBe('develop');
-    expect(diffBaseOf({ ...agent, beforeExecute: [{ action: 'git_diff', args: ['x'] }] })).toBeUndefined();
-    expect(diffBaseOf(await loadAgent(FIXTURES, 'echo'))).toBeUndefined();
+    expect(diffBaseOf(gitDiffIn(['main', 'd.patch']))).toBe('main');
+    expect(diffBaseOf(gitDiffIn(['x']))).toBeUndefined();
+    expect(diffBaseOf(loadAgent(FIXTURES, 'echo'))).toBeUndefined();
   });
 });

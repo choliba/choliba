@@ -9,7 +9,7 @@ import type { AgentDefinition } from '../agent.types';
 import { listAgents, loadAgent } from '../agent-loader';
 import { resolveCommand } from '../command-registry';
 import { commandFromAgent, effectivePolicy } from '../define-command';
-import type { CommandDefinition, ExecutionMode } from '../command.types';
+import type { CommandDefinition, CommandPrepareInput, ExecutionMode } from '../command.types';
 import { buildUserPrompt } from '../prompt';
 import type { McpServer } from '../mcps';
 import { resolveMcps } from '../mcps';
@@ -25,6 +25,7 @@ import {
   CHOL_AGENTS_PROVIDER,
   CHOL_GLOBAL_DIR,
   CHOL_MCPS_DIR,
+  CHOL_ROOT,
   CHOL_SKILLS_DIR,
   PROJECTS_DIR,
   RUNS_DIR,
@@ -32,8 +33,10 @@ import {
 } from '@choliba/core/config';
 import { listProjectNames, listTicketKeys, loadProjectSettings, resolveLocations } from '@choliba/projects';
 import { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '../workspace-dirs';
-import { absolutePermissions, canRead, outsideExecuteDirs, permissionTexts } from '../permissions';
-import { withExpandedInstructions } from '../vars';
+import { absolutePermissions, canRead, outsideExecuteDirs } from '../permissions';
+import { formatStepFailure, StepFailedError, stepExitCode } from '../prepare/actions';
+import { LOCATION_VARS, agentTexts, withExpandedVars } from '../vars';
+import { formatDryRun } from './dry-run';
 import type { AgentsArgsError, ParsedAgentsArgs } from './args';
 import { CLI_PROGRAM_NAME, PREPARE_FLAGS, USAGE, parseAgentsArgs, unknownFlagMessage } from './args';
 import type { TicketTarget } from './ticket-run';
@@ -66,20 +69,11 @@ function toAbsolute(path: string, repoRoot: string): string {
   return isAbsolute(path) ? path : join(repoRoot, path);
 }
 
-/** Trims a long argument for `--dry-run` output — nobody needs the full 30 KB system prompt on screen. */
-function shorten(value: string): string {
-  const bytes = Buffer.byteLength(value, 'utf8');
-  return bytes <= 200 ? value : `${value.slice(0, 60)}…(${String(bytes)} bytes)`;
-}
-
 function errorMessage(error: unknown): string {
   return String(error);
 }
 
 const HELP_WIDTH = 80;
-
-/** The workspace root in `agent.yaml` and `system.md`; never read from the config, only found. */
-const CHOL_ROOT = 'CHOL_ROOT';
 
 /** Greedy word-wrap: never breaks a word, never exceeds `width` unless a single word already does. */
 function wrapText(text: string, width: number): readonly string[] {
@@ -118,7 +112,10 @@ function formatAgentDetail(command: CommandDefinition, agent: AgentDefinition): 
     `version: ${agent.version}`,
     ...wrapText(agent.description, HELP_WIDTH),
     formatYamlList('models', agent.supportedModels),
-    formatYamlList('skills', agent.skills),
+    formatYamlList(
+      'skills',
+      agent.skills.map((skill) => skill.name),
+    ),
     formatYamlList('modes', agent.modes),
     ...(agent.ticketTypes === undefined ? [] : [formatYamlList('ticket_types', agent.ticketTypes)]),
     formatYamlList(
@@ -176,22 +173,22 @@ function formatAgentHelp(command: CommandDefinition, agent: AgentDefinition, dep
 }
 
 /** Global `--help`, listing the agents found in the default agents dir right now. */
-async function runHelp(deps: RunAgentsCliDeps): Promise<number> {
-  const agents = await listAgents(resolveAgentsDir(undefined, deps.config, deps.repoRoot));
+function runHelp(deps: RunAgentsCliDeps): number {
+  const agents = listAgents(resolveAgentsDir(undefined, deps.config, deps.repoRoot));
   deps.stdout.write(`${formatHelp(agentsCliSpec(specContext(agents, deps)))}\n`);
   return 0;
 }
 
 /** `agents __describe <words...>`: one line describing what the words select, read by `bun chol:help`. */
-async function runDescribe(words: readonly string[], deps: RunAgentsCliDeps): Promise<number> {
-  const agents = await listAgents(resolveAgentsDir(undefined, deps.config, deps.repoRoot));
+function runDescribe(words: readonly string[], deps: RunAgentsCliDeps): number {
+  const agents = listAgents(resolveAgentsDir(undefined, deps.config, deps.repoRoot));
   deps.stdout.write(`${describe(agentsCliSpec(specContext(agents, deps)), words)}\n`);
   return 0;
 }
 
 /** `agents __complete <words...>`: one suggestion per line, read by scripts/libs/chol-completion.bash. */
-async function runComplete(words: readonly string[], deps: RunAgentsCliDeps): Promise<number> {
-  const agents = await listAgents(resolveAgentsDir(undefined, deps.config, deps.repoRoot));
+function runComplete(words: readonly string[], deps: RunAgentsCliDeps): number {
+  const agents = listAgents(resolveAgentsDir(undefined, deps.config, deps.repoRoot));
   const output = formatSuggestions(complete(agentsCliSpec(specContext(agents, deps)), words));
   if (output !== '') {
     deps.stdout.write(`${output}\n`);
@@ -199,9 +196,9 @@ async function runComplete(words: readonly string[], deps: RunAgentsCliDeps): Pr
   return 0;
 }
 
-async function runList(kind: Extract<ParsedAgentsArgs, { kind: 'list' }>, deps: RunAgentsCliDeps): Promise<number> {
+function runList(kind: Extract<ParsedAgentsArgs, { kind: 'list' }>, deps: RunAgentsCliDeps): number {
   const agentsDir = resolveAgentsDir(kind.agentsDir, deps.config, deps.repoRoot);
-  const agents = await listAgents(agentsDir);
+  const agents = listAgents(agentsDir);
   if (agents.length === 0) {
     deps.stdout.write(`No agents found in ${agentsDir}\n`);
     return 0;
@@ -214,14 +211,14 @@ async function runList(kind: Extract<ParsedAgentsArgs, { kind: 'list' }>, deps: 
 type RunArgs = Extract<ParsedAgentsArgs, { kind: 'run' }>;
 
 /** Step 1: which command, and which agent it loads — the only two things every later step needs. */
-async function resolveAgentForCommand(
+function resolveAgentForCommand(
   parsed: RunArgs,
   deps: RunAgentsCliDeps,
   agentsDir: string,
-): Promise<{ command: CommandDefinition; agent: AgentDefinition } | undefined> {
+): { command: CommandDefinition; agent: AgentDefinition } | undefined {
   let command: CommandDefinition | undefined;
   try {
-    command = await resolveCommand(parsed.command, deps.commands, agentsDir);
+    command = resolveCommand(parsed.command, deps.commands, agentsDir);
   } catch (error) {
     deps.stderr.write(`${errorMessage(error)}\n`);
     return undefined;
@@ -233,7 +230,7 @@ async function resolveAgentForCommand(
     return undefined;
   }
   try {
-    const agent = await loadAgent(agentsDir, command.agent);
+    const agent = loadAgent(agentsDir, command.agent);
     return { command, agent };
   } catch (error) {
     deps.stderr.write(`${errorMessage(error)}\n`);
@@ -308,10 +305,10 @@ function resolveAgentMcps(agent: AgentDefinition, deps: RunAgentsCliDeps): reado
 }
 
 /** The variables that name the projects' locations, resolved only when the agent uses one. */
-const LOCATION_VAR = new RegExp(`\\$\\{(${CHOL_GLOBAL_DIR}|${PROJECTS_DIR}|${TICKET_RUNS})\\}`);
+const LOCATION_VAR = new RegExp(`\\$\\{(${LOCATION_VARS.join('|')})\\}`);
 
 /**
- * The folders an agent's `system.md` and `agent.yaml` may name, so it never depends on the workspace
+ * The folders an agent's `agent.yaml` may name, so it never depends on the workspace
  * layout, each under the same name as in `.env`: `${CHOL_ROOT}` (the workspace root, always found by the
  * application), `${CHOL_AGENTS_DIR}`, `${CHOL_SKILLS_DIR}` and `${CHOL_MCPS_DIR}` always;
  * `${CHOL_GLOBAL_DIR}`, `${PROJECTS_DIR}` and `${TICKET_RUNS}` once CHOL_GLOBAL_DIR is configured;
@@ -325,8 +322,7 @@ function locationVars(
 ): Readonly<Record<string, string>> {
   // Resolved only when used: an agent naming none of them runs without CHOL_GLOBAL_DIR, and one that does
   // gets the clear "CHOL_GLOBAL_DIR não definida" instead of a missing variable.
-  const texts = [agent.instructions, ...permissionTexts(agent.permissions)];
-  const locations = texts.some((text) => LOCATION_VAR.test(text))
+  const locations = agentTexts(agent).some((text) => LOCATION_VAR.test(text))
     ? resolveLocations(deps.repoRoot, deps.config, () => undefined)
     : undefined;
   return {
@@ -399,7 +395,7 @@ function expandAgent(
   deps: RunAgentsCliDeps,
 ): AgentDefinition | undefined {
   try {
-    return withExpandedInstructions(agent, () => locationVars(deps, projectVars, agent));
+    return withExpandedVars(agent, () => locationVars(deps, projectVars, agent));
   } catch (error) {
     deps.stderr.write(`${errorMessage(error)}\n`);
     return undefined;
@@ -481,6 +477,36 @@ function resolveProviderChoice(
   }
 }
 
+/** A run that stopped before the agent, and the exit code it ends with (the reason is already on `stderr`). */
+interface Stopped {
+  readonly exitCode: number;
+}
+
+const STOPPED: Stopped = { exitCode: 1 };
+
+/**
+ * The prompt body from the command's `prepare` hook (the `before` steps of the mode, or their markers
+ * on `--dry-run`) and the task it may have rewritten. A failed step stops the run with the step's own
+ * exit code; the message says which step, what it ran and that the agent did not run.
+ */
+function runPrepare(
+  prepare: NonNullable<CommandDefinition['prepare']>,
+  input: CommandPrepareInput,
+  deps: RunAgentsCliDeps,
+): { templateOutput: string; effectiveTask: string } | Stopped {
+  try {
+    const prepared = prepare(input);
+    return { templateOutput: prepared.promptBody, effectiveTask: prepared.task };
+  } catch (error) {
+    if (error instanceof StepFailedError) {
+      deps.stderr.write(`${error.message}\n  O agente não foi executado.\n`);
+      return { exitCode: stepExitCode(error.failure) };
+    }
+    deps.stderr.write(`${errorMessage(error)}\n`);
+    return STOPPED;
+  }
+}
+
 /** Step 6: the actual `ProviderRequest`, via the command's `prepare` hook (or plain `prompt`) — and the task that hook may have rewritten. */
 function buildProviderRequest(
   command: CommandDefinition,
@@ -493,26 +519,16 @@ function buildProviderRequest(
   mcpServers: readonly McpServer[],
   parsed: RunArgs,
   deps: RunAgentsCliDeps,
-): { effectiveTask: string; providerRequest: ProviderRequest } | undefined {
-  let templateOutput: string;
-  let effectiveTask = task;
-
-  if (command.prepare !== undefined) {
-    try {
-      const prepareInput =
-        parsed.since === undefined
-          ? { task, repoRoot: deps.repoRoot, agent, mode }
-          : { task, repoRoot: deps.repoRoot, agent, mode, since: parsed.since };
-      const prepared = command.prepare(prepareInput);
-      templateOutput = prepared.promptBody;
-      effectiveTask = prepared.task;
-    } catch (error) {
-      deps.stderr.write(`${errorMessage(error)}\n`);
-      return undefined;
-    }
-  } else {
-    templateOutput = command.prompt({ task, repoRoot: deps.repoRoot, agent });
+): { effectiveTask: string; providerRequest: ProviderRequest } | Stopped {
+  const base = { task, repoRoot: deps.repoRoot, agent, mode, dryRun: parsed.dryRun };
+  const prompted =
+    command.prepare === undefined
+      ? { templateOutput: command.prompt({ task, repoRoot: deps.repoRoot, agent }), effectiveTask: task }
+      : runPrepare(command.prepare, parsed.since === undefined ? base : { ...base, since: parsed.since }, deps);
+  if ('exitCode' in prompted) {
+    return prompted;
   }
+  const { templateOutput, effectiveTask } = prompted;
 
   const providerRequest: ProviderRequest = {
     agent,
@@ -532,12 +548,17 @@ function buildProviderRequest(
   return { effectiveTask, providerRequest };
 }
 
-/** `--dry-run`: print the args that would reach the provider, never spawn it. */
+/**
+ * `--dry-run`: what this command line would do without it, in order (`formatDryRun`). Nothing runs
+ * and nothing is written: no step, no ticket, no run folder, no provider.
+ */
 function runDryRun(
-  resolved: ReturnType<typeof resolveProvider>,
-  providerRequest: ProviderRequest,
+  prepared: PreparedRun,
+  ticketTarget: TicketTarget | undefined,
+  parsed: RunArgs,
   deps: RunAgentsCliDeps,
 ): number {
+  const { resolved, providerRequest } = prepared;
   let args: readonly string[];
   try {
     args = resolved.adapter.buildArgs(providerRequest);
@@ -545,13 +566,36 @@ function runDryRun(
     deps.stderr.write(`${errorMessage(error)}\n`);
     return 1;
   }
-  for (const part of [...resolved.command, ...args]) {
-    deps.stdout.write(`${shorten(part)}\n`);
-  }
+  const workspaceFiles = parsed.showPrompt ? (resolved.adapter.previewWorkspace?.(providerRequest) ?? []) : [];
+  const output = formatDryRun({
+    providerId: resolved.adapter.id,
+    command: resolved.command,
+    args,
+    request: providerRequest,
+    newTicket: ticketTarget?.create === undefined ? undefined : ticketTarget.file,
+    hasTicket: ticketTarget !== undefined,
+    showPrompt: parsed.showPrompt,
+    workspaceFiles,
+  });
+  deps.stdout.write(`${output}\n`);
   return 0;
 }
 
-/** The real run: spawn the provider, then optional command hook after a successful execute. */
+/**
+ * The steps that run after the agent (`CommandDefinition.after`), whatever the mode and however it
+ * ended. Each failed step is reported; the run ends with the agent's exit code when the agent
+ * failed, else with the first failed step's.
+ */
+function runAfter(command: CommandDefinition, mode: ExecutionMode, exitCode: number, deps: RunAgentsCliDeps): number {
+  const failures = command.after?.({ repoRoot: deps.repoRoot, mode, exitCode }) ?? [];
+  for (const failure of failures) {
+    deps.stderr.write(`${formatStepFailure(failure)}\n  O agente terminou com código ${String(exitCode)}.\n`);
+  }
+  const [first] = failures;
+  return exitCode !== 0 || first === undefined ? exitCode : stepExitCode(first);
+}
+
+/** The real run: spawn the provider, then the `after` steps. */
 async function runAndRecord(
   command: CommandDefinition,
   mode: ExecutionMode,
@@ -573,16 +617,7 @@ async function runAndRecord(
     { runner: deps.runner, stdout: deps.stdout, stderr: deps.stderr, signals: deps.signals, now: deps.now },
   );
 
-  if (exitCode === 0 && mode === 'execute' && command.afterExecuteSuccess !== undefined) {
-    try {
-      command.afterExecuteSuccess(deps.repoRoot);
-    } catch (error) {
-      deps.stderr.write(`${errorMessage(error)}\n`);
-      return 1;
-    }
-  }
-
-  return exitCode;
+  return runAfter(command, mode, exitCode, deps);
 }
 
 interface PreparedRun {
@@ -639,32 +674,32 @@ function checkedExecuteDirs(agent: AgentDefinition, deps: RunAgentsCliDeps): rea
   return undefined;
 }
 
-/** Everything one run needs before its provider starts; `undefined` when a check stops it (reason on `stderr`). */
+/** Everything one run needs before its provider starts; `Stopped` when a check or a step stops it (reason on `stderr`). */
 function prepareRun(
   context: RunContext,
   declaredCommand: CommandDefinition,
   declaredAgent: AgentDefinition,
-): (PreparedRun & { command: CommandDefinition }) | undefined {
+): (PreparedRun & { command: CommandDefinition }) | Stopped {
   const { parsed, deps } = context;
   const agent = expandAgent(declaredAgent, context.vars, deps);
   if (agent === undefined || !checkModelSupported(parsed, agent, deps)) {
-    return undefined;
+    return STOPPED;
   }
   const command = commandFor(context, declaredCommand, agent);
   const agentSkills = resolveAgentSkills(agent, deps);
   const mcpServers = agentSkills === undefined ? undefined : resolveAgentMcps(agent, deps);
   if (agentSkills === undefined || mcpServers === undefined) {
-    return undefined;
+    return STOPPED;
   }
   const withSkills = withSkillReads(agent, agentSkills.skills);
   const executeDirs = checkedExecuteDirs(withSkills, deps);
   if (executeDirs === undefined) {
-    return undefined;
+    return STOPPED;
   }
   const addDirs = resolveAddDirs(command, parsed, deps, executeDirs);
   const resolved = resolveProviderChoice(parsed, deps);
   if (resolved === undefined) {
-    return undefined;
+    return STOPPED;
   }
   const built = buildProviderRequest(
     command,
@@ -678,7 +713,7 @@ function prepareRun(
     parsed,
     deps,
   );
-  return built === undefined ? undefined : { ...built, resolved, command };
+  return 'exitCode' in built ? built : { ...built, resolved, command };
 }
 
 async function runCommand(parsed: RunArgs, deps: RunAgentsCliDeps): Promise<number> {
@@ -690,7 +725,7 @@ async function runCommand(parsed: RunArgs, deps: RunAgentsCliDeps): Promise<numb
   }
   const agentsDir = resolveAgentsDir(parsed.agentsDir, deps.config, deps.repoRoot);
 
-  const resolvedAgent = await resolveAgentForCommand(parsed, deps, agentsDir);
+  const resolvedAgent = resolveAgentForCommand(parsed, deps, agentsDir);
   if (resolvedAgent === undefined) {
     return 1;
   }
@@ -746,11 +781,11 @@ async function runCommand(parsed: RunArgs, deps: RunAgentsCliDeps): Promise<numb
   };
 
   const prepared = prepareRun(context, command, agent);
-  if (prepared === undefined) {
-    return 1;
+  if ('exitCode' in prepared) {
+    return prepared.exitCode;
   }
   if (parsed.dryRun) {
-    return runDryRun(prepared.resolved, prepared.providerRequest, deps);
+    return runDryRun(prepared, ticketTarget, parsed, deps);
   }
   let createdContent: string | undefined;
   try {
@@ -793,7 +828,7 @@ export async function runAgentsCli(argv: readonly string[], deps: RunAgentsCliDe
     return runHelp(deps);
   }
   if (parsed.kind === 'list') {
-    return await runList(parsed, deps);
+    return runList(parsed, deps);
   }
   return runCommand(parsed, deps);
 }
