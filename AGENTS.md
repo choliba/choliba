@@ -24,6 +24,6 @@ Monorepo Bun (`packages/*`, `apps/*`), TypeScript 6.0 com tipagem dura (nunca `a
 `.editorconfig`, Jest (nunca `bun test`) com ratchet de cobertura. Tudo roda com `bun run check`.
 
 Skills de desenvolvimento do projeto em `.agents/skills/`: `add-workspace-package`, `quality-gates`, `coverage-ratchet`,
-`git-workflow`, `object-calisthenics`; e `documentation`, que também é do agente `docs-updater`, em
+`git-workflow`, `object-calisthenics`, `nestjs`; e `documentation`, que também é do agente `docs-updater`, em
 `app/skills/`. Quando usar cada uma: a `description` do `SKILL.md` dela. Agentes, skills e MCPs que os
 agentes usam ficam em `app/` (o layout de uma pasta de trabalho instalada), sem precisar de `CHOL_*_DIR` no `.env`.
