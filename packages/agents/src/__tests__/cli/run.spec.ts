@@ -591,7 +591,7 @@ describe('runAgentsCli — skills', () => {
     const { deps, stdout, stderr } = harness([], { config: { CHOL_SKILLS_DIR: undefined } });
 
     expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'x'], deps)).toBe(1);
-    expect(stderr.chunks.join('')).toContain('skill "dummy-skill" não encontrada: /repo/app/skills/dummy-skill');
+    expect(stderr.chunks.join('')).toContain('skill "dummy-skill" não encontrada: /repo/.choliba/skills/dummy-skill');
     expect(stdout.chunks).toEqual([]);
   });
 
@@ -642,7 +642,7 @@ describe('runAgentsCli — mcps', () => {
       const { deps, stdout, stderr } = harness([]);
 
       expect(await runAgentsCli(['echo', '--agents-dir', agents.agentsDir, '--dry-run', 'x'], deps)).toBe(1);
-      expect(stderr.chunks.join('')).toContain('mcp "nope" não encontrado: /repo/app/mcps/nope.json');
+      expect(stderr.chunks.join('')).toContain('mcp "nope" não encontrado: /repo/.choliba/mcps/nope.json');
       expect(stdout.chunks).toEqual([]);
     } finally {
       agents.cleanup();
@@ -980,10 +980,10 @@ describe('runAgentsCli — run', () => {
       expect(printed).toEqual(expect.arrayContaining(['--add-dir', join(FIXTURES, 'extra'), '/cli-extra']));
     });
 
-    it('defaults agentsDir to <repoRoot>/app/agents, and does not add it as a folder the provider reads', async () => {
+    it('defaults agentsDir to <repoRoot>/.choliba/agents, and does not add it as a folder the provider reads', async () => {
       const tmp = makeTmpDir('cli-default-agents-dir');
       try {
-        cpSync(join(FIXTURES, 'echo'), join(tmp.path, 'app', 'agents', 'echo'), { recursive: true });
+        cpSync(join(FIXTURES, 'echo'), join(tmp.path, '.choliba', 'agents', 'echo'), { recursive: true });
         const { deps, stdout } = harness([], { repoRoot: tmp.path });
 
         expect(await runAgentsCli(['echo', '--dry-run', '--show-prompt', 'x'], deps)).toBe(0);
@@ -1314,7 +1314,7 @@ describe('runAgentsCli — folder variables', () => {
         0,
       );
       expect(dryRunArgv(stdout)).toEqual(
-        expect.arrayContaining(['Read(//repo/app/agents/**)', 'Read(//s/**)', 'Read(//m/**)']),
+        expect.arrayContaining(['Read(//repo/.choliba/agents/**)', 'Read(//s/**)', 'Read(//m/**)']),
       );
     });
   });

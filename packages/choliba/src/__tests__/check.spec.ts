@@ -13,9 +13,9 @@ function withWorkspace(run: (root: string) => Promise<void> | void): Promise<voi
   });
 }
 
-/** A fixture agent under `app/agents/<as>` (the default agents folder), its `agent.id` renamed to match the folder. */
+/** A fixture agent under `.choliba/agents/<as>` (the default agents folder), its `agent.id` renamed to match the folder. */
 function copyAgent(root: string, fixture: string, as = fixture): void {
-  const dir = path.join(root, 'app', 'agents', as);
+  const dir = path.join(root, '.choliba', 'agents', as);
   fs.cpSync(path.join(FIXTURES, fixture), dir, { recursive: true });
   const yaml = path.join(dir, 'agent.yaml');
   fs.writeFileSync(yaml, fs.readFileSync(yaml, 'utf8').replace(`  id: ${fixture}\n`, `  id: ${as}\n`));
@@ -38,13 +38,13 @@ describe('checkAgents', () => {
       copyAgent(root, 'missing-sections', 'invalido');
       copyAgent(root, 'echo', 'sem-skill');
       copyAgent(root, 'reviewer', 'com-mcp');
-      fs.appendFileSync(path.join(root, 'app', 'agents', 'com-mcp', 'agent.yaml'), 'mcps: [app]\n');
-      fs.mkdirSync(path.join(root, 'app', 'mcps'), { recursive: true });
-      fs.writeFileSync(path.join(root, 'app', 'mcps', 'app.json'), JSON.stringify({ command: '${APP_DIR}/x' }));
-      fs.mkdirSync(path.join(root, 'app', 'agents', '_rascunho'));
+      fs.appendFileSync(path.join(root, '.choliba', 'agents', 'com-mcp', 'agent.yaml'), 'mcps: [app]\n');
+      fs.mkdirSync(path.join(root, '.choliba', 'mcps'), { recursive: true });
+      fs.writeFileSync(path.join(root, '.choliba', 'mcps', 'app.json'), JSON.stringify({ command: '${APP_DIR}/x' }));
+      fs.mkdirSync(path.join(root, '.choliba', 'agents', '_rascunho'));
 
       const section = checkAgents(root, {});
-      expect(section.title).toBe(`Agentes (${path.join(root, 'app', 'agents')})`);
+      expect(section.title).toBe(`Agentes (${path.join(root, '.choliba', 'agents')})`);
       expect(section.items.map((item) => item.name)).toEqual(['com-mcp', 'invalido', 'reviewer', 'sem-skill']);
       const problem = (name: string): string | undefined => section.items.find((item) => item.name === name)?.problem;
       expect(problem('reviewer')).toBeUndefined();
@@ -61,7 +61,7 @@ describe('checkAgents', () => {
   it('says when the agents folder does not exist', async () => {
     await withWorkspace((root) => {
       expect(checkAgents(root, {}).items).toEqual([
-        { name: path.join(root, 'app', 'agents'), problem: 'a pasta não existe' },
+        { name: path.join(root, '.choliba', 'agents'), problem: 'a pasta não existe' },
       ]);
     });
   });
@@ -95,7 +95,7 @@ describe('checkWorkspace / formatCheck / allFine', () => {
       expect(allFine(fine)).toBe(true);
       expect(formatCheck(fine)).toBe(
         [
-          `Agentes (${path.join(root, 'app', 'agents')})`,
+          `Agentes (${path.join(root, '.choliba', 'agents')})`,
           '  ✓ reviewer',
           '',
           `Projetos (${path.join(root, 'projects')})`,

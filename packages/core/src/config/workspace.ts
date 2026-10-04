@@ -33,8 +33,8 @@ function dependsOnPackage(dir: string): boolean {
 
 /**
  * The workspace a command runs in: the nearest folder, from `start` up, whose package.json depends on
- * choliba (`bun add choliba` makes one). Its `.env`, `app/agents/`, `app/skills/` and
- * `app/mcps/` are what the CLIs use, so running from any subfolder of it works the same.
+ * choliba (`bun add choliba` makes one). Its `.env`, `.choliba/agents/`, `.choliba/skills/` and
+ * `.choliba/mcps/` are what the CLIs use, so running from any subfolder of it works the same.
  */
 export function findWorkspaceRoot(start: string): string {
   let dir = resolve(start);

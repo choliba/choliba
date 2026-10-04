@@ -32,9 +32,9 @@ function withSource(run: (source: string, workspace: string, targets: InstallTar
   const workspace = join(dir, 'ws');
   mkdirSync(workspace);
   const targets = {
-    agentsDir: join(workspace, 'app', 'agents'),
-    skillsDir: join(workspace, 'app', 'skills'),
-    mcpsDir: join(workspace, 'app', 'mcps'),
+    agentsDir: join(workspace, '.choliba', 'agents'),
+    skillsDir: join(workspace, '.choliba', 'skills'),
+    mcpsDir: join(workspace, '.choliba', 'mcps'),
   };
   try {
     run(source, workspace, targets);
@@ -108,9 +108,9 @@ describe('planInstall', () => {
     });
   });
 
-  it('reads a source laid out like a workspace, under app/', () => {
+  it('reads a source laid out like a workspace, under .choliba/', () => {
     withSource((source) => {
-      const app = join(source, 'app');
+      const app = join(source, '.choliba');
       mkdirSync(app);
       for (const dir of ['agents', 'skills', 'mcps']) {
         cpSync(join(source, dir), join(app, dir), { recursive: true });
@@ -120,10 +120,10 @@ describe('planInstall', () => {
       expect(() => planInstall(source, source)).toThrow(
         [
           'Escolha um com --path:',
-          '  app/agents/echo',
-          '  app/agents/with-prepare',
-          '  app/skills/dummy-skill',
-          '  app/mcps/with-var.json',
+          '  .choliba/agents/echo',
+          '  .choliba/agents/with-prepare',
+          '  .choliba/skills/dummy-skill',
+          '  .choliba/mcps/with-var.json',
         ].join('\n'),
       );
       expect(planInstall(join(app, 'agents', 'echo'), source).items.map((item) => item.from)).toEqual([
@@ -176,8 +176,8 @@ describe('install', () => {
       expect(existsSync(join(targets.agentsDir, 'echo', 'velho.md'))).toBe(false);
       expect(existsSync(join(targets.skillsDir, 'dummy-skill', 'SKILL.md'))).toBe(true);
       expect(existsSync(join(targets.mcpsDir, 'with-var.json'))).toBe(true);
-      expect(text).toContain('  agente echo → app/agents/echo');
-      expect(text).toContain('  MCP with-var → app/mcps/with-var.json');
+      expect(text).toContain('  agente echo → .choliba/agents/echo');
+      expect(text).toContain('  MCP with-var → .choliba/mcps/with-var.json');
       expect(text).toContain('o MCP with-var usa ${SERVER_DIR}, sem valor no .env: defina antes de rodar o agente.');
       expect(text).toContain('Confira com: choliba check');
     });
@@ -210,8 +210,8 @@ describe('install', () => {
   });
 
   it('formats a plan with no warnings', () => {
-    expect(formatInstall('/w', [{ kind: 'skill', name: 's', from: '/o/s', to: '/w/app/skills/s' }], [], false)).toBe(
-      ['Instalado:', '  skill s → app/skills/s', '', 'Confira com: choliba check'].join('\n'),
-    );
+    expect(
+      formatInstall('/w', [{ kind: 'skill', name: 's', from: '/o/s', to: '/w/.choliba/skills/s' }], [], false),
+    ).toBe(['Instalado:', '  skill s → .choliba/skills/s', '', 'Confira com: choliba check'].join('\n'));
   });
 });

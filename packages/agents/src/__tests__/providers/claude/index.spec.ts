@@ -177,7 +177,7 @@ describe('claudeProvider.buildArgs', () => {
           {
             name: 'browser',
             config: { command: 'npx', args: ['browser-mcp'] },
-            path: '/repo/app/mcps/browser.json',
+            path: '/repo/.choliba/mcps/browser.json',
           },
         ],
       }),

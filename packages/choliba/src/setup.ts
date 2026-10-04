@@ -46,7 +46,7 @@ export const NEXT_STEPS = [
   '  2. suas aplicações em app/<app>/, e um projeto de teste (em projects/) para cada uma:',
   '     bun chol:project:create --app-dir app/<app> --base-url <url>',
   '  3. instale agentes, skills e MCPs: bun chol:install <pasta, repositório git ou pacote npm> [--path agents/<nome>]',
-  '     (vão para app/agents/<nome>/, app/skills/<nome>/ e app/mcps/<nome>.json)',
+  '     (vão para .choliba/agents/<nome>/, .choliba/skills/<nome>/ e .choliba/mcps/<nome>.json)',
   '  4. bun chol:check, bun chol:lint, bun chol:format e bun chol:help',
 ].join('\n');
 
@@ -61,8 +61,9 @@ export function exampleTemplatesDir(): string {
 }
 
 /**
- * `app/` (`APP_DIR`) holds the applications being tested and choliba's agents (`app/agents`, `app/skills`,
- * `app/mcps`); `projects/`, beside it, holds the test projects. The names come from `@choliba/core/config`.
+ * `app/` (`APP_DIR`) holds the applications being tested; `.choliba/` (`CHOLIBA_DIR`) holds choliba's agents
+ * (`.choliba/agents`, `.choliba/skills`, `.choliba/mcps`); `projects/` holds the test projects. The names come
+ * from `@choliba/core/config`.
  */
 
 /** The folders a workspace has, each kept by a `.gitkeep` while empty. */
@@ -159,7 +160,7 @@ export function createExample(root: string, templatesDir: string = exampleTempla
   ];
 }
 
-/** The editor settings that point every agent.yaml under app/agents at the schema shipped with choliba. */
+/** The editor settings that point every agent.yaml under .choliba/agents at the schema shipped with choliba. */
 function schemaMapping(templatesDir: string): Record<string, unknown> {
   // Our own template: always a settings object with "yaml.schemas".
   const settings = JSON.parse(readFileSync(join(templatesDir, 'vscode-settings'), 'utf8')) as {

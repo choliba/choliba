@@ -93,7 +93,7 @@ const COMMANDS: readonly CommandEntry[] = [
         {
           name: '--path',
           value: { name: 'caminho', suggest: () => ({ kind: 'files' }) },
-          description: 'Item dentro da origem (ex.: app/agents/test-writer)',
+          description: 'Item dentro da origem (ex.: .choliba/agents/test-writer)',
         },
         { name: '--dry-run', description: 'Mostra o que instalaria, sem gravar' },
       ],
@@ -159,8 +159,8 @@ export const CHOLIBA_HELP: CommandSpec = {
   usage: 'choliba COMMAND [ARGS]',
   description:
     'Testes E2E multiprojeto com Playwright, operados por agentes. Roda na pasta de trabalho: a pasta cujo ' +
-    'package.json depende de choliba, com o .env, os agentes (app/agents/), as skills (app/skills/) ' +
-    'e os MCPs (app/mcps/).',
+    'package.json depende de choliba, com o .env, os agentes (.choliba/agents/), as skills ' +
+    '(.choliba/skills/) e os MCPs (.choliba/mcps/).',
   commands: () => COMMANDS,
   footer: "Run 'choliba COMMAND --help' for more information on a command.",
 };

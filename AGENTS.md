@@ -25,6 +25,6 @@ Monorepo Bun (`packages/*`, `apps/*`), TypeScript 6.0 com tipagem dura (nunca `a
 
 Skills de desenvolvimento do projeto em `.agents/skills/`: `add-workspace-package`, `quality-gates`, `coverage-ratchet`,
 `git-workflow`, `object-calisthenics`, `nestjs`, `cli-guidelines`; e `documentation`, que também é do agente
-`docs-updater`, em `app/skills/`. Quando usar cada uma: a `description` do `SKILL.md` dela. Agentes, skills e MCPs
-que os agentes usam ficam em `app/` (o layout de uma pasta de trabalho instalada), sem precisar de `CHOL_*_DIR` no
+`docs-updater`, em `.choliba/skills/`. Quando usar cada uma: a `description` do `SKILL.md` dela. Agentes, skills e MCPs
+que os agentes usam ficam em `.choliba/` (o layout de uma pasta de trabalho instalada), sem precisar de `CHOL_*_DIR` no
 `.env`.

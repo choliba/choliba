@@ -58,7 +58,7 @@ behavior already exists.
 
 clig.dev advises against a catch-all subcommand, because it blocks adding commands with those names later.
 choliba keeps `choliba <agent>` as a shortcut for `choliba agents <agent>` on purpose. The cost is real: **before
-adding a new top-level subcommand, check it does not shadow an agent name** (in `app/agents/` and in the
+adding a new top-level subcommand, check it does not shadow an agent name** (in `.choliba/agents/` and in the
 agents that `choliba install` offers), and mention it in the PR. Subcommands themselves are never abbreviated.
 
 ## Checklist for a new or changed command

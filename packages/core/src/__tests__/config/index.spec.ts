@@ -18,12 +18,13 @@ describe('config barrel exports', () => {
   });
 
   it('re-exports the one source of the workspace layout and of the file names choliba loads', () => {
-    expect([config.APP_DIR, config.AGENTS_SUBDIR, config.SKILLS_SUBDIR, config.MCPS_SUBDIR]).toEqual([
-      'app',
-      'agents',
-      'skills',
-      'mcps',
-    ]);
+    expect([
+      config.APP_DIR,
+      config.CHOLIBA_DIR,
+      config.AGENTS_SUBDIR,
+      config.SKILLS_SUBDIR,
+      config.MCPS_SUBDIR,
+    ]).toEqual(['app', '.choliba', 'agents', 'skills', 'mcps']);
     expect([config.TICKETS_SUBDIR, config.TESTS_SUBDIR, config.TICKET_RUNS_SUBDIR]).toEqual([
       'tickets',
       'tests',

@@ -44,14 +44,14 @@ describe('formatSkillsInstruction', () => {
   it('orders each skill read by path, from the repo root when inside it', () => {
     const instruction = formatSkillsInstruction(
       [
-        { name: 'docs', description: 'Writes docs.', path: '/repo/app/skills/docs/SKILL.md' },
+        { name: 'docs', description: 'Writes docs.', path: '/repo/.choliba/skills/docs/SKILL.md' },
         { name: 'ext', description: 'Elsewhere.', path: '/other/skills/ext/SKILL.md' },
       ],
       '/repo',
     );
 
     expect(instruction.split('\n')).toEqual([
-      'Utilize a skill docs: leia `app/skills/docs/SKILL.md` antes de qualquer outra coisa e siga-a durante toda a tarefa.',
+      'Utilize a skill docs: leia `.choliba/skills/docs/SKILL.md` antes de qualquer outra coisa e siga-a durante toda a tarefa.',
       'Utilize a skill ext: leia `/other/skills/ext/SKILL.md` antes de qualquer outra coisa e siga-a durante toda a tarefa.',
       'Esses caminhos partem da raiz do repositório. Abra os arquivos que uma skill indicar (ex.: references/) só quando ela mandar.',
     ]);

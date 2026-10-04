@@ -10,7 +10,7 @@ export default defineConfig(
       '**/dist/**',
       'coverage/**',
       '.agents/**',
-      'app/skills/**',
+      '.choliba/skills/**',
       '.claude/**',
       '.playwright-cli/**',
     ],

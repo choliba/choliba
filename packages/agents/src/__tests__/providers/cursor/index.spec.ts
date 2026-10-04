@@ -108,7 +108,7 @@ describe('cursorProvider.buildArgs', () => {
           {
             name: 'browser',
             config: { command: 'npx', args: ['browser-mcp'] },
-            path: '/repo/app/mcps/browser.json',
+            path: '/repo/.choliba/mcps/browser.json',
           },
         ],
       }),
@@ -378,7 +378,7 @@ describe('cursorProvider.prepareWorkspace', () => {
             {
               name: 'browser',
               config: { command: 'npx', args: ['browser-mcp'] },
-              path: '/repo/app/mcps/browser.json',
+              path: '/repo/.choliba/mcps/browser.json',
             },
           ],
         }),
@@ -409,7 +409,7 @@ describe('cursorProvider.prepareWorkspace', () => {
               {
                 name: 'browser',
                 config: { command: 'npx', args: ['browser-mcp'] },
-                path: '/repo/app/mcps/browser.json',
+                path: '/repo/.choliba/mcps/browser.json',
               },
             ],
           }),
@@ -426,7 +426,7 @@ describe('cursorProvider.previewWorkspace', () => {
   it('shows what prepareWorkspace would write, without writing anything', () => {
     const tmp = makeTmpDir('cursor-preview');
     try {
-      const browser = { name: 'browser', config: { command: 'npx' }, path: '/repo/app/mcps/browser.json' };
+      const browser = { name: 'browser', config: { command: 'npx' }, path: '/repo/.choliba/mcps/browser.json' };
       const request = fakeRequest({ workspaceRoot: '/', runDir: tmp.path, mcpServers: [browser] });
 
       const files = cursorProvider.previewWorkspace?.(request) ?? [];

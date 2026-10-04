@@ -3,10 +3,10 @@ import { join } from 'node:path';
 import { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '../index';
 
 describe('workspace dirs', () => {
-  it('default to app/agents, app/skills and app/mcps, the layout choliba setup makes', () => {
-    expect(resolveAgentsDir(undefined, {}, '/w')).toBe(join('/w', 'app', 'agents'));
-    expect(resolveSkillsDir({}, '/w')).toBe(join('/w', 'app', 'skills'));
-    expect(resolveMcpsDir({}, '/w')).toBe(join('/w', 'app', 'mcps'));
+  it('default to .choliba/agents, .choliba/skills and .choliba/mcps, the layout choliba setup makes', () => {
+    expect(resolveAgentsDir(undefined, {}, '/w')).toBe(join('/w', '.choliba', 'agents'));
+    expect(resolveSkillsDir({}, '/w')).toBe(join('/w', '.choliba', 'skills'));
+    expect(resolveMcpsDir({}, '/w')).toBe(join('/w', '.choliba', 'mcps'));
   });
 
   it('take the flag or the config, relative to the workspace root or absolute', () => {
