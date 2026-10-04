@@ -39,11 +39,8 @@ describe('checkAgents', () => {
       copyAgent(root, 'echo', 'sem-skill');
       copyAgent(root, 'reviewer', 'com-mcp');
       fs.appendFileSync(path.join(root, 'app', 'agents', 'com-mcp', 'agent.yaml'), 'mcps: [app]\n');
-      fs.mkdirSync(path.join(root, 'app', '.agents', 'mcps'), { recursive: true });
-      fs.writeFileSync(
-        path.join(root, 'app', '.agents', 'mcps', 'app.json'),
-        JSON.stringify({ command: '${APP_DIR}/x' }),
-      );
+      fs.mkdirSync(path.join(root, 'app', 'mcps'), { recursive: true });
+      fs.writeFileSync(path.join(root, 'app', 'mcps', 'app.json'), JSON.stringify({ command: '${APP_DIR}/x' }));
       fs.mkdirSync(path.join(root, 'app', 'agents', '_rascunho'));
 
       const section = checkAgents(root, {});

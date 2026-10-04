@@ -9,7 +9,7 @@
   "criterios": [
     {
       "id": "CA-01",
-      "descricao": "Dado que estou na página da loja\nQuando informo meu e-mail e clico em Assinar\nEntão vejo a mensagem \"Obrigado por assinar!\"",
+      "descricao": ["Dado que estou na página da loja", "Quando informo meu e-mail e clico em Assinar", "Então vejo a mensagem \"Obrigado por assinar!\""],
       "testes": []
     }
   ]

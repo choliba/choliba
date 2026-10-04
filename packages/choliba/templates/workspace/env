@@ -1,10 +1,10 @@
 # Configuração do choliba nesta pasta de trabalho. Os valores do shell ganham destes.
 
 # Onde ficam os agentes, as skills e os MCPs, relativos a esta pasta. Sem estas linhas, valem os padrões
-# app/agents, app/.agents/skills e app/.agents/mcps; defina só para usar outra pasta.
+# app/agents, app/skills e app/mcps; defina só para usar outra pasta.
 # CHOL_AGENTS_DIR=app/agents
-# CHOL_SKILLS_DIR=app/.agents/skills
-# CHOL_MCPS_DIR=app/.agents/mcps
+# CHOL_SKILLS_DIR=app/skills
+# CHOL_MCPS_DIR=app/mcps
 
 # Os projetos de teste (PROJECTS_DIR) e os artefatos das execuções (CHOL_GLOBAL_DIR). O `choliba setup`
 # preenche os dois no .env com caminhos absolutos: projects e .cache/choliba desta pasta.
@@ -20,6 +20,6 @@ PROJECTS_DIR=
 # .cache/playwright-cli).
 # PLAYWRIGHT_MCP_OUTPUT_DIR=.cache/playwright-cli
 
-# Variáveis usadas por ${NOME} nos seus app/.agents/mcps/*.json, por exemplo:
+# Variáveis usadas por ${NOME} nos seus app/mcps/*.json, por exemplo:
 # MCP_APP_DIR=
 # MCP_APP_LOG_DIR=

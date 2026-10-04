@@ -7,7 +7,7 @@
     "criterios": [
       {
         "id": "CA-01",
-        "descricao": "CHANGE_ME",
+        "descricao": ["Dado CHANGE_ME", "Quando CHANGE_ME", "Então CHANGE_ME"],
         "testes": []
       }
     ]

@@ -67,8 +67,8 @@ describe('scaffoldWorkspace', () => {
     withDir((root) => {
       expect(scaffoldWorkspace(root)).toEqual([
         'app/agents/',
-        'app/.agents/skills/',
-        'app/.agents/mcps/',
+        'app/skills/',
+        'app/mcps/',
         'projects/',
         '.env.example',
         '.gitignore',
@@ -79,11 +79,11 @@ describe('scaffoldWorkspace', () => {
         'eslint.config.mjs',
         '.env',
       ]);
-      expect(fs.existsSync(path.join(root, 'app', '.agents', 'mcps', '.gitkeep'))).toBe(true);
+      expect(fs.existsSync(path.join(root, 'app', 'mcps', '.gitkeep'))).toBe(true);
       const env = fs.readFileSync(path.join(root, '.env'), 'utf8');
       expect(env).toContain(`\nPROJECTS_DIR=${path.join(root, 'projects')}\n`);
       // The agents' folders are the defaults: the .env names them only as a commented example.
-      expect(env).toContain('\n# CHOL_SKILLS_DIR=app/.agents/skills\n');
+      expect(env).toContain('\n# CHOL_SKILLS_DIR=app/skills\n');
       expect(env).not.toMatch(/^CHOL_(AGENTS|SKILLS|MCPS)_DIR=/m);
       expect(env).toContain(`\nCHOL_GLOBAL_DIR=${path.join(root, '.cache', 'choliba')}\n`);
       expect(fs.readFileSync(path.join(root, '.env.example'), 'utf8')).toContain('\nCHOL_GLOBAL_DIR=\n');
@@ -331,7 +331,7 @@ describe('setupShell / setup', () => {
       fs.writeFileSync(path.join(workspace, 'package.json'), JSON.stringify({ dependencies: { choliba: '1' } }));
 
       const first = setup(home, workspace, () => undefined);
-      expect(first).toContain(`Pasta de trabalho: ${workspace}\n  criado: app/agents/, app/.agents/skills/`);
+      expect(first).toContain(`Pasta de trabalho: ${workspace}\n  criado: app/agents/, app/skills/`);
       expect(first).toContain('app/exemplo/, projects/exemplo/');
       expect(first).toContain('.vscode/settings.json (schema dos agent.yaml)');
       expect(first).toContain('trustedDependencies no package.json');

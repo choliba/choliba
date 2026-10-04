@@ -115,6 +115,21 @@ describe('finishTicket', () => {
     });
   });
 
+  it('fails an execute run that left a criterion out of the Gherkin form, naming it', () => {
+    withTicket('{"titulo":"ok","criterios":[{"descricao":"Dado x, Quando y, Então z"}]}', (file) => {
+      const stderr = fakeWritable();
+
+      expect(finishTicket({ ticket: 'red-1', file }, undefined, 'execute', 0, stderr)).toBe(1);
+      expect(stderr.chunks.join('')).toBe(
+        [
+          `Ticket "red-1" tem critérios fora do formato (${file}):`,
+          '  criterios[0].descricao: deve ser uma lista de frases (Dado…, Quando…, Então…), não um texto',
+          '',
+        ].join('\n'),
+      );
+    });
+  });
+
   it('accepts a filled ticket, and checks nothing after a failed or non-execute run', () => {
     withTicket('{"titulo":"CHANGE_ME"}', (file) => {
       const stderr = fakeWritable();
@@ -123,7 +138,7 @@ describe('finishTicket', () => {
       expect(stderr.chunks).toEqual([]);
       expect(readFileSync(file, 'utf8')).toBe('{"titulo":"CHANGE_ME"}');
     });
-    withTicket('{"titulo":"ok"}', (file) => {
+    withTicket('{"titulo":"ok","criterios":[{"descricao":["Dado x","Quando y","Então z"]}]}', (file) => {
       expect(finishTicket({ ticket: 'red-1', file }, undefined, 'execute', 0, fakeWritable())).toBe(0);
     });
   });

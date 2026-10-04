@@ -130,7 +130,7 @@ export function createTicket(
 
 function placeholderPaths(value: unknown, where: string): string[] {
   if (typeof value === 'string') {
-    return value.trim() === PLACEHOLDER_VALUE ? [where] : [];
+    return value.includes(PLACEHOLDER_VALUE) ? [where] : [];
   }
   if (Array.isArray(value)) {
     return value.flatMap((item: unknown, index) => placeholderPaths(item, `${where}[${String(index)}]`));
@@ -143,7 +143,10 @@ function placeholderPaths(value: unknown, where: string): string[] {
   return [];
 }
 
-/** Where a ticket file still holds `CHANGE_ME`, as field paths (`criterios[0].descricao`); none when it is filled. */
+/**
+ * Where a ticket file still holds `CHANGE_ME`, alone or inside a text (`"Dado CHANGE_ME"`), as field paths
+ * (`criterios[0].descricao[0]`); none when it is filled.
+ */
 export function ticketPlaceholders(file: string): string[] {
   return placeholderPaths(readJsonFile(file), '');
 }

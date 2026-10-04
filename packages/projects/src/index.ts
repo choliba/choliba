@@ -79,5 +79,6 @@ export {
   type NewTicketOptions,
   type TicketTemplate,
 } from './ticket-template';
+export { criteriaProblems, ticketCriteriaProblems } from './ticket-criteria';
 export { findReadme, readText, readmeSummary } from './readme';
 export { runProjectsCli, type ProjectsCliDeps } from './cli';
