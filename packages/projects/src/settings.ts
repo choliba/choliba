@@ -37,7 +37,7 @@ export interface ProjectSettingsConfig {
 /** Everything a run needs to know about a project, read and checked once. */
 export interface ProjectSettings {
   readonly project: string;
-  /** `{PROJECTS_DIR}/{projeto}`. */
+  /** `{CHOL_PROJECTS_DIR}/{projeto}`. */
   readonly projectPath: string;
   readonly config: ProjectSettingsConfig;
   /** The active environment: `config.environment`, else the one with `default: true`, else the first. */

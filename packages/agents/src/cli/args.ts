@@ -87,7 +87,7 @@ export const RUN_FLAGS: readonly RunFlagDefinition[] = [
   {
     name: '--project',
     valueName: 'name',
-    description: 'Projeto em PROJECTS_DIR sobre o qual o agente age; validado antes de chamar o provider',
+    description: 'Projeto em CHOL_PROJECTS_DIR sobre o qual o agente age; validado antes de chamar o provider',
   },
   {
     name: '--type',

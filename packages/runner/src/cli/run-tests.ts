@@ -74,7 +74,7 @@ export interface RunTestsResult {
 
 /**
  * `NODE_PATH` with the `node_modules` that `@playwright/test` resolves from, seen from the runner, in
- * front of `current`. A spec imports `@playwright/test`, but a project's folder (PROJECTS_DIR may be
+ * front of `current`. A spec imports `@playwright/test`, but a project's folder (CHOL_PROJECTS_DIR may be
  * anywhere) has no `node_modules` of its own: this is where it finds the one the runner uses. When the
  * runner cannot resolve it either, `current` is kept as is.
  */
@@ -146,13 +146,13 @@ export function testsCliSpec(
   };
 }
 
-/** What completion reads from PROJECTS_DIR; nothing when the workspace's locations cannot be read. */
+/** What completion reads from CHOL_PROJECTS_DIR; nothing when the workspace's locations cannot be read. */
 function fromProjects(
   loadLocations: () => ProjectLocations,
   read: (projectsDir: string) => readonly string[],
 ): readonly string[] {
   try {
-    return read(loadLocations().PROJECTS_DIR);
+    return read(loadLocations().CHOL_PROJECTS_DIR);
   } catch {
     return [];
   }
@@ -338,7 +338,7 @@ export async function runTestsCli(options: RunTestsOptions): Promise<RunTestsRes
     writeStdout(`${formatHelp(spec)}\n`);
     return { exitCode: 0 };
   }
-  // The Playwright config runs in its own process: it finds the workspace (its .env, PROJECTS_DIR) here.
+  // The Playwright config runs in its own process: it finds the workspace (its .env, CHOL_PROJECTS_DIR) here.
   const baseEnv: NodeJS.ProcessEnv = { ...process.env, [WORKSPACE_ENV]: options.monorepoRoot, ...options.env };
   const nodePath = playwrightNodePath(options.packageRoot, baseEnv['NODE_PATH']);
   const env: NodeJS.ProcessEnv = nodePath === undefined ? baseEnv : { ...baseEnv, NODE_PATH: nodePath };
@@ -355,7 +355,7 @@ export async function runTestsCli(options: RunTestsOptions): Promise<RunTestsRes
     });
 
   const locations = loadConfig(options.monorepoRoot, env);
-  const projectsDir = locations.PROJECTS_DIR;
+  const projectsDir = locations.CHOL_PROJECTS_DIR;
   let hasCustomResultsDir = 0;
 
   const cleanup = (): void => {

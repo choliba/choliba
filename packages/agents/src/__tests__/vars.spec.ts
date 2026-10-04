@@ -50,8 +50,8 @@ describe('AGENT_VARS', () => {
       'CHOL_SKILLS_DIR',
       'CHOL_MCPS_DIR',
       'CHOL_GLOBAL_DIR',
-      'PROJECTS_DIR',
-      'TICKET_RUNS',
+      'CHOL_PROJECTS_DIR',
+      'CHOL_TICKET_RUNS',
       'PROJECT',
       'PROJECT_DIR',
       'APP_DIR',
@@ -124,7 +124,7 @@ describe('withExpandedVars', () => {
     const agent = loadAgent(FIXTURES, 'with-vars');
 
     for (const root of ['/p1', '/p2']) {
-      const expanded = withExpandedVars(agent, () => ({ PROJECTS_DIR: root }));
+      const expanded = withExpandedVars(agent, () => ({ CHOL_PROJECTS_DIR: root }));
       expect(expanded.sections.role).toBe(`Fixture de teste: grava tickets em ${root}.\n`);
       expect(expanded.permissions.allowWrite).toEqual([`${root}/*/tickets/`]);
       expect(expanded.permissions.allowRead).toEqual([`${root}/*/config.json`]);
@@ -174,7 +174,7 @@ describe('withExpandedVars', () => {
 
     expect(() => withExpandedVars(agent, () => ({ CHOL_GLOBAL_DIR: '/g' }))).toThrow(AgentVarsError);
     expect(() => withExpandedVars(agent, () => ({ CHOL_GLOBAL_DIR: '/g' }))).toThrow(
-      `${agent.sourcePath} usa \${PROJECTS_DIR}, sem valor (disponíveis: CHOL_GLOBAL_DIR).`,
+      `${agent.sourcePath} usa \${CHOL_PROJECTS_DIR}, sem valor (disponíveis: CHOL_GLOBAL_DIR).`,
     );
   });
 });

@@ -72,7 +72,7 @@ describe('runProjectsCli', () => {
       const stdout = fakeWritable();
       const stderr = fakeWritable();
       const deps = {
-        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: projectsDir }),
         templatesDir: '/templates',
         stdout,
         stderr,
@@ -117,7 +117,7 @@ describe('runProjectsCli', () => {
       const stdout = fakeWritable();
 
       const exitCode = runProjectsCli(['node', 'projects', 'tickets-folder', 'demo'], {
-        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: projectsDir }),
         templatesDir: '/templates',
         stdout,
         stderr: fakeWritable(),
@@ -131,7 +131,7 @@ describe('runProjectsCli', () => {
   it('returns usage when tickets-folder is missing the project', () => {
     const stderr = fakeWritable();
     const exitCode = runProjectsCli(['node', 'projects', 'tickets-folder'], {
-      loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: '/projects' }),
+      loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: '/projects' }),
       templatesDir: '/templates',
       stdout: fakeWritable(),
       stderr,
@@ -146,7 +146,7 @@ describe('runProjectsCli', () => {
       writeProject(projectsDir, 'demo');
       const stdout = fakeWritable();
       const exitCode = runProjectsCli(['node', 'projects', 'report-folder', 'demo'], {
-        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: projectsDir }),
         templatesDir: '/templates',
         stdout,
         stderr: fakeWritable(),
@@ -157,12 +157,12 @@ describe('runProjectsCli', () => {
     });
   });
 
-  it('prints the report folder using PROJECTS_DIR when TICKET_RUNS is unset', () => {
+  it('prints the report folder using CHOL_PROJECTS_DIR when CHOL_TICKET_RUNS is unset', () => {
     withProjectsDir((projectsDir) => {
       writeProject(projectsDir, 'demo');
       const stdout = fakeWritable();
       const exitCode = runProjectsCli(['node', 'projects', 'report-folder', 'demo', 'demo-T-01'], {
-        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: projectsDir }),
         templatesDir: '/templates',
         stdout,
         stderr: fakeWritable(),
@@ -178,7 +178,7 @@ describe('runProjectsCli', () => {
   it('prints playwright-report when report-folder has no project', () => {
     const stdout = fakeWritable();
     const exitCode = runProjectsCli(['node', 'projects', 'report-folder'], {
-      loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: '/projects' }),
+      loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: '/projects' }),
       templatesDir: '/templates',
       stdout,
       stderr: fakeWritable(),
@@ -188,13 +188,13 @@ describe('runProjectsCli', () => {
     expect(stdout.chunks.join('')).toBe('playwright-report\n');
   });
 
-  it('prints the report folder using TICKET_RUNS when set', () => {
+  it('prints the report folder using CHOL_TICKET_RUNS when set', () => {
     const stdout = fakeWritable();
     const exitCode = runProjectsCli(['node', 'projects', 'report-folder', 'demo', 'demo-01'], {
       loadConfig: () => ({
         CHOL_GLOBAL_DIR: '/global',
-        PROJECTS_DIR: '/projects',
-        TICKET_RUNS: '/runs',
+        CHOL_PROJECTS_DIR: '/projects',
+        CHOL_TICKET_RUNS: '/runs',
       }),
       templatesDir: '/templates',
       stdout,
@@ -217,7 +217,7 @@ describe('runProjectsCli', () => {
       const stdout = fakeWritable();
 
       const exitCode = runProjectsCli(['node', 'projects', 'ticket-specs', 'demo', 'demo-T-01'], {
-        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: projectsDir }),
         templatesDir: '/templates',
         stdout,
         stderr: fakeWritable(),
@@ -244,7 +244,7 @@ describe('runProjectsCli', () => {
       const stdout = fakeWritable();
 
       runProjectsCli(['node', 'projects', 'list-projects'], {
-        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: projectsDir }),
         templatesDir: '/templates',
         stdout,
         stderr: fakeWritable(),
@@ -273,7 +273,7 @@ describe('runProjectsCli', () => {
       const stdout = fakeWritable();
 
       runProjectsCli(['node', 'projects', 'list-projects'], {
-        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: projectsDir }),
         templatesDir: '/templates',
         stdout,
         stderr: fakeWritable(),
@@ -283,7 +283,7 @@ describe('runProjectsCli', () => {
 
       const withTickets = fakeWritable();
       runProjectsCli(['node', 'projects', 'list-projects', '--tickets'], {
-        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: projectsDir }),
         templatesDir: '/templates',
         stdout: withTickets,
         stderr: fakeWritable(),
@@ -297,7 +297,7 @@ describe('runProjectsCli', () => {
     withProjectsDir((projectsDir) => {
       const stdout = fakeWritable();
       runProjectsCli(['node', 'projects', 'list-projects'], {
-        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: projectsDir }),
         templatesDir: '/templates',
         stdout,
         stderr: fakeWritable(),
@@ -310,7 +310,7 @@ describe('runProjectsCli', () => {
   it('returns usage when command is missing', () => {
     const stderr = fakeWritable();
     const exitCode = runProjectsCli(['node', 'projects'], {
-      loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: '/projects' }),
+      loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: '/projects' }),
       templatesDir: '/templates',
       stdout: fakeWritable(),
       stderr,
@@ -323,7 +323,7 @@ describe('runProjectsCli', () => {
   it('returns usage when ticket-specs is missing arguments', () => {
     const stderr = fakeWritable();
     const exitCode = runProjectsCli(['node', 'projects', 'ticket-specs', 'demo'], {
-      loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: '/projects' }),
+      loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: '/projects' }),
       templatesDir: '/templates',
       stdout: fakeWritable(),
       stderr,
@@ -351,7 +351,7 @@ describe('runProjectsCli', () => {
   it('writes parse errors to stderr and returns 1', () => {
     const stderr = fakeWritable();
     const exitCode = runProjectsCli(['node', 'projects', 'unknown-command'], {
-      loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: '/projects' }),
+      loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: '/projects' }),
       templatesDir: '/templates',
       stdout: fakeWritable(),
       stderr,
@@ -368,7 +368,7 @@ describe('runProjectsCli', () => {
           const stdout = fakeWritable();
 
           const exitCode = runProjectsCli(['node', 'projects', 'create-project', 'demo', '--app-dir', appDir], {
-            loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: projectsDir }),
+            loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: projectsDir }),
             templatesDir,
             stdout,
             stderr: fakeWritable(),
@@ -400,7 +400,7 @@ describe('runProjectsCli', () => {
         const create = (project: string, appDir: string): string => {
           const stdout = fakeWritable();
           runProjectsCli(['node', 'projects', 'create-project', project, '--app-dir', appDir], {
-            loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: projectsDir }),
+            loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: projectsDir }),
             templatesDir,
             stdout,
             stderr: fakeWritable(),
@@ -427,7 +427,7 @@ describe('runProjectsCli', () => {
         const run = (...args: string[]): string => {
           const stderr = fakeWritable();
           const exitCode = runProjectsCli(['node', 'projects', 'create-project', 'demo', ...args], {
-            loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: projectsDir }),
+            loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: projectsDir }),
             templatesDir,
             stdout: fakeWritable(),
             stderr,
@@ -459,7 +459,7 @@ describe('runProjectsCli', () => {
             os.tmpdir(),
           ],
           {
-            loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: projectsDir }),
+            loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: projectsDir }),
             templatesDir,
             stdout: fakeWritable(),
             stderr: fakeWritable(),
@@ -491,7 +491,7 @@ describe('runProjectsCli', () => {
               'http://x',
             ],
             {
-              loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: projectsDir }),
+              loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: projectsDir }),
               templatesDir,
               cwd: path.dirname(appDir),
               stdout,
@@ -518,7 +518,7 @@ describe('runProjectsCli', () => {
         runProjectsCli(
           ['node', 'projects', 'create-project', '--app-dir', os.tmpdir(), '--base-url', 'http://x', 'nome'],
           {
-            loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: projectsDir }),
+            loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: projectsDir }),
             templatesDir,
             stdout,
             stderr: fakeWritable(),
@@ -533,7 +533,7 @@ describe('runProjectsCli', () => {
   it('returns usage when --base-url has no value', () => {
     const stderr = fakeWritable();
     const exitCode = runProjectsCli(['node', 'projects', 'create-project', 'demo', '--base-url'], {
-      loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: '/projects' }),
+      loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: '/projects' }),
       templatesDir: '/templates',
       stdout: fakeWritable(),
       stderr,
@@ -550,7 +550,7 @@ describe('runProjectsCli', () => {
         const stderr = fakeWritable();
 
         const exitCode = runProjectsCli(['node', 'projects', 'create-project', 'demo', '--app-dir', os.tmpdir()], {
-          loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: projectsDir }),
+          loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: projectsDir }),
           templatesDir,
           stdout: fakeWritable(),
           stderr,
@@ -567,7 +567,7 @@ describe('runProjectsCli', () => {
       const stderr = fakeWritable();
 
       const exitCode = runProjectsCli(['node', 'projects', 'create-project', 'demo', '--app-dir', os.tmpdir()], {
-        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: projectsDir }),
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: projectsDir }),
         templatesDir: path.join(projectsDir, 'sem-template'),
         stdout: fakeWritable(),
         stderr,
@@ -580,7 +580,7 @@ describe('runProjectsCli', () => {
 });
 
 describe('runProjectsCli — help and completion', () => {
-  function run(args: string[], loadConfig: () => { CHOL_GLOBAL_DIR: string; PROJECTS_DIR: string }) {
+  function run(args: string[], loadConfig: () => { CHOL_GLOBAL_DIR: string; CHOL_PROJECTS_DIR: string }) {
     const stdout = fakeWritable();
     const stderr = fakeWritable();
     const exitCode = runProjectsCli(['node', 'projects', ...args], {
@@ -592,7 +592,7 @@ describe('runProjectsCli — help and completion', () => {
     return { exitCode, out: stdout.chunks.join(''), err: stderr.chunks.join('') };
   }
 
-  const config = (projectsDir: string) => () => ({ CHOL_GLOBAL_DIR: '/global', PROJECTS_DIR: projectsDir });
+  const config = (projectsDir: string) => () => ({ CHOL_GLOBAL_DIR: '/global', CHOL_PROJECTS_DIR: projectsDir });
   const broken = () => {
     throw new Error('no config');
   };
@@ -683,7 +683,7 @@ describe('runProjectsCli — help and completion', () => {
 
   it('describes the CLI or the command the words select', () => {
     expect(run(['__describe'], broken).out).toBe(
-      'Resolve pastas e arquivos dos projetos Playwright em PROJECTS_DIR.\n',
+      'Resolve pastas e arquivos dos projetos Playwright em CHOL_PROJECTS_DIR.\n',
     );
     expect(run(['__describe', 'create-project'], broken).out).toBe('Cria um projeto novo a partir do template\n');
   });

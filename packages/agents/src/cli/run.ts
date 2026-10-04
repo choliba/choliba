@@ -27,9 +27,9 @@ import {
   CHOL_MCPS_DIR,
   CHOL_ROOT,
   CHOL_SKILLS_DIR,
-  PROJECTS_DIR,
+  CHOL_PROJECTS_DIR,
   RUNS_DIR,
-  TICKET_RUNS,
+  CHOL_TICKET_RUNS,
 } from '@choliba/core/config';
 import { listProjectNames, listTicketKeys, loadProjectSettings, resolveLocations } from '@choliba/projects';
 import { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '../workspace-dirs';
@@ -130,7 +130,7 @@ function formatAgentDetail(command: CommandDefinition, agent: AgentDefinition): 
 }
 
 function projectsDir(deps: RunAgentsCliDeps): string {
-  return resolveLocations(deps.repoRoot, deps.config, () => undefined).PROJECTS_DIR;
+  return resolveLocations(deps.repoRoot, deps.config, () => undefined).CHOL_PROJECTS_DIR;
 }
 
 /** The projects `--project` completes to; none when the locations are not configured or the folder is missing. */
@@ -311,7 +311,7 @@ const LOCATION_VAR = new RegExp(`\\$\\{(${LOCATION_VARS.join('|')})\\}`);
  * The folders an agent's `agent.yaml` may name, so it never depends on the workspace
  * layout, each under the same name as in `.env`: `${CHOL_ROOT}` (the workspace root, always found by the
  * application), `${CHOL_AGENTS_DIR}`, `${CHOL_SKILLS_DIR}` and `${CHOL_MCPS_DIR}` always;
- * `${CHOL_GLOBAL_DIR}`, `${PROJECTS_DIR}` and `${TICKET_RUNS}` once CHOL_GLOBAL_DIR is configured;
+ * `${CHOL_GLOBAL_DIR}`, `${CHOL_PROJECTS_DIR}` and `${CHOL_TICKET_RUNS}` once CHOL_GLOBAL_DIR is configured;
  * `${PROJECT}`/`${PROJECT_DIR}`/`${APP_DIR}` (the active environment's application code) when the run has
  * a project — all from `@choliba/projects` and `workspace-dirs`, this CLI works out no path itself.
  */
@@ -334,8 +334,8 @@ function locationVars(
       ? {}
       : {
           [CHOL_GLOBAL_DIR]: locations.CHOL_GLOBAL_DIR,
-          [PROJECTS_DIR]: locations.PROJECTS_DIR,
-          ...(locations.TICKET_RUNS === undefined ? {} : { [TICKET_RUNS]: locations.TICKET_RUNS }),
+          [CHOL_PROJECTS_DIR]: locations.CHOL_PROJECTS_DIR,
+          ...(locations.CHOL_TICKET_RUNS === undefined ? {} : { [CHOL_TICKET_RUNS]: locations.CHOL_TICKET_RUNS }),
         }),
     ...projectVars,
   };

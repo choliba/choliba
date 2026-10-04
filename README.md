@@ -137,7 +137,7 @@ ele:
 - cria `.choliba/agents/`, `.choliba/skills/`, `.choliba/mcps/` e `projects/` na pasta de trabalho;
 - copia de um template `.env.example`, `.gitignore`, `.editorconfig` (largura e indentação, que o Prettier lê) e os
   arquivos do Prettier e do ESLint, e cria o `.env` inicial com `CHOL_GLOBAL_DIR` apontando para
-  `.cache/choliba` e `PROJECTS_DIR` para `projects/`, os dois da própria pasta de trabalho;
+  `.cache/choliba` e `CHOL_PROJECTS_DIR` para `projects/`, os dois da própria pasta de trabalho;
 - lista `choliba` em `trustedDependencies` do `package.json`, para que instalações futuras rodem o setup de novo
   sem pedir `--trust`;
 - liga o autocomplete do bash (veja abaixo).
@@ -184,7 +184,7 @@ Qualquer comando de agente aceita `--dry-run`, que mostra o que ele faria, na or
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | `choliba agents COMMAND [OPTIONS] [TASK...]` | Roda um agente da pasta de trabalho (`agents/<nome>/`)                                                    |
 | `choliba <agente>`                           | Atalho para `choliba agents <agente>`                                                                     |
-| `choliba projects COMMAND [ARGS]`            | Cria e lista projetos e tickets em `PROJECTS_DIR`                                                         |
+| `choliba projects COMMAND [ARGS]`            | Cria e lista projetos e tickets em `CHOL_PROJECTS_DIR`                                                    |
 | `choliba tests [PROJECT[:TICKET]] [OPTIONS]` | Roda os testes E2E dos projetos com o Playwright                                                          |
 | `choliba playwright-cli COMMAND [ARGS]`      | O navegador que os agentes usam (`playwright cli`)                                                        |
 | `choliba install <origem> [OPTIONS]`         | Instala um agente (com suas skills e MCPs), uma skill ou um MCP numa pasta, repositório git ou pacote npm |
@@ -397,25 +397,25 @@ permissions:
     read: ['${CHOL_GLOBAL_DIR}/shared/']
 ```
 
-#### `${PROJECTS_DIR}`
+#### `${CHOL_PROJECTS_DIR}`
 
-A pasta de todos os projetos. Existe com `CHOL_GLOBAL_DIR` no `.env`: `PROJECTS_DIR` do `.env`, ou
+A pasta de todos os projetos. Existe com `CHOL_GLOBAL_DIR` no `.env`: `CHOL_PROJECTS_DIR` do `.env`, ou
 `<CHOL_GLOBAL_DIR>/projects`.
 
 ```yaml
 permissions:
   deny:
-    read: ['${PROJECTS_DIR}/'] # nenhum projeto além do liberado por PROJECT_DIR
+    read: ['${CHOL_PROJECTS_DIR}/'] # nenhum projeto além do liberado por PROJECT_DIR
 ```
 
-#### `${TICKET_RUNS}`
+#### `${CHOL_TICKET_RUNS}`
 
-A pasta das execuções por ticket. Existe com `CHOL_GLOBAL_DIR` no `.env`, quando `TICKET_RUNS` está configurada.
+A pasta das execuções por ticket. Existe com `CHOL_GLOBAL_DIR` no `.env`, quando `CHOL_TICKET_RUNS` está configurada.
 
 ```yaml
 permissions:
   allow:
-    read: ['${TICKET_RUNS}/${TICKET}/']
+    read: ['${CHOL_TICKET_RUNS}/${TICKET}/']
 ```
 
 #### `${PROJECT}`
@@ -484,7 +484,7 @@ Consequências de usar uma variável:
 - `${PROJECT}`, `${PROJECT_DIR}`, `${APP_DIR}`, `${TICKET}` ou `${TICKET_FILE}` (ou declarar `ticket_types`) tornam
   `--project` obrigatório;
 - `${TICKET}` ou `${TICKET_FILE}` sem `ticket_types` impedem o agente de carregar;
-- `${CHOL_GLOBAL_DIR}`, `${PROJECTS_DIR}` e `${TICKET_RUNS}` só exigem o `.env` configurado se o agente usar uma
+- `${CHOL_GLOBAL_DIR}`, `${CHOL_PROJECTS_DIR}` e `${CHOL_TICKET_RUNS}` só exigem o `.env` configurado se o agente usar uma
   delas.
 
 **Não confundir** com as variáveis dos `.json` de MCP. Um `.choliba/mcps/<nome>.json` também usa `${NOME}`, mas
@@ -493,12 +493,12 @@ preenchido com **qualquer** variável do `.env`, sem catálogo:
 ```json
 {
   "command": "node",
-  "args": ["${MCP_APP_DIR}/dist/main.js"],
-  "env": { "LOG_DIR": "${MCP_APP_LOG_DIR}" }
+  "args": ["${CHOL_MCP_APP_DIR}/dist/main.js"],
+  "env": { "LOG_DIR": "${CHOL_MCP_APP_LOG_DIR}" }
 }
 ```
 
-`MCP_APP_DIR` e `MCP_APP_LOG_DIR` vêm do `.env`; não fazem parte do catálogo do `agent.yaml`.
+`CHOL_MCP_APP_DIR` e `CHOL_MCP_APP_LOG_DIR` vêm do `.env`; não fazem parte do catálogo do `agent.yaml`.
 
 ### Steps
 
@@ -731,7 +731,7 @@ Instalado:
   MCP mcp-app → .choliba/mcps/mcp-app.json
 
 Avisos:
-  - o MCP mcp-app usa ${MCP_APP_DIR}, ${MCP_APP_LOG_DIR}, sem valor no .env: defina antes de rodar o agente.
+  - o MCP mcp-app usa ${CHOL_MCP_APP_DIR}, ${CHOL_MCP_APP_LOG_DIR}, sem valor no .env: defina antes de rodar o agente.
 
 Confira com: choliba check
 ```
@@ -780,14 +780,14 @@ Instalado:
   MCP mcp-app → .choliba/mcps/mcp-app.json
 
 Avisos:
-  - o MCP mcp-app usa ${MCP_APP_DIR}, ${MCP_APP_LOG_DIR}, sem valor no .env: defina antes de rodar o agente.
+  - o MCP mcp-app usa ${CHOL_MCP_APP_DIR}, ${CHOL_MCP_APP_LOG_DIR}, sem valor no .env: defina antes de rodar o agente.
 
 Confira com: choliba check
 ```
 
 #### O servidor do MCP `mcp-app`
 
-O `mcp-app.json` só diz como iniciar o servidor: `node ${MCP_APP_DIR}/dist/main.js`. O servidor é outro
+O `mcp-app.json` só diz como iniciar o servidor: `node ${CHOL_MCP_APP_DIR}/dist/main.js`. O servidor é outro
 repositório, [jacksonbicalho/mcp-app](https://github.com/jacksonbicalho/mcp-app), que você clona e compila uma vez
 (os passos são os do README dele):
 
@@ -804,12 +804,12 @@ choliba, o `.env` diz onde ele está:
 
 ```sh
 # .env da pasta de trabalho
-MCP_APP_DIR=/home/voce/mcp-app
-MCP_APP_LOG_DIR=/home/voce/mcp-app/logs
+CHOL_MCP_APP_DIR=/home/voce/mcp-app
+CHOL_MCP_APP_LOG_DIR=/home/voce/mcp-app/logs
 ```
 
 Sem essas duas variáveis, o `check` marca o `product-owner` com `✗` e diz que o `mcp-app.json` usa
-`${MCP_APP_DIR}` e `${MCP_APP_LOG_DIR}` sem valor. Com elas, tudo carrega:
+`${CHOL_MCP_APP_DIR}` e `${CHOL_MCP_APP_LOG_DIR}` sem valor. Com elas, tudo carrega:
 
 ```
 $ bunx choliba check
@@ -896,16 +896,16 @@ Confira com: choliba check
 
 Quais destes valores o `agent.yaml` pode usar, e como: veja [Variáveis](#variáveis).
 
-| Variável                    | Para quê                                                                                                                                                                      |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CHOL_GLOBAL_DIR`           | Raiz dos artefatos das execuções e, sem `PROJECTS_DIR`, dos projetos (`CHOL_GLOBAL_DIR/projects`). Preenchida pelo `setup` com `.cache/choliba` da pasta de trabalho.         |
-| `PROJECTS_DIR`              | Onde ficam os projetos, se não em `CHOL_GLOBAL_DIR/projects`. Preenchida pelo `setup` com `projects/` da pasta de trabalho.                                                   |
-| `TICKET_RUNS`               | Opcional: raiz de `ticket-runs/`, se não for `PROJECTS_DIR`.                                                                                                                  |
-| `CHOL_AGENTS_DIR`           | Opcional: pasta dos agentes (padrão `.choliba/agents`).                                                                                                                       |
-| `CHOL_SKILLS_DIR`           | Opcional: pasta das skills (padrão `.choliba/skills`).                                                                                                                        |
-| `CHOL_MCPS_DIR`             | Opcional: pasta dos MCPs (padrão `.choliba/mcps`).                                                                                                                            |
-| `CHOL_AGENTS_PROVIDER`      | Opcional: provider padrão dos agentes (`auto`, `claude` ou `cursor`; padrão `auto`); um `--provider` na linha de comando ganha deste.                                         |
-| `PLAYWRIGHT_MCP_OUTPUT_DIR` | Opcional: onde o `choliba playwright-cli` grava os arquivos que nomeia sozinho ou que recebem `--filename` relativo (snapshots, screenshots); padrão `.cache/playwright-cli`. |
+| Variável                         | Para quê                                                                                                                                                                      |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CHOL_GLOBAL_DIR`                | Raiz dos artefatos das execuções e, sem `CHOL_PROJECTS_DIR`, dos projetos (`CHOL_GLOBAL_DIR/projects`). Preenchida pelo `setup` com `.cache/choliba` da pasta de trabalho.    |
+| `CHOL_PROJECTS_DIR`              | Onde ficam os projetos, se não em `CHOL_GLOBAL_DIR/projects`. Preenchida pelo `setup` com `projects/` da pasta de trabalho.                                                   |
+| `CHOL_TICKET_RUNS`               | Opcional: raiz de `ticket-runs/`, se não for `CHOL_PROJECTS_DIR`.                                                                                                             |
+| `CHOL_AGENTS_DIR`                | Opcional: pasta dos agentes (padrão `.choliba/agents`).                                                                                                                       |
+| `CHOL_SKILLS_DIR`                | Opcional: pasta das skills (padrão `.choliba/skills`).                                                                                                                        |
+| `CHOL_MCPS_DIR`                  | Opcional: pasta dos MCPs (padrão `.choliba/mcps`).                                                                                                                            |
+| `CHOL_AGENTS_PROVIDER`           | Opcional: provider padrão dos agentes (`auto`, `claude` ou `cursor`; padrão `auto`); um `--provider` na linha de comando ganha deste.                                         |
+| `CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR` | Opcional: onde o `choliba playwright-cli` grava os arquivos que nomeia sozinho ou que recebem `--filename` relativo (snapshots, screenshots); padrão `.cache/playwright-cli`. |
 
 ## Autocomplete
 

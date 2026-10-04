@@ -7,8 +7,8 @@ import {
   CHOL_MCPS_DIR,
   CHOL_ROOT,
   CHOL_SKILLS_DIR,
-  PROJECTS_DIR,
-  TICKET_RUNS,
+  CHOL_PROJECTS_DIR,
+  CHOL_TICKET_RUNS,
 } from '@choliba/core/config';
 
 const VAR_PATTERN = /\$\{([A-Z_][A-Z0-9_]*)\}/g;
@@ -25,7 +25,7 @@ export const PROJECT_VARS: readonly string[] = ['PROJECT', 'PROJECT_DIR', 'APP_D
 export const TICKET_VARS: readonly string[] = ['TICKET', 'TICKET_FILE'];
 
 /** The location variables: they only have a value once `CHOL_GLOBAL_DIR` is configured. */
-export const LOCATION_VARS: readonly string[] = [CHOL_GLOBAL_DIR, PROJECTS_DIR, TICKET_RUNS];
+export const LOCATION_VARS: readonly string[] = [CHOL_GLOBAL_DIR, CHOL_PROJECTS_DIR, CHOL_TICKET_RUNS];
 
 /**
  * Every `${NAME}` an `agent.yaml` may use (the README's "Variáveis" lists them, with an example each).

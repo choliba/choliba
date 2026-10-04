@@ -1,18 +1,24 @@
 import path from 'node:path';
 
-import { CHOL_GLOBAL_DIR, PROJECTS_DIR, PROJECTS_SUBDIR, TICKET_RUNS, loadRepoConfig } from '@choliba/core/config';
+import {
+  CHOL_GLOBAL_DIR,
+  CHOL_PROJECTS_DIR,
+  PROJECTS_SUBDIR,
+  CHOL_TICKET_RUNS,
+  loadRepoConfig,
+} from '@choliba/core/config';
 
 /**
  * Where the projects under test live, resolved from the monorepo's `.env` (and the shell, which wins):
- * `CHOL_GLOBAL_DIR`, `PROJECTS_DIR` (default `{CHOL_GLOBAL_DIR}/projects`) and the optional `TICKET_RUNS`. Every other
+ * `CHOL_GLOBAL_DIR`, `CHOL_PROJECTS_DIR` (default `{CHOL_GLOBAL_DIR}/projects`) and the optional `CHOL_TICKET_RUNS`. Every other
  * project path (a project, its tickets, its reports) is derived from these by this package.
  */
 export class LocationsError extends Error {}
 
 export interface ProjectLocations {
   CHOL_GLOBAL_DIR: string;
-  PROJECTS_DIR: string;
-  TICKET_RUNS?: string;
+  CHOL_PROJECTS_DIR: string;
+  CHOL_TICKET_RUNS?: string;
 }
 
 export function resolveProjectsDir(globalDir: string, projectsDirOverride?: string): string {
@@ -29,12 +35,12 @@ function pickLocations(config: Readonly<Record<string, string | undefined>>): Pr
     );
   }
 
-  const projectsDir = resolveProjectsDir(globalDir, config[PROJECTS_DIR]);
-  const ticketRuns = config[TICKET_RUNS]?.trim();
+  const projectsDir = resolveProjectsDir(globalDir, config[CHOL_PROJECTS_DIR]);
+  const ticketRuns = config[CHOL_TICKET_RUNS]?.trim();
   return {
     CHOL_GLOBAL_DIR: globalDir,
-    PROJECTS_DIR: projectsDir,
-    ...(ticketRuns ? { TICKET_RUNS: ticketRuns } : {}),
+    CHOL_PROJECTS_DIR: projectsDir,
+    ...(ticketRuns ? { CHOL_TICKET_RUNS: ticketRuns } : {}),
   };
 }
 
@@ -54,22 +60,26 @@ export function readAppliedLocations(
   env: Readonly<Record<string, string | undefined>> = process.env,
 ): ProjectLocations {
   const globalDir = env[CHOL_GLOBAL_DIR]?.trim();
-  const projectsDir = env[PROJECTS_DIR]?.trim();
+  const projectsDir = env[CHOL_PROJECTS_DIR]?.trim();
   if (!globalDir || !projectsDir) {
     throw new LocationsError(
-      `${CHOL_GLOBAL_DIR}/${PROJECTS_DIR} não definidas no ambiente — aplique as localizações (applyLocations) antes.`,
+      `${CHOL_GLOBAL_DIR}/${CHOL_PROJECTS_DIR} não definidas no ambiente — aplique as localizações (applyLocations) antes.`,
     );
   }
-  const ticketRuns = env[TICKET_RUNS]?.trim();
-  return { CHOL_GLOBAL_DIR: globalDir, PROJECTS_DIR: projectsDir, ...(ticketRuns ? { TICKET_RUNS: ticketRuns } : {}) };
+  const ticketRuns = env[CHOL_TICKET_RUNS]?.trim();
+  return {
+    CHOL_GLOBAL_DIR: globalDir,
+    CHOL_PROJECTS_DIR: projectsDir,
+    ...(ticketRuns ? { CHOL_TICKET_RUNS: ticketRuns } : {}),
+  };
 }
 
 export function applyLocations(config: ProjectLocations): void {
   process.env[CHOL_GLOBAL_DIR] = config.CHOL_GLOBAL_DIR;
-  process.env[PROJECTS_DIR] = config.PROJECTS_DIR;
-  if (config.TICKET_RUNS) {
-    process.env[TICKET_RUNS] = config.TICKET_RUNS;
+  process.env[CHOL_PROJECTS_DIR] = config.CHOL_PROJECTS_DIR;
+  if (config.CHOL_TICKET_RUNS) {
+    process.env[CHOL_TICKET_RUNS] = config.CHOL_TICKET_RUNS;
   } else {
-    Reflect.deleteProperty(process.env, TICKET_RUNS);
+    Reflect.deleteProperty(process.env, CHOL_TICKET_RUNS);
   }
 }

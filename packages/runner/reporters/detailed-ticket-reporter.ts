@@ -29,7 +29,7 @@ export default class DetailedTicketReporter implements Reporter {
 
   constructor(options: TicketInfo = {}) {
     this.ticketInfo = options;
-    this.projectsRoot = readAppliedLocations().PROJECTS_DIR;
+    this.projectsRoot = readAppliedLocations().CHOL_PROJECTS_DIR;
     this.liveMode = isStdoutTty();
     this.liveRegion = new LiveRegion();
   }

@@ -61,10 +61,10 @@ export interface FillTicketTestsOutput {
 
 export function fillTicketTests(
   target: string,
-  locations: Pick<ProjectLocations, 'PROJECTS_DIR' | 'TICKET_RUNS'>,
+  locations: Pick<ProjectLocations, 'CHOL_PROJECTS_DIR' | 'CHOL_TICKET_RUNS'>,
   output: FillTicketTestsOutput = {},
 ): void {
-  const projectsDir = locations.PROJECTS_DIR;
+  const projectsDir = locations.CHOL_PROJECTS_DIR;
   const stdout = output.stdout ?? {
     write: (chunk) => {
       writeStdout(chunk);

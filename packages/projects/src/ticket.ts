@@ -96,12 +96,12 @@ export function ticketJsonPath(projectsDir: string, project: string, ticket: str
   return ticketFilePath(projectsDir, project, canonicalizeSuffix(projectsDir, project, ticketSuffix(project, ticket)));
 }
 
-/** Root of `ticket-runs/`: `TICKET_RUNS` when set (and not blank), `PROJECTS_DIR` otherwise. */
+/** Root of `ticket-runs/`: `CHOL_TICKET_RUNS` when set (and not blank), `CHOL_PROJECTS_DIR` otherwise. */
 export function resolveTicketRunsRoot(
-  locations: Pick<ProjectLocations, 'PROJECTS_DIR'> & { readonly TICKET_RUNS?: string | undefined },
+  locations: Pick<ProjectLocations, 'CHOL_PROJECTS_DIR'> & { readonly CHOL_TICKET_RUNS?: string | undefined },
 ): string {
-  const override = locations.TICKET_RUNS?.trim();
-  return override === undefined || override === '' ? locations.PROJECTS_DIR : override;
+  const override = locations.CHOL_TICKET_RUNS?.trim();
+  return override === undefined || override === '' ? locations.CHOL_PROJECTS_DIR : override;
 }
 
 export function resolveTicketRunsFolder(ticketRunsRoot: string, project: string, ticket?: string): string {

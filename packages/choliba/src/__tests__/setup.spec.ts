@@ -81,7 +81,7 @@ describe('scaffoldWorkspace', () => {
       ]);
       expect(fs.existsSync(path.join(root, '.choliba', 'mcps', '.gitkeep'))).toBe(true);
       const env = fs.readFileSync(path.join(root, '.env'), 'utf8');
-      expect(env).toContain(`\nPROJECTS_DIR=${path.join(root, 'projects')}\n`);
+      expect(env).toContain(`\nCHOL_PROJECTS_DIR=${path.join(root, 'projects')}\n`);
       // The agents' folders are the defaults: the .env names them only as a commented example.
       expect(env).toContain('\n# CHOL_SKILLS_DIR=.choliba/skills\n');
       expect(env).not.toMatch(/^CHOL_(AGENTS|SKILLS|MCPS)_DIR=/m);
@@ -244,9 +244,9 @@ describe('trustPackage', () => {
 });
 
 describe('initialEnv', () => {
-  it('points PROJECTS_DIR at projects and CHOL_GLOBAL_DIR at .cache/choliba, leaving the rest as it is', () => {
-    expect(initialEnv('# a\nCHOL_GLOBAL_DIR=\nPROJECTS_DIR=\n# CHOL_GLOBAL_DIR=x\nB=1\n', '/w')).toBe(
-      `# a\nCHOL_GLOBAL_DIR=${path.join('/w', '.cache', 'choliba')}\nPROJECTS_DIR=${path.join('/w', 'projects')}\n# CHOL_GLOBAL_DIR=x\nB=1\n`,
+  it('points CHOL_PROJECTS_DIR at projects and CHOL_GLOBAL_DIR at .cache/choliba, leaving the rest as it is', () => {
+    expect(initialEnv('# a\nCHOL_GLOBAL_DIR=\nCHOL_PROJECTS_DIR=\n# CHOL_GLOBAL_DIR=x\nB=1\n', '/w')).toBe(
+      `# a\nCHOL_GLOBAL_DIR=${path.join('/w', '.cache', 'choliba')}\nCHOL_PROJECTS_DIR=${path.join('/w', 'projects')}\n# CHOL_GLOBAL_DIR=x\nB=1\n`,
     );
   });
 });

@@ -94,7 +94,7 @@ function describeCreated(created: CreatedProject, appDir: string): string {
 export function runProjectsCli(argv: readonly string[], deps: ProjectsCliDeps): number {
   const args = argv.slice(2);
   const command = args[0];
-  const spec = projectsCliSpec(() => deps.loadConfig().PROJECTS_DIR);
+  const spec = projectsCliSpec(() => deps.loadConfig().CHOL_PROJECTS_DIR);
 
   if (command === '__complete') {
     const output = formatSuggestions(complete(spec, args.slice(1)));
@@ -121,14 +121,14 @@ export function runProjectsCli(argv: readonly string[], deps: ProjectsCliDeps): 
       case 'tickets-folder': {
         const project = args[1];
         if (!project) return failUsage(deps, 'Missing project for tickets-folder.');
-        const { PROJECTS_DIR: projectsDir } = deps.loadConfig();
+        const { CHOL_PROJECTS_DIR: projectsDir } = deps.loadConfig();
         deps.stdout.write(`${resolveTicketsFolder(projectsDir, project)}\n`);
         return 0;
       }
       case 'check-project': {
         const project = args[1];
         if (!project) return failUsage(deps, 'Missing project for check-project.');
-        const { config, environment } = loadProjectSettings(deps.loadConfig().PROJECTS_DIR, project);
+        const { config, environment } = loadProjectSettings(deps.loadConfig().CHOL_PROJECTS_DIR, project);
         deps.stdout.write(
           `Projeto "${project}" (${config.name}) pronto: ambiente ${environment.nome}, ${environment.baseURL}\n`,
         );
@@ -149,7 +149,7 @@ export function runProjectsCli(argv: readonly string[], deps: ProjectsCliDeps): 
         const project = args[1];
         const ticket = args[2];
         if (!project || !ticket) return failUsage(deps, 'Missing project or ticket for ticket-specs.');
-        const { PROJECTS_DIR: projectsDir } = deps.loadConfig();
+        const { CHOL_PROJECTS_DIR: projectsDir } = deps.loadConfig();
         for (const spec of resolveTicketSpecFiles(projectsDir, project, ticket)) {
           deps.stdout.write(`${spec}\n`);
         }
@@ -157,7 +157,7 @@ export function runProjectsCli(argv: readonly string[], deps: ProjectsCliDeps): 
       }
       case 'list-projects': {
         const withTickets = args.includes('--tickets');
-        const { PROJECTS_DIR: projectsDir } = deps.loadConfig();
+        const { CHOL_PROJECTS_DIR: projectsDir } = deps.loadConfig();
         const projects = listProjectNames(projectsDir);
         if (projects.length === 0) {
           deps.stdout.write(`No project found in ${projectsDir}.\n`);
@@ -179,7 +179,7 @@ export function runProjectsCli(argv: readonly string[], deps: ProjectsCliDeps): 
         const project = args[1];
         const type = args[2];
         if (!project || !type) return failUsage(deps, 'Missing project or type for create-ticket.');
-        const { PROJECTS_DIR: projectsDir } = deps.loadConfig();
+        const { CHOL_PROJECTS_DIR: projectsDir } = deps.loadConfig();
         const settings = loadProjectSettings(projectsDir, project);
         const created = createTicket(projectsDir, project, type, ticketTemplatesDir(), {
           environment: settings.environment.nome,
@@ -199,7 +199,7 @@ export function runProjectsCli(argv: readonly string[], deps: ProjectsCliDeps): 
         // named after that folder.
         const appDir = path.resolve(deps.cwd ?? process.cwd(), flags.appDir.value);
         const project = positional(args, ['--base-url', '--app-dir']) ?? path.basename(appDir);
-        const { PROJECTS_DIR: projectsDir } = deps.loadConfig();
+        const { CHOL_PROJECTS_DIR: projectsDir } = deps.loadConfig();
         const created = createProject(projectsDir, project, deps.templatesDir, {
           appDir,
           ...(flags.baseUrl.value === undefined ? {} : { baseUrl: flags.baseUrl.value }),

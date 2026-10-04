@@ -46,7 +46,7 @@ export function projectsCliSpec(projectsDir: () => string): CommandSpec {
 
   return {
     usage: `${PROGRAM_NAME} COMMAND [ARGS]`,
-    description: 'Resolve pastas e arquivos dos projetos Playwright em PROJECTS_DIR.',
+    description: 'Resolve pastas e arquivos dos projetos Playwright em CHOL_PROJECTS_DIR.',
     commands: () => [
       {
         name: 'tickets-folder',

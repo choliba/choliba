@@ -85,7 +85,7 @@ describe('fillTicketTests', () => {
 
   it('rejects invalid target format', () => {
     expect(() => {
-      fillTicketTests('invalid', { PROJECTS_DIR: '/projects' });
+      fillTicketTests('invalid', { CHOL_PROJECTS_DIR: '/projects' });
     }).toThrow('use <project>:<ticket>');
   });
 
@@ -99,7 +99,7 @@ describe('fillTicketTests', () => {
       fs.writeFileSync(path.join(reportDir, 'results.json'), JSON.stringify({ suites: [] }));
 
       const stdout = fakeWritable();
-      fillTicketTests('demo:T-01', { PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }, { stdout });
+      fillTicketTests('demo:T-01', { CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: projectsDir }, { stdout });
 
       expect(stdout.chunks.join('')).toContain('Nada novo');
     });
@@ -132,7 +132,7 @@ describe('fillTicketTests', () => {
       );
 
       const stdout = fakeWritable();
-      fillTicketTests('demo:T-01', { PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }, { stdout });
+      fillTicketTests('demo:T-01', { CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: projectsDir }, { stdout });
 
       const saved = JSON.parse(fs.readFileSync(ticketPath, 'utf-8')) as {
         criterios: { id: string; testes?: string[] }[];
@@ -163,7 +163,7 @@ describe('fillTicketTests', () => {
       );
       const stdout = fakeWritable();
 
-      fillTicketTests('demo:T-01', { PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }, { stdout });
+      fillTicketTests('demo:T-01', { CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: projectsDir }, { stdout });
 
       expect(stdout.chunks.join('')).toContain('Nada novo');
     });
@@ -190,7 +190,7 @@ describe('fillTicketTests', () => {
       );
 
       expect(() => {
-        fillTicketTests('demo:T-01', { PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir });
+        fillTicketTests('demo:T-01', { CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: projectsDir });
       }).not.toThrow();
     });
   });
@@ -216,7 +216,7 @@ describe('fillTicketTests', () => {
       );
 
       const stderr = fakeWritable();
-      fillTicketTests('demo:T-01', { PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }, { stderr });
+      fillTicketTests('demo:T-01', { CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: projectsDir }, { stderr });
 
       expect(stderr.chunks.join('')).toContain('colidiu');
     });
@@ -232,7 +232,7 @@ describe('fillTicketTests', () => {
       fs.writeFileSync(path.join(reportDir, 'results.json'), JSON.stringify({ suites: [] }));
 
       expect(() => {
-        fillTicketTests('demo:T-01', { PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir });
+        fillTicketTests('demo:T-01', { CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: projectsDir });
       }).not.toThrow();
     });
   });
@@ -240,11 +240,11 @@ describe('fillTicketTests', () => {
   it('throws when ticket or results.json is missing', () => {
     withFixture((projectsDir) => {
       expect(() => {
-        fillTicketTests('demo:MISSING', { PROJECTS_DIR: projectsDir });
+        fillTicketTests('demo:MISSING', { CHOL_PROJECTS_DIR: projectsDir });
       }).toThrow('Ticket não encontrado');
       fs.writeFileSync(path.join(projectsDir, 'demo', 'tickets', 'T-01.json'), '{}');
       expect(() => {
-        fillTicketTests('demo:T-01', { PROJECTS_DIR: projectsDir });
+        fillTicketTests('demo:T-01', { CHOL_PROJECTS_DIR: projectsDir });
       }).toThrow('Nenhum results.json');
     });
   });
@@ -266,7 +266,7 @@ describe('fillTicketTests', () => {
       );
       const stderr = fakeWritable();
 
-      fillTicketTests('demo:T-01', { PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }, { stderr });
+      fillTicketTests('demo:T-01', { CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: projectsDir }, { stderr });
 
       const saved = JSON.parse(fs.readFileSync(ticketPath, 'utf-8')) as {
         criterios: { id: string; testes?: string[] }[];
@@ -291,7 +291,7 @@ describe('fillTicketTests', () => {
         }),
       );
 
-      fillTicketTests('demo:T-01', { PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir });
+      fillTicketTests('demo:T-01', { CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: projectsDir });
 
       const saved = JSON.parse(fs.readFileSync(ticketPath, 'utf-8')) as {
         criterios: { id: string; testes?: string[] }[];
@@ -300,7 +300,7 @@ describe('fillTicketTests', () => {
     });
   });
 
-  it('uses projectsDir when TICKET_RUNS is blank', () => {
+  it('uses projectsDir when CHOL_TICKET_RUNS is blank', () => {
     withFixture((projectsDir, reportDir) => {
       const ticketPath = path.join(projectsDir, 'demo', 'tickets', 'T-01.json');
       fs.writeFileSync(
@@ -310,7 +310,7 @@ describe('fillTicketTests', () => {
       fs.writeFileSync(path.join(reportDir, 'results.json'), JSON.stringify({ suites: [] }));
       const stdout = fakeWritable();
 
-      fillTicketTests('demo:T-01', { PROJECTS_DIR: projectsDir, TICKET_RUNS: '   ' }, { stdout });
+      fillTicketTests('demo:T-01', { CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: '   ' }, { stdout });
 
       expect(stdout.chunks.join('')).toContain('Nada novo');
     });
@@ -330,7 +330,7 @@ describe('fillTicketTests', () => {
       );
       const stdout = fakeWritable();
 
-      fillTicketTests('demo:T-01', { PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }, { stdout });
+      fillTicketTests('demo:T-01', { CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: projectsDir }, { stdout });
 
       expect(stdout.chunks.join('')).toContain('Nada novo');
     });
@@ -353,7 +353,7 @@ describe('fillTicketTests', () => {
       );
       const stdout = fakeWritable();
 
-      fillTicketTests('demo:T-01', { PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }, { stdout });
+      fillTicketTests('demo:T-01', { CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: projectsDir }, { stdout });
 
       expect(stdout.chunks.join('')).toContain('Nada novo');
     });
@@ -380,7 +380,7 @@ describe('fillTicketTests', () => {
       );
       const stdout = fakeWritable();
 
-      fillTicketTests('demo:T-01', { PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }, { stdout });
+      fillTicketTests('demo:T-01', { CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: projectsDir }, { stdout });
 
       const saved = JSON.parse(fs.readFileSync(ticketPath, 'utf-8')) as {
         criterios: { id: string; testes?: string[] }[];
@@ -414,7 +414,7 @@ describe('fillTicketTests', () => {
       );
       const stderr = fakeWritable();
 
-      fillTicketTests('demo:T-01', { PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }, { stderr });
+      fillTicketTests('demo:T-01', { CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: projectsDir }, { stderr });
 
       expect(stderr.chunks.join('')).toContain('colidiu');
     });
@@ -437,7 +437,7 @@ describe('fillTicketTests', () => {
       );
       const stdout = fakeWritable();
 
-      fillTicketTests('demo:T-01', { PROJECTS_DIR: projectsDir }, { stdout, stderr: fakeWritable() });
+      fillTicketTests('demo:T-01', { CHOL_PROJECTS_DIR: projectsDir }, { stdout, stderr: fakeWritable() });
 
       const saved = JSON.parse(fs.readFileSync(ticketPath, 'utf-8')) as {
         criterios: { id: string; testes?: string[] }[];
@@ -453,7 +453,7 @@ describe('fillTicketTests', () => {
       fs.writeFileSync(path.join(reportDir, 'results.json'), JSON.stringify({ suites: [] }));
       const stdout = fakeWritable();
 
-      fillTicketTests('demo:T-01', { PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }, { stdout });
+      fillTicketTests('demo:T-01', { CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: projectsDir }, { stdout });
 
       expect(stdout.chunks.join('')).toContain('Nada novo');
     });
@@ -483,7 +483,7 @@ describe('fillTicketTests', () => {
 
       fillTicketTests(
         'demo:T-01',
-        { PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir },
+        { CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: projectsDir },
         { stdout, stderr: fakeWritable() },
       );
 
@@ -501,7 +501,7 @@ describe('fillTicketTests', () => {
       fs.writeFileSync(path.join(reportDir, 'results.json'), '{}');
       const stdout = fakeWritable();
 
-      fillTicketTests('demo:T-01', { PROJECTS_DIR: projectsDir, TICKET_RUNS: projectsDir }, { stdout });
+      fillTicketTests('demo:T-01', { CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: projectsDir }, { stdout });
 
       expect(stdout.chunks.join('')).toContain('Nada novo');
     });

@@ -1,12 +1,12 @@
 export {
   CHOL_ROOT,
   CHOL_GLOBAL_DIR,
-  PROJECTS_DIR,
+  CHOL_PROJECTS_DIR,
   CHOL_AGENTS_DIR,
   CHOL_AGENTS_PROVIDER,
   CHOL_MCPS_DIR,
   CHOL_SKILLS_DIR,
-  TICKET_RUNS,
+  CHOL_TICKET_RUNS,
 } from './vars';
 export { loadRepoConfig, mergeConfig, parseConfigFile } from './repo-config';
 export { findWorkspaceRoot, PACKAGE_NAME, WorkspaceNotFoundError } from './workspace';

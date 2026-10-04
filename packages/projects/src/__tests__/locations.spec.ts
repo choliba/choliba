@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
 
-import { CHOL_GLOBAL_DIR, PROJECTS_DIR, PROJECTS_SUBDIR, TICKET_RUNS } from '@choliba/core/config';
+import { CHOL_GLOBAL_DIR, CHOL_PROJECTS_DIR, PROJECTS_SUBDIR, CHOL_TICKET_RUNS } from '@choliba/core/config';
 
 import { applyLocations, LocationsError, resolveLocations, resolveProjectsDir } from '../index';
 
@@ -28,7 +28,7 @@ describe('resolveProjectsDir', () => {
 });
 
 describe('resolveLocations', () => {
-  it('derives PROJECTS_DIR when only CHOL_GLOBAL_DIR is set', () => {
+  it('derives CHOL_PROJECTS_DIR when only CHOL_GLOBAL_DIR is set', () => {
     const tmp = makeTmpDir('playwright-config');
     try {
       const configPath = join(tmp.path, '.env');
@@ -37,40 +37,40 @@ describe('resolveLocations', () => {
 
       expect(resolveLocations(tmp.path, {}, readFile)).toEqual({
         CHOL_GLOBAL_DIR: '/tmp/global',
-        PROJECTS_DIR: join('/tmp/global', PROJECTS_SUBDIR),
+        CHOL_PROJECTS_DIR: join('/tmp/global', PROJECTS_SUBDIR),
       });
     } finally {
       tmp.cleanup();
     }
   });
 
-  it('accepts an explicit PROJECTS_DIR override', () => {
+  it('accepts an explicit CHOL_PROJECTS_DIR override', () => {
     const tmp = makeTmpDir('playwright-config-override');
     try {
       const configPath = join(tmp.path, '.env');
       const readFile = (path: string): string | undefined =>
-        path === configPath ? 'CHOL_GLOBAL_DIR=/tmp/global\nPROJECTS_DIR=/tmp/projetos\n' : undefined;
+        path === configPath ? 'CHOL_GLOBAL_DIR=/tmp/global\nCHOL_PROJECTS_DIR=/tmp/projetos\n' : undefined;
 
       expect(resolveLocations(tmp.path, {}, readFile)).toEqual({
         CHOL_GLOBAL_DIR: '/tmp/global',
-        PROJECTS_DIR: '/tmp/projetos',
+        CHOL_PROJECTS_DIR: '/tmp/projetos',
       });
     } finally {
       tmp.cleanup();
     }
   });
 
-  it('inclui TICKET_RUNS quando definido', () => {
+  it('inclui CHOL_TICKET_RUNS quando definido', () => {
     const tmp = makeTmpDir('playwright-config-ticket-runs');
     try {
       const configPath = join(tmp.path, '.env');
       const readFile = (path: string): string | undefined =>
-        path === configPath ? 'CHOL_GLOBAL_DIR=/tmp/global\nTICKET_RUNS=/tmp/runs\n' : undefined;
+        path === configPath ? 'CHOL_GLOBAL_DIR=/tmp/global\nCHOL_TICKET_RUNS=/tmp/runs\n' : undefined;
 
       expect(resolveLocations(tmp.path, {}, readFile)).toEqual({
         CHOL_GLOBAL_DIR: '/tmp/global',
-        PROJECTS_DIR: join('/tmp/global', PROJECTS_SUBDIR),
-        TICKET_RUNS: '/tmp/runs',
+        CHOL_PROJECTS_DIR: join('/tmp/global', PROJECTS_SUBDIR),
+        CHOL_TICKET_RUNS: '/tmp/runs',
       });
     } finally {
       tmp.cleanup();
@@ -82,13 +82,13 @@ describe('resolveLocations', () => {
     try {
       const configPath = join(tmp.path, '.env');
       const readFile = (path: string): string | undefined =>
-        path === configPath ? 'CHOL_GLOBAL_DIR=/file\nPROJECTS_DIR=/file-projetos\n' : undefined;
+        path === configPath ? 'CHOL_GLOBAL_DIR=/file\nCHOL_PROJECTS_DIR=/file-projetos\n' : undefined;
 
       expect(
-        resolveLocations(tmp.path, { CHOL_GLOBAL_DIR: '/shell', PROJECTS_DIR: '/shell-projetos' }, readFile),
+        resolveLocations(tmp.path, { CHOL_GLOBAL_DIR: '/shell', CHOL_PROJECTS_DIR: '/shell-projetos' }, readFile),
       ).toEqual({
         CHOL_GLOBAL_DIR: '/shell',
-        PROJECTS_DIR: '/shell-projetos',
+        CHOL_PROJECTS_DIR: '/shell-projetos',
       });
     } finally {
       tmp.cleanup();
@@ -125,32 +125,32 @@ describe('resolveLocations', () => {
 });
 
 describe('applyLocations', () => {
-  it('grava CHOL_GLOBAL_DIR, PROJECTS_DIR e TICKET_RUNS em process.env', () => {
+  it('grava CHOL_GLOBAL_DIR, CHOL_PROJECTS_DIR e CHOL_TICKET_RUNS em process.env', () => {
     const previousGlobal = process.env[CHOL_GLOBAL_DIR];
-    const previousProjetos = process.env[PROJECTS_DIR];
-    const previousRuns = process.env[TICKET_RUNS];
+    const previousProjetos = process.env[CHOL_PROJECTS_DIR];
+    const previousRuns = process.env[CHOL_TICKET_RUNS];
 
     applyLocations({
       CHOL_GLOBAL_DIR: '/global',
-      PROJECTS_DIR: '/projetos',
-      TICKET_RUNS: '/runs',
+      CHOL_PROJECTS_DIR: '/projetos',
+      CHOL_TICKET_RUNS: '/runs',
     });
 
     expect(process.env[CHOL_GLOBAL_DIR]).toBe('/global');
-    expect(process.env[PROJECTS_DIR]).toBe('/projetos');
-    expect(process.env[TICKET_RUNS]).toBe('/runs');
+    expect(process.env[CHOL_PROJECTS_DIR]).toBe('/projetos');
+    expect(process.env[CHOL_TICKET_RUNS]).toBe('/runs');
 
     process.env[CHOL_GLOBAL_DIR] = previousGlobal;
-    process.env[PROJECTS_DIR] = previousProjetos;
-    process.env[TICKET_RUNS] = previousRuns;
+    process.env[CHOL_PROJECTS_DIR] = previousProjetos;
+    process.env[CHOL_TICKET_RUNS] = previousRuns;
   });
 
-  it('remove TICKET_RUNS de process.env quando ausente na config', () => {
-    process.env[TICKET_RUNS] = '/old';
+  it('remove CHOL_TICKET_RUNS de process.env quando ausente na config', () => {
+    process.env[CHOL_TICKET_RUNS] = '/old';
     applyLocations({
       CHOL_GLOBAL_DIR: '/global',
-      PROJECTS_DIR: '/projetos',
+      CHOL_PROJECTS_DIR: '/projetos',
     });
-    expect(process.env[TICKET_RUNS]).toBeUndefined();
+    expect(process.env[CHOL_TICKET_RUNS]).toBeUndefined();
   });
 });

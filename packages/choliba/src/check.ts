@@ -63,7 +63,7 @@ export function checkAgents(root: string, config: Config): CheckSection {
 export function checkProjects(root: string, config: Config): CheckSection {
   let projectsDir: string;
   try {
-    projectsDir = resolveLocations(root, config, () => undefined).PROJECTS_DIR;
+    projectsDir = resolveLocations(root, config, () => undefined).CHOL_PROJECTS_DIR;
   } catch (error) {
     return { title: 'Projetos', items: [{ name: ENV_FILE, problem: problemOf(error) }] };
   }

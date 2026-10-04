@@ -220,7 +220,7 @@ async function main(argv: readonly string[]): Promise<number> {
     case 'tests':
       return runTests(target.argv, workspaceRoot);
     case 'playwright-cli': {
-      const outputDir = loadRepoConfig(workspaceRoot)['PLAYWRIGHT_MCP_OUTPUT_DIR'] ?? DEFAULT_OUTPUT_DIR;
+      const outputDir = loadRepoConfig(workspaceRoot)['CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR'] ?? DEFAULT_OUTPUT_DIR;
       return runPlaywright('cli', intoOutputDir(target.argv, outputDir), workspaceRoot);
     }
     case 'install':

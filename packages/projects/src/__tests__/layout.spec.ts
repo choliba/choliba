@@ -75,11 +75,11 @@ describe('listTicketSuffixes', () => {
 });
 
 describe('ticket-runs', () => {
-  it('uses TICKET_RUNS when set and not blank, PROJECTS_DIR otherwise', () => {
-    expect(resolveTicketRunsRoot({ PROJECTS_DIR: '/p', TICKET_RUNS: ' /runs ' })).toBe('/runs');
-    expect(resolveTicketRunsRoot({ PROJECTS_DIR: '/p', TICKET_RUNS: '  ' })).toBe('/p');
-    expect(resolveTicketRunsRoot({ PROJECTS_DIR: '/p', TICKET_RUNS: undefined })).toBe('/p');
-    expect(resolveTicketRunsRoot({ PROJECTS_DIR: '/p' })).toBe('/p');
+  it('uses CHOL_TICKET_RUNS when set and not blank, CHOL_PROJECTS_DIR otherwise', () => {
+    expect(resolveTicketRunsRoot({ CHOL_PROJECTS_DIR: '/p', CHOL_TICKET_RUNS: ' /runs ' })).toBe('/runs');
+    expect(resolveTicketRunsRoot({ CHOL_PROJECTS_DIR: '/p', CHOL_TICKET_RUNS: '  ' })).toBe('/p');
+    expect(resolveTicketRunsRoot({ CHOL_PROJECTS_DIR: '/p', CHOL_TICKET_RUNS: undefined })).toBe('/p');
+    expect(resolveTicketRunsRoot({ CHOL_PROJECTS_DIR: '/p' })).toBe('/p');
   });
 
   it('puts test-results next to the report of a ticket run', () => {
@@ -129,20 +129,24 @@ describe('readAppliedLocations', () => {
   it('reads back what applyLocations set, from process.env by default', () => {
     const previous = { ...process.env };
     try {
-      applyLocations({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: '/p', TICKET_RUNS: '/r' });
-      expect(readAppliedLocations()).toEqual({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: '/p', TICKET_RUNS: '/r' });
+      applyLocations({ CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: '/p', CHOL_TICKET_RUNS: '/r' });
+      expect(readAppliedLocations()).toEqual({
+        CHOL_GLOBAL_DIR: '/g',
+        CHOL_PROJECTS_DIR: '/p',
+        CHOL_TICKET_RUNS: '/r',
+      });
     } finally {
       process.env = previous;
     }
   });
 
-  it('leaves TICKET_RUNS out when absent and fails when the locations were not applied', () => {
-    expect(readAppliedLocations({ CHOL_GLOBAL_DIR: '/g', PROJECTS_DIR: '/p', TICKET_RUNS: ' ' })).toEqual({
+  it('leaves CHOL_TICKET_RUNS out when absent and fails when the locations were not applied', () => {
+    expect(readAppliedLocations({ CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: '/p', CHOL_TICKET_RUNS: ' ' })).toEqual({
       CHOL_GLOBAL_DIR: '/g',
-      PROJECTS_DIR: '/p',
+      CHOL_PROJECTS_DIR: '/p',
     });
     expect(() => readAppliedLocations({ CHOL_GLOBAL_DIR: '/g' })).toThrow(LocationsError);
-    expect(() => readAppliedLocations({ PROJECTS_DIR: '/p' })).toThrow(
+    expect(() => readAppliedLocations({ CHOL_PROJECTS_DIR: '/p' })).toThrow(
       'aplique as localizações (applyLocations) antes',
     );
   });

@@ -90,7 +90,7 @@ const WORKSPACE_FILES: readonly (readonly [string, string])[] = [
 export function initialEnv(example: string, root: string): string {
   return example
     .replace(/^CHOL_GLOBAL_DIR=.*$/m, `CHOL_GLOBAL_DIR=${join(root, ARTIFACTS_DIR)}`)
-    .replace(/^PROJECTS_DIR=.*$/m, `PROJECTS_DIR=${join(root, PROJECTS_SUBDIR)}`);
+    .replace(/^CHOL_PROJECTS_DIR=.*$/m, `CHOL_PROJECTS_DIR=${join(root, PROJECTS_SUBDIR)}`);
 }
 
 /** The example: the application `app/exemplo/` (one page and its README) and its test project `projects/exemplo/`. */

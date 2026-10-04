@@ -55,7 +55,7 @@ const COMMANDS: readonly CommandEntry[] = [
   },
   {
     name: 'projects',
-    description: 'Cria e lista projetos e tickets em PROJECTS_DIR',
+    description: 'Cria e lista projetos e tickets em CHOL_PROJECTS_DIR',
     group: 'Commands',
     spec: { usage: 'choliba projects COMMAND [ARGS]' },
   },

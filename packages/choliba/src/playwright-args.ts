@@ -1,6 +1,6 @@
 import { isAbsolute, join } from 'node:path';
 
-/** Where `playwright cli` writes the files it names itself, unless `PLAYWRIGHT_MCP_OUTPUT_DIR` says otherwise. */
+/** Where `playwright cli` writes the files it names itself, unless `CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR` says otherwise. */
 export const DEFAULT_OUTPUT_DIR = '.cache/playwright-cli';
 
 const FILENAME = '--filename';

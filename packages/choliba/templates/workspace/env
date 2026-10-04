@@ -6,11 +6,11 @@
 # CHOL_SKILLS_DIR=.choliba/skills
 # CHOL_MCPS_DIR=.choliba/mcps
 
-# Os projetos de teste (PROJECTS_DIR) e os artefatos das execuções (CHOL_GLOBAL_DIR). O `choliba setup`
+# Os projetos de teste (CHOL_PROJECTS_DIR) e os artefatos das execuções (CHOL_GLOBAL_DIR). O `choliba setup`
 # preenche os dois no .env com caminhos absolutos: projects e .cache/choliba desta pasta.
 CHOL_GLOBAL_DIR=
-PROJECTS_DIR=
-# TICKET_RUNS=
+CHOL_PROJECTS_DIR=
+# CHOL_TICKET_RUNS=
 
 # Opcional: provider padrão dos agentes, auto, claude ou cursor (padrão: auto; --provider na linha de comando
 # ganha deste).
@@ -18,8 +18,8 @@ PROJECTS_DIR=
 
 # Opcional: onde o `choliba playwright-cli` grava snapshots e screenshots que os agentes leem (padrão:
 # .cache/playwright-cli).
-# PLAYWRIGHT_MCP_OUTPUT_DIR=.cache/playwright-cli
+# CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR=.cache/playwright-cli
 
 # Variáveis usadas por ${NOME} nos seus .choliba/mcps/*.json, por exemplo:
-# MCP_APP_DIR=
-# MCP_APP_LOG_DIR=
+# CHOL_MCP_APP_DIR=
+# CHOL_MCP_APP_LOG_DIR=
