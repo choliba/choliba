@@ -62,8 +62,8 @@ export function exampleTemplatesDir(): string {
 
 /**
  * `app/` (`APP_DIR`) holds the applications being tested; `.choliba/` (`CHOLIBA_DIR`) holds choliba's agents
- * (`.choliba/agents`, `.choliba/skills`, `.choliba/mcps`); `projects/` holds the test projects. The names come
- * from `@choliba/core/config`.
+ * (`.choliba/agents`, `.choliba/skills`, `.choliba/mcps`) and theme; `projects/` holds the test projects. The
+ * names come from `@choliba/core/config`.
  */
 
 /** The folders a workspace has, each kept by a `.gitkeep` while empty. */

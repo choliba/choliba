@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import * as path from 'node:path';
 
-const MAIN_TS = path.resolve(__dirname, '../../cli/main.ts');
+const CLI_TS = path.resolve(__dirname, '../helpers/fixtures/terminal-cli.ts');
 const FIXTURE_TS = path.resolve(__dirname, '../helpers/fixtures/echo-lines.ts');
 
 interface RunResult {
@@ -12,7 +12,7 @@ interface RunResult {
 
 function runBunCli(args: readonly string[]): Promise<RunResult> {
   return new Promise((resolve, reject) => {
-    const child = spawn('bun', [MAIN_TS, ...args], { stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn('bun', [CLI_TS, 'terminal', ...args], { stdio: ['ignore', 'pipe', 'pipe'] });
     let stdout = '';
     let stderr = '';
     child.stdout.on('data', (chunk: Buffer) => {
@@ -30,14 +30,14 @@ function runBunCli(args: readonly string[]): Promise<RunResult> {
 
 /**
  * `spawn.ts` deliberately never references the `Bun` global, so nothing in the unit
- * suite exercises the real `Bun.spawn` call in `cli/main.ts` (see spawn.ts and
+ * suite exercises the real `Bun.spawn` (see spawn.ts and
  * process-runner.spec.ts, which inject a fake spawner instead). This spec fills that
- * gap behaviorally by running the actual `mono-terminal` CLI as a real `bun`
- * subprocess. It does NOT move the coverage number: Istanbul only instruments the
+ * gap behaviorally by running `terminal run` (`TerminalModule`, wired like main.ts) as a
+ * real `bun` subprocess. It does NOT move the coverage number: Istanbul only instruments the
  * Jest process, and this fixture runs in a separate `bun` process/V8 instance whose
  * coverage counters never merge back in.
  */
-describe('mono-terminal CLI (real Bun.spawn, real bun subprocess)', () => {
+describe('terminal run (real Bun.spawn, real bun subprocess)', () => {
   it('formats stdout/stderr with the [label] prefix, preserves ANSI, and reflects the exit code', async () => {
     const result = await runBunCli(['run', '--label', 'demo', '--', 'bun', FIXTURE_TS]);
 
@@ -52,6 +52,6 @@ describe('mono-terminal CLI (real Bun.spawn, real bun subprocess)', () => {
     const result = await runBunCli(['run']);
 
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain('Usage: mono-terminal run');
+    expect(result.stderr).toContain('Usage: choliba terminal run');
   }, 15000);
 });

@@ -27,7 +27,7 @@ function firstLine(text: string): string {
 /**
  * Renders one normalized `AgentEvent` as a line of output, or `undefined` for an event that
  * produces nothing to print (a successful tool result, a quiet `done`). Deliberately does NOT
- * use `ProcessRunner`'s own `SessionLineEvent.formatted`: that field prefixes the *raw* line
+ * use `ProcessRunnerService`'s own `SessionLineEvent.formatted`: that field prefixes the *raw* line
  * from the child process, which for a provider in `--output-format stream-json` is one JSON
  * object per line — prefixing that with `[label]` would print JSON, not a conversation. Callers
  * (`run-agent.ts`) parse `event.raw` into `AgentEvent`s first and render those instead.

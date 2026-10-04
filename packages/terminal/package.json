@@ -5,10 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./output": "./src/output.ts"
-  },
-  "bin": {
-    "mono-terminal": "./src/cli/main.ts"
+    "./output": "./src/terminal/output.ts",
+    "./nest": "./src/nest.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"

@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import * as coreGit from '@choliba/core/git';
+import * as gitDiff from '../../steps/git-working-tree-diff';
 
 import type { AgentDefinition, AgentModeSteps } from '../../agent.types';
 import { loadAgent } from '../../agent-loader';
@@ -34,7 +34,7 @@ describe('buildPrepare / buildAfter', () => {
       throw new Error('expected prepare and after hooks');
     }
 
-    const getDiff = jest.spyOn(coreGit, 'getWorkingTreeDiff').mockReturnValue('diff --git a/a.ts b/a.ts\n');
+    const getDiff = jest.spyOn(gitDiff, 'getWorkingTreeDiff').mockReturnValue('diff --git a/a.ts b/a.ts\n');
     const tmp = makeTmpDir('registry-hooks');
     try {
       const result = prepare({ task: '', repoRoot: tmp.path, agent, mode: 'execute' });

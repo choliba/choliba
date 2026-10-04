@@ -1,4 +1,4 @@
-import type { CommandEntry, CommandSpec, FlagSpec, FlagValueSpec, Suggestions } from './cli.types';
+import type { CommandEntry, CommandSpec, FlagSpec, FlagValueSpec, Suggestions } from './interfaces/cli.interface';
 
 const NONE: Suggestions = { kind: 'values', values: [] };
 

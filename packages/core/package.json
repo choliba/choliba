@@ -4,10 +4,12 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./cli": "./src/cli/index.ts",
     "./config": "./src/config/index.ts",
-    "./git": "./src/git/index.ts"
+    "./nest": "./src/nest.ts",
+    "./platform": "./src/platform/index.ts",
+    "./testing": "./src/testing/index.ts",
+    "./theme": "./src/theme/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"

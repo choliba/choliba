@@ -2,7 +2,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os';
 import { join, parse, resolve } from 'node:path';
 
-import type { GitRunner } from '@choliba/core/git';
+import type { GitRunner } from '@choliba/core/platform';
 import { PACKAGE_FILE } from '@choliba/core/config';
 
 /** Where an install comes from: a folder or file on disk, a git repository or an npm package. */

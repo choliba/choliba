@@ -3,7 +3,7 @@ import { constants, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import type { ProcessSpawner, SignalSource, Writable } from '@choliba/terminal';
-import { ProcessRunner } from '@choliba/terminal';
+import { ProcessRunnerService } from '@choliba/terminal';
 
 import type { AgentDefinition } from '../agent.types';
 import type { AgentEvent } from '../events.types';
@@ -125,7 +125,7 @@ function eventLines(events: readonly AgentEvent[]): string {
 }
 
 interface Setup {
-  readonly runner: ProcessRunner;
+  readonly runner: ProcessRunnerService;
   readonly stdout: Writable & { chunks: string[] };
   readonly stderr: Writable & { chunks: string[] };
   readonly signals: SignalSource;
@@ -136,7 +136,7 @@ interface Setup {
 }
 
 function setup(spawner: ProcessSpawner, adapterOverrides: Partial<ProviderAdapter> = {}, plansDir = '/plans'): Setup {
-  const runner = new ProcessRunner({ spawner });
+  const runner = new ProcessRunnerService({ spawner });
   const stdout = fakeWritable();
   const stderr = fakeWritable();
   const { source: signals } = fakeSignalSource();
@@ -391,7 +391,7 @@ describe('runAgent', () => {
 
   it('forwards SIGINT and SIGTERM to the underlying process', async () => {
     const spawnerHandle = fakeSpawner();
-    const runner = new ProcessRunner({ spawner: spawnerHandle.spawner });
+    const runner = new ProcessRunnerService({ spawner: spawnerHandle.spawner });
     const stdout = fakeWritable();
     const stderr = fakeWritable();
     const { source, trigger } = fakeSignalSource();

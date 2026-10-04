@@ -1,7 +1,10 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { getWorkingTreeDiff, indexDiff, type GitRunner } from '@choliba/core/git';
+import type { GitRunner } from '@choliba/core/platform';
+
+import { getWorkingTreeDiff } from '../steps/git-working-tree-diff';
+import { indexDiff } from '../steps/index-diff';
 
 import { pendingSinceHint, resolveDiffBase, type DiffBaseConfig } from './git-state';
 

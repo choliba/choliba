@@ -1,6 +1,6 @@
 import { mkdirSync, rmSync } from 'node:fs';
 
-import type { ProcessRunner, Session, SessionExitEvent, SignalSource, Writable } from '@choliba/terminal';
+import type { ProcessRunnerService, Session, SessionExitEvent, SignalSource, Writable } from '@choliba/terminal';
 import { exitCodeFor } from '@choliba/terminal';
 
 import type { AgentEvent } from './events.types';
@@ -20,7 +20,7 @@ export interface RunAgentDeps {
    * No default: building one needs a `ProcessSpawner`, and the only real one touches the
    * `Bun` global. Every caller passes its own, same as `@choliba/terminal`'s own `runCli`.
    */
-  readonly runner: ProcessRunner;
+  readonly runner: ProcessRunnerService;
   readonly stdout: Writable;
   readonly stderr: Writable;
   readonly signals: SignalSource;
@@ -41,13 +41,13 @@ function errorMessage(error: unknown): string {
 }
 
 /**
- * Runs one agent through one provider, via `@choliba/terminal`'s `ProcessRunner`: it owns
+ * Runs one agent through one provider, via `@choliba/terminal`'s `ProcessRunnerService`: it owns
  * the child process, buffering and SIGINT/SIGTERM forwarding, exactly as the `terminal`
  * package's own CLI wrapper does. What this function adds on top is provider-specific: turning
  * each raw stdout line into `AgentEvent`s with the resolved provider's parser, rendering those
  * instead of the raw JSON, and — in `plan` mode — saving the result to a plan file.
  *
- * Deliberately reads `event.raw`, never `event.formatted`: `ProcessRunner` prefixes the *raw*
+ * Deliberately reads `event.raw`, never `event.formatted`: `ProcessRunnerService` prefixes the *raw*
  * child output with `[label]`, which for a provider in `--output-format stream-json` is one
  * JSON object per line. Prefixing that would print JSON at the user, not a conversation.
  */

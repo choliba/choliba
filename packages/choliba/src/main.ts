@@ -6,11 +6,11 @@ import { dirname, join } from 'node:path';
 
 import { listAgents, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir, runAgentsCli } from '@choliba/agents';
 import { complete, formatHelp, formatSuggestions } from '@choliba/core/cli';
-import { createSpawnGitRunner } from '@choliba/core/git';
+import { createSpawnGitRunner } from '@choliba/core/platform';
 import { findWorkspaceRoot, loadRepoConfig, locateResource } from '@choliba/core/config';
 import { projectTemplatesDir, resolveLocations, runProjectsCli } from '@choliba/projects';
 import { findRunnerRoot, runTestsCli } from '@choliba/runner';
-import { createBunProcessSpawner, ProcessRunner } from '@choliba/terminal';
+import { createBunProcessSpawner, ProcessRunnerService } from '@choliba/terminal';
 import { writeStderr, writeStdout } from '@choliba/terminal/output';
 
 import { allFine, checkWorkspace, formatCheck } from './check';
@@ -25,7 +25,7 @@ import { setup, setupWorkspace, updatePackageWhenListed } from './setup';
 
 async function runAgents(argv: readonly string[], workspaceRoot: string): Promise<number> {
   return runAgentsCli(argv, {
-    runner: new ProcessRunner({ spawner: createBunProcessSpawner(Bun.spawn) }),
+    runner: new ProcessRunnerService({ spawner: createBunProcessSpawner(Bun.spawn) }),
     which: (bin) => Bun.which(bin),
     repoRoot: workspaceRoot,
     commands: [],

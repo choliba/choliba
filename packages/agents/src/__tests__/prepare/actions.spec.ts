@@ -1,7 +1,7 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import * as coreGit from '@choliba/core/git';
+import * as gitDiff from '../../steps/git-working-tree-diff';
 
 import type { StepFailure, StepSpawn } from '../../prepare/actions';
 import {
@@ -72,7 +72,7 @@ describe('checkStep', () => {
 describe('runBeforeSteps', () => {
   it('collects the prompt sections of the actions, in order', () => {
     const tmp = makeTmpDir('actions-sections');
-    const getDiff = jest.spyOn(coreGit, 'getWorkingTreeDiff').mockReturnValue('diff --git a/a.ts b/a.ts\n');
+    const getDiff = jest.spyOn(gitDiff, 'getWorkingTreeDiff').mockReturnValue('diff --git a/a.ts b/a.ts\n');
     try {
       writeFileSync(join(tmp.path, 'README.md'), '# Hi\n');
       const spawn = recordingSpawn();

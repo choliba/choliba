@@ -7,6 +7,8 @@ export {
   CHOL_MCPS_DIR,
   CHOL_SKILLS_DIR,
   CHOL_TICKET_RUNS,
+  CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR,
+  CHOL_COLORS,
 } from './vars';
 export { loadRepoConfig, mergeConfig, parseConfigFile } from './repo-config';
 export { findWorkspaceRoot, PACKAGE_NAME, WorkspaceNotFoundError } from './workspace';
@@ -44,3 +46,4 @@ export {
   TICKETS_SUBDIR,
   TICKET_RUNS_SUBDIR,
 } from './layout';
+export type { RepoConfig } from './repo-config';

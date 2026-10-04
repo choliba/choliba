@@ -3,11 +3,13 @@ import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import * as coreGit from '@choliba/core/git';
+import type { GitRunner } from '@choliba/core/platform';
+
+import * as gitDiff from '../../steps/git-working-tree-diff';
 import * as projects from '@choliba/projects';
 
 import type { SignalSource, Writable } from '@choliba/terminal';
-import { ProcessRunner } from '@choliba/terminal';
+import { ProcessRunnerService } from '@choliba/terminal';
 
 import { defineCommand } from '../../define-command';
 import { StepFailedError } from '../../prepare/actions';
@@ -98,7 +100,7 @@ interface Harness {
 function harness(stdoutLines: readonly string[], overrides: Partial<RunAgentsCliDeps> = {}): Harness {
   const stdout = fakeWritable();
   const stderr = fakeWritable();
-  const runner = new ProcessRunner({ spawner: fakeSpawner({ stdout: streamFromChunks(stdoutLines) }).spawner });
+  const runner = new ProcessRunnerService({ spawner: fakeSpawner({ stdout: streamFromChunks(stdoutLines) }).spawner });
 
   const deps: RunAgentsCliDeps = {
     runner,
@@ -185,7 +187,7 @@ describe('runAgentsCli — help', () => {
 });
 
 describe('runAgentsCli — global help and completion', () => {
-  const git: coreGit.GitRunner = {
+  const git: GitRunner = {
     run: () => ({ stdout: 'develop\nfeat/x\nv1.0.0\n', stderr: '', status: 0 }),
   };
 
@@ -228,7 +230,7 @@ describe('runAgentsCli — global help and completion', () => {
   });
 
   it('suggests only pending when git fails, and prints nothing for no suggestions', async () => {
-    const failing: coreGit.GitRunner = { run: () => ({ stdout: '', stderr: 'fatal', status: 128 }) };
+    const failing: GitRunner = { run: () => ({ stdout: '', stderr: 'fatal', status: 128 }) };
     const { deps, stdout } = harness([], { config: { CHOL_AGENTS_DIR: FIXTURES }, git: failing });
 
     expect(await runAgentsCli(['__complete', 'with-prepare', '--since', ''], deps)).toBe(0);
@@ -762,8 +764,7 @@ describe('runAgentsCli — run', () => {
   });
 
   it('runs an agent whose prepare hook comes from agent.yaml', async () => {
-    const getDiff = jest.spyOn(coreGit, 'getWorkingTreeDiff').mockReturnValue('diff --git a/a.ts b/a.ts\n');
-    const collectSnapshot = jest.spyOn(coreGit, 'collectDocsSnapshot').mockReturnValue({ readme: null, docs: [] });
+    const getDiff = jest.spyOn(gitDiff, 'getWorkingTreeDiff').mockReturnValue('diff --git a/a.ts b/a.ts\n');
     const tmp = makeTmpDir('cli-with-prepare');
     const { deps, stdout } = harness(claudeStdout(claudeSuccessLine()), { repoRoot: tmp.path });
 
@@ -782,7 +783,6 @@ describe('runAgentsCli — run', () => {
     } finally {
       tmp.cleanup();
       getDiff.mockRestore();
-      collectSnapshot.mockRestore();
     }
   });
 
@@ -948,7 +948,7 @@ describe('runAgentsCli — run', () => {
   describe('--dry-run', () => {
     it('prints what would run, in order, and never spawns', async () => {
       const spawnerHandle = fakeSpawner();
-      const { deps, stdout } = harness([], { runner: new ProcessRunner({ spawner: spawnerHandle.spawner }) });
+      const { deps, stdout } = harness([], { runner: new ProcessRunnerService({ spawner: spawnerHandle.spawner }) });
 
       expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'a task'], deps)).toBe(0);
       const text = stdout.chunks.join('');
@@ -1104,7 +1104,7 @@ describe('runAgentsCli — run', () => {
   it('stops before the agent when a before step fails, with the status of that step', async () => {
     const spawnerHandle = fakeSpawner();
     const { deps, stderr } = harness([], {
-      runner: new ProcessRunner({ spawner: spawnerHandle.spawner }),
+      runner: new ProcessRunnerService({ spawner: spawnerHandle.spawner }),
       commands: [
         defineCommand({
           name: 'guarded',

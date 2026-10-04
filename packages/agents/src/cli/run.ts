@@ -1,9 +1,9 @@
 import { dirname, isAbsolute, join } from 'node:path';
 
-import type { ProcessRunner, SignalSource, Writable } from '@choliba/terminal';
+import type { ProcessRunnerService, SignalSource, Writable } from '@choliba/terminal';
 import { complete, describe, formatHelp, formatSuggestions } from '@choliba/core/cli';
-import type { GitRunner } from '@choliba/core/git';
-import { createSpawnGitRunner } from '@choliba/core/git';
+import type { GitRunner } from '@choliba/core/platform';
+import { createSpawnGitRunner } from '@choliba/core/platform';
 
 import type { AgentDefinition } from '../agent.types';
 import { listAgents, loadAgent } from '../agent-loader';
@@ -49,7 +49,7 @@ export interface RunAgentsCliDeps {
    * No default: building one needs a `ProcessSpawner`, and the only real one touches the `Bun`
    * global. `cli/main.ts` passes its own; every spec passes a fake.
    */
-  readonly runner: ProcessRunner;
+  readonly runner: ProcessRunnerService;
   /** `Bun.which` in production; a lookup table in specs. */
   readonly which: (bin: string) => string | null;
   readonly repoRoot: string;

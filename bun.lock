@@ -138,9 +138,6 @@
     "packages/terminal": {
       "name": "@choliba/terminal",
       "version": "0.0.0",
-      "bin": {
-        "mono-terminal": "./src/cli/main.ts",
-      },
       "dependencies": {
         "@choliba/core": "workspace:*",
         "@nestjs/common": "~11.2",

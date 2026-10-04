@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { createSpawnGitRunner, type GitRunner } from '@choliba/core/git';
+import { createSpawnGitRunner, type GitRunner } from '@choliba/core/platform';
 
 import { fetchSource, sourceKind, type SourceDeps } from '../install-source';
 

@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 
-import type { CommandEntry, CommandSpec } from './cli.types';
+import type { CommandEntry, CommandSpec } from './interfaces/cli.interface';
 import { PACKAGE_FILE } from '../config/files';
 
 export interface PackageScripts {

@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import * as coreGit from '@choliba/core/git';
+import * as gitDiff from '../../steps/git-working-tree-diff';
 
 import {
   buildWorkingTreeDiffPrompt,
@@ -115,7 +115,7 @@ describe('runGitDiff', () => {
   });
 
   it('writes the diff and returns the prompt section with the default dependencies', () => {
-    const getDiff = jest.spyOn(coreGit, 'getWorkingTreeDiff').mockReturnValue('diff --git a/a.ts b/a.ts\n');
+    const getDiff = jest.spyOn(gitDiff, 'getWorkingTreeDiff').mockReturnValue('diff --git a/a.ts b/a.ts\n');
     const tmp = makeTmpDir('git-diff-default-deps');
     try {
       const section = runGitDiff(CONFIG, { repoRoot: tmp.path, since: undefined });

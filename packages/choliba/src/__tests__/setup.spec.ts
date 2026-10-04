@@ -6,6 +6,7 @@ import path from 'node:path';
 import { loadProjectSettings } from '@choliba/projects';
 
 import { FILES_MARKER } from '@choliba/core/cli';
+import { DEFAULT_THEME, parseColors } from '@choliba/core/theme';
 
 import { COMPLETION_BASH } from '../completion';
 import {
@@ -63,6 +64,17 @@ describe('COMPLETION_BASH as bash reads it', () => {
 });
 
 describe('scaffoldWorkspace', () => {
+  it('lists the default colors in the .env, commented, so CHOL_COLORS starts choosing nothing', () => {
+    withDir((root) => {
+      scaffoldWorkspace(root);
+      const env = fs.readFileSync(path.join(root, '.env'), 'utf8');
+      const defaults = [...env.matchAll(/^#\s+([a-z-]+\.[a-z-]+=[a-z-]+)$/gm)].map((match) => match[1]);
+
+      expect(env).not.toMatch(/^CHOL_COLORS=./m);
+      expect(parseColors(defaults.join(','))).toEqual(DEFAULT_THEME);
+    });
+  });
+
   it('creates .choliba/ (agents, skills, mcps), projects/ and the root files, with a working .env', () => {
     withDir((root) => {
       expect(scaffoldWorkspace(root)).toEqual([
