@@ -8,7 +8,7 @@ import {
   readTicketTemplate,
   ticketCriteriaProblems,
   ticketTemplatesDir,
-} from '../index';
+} from '../../index';
 
 /** The problems of a ticket with one criterion whose `descricao` is `description`. */
 function problemsOf(description: unknown): string[] {

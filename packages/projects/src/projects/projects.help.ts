@@ -1,10 +1,10 @@
 import type { CommandSpec, Suggestions } from '@choliba/core/cli';
 
 import { listProjectNames } from './project';
-import { listTicketKeys } from './ticket';
-import { listTicketTypes, ticketTemplatesDir } from './ticket-template';
+import { listTicketKeys } from '../tickets/ticket';
+import { listTicketTypes, ticketTemplatesDir } from '../tickets/ticket-template';
 
-export const PROGRAM_NAME = 'projects';
+export const PROGRAM_NAME = 'choliba projects';
 
 const NONE: Suggestions = { kind: 'values', values: [] };
 
@@ -108,4 +108,10 @@ export function projectsCliSpec(projectsDir: () => string): CommandSpec {
     flags: [{ name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true }],
     footer: `Run '${PROGRAM_NAME} COMMAND --help' for more information on a command.`,
   };
+}
+
+/** The help of one command of `spec`, described by the line `--help` lists it with. */
+export function commandHelp(spec: CommandSpec, name: string): CommandSpec {
+  const entry = spec.commands?.().find((candidate) => candidate.name === name);
+  return entry === undefined ? spec : { ...entry.spec, description: entry.description };
 }

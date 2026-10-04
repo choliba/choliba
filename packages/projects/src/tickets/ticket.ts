@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { ProjectsError } from './errors';
-import { readJsonFile } from './json-file';
-import type { ProjectLocations } from './locations';
-import { assertProjectExists, projectDir } from './project';
-import { REPORT_FOLDER, TEST_RESULTS_FOLDER } from './results';
+import { ProjectsError } from '../shared/errors';
+import { readJsonFile } from '../shared/json-file';
+import type { ProjectLocations } from '../locations/locations';
+import { assertProjectExists, projectDir } from '../projects/project';
+import { REPORT_FOLDER, TEST_RESULTS_FOLDER } from '../locations/results';
 import { TICKETS_SUBDIR, TICKET_RUNS_SUBDIR } from '@choliba/core/config';
 
 /** The part of a ticket JSON this package reads: which spec tests cover each acceptance criterion. */

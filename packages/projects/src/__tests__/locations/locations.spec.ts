@@ -5,7 +5,7 @@ import os from 'node:os';
 
 import { CHOL_GLOBAL_DIR, CHOL_PROJECTS_DIR, PROJECTS_SUBDIR, CHOL_TICKET_RUNS } from '@choliba/core/config';
 
-import { applyLocations, LocationsError, resolveLocations, resolveProjectsDir } from '../index';
+import { applyLocations, LocationsError, resolveLocations, resolveProjectsDir } from '../../index';
 
 function makeTmpDir(prefix: string): { path: string; cleanup: () => void } {
   const dir = fs.mkdtempSync(join(os.tmpdir(), `${prefix}-`));

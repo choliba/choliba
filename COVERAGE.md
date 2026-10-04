@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 04/10/2026 19:54:58 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 04/10/2026 20:35:11 — não editar manualmente.
 
 ## Resumo
 
@@ -80,13 +80,14 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 31 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 32 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
 🟢|[src/cli/cli-command.ts](packages/core/src/cli/cli-command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/cli/cli-help.service.ts](packages/core/src/cli/cli-help.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/cli/cli.module.ts](packages/core/src/cli/cli.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/cli/command-io.ts](packages/core/src/cli/command-io.ts)|100.00|100.00|100.00|100.00
 🟢|[src/cli/complete.ts](packages/core/src/cli/complete.ts)|100.00|100.00|100.00|100.00
 🟢|[src/cli/help.ts](packages/core/src/cli/help.ts)|100.00|100.00|100.00|100.00
 🟢|[src/cli/index.ts](packages/core/src/cli/index.ts)|100.00|100.00|100.00|100.00
@@ -119,23 +120,35 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 13 arquivos</summary>
+<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 25 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
-🟢|[src/cli-spec.ts](packages/projects/src/cli-spec.ts)|100.00|100.00|100.00|100.00
-🟢|[src/cli.ts](packages/projects/src/cli.ts)|100.00|100.00|100.00|100.00
-🟢|[src/errors.ts](packages/projects/src/errors.ts)|100.00|100.00|100.00|100.00
 🟢|[src/index.ts](packages/projects/src/index.ts)|100.00|100.00|100.00|100.00
-🟢|[src/json-file.ts](packages/projects/src/json-file.ts)|100.00|100.00|100.00|100.00
-🟢|[src/locations.ts](packages/projects/src/locations.ts)|100.00|100.00|100.00|100.00
-🟢|[src/project.ts](packages/projects/src/project.ts)|100.00|100.00|100.00|100.00
-🟢|[src/readme.ts](packages/projects/src/readme.ts)|100.00|100.00|100.00|100.00
-🟢|[src/results.ts](packages/projects/src/results.ts)|100.00|100.00|100.00|100.00
-🟢|[src/settings.ts](packages/projects/src/settings.ts)|100.00|100.00|100.00|100.00
-🟢|[src/ticket-criteria.ts](packages/projects/src/ticket-criteria.ts)|100.00|100.00|100.00|100.00
-🟢|[src/ticket-template.ts](packages/projects/src/ticket-template.ts)|100.00|100.00|100.00|100.00
-🟢|[src/ticket.ts](packages/projects/src/ticket.ts)|100.00|100.00|100.00|100.00
+🟢|[src/locations/locations.module.ts](packages/projects/src/locations/locations.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/locations/locations.service.ts](packages/projects/src/locations/locations.service.ts)|100.00|100.00|100.00|100.00
+🟢|[src/locations/locations.ts](packages/projects/src/locations/locations.ts)|100.00|100.00|100.00|100.00
+🟢|[src/locations/results.ts](packages/projects/src/locations/results.ts)|100.00|100.00|100.00|100.00
+🟢|[src/nest.ts](packages/projects/src/nest.ts)|100.00|100.00|100.00|100.00
+🟢|[src/projects/dto/create-project.dto.ts](packages/projects/src/projects/dto/create-project.dto.ts)|100.00|100.00|100.00|100.00
+🟢|[src/projects/project.ts](packages/projects/src/projects/project.ts)|100.00|100.00|100.00|100.00
+🟢|[src/projects/projects.command.ts](packages/projects/src/projects/projects.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/projects/projects.constants.ts](packages/projects/src/projects/projects.constants.ts)|100.00|100.00|100.00|100.00
+🟢|[src/projects/projects.help.ts](packages/projects/src/projects/projects.help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/projects/projects.module.ts](packages/projects/src/projects/projects.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/projects/projects.service.ts](packages/projects/src/projects/projects.service.ts)|100.00|100.00|100.00|100.00
+🟢|[src/projects/readme.ts](packages/projects/src/projects/readme.ts)|100.00|100.00|100.00|100.00
+🟢|[src/projects/run-subcommand.ts](packages/projects/src/projects/run-subcommand.ts)|100.00|100.00|100.00|100.00
+🟢|[src/projects/settings.ts](packages/projects/src/projects/settings.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shared/errors.ts](packages/projects/src/shared/errors.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shared/json-file.ts](packages/projects/src/shared/json-file.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tickets/dto/create-ticket.dto.ts](packages/projects/src/tickets/dto/create-ticket.dto.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tickets/ticket-criteria.ts](packages/projects/src/tickets/ticket-criteria.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tickets/ticket-template.ts](packages/projects/src/tickets/ticket-template.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tickets/ticket.ts](packages/projects/src/tickets/ticket.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tickets/tickets.command.ts](packages/projects/src/tickets/tickets.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tickets/tickets.module.ts](packages/projects/src/tickets/tickets.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tickets/tickets.service.ts](packages/projects/src/tickets/tickets.service.ts)|100.00|100.00|100.00|100.00
 
 </details>
 

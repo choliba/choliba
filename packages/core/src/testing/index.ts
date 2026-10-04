@@ -92,14 +92,28 @@ export function fakePlatform(overrides: Partial<FakePlatform> = {}): FakePlatfor
   };
 }
 
+/** A provider a spec replaces (`overrideProvider(provide).useValue(useValue)`). */
+export interface ProviderOverride {
+  readonly provide: string | symbol | (abstract new (...args: never[]) => unknown);
+  readonly useValue: unknown;
+}
+
 /**
  * Runs `platform.argv` as a command line against `imports` (the modules under test, with
  * `PlatformModule.forRoot(platform)`), the way `main.ts` does, and resolves with the exit code the command set.
  */
-export async function runCommand(imports: NonNullable<ModuleMetadata['imports']>, platform: Platform): Promise<number> {
-  const app = await CommandTestFactory.createTestingCommand({
+export async function runCommand(
+  imports: NonNullable<ModuleMetadata['imports']>,
+  platform: Platform,
+  overrides: readonly ProviderOverride[] = [],
+): Promise<number> {
+  const builder = CommandTestFactory.createTestingCommand({
     imports: [PlatformModule.forRoot(platform), ...imports],
-  }).compile();
+  });
+  for (const { provide, useValue } of overrides) {
+    builder.overrideProvider(provide).useValue(useValue);
+  }
+  const app = await builder.compile();
   await CommandTestFactory.runWithoutClosing(app, [...platform.argv]);
   const code = app.get(ExitStatus).code();
   await app.close();

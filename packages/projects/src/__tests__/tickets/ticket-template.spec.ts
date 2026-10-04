@@ -12,8 +12,7 @@ import {
   ticketPlaceholders,
   ticketTemplatesDir,
   projectTemplatesDir,
-  runProjectsCli,
-} from '../index';
+} from '../../index';
 
 function comDiretorio<T>(prefixo: string, fn: (dir: string) => T): T {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefixo));
@@ -56,9 +55,8 @@ describe('listTicketTypes', () => {
 });
 
 describe('package resources', () => {
-  it('points at the project template and exposes the CLI', () => {
+  it('points at the project template', () => {
     expect(fs.existsSync(path.join(projectTemplatesDir(), 'config.json'))).toBe(true);
-    expect(typeof runProjectsCli).toBe('function');
   });
 });
 

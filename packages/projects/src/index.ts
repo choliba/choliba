@@ -1,4 +1,4 @@
-export { ProjectsError } from './errors';
+export { ProjectsError, UsageError } from './shared/errors';
 export {
   applyLocations,
   readAppliedLocations,
@@ -6,8 +6,8 @@ export {
   resolveLocations,
   resolveProjectsDir,
   type ProjectLocations,
-} from './locations';
-export { readJsonFile } from './json-file';
+} from './locations/locations';
+export { readJsonFile } from './shared/json-file';
 export {
   loadProjectSettings,
   PLACEHOLDER_VALUE,
@@ -15,14 +15,14 @@ export {
   type ProjectEnvironment,
   type ProjectSettings,
   type ProjectSettingsConfig,
-} from './settings';
+} from './projects/settings';
 export {
   REPORT_FOLDER,
   TEST_RESULTS_FOLDER,
   resolveResultsRoot,
   resolveResultsTestFolder,
   type ResultsRootSources,
-} from './results';
+} from './locations/results';
 export {
   projectDir,
   projectConfigFile,
@@ -43,7 +43,7 @@ export {
   type ProjectConfig,
   type CreateProjectOptions,
   type CreatedProject,
-} from './project';
+} from './projects/project';
 export {
   ticketSuffix,
   fullTicket,
@@ -64,7 +64,7 @@ export {
   ticketSpecFiles,
   resolveTicketSpecFiles,
   type TicketJson,
-} from './ticket';
+} from './tickets/ticket';
 export {
   projectTemplatesDir,
   ticketTemplatesDir,
@@ -78,7 +78,6 @@ export {
   type NewTicket,
   type NewTicketOptions,
   type TicketTemplate,
-} from './ticket-template';
-export { criteriaProblems, ticketCriteriaProblems } from './ticket-criteria';
-export { findReadme, readText, readmeSummary } from './readme';
-export { runProjectsCli, type ProjectsCliDeps } from './cli';
+} from './tickets/ticket-template';
+export { criteriaProblems, ticketCriteriaProblems } from './tickets/ticket-criteria';
+export { findReadme, readText, readmeSummary } from './projects/readme';

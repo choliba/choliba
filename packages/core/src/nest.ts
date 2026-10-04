@@ -4,6 +4,7 @@
 export { CliCommand } from './cli/cli-command';
 export { CliHelpService } from './cli/cli-help.service';
 export { CliModule } from './cli/cli.module';
+export { CommandIo } from './cli/command-io';
 export { ConfigModule } from './config/config.module';
 export { ConfigService } from './config/config.service';
 export { ExitStatus } from './platform/exit-status';

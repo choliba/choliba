@@ -67,7 +67,13 @@ describe('ExitStatus', () => {
 });
 
 describe('rawArgsAfter', () => {
-  it('drops the command that chose them, keeping everything else as typed', () => {
+  it('drops the command path that chose them, keeping everything else as typed', () => {
+    expect(rawArgsAfter(['projects', 'create-project', 'x', '--app-dir', 'a'], 'projects', 'create-project')).toEqual([
+      'x',
+      '--app-dir',
+      'a',
+    ]);
+    expect(rawArgsAfter(['projects', '--help'], 'projects', 'create-project')).toEqual(['--help']);
     expect(rawArgsAfter(['tests', '--x', '--', 'y'], 'tests')).toEqual(['--x', '--', 'y']);
     expect(rawArgsAfter(['product-owner', '--dry-run'], 'agents')).toEqual(['product-owner', '--dry-run']);
   });

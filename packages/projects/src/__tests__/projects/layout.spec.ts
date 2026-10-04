@@ -23,7 +23,7 @@ import {
   resolveTicketRunsRoot,
   ticketFilePath,
   ticketsFolderPath,
-} from '../index';
+} from '../../index';
 
 function withTmpDir(fn: (dir: string) => void): void {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'projects-layout-'));

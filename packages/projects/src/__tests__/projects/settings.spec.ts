@@ -8,7 +8,7 @@ import {
   ProjectsError,
   selectEnvironment,
   type ProjectEnvironment,
-} from '../index';
+} from '../../index';
 
 const ENV = { nome: 'development', baseURL: 'http://localhost:5173/', appDir: '/code/app', default: true };
 

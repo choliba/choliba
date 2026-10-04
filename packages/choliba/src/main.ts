@@ -8,7 +8,12 @@ import { listAgents, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir, runAgen
 import { complete, formatHelp, formatSuggestions } from '@choliba/core/cli';
 import { createSpawnGitRunner } from '@choliba/core/platform';
 import { findWorkspaceRoot, loadRepoConfig, locateResource } from '@choliba/core/config';
-import { projectTemplatesDir, resolveLocations, runProjectsCli } from '@choliba/projects';
+import { Module, type Type } from '@nestjs/common';
+import { CommandFactory } from 'nest-commander';
+
+import { ExitStatus, PlatformModule } from '@choliba/core/nest';
+import type { Platform } from '@choliba/core/platform';
+import { ProjectsModule, ProjectsService } from '@choliba/projects/nest';
 import { findRunnerRoot, runTestsCli } from '@choliba/runner';
 import { createBunProcessSpawner, ProcessRunnerService } from '@choliba/terminal';
 import { writeStderr, writeStdout } from '@choliba/terminal/output';
@@ -37,13 +42,52 @@ async function runAgents(argv: readonly string[], workspaceRoot: string): Promis
   });
 }
 
-function runProjects(argv: readonly string[], workspaceRoot: string): number {
-  return runProjectsCli(['bun', 'choliba', ...argv], {
-    loadConfig: () => resolveLocations(workspaceRoot),
-    templatesDir: projectTemplatesDir(),
-    stdout: { write: writeStdout },
-    stderr: { write: writeStderr },
+/** The process and Bun, for the parts of choliba already on Nest. */
+function bunPlatform(argv: readonly string[]): Platform {
+  return {
+    argv,
+    cwd: process.cwd(),
+    env: process.env,
+    stdout: process.stdout,
+    stderr: process.stderr,
+    clock: () => new Date(),
+    signals: process,
+    spawn: createBunProcessSpawner(Bun.spawn),
+    which: (bin) => Bun.which(bin),
+    git: createSpawnGitRunner(),
+    noColorFlag: false,
+  };
+}
+
+@Module({})
+class PartialAppModule {}
+
+function partialApp(feature: Type, argv: readonly string[]) {
+  return { module: PartialAppModule, imports: [PlatformModule.forRoot(bunPlatform(argv)), feature] };
+}
+
+/** A command of a part already on Nest, run like the app will run every command. */
+async function runNest(feature: Type, argv: readonly string[]): Promise<number> {
+  const app = await CommandFactory.runWithoutClosing(partialApp(feature, argv), {
+    logger: false,
+    cliName: 'choliba',
+    serviceErrorHandler: (error) => {
+      writeStderr(`${error.message}\n`);
+      process.exitCode = 1;
+    },
   });
+  const code = app.get(ExitStatus).code();
+  await app.close();
+  return code;
+}
+
+/** `choliba __complete projects …`, from the projects' own spec. */
+async function completeProjects(words: readonly string[]): Promise<number> {
+  const app = await CommandFactory.createWithoutRunning(partialApp(ProjectsModule, []), { logger: false });
+  const output = formatSuggestions(complete(app.get(ProjectsService).helpSpec(), words));
+  await app.close();
+  if (output !== '') writeStdout(`${output}\n`);
+  return 0;
 }
 
 async function runTests(argv: readonly string[], workspaceRoot: string): Promise<number> {
@@ -159,7 +203,7 @@ async function completeWords(words: readonly string[]): Promise<number> {
   const target = route(words);
   if (words.length > 1 && workspaceRoot !== undefined) {
     if (target.kind === 'agents') return runAgents(['__complete', ...target.argv], workspaceRoot);
-    if (target.kind === 'projects') return runProjects(['__complete', ...target.argv], workspaceRoot);
+    if (target.kind === 'projects') return completeProjects(target.argv);
     if (target.kind === 'tests') return runTests(['__complete', ...target.argv], workspaceRoot);
   }
   const spec = firstWordSpec(agentNames(workspaceRoot));
@@ -216,7 +260,7 @@ async function main(argv: readonly string[]): Promise<number> {
     case 'agents':
       return runAgents(target.argv, workspaceRoot);
     case 'projects':
-      return runProjects(target.argv, workspaceRoot);
+      return runNest(ProjectsModule, ['projects', ...target.argv]);
     case 'tests':
       return runTests(target.argv, workspaceRoot);
     case 'playwright-cli': {

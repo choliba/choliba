@@ -1,7 +1,7 @@
 import path from 'node:path';
 
-import { ProjectsError } from './errors';
-import { readJsonFile } from './json-file';
+import { ProjectsError } from '../shared/errors';
+import { readJsonFile } from '../shared/json-file';
 import fs from 'node:fs';
 
 import { assertProjectExists, configJsonPath, envJsonPath, projectDir, projectEnvExampleFile } from './project';
