@@ -6,6 +6,7 @@ import 'reflect-metadata';
 import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
+import { dirname } from 'node:path';
 
 import { SELF_DECLARED_DEPS_METADATA } from '@nestjs/common/constants';
 import { CommandFactory } from 'nest-commander';
@@ -18,9 +19,24 @@ import { AppModule } from './app.module';
 import { CholibaRootCommand } from './help/root.command';
 import type { Runtime } from './runtime/interfaces/runtime.interface';
 
-// From the sources, Bun takes the decorator settings from the tsconfig.json it finds from the current folder;
-// outside this repository it finds none, the `@Inject`s are dropped and every command gets `undefined`.
+// The folder a run from the sources was started in, when it had to start again from this package's folder.
+const SOURCE_CWD = 'CHOLIBA_SOURCE_CWD';
+const sourceCwd = process.env[SOURCE_CWD];
+// Read once: the processes this one starts (an agent's `bunx choliba …`) find their own folder.
+delete process.env['CHOLIBA_SOURCE_CWD'];
+
+// From the sources, Bun takes the decorator settings only from a tsconfig.json in the current folder: from any other
+// (a subfolder of this repository, the folder an agent runs in) the `@Inject`s are dropped and every command gets
+// `undefined`. Start again from this package's folder, which has one, keeping where the command was run.
 if (Reflect.getMetadata(SELF_DECLARED_DEPS_METADATA, CholibaRootCommand) === undefined) {
+  if (import.meta.path.endsWith('.ts') && sourceCwd === undefined) {
+    const again = spawnSync(process.execPath, [import.meta.path, ...process.argv.slice(2)], {
+      stdio: 'inherit',
+      cwd: dirname(import.meta.dir),
+      env: { ...process.env, [SOURCE_CWD]: process.cwd() },
+    });
+    process.exit(again.status ?? 1);
+  }
   process.stderr.write(
     'O choliba rodou do código-fonte sem os decorators ligados: rode-o a partir do repositório dele ' +
       '(onde está o tsconfig.json) ou instale o pacote (bun run chol:pack).\n',
@@ -34,7 +50,7 @@ process.argv = [...process.argv.slice(0, 2), ...argv];
 
 const platform: Platform = {
   argv,
-  cwd: process.cwd(),
+  cwd: sourceCwd ?? process.cwd(),
   env: process.env,
   stdout: process.stdout,
   stderr: process.stderr,
