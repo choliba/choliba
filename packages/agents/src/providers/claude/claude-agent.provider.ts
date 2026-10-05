@@ -50,6 +50,9 @@ function buildArgs(request: ProviderRequest): readonly string[] {
   // Only the MCP servers agent.yaml lists, whatever the policy: without `--strict-mcp-config` the
   // user's own servers and connectors (which `--tools` does not remove) would join the session.
   args.push('--strict-mcp-config');
+  // Auto-memory would let the session read and write ~/.claude/projects/<run>/memory/, outside what the
+  // permissions allow, and each run's folder is new, so nothing it saves would ever be read again.
+  args.push('--settings', JSON.stringify({ autoMemoryEnabled: false }));
   // Variadic flags go last: a positional prompt placed after one would be swallowed by it.
   // There is none here (the prompt is already first, right after -p), but keeping this order
   // means a future flag inserted above can never accidentally end up after these.

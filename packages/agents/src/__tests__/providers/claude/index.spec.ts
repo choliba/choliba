@@ -175,6 +175,11 @@ describe('claudeProvider.buildArgs', () => {
     }
   });
 
+  it('turns auto-memory off, so the session never writes outside its permissions', () => {
+    const args = claudeProvider.buildArgs(fakeRequest());
+    expect(args[args.indexOf('--settings') + 1]).toBe('{"autoMemoryEnabled":false}');
+  });
+
   it('loads the listed MCP servers inline and allows their tools', () => {
     const args = claudeProvider.buildArgs(
       fakeRequest({
