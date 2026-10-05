@@ -18,8 +18,10 @@ function hookFunction(mod: unknown): HookFunction | undefined {
 
 export async function runProjectHooks(hook: ProjectHook): Promise<void> {
   const projectsDir = readAppliedLocations().CHOL_PROJECTS_DIR;
+  // Only the hooks of the project under test (`playwright.config.ts` sets it); every project's when running them all.
+  const target = process.env['CHOLIBA_PROJECT'];
 
-  for (const name of listProjectNames(projectsDir)) {
+  for (const name of target === undefined ? listProjectNames(projectsDir) : [target]) {
     const hookPath = projectHookFile(projectsDir, name, hook);
     if (!fs.existsSync(hookPath)) continue;
 
