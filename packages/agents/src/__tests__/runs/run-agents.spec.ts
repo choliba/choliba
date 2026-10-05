@@ -1003,6 +1003,45 @@ describe('runAgentsCli — run', () => {
       expect(printed).toEqual(expect.arrayContaining(['--add-dir', join(FIXTURES, 'extra'), '/cli-extra']));
     });
 
+    it('lets the agent read each --add-dir, while what its deny.read names stays denied', async () => {
+      const tmp = makeTmpDir('cli-add-dir-reads');
+      try {
+        const agentsDir = join(tmp.path, 'agents');
+        mkdirSync(join(agentsDir, 'echo'), { recursive: true });
+        const yaml = readFileSync(join(FIXTURES, 'echo', 'agent.yaml'), 'utf8');
+        writeFileSync(
+          join(agentsDir, 'echo', 'agent.yaml'),
+          yaml.replace('  deny:\n', '  deny:\n    read: [secret/]\n'),
+        );
+        const { deps, stdout } = harness([], { repoRoot: tmp.path });
+
+        await runAgentsCli(
+          [
+            'echo',
+            '--agents-dir',
+            agentsDir,
+            '--dry-run',
+            '--show-prompt',
+            '--add-dir',
+            'notes',
+            '--add-dir',
+            'secret/',
+            'x',
+          ],
+          deps,
+        );
+
+        const printed = dryRunArgv(stdout);
+        const allowed = printed.slice(printed.indexOf('--allowedTools'), printed.indexOf('--disallowedTools'));
+        const denied = printed.slice(printed.indexOf('--disallowedTools'));
+        expect(allowed).toContain(`Read(/${tmp.path}/notes/**)`);
+        expect(denied).toContain(`Read(/${tmp.path}/secret/**)`);
+        expect(printed).toEqual(expect.arrayContaining(['--add-dir', join(tmp.path, 'notes')]));
+      } finally {
+        tmp.cleanup();
+      }
+    });
+
     it('defaults agentsDir to <repoRoot>/.choliba/agents, and does not add it as a folder the provider reads', async () => {
       const tmp = makeTmpDir('cli-default-agents-dir');
       try {

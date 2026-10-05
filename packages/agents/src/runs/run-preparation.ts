@@ -116,8 +116,8 @@ function expandAgent(
 /**
  * Step 4: extra directories the provider may enter — the command's own, `--add-dir`, and the directories
  * `execute` names outside the workspace root (the provider cannot run a command in a folder it may not
- * enter). The agent's own and its skills' folders are not among them: those are granted by rules only,
- * since an added folder is one the provider reads freely. Never fails.
+ * enter). Entering a folder is not reading it: the providers run with every tool not allowed by a rule
+ * denied, so what may be read there comes from `permissions` (`withReads`). Never fails.
  */
 function resolveAddDirs(
   command: CommandDefinition,
@@ -215,12 +215,22 @@ function commandFor(context: RunContext, command: CommandDefinition, agent: Agen
   return context.synthesized ? commandFromAgent(agent) : command;
 }
 
-/** The agent with the folder of each skill it lists added to what it may read: using a skill is reading it. */
-function withSkillReads(agent: AgentDefinition, skills: readonly SkillSummary[]): AgentDefinition {
-  const folders = skills.map((skill) => `${dirname(skill.path)}/`);
+/** The agent with `folders` added to what it may read; what it may not (`deny.read`) still wins. */
+function withReads(agent: AgentDefinition, folders: readonly string[]): AgentDefinition {
   return folders.length === 0
     ? agent
     : { ...agent, permissions: { ...agent.permissions, allowRead: [...agent.permissions.allowRead, ...folders] } };
+}
+
+/**
+ * The folders the agent may read besides its own permissions: each skill it lists (using a skill is reading
+ * it) and each `--add-dir` (the person who runs it gives it that folder to read).
+ */
+function extraReads(skills: readonly SkillSummary[], parsed: RunArgs, deps: RunAgentsCliDeps): readonly string[] {
+  return [
+    ...skills.map((skill) => `${dirname(skill.path)}/`),
+    ...parsed.addDirs.map((dir) => `${toAbsolute(dir, deps.repoRoot).replace(/\/+$/, '')}/`),
+  ];
 }
 
 /** Everything one run needs before its provider starts; `Stopped` when a check or a step stops it (reason on `stderr`). */
@@ -240,7 +250,7 @@ export function prepareRun(
   if (agentSkills === undefined || mcpServers === undefined) {
     return STOPPED;
   }
-  const withSkills = withSkillReads(agent, agentSkills.skills);
+  const withSkills = withReads(agent, extraReads(agentSkills.skills, parsed, deps));
   const executeDirs = checkedExecuteDirs(withSkills, deps);
   if (executeDirs === undefined) {
     return STOPPED;
