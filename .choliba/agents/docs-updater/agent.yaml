@@ -13,6 +13,7 @@ models:
   - claude-sonnet-5
   - claude-opus-5-5-sonnet
   - Composer 2.5 Fast
+  - Auto
 
 role: |
   Você é um Redator Técnico Especialista neste repositório. Seu único objetivo é manter os arquivos em `docs/` e o
