@@ -70,7 +70,7 @@ for (const path of paths) {
 export function planDeleteBridge(
   runDir: string,
   allowRoots: readonly string[],
-  denyRoots: readonly string[] = [],
+  denyRoots: readonly string[],
 ): PlannedFile {
   return { path: deleteBridgePath(runDir), content: bridgeSource(allowRoots, denyRoots) };
 }
