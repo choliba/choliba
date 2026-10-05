@@ -123,6 +123,10 @@ Verified on 2026-10-04 (NestJS 11.2.7, nest-commander 3.21, nest-commander-testi
   prompts, unused here), and Jest's `detectOpenHandles` would report the pipe.
 - **`@typescript-eslint/no-extraneous-class` allows decorated classes** (`allowWithDecorator`): `@Module({…})
   export class X {}` is empty by design. An empty class without a decorator is still an error.
+- **Bun takes the decorator settings from the tsconfig.json it finds from the current folder.** Running
+  `packages/choliba/src/main.ts` from outside this repository finds none: the parameter decorators (`@Inject`) are
+  dropped and every command gets `undefined`. `main.ts` checks Nest's `self:paramtypes` metadata of a command and
+  stops with a message saying so. The built package is not affected: the bundle is compiled here.
 - **Nothing the Playwright runner loads may use a decorator.** Playwright compiles `playwright.config.ts`,
   `shared/`, `reporters/` and what they import with its own Babel, which rejects parameter decorators
   (`UnsupportedParameterDecorator`). So `@choliba/<pkg>` and its subpaths export plain functions only; modules,

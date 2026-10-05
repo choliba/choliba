@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 
+import { SELF_DECLARED_DEPS_METADATA } from '@nestjs/common/constants';
 import { CommandFactory } from 'nest-commander';
 
 import { ExitStatus } from '@choliba/core/nest';
@@ -14,7 +15,18 @@ import { createSpawnGitRunner, takeGlobalFlags, type Platform } from '@choliba/c
 import { createBunProcessSpawner } from '@choliba/terminal';
 
 import { AppModule } from './app.module';
+import { CholibaRootCommand } from './help/root.command';
 import type { Runtime } from './runtime/interfaces/runtime.interface';
+
+// From the sources, Bun takes the decorator settings from the tsconfig.json it finds from the current folder;
+// outside this repository it finds none, the `@Inject`s are dropped and every command gets `undefined`.
+if (Reflect.getMetadata(SELF_DECLARED_DEPS_METADATA, CholibaRootCommand) === undefined) {
+  process.stderr.write(
+    'O choliba rodou do código-fonte sem os decorators ligados: rode-o a partir do repositório dele ' +
+      '(onde está o tsconfig.json) ou instale o pacote (bun run chol:pack).\n',
+  );
+  process.exit(1);
+}
 
 const { argv, noColorFlag } = takeGlobalFlags(process.argv.slice(2));
 // The command-line parser reads process.argv: it gets the line without the global flags.
