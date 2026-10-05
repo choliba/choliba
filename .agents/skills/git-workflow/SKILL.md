@@ -96,8 +96,9 @@ pushes, and GitHub refuses them: a ruleset on each branch (see the table below) 
    yourself; strip any tool-generated footer and run `.githooks/commit-msg --no-format` on the body locally if
    unsure. After `gh pr create`, verify with `gh pr view --json body` — some hosts append attribution after
    creation; edit the PR with `gh pr edit` if needed.
-5. Wait for CI (`gh pr checks --watch`). GitHub keeps the merge button blocked until `check` is green and the
-   branch is up to date with its base.
+5. Wait for CI (`gh pr checks --watch`). GitHub keeps the merge button blocked until `check` is green. Into
+   `develop` the branch does not need to be up to date with its base: the squash lands on top of the current
+   `develop`, so merging one PR does not hold back the others.
 6. Merge a feature PR (into `develop`) with **squash**; the branch is deleted automatically. Do not merge on your
    own: tell the user the PR is green and let them merge, or merge only when they ask you to.
 7. Releasing: a PR from `develop` into `master`, same checks, titled like `chore(release): v1.2.0`. See below.
@@ -142,6 +143,6 @@ A PR may be merged only if both hold, and CI verifies them:
 | ----- | -------------- |
 | `.githooks/commit-msg` (activated by `bun install` through the `prepare` script) | format and forbidden text of each local commit |
 | `.github/workflows/ci.yml`, job `check` | PR title, PR body, every commit message, `bun run check`, coverage not lower |
-| Rulesets `develop` and `master` (repository settings → Rules; no bypass, so they bind the owner too) | PR required, `check` must pass with the branch up to date, no force-push, no deletion; `develop` allows only squash merges, `master` only merge commits. To step outside them in an emergency, disable the ruleset in the settings, then turn it back on. |
+| Rulesets `develop` and `master` (repository settings → Rules; no bypass, so they bind the owner too) | PR required, `check` must pass (into `master` also with the branch up to date), no force-push, no deletion; `develop` allows only squash merges, `master` only merge commits. To step outside them in an emergency, disable the ruleset in the settings, then turn it back on. |
 
 If the hook is not active in a clone (`git config core.hooksPath` should print `.githooks`), run `bun install`.
