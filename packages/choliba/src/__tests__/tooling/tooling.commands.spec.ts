@@ -76,35 +76,6 @@ describe('choliba format', () => {
     }));
 });
 
-describe('choliba playwright-cli and playwright-trace', () => {
-  it("runs the runner's Playwright, putting the files the cli names under the workspace's output folder", () =>
-    withWorkspace(
-      async (root) => {
-        const runtime = fakeRuntime();
-        await tool(['playwright-cli', 'screenshot', '--filename', 'a.png'], root, runtime);
-        await tool(['playwright-trace', 'open', 't.zip'], root, runtime);
-
-        expect(runtime.runs.map((run) => run.args.slice(1))).toEqual([
-          ['cli', 'screenshot', '--filename', join('saidas', 'a.png')],
-          ['trace', 'open', 't.zip'],
-        ]);
-        expect(runtime.runs[0]?.args[0]).toMatch(/cli/);
-        expect(runtime.runs[0]?.env).toEqual({ PLAYWRIGHT_MCP_OUTPUT_DIR: 'saidas' });
-        expect(runtime.runs[1]?.env).toBeUndefined();
-      },
-      { '.env': 'CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR=saidas\n' },
-    ));
-
-  it('defaults the output folder to .cache/playwright-cli', () =>
-    withWorkspace(async (root) => {
-      const runtime = fakeRuntime();
-      await tool(['playwright-cli', 'screenshot', '--filename=a.png'], root, runtime);
-
-      expect(runtime.runs[0]?.args.slice(1)).toEqual(['cli', 'screenshot', '--filename=.cache/playwright-cli/a.png']);
-      expect(runtime.runs[0]?.env).toEqual({ PLAYWRIGHT_MCP_OUTPUT_DIR: '.cache/playwright-cli' });
-    }));
-});
-
 describe('the tools, when they cannot run', () => {
   it('say why, with exit code 1: outside a workspace, or a dependency without the executable', async () => {
     await withFolder(async (dir) => {

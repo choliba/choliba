@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { findResource, locateResource } from '../../config/index';
+import { findResource, locateResource, resourceStarts } from '../../config/index';
 
 function withTree(run: (root: string) => void): void {
   const root = mkdtempSync(join(tmpdir(), 'resources-'));
@@ -12,6 +12,19 @@ function withTree(run: (root: string) => void): void {
     rmSync(root, { recursive: true, force: true });
   }
 }
+
+describe('resourceStarts', () => {
+  it('starts from the running script, link resolved, then the source dir; only the source dir without a script', () => {
+    withTree((root) => {
+      mkdirSync(join(root, 'bin'));
+      writeFileSync(join(root, 'bin', 'choliba.js'), '');
+      symlinkSync(join(root, 'bin', 'choliba.js'), join(root, 'choliba'));
+
+      expect(resourceStarts('/src', ['bun', join(root, 'choliba')])).toEqual([join(root, 'bin'), '/src']);
+      expect(resourceStarts('/src', ['bun'])).toEqual(['/src']);
+    });
+  });
+});
 
 describe('locateResource / findResource', () => {
   it('prefers the package of the running script, reached through its link, over the source dir', () => {

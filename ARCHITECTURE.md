@@ -12,14 +12,14 @@ pacote é uma biblioteca Nest; `packages/choliba` é o único app.
 
 ## Os pacotes
 
-| Pacote              | O que tem                                                                                                                                      |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/core`     | a plataforma (o processo e o Bun como valores injetáveis), a configuração da pasta de trabalho, o tema de cores, o help e o autocomplete       |
-| `packages/terminal` | rodar processos com a saída rotulada (`ProcessRunnerService`) e o comando oculto `terminal run`                                                |
-| `packages/projects` | projetos e tickets: onde ficam, criar, conferir; o comando `projects`                                                                          |
-| `packages/runner`   | os testes E2E pelo Playwright, os portões red/green e o reporter; o comando `tests`                                                            |
-| `packages/agents`   | os agentes: o `agent.yaml`, a montagem de uma execução (`runs/`), os steps, os providers; o comando `agents` e `choliba <agente>`              |
-| `packages/choliba`  | o app: `AppModule`, `main.ts`, o help da raiz, `install`, `check`, `setup`, `lint`, `format`, `playwright-*`, `completion`; o pacote publicado |
+| Pacote              | O que tem                                                                                                                                                                         |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/core`     | a plataforma (o processo e o Bun como valores injetáveis), a configuração da pasta de trabalho, o tema de cores, o help e o autocomplete                                          |
+| `packages/terminal` | rodar processos com a saída rotulada (`ProcessRunnerService`) e o comando oculto `terminal run`                                                                                   |
+| `packages/projects` | projetos e tickets: onde ficam, criar, conferir; o comando `projects`                                                                                                             |
+| `packages/runner`   | os testes E2E pelo Playwright, os portões red/green e o reporter; o comando `tests`                                                                                               |
+| `packages/agents`   | os agentes: o `agent.yaml`, a montagem de uma execução (`runs/`, com as ferramentas da run em `runs/run-tools/`), os steps, os providers; o comando `agents` e `choliba <agente>` |
+| `packages/choliba`  | o app: `AppModule`, `main.ts`, o help da raiz, `install`, `check`, `setup`, `lint`, `format`, `completion`; o pacote publicado                                                    |
 
 ## Invariantes
 

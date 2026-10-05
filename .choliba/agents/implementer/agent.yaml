@@ -81,9 +81,9 @@ skills:
   playwright-trace:
     instructions: |
       O resumo das falhas traz, em cada teste, o `trace.zip` da rodada (`trace: …`). Quando a mensagem de erro não
-      mostra o que a página fez, abra o trace: onde a skill escreve `npx playwright trace <comando>`, rode
-      `bunx choliba playwright-trace <comando>` (`open <trace.zip>`, `actions --errors-only`, `requests --failed`,
-      `console --errors-only`, `snapshot <id>`) e termine com `close`.
+      mostra o que a página fez, abra o trace: onde a skill escreve `npx playwright trace <comando>`, rode a ferramenta
+      `playwright-trace` pelo caminho que o bloco de permissões traz, seguida do `<comando>` (`open <trace.zip>`,
+      `actions --errors-only`, `requests --failed`, `console --errors-only`, `snapshot <id>`), e termine com `close`.
 
 permissions:
   allow:
@@ -102,7 +102,8 @@ permissions:
       '${CHOL_ROOT}/':
         - bunx choliba tests ${PROJECT}:${TICKET}
         - bunx choliba tests ${PROJECT}/tests
-        - bunx choliba playwright-trace
+    tools:
+      playwright-trace: ['*']
   deny:
     read: [packages/, '${CHOL_AGENTS_DIR}/', scripts/, jest/]
     write: [packages/, '${CHOL_AGENTS_DIR}/', scripts/, jest/, '${PROJECT_DIR}/', '${CHOL_SKILLS_DIR}/']

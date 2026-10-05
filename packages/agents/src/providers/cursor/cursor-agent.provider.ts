@@ -1,12 +1,7 @@
 import { mcpServersMap } from '../../mcps/mcps';
-import {
-  applyDeleteBridge,
-  deleteBridgePath,
-  planDeleteBridge,
-  shouldApplyDeleteBridge,
-} from '../../runs/delete-bridge';
 import { absolutePermissions } from '../../runs/permissions';
 import { assertArgvFits, wrapInstructions } from '../../runs/prompt';
+import { runToolCommands, runToolsOf } from '../../runs/run-tools/run-tools';
 import { createStreamJsonParser } from '../stream-json';
 import { Injectable } from '@nestjs/common';
 
@@ -49,6 +44,7 @@ function buildArgs(request: ProviderRequest): readonly string[] {
   const prompt = `${wrapInstructions(request.agent, request.skillsInstruction, {
     runDir: request.runDir,
     root: request.workspaceRoot,
+    policy: request.policy,
   })}\n\n${request.userPrompt}`;
   const args: string[] = ['-p', prompt, '--trust', '--output-format', 'stream-json', '--workspace', request.runDir];
   if (request.model !== undefined) {
@@ -69,43 +65,34 @@ function buildArgs(request: ProviderRequest): readonly string[] {
   return args;
 }
 
-function resolvedPermissions(request: ProviderRequest) {
-  return absolutePermissions(request.agent.permissions, request.workspaceRoot);
-}
-
-function deleteBridgeFor(request: ProviderRequest): string | undefined {
-  const permissions = resolvedPermissions(request);
-  if (!shouldApplyDeleteBridge(permissions.allowDelete, request.policy)) {
-    return undefined;
-  }
-  return deleteBridgePath(request.runDir);
-}
-
+/**
+ * The agent's permissions and MCP servers, written into `.cursor/cli.json` and `.cursor/mcp.json` of the
+ * folder the run happens in (the permissions always: even an agent that declares none is denied the rest). Undone in reverse order, so
+ * the `.cursor/` dir created for the first file is removed only once both are gone. The run tools' scripts are
+ * already on disk (`runAgent` writes them first), so the complement of what may be written names them too.
+ */
 function requestPermissions(request: ProviderRequest): CursorPermissions {
   return cursorPermissions(
-    resolvedPermissions(request),
+    absolutePermissions(request.agent.permissions, request.workspaceRoot),
     request.policy,
     request.workspaceRoot,
     request.runDir,
     request.mcpServers ?? [],
     readDir,
-    { deleteBridge: deleteBridgeFor(request) },
+    runToolCommands(runToolsOf(request)),
   );
 }
 
 function prepareWorkspace(request: ProviderRequest): () => void {
   const mcpServers = request.mcpServers ?? [];
-  const permissions = resolvedPermissions(request);
+  const permissions = requestPermissions(request);
   const restores: (() => void)[] = [];
   const restoreAll = (): void => {
     for (const restore of [...restores].reverse()) {
       restore();
     }
   };
-  if (shouldApplyDeleteBridge(permissions.allowDelete, request.policy)) {
-    restores.push(applyDeleteBridge(request.runDir, permissions.allowDelete, permissions.denyDelete));
-  }
-  restores.push(applyCursorPermissions(request.runDir, requestPermissions(request)));
+  restores.push(applyCursorPermissions(request.runDir, permissions));
   if (mcpServers.length > 0) {
     try {
       restores.push(applyCursorMcpServers(request.runDir, mcpServersMap(mcpServers)));
@@ -120,16 +107,10 @@ function prepareWorkspace(request: ProviderRequest): () => void {
 /** What `prepareWorkspace` would write, for `--dry-run --show-prompt`: `cli.json` always, `mcp.json` with servers. */
 function previewWorkspace(request: ProviderRequest): readonly PlannedFile[] {
   const mcpServers = request.mcpServers ?? [];
-  const permissions = resolvedPermissions(request);
-  const files: PlannedFile[] = [];
-  if (shouldApplyDeleteBridge(permissions.allowDelete, request.policy)) {
-    files.push(planDeleteBridge(request.runDir, permissions.allowDelete, permissions.denyDelete));
-  }
-  files.push(planCursorPermissions(request.runDir, requestPermissions(request)));
-  if (mcpServers.length > 0) {
-    files.push(planCursorMcpServers(request.runDir, mcpServersMap(mcpServers)));
-  }
-  return files;
+  const permissions = planCursorPermissions(request.runDir, requestPermissions(request));
+  return mcpServers.length === 0
+    ? [permissions]
+    : [permissions, planCursorMcpServers(request.runDir, mcpServersMap(mcpServers))];
 }
 
 /** Cursor's agent CLI (`agent`, `cursor-agent` or `cursor agent`, whichever is installed). */

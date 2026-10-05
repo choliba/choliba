@@ -237,12 +237,16 @@ export const WORKSPACE_SCRIPTS: Readonly<Record<string, string>> = {
   'chol:project:list': 'choliba projects list-projects',
   'chol:ticket:create': 'choliba projects create-ticket',
   'chol:tests': 'choliba tests',
-  'chol:playwright-cli': 'choliba playwright-cli',
-  'chol:playwright-trace': 'choliba playwright-trace',
   'chol:install': 'choliba install',
   'chol:lint': 'choliba lint',
   'chol:format': 'choliba format',
   'chol:format:fix': 'choliba format --write',
+};
+
+/** Scripts an earlier `setup` added for commands that no longer exist, with the command they ran. */
+const RETIRED_SCRIPTS: Readonly<Record<string, string>> = {
+  'chol:playwright-cli': 'choliba playwright-cli',
+  'chol:playwright-trace': 'choliba playwright-trace',
 };
 
 /** The workspace package.json as an object; undefined when missing, unreadable or not an object. */
@@ -280,6 +284,24 @@ export function addScripts(root: string): readonly string[] {
 }
 
 /**
+ * Removes `RETIRED_SCRIPTS` from the workspace package.json — only the ones still running the retired
+ * command, so a script the user changed stays. Returns the names removed.
+ */
+export function removeRetiredScripts(root: string): readonly string[] {
+  const pkg = readPackage(root);
+  if (pkg === undefined || !isRecord(pkg['scripts'])) return [];
+  const scripts = pkg['scripts'];
+  const removed = Object.keys(RETIRED_SCRIPTS).filter((name) => scripts[name] === RETIRED_SCRIPTS[name]);
+  if (removed.length > 0) {
+    writePackage(root, {
+      ...pkg,
+      scripts: Object.fromEntries(Object.entries(scripts).filter(([name]) => !removed.includes(name))),
+    });
+  }
+  return removed;
+}
+
+/**
  * Lists choliba in the workspace package.json `trustedDependencies`, so Bun runs this setup on every
  * later install or upgrade instead of blocking it. Returns whether the file changed; a missing or
  * unreadable package.json is left alone.
@@ -310,9 +332,11 @@ export function packageListsCholiba(root: string): boolean {
 export function updatePackage(root: string): readonly string[] {
   const trusted = trustPackage(root);
   const scripts = addScripts(root);
+  const retired = removeRetiredScripts(root);
   return [
     ...(trusted ? ['trustedDependencies no package.json'] : []),
     ...(scripts.length === 0 ? [] : [`scripts ${scripts.join(', ')} no package.json`]),
+    ...(retired.length === 0 ? [] : [`scripts ${retired.join(', ')} removidos do package.json (comandos que saíram)`]),
   ];
 }
 

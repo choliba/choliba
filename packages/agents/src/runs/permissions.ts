@@ -1,7 +1,7 @@
 import { dirname, isAbsolute, join } from 'node:path';
 
+import type { PermissionPolicy } from '../agents/interfaces/command.interface';
 import { asStringArray, isRecord } from '../shared/json';
-import { deleteBridgePath } from './delete-bridge-path';
 
 /** One entry of `permissions.allow.execute`/`.deny.execute`: a directory and the commands that go with it. */
 export interface ExecuteRule {
@@ -13,6 +13,12 @@ export interface ExecuteRule {
 /** The only command a deny rule may list alone: nothing runs in that directory. */
 export const EVERY_COMMAND = '*';
 
+/** One entry of `permissions.allow.tools`/`.deny.tools`: a run tool and its subcommands (`['*']` = all of them). */
+export interface ToolRule {
+  readonly tool: string;
+  readonly subcommands: readonly string[];
+}
+
 /**
  * What an agent's `agent.yaml#permissions` declares, read so the providers can enforce it instead of
  * only asking the model to follow it. Paths are as written (absolute, relative to the workspace root
@@ -23,10 +29,12 @@ export interface AgentPermissions {
   readonly allowWrite: readonly string[];
   readonly allowDelete: readonly string[];
   readonly allowExecute: readonly ExecuteRule[];
+  readonly allowTools: readonly ToolRule[];
   readonly denyRead: readonly string[];
   readonly denyWrite: readonly string[];
   readonly denyDelete: readonly string[];
   readonly denyExecute: readonly ExecuteRule[];
+  readonly denyTools: readonly ToolRule[];
 }
 
 export const NO_PERMISSIONS: AgentPermissions = {
@@ -34,10 +42,12 @@ export const NO_PERMISSIONS: AgentPermissions = {
   allowWrite: [],
   allowDelete: [],
   allowExecute: [],
+  allowTools: [],
   denyRead: [],
   denyWrite: [],
   denyDelete: [],
   denyExecute: [],
+  denyTools: [],
 };
 
 function group(permissions: Record<string, unknown>, key: string): Record<string, unknown> {
@@ -57,6 +67,14 @@ function rules(from: Record<string, unknown>, key: string): readonly ExecuteRule
   return Object.entries(value).map(([dir, commands]) => ({ dir, commands: asStringArray(commands) ?? [] }));
 }
 
+function toolRules(from: Record<string, unknown>): readonly ToolRule[] {
+  const value = from['tools'];
+  if (!isRecord(value)) {
+    return [];
+  }
+  return Object.entries(value).map(([tool, subcommands]) => ({ tool, subcommands: asStringArray(subcommands) ?? [] }));
+}
+
 /** Reads `agent.yaml#permissions` (already checked against the schema); none declared is `NO_PERMISSIONS`. */
 export function readAgentPermissions(value: unknown): AgentPermissions {
   if (!isRecord(value)) {
@@ -69,43 +87,52 @@ export function readAgentPermissions(value: unknown): AgentPermissions {
     allowWrite: paths(allow, 'write'),
     allowDelete: paths(allow, 'delete'),
     allowExecute: rules(allow, 'execute'),
+    allowTools: toolRules(allow),
     denyRead: paths(deny, 'read'),
     denyWrite: paths(deny, 'write'),
     denyDelete: paths(deny, 'delete'),
     denyExecute: rules(deny, 'execute'),
+    denyTools: toolRules(deny),
   };
 }
 
-/** `permissions` with `change` applied to every path, directory and command in it. */
+/** `permissions` with `change` applied to every path, directory, command and subcommand in it. */
 export function mapPermissions(permissions: AgentPermissions, change: (text: string) => string): AgentPermissions {
   const list = (items: readonly string[]): readonly string[] => items.map(change);
   const ruleList = (items: readonly ExecuteRule[]): readonly ExecuteRule[] =>
     items.map((rule) => ({ dir: change(rule.dir), commands: list(rule.commands) }));
+  const toolList = (items: readonly ToolRule[]): readonly ToolRule[] =>
+    items.map((rule) => ({ tool: rule.tool, subcommands: list(rule.subcommands) }));
   return {
     allowRead: list(permissions.allowRead),
     allowWrite: list(permissions.allowWrite),
     allowDelete: list(permissions.allowDelete),
     allowExecute: ruleList(permissions.allowExecute),
+    allowTools: toolList(permissions.allowTools),
     denyRead: list(permissions.denyRead),
     denyWrite: list(permissions.denyWrite),
     denyDelete: list(permissions.denyDelete),
     denyExecute: ruleList(permissions.denyExecute),
+    denyTools: toolList(permissions.denyTools),
   };
 }
 
-/** Every path, directory and command in `permissions`, e.g. to look for `${VAR}` in them. */
+/** Every path, directory, command and subcommand in `permissions`, e.g. to look for `${VAR}` in them. */
 export function permissionTexts(permissions: AgentPermissions): readonly string[] {
   const ruleTexts = (items: readonly ExecuteRule[]): readonly string[] =>
     items.flatMap((rule) => [rule.dir, ...rule.commands]);
+  const toolTexts = (items: readonly ToolRule[]): readonly string[] => items.flatMap((rule) => rule.subcommands);
   return [
     ...permissions.allowRead,
     ...permissions.allowWrite,
     ...permissions.allowDelete,
     ...ruleTexts(permissions.allowExecute),
+    ...toolTexts(permissions.allowTools),
     ...permissions.denyRead,
     ...permissions.denyWrite,
     ...permissions.denyDelete,
     ...ruleTexts(permissions.denyExecute),
+    ...toolTexts(permissions.denyTools),
   ];
 }
 
@@ -142,10 +169,12 @@ export function absolutePermissions(permissions: AgentPermissions, root: string)
     allowWrite: paths(permissions.allowWrite),
     allowDelete: paths(permissions.allowDelete),
     allowExecute: rules(permissions.allowExecute),
+    allowTools: permissions.allowTools,
     denyRead: paths(permissions.denyRead),
     denyWrite: paths(permissions.denyWrite),
     denyDelete: paths(permissions.denyDelete),
     denyExecute: rules(permissions.denyExecute),
+    denyTools: permissions.denyTools,
   };
 }
 
@@ -187,28 +216,27 @@ function ruleLines(label: string, items: readonly ExecuteRule[]): readonly strin
   return items.length === 0 ? [] : [`${label}:`, ...items.map(describe)];
 }
 
-/**
- * The permissions in words, for the prompt: the model reads what it may do from the same data the
- * provider enforces, so the two never disagree.
- */
 /** Where a run happens: the empty folder the provider runs in, inside the workspace root. */
 export interface RunPlace {
   readonly runDir: string;
   readonly root: string;
+  /** The run's effective policy: a read-only run has no `delete` tool. */
+  readonly policy?: PermissionPolicy;
 }
 
-export function formatPermissions(permissions: AgentPermissions, place?: RunPlace): string {
-  const deleteHow =
-    permissions.allowDelete.length === 0 || place === undefined
-      ? []
-      : [
-          `To delete, run \`${deleteBridgePath(place.runDir)} <path…>\` exactly so, from where you are (never cd): it is the only way, anything else that deletes is refused.`,
-        ];
+/**
+ * The permissions in words, for the prompt: the model reads what it may do from the same data the
+ * provider enforces, so the two never disagree. `toolLines` describe the run tools (`runToolLines`).
+ */
+export function formatPermissions(
+  permissions: AgentPermissions,
+  place?: RunPlace,
+  toolLines: readonly string[] = [],
+): string {
   const lines = [
     ...pathLines('You may read', permissions.allowRead),
     ...pathLines('You may write', permissions.allowWrite),
     ...pathLines('You may delete', permissions.allowDelete),
-    ...deleteHow,
     ...ruleLines('You may run', permissions.allowExecute),
     ...pathLines('You may not read', permissions.denyRead),
     ...pathLines('You may not write', permissions.denyWrite),
@@ -225,9 +253,9 @@ export function formatPermissions(permissions: AgentPermissions, place?: RunPlac
           'chaining listed commands with && works, but any other part (cd, a pipe, a redirection, another program) gets the whole command refused.',
         ];
   const body =
-    lines.length === 0
+    lines.length === 0 && toolLines.length === 0
       ? ['Nothing is allowed: you may not read, write or run anything yourself; work with what this prompt gives you.']
-      : [...lines, ...commands];
+      : [...lines, ...commands, ...toolLines];
   return [
     '<permissions>',
     'Enforced by the command, not only asked: anything not allowed below is blocked. Relative paths are relative to the workspace root; paths ending in / cover everything under them.',

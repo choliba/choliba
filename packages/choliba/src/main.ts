@@ -52,8 +52,7 @@ const runtime: Runtime = {
   execPath: process.execPath,
   home: homedir(),
   resolve: (specifier) => Bun.resolveSync(specifier, import.meta.dir),
-  run: (command, args, cwd, env = {}) =>
-    spawnSync(command, [...args], { stdio: 'inherit', cwd, env: { ...process.env, ...env } }).status ?? 1,
+  run: (command, args, cwd) => spawnSync(command, [...args], { stdio: 'inherit', cwd }).status ?? 1,
   capture: (command, args, cwd) => {
     const result = spawnSync(command, [...args], { cwd, encoding: 'utf8' });
     return { status: result.status, stderr: result.stderr };

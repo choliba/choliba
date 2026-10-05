@@ -18,6 +18,10 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
   `bunx choliba ...` funciona sem `cd`). Um diretório de `execute` fora do workspace precisa estar em `allow.read`,
   porque rodar comandos nele já dá acesso ao que há lá. Os providers aplicam em que diretórios o agente entra e
   quais comandos roda, mas não o vínculo "este comando só neste diretório": na prática vale a união dos dois.
+- **Ferramentas da run.** O que só os agentes usam (apagar, o navegador, o leitor de trace) não é comando público do
+  choliba: é um script que ele cria ao lado da pasta da execução, libera só para aquela sessão, nega para escrita e
+  apaga no fim. O apagar resolve cada caminho antes de agir e recusa o que sai de `allow.delete`. Veja
+  [Ferramentas da run](../referencia/agent-yaml.md#ferramentas-da-run).
 - **`steps` não passam pelas permissões.** Os passos são executados pelo choliba, fora da sessão do modelo: um
   passo pode fazer o que o modelo não pode (o `docs-updater` proíbe o modelo de rodar o Prettier e o roda no
   `steps.execute.after`). Veja [Steps](../referencia/agent-yaml.md#steps).

@@ -1,6 +1,7 @@
 import type { AgentDefinition, AgentSections, McpDeclaration } from '../agents/interfaces/agent.interface';
 import type { ExecutionMode } from '../agents/interfaces/command.interface';
 import { type RunPlace, formatPermissions } from './permissions';
+import { runToolLines } from './run-tools/run-tools';
 
 /**
  * Linux's `MAX_ARG_STRLEN` is 128 KiB (131072 bytes) per argument, NUL included. One byte is
@@ -74,7 +75,7 @@ export function wrapInstructions(agent: AgentDefinition, skillsInstruction = '',
   return [
     `<agent_instructions id="${attr(agent.id)}" name="${attr(agent.displayName)}" version="${attr(agent.version)}" source="${attr(agent.sourcePath)}">`,
     ...(skillsInstruction === '' ? [] : [skillsInstruction, '']),
-    formatPermissions(agent.permissions, place),
+    formatPermissions(agent.permissions, place, runToolLines(agent.permissions, place)),
     '',
     ...(mcps === '' ? [] : [mcps, '']),
     `Relative paths in the instructions below are relative to ${agent.dir}/.`,

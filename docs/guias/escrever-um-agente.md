@@ -37,7 +37,8 @@ notes:
 skills:
   playwright-cli:
     instructions: |
-      Onde a skill escreve `playwright-cli <comando>`, rode `bunx choliba playwright-cli <comando>`.
+      Onde a skill escreve `playwright-cli <comando>`, rode a ferramenta `playwright-cli` pelo caminho que o bloco de
+      permissões traz, seguida do `<comando>`.
 mcps:
   mcp-app:
     tools: [jira_get_issue]
@@ -49,8 +50,10 @@ permissions:
     read: ['${PROJECT_DIR}/', '${APP_DIR}/']
     write: ['${PROJECT_DIR}/tests/']
     execute:
-      '${CHOL_ROOT}/': [bunx choliba tests, bunx choliba playwright-cli]
+      '${CHOL_ROOT}/': [bunx choliba tests]
       '${APP_DIR}/': [git log, git diff]
+    tools:
+      playwright-cli: ['*']
   deny:
     write: ['${APP_DIR}/']
     execute:

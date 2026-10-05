@@ -141,6 +141,10 @@
               "type": "object",
               "propertyNames": { "$ref": "#/definitions/text" },
               "additionalProperties": { "$ref": "#/definitions/commands" }
+            },
+            "tools": {
+              "description": "Ferramentas da run -> subcomandos que pode usar (['*'] = todos). O choliba cria o script de cada uma ao lado da pasta da run e o prompt traz o caminho.",
+              "$ref": "#/definitions/runTools"
             }
           }
         },
@@ -159,6 +163,10 @@
               "type": "object",
               "propertyNames": { "$ref": "#/definitions/text" },
               "additionalProperties": { "oneOf": [{ "const": ["*"] }, { "$ref": "#/definitions/commands" }] }
+            },
+            "tools": {
+              "description": "Ferramentas da run -> subcomandos bloqueados; ['*'] = a ferramenta inteira.",
+              "$ref": "#/definitions/runTools"
             }
           }
         }
@@ -220,6 +228,21 @@
       "type": "array",
       "uniqueItems": true,
       "items": { "$ref": "#/definitions/text" }
+    },
+    "runTools": {
+      "type": "object",
+      "propertyNames": { "enum": ["playwright-cli", "playwright-trace"] },
+      "additionalProperties": {
+        "oneOf": [
+          { "const": ["*"] },
+          {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "allOf": [{ "$ref": "#/definitions/text" }, { "not": { "const": "*" } }] }
+          }
+        ]
+      }
     },
     "commands": {
       "type": "array",

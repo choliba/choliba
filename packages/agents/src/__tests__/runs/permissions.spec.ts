@@ -20,12 +20,14 @@ const DECLARED = readAgentPermissions({
     write: ['docs/'],
     delete: ['app/'],
     execute: { './': ['git diff', 'bunx choliba tests'], '/app/': ['git diff', 'composer test'] },
+    tools: { 'playwright-cli': ['*'], 'playwright-trace': ['open'] },
   },
   deny: {
     read: ['.env'],
     write: ['packages/'],
     delete: ['app/secrets/'],
     execute: { '/etc/': ['*'], './': ['git push'] },
+    tools: { 'playwright-cli': ['eval'] },
   },
 });
 
@@ -39,6 +41,10 @@ describe('readAgentPermissions', () => {
         { dir: './', commands: ['git diff', 'bunx choliba tests'] },
         { dir: '/app/', commands: ['git diff', 'composer test'] },
       ],
+      allowTools: [
+        { tool: 'playwright-cli', subcommands: ['*'] },
+        { tool: 'playwright-trace', subcommands: ['open'] },
+      ],
       denyRead: ['.env'],
       denyWrite: ['packages/'],
       denyDelete: ['app/secrets/'],
@@ -46,6 +52,7 @@ describe('readAgentPermissions', () => {
         { dir: '/etc/', commands: ['*'] },
         { dir: './', commands: ['git push'] },
       ],
+      denyTools: [{ tool: 'playwright-cli', subcommands: ['eval'] }],
     });
   });
 
@@ -59,15 +66,19 @@ describe('readAgentPermissions', () => {
     expect(readAgentPermissions({ allow: { execute: { './': 'git' } } }).allowExecute).toEqual([
       { dir: './', commands: [] },
     ]);
+    expect(readAgentPermissions({ allow: { tools: { 'playwright-cli': 'x' } } }).allowTools).toEqual([
+      { tool: 'playwright-cli', subcommands: [] },
+    ]);
   });
 });
 
 describe('mapPermissions and permissionTexts', () => {
-  it('change and list every path, directory and command', () => {
+  it('change and list every path, directory, command and subcommand, never a tool name', () => {
     const upper = mapPermissions(DECLARED, (text) => text.toUpperCase());
 
     expect(upper.allowExecute[1]).toEqual({ dir: '/APP/', commands: ['GIT DIFF', 'COMPOSER TEST'] });
     expect(upper.denyExecute[0]).toEqual({ dir: '/ETC/', commands: ['*'] });
+    expect(upper.allowTools[1]).toEqual({ tool: 'playwright-trace', subcommands: ['OPEN'] });
     expect(permissionTexts(upper)).toEqual([
       'SRC/',
       'DOCS/',
@@ -78,6 +89,8 @@ describe('mapPermissions and permissionTexts', () => {
       '/APP/',
       'GIT DIFF',
       'COMPOSER TEST',
+      '*',
+      'OPEN',
       '.ENV',
       'PACKAGES/',
       'APP/SECRETS/',
@@ -85,6 +98,7 @@ describe('mapPermissions and permissionTexts', () => {
       '*',
       './',
       'GIT PUSH',
+      'EVAL',
     ]);
   });
 });
@@ -127,26 +141,14 @@ describe('formatPermissions', () => {
     );
   });
 
-  it('names the delete bridge when the run place is known', () => {
-    const text = formatPermissions(DECLARED, { runDir: '/w/.cache/runs/x', root: '/w' });
-    expect(text).toContain('You may delete:');
-    expect(text).toContain('/w/.cache/runs/x.choliba-delete <path…>');
-    expect(text).toContain('it is the only way');
-  });
+  it('ends with the run tools it is given, which alone are enough to allow something', () => {
+    const place = { runDir: '/w/.cache/runs/x', root: '/w' };
+    const text = formatPermissions(DECLARED, place, ['Tools: …', '- `x.delete <path…>`']);
+    expect(text.split('\n').slice(-3)).toEqual(['Tools: …', '- `x.delete <path…>`', '</permissions>']);
 
-  it('lists delete without the bridge path when the run place is unknown', () => {
-    const onlyDelete = readAgentPermissions({ allow: { delete: ['app/'] } });
-    const text = formatPermissions(onlyDelete);
-    expect(text).toContain('You may delete:');
-    expect(text).not.toContain('.choliba-delete');
-    expect(text).not.toContain('Run each command exactly as listed');
-  });
-
-  it('explains the bridge when only delete is allowed and the run place is known', () => {
-    const onlyDelete = readAgentPermissions({ allow: { delete: ['app/'] } });
-    const text = formatPermissions(onlyDelete, { runDir: '/w/.cache/runs/x', root: '/w' });
-    expect(text).toContain('/w/.cache/runs/x.choliba-delete <path…>');
-    expect(text).not.toContain('Run each command exactly as listed');
+    const onlyTools = formatPermissions(NO_PERMISSIONS, place, ['Tools: …']);
+    expect(onlyTools).not.toContain('Nothing is allowed');
+    expect(onlyTools).not.toContain('Run each command exactly as listed');
   });
 
   it('says that nothing is allowed when nothing is declared', () => {

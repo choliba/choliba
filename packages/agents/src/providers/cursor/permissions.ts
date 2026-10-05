@@ -5,6 +5,7 @@ import type { PermissionPolicy } from '../../agents/interfaces/command.interface
 import type { McpServer } from '../../mcps/mcps';
 import type { AgentPermissions, ExecuteRule } from '../../runs/permissions';
 import { allowedCommands, blocksEveryCommand, pathBase, pathGlob, withoutTrailingSlash } from '../../runs/permissions';
+import type { RunToolCommands } from '../../runs/run-tools/run-tools';
 
 export interface CursorPermissions {
   readonly allow: readonly string[];
@@ -102,9 +103,9 @@ function cdTokens(
   permissions: AgentPermissions,
   workspaceRoot: string,
   runDir: string,
-  deleteBridge: string | undefined,
+  runTools: RunToolCommands,
 ): readonly string[] {
-  if (permissions.allowExecute.length === 0 && deleteBridge === undefined) {
+  if (permissions.allowExecute.length === 0 && runTools.allow.length === 0) {
     return [];
   }
   const dirs = permissions.allowExecute
@@ -118,10 +119,7 @@ function denyShellTokens(rule: ExecuteRule): readonly string[] {
   return blocksEveryCommand(rule) ? [`Shell(cd:${withoutTrailingSlash(rule.dir)})`] : rule.commands.map(shellToken);
 }
 
-export interface CursorPermissionsOptions {
-  /** Absolute path of the ephemeral delete bridge in the run dir, when `allow.delete` applies. */
-  readonly deleteBridge?: string | undefined;
-}
+const NO_RUN_TOOLS: RunToolCommands = { allow: [], deny: [], scripts: [] };
 
 /**
  * Translates what agent.yaml declares (`permissions`, already absolute, and the MCP servers in `mcps`)
@@ -136,10 +134,9 @@ export function cursorPermissions(
   runDir: string,
   mcpServers: readonly McpServer[] = [],
   read: ReadDir = readDir,
-  options: CursorPermissionsOptions = {},
+  runTools: RunToolCommands = NO_RUN_TOOLS,
 ): CursorPermissions {
   const writes = policy === 'read-only' ? [] : permissions.allowWrite;
-  const deleteBridge = policy === 'read-only' ? undefined : options.deleteBridge;
   const readable = complementOf([runDir, ...reached(permissions.allowRead)], read);
   const writable = complementOf([runDir, ...reached(writes)], read);
   return {
@@ -147,16 +144,17 @@ export function cursorPermissions(
       ...permissions.allowRead.map((path) => fileToken('Read', path)),
       ...writes.map((path) => fileToken('Write', path)),
       ...allowedCommands(permissions).map(shellToken),
-      ...(deleteBridge === undefined ? [] : [shellToken(deleteBridge)]),
-      ...cdTokens(permissions, workspaceRoot, runDir, deleteBridge),
+      ...runTools.allow.map(shellToken),
+      ...cdTokens(permissions, workspaceRoot, runDir, runTools),
       ...mcpServers.flatMap(mcpTokens),
     ],
     deny: [
       ...permissions.denyRead.map((path) => fileToken('Read', path)),
       ...permissions.denyWrite.map((path) => fileToken('Write', path)),
-      // The helper is allowed to run, so it must never be rewritten (once written, the complement names it too).
-      ...(deleteBridge === undefined ? [] : [fileToken('Write', deleteBridge)]),
+      // The run tools are allowed to run, so they must never be rewritten (once written, the complement names them too).
+      ...runTools.scripts.map((path) => fileToken('Write', path)),
       ...permissions.denyExecute.flatMap(denyShellTokens),
+      ...runTools.deny.map(shellToken),
       ...readable.map((path) => fileToken('Read', path)),
       ...writable.map((path) => fileToken('Write', path)),
     ],
