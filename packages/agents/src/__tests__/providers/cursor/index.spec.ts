@@ -1,13 +1,13 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { AgentDefinition } from '../../../agent.types';
-import type { AgentEvent } from '../../../events.types';
+import type { AgentDefinition } from '../../../agents/interfaces/agent.interface';
+import type { AgentEvent } from '../../../runs/interfaces/event.interface';
 import type { ProviderRequest } from '../../../providers/provider.types';
 import { cursorProvider } from '../../../providers/cursor';
-import { PromptTooLargeError, MAX_ARG_BYTES } from '../../../prompt';
+import { PromptTooLargeError, MAX_ARG_BYTES } from '../../../runs/prompt';
 import { makeTmpDir } from '../../helpers/tmp';
-import { NO_PERMISSIONS, readAgentPermissions } from '../../../permissions';
+import { NO_PERMISSIONS, readAgentPermissions } from '../../../runs/permissions';
 import { NO_MODE_STEPS, fakeSections } from '../../helpers/agent';
 
 const CURSOR_PLAN_FIXTURE = join(__dirname, '..', '..', 'fixtures', 'streams', 'cursor-create-plan-tool-call.jsonl');

@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { absolutePermissions, readAgentPermissions } from '../../../permissions';
+import { absolutePermissions, readAgentPermissions } from '../../../runs/permissions';
 import type { DirEntry, ReadDir } from '../../../providers/cursor/permissions';
 import { complementOf, cursorPermissions, readDir, shellToken } from '../../../providers/cursor/permissions';
 import { makeTmpDir } from '../../helpers/tmp';

@@ -1,5 +1,5 @@
-import type { AgentEvent } from '../events.types';
-import { asBoolean, asString, isRecord, parseJsonLine } from '../json';
+import type { AgentEvent } from '../runs/interfaces/event.interface';
+import { asBoolean, asString, isRecord, parseJsonLine } from '../shared/json';
 import { contentBlocks, summarize, toolResultText } from './message-blocks';
 import { parseCursorToolCall } from './cursor/tool-calls';
 import type { StreamParser } from './provider.types';

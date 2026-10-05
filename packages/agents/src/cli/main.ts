@@ -4,7 +4,7 @@ import { ProcessRunnerService } from '@choliba/terminal';
 
 import { findWorkspaceRoot, loadRepoConfig } from '@choliba/core/config';
 
-import { runAgentsCli } from './run';
+import { runAgentsCli } from '../runs/run-agents';
 
 // The only lines in this package that read the real `Bun.*` globals. Kept here, in the thin
 // wiring entrypoint the coverage ratchet already excludes, so every other module stays

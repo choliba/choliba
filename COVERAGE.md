@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 04/10/2026 21:54:36 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 04/10/2026 22:16:01 — não editar manualmente.
 
 ## Resumo
 
@@ -21,29 +21,18 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
-🟢|[src/agent-loader.ts](packages/agents/src/agent-loader.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agent-validation.ts](packages/agents/src/agent-validation.ts)|100.00|100.00|100.00|100.00
-🟢|[src/cli/args.ts](packages/agents/src/cli/args.ts)|100.00|100.00|100.00|100.00
-🟢|[src/cli/cli-spec.ts](packages/agents/src/cli/cli-spec.ts)|100.00|100.00|100.00|100.00
-🟢|[src/cli/dry-run.ts](packages/agents/src/cli/dry-run.ts)|100.00|100.00|100.00|100.00
-🟢|[src/cli/run.ts](packages/agents/src/cli/run.ts)|100.00|100.00|100.00|100.00
-🟢|[src/cli/ticket-run.ts](packages/agents/src/cli/ticket-run.ts)|100.00|100.00|100.00|100.00
-🟢|[src/command-registry.ts](packages/agents/src/command-registry.ts)|100.00|100.00|100.00|100.00
-🟢|[src/commands/agent.ts](packages/agents/src/commands/agent.ts)|100.00|100.00|100.00|100.00
-🟢|[src/commands/index.ts](packages/agents/src/commands/index.ts)|100.00|100.00|100.00|100.00
-🟢|[src/define-command.ts](packages/agents/src/define-command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/agent-loader.ts](packages/agents/src/agents/agent-loader.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/agent-validation.ts](packages/agents/src/agents/agent-validation.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/agents.help.ts](packages/agents/src/agents/agents.help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/commands/agent.ts](packages/agents/src/agents/commands/agent.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/commands/command-registry.ts](packages/agents/src/agents/commands/command-registry.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/commands/define-command.ts](packages/agents/src/agents/commands/define-command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/commands/index.ts](packages/agents/src/agents/commands/index.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/dto/run-agent.dto.ts](packages/agents/src/agents/dto/run-agent.dto.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/workspace-dirs.ts](packages/agents/src/agents/workspace-dirs.ts)|100.00|100.00|100.00|100.00
 🟢|[src/index.ts](packages/agents/src/index.ts)|100.00|100.00|100.00|100.00
-🟢|[src/json.ts](packages/agents/src/json.ts)|100.00|100.00|100.00|100.00
-🟢|[src/mcps.ts](packages/agents/src/mcps.ts)|100.00|100.00|100.00|100.00
-🟢|[src/permissions.ts](packages/agents/src/permissions.ts)|100.00|100.00|100.00|100.00
-🟢|[src/plan-store.ts](packages/agents/src/plan-store.ts)|100.00|100.00|100.00|100.00
-🟢|[src/prepare/actions.ts](packages/agents/src/prepare/actions.ts)|100.00|100.00|100.00|100.00
-🟢|[src/prepare/add-files.ts](packages/agents/src/prepare/add-files.ts)|100.00|100.00|100.00|100.00
-🟢|[src/prepare/constants.ts](packages/agents/src/prepare/constants.ts)|100.00|100.00|100.00|100.00
-🟢|[src/prepare/git-state.ts](packages/agents/src/prepare/git-state.ts)|100.00|100.00|100.00|100.00
-🟢|[src/prepare/registry.ts](packages/agents/src/prepare/registry.ts)|100.00|100.00|100.00|100.00
-🟢|[src/prepare/working-tree-diff.ts](packages/agents/src/prepare/working-tree-diff.ts)|100.00|100.00|100.00|100.00
-🟢|[src/prompt.ts](packages/agents/src/prompt.ts)|100.00|100.00|100.00|100.00
+🟢|[src/mcps/mcps.ts](packages/agents/src/mcps/mcps.ts)|100.00|100.00|100.00|100.00
+🟢|[src/plans/plan-store.ts](packages/agents/src/plans/plan-store.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/claude/index.ts](packages/agents/src/providers/claude/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/claude/permissions.ts](packages/agents/src/providers/claude/permissions.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/cursor/cli-json.ts](packages/agents/src/providers/cursor/cli-json.ts)|100.00|100.00|100.00|100.00
@@ -53,13 +42,24 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/providers/message-blocks.ts](packages/agents/src/providers/message-blocks.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/registry.ts](packages/agents/src/providers/registry.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/stream-json.ts](packages/agents/src/providers/stream-json.ts)|100.00|100.00|100.00|100.00
-🟢|[src/render.ts](packages/agents/src/render.ts)|100.00|100.00|100.00|100.00
-🟢|[src/run-agent.ts](packages/agents/src/run-agent.ts)|100.00|100.00|100.00|100.00
-🟢|[src/skills.ts](packages/agents/src/skills.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/dry-run.ts](packages/agents/src/runs/dry-run.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/permissions.ts](packages/agents/src/runs/permissions.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/prompt.ts](packages/agents/src/runs/prompt.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/render.ts](packages/agents/src/runs/render.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/run-agent.ts](packages/agents/src/runs/run-agent.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/run-agents.ts](packages/agents/src/runs/run-agents.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/ticket-run.ts](packages/agents/src/runs/ticket-run.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/vars.ts](packages/agents/src/runs/vars.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shared/json.ts](packages/agents/src/shared/json.ts)|100.00|100.00|100.00|100.00
+🟢|[src/skills/skills.ts](packages/agents/src/skills/skills.ts)|100.00|100.00|100.00|100.00
+🟢|[src/steps/actions.ts](packages/agents/src/steps/actions.ts)|100.00|100.00|100.00|100.00
+🟢|[src/steps/add-files.ts](packages/agents/src/steps/add-files.ts)|100.00|100.00|100.00|100.00
+🟢|[src/steps/constants.ts](packages/agents/src/steps/constants.ts)|100.00|100.00|100.00|100.00
+🟢|[src/steps/git-state.ts](packages/agents/src/steps/git-state.ts)|100.00|100.00|100.00|100.00
 🟢|[src/steps/git-working-tree-diff.ts](packages/agents/src/steps/git-working-tree-diff.ts)|100.00|100.00|100.00|100.00
 🟢|[src/steps/index-diff.ts](packages/agents/src/steps/index-diff.ts)|100.00|100.00|100.00|100.00
-🟢|[src/vars.ts](packages/agents/src/vars.ts)|100.00|100.00|100.00|100.00
-🟢|[src/workspace-dirs.ts](packages/agents/src/workspace-dirs.ts)|100.00|100.00|100.00|100.00
+🟢|[src/steps/registry.ts](packages/agents/src/steps/registry.ts)|100.00|100.00|100.00|100.00
+🟢|[src/steps/working-tree-diff.ts](packages/agents/src/steps/working-tree-diff.ts)|100.00|100.00|100.00|100.00
 
 </details>
 

@@ -1,7 +1,7 @@
-import type { AgentDefinition } from '../agent.types';
-import type { ExecutionMode, PermissionPolicy } from '../command.types';
-import type { AgentEvent } from '../events.types';
-import type { McpServer } from '../mcps';
+import type { AgentDefinition } from '../agents/interfaces/agent.interface';
+import type { ExecutionMode, PermissionPolicy } from '../agents/interfaces/command.interface';
+import type { AgentEvent } from '../runs/interfaces/event.interface';
+import type { McpServer } from '../mcps/mcps';
 
 export type ProviderId = 'claude' | 'cursor';
 

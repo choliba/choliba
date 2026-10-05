@@ -1,6 +1,6 @@
-import { mcpServersMap } from '../../mcps';
-import { absolutePermissions } from '../../permissions';
-import { assertArgvFits, wrapInstructions } from '../../prompt';
+import { mcpServersMap } from '../../mcps/mcps';
+import { absolutePermissions } from '../../runs/permissions';
+import { assertArgvFits, wrapInstructions } from '../../runs/prompt';
 import { createStreamJsonParser } from '../stream-json';
 import type { PlanContentContext, PlannedFile, ProviderAdapter, ProviderRequest } from '../provider.types';
 import { applyCursorMcpServers, applyCursorPermissions, planCursorMcpServers, planCursorPermissions } from './cli-json';
