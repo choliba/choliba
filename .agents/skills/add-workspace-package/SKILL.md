@@ -25,8 +25,9 @@ missing `typecheck` script or a wrong `extends` path silently drops the package 
    should do, make it pass, then delete the starter code. The starter exists only so the gates have something
    to check the moment the package appears.
 4. **Wire dependencies.** To use a sibling, add `"@choliba/<name>": "workspace:*"` to the dependent's
-   `package.json` `dependencies`, run `bun install`, and import from `@choliba/<name>`. Libraries expose
-   `./src/index.ts` through `exports`, so no build is needed. For an external package, run `bun add <pkg>`
+   `package.json` `dependencies`, run `bun install`, and import from `@choliba/<name>` (plain functions) or
+   `@choliba/<name>/nest` (its Nest module and service; see the `nestjs` skill). Libraries expose
+   `./src/index.ts` and `./src/nest.ts` through `exports`, so no build is needed. For an external package, run `bun add <pkg>`
    from inside that package's directory so it lands in the right `package.json` (Bun guide:
    https://bun.com/guides/install/workspaces). Shared tooling goes in the root `devDependencies` instead.
    Always finish with `bun install`: a stale `bun.lock` fails `--frozen-lockfile` in CI.

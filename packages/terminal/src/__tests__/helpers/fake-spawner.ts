@@ -1,4 +1,4 @@
-import type { ProcessSpawner, SpawnCommandOptions, SpawnedProcess } from '../../spawn';
+import type { ProcessSpawner, SpawnCommandOptions, SpawnedProcess } from '../../terminal/spawn';
 
 export function delay(ms: number): Promise<void> {
   return new Promise((resolve) => {

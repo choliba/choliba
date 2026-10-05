@@ -2,6 +2,9 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ENV_FILE } from './files';
 
+/** The workspace's `.env` merged with the process environment (the process wins). */
+export type RepoConfig = Readonly<Record<string, string | undefined>>;
+
 /** Parses a `.env` file body into key/value pairs (no variable expansion). */
 export function parseConfigFile(content: string): Record<string, string> {
   const out: Record<string, string> = {};

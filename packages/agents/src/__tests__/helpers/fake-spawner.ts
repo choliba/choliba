@@ -1,7 +1,7 @@
 import type { ProcessSpawner, SpawnCommandOptions, SpawnedProcess } from '@choliba/terminal';
 
 /**
- * A minimal fake `ProcessSpawner` for `ProcessRunner`, so `run-agent.spec.ts` exercises the
+ * A minimal fake `ProcessSpawner` for `ProcessRunnerService`, so `run-agent.spec.ts` exercises the
  * real runner and session lifecycle without ever touching `Bun.spawn`. Mirrors the shape of
  * `@choliba/terminal`'s own test helper, which lives under its `src/__tests__/` and is not
  * importable across packages.

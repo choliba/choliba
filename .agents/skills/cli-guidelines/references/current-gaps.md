@@ -5,13 +5,12 @@ found; remove the line, do not mark it done.
 
 | Rule (`SKILL.md`) | Today | Where |
 |---|---|---|
-| 6. Color only for humans | `colorize` defaults to `true`; only `--no-color` turns it off. `NO_COLOR`, `TERM=dumb` and a non-TTY stdout are not checked | `packages/agents/src/cli/args.ts` (`colorize`) |
-| 6. Color decided centrally | Each CLI decides on its own; only the agents CLI has `--no-color` | `packages/agents/src/cli/args.ts`, `packages/terminal/src/cli/args.ts` |
-| 5. Standard flags | No `--version` on `choliba` | `packages/choliba/src/route.ts` |
-| 7. `--no-input` | Not supported; the one prompt (open the HTML report in `tests`) is already TTY-only | `packages/runner/src/cli/run-tests.ts` |
-| 9. Typo suggestions | An unknown command or flag is reported without a "did you mean" | `packages/choliba/src/route.ts`, the per-CLI parsers |
-| 1. stdout injected | `tests` writes through the global `writeStdout`/`writeStderr` instead of injected streams | `packages/runner/src/cli/run-tests.ts` |
+| 5. Standard flags | No `--version` on `choliba` | `packages/choliba/src/help/app.help.ts` |
+| 7. `--no-input` | Not supported; the one prompt (open the HTML report in `tests`) is already TTY-only | `packages/runner/src/tests/run-tests.ts` |
+| 9. Typo suggestions | An unknown command or flag is reported without a "did you mean" | `packages/choliba/src/help/root.command.ts`, the per-command parsers |
 
-What already follows the rules, for reference: pt-BR help from `CommandSpec`, dynamic autocomplete, `--dry-run`
-on agents and `install`, SIGINT/SIGTERM forwarding with cleanup of the run folder (`runAgent`, `terminal run`),
-flags over environment over `.env` (`loadRepoConfig`), credentials only in files.
+What already follows the rules, for reference: pt-BR help from `CommandSpec`, dynamic autocomplete of the whole
+line (`choliba __complete`), `--dry-run` on agents and `install`, SIGINT/SIGTERM forwarding with cleanup of the run
+folder (`runAgent`, `terminal run`), flags over environment over `.env` (`loadRepoConfig`), credentials only in
+files, color decided once (`ThemeService`: `--no-color` global, `NO_COLOR`, `TERM=dumb`, non-TTY stdout,
+`FORCE_COLOR`; colors from `CHOL_COLORS`), every command writing through the injected stdout/stderr.

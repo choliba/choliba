@@ -5,10 +5,13 @@ import { join } from 'node:path';
  * pasta de trabalho, de um projeto ou de uma origem de `choliba install`).
  */
 
-/** Onde ficam as aplicações testadas e os agentes do choliba (`app/agents`, `app/skills`, `app/mcps`). */
+/** Onde ficam as aplicações testadas (`app/<app>/`). */
 export const APP_DIR = 'app';
 
-/** Os agentes, em qualquer raiz que os tenha (a pasta da aplicação, uma origem de `choliba install`). */
+/** Onde fica o que é do choliba na pasta de trabalho: agentes, skills, MCPs e o tema. */
+export const CHOLIBA_DIR = '.choliba';
+
+/** Os agentes, em qualquer raiz que os tenha (a pasta do choliba, uma origem de `choliba install`). */
 export const AGENTS_SUBDIR = 'agents';
 
 /** As skills, ao lado dos agentes. */
@@ -30,13 +33,13 @@ export const TESTS_SUBDIR = 'tests';
 export const TICKET_RUNS_SUBDIR = 'ticket-runs';
 
 /** Onde ficam os agentes quando `CHOL_AGENTS_DIR` não diz outra coisa. */
-export const DEFAULT_AGENTS_DIR = join(APP_DIR, AGENTS_SUBDIR);
+export const DEFAULT_AGENTS_DIR = join(CHOLIBA_DIR, AGENTS_SUBDIR);
 
 /** Onde ficam as skills quando `CHOL_SKILLS_DIR` não diz outra coisa. */
-export const DEFAULT_SKILLS_DIR = join(APP_DIR, SKILLS_SUBDIR);
+export const DEFAULT_SKILLS_DIR = join(CHOLIBA_DIR, SKILLS_SUBDIR);
 
 /** Onde ficam os servidores MCP quando `CHOL_MCPS_DIR` não diz outra coisa. */
-export const DEFAULT_MCPS_DIR = join(APP_DIR, MCPS_SUBDIR);
+export const DEFAULT_MCPS_DIR = join(CHOLIBA_DIR, MCPS_SUBDIR);
 
 /** Arquivos que o choliba gera e apaga, fora do controle de versão. */
 export const CACHE_DIR = '.cache';

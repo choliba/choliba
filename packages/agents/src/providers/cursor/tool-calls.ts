@@ -1,5 +1,5 @@
-import type { AgentEvent } from '../../events.types';
-import { asString, isRecord } from '../../json';
+import type { AgentEvent } from '../../runs/interfaces/event.interface';
+import { asString, isRecord } from '../../shared/json';
 
 /** `readToolCall` → `Read`, `shellToolCall` → `Shell`: the name shown in the terminal. */
 export function cursorToolName(key: string): string {

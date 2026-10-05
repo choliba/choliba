@@ -5,15 +5,23 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./output": "./src/output.ts"
-  },
-  "bin": {
-    "mono-terminal": "./src/cli/main.ts"
+    "./output": "./src/terminal/output.ts",
+    "./nest": "./src/nest.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "devDependencies": {
-    "@types/bun": "^1.4.2"
+    "@nestjs/testing": "~11.2",
+    "@types/bun": "^1.4.2",
+    "nest-commander-testing": "~3.6"
+  },
+  "dependencies": {
+    "@choliba/core": "workspace:*",
+    "@nestjs/common": "~11.2",
+    "@nestjs/core": "~11.2",
+    "nest-commander": "~3.21",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
   }
 }

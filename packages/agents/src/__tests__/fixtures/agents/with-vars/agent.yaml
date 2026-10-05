@@ -10,7 +10,7 @@ models:
   - claude-3-5-sonnet
 
 role: |
-  Fixture de teste: grava tickets em ${PROJECTS_DIR}.
+  Fixture de teste: grava tickets em ${CHOL_PROJECTS_DIR}.
 context:
   - Nada.
 input: |
@@ -24,8 +24,8 @@ notes:
 
 permissions:
   allow:
-    read: ['${PROJECTS_DIR}/*/config.json']
-    write: ['${PROJECTS_DIR}/*/tickets/']
+    read: ['${CHOL_PROJECTS_DIR}/*/config.json']
+    write: ['${CHOL_PROJECTS_DIR}/*/tickets/']
   deny:
     write: [agents/]
 

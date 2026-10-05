@@ -1,4 +1,4 @@
-import type { AgentEvent } from '../../events.types';
+import type { AgentEvent } from '../../runs/interfaces/event.interface';
 import {
   createStreamJsonParser,
   defaultResolvePlanContent,

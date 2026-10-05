@@ -1,13 +1,13 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { AgentDefinition } from '../../../agent.types';
-import type { AgentEvent } from '../../../events.types';
-import type { ProviderRequest } from '../../../providers/provider.types';
-import { cursorProvider } from '../../../providers/cursor';
-import { PromptTooLargeError, MAX_ARG_BYTES } from '../../../prompt';
+import type { AgentDefinition } from '../../../agents/interfaces/agent.interface';
+import type { AgentEvent } from '../../../runs/interfaces/event.interface';
+import type { ProviderRequest } from '../../../providers/interfaces/provider.interface';
+import { cursorProvider } from '../../helpers/providers';
+import { PromptTooLargeError, MAX_ARG_BYTES } from '../../../runs/prompt';
 import { makeTmpDir } from '../../helpers/tmp';
-import { NO_PERMISSIONS, readAgentPermissions } from '../../../permissions';
+import { NO_PERMISSIONS, readAgentPermissions } from '../../../runs/permissions';
 import { NO_MODE_STEPS, fakeSections } from '../../helpers/agent';
 
 const CURSOR_PLAN_FIXTURE = join(__dirname, '..', '..', 'fixtures', 'streams', 'cursor-create-plan-tool-call.jsonl');
@@ -108,7 +108,7 @@ describe('cursorProvider.buildArgs', () => {
           {
             name: 'browser',
             config: { command: 'npx', args: ['browser-mcp'] },
-            path: '/repo/app/mcps/browser.json',
+            path: '/repo/.choliba/mcps/browser.json',
           },
         ],
       }),
@@ -203,7 +203,7 @@ describe('cursorProvider.createParser', () => {
 
   it('resolvePlanContent treats blank plan markdown as missing', () => {
     expect(
-      cursorProvider.resolvePlanContent?.({
+      cursorProvider.resolvePlanContent({
         planMarkdown: '   ',
         doneEvent: undefined,
         textParts: [],
@@ -213,7 +213,7 @@ describe('cursorProvider.createParser', () => {
 
   it('resolvePlanContent ignores done narration when no plan event was captured', () => {
     expect(
-      cursorProvider.resolvePlanContent?.({
+      cursorProvider.resolvePlanContent({
         planMarkdown: undefined,
         doneEvent: { type: 'done', isError: false, text: 'Creating the plan...' },
         textParts: ['Analyzing...'],
@@ -315,7 +315,7 @@ describe('cursorProvider.createParser', () => {
     const plan = events.find((event): event is Extract<AgentEvent, { type: 'plan' }> => event.type === 'plan');
     expect(plan?.markdown).toContain('## Documentation update plan');
     expect(
-      cursorProvider.resolvePlanContent?.({
+      cursorProvider.resolvePlanContent({
         planMarkdown: plan?.markdown,
         doneEvent: events.find((event): event is Extract<AgentEvent, { type: 'done' }> => event.type === 'done'),
         textParts: events
@@ -339,14 +339,14 @@ describe('cursorProvider.prepareWorkspace', () => {
     const tmp = makeTmpDir('cursor-prepare');
     try {
       const permissions = readAgentPermissions({ deny: { execute: { './': ['prettier'] } } });
-      const restore = cursorProvider.prepareWorkspace?.(
+      const restore = cursorProvider.prepareWorkspace(
         fakeRequest({ workspaceRoot: '/', runDir: tmp.path, agent: fakeAgent({ permissions }) }),
       );
 
       const { allow, deny } = cliJsonIn(tmp.path);
       expect(allow).toEqual([]);
       expect(deny[0]).toBe('Shell(prettier)');
-      restore?.();
+      restore();
       expect(existsSync(join(tmp.path, '.cursor'))).toBe(false);
     } finally {
       tmp.cleanup();
@@ -356,12 +356,12 @@ describe('cursorProvider.prepareWorkspace', () => {
   it('denies the rest of the disk even to an agent that declares no permissions', () => {
     const tmp = makeTmpDir('cursor-prepare-none');
     try {
-      const restore = cursorProvider.prepareWorkspace?.(fakeRequest({ workspaceRoot: '/', runDir: tmp.path }));
+      const restore = cursorProvider.prepareWorkspace(fakeRequest({ workspaceRoot: '/', runDir: tmp.path }));
 
       const { allow, deny } = cliJsonIn(tmp.path);
       expect(allow).toEqual([]);
       expect(deny).toEqual(expect.arrayContaining(['Read(/etc/**)', 'Write(/etc/**)']));
-      restore?.();
+      restore();
     } finally {
       tmp.cleanup();
     }
@@ -370,7 +370,7 @@ describe('cursorProvider.prepareWorkspace', () => {
   it('writes the listed MCP servers and their permission for the run, then removes both files', () => {
     const tmp = makeTmpDir('cursor-prepare-mcps');
     try {
-      const restore = cursorProvider.prepareWorkspace?.(
+      const restore = cursorProvider.prepareWorkspace(
         fakeRequest({
           workspaceRoot: '/',
           runDir: tmp.path,
@@ -378,7 +378,7 @@ describe('cursorProvider.prepareWorkspace', () => {
             {
               name: 'browser',
               config: { command: 'npx', args: ['browser-mcp'] },
-              path: '/repo/app/mcps/browser.json',
+              path: '/repo/.choliba/mcps/browser.json',
             },
           ],
         }),
@@ -387,7 +387,7 @@ describe('cursorProvider.prepareWorkspace', () => {
       const mcpJson: unknown = JSON.parse(readFileSync(join(tmp.path, '.cursor/mcp.json'), 'utf8'));
       expect(mcpJson).toEqual({ mcpServers: { browser: { command: 'npx', args: ['browser-mcp'] } } });
       expect(cliJsonIn(tmp.path).allow).toEqual(['Mcp(browser:*)']);
-      restore?.();
+      restore();
       expect(existsSync(join(tmp.path, '.cursor'))).toBe(false);
     } finally {
       tmp.cleanup();
@@ -401,7 +401,7 @@ describe('cursorProvider.prepareWorkspace', () => {
       writeFileSync(join(tmp.path, '.cursor/mcp.json'), '{ nope');
 
       expect(() =>
-        cursorProvider.prepareWorkspace?.(
+        cursorProvider.prepareWorkspace(
           fakeRequest({
             workspaceRoot: '/',
             runDir: tmp.path,
@@ -409,7 +409,7 @@ describe('cursorProvider.prepareWorkspace', () => {
               {
                 name: 'browser',
                 config: { command: 'npx', args: ['browser-mcp'] },
-                path: '/repo/app/mcps/browser.json',
+                path: '/repo/.choliba/mcps/browser.json',
               },
             ],
           }),
@@ -426,10 +426,10 @@ describe('cursorProvider.previewWorkspace', () => {
   it('shows what prepareWorkspace would write, without writing anything', () => {
     const tmp = makeTmpDir('cursor-preview');
     try {
-      const browser = { name: 'browser', config: { command: 'npx' }, path: '/repo/app/mcps/browser.json' };
+      const browser = { name: 'browser', config: { command: 'npx' }, path: '/repo/.choliba/mcps/browser.json' };
       const request = fakeRequest({ workspaceRoot: '/', runDir: tmp.path, mcpServers: [browser] });
 
-      const files = cursorProvider.previewWorkspace?.(request) ?? [];
+      const files = cursorProvider.previewWorkspace(request);
 
       expect(files.map((file) => file.path)).toEqual([
         join(tmp.path, '.cursor', 'cli.json'),
@@ -438,10 +438,10 @@ describe('cursorProvider.previewWorkspace', () => {
       expect(JSON.parse(files[1]?.content ?? '')).toEqual({ mcpServers: { browser: { command: 'npx' } } });
       expect(existsSync(join(tmp.path, '.cursor'))).toBe(false);
 
-      const restore = cursorProvider.prepareWorkspace?.(request);
+      const restore = cursorProvider.prepareWorkspace(request);
       expect(readFileSync(join(tmp.path, '.cursor', 'cli.json'), 'utf8')).toBe(files[0]?.content);
-      restore?.();
-      expect(cursorProvider.previewWorkspace?.(fakeRequest({ workspaceRoot: '/', runDir: tmp.path }))).toHaveLength(1);
+      restore();
+      expect(cursorProvider.previewWorkspace(fakeRequest({ workspaceRoot: '/', runDir: tmp.path }))).toHaveLength(1);
     } finally {
       tmp.cleanup();
     }

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://choliba.internal/schemas/v1/agent.yaml.schema.json",
   "title": "agent.yaml (padrão 1)",
-  "description": "Padrão 1 do app/agents/<id>/agent.yaml, a declaração completa do agente — validado por validateAgentYamlV1 em packages/agents/src/agent-validation.ts. Regras que o schema não expressa ficam no código: version é a primeira chave, agent.id é igual ao nome da pasta, modes.default e cada modo de steps estão em modes.allow, e cada ${VAR} é do catálogo e vale onde está.",
+  "description": "Padrão 1 do .choliba/agents/<id>/agent.yaml, a declaração completa do agente — validado por validateAgentYamlV1 em packages/agents/src/agent-validation.ts. Regras que o schema não expressa ficam no código: version é a primeira chave, agent.id é igual ao nome da pasta, modes.default e cada modo de steps estão em modes.allow, e cada ${VAR} é do catálogo e vale onde está.",
   "type": "object",
   "required": ["version", "agent", "models", "role", "input", "flow", "output"],
   "additionalProperties": false,
@@ -15,7 +15,7 @@
       "additionalProperties": false,
       "properties": {
         "id": {
-          "description": "Identificador do agente e nome do comando (choliba <id>); igual ao nome da pasta app/agents/<id>/.",
+          "description": "Identificador do agente e nome do comando (choliba <id>); igual ao nome da pasta .choliba/agents/<id>/.",
           "type": "string",
           "pattern": "^[a-z][a-z0-9-]*$"
         },
@@ -33,6 +33,10 @@
           "description": "O que faz, o que não faz e quando usar (aparece na ajuda).",
           "type": "string",
           "pattern": "\\S"
+        },
+        "color": {
+          "description": "Cor do rótulo [agente] no terminal. CHOL_COLORS (agents.<id>=<cor>) no .env de quem usa ganha desta.",
+          "enum": ["red", "green", "yellow", "blue", "magenta", "cyan", "white", "gray", "bright-red", "bright-green", "bright-yellow", "bright-blue", "bright-magenta", "bright-cyan"]
         }
       }
     },
@@ -68,7 +72,7 @@
       "$ref": "#/definitions/texts"
     },
     "skills": {
-      "description": "Skills que o agente recebe: pastas em app/skills/ (ou CHOL_SKILLS_DIR) com SKILL.md. Lista de nomes, ou mapa nome -> null / { instructions } (como este agente usa a skill; entra no prompt só com a skill).",
+      "description": "Skills que o agente recebe: pastas em .choliba/skills/ (ou CHOL_SKILLS_DIR) com SKILL.md. Lista de nomes, ou mapa nome -> null / { instructions } (como este agente usa a skill; entra no prompt só com a skill).",
       "oneOf": [
         { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/name" } },
         {
@@ -89,7 +93,7 @@
       ]
     },
     "mcps": {
-      "description": "Servidores MCP liberados, por app/mcps/<nome>.json (ou CHOL_MCPS_DIR). Lista de nomes (todas as tools) ou mapa nome -> null (todas) / { tools?, instructions? } (só essas tools; como este agente usa o servidor, que entra no prompt só com ele).",
+      "description": "Servidores MCP liberados, por .choliba/mcps/<nome>.json (ou CHOL_MCPS_DIR). Lista de nomes (todas as tools) ou mapa nome -> null (todas) / { tools?, instructions? } (só essas tools; como este agente usa o servidor, que entra no prompt só com ele).",
       "oneOf": [
         { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/name" } },
         {

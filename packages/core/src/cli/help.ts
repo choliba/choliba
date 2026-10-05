@@ -1,4 +1,4 @@
-import type { CommandEntry, CommandSpec, FlagChoice, FlagSpec } from './cli.types';
+import type { CommandEntry, CommandSpec, FlagChoice, FlagSpec } from './interfaces/cli.interface';
 
 /** Every line of `--help` fits in this many columns (a word longer than that stays whole). */
 export const HELP_WIDTH = 80;

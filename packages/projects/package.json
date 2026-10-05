@@ -4,17 +4,23 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
-  },
-  "bin": {
-    "projects": "./src/main.ts"
+    ".": "./src/index.ts",
+    "./nest": "./src/nest.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@choliba/core": "workspace:*",
-    "@choliba/terminal": "workspace:*"
+    "@choliba/terminal": "workspace:*",
+    "@nestjs/common": "~11.2",
+    "@nestjs/core": "~11.2",
+    "nest-commander": "~3.21",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
   },
-  "cholCompletion": true
+  "devDependencies": {
+    "@nestjs/testing": "~11.2",
+    "nest-commander-testing": "~3.6"
+  }
 }

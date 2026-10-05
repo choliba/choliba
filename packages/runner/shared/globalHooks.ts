@@ -17,7 +17,7 @@ function hookFunction(mod: unknown): HookFunction | undefined {
 }
 
 export async function runProjectHooks(hook: ProjectHook): Promise<void> {
-  const projectsDir = readAppliedLocations().PROJECTS_DIR;
+  const projectsDir = readAppliedLocations().CHOL_PROJECTS_DIR;
 
   for (const name of listProjectNames(projectsDir)) {
     const hookPath = projectHookFile(projectsDir, name, hook);

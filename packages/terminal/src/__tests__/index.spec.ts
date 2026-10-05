@@ -1,8 +1,9 @@
 import * as terminal from '../index';
+import * as nest from '../nest';
 
 describe('public entrypoint', () => {
   it('re-exports the core runner API', () => {
-    expect(terminal.ProcessRunner).toBeDefined();
+    expect(terminal.ProcessRunnerService).toBeDefined();
     expect(terminal.Session).toBeDefined();
     expect(terminal.CircularBuffer).toBeDefined();
     expect(terminal.TypedEventEmitter).toBeDefined();
@@ -20,11 +21,15 @@ describe('public entrypoint', () => {
     expect(typeof terminal.isStdoutTty).toBe('function');
     expect(typeof terminal.writeStderr).toBe('function');
     expect(terminal.DEFAULT_SPINNER_FRAMES.length).toBeGreaterThan(0);
+    expect(nest.TerminalModule).toBeDefined();
+    expect(nest.TerminalCommand).toBeDefined();
+    expect(nest.TerminalService).toBeDefined();
+    expect(terminal.parseRunArgs(['run', '--label', 'x', '--', 'y'])).toBeInstanceOf(terminal.RunDto);
   });
 
   it('exposes a working ProcessRunner end to end through the barrel', () => {
     const spawnCalls: unknown[] = [];
-    const runner = new terminal.ProcessRunner({
+    const runner = new terminal.ProcessRunnerService({
       spawner: {
         spawn(options) {
           spawnCalls.push(options);

@@ -11,6 +11,7 @@ ESLint 10.11, typescript-eslint 8.70.1, Prettier 3.9.8). Re-check peer ranges be
 - Strict typing: what `no-explicit-any` alone misses
 - Prettier and `.editorconfig`
 - Bun workspace details
+- Decorators, Nest and nest-commander
 
 ## TypeScript 6.0 traps
 
@@ -105,3 +106,26 @@ Hand-written files rarely match Prettier exactly, so `add-package.sh` finishes w
   the typechecker (bundler resolution), for ts-jest (the symlink resolves outside `node_modules`, so it is
   transformed) and for Bun at runtime. Publishing a package to npm would need a build step: ask first.
 - `bun run --filter '*' typecheck` runs each package's script; the root script then also typechecks root files.
+
+## Decorators, Nest and nest-commander
+
+Verified on 2026-10-04 (NestJS 11.2.7, nest-commander 3.21, nest-commander-testing 3.6, the versions above).
+
+- **NestJS stays on `~11.2`.** Nest 12 is ESM-only and nest-commander (CJS) `require()`s it, which Bun refuses
+  (`require() async module … is unsupported`): `choliba --help` breaks. Move to 12 once nest-commander ships ESM.
+- **`experimentalDecorators` on, `emitDecoratorMetadata` off**, in `tsconfig.base.json`. ts-jest compiles file by
+  file (`isolatedModules`), so emitted metadata becomes `typeof X !== "undefined" ? X : Object` for every injected
+  class: a branch that never runs and drops branch coverage. Compiling the whole program in Jest instead took 40 s
+  instead of 14 s and broke suites. So every constructor dependency is injected explicitly, `@Inject(Class)` or
+  `@Inject(TOKEN)`; a missing one fails at `compile()` in the module's spec.
+- **`jest/jest.setup.ts`** loads `reflect-metadata` (Nest's decorators store what they declare with it) and
+  `unref()`s stdin when it is a socket: nest-commander reads `process.stdin` as soon as it is imported (for
+  prompts, unused here), and Jest's `detectOpenHandles` would report the pipe.
+- **`@typescript-eslint/no-extraneous-class` allows decorated classes** (`allowWithDecorator`): `@Module({…})
+  export class X {}` is empty by design. An empty class without a decorator is still an error.
+- **Nothing the Playwright runner loads may use a decorator.** Playwright compiles `playwright.config.ts`,
+  `shared/`, `reporters/` and what they import with its own Babel, which rejects parameter decorators
+  (`UnsupportedParameterDecorator`). So `@choliba/<pkg>` and its subpaths export plain functions only; modules,
+  services and commands come from `@choliba/<pkg>/nest`. `runner/src/__tests__/playwright-loaded.spec.ts` walks
+  the imports from what Playwright loads and fails, naming the chain, if it reaches a decorator.
+

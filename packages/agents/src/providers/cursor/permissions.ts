@@ -1,10 +1,10 @@
 import { readdirSync } from 'node:fs';
 import { dirname, join, sep } from 'node:path';
 
-import type { PermissionPolicy } from '../../command.types';
-import type { McpServer } from '../../mcps';
-import type { AgentPermissions, ExecuteRule } from '../../permissions';
-import { allowedCommands, blocksEveryCommand, pathBase, pathGlob, withoutTrailingSlash } from '../../permissions';
+import type { PermissionPolicy } from '../../agents/interfaces/command.interface';
+import type { McpServer } from '../../mcps/mcps';
+import type { AgentPermissions, ExecuteRule } from '../../runs/permissions';
+import { allowedCommands, blocksEveryCommand, pathBase, pathGlob, withoutTrailingSlash } from '../../runs/permissions';
 
 export interface CursorPermissions {
   readonly allow: readonly string[];

@@ -1,12 +1,14 @@
 export {
   CHOL_ROOT,
   CHOL_GLOBAL_DIR,
-  PROJECTS_DIR,
+  CHOL_PROJECTS_DIR,
   CHOL_AGENTS_DIR,
   CHOL_AGENTS_PROVIDER,
   CHOL_MCPS_DIR,
   CHOL_SKILLS_DIR,
-  TICKET_RUNS,
+  CHOL_TICKET_RUNS,
+  CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR,
+  CHOL_COLORS,
 } from './vars';
 export { loadRepoConfig, mergeConfig, parseConfigFile } from './repo-config';
 export { findWorkspaceRoot, PACKAGE_NAME, WorkspaceNotFoundError } from './workspace';
@@ -30,6 +32,7 @@ export {
 export {
   AGENTS_SUBDIR,
   APP_DIR,
+  CHOLIBA_DIR,
   ARTIFACTS_DIR,
   CACHE_DIR,
   DEFAULT_AGENTS_DIR,
@@ -43,3 +46,4 @@ export {
   TICKETS_SUBDIR,
   TICKET_RUNS_SUBDIR,
 } from './layout';
+export type { RepoConfig } from './repo-config';
