@@ -25,6 +25,7 @@ import {
   updatePackage,
   updatePackageWhenListed,
   addScripts,
+  removeRetiredScripts,
   WORKSPACE_SCRIPTS,
   workspaceTemplatesDir,
 } from '../../setup/setup';
@@ -226,6 +227,33 @@ describe('addScripts', () => {
   });
 });
 
+describe('removeRetiredScripts', () => {
+  it('removes the scripts of commands that left choliba, unless the user changed them', () => {
+    withDir((root) => {
+      const file = path.join(root, 'package.json');
+      expect(removeRetiredScripts(root)).toEqual([]);
+      fs.writeFileSync(file, JSON.stringify({ name: 'g' }));
+      expect(removeRetiredScripts(root)).toEqual([]);
+      fs.writeFileSync(
+        file,
+        JSON.stringify({
+          name: 'g',
+          scripts: {
+            'chol:playwright-cli': 'choliba playwright-cli',
+            'chol:playwright-trace': 'meu trace',
+            build: 'x',
+          },
+        }),
+      );
+
+      expect(removeRetiredScripts(root)).toEqual(['chol:playwright-cli']);
+      const scripts = (JSON.parse(fs.readFileSync(file, 'utf8')) as { scripts: Record<string, string> }).scripts;
+      expect(scripts).toEqual({ 'chol:playwright-trace': 'meu trace', build: 'x' });
+      expect(removeRetiredScripts(root)).toEqual([]);
+    });
+  });
+});
+
 describe('trustPackage', () => {
   it('adds choliba to trustedDependencies once, keeping the rest of package.json', () => {
     withDir((root) => {
@@ -285,6 +313,13 @@ describe('packageListsCholiba / updatePackage / updatePackageWhenListed', () => 
       expect(pkg.trustedDependencies).toEqual(['choliba']);
       expect(pkg.scripts['chol:check']).toBe('choliba check');
       expect(updatePackage(root)).toEqual([]);
+      fs.writeFileSync(
+        file,
+        JSON.stringify({ ...pkg, scripts: { ...pkg.scripts, 'chol:playwright-cli': 'choliba playwright-cli' } }),
+      );
+      expect(updatePackage(root)).toEqual([
+        'scripts chol:playwright-cli removidos do package.json (comandos que saíram)',
+      ]);
       expect(await updatePackageWhenListed(root, () => Promise.resolve())).toBe(true);
 
       fs.writeFileSync(file, JSON.stringify({ name: 'g' }));

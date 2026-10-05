@@ -4,23 +4,47 @@ Todas as chaves do `agent.yaml` (padrão 1), as variáveis `${NOME}` que ele ace
 completo e o passo a passo estão em [Escrevendo um agente](../guias/escrever-um-agente.md); o schema é
 `packages/agents/schemes/v1/agent.schema.json`.
 
-| Chave                             | Obrigatória | Padrão              | O que é                                                                                                                                                                                                                                                                            |
-| --------------------------------- | ----------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `version`                         | sim         | —                   | Versão do padrão: `1`.                                                                                                                                                                                                                                                             |
-| `agent`                           | sim         | —                   | `id` (igual à pasta, é o nome do comando), `name`, `version` (semver do agente), `description` e, opcional, `color` (cor do rótulo `[agente]`; `CHOL_COLORS` ganha dela).                                                                                                          |
-| `models`                          | sim         | —                   | Modelos com que o agente pode rodar, pelo id que o provider informa.                                                                                                                                                                                                               |
-| `role`, `input`, `flow`, `output` | sim         | —                   | O texto do agente (veja [O texto do agente](../guias/escrever-um-agente.md#o-texto-do-agente)).                                                                                                                                                                                    |
-| `context`, `notes`                | não         | nenhum              | Listas de textos que completam o texto do agente.                                                                                                                                                                                                                                  |
-| `skills`                          | não         | `[]`                | Pastas em `.choliba/skills/`, com a instrução de uso de cada uma (veja [Skills e MCPs](../guias/escrever-um-agente.md#skills-e-mcps)).                                                                                                                                             |
-| `mcps`                            | não         | nenhum              | Servidores em `.choliba/mcps/<nome>.json`, com as tools liberadas e a instrução de uso de cada um.                                                                                                                                                                                 |
-| `permissions.allow`/`.deny`       | não         | nada liberado       | `read`, `write` e `delete`: caminhos (terminado em `/` = tudo abaixo). `delete` libera um comando de apagar que o choliba cria em cada execução (o prompt traz o caminho); ele recusa links para fora, a própria raiz e o que `deny.delete` nega. `execute`: diretório → comandos. |
-| `modes.allow` / `.default`        | não         | os três / `execute` | Modos aceitos (`execute`, `plan`, `ask`) e o usado quando a linha de comando não diz.                                                                                                                                                                                              |
-| `task.required` / `.default`      | não         | `true` / —          | Se a tarefa é obrigatória e, quando não é, qual usar (`default` passa a ser obrigatório).                                                                                                                                                                                          |
-| `ticket_types`                    | não         | agente sem ticket   | Tipos de ticket aceitos (`story`, `bug`, `improvement`, `task`); a execução pede `--type` ou `--ticket`, a não ser com `allow_without_ticket`.                                                                                                                                     |
-| `allow_without_ticket`            | não         | `false`             | `true` deixa a execução seguir sem `--type`/`--ticket`: com `ticket_types`, o ticket fica opcional; sem, deixa explícito que o agente não usa ticket.                                                                                                                              |
-| `steps.<modo>.before` / `.after`  | não         | nenhum              | Ações do choliba antes e depois do agente, em cada modo (veja [Steps](#steps)).                                                                                                                                                                                                    |
+| Chave                             | Obrigatória | Padrão              | O que é                                                                                                                                                                                                                                                   |
+| --------------------------------- | ----------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version`                         | sim         | —                   | Versão do padrão: `1`.                                                                                                                                                                                                                                    |
+| `agent`                           | sim         | —                   | `id` (igual à pasta, é o nome do comando), `name`, `version` (semver do agente), `description` e, opcional, `color` (cor do rótulo `[agente]`; `CHOL_COLORS` ganha dela).                                                                                 |
+| `models`                          | sim         | —                   | Modelos com que o agente pode rodar, pelo id que o provider informa.                                                                                                                                                                                      |
+| `role`, `input`, `flow`, `output` | sim         | —                   | O texto do agente (veja [O texto do agente](../guias/escrever-um-agente.md#o-texto-do-agente)).                                                                                                                                                           |
+| `context`, `notes`                | não         | nenhum              | Listas de textos que completam o texto do agente.                                                                                                                                                                                                         |
+| `skills`                          | não         | `[]`                | Pastas em `.choliba/skills/`, com a instrução de uso de cada uma (veja [Skills e MCPs](../guias/escrever-um-agente.md#skills-e-mcps)).                                                                                                                    |
+| `mcps`                            | não         | nenhum              | Servidores em `.choliba/mcps/<nome>.json`, com as tools liberadas e a instrução de uso de cada um.                                                                                                                                                        |
+| `permissions.allow`/`.deny`       | não         | nada liberado       | `read`, `write` e `delete`: caminhos (terminado em `/` = tudo abaixo). `execute`: diretório → comandos. `tools`: ferramenta da run → subcomandos (`['*']` = todos; em `deny`, `['*']` tira a ferramenta). Veja [Ferramentas da run](#ferramentas-da-run). |
+| `modes.allow` / `.default`        | não         | os três / `execute` | Modos aceitos (`execute`, `plan`, `ask`) e o usado quando a linha de comando não diz.                                                                                                                                                                     |
+| `task.required` / `.default`      | não         | `true` / —          | Se a tarefa é obrigatória e, quando não é, qual usar (`default` passa a ser obrigatório).                                                                                                                                                                 |
+| `ticket_types`                    | não         | agente sem ticket   | Tipos de ticket aceitos (`story`, `bug`, `improvement`, `task`); a execução pede `--type` ou `--ticket`, a não ser com `allow_without_ticket`.                                                                                                            |
+| `allow_without_ticket`            | não         | `false`             | `true` deixa a execução seguir sem `--type`/`--ticket`: com `ticket_types`, o ticket fica opcional; sem, deixa explícito que o agente não usa ticket.                                                                                                     |
+| `steps.<modo>.before` / `.after`  | não         | nenhum              | Ações do choliba antes e depois do agente, em cada modo (veja [Steps](#steps)).                                                                                                                                                                           |
 
 Regras de permissão: veja [Segurança](../conceitos/seguranca.md).
+
+## Ferramentas da run
+
+O que só os agentes usam não é comando do choliba: é uma ferramenta da run. Em cada execução, o choliba cria o script
+de cada ferramenta ao lado da pasta da run (`.cache/runs/<execução>.<ferramenta>`), libera só esse caminho para o
+agente, impede que ele seja reescrito e o apaga no fim. O prompt traz o caminho completo de cada uma.
+
+| Ferramenta         | Vem de                     | O que faz                                                                                                                                  |
+| ------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `delete`           | `permissions.allow.delete` | Apaga arquivos e pastas sob esses caminhos; recusa links para fora, a própria raiz e o que `deny.delete` nega. Não existe em `plan`/`ask`. |
+| `playwright-cli`   | `permissions.allow.tools`  | O navegador (`playwright cli`), na versão do choliba, na raiz da pasta de trabalho; grava em `CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR`.             |
+| `playwright-trace` | `permissions.allow.tools`  | Lê o `trace.zip` de um teste que falhou (`playwright trace`), na versão do choliba.                                                        |
+
+```yaml
+permissions:
+  allow:
+    delete: ['${APP_DIR}/']
+    tools:
+      playwright-cli: ['*']
+      playwright-trace: [open, actions, close]
+  deny:
+    tools:
+      playwright-cli: [eval, run-code, route, unroute]
+```
 
 ## Variáveis
 
@@ -40,7 +64,7 @@ defini-la no `.env` ou no ambiente é erro.
 permissions:
   allow:
     execute:
-      '${CHOL_ROOT}/': [bunx choliba playwright-cli] # os comandos rodam a partir da raiz
+      '${CHOL_ROOT}/': [bunx choliba tests] # os comandos rodam a partir da raiz
 ```
 
 ### `${CHOL_AGENTS_DIR}`

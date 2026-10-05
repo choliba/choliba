@@ -21,13 +21,14 @@ permissões do `agent.yaml`.
 
 **Fase 2: o agente**
 
-11. O provider roda numa pasta vazia, `.cache/runs/<id>/`, com os dois prompts. O agente lê, grava, roda os
-    comandos de `allow.execute` e chama as tools dos MCPs; em `plan` e `ask`, não grava nada.
+11. O choliba cria as ferramentas da run ao lado de `.cache/runs/<id>/`, e o provider roda nessa pasta vazia, com os
+    dois prompts. O agente lê, grava, roda os comandos de `allow.execute` e as ferramentas da run e chama as tools
+    dos MCPs; em `plan` e `ask`, não grava nada.
 
 **Fase 3: o choliba, depois do agente**
 
-12. Apaga a pasta da execução e desfaz o que o provider preparou (os arquivos `.cursor/` do Cursor), seja qual for
-    o resultado.
+12. Apaga a pasta da execução e as ferramentas da run e desfaz o que o provider preparou (os arquivos `.cursor/` do
+    Cursor), seja qual for o resultado.
 13. Roda o `steps.<modo>.after`: `success` ou `failure`, depois `always`.
 14. Fecha o ticket: um ticket novo que o agente não tocou é apagado; em `execute`, sobrar `CHANGE_ME` é erro.
 

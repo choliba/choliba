@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 05/10/2026 03:28:47 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 05/10/2026 17:36:38 — não editar manualmente.
 
 ## Resumo
 
@@ -17,7 +17,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 56 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 58 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -53,8 +53,6 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/providers/register-agent-provider.ts](packages/agents/src/providers/register-agent-provider.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/stream-json.ts](packages/agents/src/providers/stream-json.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/agent-detail.ts](packages/agents/src/runs/agent-detail.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/delete-bridge-path.ts](packages/agents/src/runs/delete-bridge-path.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/delete-bridge.ts](packages/agents/src/runs/delete-bridge.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/dry-run.ts](packages/agents/src/runs/dry-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/permissions.ts](packages/agents/src/runs/permissions.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/prompt.ts](packages/agents/src/runs/prompt.ts)|100.00|100.00|100.00|100.00
@@ -64,6 +62,10 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/runs/run-checks.ts](packages/agents/src/runs/run-checks.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/run-context.ts](packages/agents/src/runs/run-context.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/run-preparation.ts](packages/agents/src/runs/run-preparation.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/run-tools/delete.tool.ts](packages/agents/src/runs/run-tools/delete.tool.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/run-tools/playwright.tool.ts](packages/agents/src/runs/run-tools/playwright.tool.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/run-tools/run-tool-path.ts](packages/agents/src/runs/run-tools/run-tool-path.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/run-tools/run-tools.ts](packages/agents/src/runs/run-tools/run-tools.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/spec-context.ts](packages/agents/src/runs/spec-context.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/ticket-run.ts](packages/agents/src/runs/ticket-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/vars.ts](packages/agents/src/runs/vars.ts)|100.00|100.00|100.00|100.00
@@ -81,7 +83,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 27 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 26 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -108,7 +110,6 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/setup/setup.module.ts](packages/choliba/src/setup/setup.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/setup/setup.ts](packages/choliba/src/setup/setup.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tooling/eslint-config.ts](packages/choliba/src/tooling/eslint-config.ts)|100.00|100.00|100.00|100.00
-🟢|[src/tooling/playwright-args.ts](packages/choliba/src/tooling/playwright-args.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tooling/tooling.commands.ts](packages/choliba/src/tooling/tooling.commands.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tooling/tooling.module.ts](packages/choliba/src/tooling/tooling.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tooling/tools.service.ts](packages/choliba/src/tooling/tools.service.ts)|100.00|100.00|100.00|100.00

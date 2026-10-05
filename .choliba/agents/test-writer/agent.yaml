@@ -103,15 +103,17 @@ notes:
 skills:
   playwright-cli:
     instructions: |
-      Onde a skill escreve `playwright-cli <comando>`, rode `bunx choliba playwright-cli <comando>`. Use para ver a
+      Onde a skill escreve `playwright-cli <comando>`, rode a ferramenta `playwright-cli` pelo caminho que o bloco de
+      permissões traz, seguida do `<comando>`. Use para ver a
       tela como ela é hoje (`open <baseURL>`, `snapshot`, `click`, `fill`) e achar os papéis e rótulos acessíveis dos
       elementos. Termine sempre com `close`.
   playwright-trace:
     instructions: |
       Cada teste que falha deixa um `trace.zip` (o caminho aparece no relatório da rodada). Quando a mensagem de erro
       não basta para saber se a falha é do comportamento ou do próprio teste, abra o trace: onde a skill escreve
-      `npx playwright trace <comando>`, rode `bunx choliba playwright-trace <comando>` (`open <trace.zip>`,
-      `actions --errors-only`, `action <id>`, `snapshot <id>`) e termine com `close`.
+      `npx playwright trace <comando>`, rode a ferramenta `playwright-trace` pelo caminho que o bloco de permissões
+      traz, seguida do `<comando>` (`open <trace.zip>`, `actions --errors-only`, `action <id>`, `snapshot <id>`), e
+      termine com `close`.
 
 permissions:
   allow:
@@ -128,9 +130,10 @@ permissions:
       - '${PROJECT_DIR}/tests/${TICKET}.spec.ts'
     execute:
       '${CHOL_ROOT}/':
-        - bunx choliba playwright-cli
         - bunx choliba tests ${PROJECT}:${TICKET}
-        - bunx choliba playwright-trace
+    tools:
+      playwright-cli: ['*']
+      playwright-trace: ['*']
   deny:
     read: [packages/, '${CHOL_AGENTS_DIR}/', scripts/, jest/]
     write:

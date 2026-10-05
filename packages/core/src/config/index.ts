@@ -12,7 +12,7 @@ export {
 } from './vars';
 export { loadRepoConfig, mergeConfig, parseConfigFile } from './repo-config';
 export { findWorkspaceRoot, PACKAGE_NAME, WorkspaceNotFoundError } from './workspace';
-export { findResource, locateResource } from './resources';
+export { findResource, locateResource, resourceStarts } from './resources';
 export {
   AGENT_FILE,
   BUNFIG_FILE,

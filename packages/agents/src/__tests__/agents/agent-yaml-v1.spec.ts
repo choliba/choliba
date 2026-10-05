@@ -194,7 +194,20 @@ describe('validateAgentYamlV1', () => {
   });
 
   it('rejects unknown keys below the root too', () => {
-    expect(errorsOf({ ...minimal(), permissions: { allow: { tools: ['Read'] } } })).toContain('"tools"');
+    expect(errorsOf({ ...minimal(), permissions: { allow: { web: ['x'] } } })).toContain('"web"');
+  });
+
+  it('takes run tools by name, each with its subcommands or every one', () => {
+    const withTools = (allow: unknown, deny: unknown = {}): boolean =>
+      validate({ ...minimal(), permissions: { allow: { tools: allow }, deny: { tools: deny } } }).valid;
+    expect(
+      withTools({ 'playwright-cli': ['*'], 'playwright-trace': ['open', 'close'] }, { 'playwright-cli': ['eval'] }),
+    ).toBe(true);
+    expect(withTools({}, { 'playwright-cli': ['*'] })).toBe(true);
+    expect(withTools({ nope: ['*'] })).toBe(false);
+    expect(withTools({ 'playwright-cli': ['*', 'open'] })).toBe(false);
+    expect(withTools({ 'playwright-cli': [] })).toBe(false);
+    expect(withTools(['playwright-cli'])).toBe(false);
   });
 
   it('accepts mcps as a list of names or a map to tools, instructions or null', () => {
