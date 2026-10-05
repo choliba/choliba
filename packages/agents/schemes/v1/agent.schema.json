@@ -132,6 +132,10 @@
           "properties": {
             "read": { "$ref": "#/definitions/paths" },
             "write": { "$ref": "#/definitions/paths" },
+            "delete": {
+              "description": "Caminhos que pode apagar (mesmo formato de read/write; / no fim = tudo abaixo).",
+              "$ref": "#/definitions/paths"
+            },
             "execute": {
               "description": "Diretório -> comandos (prefixos com argumentos) que pode executar ali.",
               "type": "object",
@@ -146,6 +150,10 @@
           "properties": {
             "read": { "$ref": "#/definitions/paths" },
             "write": { "$ref": "#/definitions/paths" },
+            "delete": {
+              "description": "Caminhos que não pode apagar (mesmo formato de read/write).",
+              "$ref": "#/definitions/paths"
+            },
             "execute": {
               "description": "Diretório -> comandos bloqueados ali; ['*'] = nada executa ali.",
               "type": "object",
@@ -182,11 +190,15 @@
       "then": { "required": ["default"], "properties": { "default": { "$ref": "#/definitions/text" } } }
     },
     "ticket_types": {
-      "description": "Tipos de ticket com que o agente trabalha (templates em packages/projects/templates/ticket/); exige --type ou --ticket, e portanto --project.",
+      "description": "Tipos de ticket com que o agente trabalha (templates em packages/projects/templates/ticket/); com allow_without_ticket: false (padrão) exige --type ou --ticket, e portanto --project.",
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
       "items": { "enum": ["story", "bug", "improvement", "task"] }
+    },
+    "allow_without_ticket": {
+      "description": "Se true, a run pode seguir sem --type/--ticket. Com ticket_types, o ticket fica opcional; sem ticket_types, deixa explícito que o agente não usa ticket. Se o YAML usa ${TICKET}/${TICKET_FILE}, ainda é preciso passar ticket na run (senão a expansão falha).",
+      "type": "boolean"
     },
     "steps": {
       "description": "Ações do CLI por modo, em ordem: <ação>: [args]. before roda antes do agente e para tudo na primeira falha; after roda sempre depois dele: success (agente saiu com 0) ou failure, e depois always. Um modo sem steps não roda nada.",

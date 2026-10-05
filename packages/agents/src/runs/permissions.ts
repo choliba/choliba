@@ -1,6 +1,7 @@
 import { dirname, isAbsolute, join } from 'node:path';
 
 import { asStringArray, isRecord } from '../shared/json';
+import { deleteBridgePath } from './delete-bridge-path';
 
 /** One entry of `permissions.allow.execute`/`.deny.execute`: a directory and the commands that go with it. */
 export interface ExecuteRule {
@@ -20,18 +21,22 @@ export const EVERY_COMMAND = '*';
 export interface AgentPermissions {
   readonly allowRead: readonly string[];
   readonly allowWrite: readonly string[];
+  readonly allowDelete: readonly string[];
   readonly allowExecute: readonly ExecuteRule[];
   readonly denyRead: readonly string[];
   readonly denyWrite: readonly string[];
+  readonly denyDelete: readonly string[];
   readonly denyExecute: readonly ExecuteRule[];
 }
 
 export const NO_PERMISSIONS: AgentPermissions = {
   allowRead: [],
   allowWrite: [],
+  allowDelete: [],
   allowExecute: [],
   denyRead: [],
   denyWrite: [],
+  denyDelete: [],
   denyExecute: [],
 };
 
@@ -62,9 +67,11 @@ export function readAgentPermissions(value: unknown): AgentPermissions {
   return {
     allowRead: paths(allow, 'read'),
     allowWrite: paths(allow, 'write'),
+    allowDelete: paths(allow, 'delete'),
     allowExecute: rules(allow, 'execute'),
     denyRead: paths(deny, 'read'),
     denyWrite: paths(deny, 'write'),
+    denyDelete: paths(deny, 'delete'),
     denyExecute: rules(deny, 'execute'),
   };
 }
@@ -77,9 +84,11 @@ export function mapPermissions(permissions: AgentPermissions, change: (text: str
   return {
     allowRead: list(permissions.allowRead),
     allowWrite: list(permissions.allowWrite),
+    allowDelete: list(permissions.allowDelete),
     allowExecute: ruleList(permissions.allowExecute),
     denyRead: list(permissions.denyRead),
     denyWrite: list(permissions.denyWrite),
+    denyDelete: list(permissions.denyDelete),
     denyExecute: ruleList(permissions.denyExecute),
   };
 }
@@ -91,9 +100,11 @@ export function permissionTexts(permissions: AgentPermissions): readonly string[
   return [
     ...permissions.allowRead,
     ...permissions.allowWrite,
+    ...permissions.allowDelete,
     ...ruleTexts(permissions.allowExecute),
     ...permissions.denyRead,
     ...permissions.denyWrite,
+    ...permissions.denyDelete,
     ...ruleTexts(permissions.denyExecute),
   ];
 }
@@ -129,9 +140,11 @@ export function absolutePermissions(permissions: AgentPermissions, root: string)
   return {
     allowRead: paths(permissions.allowRead),
     allowWrite: paths(permissions.allowWrite),
+    allowDelete: paths(permissions.allowDelete),
     allowExecute: rules(permissions.allowExecute),
     denyRead: paths(permissions.denyRead),
     denyWrite: paths(permissions.denyWrite),
+    denyDelete: paths(permissions.denyDelete),
     denyExecute: rules(permissions.denyExecute),
   };
 }
@@ -185,12 +198,21 @@ export interface RunPlace {
 }
 
 export function formatPermissions(permissions: AgentPermissions, place?: RunPlace): string {
+  const deleteHow =
+    permissions.allowDelete.length === 0 || place === undefined
+      ? []
+      : [
+          `To delete, run \`${deleteBridgePath(place.runDir)} <path…>\` exactly so, from where you are (never cd): it is the only way, anything else that deletes is refused.`,
+        ];
   const lines = [
     ...pathLines('You may read', permissions.allowRead),
     ...pathLines('You may write', permissions.allowWrite),
+    ...pathLines('You may delete', permissions.allowDelete),
+    ...deleteHow,
     ...ruleLines('You may run', permissions.allowExecute),
     ...pathLines('You may not read', permissions.denyRead),
     ...pathLines('You may not write', permissions.denyWrite),
+    ...pathLines('You may not delete', permissions.denyDelete),
     ...ruleLines('You may not run', permissions.denyExecute),
   ];
   const commands =

@@ -1,4 +1,5 @@
 import { mcpServersMap } from '../../mcps/mcps';
+import { applyDeleteBridge, deleteBridgePath, shouldApplyDeleteBridge } from '../../runs/delete-bridge';
 import { absolutePermissions } from '../../runs/permissions';
 import { assertArgvFits, wrapInstructions } from '../../runs/prompt';
 import { createStreamJsonParser } from '../stream-json';
@@ -8,6 +9,18 @@ import { AgentProvider } from '../agent-provider';
 import type { ProviderRequest, StreamParser } from '../interfaces/provider.interface';
 import { RegisterAgentProvider } from '../register-agent-provider';
 import { claudePermissionArgs } from './permissions';
+
+function resolvedPermissions(request: ProviderRequest) {
+  return absolutePermissions(request.agent.permissions, request.workspaceRoot);
+}
+
+function deleteBridgeFor(request: ProviderRequest): string | undefined {
+  const permissions = resolvedPermissions(request);
+  if (!shouldApplyDeleteBridge(permissions.allowDelete, request.policy)) {
+    return undefined;
+  }
+  return deleteBridgePath(request.runDir);
+}
 
 function buildArgs(request: ProviderRequest): readonly string[] {
   const args: string[] = [
@@ -27,9 +40,10 @@ function buildArgs(request: ProviderRequest): readonly string[] {
   }
   const mcpServers = request.mcpServers ?? [];
   const permissions = claudePermissionArgs(
-    absolutePermissions(request.agent.permissions, request.workspaceRoot),
+    resolvedPermissions(request),
     request.policy,
     mcpServers,
+    deleteBridgeFor(request),
   );
   args.push('--permission-mode', permissions.permissionMode);
   args.push('--tools', permissions.tools.join(','));
@@ -55,6 +69,14 @@ function buildArgs(request: ProviderRequest): readonly string[] {
   return args;
 }
 
+function prepareWorkspace(request: ProviderRequest): () => void {
+  const permissions = resolvedPermissions(request);
+  if (!shouldApplyDeleteBridge(permissions.allowDelete, request.policy)) {
+    return () => undefined;
+  }
+  return applyDeleteBridge(request.runDir, permissions.allowDelete, permissions.denyDelete);
+}
+
 /** Claude Code (`claude -p … --output-format stream-json`). */
 @RegisterAgentProvider()
 @Injectable()
@@ -70,5 +92,9 @@ export class ClaudeAgentProvider extends AgentProvider {
 
   createParser(): StreamParser {
     return createStreamJsonParser({ planFromExitPlanMode: true });
+  }
+
+  override prepareWorkspace(request: ProviderRequest): () => void {
+    return prepareWorkspace(request);
   }
 }

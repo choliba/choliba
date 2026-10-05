@@ -24,6 +24,7 @@ const plain: AgentDefinition = {
   policy: 'edits',
   taskRequired: true,
   projectRequired: true,
+  allowWithoutTicket: false,
   defaultMode: 'execute',
   modes: ['execute', 'plan', 'ask'],
   permissions: NO_PERMISSIONS,
@@ -56,6 +57,19 @@ describe('resolveTicketTarget', () => {
     expect(() =>
       resolveTicketTarget(agent, { project: undefined, ticketType: 'bug', ticket: undefined }, () => '/p'),
     ).toThrow('"po" precisa de --project para achar o ticket.');
+  });
+
+  it('allows omitting the ticket when allow_without_ticket is true', () => {
+    const optional = { ...agent, allowWithoutTicket: true };
+    expect(
+      resolveTicketTarget(optional, { project: 'red', ticketType: undefined, ticket: undefined }, () => '/p'),
+    ).toBeUndefined();
+  });
+
+  it('still requires --type or --ticket when allow_without_ticket is false', () => {
+    expect(() =>
+      resolveTicketTarget(agent, { project: 'red', ticketType: undefined, ticket: undefined }, () => '/p'),
+    ).toThrow('"po" precisa de --type <tipo>');
   });
 });
 

@@ -77,6 +77,7 @@ describe('parseAgentYaml', () => {
       permissions: NO_PERMISSIONS,
       policy: 'read-only',
       taskRequired: true,
+      allowWithoutTicket: false,
       modes: ['execute', 'plan', 'ask'],
       defaultMode: 'execute',
       steps: { execute: NO_STEPS, plan: NO_STEPS, ask: NO_STEPS },
@@ -90,12 +91,13 @@ describe('parseAgentYaml', () => {
       skills: { s: { instructions: 'Use s.' }, plain: null },
       mcps: { app: { tools: ['t'], instructions: 'Use app.' }, other: null, docs: { instructions: 'Use docs.' } },
       permissions: {
-        allow: { read: ['r/'], write: ['w/'], execute: { './': ['git diff'] } },
-        deny: { read: ['nr/'], write: ['nw/'], execute: { '/etc/': ['*'] } },
+        allow: { read: ['r/'], write: ['w/'], delete: ['d/'], execute: { './': ['git diff'] } },
+        deny: { read: ['nr/'], write: ['nw/'], delete: ['nd/'], execute: { '/etc/': ['*'] } },
       },
       modes: { allow: ['plan', 'ask'], default: 'ask' },
       task: { required: false, default: 'Faça.' },
       ticket_types: ['story'],
+      allow_without_ticket: true,
       steps: {
         plan: { before: [{ add_files: ['t', 'x.md'] }], after: [{ run: ['echo', 'a'] }] },
         ask: { after: { success: [{ run: ['ok'] }], failure: [{ run: ['ko', '${AGENT_EXIT_CODE}'] }] } },
@@ -113,15 +115,18 @@ describe('parseAgentYaml', () => {
       permissions: {
         allowRead: ['r/'],
         allowWrite: ['w/'],
+        allowDelete: ['d/'],
         allowExecute: [{ dir: './', commands: ['git diff'] }],
         denyRead: ['nr/'],
         denyWrite: ['nw/'],
+        denyDelete: ['nd/'],
         denyExecute: [{ dir: '/etc/', commands: ['*'] }],
       },
       policy: 'edits',
       taskRequired: false,
       defaultTask: 'Faça.',
       ticketTypes: ['story'],
+      allowWithoutTicket: true,
       modes: ['plan', 'ask'],
       defaultMode: 'ask',
       steps: {
@@ -205,6 +210,7 @@ describe('parseAgentYaml', () => {
 describe('policyFromPermissions', () => {
   it('is edits with a write path and read-only otherwise', () => {
     expect(policyFromPermissions({ ...NO_PERMISSIONS, allowWrite: ['docs/'] })).toBe('edits');
+    expect(policyFromPermissions({ ...NO_PERMISSIONS, allowDelete: ['docs/'] })).toBe('edits');
     expect(policyFromPermissions({ ...NO_PERMISSIONS, allowRead: ['docs/'] })).toBe('read-only');
   });
 });

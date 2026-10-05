@@ -18,9 +18,15 @@ const DECLARED = readAgentPermissions({
   allow: {
     read: ['src/'],
     write: ['docs/'],
+    delete: ['app/'],
     execute: { './': ['git diff', 'bunx choliba tests'], '/app/': ['git diff', 'composer test'] },
   },
-  deny: { read: ['.env'], write: ['packages/'], execute: { '/etc/': ['*'], './': ['git push'] } },
+  deny: {
+    read: ['.env'],
+    write: ['packages/'],
+    delete: ['app/secrets/'],
+    execute: { '/etc/': ['*'], './': ['git push'] },
+  },
 });
 
 describe('readAgentPermissions', () => {
@@ -28,12 +34,14 @@ describe('readAgentPermissions', () => {
     expect(DECLARED).toEqual({
       allowRead: ['src/'],
       allowWrite: ['docs/'],
+      allowDelete: ['app/'],
       allowExecute: [
         { dir: './', commands: ['git diff', 'bunx choliba tests'] },
         { dir: '/app/', commands: ['git diff', 'composer test'] },
       ],
       denyRead: ['.env'],
       denyWrite: ['packages/'],
+      denyDelete: ['app/secrets/'],
       denyExecute: [
         { dir: '/etc/', commands: ['*'] },
         { dir: './', commands: ['git push'] },
@@ -63,6 +71,7 @@ describe('mapPermissions and permissionTexts', () => {
     expect(permissionTexts(upper)).toEqual([
       'SRC/',
       'DOCS/',
+      'APP/',
       './',
       'GIT DIFF',
       'BUNX CHOLIBA TESTS',
@@ -71,6 +80,7 @@ describe('mapPermissions and permissionTexts', () => {
       'COMPOSER TEST',
       '.ENV',
       'PACKAGES/',
+      'APP/SECRETS/',
       '/ETC/',
       '*',
       './',
@@ -96,6 +106,8 @@ describe('formatPermissions', () => {
         '- src/',
         'You may write:',
         '- docs/',
+        'You may delete:',
+        '- app/',
         'You may run:',
         '- in ./: git diff, bunx choliba tests',
         '- in /app/: git diff, composer test',
@@ -103,6 +115,8 @@ describe('formatPermissions', () => {
         '- .env',
         'You may not write:',
         '- packages/',
+        'You may not delete:',
+        '- app/secrets/',
         'You may not run:',
         '- in /etc/: every command',
         '- in ./: git push',
@@ -111,6 +125,28 @@ describe('formatPermissions', () => {
         '</permissions>',
       ].join('\n'),
     );
+  });
+
+  it('names the delete bridge when the run place is known', () => {
+    const text = formatPermissions(DECLARED, { runDir: '/w/.cache/runs/x', root: '/w' });
+    expect(text).toContain('You may delete:');
+    expect(text).toContain('/w/.cache/runs/x.choliba-delete <path…>');
+    expect(text).toContain('it is the only way');
+  });
+
+  it('lists delete without the bridge path when the run place is unknown', () => {
+    const onlyDelete = readAgentPermissions({ allow: { delete: ['app/'] } });
+    const text = formatPermissions(onlyDelete);
+    expect(text).toContain('You may delete:');
+    expect(text).not.toContain('.choliba-delete');
+    expect(text).not.toContain('Run each command exactly as listed');
+  });
+
+  it('explains the bridge when only delete is allowed and the run place is known', () => {
+    const onlyDelete = readAgentPermissions({ allow: { delete: ['app/'] } });
+    const text = formatPermissions(onlyDelete, { runDir: '/w/.cache/runs/x', root: '/w' });
+    expect(text).toContain('/w/.cache/runs/x.choliba-delete <path…>');
+    expect(text).not.toContain('Run each command exactly as listed');
   });
 
   it('says that nothing is allowed when nothing is declared', () => {
