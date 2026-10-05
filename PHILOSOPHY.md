@@ -110,7 +110,7 @@ Mas:
 > O que este agente realmente precisa fazer?
 
 Todo o restante permanece fora de seu alcance. A força dessa garantia depende do provider: os limites de cada um
-estão em [Segurança](README.md#segurança).
+estão em [Segurança](docs/conceitos/seguranca.md).
 
 ---
 
