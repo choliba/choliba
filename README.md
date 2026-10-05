@@ -62,6 +62,8 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
   um item liberado (a raiz do workspace, por exemplo), não é bloqueado.
 - **Caminhos.** Caminho relativo é relativo à raiz do workspace. As pastas das skills declaradas ficam liberadas para
   leitura sozinhas. Num glob, o Cursor libera a pasta antes dele inteira.
+- **`--add-dir <pasta>`** libera a leitura de uma pasta a mais só naquela execução (pode repetir), como se ela
+  estivesse em `allow.read`; o `deny` do agente continua valendo por cima dela.
 - **Execução por diretório.** Os comandos rodam a partir da pasta da execução, dentro do workspace (por isso
   `bunx choliba ...` funciona sem `cd`). Um diretório de `execute` fora do workspace precisa estar em `allow.read`,
   porque rodar comandos nele já dá acesso ao que há lá. Os providers aplicam em que diretórios o agente entra e

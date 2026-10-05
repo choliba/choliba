@@ -95,7 +95,7 @@ export function runFlagDefinitions(providers: ProviderRegistry): readonly RunFla
       name: '--add-dir',
       valueName: 'dir',
       repeatable: true,
-      description: 'Pasta extra liberada para o provider (pode repetir)',
+      description: 'Pasta extra que o agente pode ler (pode repetir); o deny do agente continua valendo',
     },
     { name: '--dry-run', description: 'Mostra o que seria executado, na ordem, sem executar nada' },
     {
