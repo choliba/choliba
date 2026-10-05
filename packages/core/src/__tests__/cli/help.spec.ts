@@ -1,4 +1,4 @@
-import type { CommandSpec } from '../../cli/cli.types';
+import type { CommandSpec } from '../../cli/interfaces/cli.interface';
 import { formatHelp, formatRows, HELP_WIDTH } from '../../cli/help';
 
 describe('formatHelp', () => {

@@ -9,21 +9,22 @@ describe('config barrel exports', () => {
     expect(config.CHOL_MCPS_DIR).toBe('CHOL_MCPS_DIR');
     expect(config.PACKAGE_NAME).toBe('choliba');
     expect(config.CHOL_GLOBAL_DIR).toBe('CHOL_GLOBAL_DIR');
-    expect(config.PROJECTS_DIR).toBe('PROJECTS_DIR');
+    expect(config.CHOL_PROJECTS_DIR).toBe('CHOL_PROJECTS_DIR');
     expect(config.PROJECTS_SUBDIR).toBe('projects');
-    expect(config.TICKET_RUNS).toBe('TICKET_RUNS');
+    expect(config.CHOL_TICKET_RUNS).toBe('CHOL_TICKET_RUNS');
     expect(config.parseConfigFile('FOO=bar')).toEqual({ FOO: 'bar' });
     expect(config.mergeConfig({ FOO: 'file' }, { FOO: 'shell' })).toEqual({ FOO: 'shell' });
     expect(config.loadRepoConfig('/missing', { FOO: 'bar' }, () => undefined)).toEqual({ FOO: 'bar' });
   });
 
   it('re-exports the one source of the workspace layout and of the file names choliba loads', () => {
-    expect([config.APP_DIR, config.AGENTS_SUBDIR, config.SKILLS_SUBDIR, config.MCPS_SUBDIR]).toEqual([
-      'app',
-      'agents',
-      'skills',
-      'mcps',
-    ]);
+    expect([
+      config.APP_DIR,
+      config.CHOLIBA_DIR,
+      config.AGENTS_SUBDIR,
+      config.SKILLS_SUBDIR,
+      config.MCPS_SUBDIR,
+    ]).toEqual(['app', '.choliba', 'agents', 'skills', 'mcps']);
     expect([config.TICKETS_SUBDIR, config.TESTS_SUBDIR, config.TICKET_RUNS_SUBDIR]).toEqual([
       'tickets',
       'tests',

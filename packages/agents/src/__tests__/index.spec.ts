@@ -31,13 +31,11 @@ describe('public entrypoint', () => {
     expect(typeof agents.slugify).toBe('function');
     expect(typeof agents.writePlan).toBe('function');
 
-    expect(agents.claudeProvider).toBeDefined();
-    expect(agents.cursorProvider).toBeDefined();
+    expect(agents.AgentProvider).toBeDefined();
+    expect(agents.ProviderRegistry).toBeDefined();
+    expect(agents.AUTO).toBe('auto');
     expect(agents.InvalidProviderPreferenceError).toBeDefined();
     expect(agents.ProviderNotFoundError).toBeDefined();
-    expect(Array.isArray(agents.PROVIDERS)).toBe(true);
-    expect(typeof agents.parseProviderPreference).toBe('function');
-    expect(typeof agents.resolveProvider).toBe('function');
 
     expect(typeof agents.renderEvent).toBe('function');
     expect(typeof agents.runAgent).toBe('function');

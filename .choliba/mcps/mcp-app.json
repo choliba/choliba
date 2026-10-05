@@ -1,0 +1,7 @@
+{
+  "command": "node",
+  "args": ["${CHOL_MCP_APP_DIR}/dist/main.js"],
+  "env": {
+    "LOG_DIR": "${CHOL_MCP_APP_LOG_DIR}"
+  }
+}

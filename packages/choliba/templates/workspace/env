@@ -1,16 +1,16 @@
 # Configuração do choliba nesta pasta de trabalho. Os valores do shell ganham destes.
 
 # Onde ficam os agentes, as skills e os MCPs, relativos a esta pasta. Sem estas linhas, valem os padrões
-# app/agents, app/skills e app/mcps; defina só para usar outra pasta.
-# CHOL_AGENTS_DIR=app/agents
-# CHOL_SKILLS_DIR=app/skills
-# CHOL_MCPS_DIR=app/mcps
+# .choliba/agents, .choliba/skills e .choliba/mcps; defina só para usar outra pasta.
+# CHOL_AGENTS_DIR=.choliba/agents
+# CHOL_SKILLS_DIR=.choliba/skills
+# CHOL_MCPS_DIR=.choliba/mcps
 
-# Os projetos de teste (PROJECTS_DIR) e os artefatos das execuções (CHOL_GLOBAL_DIR). O `choliba setup`
+# Os projetos de teste (CHOL_PROJECTS_DIR) e os artefatos das execuções (CHOL_GLOBAL_DIR). O `choliba setup`
 # preenche os dois no .env com caminhos absolutos: projects e .cache/choliba desta pasta.
 CHOL_GLOBAL_DIR=
-PROJECTS_DIR=
-# TICKET_RUNS=
+CHOL_PROJECTS_DIR=
+# CHOL_TICKET_RUNS=
 
 # Opcional: provider padrão dos agentes, auto, claude ou cursor (padrão: auto; --provider na linha de comando
 # ganha deste).
@@ -18,8 +18,28 @@ PROJECTS_DIR=
 
 # Opcional: onde o `choliba playwright-cli` grava snapshots e screenshots que os agentes leem (padrão:
 # .cache/playwright-cli).
-# PLAYWRIGHT_MCP_OUTPUT_DIR=.cache/playwright-cli
+# CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR=.cache/playwright-cli
 
-# Variáveis usadas por ${NOME} nos seus app/mcps/*.json, por exemplo:
-# MCP_APP_DIR=
-# MCP_APP_LOG_DIR=
+# Variáveis usadas por ${NOME} nos seus .choliba/mcps/*.json, por exemplo:
+# CHOL_MCP_APP_DIR=
+# CHOL_MCP_APP_LOG_DIR=
+# Opcional: as cores do choliba, papel.nome=cor separados por vírgula (ex.: agents.test-writer=bright-red).
+# Cores: red, green, yellow, blue, magenta, cyan, white, gray e os tons claros bright-red, bright-green,
+# bright-yellow, bright-blue, bright-magenta e bright-cyan; o tom exato depende do tema do terminal. A cor só
+# aparece no terminal: sai sem cor com --no-color, NO_COLOR=1, TERM=dumb ou em pipe (FORCE_COLOR=1 força).
+# Só muda o que estiver na linha; o resto fica no padrão. Os padrões:
+#   providers.claude=magenta
+#   providers.cursor=cyan
+#   agents.product-owner=blue
+#   agents.test-writer=red
+#   agents.implementer=green
+#   agents.docs-updater=cyan
+#   states.error=bright-red
+#   states.success=green
+#   states.warning=yellow
+#   states.hint=gray
+#   gates.red=red
+#   gates.green=green
+#   labels.provider=magenta
+# Para mudar, tire o # da linha abaixo e escreva as cores que quer trocar, por exemplo:
+# CHOL_COLORS=agents.test-writer=bright-red,states.error=red

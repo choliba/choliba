@@ -1,4 +1,4 @@
-import { isRecord } from '../json';
+import { isRecord } from '../shared/json';
 
 /**
  * Shared by both provider parsers: claude and cursor-agent parse `assistant` events identically

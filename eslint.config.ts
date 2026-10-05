@@ -10,7 +10,7 @@ export default defineConfig(
       '**/dist/**',
       'coverage/**',
       '.agents/**',
-      'app/skills/**',
+      '.choliba/skills/**',
       '.claude/**',
       '.playwright-cli/**',
     ],
@@ -32,6 +32,8 @@ export default defineConfig(
       '@typescript-eslint/ban-ts-comment': 'error',
       '@typescript-eslint/no-non-null-assertion': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
+      // `@Module({...}) export class XModule {}` é uma classe vazia por definição; sem decorator a regra vale.
+      '@typescript-eslint/no-extraneous-class': ['error', { allowWithDecorator: true }],
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     },
   },

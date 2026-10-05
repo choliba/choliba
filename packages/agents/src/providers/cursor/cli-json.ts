@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { PlannedFile } from '../provider.types';
+import type { PlannedFile } from '../interfaces/provider.interface';
 import type { CursorPermissions } from './permissions';
 
 function isRecord(value: unknown): value is Record<string, unknown> {

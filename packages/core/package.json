@@ -4,12 +4,26 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./cli": "./src/cli/index.ts",
     "./config": "./src/config/index.ts",
-    "./git": "./src/git/index.ts"
+    "./nest": "./src/nest.ts",
+    "./platform": "./src/platform/index.ts",
+    "./testing": "./src/testing/index.ts",
+    "./theme": "./src/theme/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@nestjs/common": "~11.2",
+    "@nestjs/core": "~11.2",
+    "nest-commander": "~3.21",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "yaml": "^2.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "~11.2",
+    "nest-commander-testing": "~3.6"
   }
 }

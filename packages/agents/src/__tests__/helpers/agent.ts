@@ -1,4 +1,4 @@
-import type { AgentDefinition, AgentModeSteps, AgentSections } from '../../agent.types';
+import type { AgentDefinition, AgentModeSteps, AgentSections } from '../../agents/interfaces/agent.interface';
 
 /** A mode with no steps: nothing before the agent, nothing after it. */
 export const NO_STEPS: AgentModeSteps = { before: [], after: { success: [], failure: [], always: [] } };

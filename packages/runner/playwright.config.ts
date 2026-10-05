@@ -17,9 +17,9 @@ const EXT = import.meta.url.endsWith('.ts') ? '.ts' : '.js';
 const playwrightEnv = resolveLocations(monorepoRoot, process.env);
 applyLocations(playwrightEnv);
 
-const projectsDir = playwrightEnv.PROJECTS_DIR;
+const projectsDir = playwrightEnv.CHOL_PROJECTS_DIR;
 if (!fs.existsSync(projectsDir)) {
-  throw new Error(`PROJECTS_DIR="${projectsDir}" não existe.`);
+  throw new Error(`CHOL_PROJECTS_DIR="${projectsDir}" não existe.`);
 }
 
 // Found from the command line in the main process; the workers, which load this file again with other

@@ -80,7 +80,7 @@ await bundle(
 // `choliba/eslint`: the config a workspace's eslint.config.js imports, loaded by ESLint under Node.
 await bundle(
   {
-    entrypoints: [join(packageDir, 'src', 'eslint-config.ts')],
+    entrypoints: [join(packageDir, 'src', 'tooling', 'eslint-config.ts')],
     outdir: out,
     naming: 'eslint.js',
     target: 'node',

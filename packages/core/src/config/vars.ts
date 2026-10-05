@@ -20,7 +20,13 @@ export const CHOL_MCPS_DIR = 'CHOL_MCPS_DIR';
 export const CHOL_GLOBAL_DIR = 'CHOL_GLOBAL_DIR';
 
 /** Override for the projects folder when it is not `{CHOL_GLOBAL_DIR}/projects`. */
-export const PROJECTS_DIR = 'PROJECTS_DIR';
+export const CHOL_PROJECTS_DIR = 'CHOL_PROJECTS_DIR';
 
-/** Optional ticket-runs/ root when different from PROJECTS_DIR. */
-export const TICKET_RUNS = 'TICKET_RUNS';
+/** Optional ticket-runs/ root when different from CHOL_PROJECTS_DIR. */
+export const CHOL_TICKET_RUNS = 'CHOL_TICKET_RUNS';
+
+/** Where `choliba playwright-cli` writes the files it names itself (default `.cache/playwright-cli`). */
+export const CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR = 'CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR';
+
+/** The colors chosen for the workspace: `papel.nome=cor`, separated by commas (`agents.test-writer=red`). */
+export const CHOL_COLORS = 'CHOL_COLORS';

@@ -9,7 +9,7 @@ describe('playwright package entrypoint', () => {
     expect(typeof playwright.flattenResults).toBe('function');
     expect(typeof playwright.isRealFailure).toBe('function');
     expect(typeof playwright.fillTicketTests).toBe('function');
-    expect(typeof playwright.runTestsCli).toBe('function');
+    expect(typeof playwright.runTests).toBe('function');
   });
 });
 

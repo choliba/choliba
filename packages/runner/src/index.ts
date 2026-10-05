@@ -1,4 +1,6 @@
-export { flattenResults, isRealFailure, type FlatTestResult } from './playwright-results';
-export { fillTicketTests } from './fill-ticket-tests';
-export { findRunnerRoot } from './runner-root';
-export { runTestsCli, testsCliSpec, type RunTestsOptions, type RunTestsResult } from './cli/run-tests';
+export { flattenResults, isRealFailure, type FlatTestResult } from './tests/playwright-results';
+export { fillTicketTests } from './tests/fill-ticket-tests';
+export { findRunnerRoot } from './tests/runner-root';
+export { testsCliSpec } from './tests/tests.help';
+export { runTests, type RunTestsOptions, type RunTestsResult } from './tests/run-tests';
+export { TestsError } from './tests/tests-error';

@@ -1,7 +1,7 @@
-import type { PermissionPolicy } from '../../command.types';
-import type { McpServer } from '../../mcps';
-import type { AgentPermissions, ExecuteRule } from '../../permissions';
-import { allowedCommands, blocksEveryCommand, pathGlob, withoutTrailingSlash } from '../../permissions';
+import type { PermissionPolicy } from '../../agents/interfaces/command.interface';
+import type { McpServer } from '../../mcps/mcps';
+import type { AgentPermissions, ExecuteRule } from '../../runs/permissions';
+import { allowedCommands, blocksEveryCommand, pathGlob, withoutTrailingSlash } from '../../runs/permissions';
 
 /** The tools that read files, which the session gets once the agent may read somewhere. */
 const READ_TOOLS: readonly string[] = ['Read', 'Grep', 'Glob'];

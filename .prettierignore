@@ -4,7 +4,7 @@ coverage
 COVERAGE.md
 bun.lock
 .agents
-app/skills
-app/mcps
+.choliba/skills
+.choliba/mcps
 .claude
 .playwright-cli
