@@ -90,9 +90,15 @@ export interface AgentDefinition {
   readonly projectRequired: boolean;
   /**
    * The ticket types the agent works on (`agent.yaml#ticket_types`). When set, a run needs `--type`
-   * (the CLI creates the ticket from that type's template) or `--ticket` (an existing one).
+   * (the CLI creates the ticket from that type's template) or `--ticket` (an existing one), unless
+   * `allowWithoutTicket` is true.
    */
   readonly ticketTypes?: readonly string[];
+  /**
+   * `agent.yaml#allow_without_ticket`: the run may omit `--type`/`--ticket`. With `ticketTypes`,
+   * the ticket is optional; without them, the agent never uses a ticket.
+   */
+  readonly allowWithoutTicket: boolean;
   /** `modes.allow`: the modes a run may use; any other is refused. */
   readonly modes: readonly ExecutionMode[];
   /** `modes.default`: the mode of a run that names none. */

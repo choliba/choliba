@@ -227,6 +227,25 @@ describe('validateAgentYamlV1', () => {
     });
   });
 
+  describe('permissions.delete', () => {
+    it('accepts delete as a list of paths like read and write', () => {
+      expect(
+        validate({
+          ...minimal(),
+          permissions: { allow: { delete: ['${APP_DIR}/'] }, deny: { delete: ['${APP_DIR}/secrets/'] } },
+        }).valid,
+      ).toBe(true);
+    });
+  });
+
+  describe('allow_without_ticket', () => {
+    it('accepts a boolean', () => {
+      expect(validate({ ...minimal(), allow_without_ticket: true }).valid).toBe(true);
+      expect(validate({ ...minimal(), allow_without_ticket: false }).valid).toBe(true);
+      expect(errorsOf({ ...minimal(), allow_without_ticket: 'yes' })).toContain('/allow_without_ticket');
+    });
+  });
+
   describe('modes', () => {
     it('requires the default to be one of the allowed modes', () => {
       expect(errorsOf({ ...minimal(), modes: { allow: ['plan', 'ask'], default: 'execute' } })).toContain(

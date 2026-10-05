@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { deleteBridgePath } from '../../../runs/delete-bridge-path';
 import { absolutePermissions, readAgentPermissions } from '../../../runs/permissions';
 import type { DirEntry, ReadDir } from '../../../providers/cursor/permissions';
 import { complementOf, cursorPermissions, readDir, shellToken } from '../../../providers/cursor/permissions';
@@ -155,5 +156,30 @@ describe('cursorPermissions', () => {
     const permissions = cursorPermissions(DECLARED, 'edits', ROOT, RUN_DIR);
 
     expect(permissions.deny.length).toBeGreaterThan(4);
+  });
+
+  it('allows the ephemeral delete bridge and cd into the run dir when allow.delete applies', () => {
+    const withDelete = absolutePermissions(readAgentPermissions({ allow: { delete: ['/repo/src/'] } }), ROOT);
+    const bridge = deleteBridgePath(RUN_DIR);
+    const permissions = cursorPermissions(withDelete, 'edits', ROOT, RUN_DIR, [], fakeDisk, {
+      deleteBridge: bridge,
+    });
+
+    expect(permissions.allow).toEqual([`Shell(${bridge})`, `Shell(cd:${RUN_DIR})`]);
+    expect(permissions.deny).toContain(`Write(${bridge})`);
+  });
+
+  it('omits the delete bridge in read-only runs', () => {
+    const withDelete = absolutePermissions(
+      readAgentPermissions({ allow: { delete: ['/repo/src/'], read: ['src/'] } }),
+      ROOT,
+    );
+    const bridge = deleteBridgePath(RUN_DIR);
+    const permissions = cursorPermissions(withDelete, 'read-only', ROOT, RUN_DIR, [], fakeDisk, {
+      deleteBridge: bridge,
+    });
+
+    expect(permissions.allow).toEqual(['Read(/repo/src/**)']);
+    expect([...permissions.allow, ...permissions.deny].join(' ')).not.toContain('.choliba-delete');
   });
 });

@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 04/10/2026 22:29:17 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 05/10/2026 02:22:34 — não editar manualmente.
 
 ## Resumo
 
@@ -17,7 +17,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 54 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 57 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -53,6 +53,9 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/providers/register-agent-provider.ts](packages/agents/src/providers/register-agent-provider.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/stream-json.ts](packages/agents/src/providers/stream-json.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/agent-detail.ts](packages/agents/src/runs/agent-detail.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/delete-bridge-path.ts](packages/agents/src/runs/delete-bridge-path.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/delete-bridge.ts](packages/agents/src/runs/delete-bridge.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/delete-under.ts](packages/agents/src/runs/delete-under.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/dry-run.ts](packages/agents/src/runs/dry-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/permissions.ts](packages/agents/src/runs/permissions.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/prompt.ts](packages/agents/src/runs/prompt.ts)|100.00|100.00|100.00|100.00

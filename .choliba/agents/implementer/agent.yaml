@@ -73,6 +73,9 @@ notes:
   - >-
     Rode os testes do ticket depois de cada mudança. Se depois de três rodadas algum critério ainda falhar, pare e
     reporte o que falta e por quê, em vez de continuar tentando.
+  - >-
+    Para apagar um arquivo ou pasta sob `${APP_DIR}`, rode o comando de apagar que o bloco de permissões indica, com o
+    caminho completo dele: é o único jeito que funciona.
 
 skills:
   playwright-trace:
@@ -92,6 +95,8 @@ permissions:
       - .cache/test-writer/${TICKET}/
       - '${APP_DIR}/'
     write:
+      - '${APP_DIR}/'
+    delete:
       - '${APP_DIR}/'
     execute:
       '${CHOL_ROOT}/':

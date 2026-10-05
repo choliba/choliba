@@ -7,6 +7,7 @@ import type { ProviderRequest } from '../../../providers/interfaces/provider.int
 import { cursorProvider } from '../../helpers/providers';
 import { PromptTooLargeError, MAX_ARG_BYTES } from '../../../runs/prompt';
 import { makeTmpDir } from '../../helpers/tmp';
+import { deleteBridgePath } from '../../../runs/delete-bridge-path';
 import { NO_PERMISSIONS, readAgentPermissions } from '../../../runs/permissions';
 import { NO_MODE_STEPS, fakeSections } from '../../helpers/agent';
 
@@ -25,6 +26,7 @@ function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
     policy: 'read-only',
     taskRequired: true,
     projectRequired: false,
+    allowWithoutTicket: false,
     defaultMode: 'execute',
     modes: ['execute', 'plan', 'ask'],
     permissions: NO_PERMISSIONS,
@@ -442,6 +444,36 @@ describe('cursorProvider.previewWorkspace', () => {
       expect(readFileSync(join(tmp.path, '.cursor', 'cli.json'), 'utf8')).toBe(files[0]?.content);
       restore();
       expect(cursorProvider.previewWorkspace(fakeRequest({ workspaceRoot: '/', runDir: tmp.path }))).toHaveLength(1);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('includes the delete bridge when allow.delete is set', () => {
+    const tmp = makeTmpDir('cursor-preview-delete');
+    try {
+      const app = join(tmp.path, 'app');
+      const run = join(tmp.path, 'run');
+      mkdirSync(app);
+      mkdirSync(run);
+      const permissions = readAgentPermissions({ allow: { delete: [app] } });
+      const request = fakeRequest({
+        workspaceRoot: tmp.path,
+        runDir: run,
+        policy: 'edits',
+        agent: fakeAgent({ permissions, policy: 'edits' }),
+      });
+
+      const files = cursorProvider.previewWorkspace(request);
+      expect(files.map((file) => file.path)).toEqual([deleteBridgePath(run), join(run, '.cursor', 'cli.json')]);
+      expect(existsSync(deleteBridgePath(run))).toBe(false);
+
+      const restore = cursorProvider.prepareWorkspace(request);
+      expect(existsSync(deleteBridgePath(run))).toBe(true);
+      expect(cliJsonIn(run).allow).toContain(`Shell(${deleteBridgePath(run)})`);
+      expect(cliJsonIn(run).deny).toContain(`Write(${deleteBridgePath(run)})`);
+      restore();
+      expect(existsSync(deleteBridgePath(run))).toBe(false);
     } finally {
       tmp.cleanup();
     }

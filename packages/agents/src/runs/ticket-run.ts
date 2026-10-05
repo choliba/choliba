@@ -64,7 +64,8 @@ function existingTicket(projectsDir: string, project: string, ticket: string): T
 
 /**
  * The ticket of this run, checked before anything else happens. An agent with `ticket_types` needs
- * `--type` (a type it accepts, with a template) or `--ticket` (an existing ticket); any other agent
+ * `--type` (a type it accepts, with a template) or `--ticket` (an existing ticket), unless
+ * `allow_without_ticket` is true (then both flags are optional). An agent without `ticket_types`
  * takes neither. For `--type` nothing is written yet: `createPlannedTicket` does it just before the
  * provider starts, so a run stopped by a later check leaves no file behind.
  */
@@ -78,6 +79,9 @@ export function resolveTicketTarget(
     if (args.ticketType !== undefined || args.ticket !== undefined) {
       throw new TicketRunError(`"${agent.name}" não trabalha com tickets: --type e --ticket não se aplicam.`);
     }
+    return undefined;
+  }
+  if (args.ticketType === undefined && args.ticket === undefined && agent.allowWithoutTicket) {
     return undefined;
   }
   if (args.project === undefined) {

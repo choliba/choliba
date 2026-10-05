@@ -18,6 +18,7 @@ function request(overrides: Partial<ProviderRequest> = {}): ProviderRequest {
       policy: 'read-only',
       taskRequired: true,
       projectRequired: false,
+      allowWithoutTicket: false,
       defaultMode: 'execute',
       modes: ['execute', 'plan', 'ask'],
       permissions: NO_PERMISSIONS,
