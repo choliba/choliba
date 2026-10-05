@@ -2,9 +2,9 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, write
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { formatInstall, install, parseInstallArgs, planInstall, type InstallTargets } from '../install';
+import { formatInstall, install, parseInstallArgs, planInstall, type InstallTargets } from '../../install/install';
 
-const FIXTURES = join(__dirname, '..', '..', '..', 'agents', 'src', '__tests__', 'fixtures');
+const FIXTURES = join(__dirname, '..', '..', '..', '..', 'agents', 'src', '__tests__', 'fixtures');
 
 /**
  * A source laid out at its root — `agents/echo` (declaring the skill `dummy-skill`, a skill

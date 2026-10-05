@@ -31,11 +31,12 @@
     "typescript-eslint": "^8.70.1"
   },
   "exports": {
-    "./eslint": "./src/eslint-config.ts",
+    "./eslint": "./src/tooling/eslint-config.ts",
     "./package.json": "./package.json"
   },
   "devDependencies": {
     "@nestjs/testing": "~11.2",
     "nest-commander-testing": "~3.6"
-  }
+  },
+  "cholCompletion": true
 }

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 
 import { createSpawnGitRunner, type GitRunner } from '@choliba/core/platform';
 
-import { fetchSource, sourceKind, type SourceDeps } from '../install-source';
+import { fetchSource, sourceKind, type SourceDeps } from '../../install/install-source';
 
 function withDir(run: (dir: string) => void): void {
   const dir = mkdtempSync(join(tmpdir(), 'install-source-'));

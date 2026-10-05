@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import { DEFAULT_OUTPUT_DIR, intoOutputDir } from '../playwright-args';
+import { DEFAULT_OUTPUT_DIR, intoOutputDir } from '../../tooling/playwright-args';
 
 describe('intoOutputDir', () => {
   it('moves a relative --filename, in both forms, into the output folder', () => {

@@ -26,7 +26,7 @@ import {
 } from '@choliba/core/config';
 import { createProject, projectTemplatesDir } from '@choliba/projects';
 
-import { COMPLETION_BASH } from './completion';
+import { COMPLETION_BASH } from '../completion/completion';
 
 /** Where `setup` keeps the completion script: one place for every workspace. */
 export function completionFile(home: string): string {

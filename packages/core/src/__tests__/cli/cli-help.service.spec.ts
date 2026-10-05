@@ -6,7 +6,7 @@ import { fakePlatform, type FakePlatform } from '../../testing';
 
 const SPEC: CommandSpec = {
   usage: 'demo COMMAND',
-  description: 'Uma CLI de exemplo',
+  description: 'Uma CLI de exemplo\n\n  demo list    lista tudo',
   commands: () => [
     { name: 'list', description: 'Lista tudo', group: 'Commands', spec: { usage: 'demo list' } },
     { name: 'show', description: 'Mostra um', group: 'Commands', spec: { usage: 'demo show' } },

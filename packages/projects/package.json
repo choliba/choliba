@@ -19,7 +19,6 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },
-  "cholCompletion": true,
   "devDependencies": {
     "@nestjs/testing": "~11.2",
     "nest-commander-testing": "~3.6"

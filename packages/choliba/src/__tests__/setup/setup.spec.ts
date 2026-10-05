@@ -8,7 +8,7 @@ import { loadProjectSettings } from '@choliba/projects';
 import { FILES_MARKER } from '@choliba/core/cli';
 import { DEFAULT_THEME, parseColors } from '@choliba/core/theme';
 
-import { COMPLETION_BASH } from '../completion';
+import { COMPLETION_BASH } from '../../completion/completion';
 import {
   completionFile,
   initialEnv,
@@ -27,7 +27,7 @@ import {
   addScripts,
   WORKSPACE_SCRIPTS,
   workspaceTemplatesDir,
-} from '../setup';
+} from '../../setup/setup';
 
 function withDir(run: (dir: string) => void): void {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'choliba-setup-'));

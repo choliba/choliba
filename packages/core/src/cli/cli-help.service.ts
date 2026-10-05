@@ -32,9 +32,10 @@ export class CliHelpService {
     }
   }
 
-  /** `__describe <words…>`: one line saying what the words select. */
+  /** `__describe <words…>`: one line saying what the words select (the examples a description may go on with stay out). */
   printDescription(spec: CommandSpec, words: readonly string[]): void {
-    this.stdout.write(`${describe(spec, words)}\n`);
+    const [line] = describe(spec, words).split('\n');
+    this.stdout.write(`${String(line)}\n`);
   }
 
   /** A usage error: the message and where to read the usage, on stderr; returns the exit code (1). */

@@ -1,55 +1,13 @@
 import type { CommandEntry, CommandSpec, Suggestions } from '@choliba/core/cli';
 import { testsCliSpec } from '@choliba/runner';
 
-/** What `choliba` runs itself; any other first word is an agent of the workspace. */
-export const SUBCOMMANDS = [
-  'agents',
-  'projects',
-  'tests',
-  'playwright-cli',
-  'playwright-trace',
-  'install',
-  'check',
-  'lint',
-  'format',
-  'setup',
-  'completion',
-] as const;
-
-export type Subcommand = (typeof SUBCOMMANDS)[number];
-
-export interface Route {
-  readonly kind: Subcommand | 'help' | '__complete';
-  /** The arguments for that subcommand, without its own name. */
-  readonly argv: readonly string[];
-}
-
-function isSubcommand(word: string): word is Subcommand {
-  return SUBCOMMANDS.some((subcommand) => subcommand === word);
-}
-
-/**
- * Which part of choliba a command line is for. `choliba <agent> …` is `choliba agents <agent> …`, so
- * an unknown first word goes to the agents CLI, which runs that agent or says it does not exist.
- */
-export function route(argv: readonly string[]): Route {
-  const [first, ...rest] = argv;
-  if (first === undefined || first === 'help' || first === '--help' || first === '-h') {
-    return { kind: 'help', argv: rest };
-  }
-  if (first === '__complete') {
-    return { kind: '__complete', argv: rest };
-  }
-  return isSubcommand(first) ? { kind: first, argv: rest } : { kind: 'agents', argv };
-}
-
 const FILES = (): Suggestions => ({ kind: 'files' });
 
 /** What `choliba --help` lists, and what its first word completes to (with the agents). */
-const COMMANDS: readonly CommandEntry[] = [
+export const COMMANDS: readonly CommandEntry[] = [
   {
     name: 'agents',
-    description: 'Roda um agente da pasta de trabalho (agents/<nome>/); `choliba <agente>` é atalho',
+    description: 'Roda um agente da pasta de trabalho (.choliba/agents/<nome>/); `choliba <agente>` é atalho',
     group: 'Commands',
     spec: { usage: 'choliba agents COMMAND [OPTIONS] [TASK...]' },
   },
@@ -138,21 +96,21 @@ const COMMANDS: readonly CommandEntry[] = [
   },
 ];
 
-/** The subcommands choliba runs itself; the others take `--help` to the CLI or tool they hand off to. */
-const OWN_HELP: readonly Subcommand[] = ['install', 'check', 'setup', 'completion'];
-
 /**
- * `choliba <subcommand> --help`, for the subcommands choliba runs itself: their spec, described by the
- * same line `choliba --help` lists them with. Nothing for anything else.
+ * `choliba <command> --help` of a command choliba runs itself (`install`, `check`, `setup`, `completion`): its
+ * spec, described by the line `choliba --help` lists it with.
  */
-export function subcommandHelp(target: Route): CommandSpec | undefined {
-  if (!target.argv.some((arg) => arg === '--help' || arg === '-h')) return undefined;
-  const entry = COMMANDS.find(
-    (command) => command.name === target.kind && OWN_HELP.some((name) => name === command.name),
-  );
-  if (entry === undefined) return undefined;
+export function commandHelp(name: string): CommandSpec {
+  const entry = COMMANDS.find((command) => command.name === name);
+  if (entry === undefined) return CHOLIBA_HELP;
   return { ...entry.spec, description: entry.spec.description ?? entry.description };
 }
+
+/** The flag every command takes, removed from the command line before any of them sees it. */
+const GLOBAL_FLAGS = [
+  { name: '--no-color', description: 'Saída sem cores (vale para todo comando; NO_COLOR=1 também)' },
+  { name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true },
+];
 
 /** `choliba --help`. */
 export const CHOLIBA_HELP: CommandSpec = {
@@ -162,19 +120,6 @@ export const CHOLIBA_HELP: CommandSpec = {
     'package.json depende de choliba, com o .env, os agentes (.choliba/agents/), as skills ' +
     '(.choliba/skills/) e os MCPs (.choliba/mcps/).',
   commands: () => COMMANDS,
+  flags: GLOBAL_FLAGS,
   footer: "Run 'choliba COMMAND --help' for more information on a command.",
 };
-
-/**
- * What completion walks: the subcommands and, as shortcuts, the agents of the workspace. `agents`,
- * `projects` and `tests` complete the rest of the line themselves.
- */
-export function firstWordSpec(agentNames: readonly string[]): CommandSpec {
-  const agents = agentNames.map((name): CommandEntry => ({
-    name,
-    description: '',
-    group: 'Agents',
-    spec: { usage: `choliba ${name}` },
-  }));
-  return { usage: CHOLIBA_HELP.usage, commands: () => [...COMMANDS, ...agents] };
-}

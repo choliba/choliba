@@ -26,6 +26,5 @@
     "@nestjs/testing": "~11.2",
     "@types/bun": "^1.4.2",
     "nest-commander-testing": "~3.6"
-  },
-  "cholCompletion": true
+  }
 }

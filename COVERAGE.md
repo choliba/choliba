@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 04/10/2026 22:14:52 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 04/10/2026 22:29:17 — não editar manualmente.
 
 ## Resumo
 
@@ -79,18 +79,37 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 8 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 27 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
-🟢|[src/check.ts](packages/choliba/src/check.ts)|100.00|100.00|100.00|100.00
-🟢|[src/completion.ts](packages/choliba/src/completion.ts)|100.00|100.00|100.00|100.00
-🟢|[src/eslint-config.ts](packages/choliba/src/eslint-config.ts)|100.00|100.00|100.00|100.00
-🟢|[src/install-source.ts](packages/choliba/src/install-source.ts)|100.00|100.00|100.00|100.00
-🟢|[src/install.ts](packages/choliba/src/install.ts)|100.00|100.00|100.00|100.00
-🟢|[src/playwright-args.ts](packages/choliba/src/playwright-args.ts)|100.00|100.00|100.00|100.00
-🟢|[src/route.ts](packages/choliba/src/route.ts)|100.00|100.00|100.00|100.00
-🟢|[src/setup.ts](packages/choliba/src/setup.ts)|100.00|100.00|100.00|100.00
+🟢|[src/app.module.ts](packages/choliba/src/app.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/check/check.command.ts](packages/choliba/src/check/check.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/check/check.module.ts](packages/choliba/src/check/check.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/check/check.ts](packages/choliba/src/check/check.ts)|100.00|100.00|100.00|100.00
+🟢|[src/completion/completion.command.ts](packages/choliba/src/completion/completion.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/completion/completion.module.ts](packages/choliba/src/completion/completion.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/completion/completion.ts](packages/choliba/src/completion/completion.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/app-help.service.ts](packages/choliba/src/help/app-help.service.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/app.help.ts](packages/choliba/src/help/app.help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/complete.command.ts](packages/choliba/src/help/complete.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/help.module.ts](packages/choliba/src/help/help.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/root.command.ts](packages/choliba/src/help/root.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/install/install-source.ts](packages/choliba/src/install/install-source.ts)|100.00|100.00|100.00|100.00
+🟢|[src/install/install.command.ts](packages/choliba/src/install/install.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/install/install.module.ts](packages/choliba/src/install/install.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/install/install.service.ts](packages/choliba/src/install/install.service.ts)|100.00|100.00|100.00|100.00
+🟢|[src/install/install.ts](packages/choliba/src/install/install.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runtime/runtime.constants.ts](packages/choliba/src/runtime/runtime.constants.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runtime/runtime.module.ts](packages/choliba/src/runtime/runtime.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/setup/setup.command.ts](packages/choliba/src/setup/setup.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/setup/setup.module.ts](packages/choliba/src/setup/setup.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/setup/setup.ts](packages/choliba/src/setup/setup.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tooling/eslint-config.ts](packages/choliba/src/tooling/eslint-config.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tooling/playwright-args.ts](packages/choliba/src/tooling/playwright-args.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tooling/tooling.commands.ts](packages/choliba/src/tooling/tooling.commands.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tooling/tooling.module.ts](packages/choliba/src/tooling/tooling.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tooling/tools.service.ts](packages/choliba/src/tooling/tools.service.ts)|100.00|100.00|100.00|100.00
 
 </details>
 

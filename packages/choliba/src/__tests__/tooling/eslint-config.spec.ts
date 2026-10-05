@@ -1,4 +1,4 @@
-import config from '../eslint-config';
+import config from '../../tooling/eslint-config';
 
 describe('choliba/eslint', () => {
   it('ignores what the tools generate, then applies the JavaScript and TypeScript recommended rules', () => {
