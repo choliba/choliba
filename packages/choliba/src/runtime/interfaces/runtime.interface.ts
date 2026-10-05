@@ -19,8 +19,11 @@ export interface Runtime {
   readonly home: string;
   /** `Bun.resolveSync(specifier, entryDir)`: a file of a dependency of this package. */
   resolve(specifier: string): string;
-  /** Runs `command` in `cwd` with the terminal attached; resolves with its exit code (1 when it did not start). */
-  run(command: string, args: readonly string[], cwd: string): number;
+  /**
+   * Runs `command` in `cwd` with the terminal attached, with `env` on top of choliba's own environment;
+   * resolves with its exit code (1 when it did not start).
+   */
+  run(command: string, args: readonly string[], cwd: string, env?: Readonly<Record<string, string>>): number;
   /** Runs `command` in `cwd`, keeping what it writes. */
   capture(command: string, args: readonly string[], cwd: string): CapturedRun;
   /** Starts `command` in `cwd` and leaves it running after choliba exits. */
