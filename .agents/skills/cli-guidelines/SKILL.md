@@ -30,7 +30,7 @@ behavior already exists.
    `--output`. Never reuse a standard name with another meaning.
 6. **Color only for humans.** Color is off when stdout is not a TTY, `NO_COLOR` is set and non-empty,
    `TERM=dumb` or `--no-color` is passed; `FORCE_COLOR` forces it on. Decide once, centrally, and pass the
-   decision down (`colorize`), never test the environment deep in rendering code. No spinners or live regions
+   decision down (`ThemeService` and its `Theme`), never test the environment deep in rendering code. No spinners or live regions
    when stdout is not a TTY.
 7. **Prompts only on a TTY, never required.** Every prompted value can also come from a flag. When stdin is not a
    TTY, or `--no-input` is passed, skip the prompt and fail with a message naming the flag to use.

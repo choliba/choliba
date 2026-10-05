@@ -1,59 +1,72 @@
 ---
 name: nestjs
-description: How NestJS fits into the choliba Bun monorepo — where a Nest app, module or shared "library" lives, how it wraps the existing framework-free packages, and the TypeScript 6 / DI / Jest traps that break the quality gates. Use when creating or reviewing NestJS code here (app, module, controller, provider, guard, pipe, interceptor, filter, DTO, a spec with @nestjs/testing), when asked where a Nest module should live or how to share one between apps, or when someone mentions `nest new`, `nest g`, `nest-cli.json`, Nest libraries/monorepo mode or docs.nestjs.com.
-argument-hint: 'What you are building (app, module, provider...) and which @choliba packages it wraps.'
+description: How choliba is built on NestJS and nest-commander (no HTTP) — where a module, service, command or provider goes, the pure `@choliba/<pkg>` vs `@choliba/<pkg>/nest` split, explicit injection without decorator metadata, the platform and runtime as injectable values, raw command arguments, how to add a command or an agent provider, and how to test them with Jest. Use when creating or changing any module, service, command, agent provider or Nest spec here, when asked where Nest code goes, or when someone mentions `@Module`, `@Injectable`, `@Command`, nest-commander, `nest g` or docs.nestjs.com.
+argument-hint: 'What you are building (command, module, provider...) and in which package.'
 user-invocable: true
 disable-model-invocation: false
 ---
 
 # NestJS in choliba
 
-NestJS gives choliba modules and dependency injection on top of the Bun workspace that already exists. It does
-**not** replace the workspace: the Nest CLI "monorepo mode" (`nest-cli.json`, `libs/`, `@app/*` paths, one
-`package.json`, `nest build`) is not used. Nest concepts are mapped onto `packages/*` and `apps/*` instead; the
-table is in `references/workspace-mapping.md`.
+Every package is a Nest library and `packages/choliba` is the one app (`AppModule` + `main.ts`). Nest gives
+modules and dependency injection; **nest-commander** turns them into the `choliba` command line. There is no
+HTTP. The workspace (`packages/*`) stays: the Nest CLI "monorepo mode" (`nest-cli.json`, `libs/`) is not used
+(`references/workspace-mapping.md`).
 
 ## Where code goes
 
-- **A Nest app is a workspace app.** Create it with
-  `bash .agents/skills/add-workspace-package/scripts/add-package.sh <name> app` (see the `add-workspace-package`
-  skill). `src/main.ts` only bootstraps (`NestFactory.create(AppModule)`, `listen`) and stays out of coverage;
-  everything testable starts at `src/app.module.ts`.
-- **The existing packages stay framework-free.** `core`, `projects`, `runner`, `agents` and `terminal` back the
-  CLI and must not import `@nestjs/*`. A Nest module wraps them with thin providers that delegate to the existing
-  functions, for example a `ProjectsService` whose methods call `listProjects` / `createProject` from
-  `@choliba/projects`, receiving `ProjectLocations` through injection instead of reading config itself.
-- **A Nest "library" is a workspace package.** While only one app uses a module, it lives in that app
-  (`apps/<name>/src/<feature>/`). When a second app needs it, move it to `packages/<name>`, export `XxxModule`
-  from `src/index.ts` and import it as `@choliba/<name>` (`workspace:*`). No build step, no tsconfig `paths`.
-- **One feature per folder**: `<feature>.module.ts`, `<feature>.controller.ts`, `<feature>.service.ts`, DTOs in
-  `dto/`. Specs never sit next to them (see testing below).
+- **One feature per folder** (as `cats/` in docs.nestjs.com/modules), the command in place of the controller:
+  `<feature>.module.ts`, `<feature>.service.ts`, `<feature>.command.ts`, `<feature>.help.ts` (the pt-BR
+  `CommandSpec`), `dto/<action>.dto.ts` (a class with a constructor, never `field!`), `interfaces/*.interface.ts`,
+  `<feature>.constants.ts` (injection tokens). The domain logic stays in plain functions next to them; the
+  service is thin and calls them.
+- **Two entry points per package.** `@choliba/<pkg>` (and its subpaths) export plain functions and types only;
+  `@choliba/<pkg>/nest` exports the modules, services and commands. The Playwright runner loads the first with
+  its own Babel, which rejects parameter decorators; a spec walks its imports and fails on any decorator
+  (`references/typescript-and-di.md`).
+- **`exports` explicit, no `@Global`**, except `PlatformModule.forRoot(platform)` and the app's
+  `RuntimeModule.forRoot(runtime)`: their values only exist at `forRoot`, so importing the module itself would
+  give an empty one. A module imports another module and injects its exported service, never its inner files.
 
-## Steps
+## The pieces every command uses (`@choliba/core`)
 
-1. **Dependencies in the package that uses them.** From inside the app or package directory:
-   `bun add @nestjs/common @nestjs/core @nestjs/platform-express reflect-metadata rxjs` and
-   `bun add -d @nestjs/testing supertest @types/supertest`. Never in the root `package.json`. Finish with
-   `bun install` so `bun.lock` is current.
-2. **Enable legacy decorators in that package only.** Its `tsconfig.json` adds `experimentalDecorators` and
-   `emitDecoratorMetadata`; `tsconfig.base.json` does not change. Jest needs the same flags: read
-   `references/typescript-and-di.md` before the first spec, it is the trap most likely to cost an afternoon.
-3. **Write the failing spec first**, in `src/__tests__/`, then the module. Patterns in `references/testing.md`.
-4. **No Nest CLI in the repo.** No `nest-cli.json`, no `@nestjs/cli` dependency. Write files by hand following
-   the shapes above. If you do run `bunx @nestjs/cli g <schematic> <name> --flat --no-spec`, move the result
-   into the conventions and delete anything it added to a `nest-cli.json`.
-5. **Close with the gates**: `bun run check` and `bash .agents/skills/quality-gates/scripts/verify.sh`.
+- **`PlatformModule.forRoot(platform)`**: the process and Bun as tokens (`ARGV`, `CWD`, `ENV`, `STDOUT`,
+  `STDERR`, `CLOCK`, `SIGNALS`, `SPAWN`, `WHICH`, `GIT`, `NO_COLOR_FLAG`) and `ExitStatus`. Only `main.ts` reads
+  Bun and `process`; Jest runs on Node, so nothing else may.
+- **`CliCommand`**: the base of every command; it turns the parser's own help off, so `-h`, `--help` and `help`
+  reach `run()` and the command prints its pt-BR help from its `CommandSpec`.
+- **`CommandIo`**: the arguments as typed (`io.args('projects', 'create-project')`), stdout, help, usage errors
+  and the exit code, in one injection. Commands read their arguments raw: the parser reorders unknown options
+  and drops `--`, so it only dispatches (`allowUnknownOptions`, `allowExcessArgs`).
+- **`ConfigService`** (workspace root, `.env`), **`ThemeService`** (colors, decided once), **`CliHelpService`**.
 
-## Rules that carry over unchanged
+## Steps for a new command
 
-- Hard typing: no `any`, no `!`, no `as` to silence a type. DTOs are classes with typed fields; request data is
-  narrowed with pipes, not cast.
-- Coverage only goes up: do not ask to exclude `*.module.ts`, controllers or providers from the ratchet. Building
-  the testing module exercises them (see the `coverage-ratchet` skill).
-- Prefer small providers and constructor injection; `object-calisthenics` applies to service logic.
+1. Read `cli-guidelines` (flags, stdout/stderr, exit codes, pt-BR) and write the failing spec first.
+2. The logic as plain functions in the feature folder; the service calls them with what it injects.
+3. The command: `@Command({ name, allowUnknownOptions: true, allowExcessArgs: true })`, `extends CliCommand`,
+   every constructor parameter with `@Inject(...)` (`references/typescript-and-di.md`): help first, then the
+   service, then `io.exit(code)` or `io.fail(messageOf(error))`.
+4. Its entry in `COMMANDS` (`packages/choliba/src/help/app.help.ts`) for `choliba --help` and completion, and
+   the module in `AppModule`. Check it does not shadow an agent name (`cli-guidelines`).
+5. `bun run check`; after a tool config change, `bash .agents/skills/quality-gates/scripts/verify.sh`.
 
-## When the docs are needed
+## Adding an agent provider
 
-Answer Nest API questions from docs.nestjs.com, not from memory: `references/docs-map.md` lists the page for each
-task. Anything there about `nest-cli.json`, `libs/` or `test/` folders is translated by
-`references/workspace-mapping.md`.
+1. `packages/agents/src/providers/<id>/<id>-agent.provider.ts`: a class `extends AgentProvider` with `id`,
+   `binaries`, `autoPriority`, `buildArgs`, `createParser` (and the optional hooks), decorated
+   `@RegisterAgentProvider()` and `@Injectable()`.
+2. `<id>-provider.module.ts` with it in `providers`, imported by `AgentsModule`. The registry finds it:
+   `--provider <id>`, `--<id>`, `auto`'s order and completion follow with no other change.
+3. Specs: its args and parser, and the registry spec, which the new provider must not break.
+
+## Tests
+
+`references/testing.md`: `runCommand([Module], fakePlatform({ argv, cwd }))` for a command line,
+`Test.createTestingModule` for a service, `@choliba/core/testing` for the fakes. Never `bun test`.
+
+## Versions
+
+NestJS `~11.2`: Nest 12 is ESM-only and nest-commander still `require()`s it, which Bun refuses. Move when
+nest-commander ships ESM. API questions: docs.nestjs.com and nest-commander.jaymcdoniel.dev, via
+`references/docs-map.md`, not memory.

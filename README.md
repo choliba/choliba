@@ -182,7 +182,7 @@ Qualquer comando de agente aceita `--dry-run`, que mostra o que ele faria, na or
 
 | Comando                                      | O que faz                                                                                                 |
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `choliba agents COMMAND [OPTIONS] [TASK...]` | Roda um agente da pasta de trabalho (`agents/<nome>/`)                                                    |
+| `choliba agents COMMAND [OPTIONS] [TASK...]` | Roda um agente da pasta de trabalho (`.choliba/agents/<nome>/`)                                           |
 | `choliba <agente>`                           | Atalho para `choliba agents <agente>`                                                                     |
 | `choliba projects COMMAND [ARGS]`            | Cria e lista projetos e tickets em `CHOL_PROJECTS_DIR`                                                    |
 | `choliba tests [PROJECT[:TICKET]] [OPTIONS]` | Roda os testes E2E dos projetos com o Playwright                                                          |
@@ -192,6 +192,10 @@ Qualquer comando de agente aceita `--dry-run`, que mostra o que ele faria, na or
 | `choliba completion bash`                    | Imprime o script de autocomplete do bash                                                                  |
 
 `choliba --help` (ou `choliba COMMAND --help`) lista o mesmo, sempre a partir do binário instalado.
+
+Cores: a saída só tem cor num terminal. `--no-color` (em qualquer comando), `NO_COLOR=1`, `TERM=dumb` ou um pipe
+tiram a cor; `FORCE_COLOR=1` força. Quais cores usar vem de `CHOL_COLORS` no `.env` (veja
+[`.env` da pasta de trabalho](#env-da-pasta-de-trabalho)) e, para o rótulo de um agente, do `agent.color` dele.
 
 ## A pasta de trabalho
 
@@ -278,20 +282,20 @@ steps:
         - run: [bunx, choliba, tests, '${PROJECT}:${TICKET}']
 ```
 
-| Chave                             | Obrigatória | Padrão              | O que é                                                                                                  |
-| --------------------------------- | ----------- | ------------------- | -------------------------------------------------------------------------------------------------------- |
-| `version`                         | sim         | —                   | Versão do padrão: `1`.                                                                                   |
-| `agent`                           | sim         | —                   | `id` (igual à pasta, é o nome do comando), `name`, `version` (semver do agente) e `description`.         |
-| `models`                          | sim         | —                   | Modelos com que o agente pode rodar, pelo id que o provider informa.                                     |
-| `role`, `input`, `flow`, `output` | sim         | —                   | O texto do agente (veja [O texto do agente](#o-texto-do-agente)).                                        |
-| `context`, `notes`                | não         | nenhum              | Listas de textos que completam o texto do agente.                                                        |
-| `skills`                          | não         | `[]`                | Pastas em `.choliba/skills/`, com a instrução de uso de cada uma (veja [Skills e MCPs](#skills-e-mcps)). |
-| `mcps`                            | não         | nenhum              | Servidores em `.choliba/mcps/<nome>.json`, com as tools liberadas e a instrução de uso de cada um.       |
-| `permissions.allow`/`.deny`       | não         | nada liberado       | `read` e `write`: caminhos (terminado em `/` = tudo abaixo). `execute`: diretório → comandos.            |
-| `modes.allow` / `.default`        | não         | os três / `execute` | Modos aceitos (`execute`, `plan`, `ask`) e o usado quando a linha de comando não diz.                    |
-| `task.required` / `.default`      | não         | `true` / —          | Se a tarefa é obrigatória e, quando não é, qual usar (`default` passa a ser obrigatório).                |
-| `ticket_types`                    | não         | agente sem ticket   | Tipos de ticket aceitos (`story`, `bug`, `improvement`, `task`); a execução pede `--type` ou `--ticket`. |
-| `steps.<modo>.before` / `.after`  | não         | nenhum              | Ações do choliba antes e depois do agente, em cada modo (veja [Steps](#steps)).                          |
+| Chave                             | Obrigatória | Padrão              | O que é                                                                                                                                                                   |
+| --------------------------------- | ----------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version`                         | sim         | —                   | Versão do padrão: `1`.                                                                                                                                                    |
+| `agent`                           | sim         | —                   | `id` (igual à pasta, é o nome do comando), `name`, `version` (semver do agente), `description` e, opcional, `color` (cor do rótulo `[agente]`; `CHOL_COLORS` ganha dela). |
+| `models`                          | sim         | —                   | Modelos com que o agente pode rodar, pelo id que o provider informa.                                                                                                      |
+| `role`, `input`, `flow`, `output` | sim         | —                   | O texto do agente (veja [O texto do agente](#o-texto-do-agente)).                                                                                                         |
+| `context`, `notes`                | não         | nenhum              | Listas de textos que completam o texto do agente.                                                                                                                         |
+| `skills`                          | não         | `[]`                | Pastas em `.choliba/skills/`, com a instrução de uso de cada uma (veja [Skills e MCPs](#skills-e-mcps)).                                                                  |
+| `mcps`                            | não         | nenhum              | Servidores em `.choliba/mcps/<nome>.json`, com as tools liberadas e a instrução de uso de cada um.                                                                        |
+| `permissions.allow`/`.deny`       | não         | nada liberado       | `read` e `write`: caminhos (terminado em `/` = tudo abaixo). `execute`: diretório → comandos.                                                                             |
+| `modes.allow` / `.default`        | não         | os três / `execute` | Modos aceitos (`execute`, `plan`, `ask`) e o usado quando a linha de comando não diz.                                                                                     |
+| `task.required` / `.default`      | não         | `true` / —          | Se a tarefa é obrigatória e, quando não é, qual usar (`default` passa a ser obrigatório).                                                                                 |
+| `ticket_types`                    | não         | agente sem ticket   | Tipos de ticket aceitos (`story`, `bug`, `improvement`, `task`); a execução pede `--type` ou `--ticket`.                                                                  |
+| `steps.<modo>.before` / `.after`  | não         | nenhum              | Ações do choliba antes e depois do agente, em cada modo (veja [Steps](#steps)).                                                                                           |
 
 Regras de permissão: veja [Segurança](#segurança).
 

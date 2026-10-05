@@ -21,7 +21,9 @@ Detalhes e o passo a passo: skill `git-workflow` (`.agents/skills/git-workflow/S
 ## Stack
 
 Monorepo Bun (`packages/*`, `apps/*`), TypeScript 6.0 com tipagem dura (nunca `any`), ESLint, Prettier com
-`.editorconfig`, Jest (nunca `bun test`) com ratchet de cobertura. Tudo roda com `bun run check`.
+`.editorconfig`, Jest (nunca `bun test`) com ratchet de cobertura. Tudo roda com `bun run check`. A estrutura é
+NestJS 11 + nest-commander, sem HTTP: cada pacote é uma biblioteca Nest (`@choliba/<pkg>` puro,
+`@choliba/<pkg>/nest` com módulos, services e comandos) e `packages/choliba` é o app (skill `nestjs`).
 
 Skills de desenvolvimento do projeto em `.agents/skills/`: `add-workspace-package`, `quality-gates`, `coverage-ratchet`,
 `git-workflow`, `object-calisthenics`, `nestjs`, `cli-guidelines`; e `documentation`, que também é do agente
