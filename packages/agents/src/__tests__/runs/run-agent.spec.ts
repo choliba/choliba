@@ -2,14 +2,17 @@ import { existsSync } from 'node:fs';
 import { constants, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { buildTheme } from '@choliba/core/theme';
+
 import type { ProcessSpawner, SignalSource, Writable } from '@choliba/terminal';
 import { ProcessRunnerService } from '@choliba/terminal';
 
 import type { AgentDefinition } from '../../agents/interfaces/agent.interface';
 import type { AgentEvent } from '../../runs/interfaces/event.interface';
 import { readPlan } from '../../plans/plan-store';
-import type { PlanContentContext, ProviderAdapter, ProviderRequest } from '../../providers/provider.types';
-import type { ResolvedProvider } from '../../providers/registry';
+import type { AgentProvider } from '../../providers/agent-provider';
+import type { PlanContentContext, ProviderRequest } from '../../providers/interfaces/provider.interface';
+import type { ResolvedProvider } from '../../providers/provider-registry';
 import type { RunAgentRequest } from '../../runs/run-agent';
 import { runAgent } from '../../runs/run-agent';
 import { erroringStream, fakeSpawner, streamFromChunks, throwingSpawner } from '../helpers/fake-spawner';
@@ -92,10 +95,11 @@ function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
  * translation from its native format is tested separately (`providers/*.spec.ts`); here we only
  * care what `runAgent` does with the already-normalized events.
  */
-function fakeAdapter(overrides: Partial<ProviderAdapter> = {}): ProviderAdapter {
+function fakeAdapter(overrides: Partial<AgentProvider> = {}): AgentProvider {
   return {
     id: 'claude',
     binaries: [['fake']],
+    autoPriority: 1,
     buildArgs: () => ['--arg'],
     createParser: () => {
       let sawInitWithModel = false;
@@ -135,7 +139,7 @@ interface Setup {
   ) => RunAgentRequest;
 }
 
-function setup(spawner: ProcessSpawner, adapterOverrides: Partial<ProviderAdapter> = {}, plansDir = '/plans'): Setup {
+function setup(spawner: ProcessSpawner, adapterOverrides: Partial<AgentProvider> = {}, plansDir = '/plans'): Setup {
   const runner = new ProcessRunnerService({ spawner });
   const stdout = fakeWritable();
   const stderr = fakeWritable();
@@ -163,7 +167,7 @@ function setup(spawner: ProcessSpawner, adapterOverrides: Partial<ProviderAdapte
       commandName: 'echo',
       task: 'do it',
       plansDir,
-      colorize: false,
+      theme: buildTheme({}, false),
       ...overrides,
     }),
   };
@@ -413,7 +417,7 @@ describe('runAgent', () => {
         commandName: 'echo',
         task: 'do it',
         plansDir: '/plans',
-        colorize: false,
+        theme: buildTheme({}, false),
       },
       { runner, stdout, stderr, signals: source, now: () => new Date() },
     );

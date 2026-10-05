@@ -3,6 +3,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { complete, describe as describeSpec, formatSuggestions } from '@choliba/core/cli';
 import type { GitRunner } from '@choliba/core/platform';
 
 import * as gitDiff from '../../steps/git-working-tree-diff';
@@ -15,8 +16,11 @@ import { defineCommand } from '../../agents/commands/define-command';
 import { StepFailedError } from '../../steps/actions';
 import { readPlan } from '../../plans/plan-store';
 import type { RunAgentsCliDeps } from '../../runs/run-agents';
-import { runAgentsCli } from '../../runs/run-agents';
+import { agentsHelpSpec, runAgentsCli } from '../../runs/run-agents';
 import { COMMAND_LINE_TITLE } from '../../runs/dry-run';
+import { buildTheme } from '@choliba/core/theme';
+
+import { PROVIDERS } from '../helpers/providers';
 import { fakeSpawner, streamFromChunks } from '../helpers/fake-spawner';
 import { makeTmpDir } from '../helpers/tmp';
 
@@ -91,6 +95,19 @@ function dryRunArgv(writable: Writable & { chunks: string[] }): readonly string[
   return JSON.parse(text.slice(start + marker.length).split('\n')[0] ?? '') as string[];
 }
 
+/** What `choliba __complete agents <words…>` prints: one suggestion per line, nothing when there is none. */
+async function completeWords(words: readonly string[], deps: RunAgentsCliDeps): Promise<number> {
+  const output = formatSuggestions(complete(agentsHelpSpec(deps), words));
+  if (output !== '') deps.stdout.write(`${output}\n`);
+  return Promise.resolve(0);
+}
+
+/** What `choliba __describe agents <words…>` prints. */
+async function describeWords(words: readonly string[], deps: RunAgentsCliDeps): Promise<number> {
+  deps.stdout.write(`${describeSpec(agentsHelpSpec(deps), words)}\n`);
+  return Promise.resolve(0);
+}
+
 interface Harness {
   readonly deps: RunAgentsCliDeps;
   readonly stdout: Writable & { chunks: string[] };
@@ -105,6 +122,8 @@ function harness(stdoutLines: readonly string[], overrides: Partial<RunAgentsCli
   const deps: RunAgentsCliDeps = {
     runner,
     which: whichOf(['claude']),
+    providers: PROVIDERS,
+    theme: buildTheme({}, false),
     repoRoot: '/repo',
     commands: [],
     now: () => new Date('2026-01-01T00:00:00.000Z'),
@@ -124,7 +143,7 @@ describe('runAgentsCli — help', () => {
     const { deps, stdout } = harness([]);
 
     expect(await runAgentsCli([], deps)).toBe(0);
-    expect(stdout.chunks.join('')).toContain('Usage:  agents [OPTIONS] COMMAND [TASK...]');
+    expect(stdout.chunks.join('')).toContain('Usage:  choliba agents [OPTIONS] COMMAND [TASK...]');
   });
 
   it('rejects a malformed argv up front, before resolving anything', async () => {
@@ -141,7 +160,7 @@ describe('runAgentsCli — help', () => {
     const text = stdout.chunks.join('');
     expect(text).toContain('id: echo');
     expect(text).toContain('Policy: read-only');
-    expect(text).toContain('Usage:  agents echo [OPTIONS] [TASK...]');
+    expect(text).toContain('Usage:  choliba agents echo [OPTIONS] [TASK...]');
     expect(text).toContain('--dry-run');
   });
 
@@ -178,7 +197,7 @@ describe('runAgentsCli — help', () => {
       const { deps, stdout } = harness([]);
       expect(await runAgentsCli(['long-help', '--agents-dir', agentsDir, '--help'], deps)).toBe(0);
       const text = stdout.chunks.join('');
-      expect(text).toContain('Usage:  agents long-help');
+      expect(text).toContain('Usage:  choliba agents long-help');
       expect(text).toContain('Esta descrição é propositalmente longa');
     } finally {
       tmp.cleanup();
@@ -199,33 +218,33 @@ describe('runAgentsCli — global help and completion', () => {
     expect(text).toContain('Agents:\n');
     expect(text).toMatch(/\n {2}echo +\S/);
     expect(text).toContain('Commands:\n  list');
-    expect(text).toContain("Run 'agents COMMAND --help' for more information on a command.");
+    expect(text).toContain("Run 'choliba agents COMMAND --help' for more information on a command.");
   });
 
   it('completes agent names, commands and --<agent> forms', async () => {
     const { deps, stdout } = harness([], { config: { CHOL_AGENTS_DIR: FIXTURES }, git });
 
-    expect(await runAgentsCli(['__complete', 'ec'], deps)).toBe(0);
-    expect(await runAgentsCli(['__complete', '--ec'], deps)).toBe(0);
+    expect(await completeWords(['ec'], deps)).toBe(0);
+    expect(await completeWords(['--ec'], deps)).toBe(0);
     expect(lines(stdout)).toEqual(['echo', '--echo']);
   });
 
   it('completes flag values from the agent, the modes and git refs', async () => {
     const { deps, stdout } = harness([], { config: { CHOL_AGENTS_DIR: FIXTURES }, git });
 
-    await runAgentsCli(['__complete', '--echo', '--mode', 'p'], deps);
-    await runAgentsCli(['__complete', 'echo', '--model', ''], deps);
-    await runAgentsCli(['__complete', 'with-prepare', '--since', 'fe'], deps);
-    await runAgentsCli(['__complete', 'echo', '--plan-from', ''], deps);
+    await completeWords(['--echo', '--mode', 'p'], deps);
+    await completeWords(['echo', '--model', ''], deps);
+    await completeWords(['with-prepare', '--since', 'fe'], deps);
+    await completeWords(['echo', '--plan-from', ''], deps);
     expect(lines(stdout)).toEqual(['plan', 'claude-3-5-sonnet', 'gpt-4o', 'feat/x', ':files']);
   });
 
   it('describes the CLI or the command the words select', async () => {
     const { deps, stdout } = harness([], { config: { CHOL_AGENTS_DIR: FIXTURES }, git });
 
-    await runAgentsCli(['__describe'], deps);
-    await runAgentsCli(['__describe', '--echo', '--mode', 'plan'], deps);
-    expect(lines(stdout)[0]).toMatch(/^Executa os agentes do repositório/);
+    await describeWords([], deps);
+    await describeWords(['--echo', '--mode', 'plan'], deps);
+    expect(lines(stdout)[0]).toMatch(/^Executa os agentes da pasta de trabalho/);
     expect(lines(stdout)[1]).toBe('Repete a tarefa recebida, usado nos testes deste pacote.');
   });
 
@@ -233,16 +252,16 @@ describe('runAgentsCli — global help and completion', () => {
     const failing: GitRunner = { run: () => ({ stdout: '', stderr: 'fatal', status: 128 }) };
     const { deps, stdout } = harness([], { config: { CHOL_AGENTS_DIR: FIXTURES }, git: failing });
 
-    expect(await runAgentsCli(['__complete', 'with-prepare', '--since', ''], deps)).toBe(0);
-    expect(await runAgentsCli(['__complete', 'echo', '--help', ''], deps)).toBe(0);
+    expect(await completeWords(['with-prepare', '--since', ''], deps)).toBe(0);
+    expect(await completeWords(['echo', '--help', ''], deps)).toBe(0);
     expect(lines(stdout)).toEqual(['pending']);
   });
 
   it('offers the diff-base flags only to agents with a prepare step', async () => {
     const { deps, stdout } = harness([], { config: { CHOL_AGENTS_DIR: FIXTURES }, git });
 
-    await runAgentsCli(['__complete', 'with-prepare', '--si'], deps);
-    await runAgentsCli(['__complete', 'echo', '--si'], deps);
+    await completeWords(['with-prepare', '--si'], deps);
+    await completeWords(['echo', '--si'], deps);
     expect(lines(stdout)).toEqual(['--since', '--since-pending']);
   });
 
@@ -254,7 +273,7 @@ describe('runAgentsCli — global help and completion', () => {
       });
       const { deps, stdout } = harness([], { config: { CHOL_AGENTS_DIR: FIXTURES }, repoRoot: tmp.path });
 
-      await runAgentsCli(['__complete', 'with-prepare', '--since', ''], deps);
+      await completeWords(['with-prepare', '--since', ''], deps);
       expect(lines(stdout)).toEqual(['pending', 'trunk']);
     } finally {
       tmp.cleanup();
@@ -419,16 +438,16 @@ describe('runAgentsCli — tickets', () => {
       withTicketAgent(async (agentsDir) => {
         mkdirSync(join(projectsDir, 'ready', 'tickets'), { recursive: true });
         writeFileSync(join(projectsDir, 'ready', 'tickets', '2.json'), '{}');
-        const complete = ['__complete', 'with-project', '--ticket', ''];
+        const words = ['with-project', '--ticket', ''];
 
         const configured = harness([], {
           config: { CHOL_AGENTS_DIR: agentsDir, CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: projectsDir },
         });
-        await runAgentsCli(complete, configured.deps);
+        await completeWords(words, configured.deps);
         expect(lines(configured.stdout)).toEqual(['ready-2']);
 
         const bare = harness([], { config: { CHOL_AGENTS_DIR: agentsDir } });
-        await runAgentsCli(complete, bare.deps);
+        await completeWords(words, bare.deps);
         expect(lines(bare.stdout)).toEqual([]);
       }),
     );
@@ -444,7 +463,7 @@ describe('runAgentsCli — tickets', () => {
         const config = { CHOL_AGENTS_DIR: agentsDir, CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: projectsDir };
         const suggest = async (...words: string[]): Promise<readonly string[]> => {
           const { deps, stdout } = harness([], { config });
-          await runAgentsCli(['__complete', 'with-project', ...words, ''], deps);
+          await completeWords(['with-project', ...words, ''], deps);
           return lines(stdout);
         };
 
@@ -551,9 +570,9 @@ describe('runAgentsCli — --project', () => {
       [
         'unknown flag: --project',
         '',
-        'Usage:  agents echo [OPTIONS] [TASK...]',
+        'Usage:  choliba agents echo [OPTIONS] [TASK...]',
         '',
-        "Run 'agents echo --help' for more information",
+        "Run 'choliba agents echo --help' for more information",
         '',
       ].join('\n'),
     );
@@ -572,11 +591,11 @@ describe('runAgentsCli — --project', () => {
       const configured = harness([], {
         config: { CHOL_AGENTS_DIR: FIXTURES, CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: projectsDir },
       });
-      await runAgentsCli(['__complete', 'with-project', '--project', ''], configured.deps);
+      await completeWords(['with-project', '--project', ''], configured.deps);
       expect(lines(configured.stdout)).toEqual(['pending', 'ready']);
 
       const bare = harness([], { config: { CHOL_AGENTS_DIR: FIXTURES } });
-      await runAgentsCli(['__complete', 'with-project', '--project', ''], bare.deps);
+      await completeWords(['with-project', '--project', ''], bare.deps);
       expect(lines(bare.stdout)).toEqual([]);
     });
   });
@@ -728,7 +747,7 @@ describe('runAgentsCli — run', () => {
   it('runs an implicit command for a loadable agent end to end, through the real claude adapter', async () => {
     const { deps, stdout } = harness(claudeStdout(claudeTextLine('all good'), claudeSuccessLine()));
 
-    const exitCode = await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--no-color', 'do the task'], deps);
+    const exitCode = await runAgentsCli(['echo', '--agents-dir', FIXTURES, 'do the task'], deps);
 
     expect(exitCode).toBe(0);
     const output = stdout.chunks.join('');

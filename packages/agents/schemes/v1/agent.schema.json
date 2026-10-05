@@ -33,6 +33,10 @@
           "description": "O que faz, o que não faz e quando usar (aparece na ajuda).",
           "type": "string",
           "pattern": "\\S"
+        },
+        "color": {
+          "description": "Cor do rótulo [agente] no terminal. CHOL_COLORS (agents.<id>=<cor>) no .env de quem usa ganha desta.",
+          "enum": ["red", "green", "yellow", "blue", "magenta", "cyan", "white", "gray", "bright-red", "bright-green", "bright-yellow", "bright-blue", "bright-magenta", "bright-cyan"]
         }
       }
     },

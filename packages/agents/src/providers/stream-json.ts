@@ -2,7 +2,7 @@ import type { AgentEvent } from '../runs/interfaces/event.interface';
 import { asBoolean, asString, isRecord, parseJsonLine } from '../shared/json';
 import { contentBlocks, summarize, toolResultText } from './message-blocks';
 import { parseCursorToolCall } from './cursor/tool-calls';
-import type { StreamParser } from './provider.types';
+import type { StreamParser } from './interfaces/provider.interface';
 
 export interface StreamJsonParserOptions {
   readonly planFromExitPlanMode: boolean;

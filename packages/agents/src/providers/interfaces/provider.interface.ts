@@ -1,9 +1,7 @@
-import type { AgentDefinition } from '../agents/interfaces/agent.interface';
-import type { ExecutionMode, PermissionPolicy } from '../agents/interfaces/command.interface';
-import type { AgentEvent } from '../runs/interfaces/event.interface';
-import type { McpServer } from '../mcps/mcps';
-
-export type ProviderId = 'claude' | 'cursor';
+import type { AgentDefinition } from '../../agents/interfaces/agent.interface';
+import type { ExecutionMode, PermissionPolicy } from '../../agents/interfaces/command.interface';
+import type { AgentEvent } from '../../runs/interfaces/event.interface';
+import type { McpServer } from '../../mcps/mcps';
 
 export interface ProviderRequest {
   readonly agent: AgentDefinition;
@@ -43,32 +41,6 @@ export interface PlanContentContext {
   readonly planMarkdown: string | undefined;
   readonly doneEvent: Extract<AgentEvent, { type: 'done' }> | undefined;
   readonly textParts: readonly string[];
-}
-
-export interface ProviderAdapter {
-  readonly id: ProviderId;
-  /**
-   * Candidate binaries to try, in order, most specific first — e.g. cursor's own CLI is
-   * reachable as `agent`, `cursor-agent` or `cursor agent` depending on install. `which` in
-   * `providers/registry.ts` picks the first one that resolves.
-   */
-  readonly binaries: readonly (readonly string[])[];
-  /** The args *after* the binary. Calls `assertArgvFits` before returning. */
-  buildArgs(request: ProviderRequest): readonly string[];
-  createParser(): StreamParser;
-  /**
-   * How to pick plan file content in `--mode plan`. Default: `plan` event, then `done.text`,
-   * then streamed `text` chunks. Cursor overrides this — its `result` field is narration only.
-   */
-  resolvePlanContent?(context: PlanContentContext): string | undefined;
-  /**
-   * Prepares the workspace right before the provider starts (cursor writes the agent's permissions
-   * into `.cursor/cli.json`, since it has no flag for them) and returns the function that undoes
-   * it, which `runAgent` always calls once the session ends.
-   */
-  prepareWorkspace?(request: ProviderRequest): () => void;
-  /** `--dry-run --show-prompt`: the files `prepareWorkspace` would write, with their content, writing nothing. */
-  previewWorkspace?(request: ProviderRequest): readonly PlannedFile[];
 }
 
 /** A file a provider would write for a run, and what it would hold. */

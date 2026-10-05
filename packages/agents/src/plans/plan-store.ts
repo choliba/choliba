@@ -1,7 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { ProviderId } from '../providers/provider.types';
 
 /** Lowercases, keeps only `[a-z0-9]`, collapses everything else to a single `-`, and trims it. */
 export function slugify(task: string, maxLen = 60): string {
@@ -20,7 +19,7 @@ export function formatPlanTimestamp(now: Date): string {
 }
 
 /** `{timestamp}-{provider}.{nome}` basename shared by resolvePlanPath and writePlan. */
-export function planBasename(provider: ProviderId, task: string, now: Date): string {
+export function planBasename(provider: string, task: string, now: Date): string {
   return `${formatPlanTimestamp(now)}-${provider}.${slugify(task)}`;
 }
 
@@ -32,7 +31,7 @@ export function resolvePlanPath(
   plansDir: string,
   agent: string,
   task: string,
-  provider: ProviderId,
+  provider: string,
   now: Date,
 ): string {
   const dir = join(plansDir, agent);
@@ -50,7 +49,7 @@ export interface WritePlanOptions {
   readonly plansDir: string;
   readonly agent: string;
   readonly command: string;
-  readonly provider: ProviderId;
+  readonly provider: string;
   readonly task: string;
   readonly content: string;
   readonly now: Date;

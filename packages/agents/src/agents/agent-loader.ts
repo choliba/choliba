@@ -3,6 +3,8 @@ import { join } from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
+import { isAnsiColor } from '@choliba/core/theme';
+
 import type {
   AgentAfterSteps,
   AgentDefinition,
@@ -83,6 +85,7 @@ interface AgentYamlV1 {
     readonly name: string;
     readonly version: string;
     readonly description: string;
+    readonly color?: string;
   };
   readonly models: readonly string[];
   readonly role: string;
@@ -218,6 +221,8 @@ export function parseAgentYaml(text: string, source: string, folder: string): Ya
     displayName: doc.agent.name,
     version: doc.agent.version,
     description: doc.agent.description,
+    // The schema already took only the names the theme has; the guard just tells TypeScript so.
+    ...(isAnsiColor(doc.agent.color) ? { color: doc.agent.color } : {}),
     supportedModels: doc.models,
     sections: {
       role: doc.role,

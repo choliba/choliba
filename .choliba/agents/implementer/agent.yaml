@@ -4,6 +4,7 @@ agent:
   id: implementer
   name: Implementer
   version: 1.0.0
+  color: green
   description: >-
     Implementa um ticket na aplicação (appDir do ambiente ativo) a partir dos testes
     que o test-writer escreveu: o mínimo para cada critério de aceite passar, sem

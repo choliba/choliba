@@ -1,3 +1,4 @@
+import type { Theme } from '@choliba/core/theme';
 import type { AnsiColor } from '@choliba/terminal';
 import { formatLine } from '@choliba/terminal';
 
@@ -9,9 +10,17 @@ export interface RenderOptions {
   readonly color?: AnsiColor;
 }
 
-/** First line printed when an agent run starts — identifies the resolved provider. */
-export function formatProviderLine(providerId: string, colorize: boolean): string {
-  return formatLine('provider', providerId, { colorize });
+/** First line printed when an agent run starts — identifies the resolved provider, each in its theme color. */
+export function formatProviderLine(providerId: string, theme: Theme): string {
+  return formatLine('provider', theme.paint('providers', providerId, providerId), {
+    colorize: theme.enabled,
+    color: theme.colorOf('labels', 'provider'),
+  });
+}
+
+/** How an agent's lines are labeled: its name, in the color the theme gives it (its own `agent.color` second). */
+export function agentRenderOptions(name: string, declared: AnsiColor | undefined, theme: Theme): RenderOptions {
+  return { label: name, colorize: theme.enabled, color: theme.colorOf('agents', name, declared) };
 }
 
 /**

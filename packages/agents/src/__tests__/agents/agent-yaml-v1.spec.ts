@@ -1,4 +1,9 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { stringify } from 'yaml';
+
+import { ANSI_COLORS } from '@choliba/core/theme';
 
 import { SUPPORTED_AGENT_YAML_VERSIONS, validateAgentYamlV1 } from '../../agents/agent-validation';
 
@@ -99,6 +104,23 @@ function validate(doc: Doc, folder = 'qa-e2e') {
 function errorsOf(doc: Doc, folder?: string): string {
   return validate(doc, folder).errors.join('\n');
 }
+
+describe('agent.color', () => {
+  const agent = { id: 'qa-e2e', name: 'QA E2E', version: '1.0.0', description: 'Escreve testes.' };
+
+  it('takes one of the colors of the theme, and nothing else', () => {
+    expect(validate({ ...minimal(), agent: { ...agent, color: 'bright-cyan' } })).toEqual({ valid: true, errors: [] });
+    expect(errorsOf({ ...minimal(), agent: { ...agent, color: 'purple' } })).toMatch(/color/);
+  });
+
+  it('lists exactly the colors the theme has', () => {
+    const schemaFile = join(__dirname, '..', '..', '..', 'schemes', 'v1', 'agent.schema.json');
+    const schema = JSON.parse(readFileSync(schemaFile, 'utf8')) as {
+      properties: { agent: { properties: { color: { enum: readonly string[] } } } };
+    };
+    expect(schema.properties.agent.properties.color.enum).toEqual(ANSI_COLORS);
+  });
+});
 
 describe('validateAgentYamlV1', () => {
   it('accepts the complete example of the standard', () => {

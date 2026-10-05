@@ -2,7 +2,11 @@ import { mcpServersMap } from '../../mcps/mcps';
 import { absolutePermissions } from '../../runs/permissions';
 import { assertArgvFits, wrapInstructions } from '../../runs/prompt';
 import { createStreamJsonParser } from '../stream-json';
-import type { PlanContentContext, PlannedFile, ProviderAdapter, ProviderRequest } from '../provider.types';
+import { Injectable } from '@nestjs/common';
+
+import { AgentProvider } from '../agent-provider';
+import type { PlanContentContext, PlannedFile, ProviderRequest, StreamParser } from '../interfaces/provider.interface';
+import { RegisterAgentProvider } from '../register-agent-provider';
 import { applyCursorMcpServers, applyCursorPermissions, planCursorMcpServers, planCursorPermissions } from './cli-json';
 import { type CursorPermissions, cursorPermissions } from './permissions';
 
@@ -104,13 +108,36 @@ function previewWorkspace(request: ProviderRequest): readonly PlannedFile[] {
     : [permissions, planCursorMcpServers(request.runDir, mcpServersMap(mcpServers))];
 }
 
-export const cursorProvider: ProviderAdapter = {
-  id: 'cursor',
-  binaries: [['agent'], ['cursor-agent'], ['cursor', 'agent']],
-  buildArgs,
-  prepareWorkspace,
-  previewWorkspace,
-  createParser: () =>
-    createStreamJsonParser({ planFromExitPlanMode: false, planFromCreatePlanToolCall: true, toolCallEvents: true }),
-  resolvePlanContent,
-};
+/** Cursor's agent CLI (`agent`, `cursor-agent` or `cursor agent`, whichever is installed). */
+@RegisterAgentProvider()
+@Injectable()
+export class CursorAgentProvider extends AgentProvider {
+  readonly id = 'cursor';
+  readonly binaries = [['agent'], ['cursor-agent'], ['cursor', 'agent']];
+  /** First in `auto`. */
+  readonly autoPriority = 1;
+
+  buildArgs(request: ProviderRequest): readonly string[] {
+    return buildArgs(request);
+  }
+
+  createParser(): StreamParser {
+    return createStreamJsonParser({
+      planFromExitPlanMode: false,
+      planFromCreatePlanToolCall: true,
+      toolCallEvents: true,
+    });
+  }
+
+  override resolvePlanContent(context: PlanContentContext): string | undefined {
+    return resolvePlanContent(context);
+  }
+
+  override prepareWorkspace(request: ProviderRequest): () => void {
+    return prepareWorkspace(request);
+  }
+
+  override previewWorkspace(request: ProviderRequest): readonly PlannedFile[] {
+    return previewWorkspace(request);
+  }
+}

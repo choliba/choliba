@@ -1,6 +1,6 @@
 import type { AgentDefinition } from '../../../agents/interfaces/agent.interface';
-import type { ProviderRequest } from '../../../providers/provider.types';
-import { claudeProvider } from '../../../providers/claude';
+import type { ProviderRequest } from '../../../providers/interfaces/provider.interface';
+import { claudeProvider } from '../../helpers/providers';
 import { PromptTooLargeError, MAX_ARG_BYTES } from '../../../runs/prompt';
 import { NO_PERMISSIONS, readAgentPermissions } from '../../../runs/permissions';
 import { NO_MODE_STEPS, fakeSections } from '../../helpers/agent';

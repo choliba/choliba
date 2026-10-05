@@ -1,15 +1,12 @@
 import { EXECUTION_MODES, type ExecutionMode } from '../interfaces/command.interface';
 import { SINCE_PENDING } from '../../steps/constants';
-import { AUTO_ORDER, PROVIDERS } from '../../providers/registry';
+import type { ProviderRegistry } from '../../providers/provider-registry';
 
-/** Program name in help and error messages — matches the root script `bun run chol:agents` and package bin. */
-export const CLI_PROGRAM_NAME = 'agents';
+/** Program name in help and error messages. */
+export const CLI_PROGRAM_NAME = 'choliba agents';
 
-/** Appended to every argument error; the full reference is `agents --help`, built from `RUN_FLAGS`. */
+/** Appended to every argument error; the full reference is `agents --help`, built from `runFlagDefinitions`. */
 export const USAGE = `Run '${CLI_PROGRAM_NAME} --help' for usage.`;
-
-/** Providers selectable by name, each also accepted as its own shortcut flag (`--cursor`). */
-export const PROVIDER_CHOICES: readonly string[] = ['auto', ...PROVIDERS.map((provider) => provider.id)];
 
 export { EXECUTION_MODES };
 
@@ -37,24 +34,6 @@ export const MODE_CHOICES: Readonly<Record<ExecutionMode, string>> = {
   ask: 'Só responde, sem gravar nada.',
 };
 
-/** How a provider is found: its command, or — when installs name it differently — the first of them installed. */
-function providerCommands(provider: (typeof PROVIDERS)[number]): string {
-  const names = provider.binaries.map((binary) => `\`${binary.join(' ')}\``);
-  if (names.length === 1) {
-    return `Comando ${names.join('')}.`;
-  }
-  return `Comando ${names.slice(0, -1).join(', ')} ou ${names.slice(-1).join('')}, o primeiro que estiver instalado.`;
-}
-
-/** What each `--provider` value means, listed under `--provider` in `--help`. */
-export const PROVIDER_DESCRIPTIONS: readonly { readonly name: string; readonly description: string }[] = [
-  {
-    name: 'auto',
-    description: `O primeiro instalado, nesta ordem: ${AUTO_ORDER.map((provider) => provider.id).join(', ')}.`,
-  },
-  ...PROVIDERS.map((provider) => ({ name: provider.id, description: providerCommands(provider) })),
-];
-
 /** `--since` values in words; `defaultBase` is the base of the agent's `git_diff` when known. */
 export function sinceDescription(defaultBase = 'base do git_diff do agente'): string {
   return `Base do diff: ${SINCE_PENDING} (desde a última execução registrada), HEAD~N, branch, tag ou SHA (padrão: ${defaultBase})`;
@@ -76,55 +55,57 @@ export const TYPE_SHORTCUT_PREFIX = '--type-';
  * Every flag accepted after the command name. `--help` and shell completion are generated from
  * this list, and a spec checks that the parser below accepts each entry, so the three stay in step.
  */
-export const RUN_FLAGS: readonly RunFlagDefinition[] = [
-  {
-    name: '--mode',
-    valueName: 'string',
-    description: modeDescription(),
-    choices: EXECUTION_MODES.map((mode) => ({ name: mode, description: MODE_CHOICES[mode] })),
-  },
-  ...EXECUTION_MODES.map((mode) => ({ name: `--mode-${mode}`, description: `Atalho para --mode ${mode}` })),
-  {
-    name: '--project',
-    valueName: 'name',
-    description: 'Projeto em CHOL_PROJECTS_DIR sobre o qual o agente age; validado antes de chamar o provider',
-  },
-  {
-    name: '--type',
-    valueName: 'type',
-    description: 'Tipo do ticket novo, criado pelo CLI a partir do template do tipo:',
-  },
-  { name: '--ticket', valueName: 'key', description: 'Ticket existente do projeto sobre o qual o agente trabalha' },
-  { name: '--plan-from', valueName: 'file', description: 'Executa um plano salvo (arquivo em plans/)' },
-  { name: '--since', valueName: 'ref', description: sinceDescription() },
-  {
-    name: `--since-${SINCE_PENDING}`,
-    description: `Atalho para --since ${SINCE_PENDING} (desde a última execução registrada)`,
-  },
-  {
-    name: '--provider',
-    valueName: 'string',
-    description: 'Provider que roda o agente (padrão: auto):',
-    choices: PROVIDER_DESCRIPTIONS,
-  },
-  ...PROVIDER_CHOICES.map((choice) => ({ name: `--${choice}`, description: `Atalho para --provider ${choice}` })),
-  { name: '--model', valueName: 'string', description: 'Modelo; precisa estar em models do agente' },
-  { name: '--agents-dir', valueName: 'dir', description: 'Pasta dos agentes (padrão: agents/)' },
-  {
-    name: '--add-dir',
-    valueName: 'dir',
-    repeatable: true,
-    description: 'Pasta extra liberada para o provider (pode repetir)',
-  },
-  { name: '--dry-run', description: 'Mostra o que seria executado, na ordem, sem executar nada' },
-  {
-    name: '--show-prompt',
-    description:
-      'Com --dry-run: mostra os prompts e a linha de comando completos (e, no cursor, os arquivos de .cursor/)',
-  },
-  { name: '--no-color', description: 'Saída sem cores' },
-  { name: '--help', aliases: ['-h'], description: 'Mostra a ajuda do agente', terminal: true },
-];
+/** Every flag a run takes; the provider ones come from the providers choliba found. */
+export function runFlagDefinitions(providers: ProviderRegistry): readonly RunFlagDefinition[] {
+  return [
+    {
+      name: '--mode',
+      valueName: 'string',
+      description: modeDescription(),
+      choices: EXECUTION_MODES.map((mode) => ({ name: mode, description: MODE_CHOICES[mode] })),
+    },
+    ...EXECUTION_MODES.map((mode) => ({ name: `--mode-${mode}`, description: `Atalho para --mode ${mode}` })),
+    {
+      name: '--project',
+      valueName: 'name',
+      description: 'Projeto em CHOL_PROJECTS_DIR sobre o qual o agente age; validado antes de chamar o provider',
+    },
+    {
+      name: '--type',
+      valueName: 'type',
+      description: 'Tipo do ticket novo, criado pelo CLI a partir do template do tipo:',
+    },
+    { name: '--ticket', valueName: 'key', description: 'Ticket existente do projeto sobre o qual o agente trabalha' },
+    { name: '--plan-from', valueName: 'file', description: 'Executa um plano salvo (arquivo em plans/)' },
+    { name: '--since', valueName: 'ref', description: sinceDescription() },
+    {
+      name: `--since-${SINCE_PENDING}`,
+      description: `Atalho para --since ${SINCE_PENDING} (desde a última execução registrada)`,
+    },
+    {
+      name: '--provider',
+      valueName: 'string',
+      description: 'Provider que roda o agente (padrão: auto):',
+      choices: providers.descriptions(),
+    },
+    ...providers.choices().map((choice) => ({ name: `--${choice}`, description: `Atalho para --provider ${choice}` })),
+    { name: '--model', valueName: 'string', description: 'Modelo; precisa estar em models do agente' },
+    { name: '--agents-dir', valueName: 'dir', description: 'Pasta dos agentes (padrão: .choliba/agents/)' },
+    {
+      name: '--add-dir',
+      valueName: 'dir',
+      repeatable: true,
+      description: 'Pasta extra liberada para o provider (pode repetir)',
+    },
+    { name: '--dry-run', description: 'Mostra o que seria executado, na ordem, sem executar nada' },
+    {
+      name: '--show-prompt',
+      description:
+        'Com --dry-run: mostra os prompts e a linha de comando completos (e, no cursor, os arquivos de .cursor/)',
+    },
+    { name: '--help', aliases: ['-h'], description: 'Mostra a ajuda do agente', terminal: true },
+  ];
+}
 
 export class AgentsArgsError extends Error {}
 
@@ -163,7 +144,6 @@ export interface ParsedRunArgs {
   readonly dryRun: boolean;
   /** `--show-prompt`: with `--dry-run`, the prompts in full instead of their sizes. */
   readonly showPrompt: boolean;
-  readonly colorize: boolean;
   /** Git ref for diff base; meaningful only for agents with a `git_diff` in `before_execute`. */
   readonly since: string | undefined;
   /**
@@ -218,7 +198,7 @@ function parseListArgs(rest: readonly string[]): ParsedAgentsArgs {
  * or two different `--since` bases: those are raw flags, so the conflict is visible without
  * resolving anything.
  */
-export function parseAgentsArgs(argv: readonly string[]): ParsedAgentsArgs {
+export function parseAgentsArgs(argv: readonly string[], providers: ProviderRegistry): ParsedAgentsArgs {
   const [first, ...rest] = argv;
   if (first === undefined || first === 'help' || first === '--help' || first === '-h') {
     return { kind: 'help' };
@@ -245,7 +225,6 @@ export function parseAgentsArgs(argv: readonly string[]): ParsedAgentsArgs {
   const addDirs: string[] = [];
   let dryRun = false;
   let showPrompt = false;
-  let colorize = true;
   let since: string | undefined;
   let help = false;
 
@@ -322,7 +301,7 @@ export function parseAgentsArgs(argv: readonly string[]): ParsedAgentsArgs {
       provider = nextValue(queue, '--provider');
       continue;
     }
-    if (arg.startsWith('--') && PROVIDER_CHOICES.includes(arg.slice(2))) {
+    if (arg.startsWith('--') && providers.choices().includes(arg.slice(2))) {
       // Shorthand for `--provider <name>`, same as `--<command>` is shorthand for the positional
       // command — no `--provider` needed when the name itself already says which one.
       provider = arg.slice(2);
@@ -356,10 +335,6 @@ export function parseAgentsArgs(argv: readonly string[]): ParsedAgentsArgs {
       showPrompt = true;
       continue;
     }
-    if (arg === '--no-color') {
-      colorize = false;
-      continue;
-    }
     if (arg.startsWith('--')) {
       throw new AgentsArgsError(unknownFlagMessage(arg, command));
     }
@@ -388,7 +363,6 @@ export function parseAgentsArgs(argv: readonly string[]): ParsedAgentsArgs {
     addDirs,
     dryRun,
     showPrompt,
-    colorize,
     since,
     help,
     flags,

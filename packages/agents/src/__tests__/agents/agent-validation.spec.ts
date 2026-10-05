@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import type { ErrorObject } from 'ajv';
 
+import { loadAgent } from '../../agents/agent-loader';
 import {
   formatAgentYamlSchemaError,
   mapAgentYamlSchemaErrors,
@@ -97,5 +98,14 @@ describe('the agents of this repository', () => {
 
   it.each(['product-owner', 'test-writer', 'implementer', 'docs-updater'])('%s is a valid agent.yaml', (name) => {
     expect(validateAgentFiles(REPO_AGENTS, name)).toEqual({ valid: true, errors: [] });
+  });
+
+  it.each([
+    ['product-owner', 'blue'],
+    ['test-writer', 'red'],
+    ['implementer', 'green'],
+    ['docs-updater', 'cyan'],
+  ])('%s declares its color (%s)', (name, color) => {
+    expect(loadAgent(REPO_AGENTS, name).color).toBe(color);
   });
 });

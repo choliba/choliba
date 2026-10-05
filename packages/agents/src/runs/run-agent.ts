@@ -5,15 +5,17 @@ import { exitCodeFor } from '@choliba/terminal';
 
 import type { AgentEvent } from './interfaces/event.interface';
 import { writePlan } from '../plans/plan-store';
-import type { ProviderRequest } from '../providers/provider.types';
-import type { ResolvedProvider } from '../providers/registry';
+import type { ProviderRequest } from '../providers/interfaces/provider.interface';
+import type { ResolvedProvider } from '../providers/provider-registry';
 import {
   defaultResolvePlanContent,
   isSubstantiveAgentEvent,
   modelReportMissingMessage,
   validateReportedModel,
 } from '../providers/stream-json';
-import { formatProviderLine, renderEvent } from './render';
+import type { Theme } from '@choliba/core/theme';
+
+import { agentRenderOptions, formatProviderLine, renderEvent } from './render';
 
 export interface RunAgentDeps {
   /**
@@ -33,7 +35,8 @@ export interface RunAgentRequest {
   readonly commandName: string;
   readonly task: string;
   readonly plansDir: string;
-  readonly colorize: boolean;
+  /** The colors of what it prints, and whether to color at all (`ThemeService`). */
+  readonly theme: Theme;
 }
 
 function errorMessage(error: unknown): string {
@@ -102,10 +105,10 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
     return 1;
   }
 
-  deps.stdout.write(`${formatProviderLine(providerId, request.colorize)}\n`);
+  deps.stdout.write(`${formatProviderLine(providerId, request.theme)}\n`);
 
   const parser = adapter.createParser();
-  const renderOptions = { label, colorize: request.colorize };
+  const renderOptions = agentRenderOptions(label, request.providerRequest.agent.color, request.theme);
   let doneEvent: Extract<AgentEvent, { type: 'done' }> | undefined;
   let planMarkdown: string | undefined;
   const textParts: string[] = [];

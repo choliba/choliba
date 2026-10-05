@@ -1,10 +1,27 @@
-import { formatProviderLine, renderEvent } from '../../runs/render';
+import { buildTheme } from '@choliba/core/theme';
+
+import { agentRenderOptions, formatProviderLine, renderEvent } from '../../runs/render';
 
 const OPTS = { label: 'echo', colorize: false };
 
 describe('formatProviderLine', () => {
   it('prints the provider id with a provider label prefix', () => {
-    expect(formatProviderLine('claude', false)).toBe('[provider] claude');
+    expect(formatProviderLine('claude', buildTheme({}, false))).toBe('[provider] claude');
+  });
+
+  it('colors the label and the provider each in its theme color', () => {
+    const theme = buildTheme({ providers: { claude: 'blue' } }, true);
+    expect(formatProviderLine('claude', theme)).toBe('\u001b[35m[provider]\u001b[0m \u001b[34mclaude\u001b[0m');
+  });
+});
+
+describe('agentRenderOptions', () => {
+  it("labels an agent with its name, in CHOL_COLORS' color, else its own, else the default", () => {
+    const theme = buildTheme({ agents: { echo: 'gray' } }, true);
+    expect(agentRenderOptions('echo', 'red', theme)).toEqual({ label: 'echo', colorize: true, color: 'gray' });
+    expect(agentRenderOptions('other', 'red', theme)).toMatchObject({ color: 'red' });
+    expect(agentRenderOptions('implementer', undefined, theme)).toMatchObject({ color: 'green' });
+    expect(agentRenderOptions('echo', undefined, buildTheme({}, false))).toMatchObject({ colorize: false });
   });
 });
 

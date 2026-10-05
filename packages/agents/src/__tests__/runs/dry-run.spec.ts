@@ -1,6 +1,6 @@
 import { COMMAND_LINE_TITLE, formatDryRun, type DryRunInput } from '../../runs/dry-run';
 import { wrapInstructions } from '../../runs/prompt';
-import type { ProviderRequest } from '../../providers/provider.types';
+import type { ProviderRequest } from '../../providers/interfaces/provider.interface';
 import { NO_MODE_STEPS, NO_STEPS, fakeSections } from '../helpers/agent';
 import { NO_PERMISSIONS } from '../../runs/permissions';
 

@@ -4,6 +4,7 @@ agent:
   id: product-owner
   name: Product Owner
   version: 1.2.0
+  color: blue
   description: >-
     Especialista em negócio: transforma um problema, feature ou bug num ticket com
     critérios de aceite em Gherkin, usando a aplicação no navegador como fonte de

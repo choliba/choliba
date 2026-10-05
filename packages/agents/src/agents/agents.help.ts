@@ -5,14 +5,14 @@ import { readTicketTemplate, ticketTemplatesDir } from '@choliba/projects';
 import type { AgentDefinition } from './interfaces/agent.interface';
 import { SINCE_PENDING } from '../steps/constants';
 import { diffBaseOf } from '../steps/registry';
+import type { ProviderRegistry } from '../providers/provider-registry';
 import {
   CLI_PROGRAM_NAME,
   EXECUTION_MODES,
   MODE_CHOICES,
   PREPARE_FLAGS,
   PROJECT_FLAGS,
-  PROVIDER_CHOICES,
-  RUN_FLAGS,
+  runFlagDefinitions,
   TICKET_FLAGS,
   TYPE_SHORTCUT_PREFIX,
   modeDescription,
@@ -20,6 +20,8 @@ import {
 } from './dto/run-agent.dto';
 
 export interface AgentsCliSpecContext {
+  /** The providers choliba found: `--provider`, `--<id>` and their completion. */
+  readonly providers: ProviderRegistry;
   readonly agents: readonly AgentDefinition[];
   readonly repoRoot: string;
   readonly git: GitRunner;
@@ -52,7 +54,7 @@ function summary(description: string): string {
   return end === -1 ? oneLine : oneLine.slice(0, end + 1);
 }
 
-/** How to complete the value of a `RUN_FLAGS` entry for `agent`; nothing for a free-form value. */
+/** How to complete the value of a `runFlagDefinitions` entry for `agent`; nothing for a free-form value. */
 export function flagValueSuggestions(
   flagName: string,
   agent: AgentDefinition,
@@ -63,7 +65,7 @@ export function flagValueSuggestions(
     case '--mode':
       return values(agent.modes);
     case '--provider':
-      return values(PROVIDER_CHOICES);
+      return values(context.providers.choices());
     case '--model':
       return values(agent.supportedModels);
     case '--since':
@@ -119,7 +121,7 @@ function withModes(flags: readonly FlagSpec[], agent: AgentDefinition): readonly
 }
 
 /**
- * `RUN_FLAGS` with value completion for this agent. The diff-base flags only appear for agents
+ * `runFlagDefinitions` with value completion for this agent. The diff-base flags only appear for agents
  * with a `git_diff` in `steps.before`, `--project` only for agents that act on a project,
  * `--type`/`--ticket` (and a `--type-<type>` per type) only for agents with `ticket_types`,
  * `--mode` and its shortcuts only with the modes the agent allows, and `--mode`/`--since` show that
@@ -132,23 +134,25 @@ function runFlags(agent: AgentDefinition, context: AgentsCliSpecContext): readon
     ...(agent.projectRequired ? [] : PROJECT_FLAGS),
     ...(agent.ticketTypes === undefined ? TICKET_FLAGS : []),
   ];
-  const flags = RUN_FLAGS.filter((flag) => !hidden.includes(flag.name)).map(({ valueName, ...rest }) => {
-    const flag =
-      rest.name === '--mode'
-        ? { ...rest, description: modeDescription(agent.defaultMode) }
-        : rest.name === '--since' && diffBase !== undefined
-          ? { ...rest, description: sinceDescription(diffBase) }
-          : rest;
-    return valueName === undefined
-      ? flag
-      : {
-          ...flag,
-          value: {
-            name: valueName,
-            suggest: (typed: TypedFlags) => flagValueSuggestions(flag.name, agent, context, typed),
-          },
-        };
-  });
+  const flags = runFlagDefinitions(context.providers)
+    .filter((flag) => !hidden.includes(flag.name))
+    .map(({ valueName, ...rest }) => {
+      const flag =
+        rest.name === '--mode'
+          ? { ...rest, description: modeDescription(agent.defaultMode) }
+          : rest.name === '--since' && diffBase !== undefined
+            ? { ...rest, description: sinceDescription(diffBase) }
+            : rest;
+      return valueName === undefined
+        ? flag
+        : {
+            ...flag,
+            value: {
+              name: valueName,
+              suggest: (typed: TypedFlags) => flagValueSuggestions(flag.name, agent, context, typed),
+            },
+          };
+    });
   return withModes(withTicketTypes(flags, agent), agent);
 }
 
@@ -175,9 +179,9 @@ export function agentCommandSpec(
  * `--help` and shell completion always list the agents, models and refs that exist right now.
  */
 export function agentsCliSpec(context: AgentsCliSpecContext): CommandSpec {
-  const agentsDirFlag = RUN_FLAGS.filter((flag) => flag.name === '--agents-dir').map(
-    ({ valueName: _valueName, ...rest }): FlagSpec => ({ ...rest, value: { name: 'dir', suggest: () => FILES } }),
-  );
+  const agentsDirFlag = runFlagDefinitions(context.providers)
+    .filter((flag) => flag.name === '--agents-dir')
+    .map(({ valueName: _valueName, ...rest }): FlagSpec => ({ ...rest, value: { name: 'dir', suggest: () => FILES } }));
   const helpFlag: FlagSpec = { name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true };
 
   const commands = (): readonly CommandEntry[] => [
@@ -199,7 +203,7 @@ export function agentsCliSpec(context: AgentsCliSpecContext): CommandSpec {
 
   return {
     usage: `${CLI_PROGRAM_NAME} [OPTIONS] COMMAND [TASK...]`,
-    description: `Executa os agentes do repositório (agents/<nome>/) por um provider (${PROVIDER_CHOICES.join(', ')}).`,
+    description: `Executa os agentes da pasta de trabalho (.choliba/agents/<nome>/) por um provider (${context.providers.choices().join(', ')}).`,
     commands,
     flags: [helpFlag],
     footer: `Run '${CLI_PROGRAM_NAME} COMMAND --help' for more information on a command.`,

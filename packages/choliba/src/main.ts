@@ -4,7 +4,8 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 
-import { listAgents, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir, runAgentsCli } from '@choliba/agents';
+import { listAgents, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '@choliba/agents';
+import { AgentsModule, AgentsService } from '@choliba/agents/nest';
 import { complete, formatHelp, formatSuggestions } from '@choliba/core/cli';
 import { createSpawnGitRunner } from '@choliba/core/platform';
 import { findWorkspaceRoot, loadRepoConfig, locateResource } from '@choliba/core/config';
@@ -12,10 +13,10 @@ import { Module, type Type } from '@nestjs/common';
 import { CommandFactory } from 'nest-commander';
 
 import { ExitStatus, PlatformModule } from '@choliba/core/nest';
-import type { Platform } from '@choliba/core/platform';
+import { takeGlobalFlags, type Platform } from '@choliba/core/platform';
 import { ProjectsModule, ProjectsService } from '@choliba/projects/nest';
 import { TestsModule, TestsService } from '@choliba/runner/nest';
-import { createBunProcessSpawner, ProcessRunnerService } from '@choliba/terminal';
+import { createBunProcessSpawner } from '@choliba/terminal';
 import { writeStderr, writeStdout } from '@choliba/terminal/output';
 
 import { allFine, checkWorkspace, formatCheck } from './check';
@@ -28,19 +29,8 @@ import { setup, setupWorkspace, updatePackageWhenListed } from './setup';
 // Wiring only (excluded from coverage, like every main.ts): which part of choliba runs is decided
 // by `route`, and each part is the same CLI the repository's own `chol:*` scripts run.
 
-async function runAgents(argv: readonly string[], workspaceRoot: string): Promise<number> {
-  return runAgentsCli(argv, {
-    runner: new ProcessRunnerService({ spawner: createBunProcessSpawner(Bun.spawn) }),
-    which: (bin) => Bun.which(bin),
-    repoRoot: workspaceRoot,
-    commands: [],
-    config: loadRepoConfig(workspaceRoot),
-    now: () => new Date(),
-    stdout: process.stdout,
-    stderr: process.stderr,
-    signals: process,
-  });
-}
+/** The command line without the global flags (`--no-color`), which every part of choliba gets from here. */
+const GLOBAL = takeGlobalFlags(process.argv.slice(2));
 
 /** The process and Bun, for the parts of choliba already on Nest. */
 function bunPlatform(argv: readonly string[]): Platform {
@@ -55,7 +45,7 @@ function bunPlatform(argv: readonly string[]): Platform {
     spawn: createBunProcessSpawner(Bun.spawn),
     which: (bin) => Bun.which(bin),
     git: createSpawnGitRunner(),
-    noColorFlag: false,
+    noColorFlag: GLOBAL.noColorFlag,
   };
 }
 
@@ -68,6 +58,9 @@ function partialApp(feature: Type, argv: readonly string[]) {
 
 /** A command of a part already on Nest, run like the app will run every command. */
 async function runNest(feature: Type, argv: readonly string[]): Promise<number> {
+  // The command-line parser reads process.argv: give it the line this part runs (no global flags, and
+  // `agents <agent>` for the `choliba <agent>` shortcut).
+  process.argv = [...process.argv.slice(0, 2), ...argv];
   const app = await CommandFactory.runWithoutClosing(partialApp(feature, argv), {
     logger: false,
     cliName: 'choliba',
@@ -82,10 +75,15 @@ async function runNest(feature: Type, argv: readonly string[]): Promise<number> 
 }
 
 /** `choliba __complete projects|tests …`, from that part's own spec. */
-async function completeFrom(feature: 'projects' | 'tests', words: readonly string[]): Promise<number> {
-  const module = feature === 'projects' ? ProjectsModule : TestsModule;
-  const app = await CommandFactory.createWithoutRunning(partialApp(module, []), { logger: false });
-  const spec = feature === 'projects' ? app.get(ProjectsService).helpSpec() : app.get(TestsService).helpSpec();
+async function completeFrom(feature: 'agents' | 'projects' | 'tests', words: readonly string[]): Promise<number> {
+  const modules = { agents: AgentsModule, projects: ProjectsModule, tests: TestsModule };
+  const app = await CommandFactory.createWithoutRunning(partialApp(modules[feature], []), { logger: false });
+  const specs = {
+    agents: () => app.get(AgentsService).helpSpec(),
+    projects: () => app.get(ProjectsService).helpSpec(),
+    tests: () => app.get(TestsService).helpSpec(),
+  };
+  const spec = specs[feature]();
   const output = formatSuggestions(complete(spec, words));
   await app.close();
   if (output !== '') writeStdout(`${output}\n`);
@@ -200,7 +198,7 @@ async function completeWords(words: readonly string[]): Promise<number> {
   const workspaceRoot = workspaceOrNothing();
   const target = route(words);
   if (words.length > 1 && workspaceRoot !== undefined) {
-    if (target.kind === 'agents') return runAgents(['__complete', ...target.argv], workspaceRoot);
+    if (target.kind === 'agents') return completeFrom('agents', target.argv);
     if (target.kind === 'projects') return completeFrom('projects', target.argv);
     if (target.kind === 'tests') return completeFrom('tests', target.argv);
   }
@@ -256,7 +254,7 @@ async function main(argv: readonly string[]): Promise<number> {
   }
   switch (target.kind) {
     case 'agents':
-      return runAgents(target.argv, workspaceRoot);
+      return runNest(AgentsModule, ['agents', ...target.argv]);
     case 'projects':
       return runNest(ProjectsModule, ['projects', ...target.argv]);
     case 'tests':
@@ -276,7 +274,7 @@ async function main(argv: readonly string[]): Promise<number> {
   }
 }
 
-main(process.argv.slice(2))
+main(GLOBAL.argv)
   .then((exitCode) => {
     process.exitCode = exitCode;
   })

@@ -1,5 +1,14 @@
 import type { ParsedRunArgs } from '../../agents/dto/run-agent.dto';
-import { AgentsArgsError, parseAgentsArgs, RUN_FLAGS, USAGE } from '../../agents/dto/run-agent.dto';
+import {
+  AgentsArgsError,
+  parseAgentsArgs as parseWith,
+  runFlagDefinitions,
+  USAGE,
+} from '../../agents/dto/run-agent.dto';
+import { PROVIDERS } from '../helpers/providers';
+
+const parseAgentsArgs = (argv: readonly string[]): ReturnType<typeof parseWith> => parseWith(argv, PROVIDERS);
+const RUN_FLAGS = runFlagDefinitions(PROVIDERS);
 
 /** Narrows `ParsedAgentsArgs` to its `run` case, for the `describe` block that only exercises that shape. */
 function parseRun(argv: readonly string[]): ParsedRunArgs {
@@ -41,7 +50,6 @@ describe('parseAgentsArgs — run', () => {
       command: 'developer',
       task: 'fix the bug',
       mode: undefined,
-      colorize: true,
       dryRun: false,
       addDirs: [],
     });
@@ -186,10 +194,11 @@ describe('parseAgentsArgs — run', () => {
     expect(() => parseAgentsArgs(['developer', '--add-dir'])).toThrow(/Missing value for --add-dir/);
   });
 
-  it('parses --dry-run and --no-color', () => {
-    const parsed = parseAgentsArgs(['developer', '--dry-run', '--no-color']);
+  it('parses --dry-run, and leaves --no-color to choliba (a global flag, removed before any command)', () => {
+    expect(() => parseAgentsArgs(['developer', '--no-color'])).toThrow(AgentsArgsError);
+    const parsed = parseAgentsArgs(['developer', '--dry-run']);
 
-    expect(parsed).toMatchObject({ dryRun: true, colorize: false });
+    expect(parsed).toMatchObject({ dryRun: true });
   });
 
   it('parses --since', () => {
@@ -203,7 +212,7 @@ describe('parseAgentsArgs — run', () => {
 
   it('rejects an unrecognized flag', () => {
     expect(() => parseAgentsArgs(['developer', '--bogus=1'])).toThrow(
-      "unknown flag: --bogus=1\n\nUsage:  agents developer [OPTIONS] [TASK...]\n\nRun 'agents developer --help' for more information",
+      "unknown flag: --bogus=1\n\nUsage:  choliba agents developer [OPTIONS] [TASK...]\n\nRun 'choliba agents developer --help' for more information",
     );
   });
 
@@ -261,6 +270,6 @@ describe('RUN_FLAGS', () => {
   });
 
   it('points argument errors at --help', () => {
-    expect(USAGE).toBe("Run 'agents --help' for usage.");
+    expect(USAGE).toBe("Run 'choliba agents --help' for usage.");
   });
 });

@@ -1,3 +1,4 @@
+import type { AnsiColor } from '@choliba/core/theme';
 import type { ExecutionMode, PermissionPolicy } from './command.interface';
 import type { AgentPermissions } from '../../runs/permissions';
 
@@ -70,6 +71,8 @@ export interface AgentDefinition {
   /** The agent's own version (`agent.version`), not the standard's. */
   readonly version: string;
   readonly description: string;
+  /** `agent.color`: the color its author chose for its `[label]`; `CHOL_COLORS` overrides it. */
+  readonly color?: AnsiColor;
   /** `models`: the models the agent may run with. */
   readonly supportedModels: readonly string[];
   readonly skills: readonly SkillDeclaration[];

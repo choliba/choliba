@@ -4,6 +4,7 @@ agent:
   id: test-writer
   name: Test Writer
   version: 1.1.0
+  color: red
   description: >-
     Escreve os testes antes da implementação: um teste Playwright por critério de
     aceite do ticket, nomeado pelo id do critério (CA-01, CA-02...), usando a

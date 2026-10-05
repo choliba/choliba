@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { AgentEvent } from '../../../runs/interfaces/event.interface';
-import { cursorProvider } from '../../../providers/cursor';
+import { cursorProvider } from '../../helpers/providers';
 import { cursorToolName, parseCursorToolCall } from '../../../providers/cursor/tool-calls';
 import { renderEvent } from '../../../runs/render';
 

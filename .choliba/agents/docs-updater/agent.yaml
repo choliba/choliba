@@ -4,6 +4,7 @@ agent:
   id: docs-updater
   name: Docs Updater
   version: 1.3.0
+  color: cyan
   description: >-
     Atualiza a documentação em docs/ e o README para refletir exatamente o que mudou
     no código, a partir do diff calculado pelo comando (base develop por padrão,

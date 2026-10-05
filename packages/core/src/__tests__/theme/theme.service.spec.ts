@@ -18,6 +18,7 @@ describe('ThemeService', () => {
       const theme = await themeFor(fakePlatform({ cwd: workspace.path, stdout: new BufferWritable(true) }));
 
       expect(theme.enabled()).toBe(true);
+      expect(theme.theme().enabled).toBe(true);
       expect(theme.colorOf('agents', 'implementer')).toBe('blue');
       expect(theme.paint('agents', 'implementer', 'x')).toBe('\u001b[34mx\u001b[0m');
       expect(theme.paint('agents', 'novo', 'x', 'gray')).toBe('\u001b[90mx\u001b[0m');

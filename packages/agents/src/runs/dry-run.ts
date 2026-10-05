@@ -1,7 +1,7 @@
 import type { AgentStep, McpDeclaration } from '../agents/interfaces/agent.interface';
 import { describeStep } from '../steps/actions';
 import { wrapInstructions } from './prompt';
-import type { PlannedFile, ProviderRequest } from '../providers/provider.types';
+import type { PlannedFile, ProviderRequest } from '../providers/interfaces/provider.interface';
 
 /** What `--dry-run` shows: everything a real run of this command line would do, in order. */
 export interface DryRunInput {

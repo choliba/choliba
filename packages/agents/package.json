@@ -4,10 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
-  },
-  "bin": {
-    "agents": "./src/cli/main.ts"
+    ".": "./src/index.ts",
+    "./nest": "./src/nest.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"

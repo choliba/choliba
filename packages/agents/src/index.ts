@@ -20,17 +20,15 @@ export {
 } from './runs/prompt';
 export { readPlan, resolvePlanPath, slugify, writePlan } from './plans/plan-store';
 export type { WritePlanOptions } from './plans/plan-store';
-export { claudeProvider } from './providers/claude';
-export { cursorProvider } from './providers/cursor';
-export type { ProviderAdapter, ProviderId, ProviderRequest, StreamParser } from './providers/provider.types';
+export { AgentProvider } from './providers/agent-provider';
+export type { ProviderRequest, StreamParser } from './providers/interfaces/provider.interface';
 export {
+  AUTO,
   InvalidProviderPreferenceError,
-  PROVIDERS,
   ProviderNotFoundError,
-  parseProviderPreference,
-  resolveProvider,
-} from './providers/registry';
-export type { ProviderPreference, ResolvedProvider } from './providers/registry';
+  ProviderRegistry,
+} from './providers/provider-registry';
+export type { ResolvedProvider } from './providers/provider-registry';
 export { renderEvent } from './runs/render';
 export type { RenderOptions } from './runs/render';
 export { runAgent } from './runs/run-agent';

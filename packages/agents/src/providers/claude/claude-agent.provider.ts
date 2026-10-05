@@ -2,7 +2,11 @@ import { mcpServersMap } from '../../mcps/mcps';
 import { absolutePermissions } from '../../runs/permissions';
 import { assertArgvFits, wrapInstructions } from '../../runs/prompt';
 import { createStreamJsonParser } from '../stream-json';
-import type { ProviderAdapter, ProviderRequest } from '../provider.types';
+import { Injectable } from '@nestjs/common';
+
+import { AgentProvider } from '../agent-provider';
+import type { ProviderRequest, StreamParser } from '../interfaces/provider.interface';
+import { RegisterAgentProvider } from '../register-agent-provider';
 import { claudePermissionArgs } from './permissions';
 
 function buildArgs(request: ProviderRequest): readonly string[] {
@@ -51,9 +55,20 @@ function buildArgs(request: ProviderRequest): readonly string[] {
   return args;
 }
 
-export const claudeProvider: ProviderAdapter = {
-  id: 'claude',
-  binaries: [['claude']],
-  buildArgs,
-  createParser: () => createStreamJsonParser({ planFromExitPlanMode: true }),
-};
+/** Claude Code (`claude -p … --output-format stream-json`). */
+@RegisterAgentProvider()
+@Injectable()
+export class ClaudeAgentProvider extends AgentProvider {
+  readonly id = 'claude';
+  readonly binaries = [['claude']];
+  /** After cursor in `auto`. */
+  readonly autoPriority = 2;
+
+  buildArgs(request: ProviderRequest): readonly string[] {
+    return buildArgs(request);
+  }
+
+  createParser(): StreamParser {
+    return createStreamJsonParser({ planFromExitPlanMode: true });
+  }
+}

@@ -5,6 +5,7 @@ import type { GitRunner } from '@choliba/core/platform';
 
 import { loadAgent } from '../../agents/agent-loader';
 import { agentCommandSpec, agentsCliSpec, flagValueSuggestions } from '../../agents/agents.help';
+import { PROVIDERS } from '../helpers/providers';
 
 const FIXTURES = join(__dirname, '..', 'fixtures', 'agents');
 const git: GitRunner = { run: () => ({ stdout: '', stderr: '', status: 0 }) };
@@ -15,7 +16,14 @@ describe('agentsCliSpec', () => {
     const agent = { ...echo, description: 'Primeira frase.   Segunda\n frase.' };
 
     const help = formatHelp(
-      agentsCliSpec({ agents: [agent], repoRoot: '/repo', git, projects: () => [], tickets: () => [] }),
+      agentsCliSpec({
+        agents: [agent],
+        providers: PROVIDERS,
+        repoRoot: '/repo',
+        git,
+        projects: () => [],
+        tickets: () => [],
+      }),
     );
 
     expect(help).toContain('  echo   Primeira frase.\n');
@@ -24,7 +32,14 @@ describe('agentsCliSpec', () => {
 
   it('completes providers and asks for files for directory flags', () => {
     const echo = loadAgent(FIXTURES, 'echo');
-    const spec = agentsCliSpec({ agents: [echo], repoRoot: '/repo', git, projects: () => [], tickets: () => [] });
+    const spec = agentsCliSpec({
+      agents: [echo],
+      providers: PROVIDERS,
+      repoRoot: '/repo',
+      git,
+      projects: () => [],
+      tickets: () => [],
+    });
 
     expect(complete(spec, ['echo', '--provider', ''])).toEqual({
       kind: 'values',
@@ -43,6 +58,7 @@ describe('agentsCliSpec', () => {
     expect(
       flagValueSuggestions('--unknown', echo, {
         agents: [],
+        providers: PROVIDERS,
         repoRoot: '/repo',
         git,
         projects: () => [],
@@ -57,7 +73,14 @@ describe('agentsCliSpec', () => {
   it("shows each agent's own defaults and hides diff-base flags without prepare", () => {
     const echo = loadAgent(FIXTURES, 'echo');
     const prepared = loadAgent(FIXTURES, 'with-prepare');
-    const context = { agents: [echo, prepared], repoRoot: '/repo', git, projects: () => [], tickets: () => [] };
+    const context = {
+      agents: [echo, prepared],
+      providers: PROVIDERS,
+      repoRoot: '/repo',
+      git,
+      projects: () => [],
+      tickets: () => [],
+    };
 
     const withPrepare = formatHelp(agentCommandSpec(prepared, context));
     const flat = withPrepare.replace(/\s+/g, ' ');
@@ -76,6 +99,7 @@ describe('agentsCliSpec', () => {
     const withProject = loadAgent(FIXTURES, 'with-project');
     const context = {
       agents: [echo, withProject],
+      providers: PROVIDERS,
       repoRoot: '/repo',
       git,
       projects: () => ['blue', 'red'],
@@ -93,6 +117,7 @@ describe('agentsCliSpec', () => {
     const withTickets = { ...loadAgent(FIXTURES, 'with-project'), ticketTypes: ['bug', 'story'] };
     const context = {
       agents: [echo, withTickets],
+      providers: PROVIDERS,
       repoRoot: '/repo',
       git,
       projects: () => ['red'],
