@@ -10,7 +10,7 @@ import {
   listMatchingTicketKeys,
   stripProjectPrefix,
   trim,
-} from '../cli/ticket-expand';
+} from '../../tests/ticket-expand';
 
 function withProjectsDir(fn: (projectsDir: string) => void): void {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ticket-expand-'));

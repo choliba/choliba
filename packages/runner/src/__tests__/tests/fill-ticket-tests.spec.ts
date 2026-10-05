@@ -4,8 +4,8 @@ import path from 'node:path';
 
 import type { Writable } from '@choliba/terminal/output';
 
-import { installSilentTerminal } from './helpers/silent-terminal';
-import { anchorSpecFile, fillTicketTests, shortTitle, specFileFromFullTitle } from '../fill-ticket-tests';
+import { installSilentTerminal } from '../helpers/silent-terminal';
+import { anchorSpecFile, fillTicketTests, shortTitle, specFileFromFullTitle } from '../../tests/fill-ticket-tests';
 
 function fakeWritable(): Writable & { chunks: string[] } {
   const chunks: string[] = [];

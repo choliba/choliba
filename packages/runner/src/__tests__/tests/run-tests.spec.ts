@@ -19,7 +19,8 @@ import * as projects from '@choliba/projects';
 import * as terminalOutput from '@choliba/terminal/output';
 
 import { installSilentTerminal } from '../helpers/silent-terminal';
-import { isStdinInteractive, playwrightNodePath, readProcessStdinIsTTY, runTestsCli } from '../../cli/run-tests';
+import { playwrightNodePath } from '../../tests/playwright-env';
+import { isStdinInteractive, readProcessStdinIsTTY, runTests } from '../../tests/run-tests';
 
 const TEST_ROOTS = { packageRoot: '/tmp/playwright-pkg', monorepoRoot: '/tmp/monorepo' };
 
@@ -56,7 +57,7 @@ function writeProject(projectsDir: string, name: string, tickets: { suffix: stri
   }
 }
 
-describe('runTestsCli', () => {
+describe('runTests', () => {
   let restoreTerminal: () => void;
 
   beforeEach(() => {
@@ -95,7 +96,7 @@ describe('runTestsCli', () => {
     expect(playwrightNodePath('/nowhere', undefined)).toBeUndefined();
 
     const envs: NodeJS.ProcessEnv[] = [];
-    await runTestsCli({
+    await runTests({
       packageRoot: runnerRoot,
       monorepoRoot: '/tmp/monorepo',
       argv: ['--list'],
@@ -112,7 +113,7 @@ describe('runTestsCli', () => {
 
   it('forwards raw playwright flags', async () => {
     const calls: string[][] = [];
-    const result = await runTestsCli({
+    const result = await runTests({
       ...TEST_ROOTS,
       argv: ['--list'],
       spawnPlaywright: (args) => {
@@ -127,87 +128,10 @@ describe('runTestsCli', () => {
     expect(calls[0]).toEqual(['test', '--list']);
   });
 
-  it.each([['--help'], ['-h'], ['demo:T-01', '--help']])(
-    'shows its own help for %s instead of Playwright’s',
-    async (...argv) => {
-      const stdout = jest.spyOn(terminalOutput, 'writeStdout');
-      const spawnPlaywright = jest.fn(() => 0);
-      const result = await runTestsCli({
-        ...TEST_ROOTS,
-        argv,
-        spawnPlaywright,
-        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: '/p' }),
-        stdinIsTTY: false,
-      });
-
-      expect(result.exitCode).toBe(0);
-      expect(spawnPlaywright).not.toHaveBeenCalled();
-      const [[help]] = stdout.mock.calls as [[string]];
-      expect(help).toContain('choliba tests [PROJECT');
-      expect(help).toContain('--expect');
-      expect(help).toContain('playwright test --help');
-    },
-  );
-
-  it('completes its flags, the projects, their tickets and the values of --expect', async () => {
-    await withProject(async (projectsDir) => {
-      writeProject(projectsDir, 'demo', [{ suffix: 'T-01' }, { suffix: 'T-02' }]);
-      const stdout = jest.spyOn(terminalOutput, 'writeStdout');
-      const run = (...argv: string[]): Promise<unknown> =>
-        runTestsCli({
-          ...TEST_ROOTS,
-          argv: ['__complete', ...argv],
-          loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: projectsDir }),
-        });
-
-      await run('--');
-      await run('');
-      await run('demo', '--expect', '');
-      await run('demo', 'x');
-      await run('demo', '--failures', '');
-      await run('demo:');
-      await run('demo:T-02');
-      await run('nope:');
-
-      expect(stdout.mock.calls).toEqual([
-        ['--expect\n--failures\n--help\n'],
-        ['demo\n'],
-        ['red\ngreen\n'],
-        [':files\n'],
-        ['demo:T-01\ndemo:T-02\n'],
-        ['demo:T-02\n'],
-      ]);
-    });
-  });
-
-  it('completes no project when the workspace locations cannot be read', async () => {
-    const stdout = jest.spyOn(terminalOutput, 'writeStdout');
-    await runTestsCli({
-      ...TEST_ROOTS,
-      argv: ['__complete', ''],
-      loadConfig: () => {
-        throw new Error('sem CHOL_PROJECTS_DIR');
-      },
-    });
-    expect(stdout.mock.calls).toEqual([['--expect\n--failures\n--help\n-h\n']]);
-  });
-
-  it('describes itself in one line, for bun chol:help', async () => {
-    const stdout = jest.spyOn(terminalOutput, 'writeStdout');
-    await runTestsCli({
-      ...TEST_ROOTS,
-      argv: ['__describe'],
-      loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: '/p' }),
-    });
-    expect(stdout.mock.calls).toEqual([
-      ['Roda os testes E2E dos projetos com o Playwright. Sem PROJECT, roda todos os projetos.\n'],
-    ]);
-  });
-
   it('fails when project does not exist', async () => {
     await withProject(async (projectsDir, cwd) => {
       await expect(
-        runTestsCli({
+        runTests({
           ...TEST_ROOTS,
           argv: ['missing:T-01'],
           cwd,
@@ -225,7 +149,7 @@ describe('runTestsCli', () => {
       writeProject(projectsDir, 'demo', [{ suffix: 'T-01', specs: ['a.spec.ts'] }]);
 
       await expect(
-        runTestsCli({
+        runTests({
           ...TEST_ROOTS,
           argv: ['demo', 'demo-T-01'],
           cwd,
@@ -242,7 +166,7 @@ describe('runTestsCli', () => {
       writeProject(projectsDir, 'demo', [{ suffix: 'T-01', specs: ['alpha.spec.ts'] }]);
       const calls: string[][] = [];
 
-      const result = await runTestsCli({
+      const result = await runTests({
         ...TEST_ROOTS,
         argv: ['demo:T-01'],
         cwd,
@@ -265,7 +189,7 @@ describe('runTestsCli', () => {
       writeProject(projectsDir, 'demo', [{ suffix: 'T-01' }]);
       const calls: string[][] = [];
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo:T-01'],
         cwd,
@@ -289,7 +213,7 @@ describe('runTestsCli', () => {
       ]);
       const calls: string[][] = [];
 
-      const result = await runTestsCli({
+      const result = await runTests({
         ...TEST_ROOTS,
         argv: ['demo:T-01,T-02'],
         cwd,
@@ -314,7 +238,7 @@ describe('runTestsCli', () => {
       ]);
       const calls: string[][] = [];
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo'],
         cwd,
@@ -336,7 +260,7 @@ describe('runTestsCli', () => {
       writeProject(projectsDir, 'beta');
       const calls: string[][] = [];
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: [],
         cwd,
@@ -357,7 +281,7 @@ describe('runTestsCli', () => {
       writeProject(projectsDir, 'demo', [{ suffix: 'T-01', specs: ['a.spec.ts'] }]);
       const shown: string[] = [];
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo:T-01'],
         cwd,
@@ -379,7 +303,7 @@ describe('runTestsCli', () => {
       writeProject(projectsDir, 'demo', [{ suffix: 'T-01', specs: ['a.spec.ts'] }]);
 
       await expect(
-        runTestsCli({
+        runTests({
           ...TEST_ROOTS,
           argv: ['demo:T-*,T-02/tests/foo.spec.ts'],
           cwd,
@@ -393,7 +317,7 @@ describe('runTestsCli', () => {
 
   it('uses the default spawnPlaywright implementation', async () => {
     const spawnCalls: { command: string; args: readonly string[] }[] = [];
-    await runTestsCli({
+    await runTests({
       ...TEST_ROOTS,
       argv: ['--list'],
       loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: '/p' }),
@@ -415,7 +339,7 @@ describe('runTestsCli', () => {
       writeProject(projectsDir, 'demo', [{ suffix: 'T-01', specs: ['a.spec.ts'] }]);
       const spawnCalls: { command: string; args: readonly string[] }[] = [];
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo:T-01'],
         cwd,
@@ -442,7 +366,7 @@ describe('runTestsCli', () => {
       ]);
       const calls: string[][] = [];
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo:CAD-01', '-', 'CAD-02'],
         cwd,
@@ -457,7 +381,7 @@ describe('runTestsCli', () => {
       expect(calls).toHaveLength(2);
 
       calls.length = 0;
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo:CAD-01,CAD-02'],
         cwd,
@@ -472,7 +396,7 @@ describe('runTestsCli', () => {
       expect(calls).toHaveLength(2);
 
       calls.length = 0;
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo:CAD-01,', 'CAD-02'],
         cwd,
@@ -487,7 +411,7 @@ describe('runTestsCli', () => {
       expect(calls).toHaveLength(2);
 
       calls.length = 0;
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo:CAD-01,', 'CAD-02', 'CAD-03'],
         cwd,
@@ -508,7 +432,7 @@ describe('runTestsCli', () => {
       const calls: string[][] = [];
 
       await expect(
-        runTestsCli({
+        runTests({
           ...TEST_ROOTS,
           argv: [''],
           cwd,
@@ -533,7 +457,7 @@ describe('runTestsCli', () => {
       );
 
       await expect(
-        runTestsCli({
+        runTests({
           ...TEST_ROOTS,
           argv: ['demo'],
           cwd,
@@ -550,7 +474,7 @@ describe('runTestsCli', () => {
       writeProject(projectsDir, 'demo', [{ suffix: 'T-01', specs: ['a.spec.ts'] }]);
       const calls: string[][] = [];
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo/tests/a.spec.ts'],
         cwd,
@@ -571,7 +495,7 @@ describe('runTestsCli', () => {
       writeProject(projectsDir, 'demo');
 
       await expect(
-        runTestsCli({
+        runTests({
           ...TEST_ROOTS,
           argv: ['demo:demo-MISSING'],
           cwd,
@@ -590,7 +514,7 @@ describe('runTestsCli', () => {
         { suffix: 'T-02', specs: ['b.spec.ts'] },
       ]);
 
-      const result = await runTestsCli({
+      const result = await runTests({
         ...TEST_ROOTS,
         argv: ['demo:T-01,T-02'],
         cwd,
@@ -609,7 +533,7 @@ describe('runTestsCli', () => {
       fs.mkdirSync(path.join(cwd, 'test-results'), { recursive: true });
       fs.mkdirSync(path.join(cwd, 'playwright-report'), { recursive: true });
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo:T-01'],
         cwd,
@@ -628,7 +552,7 @@ describe('runTestsCli', () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'run-tests-env-'));
     try {
       fs.writeFileSync(path.join(tmp, '.env'), 'CHOL_GLOBAL_DIR=/tmp/global\n');
-      await runTestsCli({
+      await runTests({
         packageRoot: TEST_ROOTS.packageRoot,
         monorepoRoot: tmp,
         argv: ['--list'],
@@ -645,7 +569,7 @@ describe('runTestsCli', () => {
       writeProject(projectsDir, 'demo', [{ suffix: 'T-01', specs: ['a.spec.ts'] }]);
       const spawnCalls: { command: string; args: readonly string[] }[] = [];
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo'],
         cwd,
@@ -676,7 +600,7 @@ describe('runTestsCli', () => {
       writeProject(projectsDir, 'demo', [{ suffix: 'T-01', specs: ['a.spec.ts'] }]);
       const spawnCalls: { command: string; args: readonly string[] }[] = [];
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo:T-01'],
         cwd,
@@ -705,7 +629,7 @@ describe('runTestsCli', () => {
       writeProject(projectsDir, 'demo', [{ suffix: 'T-01', specs: ['a.spec.ts'] }]);
       const spawnCalls: { command: string; args: readonly string[] }[] = [];
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo:T-01'],
         cwd,
@@ -725,7 +649,7 @@ describe('runTestsCli', () => {
   });
 
   it('treats a null spawn status as exit code 1', async () => {
-    const result = await runTestsCli({
+    const result = await runTests({
       ...TEST_ROOTS,
       argv: ['--list'],
       stdinIsTTY: false,
@@ -748,7 +672,7 @@ describe('runTestsCli', () => {
       let capturedEnv: NodeJS.ProcessEnv | undefined;
       const calls: string[][] = [];
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo:CAD-01,', 'CAD-02', '--headed'],
         cwd,
@@ -776,7 +700,7 @@ describe('runTestsCli', () => {
       writeProject(projectsDir, 'demo', [{ suffix: 'T-01', specs: ['a.spec.ts'] }]);
       let capturedEnv: NodeJS.ProcessEnv | undefined;
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo:T-01'],
         cwd,
@@ -805,7 +729,7 @@ describe('runTestsCli', () => {
       fs.writeFileSync(path.join(projectDir, '.env.json'), JSON.stringify({ development: {} }));
       const calls: string[][] = [];
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo'],
         cwd,
@@ -826,7 +750,7 @@ describe('runTestsCli', () => {
       writeProject(projectsDir, 'alpha', [{ suffix: 'T-01', specs: ['a.spec.ts'] }]);
       writeProject(projectsDir, 'beta', [{ suffix: 'T-01', specs: ['b.spec.ts'] }]);
 
-      const result = await runTestsCli({
+      const result = await runTests({
         ...TEST_ROOTS,
         argv: [],
         cwd,
@@ -844,7 +768,7 @@ describe('runTestsCli', () => {
       writeProject(projectsDir, 'demo', [{ suffix: 'T-01', specs: ['a.spec.ts'] }]);
       const spawnCalls: { command: string; args: readonly string[] }[] = [];
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo'],
         cwd,
@@ -867,7 +791,7 @@ describe('runTestsCli', () => {
       writeProject(projectsDir, 'demo', [{ suffix: 'T-01', specs: ['a.spec.ts'] }]);
       const spawnCalls: { command: string; args: readonly string[] }[] = [];
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo:T-01'],
         cwd,
@@ -892,7 +816,7 @@ describe('runTestsCli', () => {
       fs.mkdirSync(path.join(projectsDir, 'demo', 'tickets'), { recursive: true });
       const calls: string[][] = [];
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo'],
         cwd,
@@ -913,7 +837,7 @@ describe('runTestsCli', () => {
       writeProject(projectsDir, 'demo');
       const shown: string[] = [];
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo'],
         cwd,
@@ -938,7 +862,7 @@ describe('runTestsCli', () => {
       ]);
       const calls: string[][] = [];
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo:CAD-01,', 'CAD/02'],
         cwd,
@@ -952,7 +876,7 @@ describe('runTestsCli', () => {
 
       expect(calls).toHaveLength(1);
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo:CAD-01,', 'CAD-02', ''],
         cwd,
@@ -976,7 +900,7 @@ describe('runTestsCli', () => {
       ]);
       const calls: string[][] = [];
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo:CAD-01,', 'CAD-02', '-g'],
         cwd,
@@ -1001,7 +925,7 @@ describe('runTestsCli', () => {
       fs.mkdirSync(path.join(cwd, 'test-results'), { recursive: true });
       fs.mkdirSync(path.join(cwd, 'playwright-report'), { recursive: true });
 
-      await runTestsCli({
+      await runTests({
         ...TEST_ROOTS,
         argv: ['demo:T-01'],
         cwd,
@@ -1060,7 +984,7 @@ describe('runTestsCli', () => {
     }
 
     function run(projectsDir: string, cwd: string, argv: string[], spawnPlaywright: (args: string[]) => number) {
-      return runTestsCli({
+      return runTests({
         ...TEST_ROOTS,
         argv,
         cwd,

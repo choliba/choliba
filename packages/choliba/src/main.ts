@@ -14,7 +14,7 @@ import { CommandFactory } from 'nest-commander';
 import { ExitStatus, PlatformModule } from '@choliba/core/nest';
 import type { Platform } from '@choliba/core/platform';
 import { ProjectsModule, ProjectsService } from '@choliba/projects/nest';
-import { findRunnerRoot, runTestsCli } from '@choliba/runner';
+import { TestsModule, TestsService } from '@choliba/runner/nest';
 import { createBunProcessSpawner, ProcessRunnerService } from '@choliba/terminal';
 import { writeStderr, writeStdout } from '@choliba/terminal/output';
 
@@ -81,17 +81,15 @@ async function runNest(feature: Type, argv: readonly string[]): Promise<number> 
   return code;
 }
 
-/** `choliba __complete projects …`, from the projects' own spec. */
-async function completeProjects(words: readonly string[]): Promise<number> {
-  const app = await CommandFactory.createWithoutRunning(partialApp(ProjectsModule, []), { logger: false });
-  const output = formatSuggestions(complete(app.get(ProjectsService).helpSpec(), words));
+/** `choliba __complete projects|tests …`, from that part's own spec. */
+async function completeFrom(feature: 'projects' | 'tests', words: readonly string[]): Promise<number> {
+  const module = feature === 'projects' ? ProjectsModule : TestsModule;
+  const app = await CommandFactory.createWithoutRunning(partialApp(module, []), { logger: false });
+  const spec = feature === 'projects' ? app.get(ProjectsService).helpSpec() : app.get(TestsService).helpSpec();
+  const output = formatSuggestions(complete(spec, words));
   await app.close();
   if (output !== '') writeStdout(`${output}\n`);
   return 0;
-}
-
-async function runTests(argv: readonly string[], workspaceRoot: string): Promise<number> {
-  return (await runTestsCli({ argv: [...argv], packageRoot: findRunnerRoot(), monorepoRoot: workspaceRoot })).exitCode;
 }
 
 /** The executable a dependency of this package declares as `bin` (resolved from its package.json). */
@@ -203,8 +201,8 @@ async function completeWords(words: readonly string[]): Promise<number> {
   const target = route(words);
   if (words.length > 1 && workspaceRoot !== undefined) {
     if (target.kind === 'agents') return runAgents(['__complete', ...target.argv], workspaceRoot);
-    if (target.kind === 'projects') return completeProjects(target.argv);
-    if (target.kind === 'tests') return runTests(['__complete', ...target.argv], workspaceRoot);
+    if (target.kind === 'projects') return completeFrom('projects', target.argv);
+    if (target.kind === 'tests') return completeFrom('tests', target.argv);
   }
   const spec = firstWordSpec(agentNames(workspaceRoot));
   const output = formatSuggestions(complete(spec, words));
@@ -262,7 +260,7 @@ async function main(argv: readonly string[]): Promise<number> {
     case 'projects':
       return runNest(ProjectsModule, ['projects', ...target.argv]);
     case 'tests':
-      return runTests(target.argv, workspaceRoot);
+      return runNest(TestsModule, ['tests', ...target.argv]);
     case 'playwright-cli': {
       const outputDir = loadRepoConfig(workspaceRoot)['CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR'] ?? DEFAULT_OUTPUT_DIR;
       return runPlaywright('cli', intoOutputDir(target.argv, outputDir), workspaceRoot);

@@ -28,6 +28,9 @@ describe('CommandIo', () => {
 
     expect(platform.stdout.text()).toBe('Usage:  demo\nok\n');
     expect(exit.code()).toBe(0);
+
+    io.exit(7);
+    expect(exit.code()).toBe(7);
   });
 
   it('fails with a message, or with a usage error, on stderr and exit code 1', async () => {

@@ -45,6 +45,11 @@ export class CommandIo {
     this.exitStatus.set(1);
   }
 
+  /** The exit code of a command that ran something else (a child process) and passes its code on. */
+  exit(code: number): void {
+    this.exitStatus.set(code);
+  }
+
   /** The command line is wrong: `message` and where to read the usage of `command`, exit code 1. */
   usageError(message: string, command: string): void {
     this.exitStatus.set(this.help.usageError(message, command));

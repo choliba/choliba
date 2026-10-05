@@ -1,4 +1,4 @@
-import { flattenResults, isRealFailure } from '../playwright-results';
+import { flattenResults, isRealFailure } from '../../tests/playwright-results';
 
 describe('playwright-results', () => {
   it('flattenResults includes describe in fullTitle', () => {

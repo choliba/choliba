@@ -4,7 +4,7 @@ import {
   formatFailures,
   verdictProblems,
   type PlaywrightReport,
-} from '../ticket-verdict';
+} from '../../tests/ticket-verdict';
 
 function test(title: string, status: string, message?: string) {
   return {

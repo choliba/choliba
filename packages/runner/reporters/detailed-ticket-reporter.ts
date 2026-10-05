@@ -1,8 +1,12 @@
 import path from 'node:path';
 
+import { loadRepoConfig } from '@choliba/core/config';
+import { resolveTheme, type Theme } from '@choliba/core/theme';
 import { readAppliedLocations } from '@choliba/projects';
 import type { FullConfig, Reporter, TestCase, TestResult } from '@playwright/test/reporter';
 import { formatDuration, isStdoutTty, LiveRegion, printBox, writeStdout } from '@choliba/terminal/output';
+
+import { WORKSPACE_ENV } from '../src/tests/playwright-env';
 
 const DISPLAY_DELAY_MS = 1_500;
 
@@ -13,10 +17,20 @@ export interface TicketInfo {
   environment?: string;
 }
 
-function markerFor(status: TestResult['status']): string {
-  if (status === 'passed') return '✓';
-  if (status === 'skipped') return '○';
-  return '✗';
+function markerFor(status: TestResult['status'], theme: Theme): string {
+  if (status === 'passed') return theme.paint('states', 'success', '✓');
+  if (status === 'skipped') return theme.paint('states', 'hint', '○');
+  return theme.paint('states', 'error', '✗');
+}
+
+/**
+ * The workspace's colors (`CHOL_COLORS`), read here because the reporter runs in Playwright's process, outside
+ * choliba's: `choliba tests` passes the workspace (and `NO_COLOR` when color is off) in the environment.
+ */
+function workspaceTheme(env: NodeJS.ProcessEnv = process.env): Theme {
+  const root = env[WORKSPACE_ENV];
+  const config = root === undefined ? env : loadRepoConfig(root, env);
+  return resolveTheme(config, { env, isTTY: isStdoutTty(), noColorFlag: false });
 }
 
 export default class DetailedTicketReporter implements Reporter {
@@ -26,12 +40,14 @@ export default class DetailedTicketReporter implements Reporter {
   private readonly liveRegion: LiveRegion;
   private readonly displayTimers = new Map<string, NodeJS.Timeout>();
   private readonly runningTests = new Set<string>();
+  private readonly theme: Theme;
 
   constructor(options: TicketInfo = {}) {
     this.ticketInfo = options;
     this.projectsRoot = readAppliedLocations().CHOL_PROJECTS_DIR;
     this.liveMode = isStdoutTty();
     this.liveRegion = new LiveRegion();
+    this.theme = workspaceTheme();
   }
 
   onBegin(_config: FullConfig): void {
@@ -74,7 +90,7 @@ export default class DetailedTicketReporter implements Reporter {
     }
 
     const { prefix, location } = this.buildTestLineInfo(test);
-    const marker = markerFor(result.status);
+    const marker = markerFor(result.status, this.theme);
     const duration = formatDuration(result.duration);
     const finalLine = `${prefix} ${marker} ${test.title} (${duration})\n${location}\n\n`;
 

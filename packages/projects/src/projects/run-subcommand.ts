@@ -1,5 +1,5 @@
 import type { CommandIo } from '@choliba/core/nest';
-import type { CommandSpec } from '@choliba/core/cli';
+import { messageOf, type CommandSpec } from '@choliba/core/cli';
 
 import { UsageError } from '../shared/errors';
 import { commandHelp, PROGRAM_NAME } from './projects.help';
@@ -22,7 +22,7 @@ export function runSubcommand(
   try {
     body(args);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = messageOf(error);
     if (error instanceof UsageError) {
       io.usageError(message, PROGRAM_NAME);
       return;

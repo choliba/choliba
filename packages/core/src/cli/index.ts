@@ -18,4 +18,5 @@ export {
   scriptsHelpSpec,
   scriptSummary,
 } from './scripts-help';
+export { messageOf } from './message-of';
 export { wantsHelp } from './wants-help';
