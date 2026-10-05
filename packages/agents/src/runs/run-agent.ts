@@ -5,7 +5,7 @@ import { exitCodeFor } from '@choliba/terminal';
 
 import type { AgentEvent } from './interfaces/event.interface';
 import { writePlan } from '../plans/plan-store';
-import type { ProviderRequest } from '../providers/interfaces/provider.interface';
+import type { PlannedFile, ProviderRequest } from '../providers/interfaces/provider.interface';
 import type { ResolvedProvider } from '../providers/provider-registry';
 import {
   defaultResolvePlanContent,
@@ -16,6 +16,7 @@ import {
 import type { Theme } from '@choliba/core/theme';
 
 import { agentRenderOptions, formatProviderLine, renderEvent } from './render';
+import { applyRunTools } from './run-tools/run-tools';
 
 export interface RunAgentDeps {
   /**
@@ -37,6 +38,8 @@ export interface RunAgentRequest {
   readonly plansDir: string;
   /** The colors of what it prints, and whether to color at all (`ThemeService`). */
   readonly theme: Theme;
+  /** The run tools' scripts (`planRunTools`), written next to the run folder for the session only. */
+  readonly toolFiles?: readonly PlannedFile[];
 }
 
 function errorMessage(error: unknown): string {
@@ -55,15 +58,19 @@ function errorMessage(error: unknown): string {
  * JSON object per line. Prefixing that would print JSON at the user, not a conversation.
  */
 export async function runAgent(request: RunAgentRequest, deps: RunAgentDeps): Promise<number> {
-  // The empty folder the provider runs in, and whatever the adapter sets up for the run (cursor's
-  // .cursor/cli.json), are removed however the session ends: success, failure, or SIGINT/SIGTERM,
-  // which only kill the child and still let `runSession` return.
+  // The empty folder the provider runs in, the run tools next to it and whatever the adapter sets up for
+  // the run (cursor's .cursor/cli.json), are removed however the session ends: success, failure, or
+  // SIGINT/SIGTERM, which only kill the child and still let `runSession` return. The tools go first:
+  // cursor's permissions are built from what is on disk.
   const runDir = request.providerRequest.runDir;
+  let restoreTools: () => void = noop;
   let restore: () => void;
   try {
     mkdirSync(runDir, { recursive: true });
+    restoreTools = applyRunTools(request.toolFiles ?? []);
     restore = request.provider.adapter.prepareWorkspace?.(request.providerRequest) ?? noop;
   } catch (error) {
+    restoreTools();
     rmSync(runDir, { recursive: true, force: true });
     deps.stderr.write(`${errorMessage(error)}\n`);
     return 1;
@@ -72,6 +79,7 @@ export async function runAgent(request: RunAgentRequest, deps: RunAgentDeps): Pr
     return await runSession(request, deps);
   } finally {
     restore();
+    restoreTools();
     rmSync(runDir, { recursive: true, force: true });
   }
 }

@@ -363,6 +363,32 @@ describe('runAgent', () => {
     expect(events).toEqual(['prepare', 'restore', 'prepare', 'restore']);
   });
 
+  it('writes the run tools before preparing the workspace and removes them after, whatever the outcome', async () => {
+    const runDir = freshRunDir();
+    const toolFiles = [{ path: `${runDir}.delete`, content: '#!/usr/bin/env bun\n' }];
+    const seen: boolean[] = [];
+    const prepareWorkspace = (): (() => void) => {
+      seen.push(existsSync(`${runDir}.delete`));
+      return () => undefined;
+    };
+
+    await run(
+      setup(fakeSpawner({ stdout: streamFromChunks([]) }).spawner, { prepareWorkspace }),
+      { toolFiles },
+      { runDir },
+    );
+    expect(seen).toEqual([true]);
+    expect(existsSync(`${runDir}.delete`)).toBe(false);
+
+    const failing = setup(fakeSpawner().spawner, {
+      prepareWorkspace: () => {
+        throw new Error('cli.json inválido');
+      },
+    });
+    expect(await run(failing, { toolFiles }, { runDir })).toBe(1);
+    expect(existsSync(`${runDir}.delete`)).toBe(false);
+  });
+
   it('returns 1 without spawning when preparing the workspace fails', async () => {
     const spawnerHandle = fakeSpawner();
     const s = setup(spawnerHandle.spawner, {

@@ -26,6 +26,14 @@ function findUp(start: string, relative: string): string | undefined {
 }
 
 /**
+ * Where to look for what the code ships with, in order: the folder of the script that is actually running,
+ * then `sourceDir` (the caller's own `__dirname`, which a bundle freezes to where it was built).
+ */
+export function resourceStarts(sourceDir: string, argv: readonly string[] = process.argv): readonly string[] {
+  return [runningScriptDir(argv), sourceDir].filter((start): start is string => start !== undefined);
+}
+
+/**
  * A file or folder the code ships with (`schemes`, `templates/ticket`…), looked up from the script
  * that is actually running, then from `sourceDir` (the caller's own `__dirname`); `undefined` when
  * neither finds it. Bundled, the script is the installed `bin/choliba.js` and its package holds the
@@ -37,8 +45,7 @@ export function locateResource(
   sourceDir: string,
   argv: readonly string[] = process.argv,
 ): string | undefined {
-  const starts = [runningScriptDir(argv), sourceDir].filter((start): start is string => start !== undefined);
-  for (const start of starts) {
+  for (const start of resourceStarts(sourceDir, argv)) {
     const found = findUp(start, relative);
     if (found !== undefined) {
       return found;

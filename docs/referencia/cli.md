@@ -6,7 +6,6 @@
 | `choliba <agente>`                           | Atalho para `choliba agents <agente>`                                                                     |
 | `choliba projects COMMAND [ARGS]`            | Cria e lista projetos e tickets em `CHOL_PROJECTS_DIR`                                                    |
 | `choliba tests [PROJECT[:TICKET]] [OPTIONS]` | Roda os testes E2E dos projetos com o Playwright                                                          |
-| `choliba playwright-cli COMMAND [ARGS]`      | O navegador que os agentes usam (`playwright cli`)                                                        |
 | `choliba install <origem> [OPTIONS]`         | Instala um agente (com suas skills e MCPs), uma skill ou um MCP numa pasta, repositório git ou pacote npm |
 | `choliba setup`                              | Cria a pasta de trabalho e liga o autocomplete (roda sozinho ao instalar com `--trust`)                   |
 | `choliba completion bash`                    | Imprime o script de autocomplete do bash                                                                  |

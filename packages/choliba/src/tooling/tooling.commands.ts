@@ -4,7 +4,6 @@ import { Command } from 'nest-commander';
 import { messageOf } from '@choliba/core/cli';
 import { CliCommand, CommandIo } from '@choliba/core/nest';
 
-import { DEFAULT_OUTPUT_DIR, intoOutputDir } from './playwright-args';
 import { ToolsService } from './tools.service';
 
 /** Every option goes on to the tool, `--help` included: these commands are the tool, run in the workspace. */
@@ -53,48 +52,6 @@ export class FormatCommand extends CliCommand {
 
   run(): Promise<void> {
     passOn(this.io, () => this.tools.format(this.io.args('format')));
-    return Promise.resolve();
-  }
-}
-
-/** `choliba playwright-cli …`: the browser the agents use, writing what it names itself under the workspace's folder. */
-@Command({ name: 'playwright-cli', description: 'O navegador que os agentes usam (playwright cli)', ...PASS_THROUGH })
-export class PlaywrightCliCommand extends CliCommand {
-  constructor(
-    @Inject(CommandIo) private readonly io: CommandIo,
-    @Inject(ToolsService) private readonly tools: ToolsService,
-  ) {
-    super();
-  }
-
-  run(): Promise<void> {
-    passOn(this.io, () => {
-      const outputDir = this.tools.workspaceConfig()['CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR'] ?? DEFAULT_OUTPUT_DIR;
-      // Without it, the browser the cli opens writes what it names itself into `.playwright-cli/` of the workspace root.
-      return this.tools.playwright('cli', intoOutputDir(this.io.args('playwright-cli'), outputDir), {
-        PLAYWRIGHT_MCP_OUTPUT_DIR: outputDir,
-      });
-    });
-    return Promise.resolve();
-  }
-}
-
-/** `choliba playwright-trace …`: reads the trace.zip of a failed test, with the runner's Playwright. */
-@Command({
-  name: 'playwright-trace',
-  description: 'Lê um trace.zip de teste que falhou (playwright trace), na versão do runner',
-  ...PASS_THROUGH,
-})
-export class PlaywrightTraceCommand extends CliCommand {
-  constructor(
-    @Inject(CommandIo) private readonly io: CommandIo,
-    @Inject(ToolsService) private readonly tools: ToolsService,
-  ) {
-    super();
-  }
-
-  run(): Promise<void> {
-    passOn(this.io, () => this.tools.playwright('trace', this.io.args('playwright-trace')));
     return Promise.resolve();
   }
 }

@@ -17,6 +17,7 @@ import { formatStepFailure, stepExitCode } from '../steps/actions';
 import { formatAgentDetail, runList } from './agent-detail';
 import { formatDryRun } from './dry-run';
 import { runAgent } from './run-agent';
+import { planRunTools } from './run-tools/run-tools';
 import {
   foreignFlag,
   resolveAgentForCommand,
@@ -72,7 +73,9 @@ function runDryRun(
     deps.stderr.write(`${errorMessage(error)}\n`);
     return 1;
   }
-  const workspaceFiles = parsed.showPrompt ? (resolved.adapter.previewWorkspace?.(providerRequest) ?? []) : [];
+  const workspaceFiles = parsed.showPrompt
+    ? [...planRunTools(providerRequest, deps.config), ...(resolved.adapter.previewWorkspace?.(providerRequest) ?? [])]
+    : [];
   const output = formatDryRun({
     providerId: resolved.adapter.id,
     command: resolved.command,
@@ -118,6 +121,7 @@ async function runAndRecord(
       task: effectiveTask,
       plansDir: join(deps.repoRoot, 'plans'),
       theme: deps.theme,
+      toolFiles: planRunTools(providerRequest, deps.config),
     },
     { runner: deps.runner, stdout: deps.stdout, stderr: deps.stderr, signals: deps.signals, now: deps.now },
   );

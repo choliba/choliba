@@ -129,6 +129,7 @@ export function formatDryRun(input: DryRunInput): string {
   const systemPrompt = wrapInstructions(request.agent, request.skillsInstruction, {
     runDir: request.runDir,
     root: request.workspaceRoot,
+    policy: request.policy,
   });
   const ticketCreated: readonly Entry[] =
     input.newTicket === undefined ? [] : [{ who: 'CLI', lines: [`cria o ticket ${input.newTicket}`] }];

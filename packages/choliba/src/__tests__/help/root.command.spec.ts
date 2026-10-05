@@ -40,6 +40,10 @@ describe('choliba', () => {
         const unknown = await choliba(['nope', 'x'], root);
         expect(unknown.code).toBe(1);
         expect(unknown.err).toContain('Unknown command "nope". Run "choliba agents list"');
+
+        const playwright = await choliba(['playwright-cli', 'open'], root);
+        expect(playwright.code).toBe(1);
+        expect(playwright.err).toContain('Unknown command "playwright-cli"');
       },
       { '.env': ENV },
     ));
@@ -72,7 +76,7 @@ describe('choliba __complete', () => {
 
   it('completes only the commands outside a workspace, with no agent', () =>
     withFolder(async (dir) => {
-      expect((await choliba(['__complete', 'p'], dir)).out).toBe('projects\nplaywright-cli\nplaywright-trace\n');
+      expect((await choliba(['__complete', 'p'], dir)).out).toBe('projects\n');
       expect((await choliba(['__complete', 'tests', 'x'], dir)).out).toBe('');
     }));
 });

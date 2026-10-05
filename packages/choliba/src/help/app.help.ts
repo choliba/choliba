@@ -28,18 +28,6 @@ export const COMMANDS: readonly CommandEntry[] = [
     ),
   },
   {
-    name: 'playwright-cli',
-    description: 'O navegador que os agentes usam (playwright cli)',
-    group: 'Commands',
-    spec: { usage: 'choliba playwright-cli COMMAND [ARGS]', positionals: FILES },
-  },
-  {
-    name: 'playwright-trace',
-    description: 'Lê um trace.zip de teste que falhou (playwright trace), na versão do runner',
-    group: 'Commands',
-    spec: { usage: 'choliba playwright-trace COMMAND [ARGS]', positionals: FILES },
-  },
-  {
     name: 'install',
     description:
       'Instala um agente (com suas skills e MCPs), uma skill ou um MCP de uma pasta, repositório git ou pacote npm',

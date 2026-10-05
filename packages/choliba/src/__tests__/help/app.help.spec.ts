@@ -7,9 +7,11 @@ describe('CHOLIBA_HELP', () => {
     const help = formatHelp(CHOLIBA_HELP);
 
     expect(help).toContain('Usage:  choliba COMMAND [ARGS]');
-    for (const name of ['agents', 'projects', 'tests', 'playwright-cli', 'playwright-trace', 'install']) {
+    for (const name of ['agents', 'projects', 'tests', 'install']) {
       expect(help).toContain(`  ${name} `);
     }
+    // The agents' playwright tools are run tools, written for each run, not commands of choliba.
+    expect(help).not.toContain('playwright-');
     expect(help).toContain('--no-color');
   });
 });
@@ -34,7 +36,7 @@ describe('COMMANDS', () => {
   const spec = { ...CHOLIBA_HELP, commands: () => COMMANDS };
 
   it('completes what each command takes after its name', () => {
-    for (const name of ['install', 'lint', 'format', 'playwright-cli', 'playwright-trace']) {
+    for (const name of ['install', 'lint', 'format']) {
       expect(complete(spec, [name, '..'])).toEqual({ kind: 'files' });
     }
     expect(complete(spec, ['install', '--'])).toEqual({ kind: 'values', values: ['--path', '--dry-run'] });

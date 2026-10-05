@@ -16,7 +16,7 @@ CHOL_PROJECTS_DIR=
 # ganha deste).
 # CHOL_AGENTS_PROVIDER=auto
 
-# Opcional: onde o `choliba playwright-cli` grava snapshots e screenshots que os agentes leem (padrão:
+# Opcional: onde a ferramenta playwright-cli dos agentes grava snapshots e screenshots que eles leem (padrão:
 # .cache/playwright-cli).
 # CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR=.cache/playwright-cli
 

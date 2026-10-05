@@ -26,7 +26,7 @@ também aparece como aviso.
 | agente | `.choliba/agents/test-writer`                  | Escreve um teste por critério, antes da implementação.                              |
 | agente | `.choliba/agents/implementer`                  | Muda a aplicação até os testes do ticket passarem.                                  |
 | agente | `.choliba/agents/docs-updater`                 | Atualiza a documentação a partir do diff.                                           |
-| skill  | `.choliba/skills/playwright-cli`               | Ensina o agente a usar o navegador (`choliba playwright-cli`).                      |
+| skill  | `.choliba/skills/playwright-cli`               | Ensina o agente a usar o navegador (a ferramenta da run `playwright-cli`).          |
 | skill  | `.choliba/skills/playwright-trace`             | Ensina o agente a ler o `trace.zip` de um teste que falhou.                         |
 | skill  | `.choliba/skills/playwright-component-testing` | Testes de componente com Playwright.                                                |
 | skill  | `.choliba/skills/documentation`                | Boas práticas de documentação (usada pelo `docs-updater`).                          |
@@ -188,8 +188,8 @@ encontra numa origem organizada como uma pasta de trabalho (`.choliba/agents/`, 
 pastas na raiz (`agents/`, `skills/`, `mcps/`); fora disso, não lista nada.
 
 O texto das skills oficiais usa `playwright-cli` e `npx playwright trace`. Os agentes do choliba traduzem isso na
-instrução de cada skill no `agent.yaml` (`bunx choliba playwright-cli`, `bunx choliba playwright-trace`), que roda a
-versão do Playwright do choliba (veja [Skills e MCPs](escrever-um-agente.md#skills-e-mcps)).
+instrução de cada skill no `agent.yaml`: as ferramentas da run `playwright-cli` e `playwright-trace`, que rodam a
+versão do Playwright do choliba (veja [Ferramentas da run](../referencia/agent-yaml.md#ferramentas-da-run)).
 
 ### Outras origens
 

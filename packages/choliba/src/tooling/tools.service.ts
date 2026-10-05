@@ -14,7 +14,7 @@ function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-/** The Node tools choliba ships (ESLint, Prettier, Playwright), run in the workspace with the terminal attached. */
+/** The Node tools choliba ships (ESLint, Prettier), run in the workspace with the terminal attached. */
 @Injectable()
 export class ToolsService {
   constructor(
@@ -43,21 +43,6 @@ export class ToolsService {
       [mode, ...(paths.length === 0 ? ['.'] : paths)],
       this.config.workspaceRoot(),
     );
-  }
-
-  /** `playwright <command> …` of the runner's own Playwright (`cli`, `trace`), so no other version is fetched. */
-  playwright(command: string, args: readonly string[], env?: Readonly<Record<string, string>>): number {
-    return this.runtime.run(
-      this.node(),
-      [this.runtime.resolve('@playwright/test/cli'), command, ...args],
-      this.config.workspaceRoot(),
-      env,
-    );
-  }
-
-  /** The workspace configuration, for what a tool reads from it. */
-  workspaceConfig(): Readonly<Record<string, string | undefined>> {
-    return this.config.load(this.config.workspaceRoot());
   }
 
   private node(): string {
