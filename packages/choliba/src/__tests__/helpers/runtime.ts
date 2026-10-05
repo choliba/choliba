@@ -9,6 +9,7 @@ export interface RecordedRun {
   readonly command: string;
   readonly args: readonly string[];
   readonly cwd: string;
+  readonly env?: Readonly<Record<string, string>>;
 }
 
 export interface FakeRuntime extends Runtime {
@@ -36,8 +37,8 @@ export function fakeRuntime(
     execPath: '/usr/bin/bun',
     home: '/home/ninguem',
     resolve: (specifier) => require.resolve(specifier, { paths: [SRC] }),
-    run: (command, args, cwd) => {
-      runs.push({ command, args, cwd });
+    run: (command, args, cwd, env) => {
+      runs.push({ command, args, cwd, ...(env === undefined ? {} : { env }) });
       return status;
     },
     capture: (command, args, cwd) => {

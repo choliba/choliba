@@ -70,7 +70,10 @@ export class PlaywrightCliCommand extends CliCommand {
   run(): Promise<void> {
     passOn(this.io, () => {
       const outputDir = this.tools.workspaceConfig()['CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR'] ?? DEFAULT_OUTPUT_DIR;
-      return this.tools.playwright('cli', intoOutputDir(this.io.args('playwright-cli'), outputDir));
+      // Without it, the browser the cli opens writes what it names itself into `.playwright-cli/` of the workspace root.
+      return this.tools.playwright('cli', intoOutputDir(this.io.args('playwright-cli'), outputDir), {
+        PLAYWRIGHT_MCP_OUTPUT_DIR: outputDir,
+      });
     });
     return Promise.resolve();
   }

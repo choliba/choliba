@@ -98,8 +98,13 @@ function reached(paths: readonly string[]): readonly string[] {
  * its commands from anywhere else — `cd /tmp && …` stays rejected (both checked with real runs). The
  * workspace root means the folder the run happens in, which is inside it.
  */
-function cdTokens(permissions: AgentPermissions, workspaceRoot: string, runDir: string): readonly string[] {
-  if (permissions.allowExecute.length === 0) {
+function cdTokens(
+  permissions: AgentPermissions,
+  workspaceRoot: string,
+  runDir: string,
+  deleteBridge: string | undefined,
+): readonly string[] {
+  if (permissions.allowExecute.length === 0 && deleteBridge === undefined) {
     return [];
   }
   const dirs = permissions.allowExecute
@@ -111,6 +116,11 @@ function cdTokens(permissions: AgentPermissions, workspaceRoot: string, runDir: 
 /** A deny rule in cursor's syntax: its commands, or — for `['*']` — the `cd` into the directory. */
 function denyShellTokens(rule: ExecuteRule): readonly string[] {
   return blocksEveryCommand(rule) ? [`Shell(cd:${withoutTrailingSlash(rule.dir)})`] : rule.commands.map(shellToken);
+}
+
+export interface CursorPermissionsOptions {
+  /** Absolute path of the ephemeral delete bridge in the run dir, when `allow.delete` applies. */
+  readonly deleteBridge?: string | undefined;
 }
 
 /**
@@ -126,8 +136,10 @@ export function cursorPermissions(
   runDir: string,
   mcpServers: readonly McpServer[] = [],
   read: ReadDir = readDir,
+  options: CursorPermissionsOptions = {},
 ): CursorPermissions {
   const writes = policy === 'read-only' ? [] : permissions.allowWrite;
+  const deleteBridge = policy === 'read-only' ? undefined : options.deleteBridge;
   const readable = complementOf([runDir, ...reached(permissions.allowRead)], read);
   const writable = complementOf([runDir, ...reached(writes)], read);
   return {
@@ -135,12 +147,15 @@ export function cursorPermissions(
       ...permissions.allowRead.map((path) => fileToken('Read', path)),
       ...writes.map((path) => fileToken('Write', path)),
       ...allowedCommands(permissions).map(shellToken),
-      ...cdTokens(permissions, workspaceRoot, runDir),
+      ...(deleteBridge === undefined ? [] : [shellToken(deleteBridge)]),
+      ...cdTokens(permissions, workspaceRoot, runDir, deleteBridge),
       ...mcpServers.flatMap(mcpTokens),
     ],
     deny: [
       ...permissions.denyRead.map((path) => fileToken('Read', path)),
       ...permissions.denyWrite.map((path) => fileToken('Write', path)),
+      // The helper is allowed to run, so it must never be rewritten (once written, the complement names it too).
+      ...(deleteBridge === undefined ? [] : [fileToken('Write', deleteBridge)]),
       ...permissions.denyExecute.flatMap(denyShellTokens),
       ...readable.map((path) => fileToken('Read', path)),
       ...writable.map((path) => fileToken('Write', path)),

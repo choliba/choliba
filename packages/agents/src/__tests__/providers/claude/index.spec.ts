@@ -1,9 +1,14 @@
+import { existsSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
+
 import type { AgentDefinition } from '../../../agents/interfaces/agent.interface';
 import type { ProviderRequest } from '../../../providers/interfaces/provider.interface';
 import { claudeProvider } from '../../helpers/providers';
 import { PromptTooLargeError, MAX_ARG_BYTES } from '../../../runs/prompt';
+import { deleteBridgePath } from '../../../runs/delete-bridge-path';
 import { NO_PERMISSIONS, readAgentPermissions } from '../../../runs/permissions';
 import { NO_MODE_STEPS, fakeSections } from '../../helpers/agent';
+import { makeTmpDir } from '../../helpers/tmp';
 
 function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
   return {
@@ -18,6 +23,7 @@ function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
     policy: 'read-only',
     taskRequired: true,
     projectRequired: false,
+    allowWithoutTicket: false,
     defaultMode: 'execute',
     modes: ['execute', 'plan', 'ask'],
     permissions: NO_PERMISSIONS,
@@ -388,5 +394,79 @@ describe('claudeProvider.createParser', () => {
     expect(claudeProvider.createParser().parseLine(line({ type: 'result' }))).toEqual([
       { type: 'done', isError: false, text: '' },
     ]);
+  });
+});
+
+describe('claudeProvider.prepareWorkspace', () => {
+  it('writes the delete bridge when allow.delete is set, and removes it afterwards', () => {
+    const tmp = makeTmpDir('claude-prepare-delete');
+    try {
+      const app = join(tmp.path, 'app');
+      const run = join(tmp.path, 'run');
+      mkdirSync(app);
+      mkdirSync(run);
+      const permissions = readAgentPermissions({ allow: { delete: [app] } });
+      const restore = claudeProvider.prepareWorkspace(
+        fakeRequest({
+          workspaceRoot: tmp.path,
+          runDir: run,
+          policy: 'edits',
+          agent: fakeAgent({ permissions, policy: 'edits' }),
+        }),
+      );
+
+      expect(existsSync(deleteBridgePath(run))).toBe(true);
+      const args = claudeProvider.buildArgs(
+        fakeRequest({
+          workspaceRoot: tmp.path,
+          runDir: run,
+          policy: 'edits',
+          agent: fakeAgent({ permissions, policy: 'edits' }),
+        }),
+      );
+      expect(args).toEqual(expect.arrayContaining([`Bash(${deleteBridgePath(run)}:*)`]));
+      const disallowed = args.slice(args.indexOf('--disallowedTools') + 1);
+      expect(disallowed).toEqual([`Edit(/${deleteBridgePath(run)})`, `Write(/${deleteBridgePath(run)})`]);
+      restore();
+      expect(existsSync(deleteBridgePath(run))).toBe(false);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('writes nothing when allow.delete is absent', () => {
+    const tmp = makeTmpDir('claude-prepare-none');
+    try {
+      const restore = claudeProvider.prepareWorkspace(fakeRequest({ runDir: tmp.path }));
+      expect(existsSync(deleteBridgePath(tmp.path))).toBe(false);
+      restore();
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('allows the delete bridge together with declared execute commands', () => {
+    const tmp = makeTmpDir('claude-delete-and-run');
+    try {
+      const app = join(tmp.path, 'app');
+      const run = join(tmp.path, 'run');
+      mkdirSync(app);
+      mkdirSync(run);
+      const permissions = readAgentPermissions({
+        allow: { delete: [app], execute: { './': ['git diff'] } },
+      });
+      const args = claudeProvider.buildArgs(
+        fakeRequest({
+          workspaceRoot: tmp.path,
+          runDir: run,
+          policy: 'edits',
+          agent: fakeAgent({ permissions, policy: 'edits' }),
+        }),
+      );
+      const allowed = args.slice(args.indexOf('--allowedTools') + 1);
+      expect(allowed).toEqual(expect.arrayContaining(['Bash(git diff:*)', `Bash(${deleteBridgePath(run)}:*)`]));
+    } finally {
+      tmp.cleanup();
+    }
   });
 });

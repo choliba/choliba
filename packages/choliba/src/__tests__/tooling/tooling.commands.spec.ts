@@ -89,6 +89,8 @@ describe('choliba playwright-cli and playwright-trace', () => {
           ['trace', 'open', 't.zip'],
         ]);
         expect(runtime.runs[0]?.args[0]).toMatch(/cli/);
+        expect(runtime.runs[0]?.env).toEqual({ PLAYWRIGHT_MCP_OUTPUT_DIR: 'saidas' });
+        expect(runtime.runs[1]?.env).toBeUndefined();
       },
       { '.env': 'CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR=saidas\n' },
     ));
@@ -99,6 +101,7 @@ describe('choliba playwright-cli and playwright-trace', () => {
       await tool(['playwright-cli', 'screenshot', '--filename=a.png'], root, runtime);
 
       expect(runtime.runs[0]?.args.slice(1)).toEqual(['cli', 'screenshot', '--filename=.cache/playwright-cli/a.png']);
+      expect(runtime.runs[0]?.env).toEqual({ PLAYWRIGHT_MCP_OUTPUT_DIR: '.cache/playwright-cli' });
     }));
 });
 

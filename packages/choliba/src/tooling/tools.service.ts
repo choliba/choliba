@@ -46,11 +46,12 @@ export class ToolsService {
   }
 
   /** `playwright <command> …` of the runner's own Playwright (`cli`, `trace`), so no other version is fetched. */
-  playwright(command: string, args: readonly string[]): number {
+  playwright(command: string, args: readonly string[], env?: Readonly<Record<string, string>>): number {
     return this.runtime.run(
       this.node(),
       [this.runtime.resolve('@playwright/test/cli'), command, ...args],
       this.config.workspaceRoot(),
+      env,
     );
   }
 

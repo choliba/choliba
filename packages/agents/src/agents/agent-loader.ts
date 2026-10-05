@@ -53,9 +53,9 @@ export function isValidAgentName(name: string): boolean {
 /** What `agent.yaml` says; `loadAgent` adds where it is and what is derived from the whole file. */
 type YamlFields = Omit<AgentDefinition, 'name' | 'dir' | 'sourcePath' | 'projectRequired'>;
 
-/** `edits` when the agent may write somewhere, `read-only` otherwise. */
+/** `edits` when the agent may write or delete somewhere, `read-only` otherwise. */
 export function policyFromPermissions(permissions: AgentPermissions): PermissionPolicy {
-  return permissions.allowWrite.length > 0 ? 'edits' : 'read-only';
+  return permissions.allowWrite.length > 0 || permissions.allowDelete.length > 0 ? 'edits' : 'read-only';
 }
 
 type StepLines = readonly Readonly<Record<string, readonly string[]>>[];
@@ -100,6 +100,7 @@ interface AgentYamlV1 {
   readonly modes?: { readonly allow?: Modes; readonly default?: ExecutionMode };
   readonly task?: { readonly required?: boolean; readonly default?: string };
   readonly ticket_types?: readonly string[];
+  readonly allow_without_ticket?: boolean;
   readonly steps?: Readonly<Partial<Record<ExecutionMode, ModeStepsYaml>>>;
 }
 
@@ -238,6 +239,7 @@ export function parseAgentYaml(text: string, source: string, folder: string): Ya
     policy: policyFromPermissions(permissions),
     taskRequired: doc.task?.required ?? true,
     ...(doc.ticket_types === undefined ? {} : { ticketTypes: doc.ticket_types }),
+    allowWithoutTicket: doc.allow_without_ticket === true,
     ...parseModes(doc.modes),
     ...(doc.task?.default === undefined ? {} : { defaultTask: doc.task.default }),
     steps: parseSteps(doc.steps, fail),

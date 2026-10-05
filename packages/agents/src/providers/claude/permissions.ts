@@ -59,15 +59,18 @@ export function claudePermissionArgs(
   permissions: AgentPermissions,
   policy: PermissionPolicy,
   mcpServers: readonly McpServer[],
+  deleteBridge?: string,
 ): ClaudePermissionArgs {
   const writes = policy === 'read-only' ? [] : permissions.allowWrite;
+  const bridge = policy === 'read-only' ? undefined : deleteBridge;
   const commands = allowedCommands(permissions);
+  const shellCommands = bridge === undefined ? commands : [...commands, bridge];
   // The read tools are never allowed bare (that would be anywhere): the session has them, and the
   // `Read(<path>)` rules, which Claude applies to Grep and Glob too, say where.
   const tools = [
     ...(permissions.allowRead.length > 0 ? READ_TOOLS : []),
     ...(writes.length > 0 ? WRITE_TOOLS : []),
-    ...(commands.length > 0 ? ['Bash'] : []),
+    ...(shellCommands.length > 0 ? ['Bash'] : []),
   ];
   return {
     permissionMode: 'dontAsk',
@@ -75,12 +78,14 @@ export function claudePermissionArgs(
     allowedTools: [
       ...permissions.allowRead.map((path) => `Read(${claudePath(path)})`),
       ...writeRules(writes),
-      ...commands.map(commandRule),
+      ...shellCommands.map(commandRule),
       ...mcpServers.flatMap(mcpRules),
     ],
     disallowedTools: [
       ...permissions.denyRead.map((path) => `Read(${claudePath(path)})`),
       ...writeRules(permissions.denyWrite),
+      // The helper is allowed to run, so it must never be rewritten, even under an allowed write path.
+      ...writeRules(bridge === undefined ? [] : [bridge]),
       ...permissions.denyExecute.flatMap(denyRunRules),
     ],
   };
