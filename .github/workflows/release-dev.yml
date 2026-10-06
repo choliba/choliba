@@ -3,13 +3,16 @@ name: Release dev
 # Até a primeira versão de produção existe uma release só, a pré-release v0.0.1-dev: cada merge na master
 # (o PR de release) move a tag para o novo commit e troca o .tgz e as notas da mesma release, em vez de
 # criar outra. Mover a tag com --force é a única exceção ao "sem force-push", que vale para branches.
-# As notas trazem o histórico de todas as releases (um merge na master cada), agrupado por tipo de commit.
+# As notas trazem o histórico de todas as releases (um merge na master cada): a mais nova aberta, as anteriores
+# recolhidas, cada uma com os Destaques do PR de release e os commits agrupados por tipo (scripts/release-notes.ts).
 on:
   push:
     branches: [master]
 
 permissions:
   contents: write
+  # Os Destaques: o corpo de cada PR de release.
+  pull-requests: read
 
 # Dois merges seguidos não disputam a tag: o segundo espera o primeiro terminar.
 concurrency:
@@ -63,7 +66,10 @@ jobs:
           bun run chol:pack
           cp "packages/choliba/choliba-$CHOL_VERSION.tgz" "$RUNNER_TEMP/choliba-${TAG#v}.tgz"
 
+      # Os Destaques de cada release vêm do corpo do PR de release, lido pelo gh.
       - name: Notas da release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           bun run release:notes HEAD > "$RUNNER_TEMP/notes.md"
           cat "$RUNNER_TEMP/notes.md"
