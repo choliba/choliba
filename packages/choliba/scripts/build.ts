@@ -97,12 +97,29 @@ cpSync(join(packageDir, 'templates', 'example'), join(out, 'templates', 'example
 
 const own = manifest(packageDir);
 const root = manifest(join(packagesDir, '..'));
+
+/**
+ * The version of this build: the package.json one (the base, `0.0.1-dev`), or `CHOL_VERSION` from the release
+ * workflow, a SemVer pre-release of that base (`0.0.1-dev.44`). `CHOL_GIT_HEAD` is the commit, for `--version`.
+ */
+function buildVersion(base: string): string {
+  const version = process.env['CHOL_VERSION'];
+  if (version === undefined || version === '') return base;
+  if (!new RegExp(`^${base.replaceAll('.', '\\.')}\\.\\d+$`).test(version)) {
+    throw new Error(`CHOL_VERSION=${version} não é ${base}.<número>`);
+  }
+  return version;
+}
+
+const version = buildVersion(own.version ?? '0.0.0');
+const gitHead = process.env['CHOL_GIT_HEAD'];
 writeFileSync(
   join(out, 'package.json'),
   `${JSON.stringify(
     {
       name: own.name,
-      version: own.version,
+      version,
+      ...(gitHead === undefined || gitHead === '' ? {} : { gitHead }),
       description: own.description,
       license: root.license,
       type: 'module',
@@ -118,4 +135,4 @@ writeFileSync(
     2,
   )}\n`,
 );
-console.log(`choliba ${String(own.version)} em ${out}`);
+console.log(`choliba ${version} em ${out}`);

@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 05/10/2026 17:36:38 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 06/10/2026 17:53:10 — não editar manualmente.
 
 ## Resumo
 
@@ -83,7 +83,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 26 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 27 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -99,6 +99,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/help/complete.command.ts](packages/choliba/src/help/complete.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/help.module.ts](packages/choliba/src/help/help.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/root.command.ts](packages/choliba/src/help/root.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/version.ts](packages/choliba/src/help/version.ts)|100.00|100.00|100.00|100.00
 🟢|[src/install/install-source.ts](packages/choliba/src/install/install-source.ts)|100.00|100.00|100.00|100.00
 🟢|[src/install/install.command.ts](packages/choliba/src/install/install.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/install/install.module.ts](packages/choliba/src/install/install.module.ts)|100.00|100.00|100.00|100.00

@@ -12,6 +12,10 @@
 
 `choliba --help` (ou `choliba COMMAND --help`) lista o mesmo, sempre a partir do binário instalado.
 
+`choliba --version` mostra a versão instalada no formato [SemVer](https://semver.org/lang/pt-BR/): a base da
+pré-release, o número da release (a contagem das releases, que aparece no título de cada atualização nas notas) e,
+como metadado de build, o commit, por exemplo `choliba 0.0.1-dev.16+1a2b3c4`. Rodando dos fontes ou de um `chol:pack` local, sai só a base (`0.0.1-dev`).
+
 Cores: a saída só tem cor num terminal. `--no-color` (em qualquer comando), `NO_COLOR=1`, `TERM=dumb` ou um pipe
 tiram a cor; `FORCE_COLOR=1` força. Quais cores usar vem de `CHOL_COLORS` no `.env` (veja
 [`.env` da pasta de trabalho](env.md)) e, para o rótulo de um agente, do `agent.color` dele.

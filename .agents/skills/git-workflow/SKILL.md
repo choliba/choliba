@@ -121,7 +121,12 @@ exception to "no force-push", which is about branches) and replaces the `.tgz` a
 The notes are rebuilt from git each time by `scripts/release-notes.ts` (`bun run release:notes` to preview): one
 section per release merge on `master`, newest first, its commits grouped by Conventional Commits type, so a squash
 title's type and scope are what readers see there.
-Never create another tag or release by hand; the version in `packages/choliba/package.json` stays `0.0.1-dev`.
+Never create another tag or release by hand. The version in `packages/choliba/package.json` stays `0.0.1-dev`, the
+base: the workflow builds each release as the SemVer pre-release `0.0.1-dev.<N>`, N being the count of release merges
+on `master` up to it (`git rev-list --first-parent --merges --count`: sequential, so versions order correctly), and
+writes the commit as `gitHead`, which `choliba --version` prints as build metadata (`0.0.1-dev.16+1a2b3c4`). A hash
+never goes in the pre-release part: SemVer would compare it as text and an all-digit hash with a leading zero is
+invalid.
 
 Never: push to `develop` or `master`, merge locally into them (`git merge develop` while on `master` diverges from the
 remote as soon as a PR lands), force-push, use `--no-verify`, rewrite history that is already pushed, or delete the

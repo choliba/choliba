@@ -41,16 +41,27 @@ jobs:
 
       # A tag e o .tgz têm o mesmo nome de versão: uma versão diferente no pacote publicaria um arquivo que
       # o endereço de instalação não acha.
-      - name: Versão do pacote igual à da tag
+      # A base de packages/choliba/package.json (0.0.1-dev) é a da tag; cada build é um pré-lançamento SemVer dela com o
+      # número da release: quantos merges de release a master tem até aqui (0.0.1-dev.16), contados no git, como nas
+      # notas. O commit vai como metadado de build (CHOL_GIT_HEAD), que o --version mostra depois do +.
+      - name: Versão deste build
+        id: version
         run: |
-          version="$(jq -r .version packages/choliba/package.json)"
-          if [ "v$version" != "$TAG" ]; then
-            echo "packages/choliba/package.json está em $version, mas a release é $TAG."
+          base="$(jq -r .version packages/choliba/package.json)"
+          if [ "v$base" != "$TAG" ]; then
+            echo "packages/choliba/package.json está em $base, mas a release é $TAG."
             exit 1
           fi
+          echo "version=$base.$(git rev-list --first-parent --merges --count HEAD)" >> "$GITHUB_OUTPUT"
 
+      # O endereço de instalação não muda: o .tgz desta versão sobe com o nome fixo da release.
       - name: Empacotar
-        run: bun run chol:pack
+        env:
+          CHOL_VERSION: ${{ steps.version.outputs.version }}
+          CHOL_GIT_HEAD: ${{ github.sha }}
+        run: |
+          bun run chol:pack
+          cp "packages/choliba/choliba-$CHOL_VERSION.tgz" "$RUNNER_TEMP/choliba-${TAG#v}.tgz"
 
       - name: Notas da release
         run: |
@@ -69,5 +80,5 @@ jobs:
           name: ${{ env.TAG }}
           prerelease: true
           body_path: ${{ runner.temp }}/notes.md
-          files: packages/choliba/choliba-0.0.1-dev.tgz
+          files: ${{ runner.temp }}/choliba-0.0.1-dev.tgz
           overwrite_files: true

@@ -98,6 +98,7 @@ export function commandHelp(name: string): CommandSpec {
 const GLOBAL_FLAGS = [
   { name: '--no-color', description: 'Saída sem cores (vale para todo comando; NO_COLOR=1 também)' },
   { name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true },
+  { name: '--version', description: 'Mostra a versão do choliba', terminal: true },
 ];
 
 /** `choliba --help`. */
