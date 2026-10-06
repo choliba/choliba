@@ -65,6 +65,15 @@ bun add --trust \
   https://github.com/jacksonbicalho/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
 ```
 
+Para conferir qual versão ficou instalada, rode `bunx choliba --version` e compare com o título da última
+atualização nas [notas da release](https://github.com/jacksonbicalho/choliba/releases/tag/v0.0.1-dev). A saída tem
+este formato:
+
+```
+$ bunx choliba --version
+choliba 0.0.1-dev.16+1a2b3c4
+```
+
 ## Do zero ao primeiro ticket
 
 Este passo a passo monta uma pasta de trabalho `~/dev/dev-tools` para testar e desenvolver uma aplicação em

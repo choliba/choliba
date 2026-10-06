@@ -11,8 +11,9 @@ const config: Config = {
   // `roots` não lista packages/ e apps/ de propósito: um deles pode não existir
   // (Jest falha com "roots[n] was not found"). O testMatch faz o filtro.
   roots: ['<rootDir>'],
-  // Padrão do projeto: specs vivem em src/__tests__/ (ver skill add-workspace-package).
-  testMatch: ['<rootDir>/{packages,apps}/*/src/__tests__/**/*.spec.ts'],
+  // Padrão do projeto: specs vivem em src/__tests__/ (ver skill add-workspace-package). Os scripts do repositório
+  // (scripts/) têm os seus em scripts/__tests__/, sem entrar na cobertura, que é medida só nos pacotes.
+  testMatch: ['<rootDir>/{packages,apps}/*/src/__tests__/**/*.spec.ts', '<rootDir>/scripts/__tests__/**/*.spec.ts'],
   modulePathIgnorePatterns: [
     '<rootDir>/coverage',
     '<rootDir>/.agents',

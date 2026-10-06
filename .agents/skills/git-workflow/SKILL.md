@@ -77,7 +77,9 @@ line. Spec: https://www.conventionalcommits.org/en/v1.0.0/
 - **Scope** is the package or area, lowercase: `core`, `cli`, `jest`, `ci`, `skills`, `deps`.
 - **Description**: imperative, lowercase start, no trailing period, header at most 100 characters
   (aim for 72). Say what changed; use the body for why.
-- **Breaking change**: add `!` after the type/scope and a `BREAKING CHANGE: <what breaks>` footer.
+- **Breaking change**: add `!` after the type/scope and a `BREAKING CHANGE: <what breaks and how to migrate>`
+  footer. The release notes quote that footer under the change as its migration note, so write it for whoever
+  upgrades; the footer alone also marks the commit as breaking.
 - **One logical change per commit.** Do not mix a refactor with a feature; split the commits.
 
 ## 4. Everything reaches `develop` through a pull request
@@ -92,7 +94,10 @@ pushes, and GitHub refuses them: a ruleset on each branch (see the table below) 
 2. Create a branch named `<type>/<short-kebab-description>` (`feat/slugify-lib`, `fix/ratchet-format`).
 3. Work, run `bun run check` locally, and get approval per section 2 before each commit.
 4. Push the branch and open the PR against `develop`: `gh pr create --base develop --title "<conventional title>"`.
-   The PR title becomes the commit message on merge (squash), so it must follow section 3. Write the PR body
+   The squash commit on `develop` is what the release notes are built from. With the repository settings
+   (`COMMIT_OR_PR_TITLE`, `COMMIT_MESSAGES`), a PR with **one commit** is squashed with that commit's own title and
+   body; with several, the title is the PR title and the body lists the commits. So both the commit and the PR
+   title must follow section 3, and a breaking change carries its footer in the commit. Write the PR body
    yourself; strip any tool-generated footer and run `.githooks/commit-msg --no-format` on the body locally if
    unsure. After `gh pr create`, verify with `gh pr view --json body` — some hosts append attribution after
    creation; edit the PR with `gh pr edit` if needed.
@@ -101,7 +106,7 @@ pushes, and GitHub refuses them: a ruleset on each branch (see the table below) 
    `develop`, so merging one PR does not hold back the others.
 6. Merge a feature PR (into `develop`) with **squash**; the branch is deleted automatically. Do not merge on your
    own: tell the user the PR is green and let them merge, or merge only when they ask you to.
-7. Releasing: a PR from `develop` into `master`, same checks, titled like `chore(release): v1.2.0`. See below.
+7. Releasing: a PR from `develop` into `master`, same checks, titled `chore(release): v0.0.1-dev`. See below.
 
 ### Release PRs use a merge commit, never squash
 
@@ -115,13 +120,31 @@ branches". The rulesets fix the method per branch, so the merge dialog offers on
 The agent prepares and opens the release PR (`gh pr create --base master --head develop`), confirms CI is green,
 then stops: the user merges it. A local `git merge` into `master` is refused on push.
 
+The release PR body has, in this order: `## Release v0.0.1-dev` (what the merge does to the pre-release and that it
+must be merged with **Create a merge commit**); `## Destaques`, one to three sentences in Portuguese for whoever
+uses choliba, saying what changes for them (the release workflow copies this section to the top of the release in
+the notes); and `## What goes in`, each squash title from `develop` with a short explanation.
+
+The release PR always shows "This branch is out-of-date with the base branch": release merge commits exist only on
+`master`, and the `master` ruleset requires an up-to-date branch. It is expected (the user chose, on 2026-10-06, to
+keep the ruleset), and a page refresh usually clears it. Never use "Update branch": it merges `master` into
+`develop` without a PR.
+
 Until the first production version there is a single pre-release, `v0.0.1-dev`: the merge into `master` runs
 `.github/workflows/release-dev.yml`, which moves that tag to the new commit (`git push --force` of the tag, the one
 exception to "no force-push", which is about branches) and replaces the `.tgz` and the notes of the same release.
-The notes are rebuilt from git each time by `scripts/release-notes.ts` (`bun run release:notes` to preview): one
-section per release merge on `master`, newest first, its commits grouped by Conventional Commits type, so a squash
-title's type and scope are what readers see there.
-Never create another tag or release by hand; the version in `packages/choliba/package.json` stays `0.0.1-dev`.
+The notes are rebuilt from git each time by `scripts/release-notes.ts` (`bun run release:notes` to preview), after
+Keep a Changelog and Common Changelog: one section per release merge on `master`, titled with its version and date,
+the newest open and the older ones folded; inside, the release PR's `## Destaques`, then the commits grouped by
+type (Novidades, Correções, Alterações, Desempenho, Documentação), `**Breaking:**` ones first with their footer as
+the migration note, and refactoring, tests and maintenance folded under "Interno". A squash title's type and scope
+are what readers see there, so a change for users is never typed `chore` or `ci`.
+Never create another tag or release by hand. The version in `packages/choliba/package.json` stays `0.0.1-dev`, the
+base: the workflow builds each release as the SemVer pre-release `0.0.1-dev.<N>`, N being the count of release merges
+on `master` up to it (`git rev-list --first-parent --merges --count`: sequential, so versions order correctly), and
+writes the commit as `gitHead`, which `choliba --version` prints as build metadata (`0.0.1-dev.16+1a2b3c4`). A hash
+never goes in the pre-release part: SemVer would compare it as text and an all-digit hash with a leading zero is
+invalid.
 
 Never: push to `develop` or `master`, merge locally into them (`git merge develop` while on `master` diverges from the
 remote as soon as a PR lands), force-push, use `--no-verify`, rewrite history that is already pushed, or delete the
