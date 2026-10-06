@@ -45,20 +45,20 @@ describe('migrationNote', () => {
 });
 
 describe('entry', () => {
-  it('writes the scope in bold, the description and a link to the commit', () => {
-    expect(entry(commit('fix(setup): keep the .env'), REPO)).toBe(`- **setup**: keep the .env ${LINK}`);
-    expect(entry(commit('docs: explain it'), REPO)).toBe(`- explain it ${LINK}`);
+  it('puts the PR of a squash title first, then the description and the commit', () => {
+    expect(entry(commit('fix(setup): keep the .env (#41)'), REPO)).toBe(`[#41](${REPO}/pull/41) keep the .env ${LINK}`);
+    expect(entry(commit('docs: explain it'), REPO)).toBe(`explain it ${LINK}`);
   });
 
   it('marks a breaking change, from the ! or the footer, with the migration quoted under it', () => {
-    expect(entry(commit('feat(agents)!: drop x'), REPO)).toBe(`- **Breaking:** **agents**: drop x ${LINK}`);
+    expect(entry(commit('feat(agents)!: drop x'), REPO)).toBe(`**Breaking:** drop x ${LINK}`);
     expect(entry(commit('refactor: move y', 'BREAKING CHANGE: move your y.'), REPO)).toBe(
-      `- **Breaking:** move y ${LINK}\n  > move your y.`,
+      `**Breaking:** move y ${LINK}\n> move your y.`,
     );
   });
 
   it('keeps a subject outside Conventional Commits as it is', () => {
-    expect(entry(commit('Update README'), REPO)).toBe(`- Update README ${LINK}`);
+    expect(entry(commit('Update README (#3)'), REPO)).toBe(`[#3](${REPO}/pull/3) Update README ${LINK}`);
   });
 });
 
@@ -96,8 +96,10 @@ describe('releaseSection', () => {
       '#### Documentação',
       '#### Outros',
     ]);
-    expect(section).toContain(`(#46)\n\nO choliba agora mostra a versão.\n\n#### Novidades\n- **Breaking:** **x**: d`);
-    expect(section).toContain('#### Alterações\n- **Breaking:** f');
+    expect(section).toContain(
+      `(#46)\n\nO choliba agora mostra a versão.\n\n#### Novidades\n* \`x\`\n  * **Breaking:** d`,
+    );
+    expect(section).toContain('#### Alterações\n* **Breaking:** f');
     expect(section).not.toContain('<details>');
     expect(section).toMatch(/\*\*Commits:\*\* \[`ccccccc\.\.\.bbbbbbb`\]\(.+\/compare\/c+\.\.\.b+\)$/);
   });
@@ -110,8 +112,37 @@ describe('releaseSection', () => {
 
     expect(section).toContain(`### [0.0.1-dev.16+bbbbbbb](${REPO}/commit/${'b'.repeat(40)})\n`);
     expect(section).toContain('<summary>Interno: refatoração, testes, manutenção (3)</summary>');
-    expect(section).toContain('#### Refatoração\n- c');
+    expect(section).toContain('#### Refatoração\n* c');
     expect(section).not.toMatch(/^#### (Novidades|Correções)/m);
+  });
+});
+
+describe('releaseSection, items', () => {
+  it('lists the items of a group under their scopes, in order, the ones without a scope last', () => {
+    const section = releaseSection(
+      release({
+        commits: [
+          commit('fix(cli): a (#1)'),
+          commit('fix: b'),
+          commit('fix(setup): c'),
+          commit('fix(cli)!: d', 'BREAKING CHANGE: migre.'),
+        ],
+      }),
+      CONTEXT,
+    );
+
+    expect(section).toContain(
+      [
+        '#### Correções',
+        '* `cli`',
+        `  * **Breaking:** d ${LINK}`,
+        '    > migre.',
+        `  * [#1](${REPO}/pull/1) a ${LINK}`,
+        '* `setup`',
+        `  * c ${LINK}`,
+        `* b ${LINK}`,
+      ].join('\n'),
+    );
   });
 });
 
@@ -126,6 +157,8 @@ describe('releaseNotes', () => {
     );
     const outline = [...notes.matchAll(/^(?:## .+|### \[[^\]]+\]|<summary>.+<\/summary>)/gm)].map(([line]) => line);
 
+    expect(notes.startsWith('**Versão atual: `0.0.1-dev.17+bbbbbbb`**, de 2026-10-07.')).toBe(true);
+    expect(notes).toContain('O `choliba-0.0.1-dev.tgz` em **Assets**');
     expect(notes).toContain(`bun add --trust ${REPO}/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz`);
     expect(outline).toEqual([
       '## 2026-10-07',
@@ -145,7 +178,7 @@ describe('releaseNotes', () => {
     const notes = releaseNotes([...day('2026-10-07', 3), ...day('2026-10-06', 2, 1)], CONTEXT);
 
     expect(notes).toContain('<summary>2026-10-06 · 0.0.1-dev.1 e 0.0.1-dev.2</summary>');
-    expect(releaseNotes([], CONTEXT)).not.toContain('## ');
+    expect(releaseNotes([], CONTEXT)).not.toMatch(/## |Versão atual/);
   });
 });
 

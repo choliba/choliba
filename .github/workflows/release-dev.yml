@@ -57,6 +57,7 @@ jobs:
             exit 1
           fi
           echo "version=$base.$(git rev-list --first-parent --merges --count HEAD)" >> "$GITHUB_OUTPUT"
+          echo "date=$(git log -1 --format=%ad --date=short)" >> "$GITHUB_OUTPUT"
 
       # O endereço de instalação não muda: o .tgz desta versão sobe com o nome fixo da release.
       - name: Empacotar
@@ -84,7 +85,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG }}
-          name: ${{ env.TAG }}
+          # O título diz de qual versão são as notas abertas e o .tgz em Assets; a tag é o canal, que não muda.
+          name: ${{ steps.version.outputs.version }} (${{ steps.version.outputs.date }})
           prerelease: true
           body_path: ${{ runner.temp }}/notes.md
           files: ${{ runner.temp }}/choliba-0.0.1-dev.tgz
