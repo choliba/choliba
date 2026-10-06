@@ -19,7 +19,10 @@ builda `packages/choliba` e empacota o resultado num `.tgz` local (ignorado pelo
 instala pelo caminho do arquivo.
 
 O release é o PR de `develop` para `master` (merge commit). O merge dispara o workflow `release-dev.yml`, que roda
-o mesmo `chol:pack`, move a tag `v0.0.1-dev` para o novo commit e troca o `.tgz` e as notas da pré-release. As
+o mesmo `chol:pack`, move a tag `v0.0.1-dev` para o novo commit e troca o `.tgz` e as notas da pré-release. Cada
+build da release sai com a versão `0.0.1-dev.<N>`, N sendo a contagem dos merges de release na `master` (um
+pré-lançamento [SemVer](https://semver.org/lang/pt-BR/) da base que está no `package.json`), e grava o commit,
+que o `choliba --version` mostra como metadado de build (`0.0.1-dev.16+1a2b3c4`); o `.tgz` sobe com o nome fixo, então o endereço de instalação não muda. As
 notas trazem todas as releases, a mais nova primeiro, cada uma com os commits agrupados por tipo; `bun run
 release:notes` mostra como elas ficam.
 

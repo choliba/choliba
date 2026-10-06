@@ -29,6 +29,13 @@ describe('choliba', () => {
     }),
   );
 
+  it('prints its version for --version', () =>
+    withFolder(async (dir) => {
+      const { code, out } = await choliba(['--version'], dir);
+      expect(code).toBe(0);
+      expect(out).toMatch(/^choliba 0\.0\.1-dev\S*\n$/);
+    }));
+
   it('runs an agent given as the first word, as `choliba agents <agent>` would', () =>
     withWorkspace(
       async (root) => {
