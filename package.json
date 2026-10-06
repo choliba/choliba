@@ -34,7 +34,8 @@
     "chol:install": "bun packages/choliba/src/main.ts install",
     "chol:help": "bun run scripts/help.ts",
     "chol:pack": "bun run --cwd packages/choliba build && cd packages/choliba/dist && bun pm pack --destination ..",
-    "git:clean": "bun run scripts/git-clean.ts"
+    "git:clean": "bun run scripts/git-clean.ts",
+    "release:notes": "bun run scripts/release-notes.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

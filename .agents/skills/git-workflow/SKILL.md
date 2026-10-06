@@ -118,6 +118,9 @@ then stops: the user merges it. A local `git merge` into `master` is refused on 
 Until the first production version there is a single pre-release, `v0.0.1-dev`: the merge into `master` runs
 `.github/workflows/release-dev.yml`, which moves that tag to the new commit (`git push --force` of the tag, the one
 exception to "no force-push", which is about branches) and replaces the `.tgz` and the notes of the same release.
+The notes are rebuilt from git each time by `scripts/release-notes.ts` (`bun run release:notes` to preview): one
+section per release merge on `master`, newest first, its commits grouped by Conventional Commits type, so a squash
+title's type and scope are what readers see there.
 Never create another tag or release by hand; the version in `packages/choliba/package.json` stays `0.0.1-dev`.
 
 Never: push to `develop` or `master`, merge locally into them (`git merge develop` while on `master` diverges from the
