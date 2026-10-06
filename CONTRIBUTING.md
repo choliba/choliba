@@ -19,7 +19,9 @@ builda `packages/choliba` e empacota o resultado num `.tgz` local (ignorado pelo
 instala pelo caminho do arquivo.
 
 O release é o PR de `develop` para `master` (merge commit). O merge dispara o workflow `release-dev.yml`, que roda
-o mesmo `chol:pack`, move a tag `v0.0.1-dev` para o novo commit e troca o `.tgz` e as notas da pré-release.
+o mesmo `chol:pack`, move a tag `v0.0.1-dev` para o novo commit e troca o `.tgz` e as notas da pré-release. As
+notas trazem todas as releases, a mais nova primeiro, cada uma com os commits agrupados por tipo; `bun run
+release:notes` mostra como elas ficam.
 
 ## Padrões do projeto
 

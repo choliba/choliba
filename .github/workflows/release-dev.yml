@@ -3,6 +3,7 @@ name: Release dev
 # Até a primeira versão de produção existe uma release só, a pré-release v0.0.1-dev: cada merge na master
 # (o PR de release) move a tag para o novo commit e troca o .tgz e as notas da mesma release, em vez de
 # criar outra. Mover a tag com --force é a única exceção ao "sem force-push", que vale para branches.
+# As notas trazem o histórico de todas as releases (um merge na master cada), agrupado por tipo de commit.
 on:
   push:
     branches: [master]
@@ -53,19 +54,7 @@ jobs:
 
       - name: Notas da release
         run: |
-          previous="$(git rev-parse -q --verify "refs/tags/$TAG^{commit}" || true)"
-          range="${previous:+$previous..}HEAD"
-          {
-            echo 'Pré-release atualizada a cada merge na `master`. Para instalar:'
-            echo
-            echo '```'
-            echo "bun add https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/choliba-${TAG#v}.tgz"
-            echo '```'
-            echo
-            echo '## Desde a atualização anterior'
-            echo
-            git log --no-merges --format='- %s (%h)' "$range"
-          } > "$RUNNER_TEMP/notes.md"
+          bun run release:notes HEAD > "$RUNNER_TEMP/notes.md"
           cat "$RUNNER_TEMP/notes.md"
 
       - name: Mover a tag para este commit
