@@ -90,20 +90,34 @@ function commitLink(commit: Commit, repoUrl: string): string {
   return `[${commit.hash.slice(0, 7)}](${repoUrl}/commit/${commit.hash})`;
 }
 
-/** One line of the notes, with the migration as a quote under a breaking change. */
+/** The PR a squash title ends with (`… (#41)`), and the title without it. */
+function pullRequestOf(description: string): readonly [string, number | undefined] {
+  const match = /^(.*) \(#(\d+)\)$/.exec(description);
+  if (match === null) return [description, undefined];
+  return [match[1] ?? description, Number(match[2])];
+}
+
+/**
+ * One change, as the notes show it under its scope: `**Breaking:**` when it breaks, the PR first (`[#41](…)`), the
+ * description and the commit, with the migration quoted under a breaking change.
+ */
 export function entry(commit: Commit, repoUrl: string): string {
   const change = parse(commit);
-  const link = commitLink(commit, repoUrl);
-  if (change === undefined) return `- ${commit.subject} (${link})`;
-  const breaking = change.breaking ? '**Breaking:** ' : '';
-  const scope = change.scope === undefined ? '' : `**${change.scope}**: `;
-  const line = `- ${breaking}${scope}${change.description} (${link})`;
-  return change.migration === undefined ? line : `${line}\n  > ${change.migration}`;
+  const [description, pullRequest] = pullRequestOf(change?.description ?? commit.subject);
+  const breaking = change?.breaking === true ? '**Breaking:** ' : '';
+  const pr = pullRequest === undefined ? '' : `[#${String(pullRequest)}](${repoUrl}/pull/${String(pullRequest)}) `;
+  const line = `${breaking}${pr}${description} (${commitLink(commit, repoUrl)})`;
+  return change?.migration === undefined ? line : `${line}\n> ${change.migration}`;
+}
+
+interface Item {
+  readonly scope: string | undefined;
+  readonly text: string;
 }
 
 interface Grouped {
   readonly title: string;
-  readonly entries: readonly string[];
+  readonly items: readonly Item[];
 }
 
 /** The commits of `titles`' groups, breaking changes first in each, empty groups left out. */
@@ -116,13 +130,33 @@ function grouped(commits: readonly Commit[], titles: readonly string[], repoUrl:
         ...inGroup.filter(({ change }) => change?.breaking === true),
         ...inGroup.filter(({ change }) => change?.breaking !== true),
       ];
-      return { title, entries: ordered.map(({ commit }) => entry(commit, repoUrl)) };
+      return {
+        title,
+        items: ordered.map(({ commit, change }) => ({ scope: change?.scope, text: entry(commit, repoUrl) })),
+      };
     })
-    .filter(({ entries }) => entries.length > 0);
+    .filter(({ items }) => items.length > 0);
+}
+
+/** `* text`, indented under a scope, with the lines of a quote kept under it. */
+function bullet(text: string, indent: string): string {
+  return `${indent}* ${text.replaceAll('\n', `\n${indent}  `)}`;
+}
+
+/** A group's items under their scopes (`* \`agents\``), in the order they come, the ones without a scope last. */
+function renderItems(items: readonly Item[]): string {
+  const scopes = [...new Set(items.map(({ scope }) => scope).filter((scope): scope is string => scope !== undefined))];
+  const scoped = scopes.map((scope) =>
+    [`* \`${scope}\``, ...items.filter((item) => item.scope === scope).map(({ text }) => bullet(text, '  '))].join(
+      '\n',
+    ),
+  );
+  const loose = items.filter(({ scope }) => scope === undefined).map(({ text }) => bullet(text, ''));
+  return [...scoped, ...loose].join('\n');
 }
 
 function render(groups: readonly Grouped[]): string {
-  return groups.map(({ title, entries }) => [`#### ${title}`, ...entries].join('\n')).join('\n\n');
+  return groups.map(({ title, items }) => `#### ${title}\n${renderItems(items)}`).join('\n\n');
 }
 
 /** `0.0.1-dev.15+bbb4cdb`: what `choliba --version` prints for the build of this release. */
@@ -155,7 +189,7 @@ export function releaseSection(release: Release, context: NotesContext): string 
     INTERNAL_GROUPS.map(([title]) => title),
     context.repoUrl,
   );
-  const internalCount = internal.reduce((sum, group) => sum + group.entries.length, 0);
+  const internalCount = internal.reduce((sum, group) => sum + group.items.length, 0);
   const names = internal.map(({ title }) => title.toLowerCase()).join(', ');
   return [
     heading(release, context),
@@ -199,8 +233,18 @@ function daySection(day: readonly Release[], context: NotesContext, open: boolea
 /** The whole notes: how to install, the newest day open and every older day folded. */
 export function releaseNotes(releases: readonly Release[], context: NotesContext): string {
   const asset = `choliba-${context.tag.replace(/^v/, '')}.tgz`;
+  const [latest] = releases;
+  const current =
+    latest === undefined
+      ? []
+      : [
+          `**Versão atual: \`${releaseVersion(latest, context.base)}\`**, de ${latest.date}. O \`${asset}\` em **Assets**, no fim`,
+          'da página, é desta versão.',
+          '',
+        ];
   const intro = [
-    'Pré-release atualizada a cada merge na `master`. Para instalar:',
+    ...current,
+    'Pré-release atualizada a cada merge na `master`; o endereço de instalação não muda e traz sempre a versão atual:',
     '',
     '```',
     `bun add --trust ${context.repoUrl}/releases/download/${context.tag}/${asset}`,
