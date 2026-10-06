@@ -1,16 +1,19 @@
-# Configuração do choliba nesta pasta de trabalho. Os valores do shell ganham destes.
-
-# Onde ficam os agentes, as skills e os MCPs, relativos a esta pasta. Sem estas linhas, valem os padrões
-# .choliba/agents, .choliba/skills e .choliba/mcps; defina só para usar outra pasta.
-# CHOL_AGENTS_DIR=.choliba/agents
-# CHOL_SKILLS_DIR=.choliba/skills
-# CHOL_MCPS_DIR=.choliba/mcps
+# Configuração do choliba nesta pasta de trabalho. Os valores do shell ganham destes. Todas as variáveis:
+# docs/referencia/env.md no repositório do choliba.
 
 # Os projetos de teste (CHOL_PROJECTS_DIR) e os artefatos das execuções (CHOL_GLOBAL_DIR). O `choliba setup`
 # preenche os dois no .env com caminhos absolutos: projects e .cache/choliba desta pasta.
 CHOL_GLOBAL_DIR=
 CHOL_PROJECTS_DIR=
+
+# Opcional: raiz de ticket-runs/, se não for CHOL_PROJECTS_DIR.
 # CHOL_TICKET_RUNS=
+
+# Opcional: onde ficam os agentes, as skills e os MCPs, relativos a esta pasta. Sem estas linhas, valem os padrões
+# .choliba/agents, .choliba/skills e .choliba/mcps; defina só para usar outra pasta.
+# CHOL_AGENTS_DIR=.choliba/agents
+# CHOL_SKILLS_DIR=.choliba/skills
+# CHOL_MCPS_DIR=.choliba/mcps
 
 # Opcional: provider padrão dos agentes, auto, claude ou cursor (padrão: auto; --provider na linha de comando
 # ganha deste).
@@ -20,9 +23,11 @@ CHOL_PROJECTS_DIR=
 # .cache/playwright-cli).
 # CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR=.cache/playwright-cli
 
-# Variáveis usadas por ${NOME} nos seus .choliba/mcps/*.json, por exemplo:
+# MCPs: cada ${NOME} dos seus .choliba/mcps/*.json vem daqui. O mcp-app (instalado com o agente product-owner)
+# precisa da pasta onde ele foi clonado e compilado e da pasta dos logs dele, de preferência absolutas.
 # CHOL_MCP_APP_DIR=
 # CHOL_MCP_APP_LOG_DIR=
+
 # Opcional: as cores do choliba, papel.nome=cor separados por vírgula (ex.: agents.test-writer=bright-red).
 # Cores: red, green, yellow, blue, magenta, cyan, white, gray e os tons claros bright-red, bright-green,
 # bright-yellow, bright-blue, bright-magenta e bright-cyan; o tom exato depende do tema do terminal. A cor só

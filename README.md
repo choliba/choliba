@@ -59,7 +59,10 @@ Agentes podem usar skills e servidores MCP, instalados na pasta de trabalho.
 O choliba não está no npm: o pacote é o `.tgz` da pré-release
 [`v0.0.1-dev`](https://github.com/jacksonbicalho/choliba/releases/tag/v0.0.1-dev), refeita a cada merge na `master`.
 
+Numa pasta com o próprio `package.json` (sem ele, o Bun pode instalar numa pasta acima):
+
 ```
+echo '{ "name": "dev-tools", "private": true }' > package.json
 bun add --trust \
   https://github.com/jacksonbicalho/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
 ```
@@ -69,7 +72,9 @@ cria e como atualizar: [Primeiros passos](docs/primeiros-passos.md).
 
 ## Uso
 
-Numa pasta de trabalho com o choliba instalado, do projeto ao código implementado:
+Numa pasta de trabalho com o choliba instalado, do projeto ao código implementado (o passo a passo completo, de
+uma pasta vazia ao `check` verde, está em
+[Do zero ao primeiro ticket](docs/primeiros-passos.md#do-zero-ao-primeiro-ticket)):
 
 ```sh
 # um projeto para a aplicação em ../minha-app, e os agentes do repositório do choliba
