@@ -6,10 +6,17 @@ O choliba não está no npm: o pacote é o `.tgz` da pré-release
 [`v0.0.1-dev`](https://github.com/jacksonbicalho/choliba/releases/tag/v0.0.1-dev), que é refeita a cada merge na
 `master` (o endereço não muda).
 
+Instale numa pasta que já tenha o próprio `package.json`:
+
 ```
+echo '{ "name": "dev-tools", "private": true }' > package.json
 bun add --trust \
   https://github.com/jacksonbicalho/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
 ```
+
+O `bun add` usa o primeiro `package.json` que encontra subindo a partir da pasta atual. Numa pasta vazia dentro de
+outra que tenha um, ele instala o choliba **na de cima**, sem avisar. Com o `package.json` na pasta, a instalação
+fica nela. O `name` identifica a pasta de trabalho, e o `private` evita uma publicação acidental no npm.
 
 O `--trust` deixa o Bun rodar o `postinstall` do pacote, que já executa `choliba setup` (veja abaixo). Sem
 `--trust`, instale e rode o setup à mão:
@@ -37,12 +44,15 @@ Roda sozinho no `postinstall` (com `--trust`) ou à mão (`bunx choliba setup`).
 ele:
 
 - cria `.choliba/agents/`, `.choliba/skills/`, `.choliba/mcps/` e `projects/` na pasta de trabalho;
+- cria um exemplo para experimentar: a aplicação `app/exemplo/` (uma página só) e o projeto de teste
+  `projects/exemplo/`, que já passa com `bunx choliba tests exemplo`;
 - copia de um template `.env.example`, `.gitignore`, `.editorconfig` (largura e indentação, que o Prettier lê) e os
   arquivos do Prettier e do ESLint, e cria o `.env` inicial com `CHOL_GLOBAL_DIR` apontando para
   `.cache/choliba` e `CHOL_PROJECTS_DIR` para `projects/`, os dois da própria pasta de trabalho;
 - lista `choliba` em `trustedDependencies` do `package.json`, para que instalações futuras rodem o setup de novo
   sem pedir `--trust`;
-- liga o autocomplete do bash (veja abaixo).
+- aponta o VS Code para o schema do `agent.yaml` (`.vscode/settings.json`);
+- liga o autocomplete do bash (veja [Autocomplete](referencia/cli.md#autocomplete)).
 
 ## Atualização
 
@@ -55,27 +65,92 @@ bun add --trust \
   https://github.com/jacksonbicalho/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
 ```
 
-## Uso
+## Do zero ao primeiro ticket
 
-Numa pasta de trabalho com o choliba instalado, do projeto ao código implementado:
+Este passo a passo monta uma pasta de trabalho `~/dev/dev-tools` para testar e desenvolver uma aplicação em
+`~/dev/minha-app`, que ainda pode estar vazia. As saídas são de uma execução real (com `/home/voce` no lugar da
+pasta pessoal).
 
-```sh
-# um projeto para a aplicação em ../minha-app, e os agentes do repositório do choliba
-bunx choliba projects create-project minha-app \
-  --app-dir ../minha-app --base-url http://localhost:3000
-bunx choliba install github:jacksonbicalho/choliba --path .choliba/agents/product-owner
-bunx choliba install github:jacksonbicalho/choliba --path .choliba/agents/test-writer
-bunx choliba install github:jacksonbicalho/choliba --path .choliba/agents/implementer
-bunx choliba check
+1. Crie as duas pastas e o `package.json` da pasta de trabalho (por que ele vem antes: veja
+   [Instalação](#instalação)):
 
-# o ticket, os testes e a implementação
-bunx choliba product-owner --project minha-app --type story "a busca aceita filtro por data"
-bunx choliba test-writer --project minha-app --ticket minha-app-1
-bunx choliba implementer --project minha-app --ticket minha-app-1
+   ```sh
+   mkdir -p ~/dev/dev-tools ~/dev/minha-app
+   cd ~/dev/dev-tools
+   echo '{ "name": "dev-tools", "private": true }' > package.json
+   ```
 
-# os testes do ticket, a qualquer momento
-bunx choliba tests minha-app:1
-```
+2. Instale o choliba. O setup roda sozinho e cria a pasta de trabalho, com o exemplo
+   (veja [`choliba setup`](#choliba-setup)):
 
-Qualquer comando de agente aceita `--dry-run`, que mostra o que ele faria, na ordem, sem executar nada (veja
-[`--dry-run`](guias/dry-run.md)).
+   ```sh
+   bun add --trust \
+     https://github.com/jacksonbicalho/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
+   ```
+
+3. Crie o projeto de teste da aplicação. Sem nome, o projeto leva o nome da pasta de `--app-dir`. O `--base-url` é o
+   endereço em que a aplicação vai rodar, com o `http://`:
+
+   ```
+   $ bunx choliba projects create-project minha-app --app-dir ../minha-app --base-url http://localhost:3000
+   Projeto "minha-app" criado em /home/voce/dev/dev-tools/projects/minha-app.
+   Nenhum README na raiz de /home/voce/dev/minha-app; description ficou vazio.
+   Antes de usar: crie /home/voce/dev/dev-tools/projects/minha-app/.env.json a partir de /home/voce/dev/dev-tools/projects/minha-app/.env.example.json e troque os valores CHANGE_ME (config.json e .env.json).
+   ```
+
+   O `.env.json` guarda os dados que os testes usam em cada ambiente, como um usuário de teste. O `.gitignore` da
+   pasta de trabalho o deixa fora do git. Crie-o a partir do exemplo e troque os `CHANGE_ME`. Se a aplicação ainda
+   não tem login, qualquer valor serve:
+
+   ```sh
+   cp projects/minha-app/.env.example.json projects/minha-app/.env.json
+   ```
+
+   Enquanto o `.env.json` não existir, o `check` marca o projeto com `✗`, e os agentes não rodam nele, nem com
+   `--dry-run`.
+
+4. Instale os três agentes do repositório do choliba. Cada um traz as skills e os MCPs que declara (as saídas
+   completas estão em [Instalar agentes](guias/instalar-agentes.md#os-agentes-do-choliba)):
+
+   ```sh
+   bunx choliba install github:jacksonbicalho/choliba --path .choliba/agents/product-owner
+   bunx choliba install github:jacksonbicalho/choliba --path .choliba/agents/test-writer
+   bunx choliba install github:jacksonbicalho/choliba --path .choliba/agents/implementer
+   ```
+
+5. O `product-owner` traz o MCP `mcp-app`, que precisa de `CHOL_MCP_APP_DIR` e `CHOL_MCP_APP_LOG_DIR` no `.env`.
+   Como instalar o servidor e preencher as duas:
+   [O servidor do MCP `mcp-app`](guias/instalar-agentes.md#o-servidor-do-mcp-mcp-app).
+
+6. Confira. Com tudo no lugar, nada sai com `✗`:
+
+   ```
+   $ bunx choliba check
+   Agentes (/home/voce/dev/dev-tools/.choliba/agents)
+     ✓ implementer
+     ✓ product-owner
+     ✓ test-writer
+
+   Projetos (/home/voce/dev/dev-tools/projects)
+     ✓ exemplo
+     ✓ minha-app
+   ```
+
+   Antes de rodar um agente de verdade, `--dry-run` mostra o que ele faria, na ordem, sem executar nada (veja
+   [`--dry-run`](guias/dry-run.md)):
+
+   ```sh
+   bunx choliba product-owner --project minha-app --type story "a página inicial mostra o nome do site" --dry-run
+   ```
+
+7. Do ticket ao código implementado:
+
+   ```sh
+   # o ticket, os testes e a implementação
+   bunx choliba product-owner --project minha-app --type story "a página inicial mostra o nome do site"
+   bunx choliba test-writer --project minha-app --ticket minha-app-1
+   bunx choliba implementer --project minha-app --ticket minha-app-1
+
+   # os testes do ticket, a qualquer momento
+   bunx choliba tests minha-app:1
+   ```
