@@ -134,8 +134,9 @@ Until the first production version there is a single pre-release, `v0.0.1-dev`: 
 `.github/workflows/release-dev.yml`, which moves that tag to the new commit (`git push --force` of the tag, the one
 exception to "no force-push", which is about branches) and replaces the `.tgz` and the notes of the same release.
 The notes are rebuilt from git each time by `scripts/release-notes.ts` (`bun run release:notes` to preview), after
-Keep a Changelog and Common Changelog: one section per release merge on `master`, titled with its version and date,
-the newest open and the older ones folded; inside, the release PR's `## Destaques`, then the commits grouped by
+Keep a Changelog and Common Changelog: the releases (one per release merge on `master`) grouped by day, the newest
+day open and each older day folded under its date and versions; each release titled with its version and PR;
+inside, the release PR's `## Destaques`, then the commits grouped by
 type (Novidades, Correções, Alterações, Desempenho, Documentação), `**Breaking:**` ones first with their footer as
 the migration note, and refactoring, tests and maintenance folded under "Interno". A squash title's type and scope
 are what readers see there, so a change for users is never typed `chore` or `ci`.

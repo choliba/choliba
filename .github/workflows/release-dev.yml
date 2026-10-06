@@ -3,8 +3,9 @@ name: Release dev
 # Até a primeira versão de produção existe uma release só, a pré-release v0.0.1-dev: cada merge na master
 # (o PR de release) move a tag para o novo commit e troca o .tgz e as notas da mesma release, em vez de
 # criar outra. Mover a tag com --force é a única exceção ao "sem force-push", que vale para branches.
-# As notas trazem o histórico de todas as releases (um merge na master cada): a mais nova aberta, as anteriores
-# recolhidas, cada uma com os Destaques do PR de release e os commits agrupados por tipo (scripts/release-notes.ts).
+# As notas trazem o histórico de todas as releases (um merge na master cada), agrupadas por dia: o dia mais recente
+# aberto, os anteriores recolhidos, cada uma com os Destaques do PR de release e os commits agrupados por tipo
+# (scripts/release-notes.ts).
 on:
   push:
     branches: [master]

@@ -69,7 +69,7 @@ describe('releaseVersion', () => {
 });
 
 describe('releaseSection', () => {
-  it('opens with the version and date, then the highlights, the groups in order and the compare link', () => {
+  it('opens with the version and its PR, then the highlights, the groups in order and the compare link', () => {
     const section = releaseSection(
       release({
         highlights: 'O choliba agora mostra a versão.',
@@ -85,21 +85,19 @@ describe('releaseSection', () => {
       }),
       CONTEXT,
     );
-    const titles = [...section.matchAll(/^#{2,3} .+$/gm)].map(([line]) => line);
+    const titles = [...section.matchAll(/^#{3,4} .+$/gm)].map(([line]) => line);
 
     expect(titles).toEqual([
-      `## [0.0.1-dev.16+bbbbbbb](${REPO}/pull/46) - 2026-10-07`,
-      '### Novidades',
-      '### Correções',
-      '### Alterações',
-      '### Desempenho',
-      '### Documentação',
-      '### Outros',
+      `### [0.0.1-dev.16+bbbbbbb](${REPO}/pull/46) (#46)`,
+      '#### Novidades',
+      '#### Correções',
+      '#### Alterações',
+      '#### Desempenho',
+      '#### Documentação',
+      '#### Outros',
     ]);
-    expect(section).toContain(
-      `2026-10-07\n\nO choliba agora mostra a versão.\n\n### Novidades\n- **Breaking:** **x**: d`,
-    );
-    expect(section).toContain('### Alterações\n- **Breaking:** f');
+    expect(section).toContain(`(#46)\n\nO choliba agora mostra a versão.\n\n#### Novidades\n- **Breaking:** **x**: d`);
+    expect(section).toContain('#### Alterações\n- **Breaking:** f');
     expect(section).not.toContain('<details>');
     expect(section).toMatch(/\*\*Commits:\*\* \[`ccccccc\.\.\.bbbbbbb`\]\(.+\/compare\/c+\.\.\.b+\)$/);
   });
@@ -110,25 +108,43 @@ describe('releaseSection', () => {
       CONTEXT,
     );
 
-    expect(section).toContain(`## [0.0.1-dev.16+bbbbbbb](${REPO}/commit/${'b'.repeat(40)}) - 2026-10-07`);
+    expect(section).toContain(`### [0.0.1-dev.16+bbbbbbb](${REPO}/commit/${'b'.repeat(40)})\n`);
     expect(section).toContain('<summary>Interno: refatoração, testes, manutenção (3)</summary>');
-    expect(section).toContain('### Refatoração\n- c');
-    expect(section).not.toMatch(/^### (Novidades|Correções)/m);
+    expect(section).toContain('#### Refatoração\n- c');
+    expect(section).not.toMatch(/^#### (Novidades|Correções)/m);
   });
 });
 
 describe('releaseNotes', () => {
-  it('shows how to install, the newest release open and the older ones folded', () => {
-    const notes = releaseNotes([release({ number: 16 }), release({ number: 15 }), release({ number: 14 })], CONTEXT);
+  const day = (date: string, ...numbers: number[]): readonly Release[] =>
+    numbers.map((number) => release({ date, number, pullRequest: number }));
+
+  it('shows how to install, then the releases by day: the newest day open, every older day folded', () => {
+    const notes = releaseNotes(
+      [...day('2026-10-07', 17, 16), ...day('2026-10-06', 15, 14, 13), ...day('2026-10-04', 12)],
+      CONTEXT,
+    );
+    const outline = [...notes.matchAll(/^(?:## .+|### \[[^\]]+\]|<summary>.+<\/summary>)/gm)].map(([line]) => line);
 
     expect(notes).toContain(`bun add --trust ${REPO}/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz`);
-    expect(notes.indexOf('0.0.1-dev.16+')).toBeLessThan(notes.indexOf('<summary>Atualizações anteriores (2)'));
-    expect(notes.indexOf('<summary>Atualizações anteriores (2)')).toBeLessThan(notes.indexOf('0.0.1-dev.15+'));
+    expect(outline).toEqual([
+      '## 2026-10-07',
+      '### [0.0.1-dev.17+bbbbbbb]',
+      '### [0.0.1-dev.16+bbbbbbb]',
+      '<summary>2026-10-06 · 0.0.1-dev.13 a 0.0.1-dev.15</summary>',
+      '### [0.0.1-dev.15+bbbbbbb]',
+      '### [0.0.1-dev.14+bbbbbbb]',
+      '### [0.0.1-dev.13+bbbbbbb]',
+      '<summary>2026-10-04 · 0.0.1-dev.12</summary>',
+      '### [0.0.1-dev.12+bbbbbbb]',
+    ]);
     expect(notes.endsWith('</details>\n')).toBe(true);
   });
 
-  it('has no folded part with a single release, and only the introduction with none', () => {
-    expect(releaseNotes([release()], CONTEXT)).not.toContain('Atualizações anteriores');
+  it('names the two versions of a two-release day, and has only the introduction with no release', () => {
+    const notes = releaseNotes([...day('2026-10-07', 3), ...day('2026-10-06', 2, 1)], CONTEXT);
+
+    expect(notes).toContain('<summary>2026-10-06 · 0.0.1-dev.1 e 0.0.1-dev.2</summary>');
     expect(releaseNotes([], CONTEXT)).not.toContain('## ');
   });
 });
