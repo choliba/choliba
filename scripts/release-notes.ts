@@ -1,129 +1,86 @@
 /**
- * Notas da pré-release: uma seção por merge de release na master (o mais novo primeiro), com os commits que cada
- * um trouxe da develop agrupados por tipo do Conventional Commits. Uso: `bun scripts/release-notes.ts [COMMIT]`
- * (padrão HEAD); o CI passa `GITHUB_REPOSITORY` e `TAG`.
+ * Notas da pré-release, refeitas do git a cada merge na master. Uso: `bun scripts/release-notes.ts [COMMIT]` (padrão
+ * HEAD); o CI passa `GITHUB_REPOSITORY`, `TAG` e `GH_TOKEN`. Os "Destaques" vêm do PR de release, pelo `gh`: sem ele,
+ * as notas saem sem eles e um aviso vai para o stderr.
  */
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
+import { highlightsOf, releaseNotes, type Commit, type Release } from './libs/release-notes';
 
 const repoRoot = join(import.meta.dirname, '..');
 const repository = process.env['GITHUB_REPOSITORY'] ?? 'jacksonbicalho/choliba';
 const tag = process.env['TAG'] ?? 'v0.0.1-dev';
-const repoUrl = `https://github.com/${repository}`;
 
-/** Separa os campos de um `git log --format` (o caractere de controle US não aparece em mensagens). */
+/** Separam campos e registros de um `git log --format` (caracteres de controle, que não aparecem em mensagens). */
 const FIELD = '\x1f';
+const RECORD = '\x1e';
 
-/** As seções, na ordem em que aparecem, e os tipos de commit de cada uma. */
-const SECTIONS: readonly (readonly [string, readonly string[]])[] = [
-  ['Novidades', ['feat']],
-  ['Correções', ['fix']],
-  ['Performance', ['perf']],
-  ['Refatoração', ['refactor']],
-  ['Docs', ['docs']],
-  ['Testes', ['test']],
-  ['Manutenção', ['chore', 'build', 'ci', 'style', 'revert']],
-];
-/** A seção dos assuntos fora do Conventional Commits. */
-const OTHERS = 'Outros';
-
-/** `tipo(escopo)!: descrição`, com escopo e `!` opcionais. */
-const CONVENTIONAL = /^([a-z]+)(?:\(([^)]+)\))?(!)?: (.+)$/;
-
-interface Commit {
-  readonly hash: string;
-  readonly subject: string;
-}
-
-interface Release {
-  readonly hash: string;
-  readonly previous: string;
-  readonly date: string;
-  readonly pullRequest: string | undefined;
-  readonly commits: readonly Commit[];
+function run(command: string, args: readonly string[]): { readonly status: number; readonly stdout: string } {
+  const result = spawnSync(command, [...args], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1024 * 1024 * 64 });
+  return { status: result.status ?? 1, stdout: result.stdout };
 }
 
 function git(args: readonly string[]): string {
-  const result = spawnSync('git', [...args], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1024 * 1024 * 64 });
-  if (result.status !== 0) {
-    throw new Error(`git ${args.join(' ')} falhou: ${result.stderr.trim()}`);
-  }
+  const result = run('git', args);
+  if (result.status !== 0) throw new Error(`git ${args.join(' ')} falhou`);
   return result.stdout;
 }
 
-function lines(output: string): readonly string[] {
-  return output.split('\n').filter((line) => line !== '');
+function records(output: string): readonly (readonly string[])[] {
+  return output
+    .split(RECORD)
+    .map((record) => record.replace(/^\n/, ''))
+    .filter((record) => record !== '')
+    .map((record) => record.split(FIELD));
 }
 
-/** Os commits que o merge `hash` trouxe: os do segundo pai que o primeiro ainda não tinha, sem merges. */
+/** Os commits que um merge trouxe: os do segundo pai que o primeiro ainda não tinha, sem merges. */
 function mergedCommits(previous: string, merged: string): readonly Commit[] {
-  return lines(git(['log', '--no-merges', `--format=%H${FIELD}%s`, `${previous}..${merged}`])).map((line) => {
-    const [hash = '', subject = ''] = line.split(FIELD);
-    return { hash, subject };
-  });
+  const output = git(['log', '--no-merges', `--format=%H${FIELD}%s${FIELD}%b${RECORD}`, `${previous}..${merged}`]);
+  return records(output).map(([hash = '', subject = '', body = '']) => ({ hash, subject, body }));
 }
 
-/** Cada merge de primeiro pai até `commit`: as releases, a mais nova primeiro. */
+let warned = false;
+
+/** Os "## Destaques" do PR de release, lidos pelo `gh`; sem `gh` (ou sem acesso), nenhum, com um aviso só. */
+function highlights(pullRequest: number): string | undefined {
+  const result = run('gh', ['api', `repos/${repository}/pulls/${String(pullRequest)}`, '--jq', '.body']);
+  if (result.status === 0) return highlightsOf(result.stdout);
+  if (!warned) process.stderr.write('Sem acesso ao gh: as notas saem sem os Destaques dos PRs de release.\n');
+  warned = true;
+  return undefined;
+}
+
+/** Cada merge de primeiro pai até `commit`: as releases, a mais nova primeiro, numeradas a partir da mais antiga. */
 function releases(commit: string): readonly Release[] {
-  const format = ['%H', '%P', '%ad', '%s'].join(FIELD);
-  const merges = git(['log', '--first-parent', '--merges', '--date=short', `--format=${format}`, commit]);
-  return lines(merges).map((line) => {
-    const [hash = '', parents = '', date = '', subject = ''] = line.split(FIELD);
+  const format = ['%H', '%P', '%ad', '%s'].join(FIELD) + RECORD;
+  const merges = records(git(['log', '--first-parent', '--merges', '--date=short', `--format=${format}`, commit]));
+  return merges.map(([hash = '', parents = '', date = '', subject = ''], index) => {
     const [previous = '', merged = ''] = parents.split(' ');
-    const pullRequest = /^Merge pull request #(\d+)/.exec(subject)?.[1];
-    return { hash, previous, date, pullRequest, commits: mergedCommits(previous, merged) };
+    const found = /^Merge pull request #(\d+)/.exec(subject)?.[1];
+    const pullRequest = found === undefined ? undefined : Number(found);
+    return {
+      hash,
+      previous,
+      date,
+      number: merges.length - index,
+      pullRequest,
+      highlights: pullRequest === undefined ? undefined : highlights(pullRequest),
+      commits: mergedCommits(previous, merged),
+    };
   });
 }
 
-/** O item de um commit e a seção em que ele entra. */
-function entry(commit: Commit): readonly [string, string] {
-  const short = commit.hash.slice(0, 7);
-  const match = CONVENTIONAL.exec(commit.subject);
-  if (match === null) {
-    return [OTHERS, `- ${commit.subject} (\`${short}\`)`];
-  }
-  const [, type = '', scope, breaking, description = ''] = match;
-  const section = SECTIONS.find(([, types]) => types.includes(type))?.[0] ?? OTHERS;
-  const prefix = scope === undefined ? '' : `**${scope}**: `;
-  const suffix = breaking === undefined ? '' : ' **BREAKING**';
-  return [section, `- ${prefix}${description}${suffix} (\`${short}\`)`];
-}
+const manifest = JSON.parse(readFileSync(join(repoRoot, 'packages', 'choliba', 'package.json'), 'utf8')) as {
+  readonly version: string;
+};
 
-/** As seções de uma release, na ordem de `SECTIONS`, sem as vazias. */
-function sections(commits: readonly Commit[]): readonly string[] {
-  const entries = commits.map(entry);
-  return [...SECTIONS.map(([title]) => title), OTHERS]
-    .map((title) => [title, entries.filter(([section]) => section === title).map(([, item]) => item)] as const)
-    .filter(([, items]) => items.length > 0)
-    .map(([title, items]) => [`### ${title}`, ...items].join('\n'));
-}
-
-function heading(release: Release): string {
-  const short = release.hash.slice(0, 7);
-  const label =
-    release.pullRequest === undefined
-      ? `[\`${short}\`](${repoUrl}/commit/${release.hash})`
-      : `[#${release.pullRequest}](${repoUrl}/pull/${release.pullRequest})`;
-  return `## ${release.date} — ${label}`;
-}
-
-function compare(release: Release): string {
-  const range = `${release.previous.slice(0, 7)}...${release.hash.slice(0, 7)}`;
-  return `**Commits:** [\`${range}\`](${repoUrl}/compare/${release.previous}...${release.hash})`;
-}
-
-function notes(commit: string): string {
-  const intro = [
-    'Pré-release atualizada a cada merge na `master`. Para instalar:',
-    '',
-    '```',
-    `bun add ${repoUrl}/releases/download/${tag}/choliba-${tag.replace(/^v/, '')}.tgz`,
-    '```',
-  ].join('\n');
-  const history = releases(commit).map((release) =>
-    [heading(release), ...sections(release.commits), compare(release)].join('\n\n'),
-  );
-  return [intro, ...history].join('\n\n') + '\n';
-}
-
-process.stdout.write(notes(process.argv[2] ?? 'HEAD'));
+process.stdout.write(
+  releaseNotes(releases(process.argv[2] ?? 'HEAD'), {
+    repoUrl: `https://github.com/${repository}`,
+    base: manifest.version,
+    tag,
+  }),
+);
