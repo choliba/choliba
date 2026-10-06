@@ -121,6 +121,66 @@ describe('scaffoldWorkspace', () => {
   });
 });
 
+/** The `.env` reference page: the variables a workspace `.env` may set. */
+const ENV_REFERENCE = path.resolve(__dirname, '../../../../../docs/referencia/env.md');
+
+/** Every `CHOL_*` the template assigns, commented (`# CHOL_X=`) or not, in order. */
+function templateVariables(env: string): readonly string[] {
+  return [...env.matchAll(/^(?:# )?(CHOL_[A-Z_]+)=/gm)].map((match) => match[1] ?? '');
+}
+
+/** Every `CHOL_*` named in the first column of the reference table. */
+function documentedVariables(reference: string): readonly string[] {
+  const firstColumns = [...reference.matchAll(/^\| ([^|]+)\|/gm)].map((match) => match[1] ?? '');
+  return firstColumns.flatMap((column) => [...column.matchAll(/`(CHOL_[A-Z_]+)`/g)].map((match) => match[1] ?? ''));
+}
+
+describe('the workspace templates', () => {
+  const env = fs.readFileSync(path.join(workspaceTemplatesDir(), 'env'), 'utf8');
+
+  it('names each variable of the .env once', () => {
+    const variables = templateVariables(env);
+
+    expect(variables.filter((name, index) => variables.indexOf(name) !== index)).toEqual([]);
+  });
+
+  it('names exactly the variables the .env reference documents', () => {
+    const documented = documentedVariables(fs.readFileSync(ENV_REFERENCE, 'utf8'));
+
+    expect([...templateVariables(env)].sort()).toEqual([...documented].sort());
+  });
+
+  it('leaves CHOL_GLOBAL_DIR and CHOL_PROJECTS_DIR uncommented and empty, for setup to fill', () => {
+    expect(env).toMatch(/^CHOL_GLOBAL_DIR=$/m);
+    expect(env).toMatch(/^CHOL_PROJECTS_DIR=$/m);
+  });
+
+  it('ends each group of variables with a blank line before the next comment', () => {
+    const lines = env.split('\n');
+    const glued = lines.filter(
+      (line, index) => /^(?:# )?CHOL_[A-Z_]+=/.test(line) && /^# (?!CHOL_)/.test(lines[index + 1] ?? ''),
+    );
+
+    expect(glued).toEqual([]);
+  });
+
+  it('ignores what a workspace generates and the test data of its projects, nothing of the choliba repository', () => {
+    const gitignore = fs.readFileSync(path.join(workspaceTemplatesDir(), 'gitignore'), 'utf8').split('\n');
+
+    expect(gitignore).toEqual(
+      expect.arrayContaining([
+        'node_modules/',
+        '.env',
+        '.cache/',
+        '.playwright-cli/',
+        'projects/*/ticket-runs/',
+        'projects/*/.env.json',
+      ]),
+    );
+    expect(gitignore).not.toContain('plans/');
+  });
+});
+
 describe('createExample', () => {
   it('creates the one-page application and a ready test project with its spec and ticket', () => {
     withDir((root) => {
