@@ -1,7 +1,8 @@
 /**
- * The release notes, from data already read from git: one section per release merge on master, the newest open and
- * the older ones folded, following Keep a Changelog (version, ISO date, linkable, newest first) and Common Changelog
- * (`**Breaking:**` first in its group, maintenance out of the way). No git and no I/O here, so it can be tested.
+ * The release notes, from data already read from git: the releases (one per release merge on master) grouped by
+ * day, the newest day open and every older one folded, following Keep a Changelog (version, ISO date, linkable,
+ * newest first) and Common Changelog (`**Breaking:**` first in its group, maintenance out of the way). No git and no
+ * I/O here, so it can be tested.
  */
 
 export interface Commit {
@@ -121,7 +122,7 @@ function grouped(commits: readonly Commit[], titles: readonly string[], repoUrl:
 }
 
 function render(groups: readonly Grouped[]): string {
-  return groups.map(({ title, entries }) => [`### ${title}`, ...entries].join('\n')).join('\n\n');
+  return groups.map(({ title, entries }) => [`#### ${title}`, ...entries].join('\n')).join('\n\n');
 }
 
 /** `0.0.1-dev.15+bbb4cdb`: what `choliba --version` prints for the build of this release. */
@@ -129,12 +130,12 @@ export function releaseVersion(release: Release, base: string): string {
   return `${base}.${String(release.number)}+${release.hash.slice(0, 7)}`;
 }
 
+/** `### [0.0.1-dev.15+bbb4cdb](…/pull/44) (#44)`: the version, linked to the release PR (or to the commit). */
 function heading(release: Release, context: NotesContext): string {
-  const target =
-    release.pullRequest === undefined
-      ? `${context.repoUrl}/commit/${release.hash}`
-      : `${context.repoUrl}/pull/${String(release.pullRequest)}`;
-  return `## [${releaseVersion(release, context.base)}](${target}) - ${release.date}`;
+  const version = releaseVersion(release, context.base);
+  if (release.pullRequest === undefined) return `### [${version}](${context.repoUrl}/commit/${release.hash})`;
+  const pullRequest = String(release.pullRequest);
+  return `### [${version}](${context.repoUrl}/pull/${pullRequest}) (#${pullRequest})`;
 }
 
 function compare(release: Release, repoUrl: string): string {
@@ -167,7 +168,35 @@ export function releaseSection(release: Release, context: NotesContext): string 
     .join('\n\n');
 }
 
-/** The whole notes: how to install, the newest release open and every older one folded. */
+/** The releases of each day, in the order given (newest first). */
+function byDay(releases: readonly Release[]): readonly (readonly Release[])[] {
+  const days: Release[][] = [];
+  for (const release of releases) {
+    const day = days.at(-1);
+    if (day?.[0]?.date === release.date) day.push(release);
+    else days.push([release]);
+  }
+  return days;
+}
+
+/** `0.0.1-dev.14 e 0.0.1-dev.15`, `0.0.1-dev.11 a 0.0.1-dev.13`: the versions of a day, oldest first. */
+function versionRange(day: readonly Release[], base: string): string {
+  const numbers = day.map((release) => `${base}.${String(release.number)}`).reverse();
+  const [first = '', ...rest] = numbers;
+  const last = rest.at(-1);
+  if (last === undefined) return first;
+  return `${first} ${rest.length === 1 ? 'e' : 'a'} ${last}`;
+}
+
+/** A day: `## date` and its releases, or folded under a summary with the date and its versions. */
+function daySection(day: readonly Release[], context: NotesContext, open: boolean): string {
+  const date = day[0]?.date ?? '';
+  const releases = day.map((release) => releaseSection(release, context)).join('\n\n');
+  if (open) return `## ${date}\n\n${releases}`;
+  return folded(`${date} · ${versionRange(day, context.base)}`, releases);
+}
+
+/** The whole notes: how to install, the newest day open and every older day folded. */
 export function releaseNotes(releases: readonly Release[], context: NotesContext): string {
   const asset = `choliba-${context.tag.replace(/^v/, '')}.tgz`;
   const intro = [
@@ -179,18 +208,8 @@ export function releaseNotes(releases: readonly Release[], context: NotesContext
     '',
     'A versão instalada (`bunx choliba --version`) é a do título de cada atualização abaixo.',
   ].join('\n');
-  const [latest, ...older] = releases;
-  const sections = [
-    intro,
-    latest === undefined ? undefined : releaseSection(latest, context),
-    older.length === 0
-      ? undefined
-      : folded(
-          `Atualizações anteriores (${String(older.length)})`,
-          older.map((release) => releaseSection(release, context)).join('\n\n'),
-        ),
-  ];
-  return `${sections.filter((section): section is string => section !== undefined).join('\n\n')}\n`;
+  const days = byDay(releases).map((day, index) => daySection(day, context, index === 0));
+  return `${[intro, ...days].join('\n\n')}\n`;
 }
 
 /** The `## Destaques` section of a release PR body, up to the next `## ` heading; `undefined` when it has none. */
