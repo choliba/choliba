@@ -94,6 +94,21 @@ describe('claudeProvider.buildArgs', () => {
     ]);
   });
 
+  it('never gives the session a subagent tool, whatever the agent may do', () => {
+    const sessions = [
+      fakeRequest({ policy: 'read-only' }),
+      fakeRequest({ policy: 'read-only', agent: fakeAgent({ permissions: DECLARED }) }),
+      fakeRequest({ policy: 'edits', agent: fakeAgent({ permissions: DECLARED }) }),
+    ];
+
+    for (const request of sessions) {
+      const args = claudeProvider.buildArgs(request);
+      const tools = String(args.at(args.indexOf('--tools') + 1)).split(',');
+      expect(tools).not.toContain('Agent');
+      expect(tools).not.toContain('Task');
+    }
+  });
+
   it('gives an agent that declares nothing no tool at all, and no rules', () => {
     const args = claudeProvider.buildArgs(fakeRequest({ policy: 'read-only' }));
 

@@ -20,7 +20,8 @@ completo e o passo a passo estão em [Escrevendo um agente](../guias/escrever-um
 | `allow_without_ticket`            | não         | `false`             | `true` deixa a execução seguir sem `--type`/`--ticket`: com `ticket_types`, o ticket fica opcional; sem, deixa explícito que o agente não usa ticket.                                                                                                     |
 | `steps.<modo>.before` / `.after`  | não         | nenhum              | Ações do choliba antes e depois do agente, em cada modo (veja [Steps](#steps)).                                                                                                                                                                           |
 
-Regras de permissão: veja [Segurança](../conceitos/seguranca.md).
+Regras de permissão: veja [Segurança](../conceitos/seguranca.md). Delegar a um subagente não é uma permissão: é
+negado a todo agente, sem chave no `agent.yaml`.
 
 ## Ferramentas da run
 

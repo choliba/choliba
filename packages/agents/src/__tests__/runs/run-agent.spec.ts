@@ -284,6 +284,35 @@ describe('runAgent', () => {
     expect(spawnerHandle.kill).toHaveBeenCalled();
   });
 
+  it.each(['Agent', 'Task'])('stops the session and returns 1 when the agent calls %s, a subagent', async (tool) => {
+    const lines = eventLines([
+      { type: 'tool-call', id: 't1', name: tool, summary: 'investigar a falha' },
+      { type: 'text', text: 'late line' },
+      { type: 'done', isError: false, text: 'ok' },
+    ]);
+    const spawnerHandle = fakeSpawner({ stdout: streamFromChunks([lines]) });
+    const s = setup(spawnerHandle.spawner);
+
+    expect(await run(s)).toBe(1);
+    expect(s.stderr.chunks.join('')).toContain(
+      `✗ o agente tentou delegar a um subagente (${tool}); a execução foi interrompida: nenhum agente do choliba delega trabalho.\n`,
+    );
+    expect(s.stdout.chunks.join('')).not.toContain('late line');
+    expect(spawnerHandle.kill).toHaveBeenCalledWith('SIGTERM');
+  });
+
+  it('lets the agent call any other tool', async () => {
+    const lines = eventLines([
+      { type: 'tool-call', id: 't1', name: 'Read', summary: '/w/app/a.ts' },
+      { type: 'done', isError: false, text: 'ok' },
+    ]);
+    const spawnerHandle = fakeSpawner({ stdout: streamFromChunks([lines]) });
+    const s = setup(spawnerHandle.spawner);
+
+    expect(await run(s)).toBe(0);
+    expect(spawnerHandle.kill).not.toHaveBeenCalled();
+  });
+
   it('does not stop the session when the reported model is in agent.yaml#supported_models', async () => {
     const lines = eventLines([
       { type: 'init', model: 'sonnet-5', sessionId: 's1' },

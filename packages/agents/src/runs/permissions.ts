@@ -225,6 +225,13 @@ export interface RunPlace {
 }
 
 /**
+ * Said to every agent, whatever its permissions: no agent of choliba delegates. Enforced too: Claude's session
+ * has no subagent tool, and a call to one in any provider stops the run (`delegation-guard.ts`).
+ */
+const DELEGATION_LINE =
+  'You may not delegate: no subagents (Agent/Task tools), no parallel sessions, no other agent working for you. If you are stuck, stop and report.';
+
+/**
  * The permissions in words, for the prompt: the model reads what it may do from the same data the
  * provider enforces, so the two never disagree. `toolLines` describe the run tools (`runToolLines`).
  */
@@ -260,6 +267,7 @@ export function formatPermissions(
     '<permissions>',
     'Enforced by the command, not only asked: anything not allowed below is blocked. Relative paths are relative to the workspace root; paths ending in / cover everything under them.',
     ...body,
+    DELEGATION_LINE,
     '</permissions>',
   ].join('\n');
 }

@@ -23,7 +23,8 @@ permissões do `agent.yaml`.
 
 11. O choliba cria as ferramentas da run ao lado de `.cache/runs/<id>/`, e o provider roda nessa pasta vazia, com os
     dois prompts. O agente lê, grava, roda os comandos de `allow.execute` e as ferramentas da run e chama as tools
-    dos MCPs; em `plan` e `ask`, não grava nada.
+    dos MCPs; em `plan` e `ask`, não grava nada. Se ele chama um subagente, o choliba interrompe a execução (veja
+    [Segurança](seguranca.md)).
 
 **Fase 3: o choliba, depois do agente**
 

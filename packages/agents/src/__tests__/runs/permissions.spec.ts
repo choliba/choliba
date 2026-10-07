@@ -14,6 +14,9 @@ import {
   withoutTrailingSlash,
 } from '../../runs/permissions';
 
+const DELEGATION =
+  'You may not delegate: no subagents (Agent/Task tools), no parallel sessions, no other agent working for you. If you are stuck, stop and report.';
+
 const DECLARED = readAgentPermissions({
   allow: {
     read: ['src/'],
@@ -136,6 +139,7 @@ describe('formatPermissions', () => {
         '- in ./: git push',
         'Run each command exactly as listed, from where you are (a folder inside the workspace, where it works as is):',
         'chaining listed commands with && works, but any other part (cd, a pipe, a redirection, another program) gets the whole command refused.',
+        DELEGATION,
         '</permissions>',
       ].join('\n'),
     );
@@ -144,7 +148,7 @@ describe('formatPermissions', () => {
   it('ends with the run tools it is given, which alone are enough to allow something', () => {
     const place = { runDir: '/w/.cache/runs/x', root: '/w' };
     const text = formatPermissions(DECLARED, place, ['Tools: …', '- `x.delete <path…>`']);
-    expect(text.split('\n').slice(-3)).toEqual(['Tools: …', '- `x.delete <path…>`', '</permissions>']);
+    expect(text.split('\n').slice(-4)).toEqual(['Tools: …', '- `x.delete <path…>`', DELEGATION, '</permissions>']);
 
     const onlyTools = formatPermissions(NO_PERMISSIONS, place, ['Tools: …']);
     expect(onlyTools).not.toContain('Nothing is allowed');
@@ -153,6 +157,11 @@ describe('formatPermissions', () => {
 
   it('says that nothing is allowed when nothing is declared', () => {
     expect(formatPermissions(NO_PERMISSIONS)).toContain('Nothing is allowed');
+  });
+
+  it('tells every agent it may not delegate, whatever it may do', () => {
+    expect(formatPermissions(NO_PERMISSIONS).split('\n').slice(-2)).toEqual([DELEGATION, '</permissions>']);
+    expect(formatPermissions(DECLARED)).toContain(DELEGATION);
   });
 });
 

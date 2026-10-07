@@ -17,6 +17,7 @@ import type { Theme } from '@choliba/core/theme';
 
 import { agentRenderOptions, formatProviderLine, renderEvent } from './render';
 import { applyRunTools } from './run-tools/run-tools';
+import { delegationMessage, delegationOf } from './delegation-guard';
 
 export interface RunAgentDeps {
   /**
@@ -123,10 +124,12 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
   const supportedModels = request.providerRequest.agent.supportedModels;
   const explicitModel = request.providerRequest.model;
   const modelCtx = { providerId, agentName: label };
-  const modelGuard = { triggered: false };
+  // Set once a guard stopped the session (a model outside agent.yaml, a call to a subagent): what comes after
+  // is not shown, and the run fails.
+  const stopGuard = { triggered: false };
 
-  const stopForModelGuard = (message: string): void => {
-    modelGuard.triggered = true;
+  const stop = (message: string): void => {
+    stopGuard.triggered = true;
     deps.stderr.write(`${message}\n`);
     session.kill('SIGTERM');
   };
@@ -137,14 +140,20 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
       return;
     }
     for (const agentEvent of parser.parseLine(event.raw)) {
-      if (modelGuard.triggered) {
+      if (stopGuard.triggered) {
         return;
+      }
+
+      const subagent = delegationOf(agentEvent);
+      if (subagent !== undefined) {
+        stop(delegationMessage(subagent));
+        continue;
       }
 
       if (agentEvent.type === 'init' && agentEvent.model !== undefined) {
         const error = validateReportedModel(agentEvent.model, supportedModels, modelCtx);
         if (error !== undefined) {
-          stopForModelGuard(error);
+          stop(error);
           continue;
         }
       }
@@ -155,7 +164,7 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
         !parser.sawInitWithModel &&
         isSubstantiveAgentEvent(agentEvent)
       ) {
-        stopForModelGuard(modelReportMissingMessage(supportedModels, modelCtx));
+        stop(modelReportMissingMessage(supportedModels, modelCtx));
         continue;
       }
 
@@ -195,7 +204,7 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
   deps.signals.off('SIGINT', onSigint);
   deps.signals.off('SIGTERM', onSigterm);
 
-  if (modelGuard.triggered) {
+  if (stopGuard.triggered) {
     return 1;
   }
 
