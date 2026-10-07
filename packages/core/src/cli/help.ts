@@ -20,11 +20,21 @@ function wrap(text: string, width: number): string[] {
   return lines;
 }
 
+/**
+ * A line wider than `HELP_WIDTH`, wrapped under its own indentation: an indented line (an example) keeps it, and
+ * its continuations go two columns further, so they read as part of it.
+ */
+function wrapIndented(line: string): string[] {
+  const indent = ' '.repeat(line.length - line.trimStart().length);
+  if (indent === '') return wrap(line, HELP_WIDTH);
+  return wrap(line, HELP_WIDTH - indent.length - 2).map((part, index) => `${indent}${index === 0 ? '' : '  '}${part}`);
+}
+
 /** Keeps the lines of a free-text block as they are, wrapping only the ones wider than `HELP_WIDTH`. */
 function paragraph(text: string): string {
   return text
     .split('\n')
-    .flatMap((line) => (line.length <= HELP_WIDTH ? [line] : wrap(line, HELP_WIDTH)))
+    .flatMap((line) => (line.length <= HELP_WIDTH ? [line] : wrapIndented(line)))
     .join('\n');
 }
 
