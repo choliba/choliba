@@ -13,7 +13,7 @@ const DOCS = fileURLToPath(new URL('..', import.meta.url));
 const REPOSITORY = 'https://github.com/choliba/choliba';
 
 export default defineConfig({
-  base: '/choliba/',
+  base: '/',
   lang: 'pt-BR',
   title: 'choliba',
   description: 'Agentes que transformam um pedido em ticket, testes e código, com permissões e portões.',
@@ -21,7 +21,7 @@ export default defineConfig({
   lastUpdated: true,
   // The index of `docs/` is its README, which GitHub shows; on the site it is the home.
   rewrites: { 'README.md': 'index.md' },
-  head: [['link', { rel: 'icon', type: 'image/svg+xml', href: '/choliba/owl-logo-choliba.svg' }]],
+  head: [['link', { rel: 'icon', type: 'image/svg+xml', href: '/owl-logo-choliba.svg' }]],
   markdown: {
     // The anchors GitHub makes, which the pages already link to (`cli.md#a-aplicação-do-projeto`).
     anchor: { slugify: githubSlug },
