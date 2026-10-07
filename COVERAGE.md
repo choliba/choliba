@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 07/10/2026 03:55:39 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 07/10/2026 04:14:12 — não editar manualmente.
 
 ## Resumo
 
@@ -89,10 +89,17 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba-cli</b> — 100.00% das linhas, 15 arquivos</summary>
+<summary>🟢 <b>packages/choliba-cli</b> — 100.00% das linhas, 22 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
+🟢|[src/agent/agent-options.ts](packages/choliba-cli/src/agent/agent-options.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agent/agent-yaml.ts](packages/choliba-cli/src/agent/agent-yaml.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agent/agent.command.ts](packages/choliba-cli/src/agent/agent.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agent/agent.help.ts](packages/choliba-cli/src/agent/agent.help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agent/agent.module.ts](packages/choliba-cli/src/agent/agent.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agent/agent.service.ts](packages/choliba-cli/src/agent/agent.service.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agent/create-agent.ts](packages/choliba-cli/src/agent/create-agent.ts)|100.00|100.00|100.00|100.00
 🟢|[src/app.module.ts](packages/choliba-cli/src/app.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/cli.help.ts](packages/choliba-cli/src/help/cli.help.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/help.module.ts](packages/choliba-cli/src/help/help.module.ts)|100.00|100.00|100.00|100.00
