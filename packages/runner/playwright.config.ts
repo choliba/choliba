@@ -64,6 +64,17 @@ if (targetProject) {
 }
 
 const ticket = targetProject ? process.env['QA_TICKET'] : undefined;
+
+// The tests of criteria a later ticket replaces (`substitui`) stay out of the run, except when that very ticket
+// runs on its own (`choliba tests <projeto>:<ticket>` warns about it). Playwright matches `<device> <file> <title>`.
+const retiredPatterns = targetProject
+  ? projects.retiredTestPatterns(
+      targetProject,
+      projects
+        .retiredCriteria(projectsDir, targetProject)
+        .filter((item) => process.env['QA_BATCH'] !== undefined || item.ticket !== ticket),
+    )
+  : [];
 const ticketRunsRoot = targetProject ? projects.resolveTicketRunsRoot(playwrightEnv) : undefined;
 
 let outputDir: string | undefined;
@@ -135,6 +146,7 @@ export default defineConfig({
   workers: process.env['CI'] ? 1 : 4,
   ...(outputDir ? { outputDir } : {}),
   ...(webServer ? { webServer } : {}),
+  ...(retiredPatterns.length > 0 ? { grepInvert: [...retiredPatterns] } : {}),
   reporter: [
     ticket ? [path.join(packageRoot, 'reporters', `detailed-ticket-reporter${EXT}`), ticketInfo] : ['list'],
     ['html', { outputFolder: reportFolderResolved, open: 'never' }],
