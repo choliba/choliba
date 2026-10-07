@@ -31,7 +31,8 @@ export abstract class AgentProvider {
   /**
    * Prepares the workspace right before the provider starts (cursor writes the agent's permissions into
    * `.cursor/cli.json`, since it has no flag for them) and returns the function that undoes it, which
-   * `runAgent` always calls once the session ends.
+   * `runAgent` always calls once the session ends. The undo also removes what the provider itself kept for
+   * the run dir outside the workspace (cursor's folders in `~/.cursor`).
    */
   prepareWorkspace?(request: ProviderRequest): () => void;
 

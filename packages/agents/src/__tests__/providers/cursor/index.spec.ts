@@ -5,6 +5,7 @@ import type { AgentDefinition } from '../../../agents/interfaces/agent.interface
 import type { AgentEvent } from '../../../runs/interfaces/event.interface';
 import type { ProviderRequest } from '../../../providers/interfaces/provider.interface';
 import { cursorProvider } from '../../helpers/providers';
+import { cursorStatePaths } from '../../../providers/cursor/cursor-state';
 import { PromptTooLargeError, MAX_ARG_BYTES } from '../../../runs/prompt';
 import { makeTmpDir } from '../../helpers/tmp';
 import { NO_PERMISSIONS, readAgentPermissions } from '../../../runs/permissions';
@@ -335,6 +336,14 @@ function cliJsonIn(dir: string): { allow: string[]; deny: string[] } {
   return written.permissions;
 }
 
+function restoreEnv(name: string, value: string | undefined): void {
+  if (value === undefined) {
+    Reflect.deleteProperty(process.env, name);
+    return;
+  }
+  process.env[name] = value;
+}
+
 describe('cursorProvider.prepareWorkspace', () => {
   it("writes the agent's permissions into its run dir for the run and removes them afterwards", () => {
     const tmp = makeTmpDir('cursor-prepare');
@@ -350,6 +359,30 @@ describe('cursorProvider.prepareWorkspace', () => {
       restore();
       expect(existsSync(join(tmp.path, '.cursor'))).toBe(false);
     } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('removes what cursor kept in its own folders for the run dir once the run is over', () => {
+    const tmp = makeTmpDir('cursor-prepare-state');
+    const previous = { data: process.env['CURSOR_DATA_DIR'], config: process.env['CURSOR_CONFIG_DIR'] };
+    try {
+      process.env['CURSOR_DATA_DIR'] = join(tmp.path, 'data');
+      process.env['CURSOR_CONFIG_DIR'] = join(tmp.path, 'config');
+      const runDir = join(tmp.path, 'run');
+      mkdirSync(runDir);
+      const restore = cursorProvider.prepareWorkspace(fakeRequest({ workspaceRoot: '/', runDir }));
+      const state = cursorStatePaths(runDir);
+      for (const path of state) {
+        mkdirSync(path, { recursive: true });
+      }
+
+      restore();
+
+      expect(state.filter((path) => existsSync(path))).toEqual([]);
+    } finally {
+      restoreEnv('CURSOR_DATA_DIR', previous.data);
+      restoreEnv('CURSOR_CONFIG_DIR', previous.config);
       tmp.cleanup();
     }
   });
