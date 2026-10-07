@@ -98,9 +98,14 @@ function runDryRun(
 function runAfter(command: CommandDefinition, mode: ExecutionMode, exitCode: number, deps: RunAgentsCliDeps): number {
   const failures = command.after?.({ repoRoot: deps.repoRoot, mode, exitCode }) ?? [];
   for (const failure of failures) {
-    deps.stderr.write(`${formatStepFailure(failure)}\n  O agente terminou com código ${String(exitCode)}.\n`);
+    deps.stderr.write(`${formatStepFailure(failure)}\n`);
   }
   const [first] = failures;
+  if (first !== undefined) {
+    // Once, after every failed step, so it does not read as part of the last one's output.
+    const blame = exitCode === 0 ? '; quem falhou foram os steps acima' : '';
+    deps.stderr.write(`O agente terminou com código ${String(exitCode)}${blame}.\n`);
+  }
   return exitCode !== 0 || first === undefined ? exitCode : stepExitCode(first);
 }
 
@@ -163,8 +168,8 @@ async function runCommand(parsed: RunArgs, deps: RunAgentsCliDeps): Promise<numb
     return 0;
   }
 
-  const projectVars = resolveProjectVars(parsed, agent, deps);
-  if (projectVars === undefined) {
+  const projectRun = resolveProjectVars(parsed, agent, deps);
+  if (projectRun === undefined) {
     return 1;
   }
 
@@ -187,7 +192,8 @@ async function runCommand(parsed: RunArgs, deps: RunAgentsCliDeps): Promise<numb
     parsed,
     deps,
     agentsDir,
-    vars: { ...projectVars, ...ticketVars(ticketTarget) },
+    vars: { ...projectRun.vars, ...ticketVars(ticketTarget) },
+    ...(projectRun.project === undefined ? {} : { project: projectRun.project }),
     ...taskAndMode,
     planContent: planResult.planContent,
     synthesized: !deps.commands.some((candidate) => candidate.name === parsed.command),

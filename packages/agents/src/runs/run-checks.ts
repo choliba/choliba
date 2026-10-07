@@ -12,6 +12,7 @@ import { readPlan } from '../plans/plan-store';
 import { validateExplicitModel } from '../providers/stream-json';
 import { absolutePermissions, canRead, outsideExecuteDirs } from './permissions';
 import type { RunAgentsCliDeps, RunArgs } from './run-context';
+import type { RunProject } from './run-project';
 import { errorMessage, projectsDir, toAbsolute } from './run-context';
 import { specContext } from './spec-context';
 import type { TicketTarget } from './ticket-run';
@@ -86,16 +87,17 @@ export function checkModelSupported(parsed: RunArgs, agent: AgentDefinition, dep
  * or declares `ticket_types`, see `AgentDefinition.projectRequired`), and, when given,
  * checked by `@choliba/projects` (`loadProjectSettings`: files, active environment, no
  * `CHANGE_ME`) — never by this CLI and never by the agent. A project that is not ready stops the run
- * here, with the resolver's message on `stderr`; the provider is never called.
+ * here, with the resolver's message on `stderr`; the provider is never called. Gives the project's variables
+ * and the project itself, which the prompt names (`formatProject`).
  */
 export function resolveProjectVars(
   parsed: RunArgs,
   agent: AgentDefinition,
   deps: RunAgentsCliDeps,
-): Readonly<Record<string, string>> | undefined {
+): { readonly vars: Readonly<Record<string, string>>; readonly project?: RunProject } | undefined {
   if (parsed.project === undefined) {
     if (!agent.projectRequired) {
-      return {};
+      return { vars: {} };
     }
     deps.stderr.write(
       `Project is required for "${agent.name}" (it uses a project variable or ticket_types): pass --project <name>. ${USAGE}\n`,
@@ -104,7 +106,10 @@ export function resolveProjectVars(
   }
   try {
     const settings = loadProjectSettings(projectsDir(deps), parsed.project);
-    return { PROJECT: settings.project, PROJECT_DIR: settings.projectPath, APP_DIR: settings.appDir };
+    return {
+      vars: { PROJECT: settings.project, PROJECT_DIR: settings.projectPath, APP_DIR: settings.appDir },
+      project: { name: settings.project, baseURL: settings.environment.baseURL, appDir: settings.appDir },
+    };
   } catch (error) {
     deps.stderr.write(`${errorMessage(error)}\n`);
     return undefined;

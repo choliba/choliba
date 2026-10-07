@@ -7,6 +7,7 @@ import {
   formatMcps,
   formatSections,
   modeInstruction,
+  runPlaceOf,
   wrapInstructions,
 } from '../../runs/prompt';
 import { NO_PERMISSIONS } from '../../runs/permissions';
@@ -110,6 +111,37 @@ describe('wrapInstructions', () => {
 
     expect(wrapped.indexOf('</permissions>')).toBeLessThan(wrapped.indexOf('<mcps>'));
     expect(wrapped.indexOf('</mcps>')).toBeLessThan(wrapped.indexOf('<system_role>'));
+  });
+
+  it('names the project after the permissions, only when the run has one', () => {
+    const place = { runDir: '/w/.cache/runs/x', root: '/w' };
+    const project = { name: 'site', baseURL: 'http://localhost:3000', appDir: '/code/site' };
+    const wrapped = wrapInstructions(fakeAgent(), '', { ...place, project });
+
+    expect(wrapped.indexOf('</permissions>')).toBeLessThan(wrapped.indexOf('<project name="site"'));
+    expect(wrapped.indexOf('</project>')).toBeLessThan(wrapped.indexOf('<system_role>'));
+    expect(wrapInstructions(fakeAgent(), '', place)).not.toContain('<project');
+  });
+
+  it('takes the place of a request: its run folder, workspace, policy and project, if any', () => {
+    const request = {
+      runDir: '/w/.cache/runs/x',
+      workspaceRoot: '/w',
+      policy: 'edits' as const,
+    };
+    const project = { name: 'site', baseURL: 'http://x', appDir: '/code/site' };
+
+    expect(runPlaceOf(request as Parameters<typeof runPlaceOf>[0])).toEqual({
+      runDir: '/w/.cache/runs/x',
+      root: '/w',
+      policy: 'edits',
+    });
+    expect(runPlaceOf({ ...request, project } as Parameters<typeof runPlaceOf>[0])).toEqual({
+      runDir: '/w/.cache/runs/x',
+      root: '/w',
+      policy: 'edits',
+      project,
+    });
   });
 
   it("opens with the order to use the agent's skills, when there is one", () => {
