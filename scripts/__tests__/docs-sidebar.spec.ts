@@ -14,6 +14,7 @@ describe('buildSidebar', () => {
   it('groups the pages by folder, in the order the index links them, then the others by name', () => {
     const pages = [
       { file: 'README.md', title: 'Documentação' },
+      { file: 'index.md', title: 'index.md' },
       { file: 'primeiros-passos.md', title: 'Primeiros passos' },
       { file: 'guias/a.md', title: 'Guia A' },
       { file: 'guias/b.md', title: 'O `b`' },

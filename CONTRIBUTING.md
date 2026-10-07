@@ -20,8 +20,10 @@ instala pelo caminho do arquivo.
 
 O site da documentação é gerado do `docs/` pelo [VitePress](https://vitepress.dev): `bun run docs:dev` o serve
 localmente, com recarga a cada mudança, e `bun run docs:build` o gera em `docs/.vitepress/dist` (o CI faz o mesmo em
-cada PR, então um link quebrado barra o merge). Uma página nova em `docs/` também entra na barra lateral, em
-`docs/.vitepress/config.ts`. O site público é <https://choliba.github.io/>: a cada push na `master`, `docs.yml` pede
+cada PR, então um link quebrado barra o merge). Uma página nova em `docs/` entra sozinha na barra lateral, na posição em que o
+`docs/README.md` (o índice) a cita e com o título do `# ` dela. A home do site (hero e cards) fica em `docs/.vitepress/home.ts`: o `bun run docs:home`, que o
+`docs:dev` e o `docs:build` chamam, a escreve em `docs/index.md`, ignorado pelo git, para o `docs/` do GitHub ter só
+documentação. O `docs/README.md` aparece como a página Índice. As cores e o tema ficam em `docs/.vitepress/theme/`. O site público é <https://choliba.github.io/>: a cada push na `master`, `docs.yml` pede
 ao repositório [`choliba.github.io`](https://github.com/choliba/choliba.github.io) que publique (via
 `repository_dispatch`).
 
