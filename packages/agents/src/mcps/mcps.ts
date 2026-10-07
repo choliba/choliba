@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { isAbsolute, join } from 'node:path';
 
 import type { McpDeclaration } from '../agents/interfaces/agent.interface';
 import { asString, isRecord } from '../shared/json';
@@ -77,6 +77,38 @@ export function expandMcpConfig(
   return expanded;
 }
 
+/** A server's `command` and `args`, as written (`raw`) and with the variables filled in (`expanded`), side by side. */
+function serverPaths(
+  raw: Readonly<Record<string, unknown>>,
+  expanded: Readonly<Record<string, unknown>>,
+): readonly { readonly raw: string; readonly path: string }[] {
+  const strings = (config: Readonly<Record<string, unknown>>): string[] => {
+    const args: unknown = config['args'];
+    const list: readonly unknown[] = Array.isArray(args) ? (args as readonly unknown[]) : [];
+    return [config['command'], ...list].map((item) => asString(item) ?? '');
+  };
+  const written = strings(raw);
+  // Filling in the variables keeps the shape: the same item, written and expanded, sits at the same index.
+  return strings(expanded).map((path, index) => ({ raw: String(written[index]), path }));
+}
+
+/**
+ * Fails when a server that runs a `command` points at a file that is not there (an absolute `command` or argument,
+ * like `${CHOL_MCP_APP_DIR}/dist/main.js` before the server is built): the provider would start the session
+ * without it, and the agent would look for its tools in vain. When the path came from a variable, says which.
+ */
+function assertServerFiles(
+  name: string,
+  raw: Readonly<Record<string, unknown>>,
+  expanded: Readonly<Record<string, unknown>>,
+): void {
+  const missing = serverPaths(raw, expanded).find(({ path }) => isAbsolute(path) && !existsSync(path));
+  if (missing === undefined) return;
+  const variable = /\$\{([A-Z0-9_]+)\}/.exec(missing.raw)?.[1];
+  const hint = variable === undefined ? '' : ` (veja ${variable} no .env)`;
+  throw new McpError(`o servidor do MCP ${name} não existe: ${missing.path}${hint}.`);
+}
+
 /**
  * Finds each MCP server an agent lists (`agent.yaml#mcps`) as `<mcpsDir>/<name>.json`, with its
  * `${NAME}` variables filled in from `vars`. A missing or malformed server, or a variable with no
@@ -95,7 +127,9 @@ export function resolveMcps(
     } catch {
       throw new McpError(`mcp "${name}" não encontrado: ${path} não existe.`);
     }
-    const config = expandMcpConfig(mcpConfig(text, path), vars, path);
+    const raw = mcpConfig(text, path);
+    const config = expandMcpConfig(raw, vars, path);
+    assertServerFiles(name, raw, config);
     return { name, config, path, ...(tools === undefined ? {} : { tools }) };
   });
 }
