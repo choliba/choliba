@@ -89,6 +89,17 @@ describe('parseCursorToolCall', () => {
     expect(cursorToolName('readToolCall')).toBe('Read');
     expect(cursorToolName('semSearch')).toBe('SemSearch');
   });
+
+  it('names a subagent call Task, which the run stops on', () => {
+    const started = {
+      type: 'tool_call',
+      subtype: 'started',
+      call_id: 'c1',
+      tool_call: { taskToolCall: { args: { description: 'investigar a falha' } } },
+    };
+
+    expect(parseCursorToolCall(started)).toEqual([{ type: 'tool-call', id: 'c1', name: 'Task', summary: '' }]);
+  });
 });
 
 describe('cursor plan call', () => {

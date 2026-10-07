@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 06/10/2026 21:34:52 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 06/10/2026 22:15:22 — não editar manualmente.
 
 ## Resumo
 
@@ -17,7 +17,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 59 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 60 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -53,6 +53,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/providers/register-agent-provider.ts](packages/agents/src/providers/register-agent-provider.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/stream-json.ts](packages/agents/src/providers/stream-json.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/agent-detail.ts](packages/agents/src/runs/agent-detail.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/delegation-guard.ts](packages/agents/src/runs/delegation-guard.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/dry-run.ts](packages/agents/src/runs/dry-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/permissions.ts](packages/agents/src/runs/permissions.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/prompt.ts](packages/agents/src/runs/prompt.ts)|100.00|100.00|100.00|100.00

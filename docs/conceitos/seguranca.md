@@ -22,6 +22,10 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
   choliba: é um script que ele cria ao lado da pasta da execução, libera só para aquela sessão, nega para escrita e
   apaga no fim. O apagar resolve cada caminho antes de agir e recusa o que sai de `allow.delete`. Veja
   [Ferramentas da run](../referencia/agent-yaml.md#ferramentas-da-run).
+- **Nenhum agente delega.** Nenhum agente chama um subagente nem põe outro agente para trabalhar por ele, e isso não
+  se configura. O prompt de todo agente diz isso. No Claude, a ferramenta de subagente (`Agent`) nem existe na
+  sessão. O Cursor não tem permissão que a tire, então o choliba interrompe a execução no primeiro `Task`, com
+  código 1.
 - **`steps` não passam pelas permissões.** Os passos são executados pelo choliba, fora da sessão do modelo: um
   passo pode fazer o que o modelo não pode (o `docs-updater` proíbe o modelo de rodar o Prettier e o roda no
   `steps.execute.after`). Veja [Steps](../referencia/agent-yaml.md#steps).
