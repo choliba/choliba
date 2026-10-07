@@ -230,6 +230,44 @@ describe('runTests', () => {
     });
   });
 
+  it("prepares the project's application once, before the tickets of a batch run", async () => {
+    await withProject(async (projectsDir, cwd) => {
+      writeProject(projectsDir, 'demo', [
+        { suffix: 'T-01', specs: ['a.spec.ts'] },
+        { suffix: 'T-02', specs: ['b.spec.ts'] },
+      ]);
+      fs.writeFileSync(
+        path.join(projectsDir, 'demo', 'config.json'),
+        JSON.stringify({
+          name: 'Demo',
+          envs: [{ nome: 'development', baseURL: 'http://localhost/', appDir: '/app', setup: ['bun install'] }],
+        }),
+      );
+      const setups: string[] = [];
+      const runs: string[][] = [];
+
+      const result = await runTests({
+        ...TEST_ROOTS,
+        argv: ['demo'],
+        cwd,
+        stdinIsTTY: false,
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: projectsDir }),
+        spawnSyncFn: (command, _args, options) => {
+          setups.push(`${command} @ ${options.cwd}`);
+          return { status: 0 };
+        },
+        spawnPlaywright: (args) => {
+          runs.push(args);
+          return 0;
+        },
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(setups).toEqual(['bun install @ /app']);
+      expect(runs).toHaveLength(2);
+    });
+  });
+
   it('runs all tickets when only the project is given', async () => {
     await withProject(async (projectsDir, cwd) => {
       writeProject(projectsDir, 'demo', [

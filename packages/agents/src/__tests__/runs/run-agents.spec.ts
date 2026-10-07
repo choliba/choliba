@@ -562,6 +562,22 @@ describe('runAgentsCli — --project', () => {
     });
   });
 
+  it('tells any agent run on a project where its application is, and denies it the installed dependencies', async () => {
+    await withProjects(async (projectsDir) => {
+      const { deps, stdout } = harness([], { config: { CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: projectsDir } });
+
+      expect(
+        await runAgentsCli(
+          ['with-project', '--agents-dir', FIXTURES, '--project', 'ready', '--dry-run', '--show-prompt'],
+          deps,
+        ),
+      ).toBe(0);
+      const appDir = join(projectsDir, 'ready', 'app');
+      expect(stdout.chunks.join('')).toContain(`<project name="ready" baseURL="http://ready.test" appDir="${appDir}">`);
+      expect(dryRunArgv(stdout)).toContain(`Write(/${appDir}/node_modules/**)`);
+    });
+  });
+
   it('refuses --project for an agent that does not act on a project, even next to --help', async () => {
     const { deps, stdout, stderr } = harness([]);
 
@@ -1133,10 +1149,13 @@ describe('runAgentsCli — run', () => {
         [
           '✗ execute.after.success 1/1 falhou — run: bunx choliba tests x (código 3)',
           '  CA-01 falhou',
-          '  O agente terminou com código 0.',
+          '✗ execute.after.success 1/1 falhou — run: bunx choliba tests x',
+          '  CA-01 falhou',
+          'O agente terminou com código 0; quem falhou foram os steps acima.',
+          '',
         ].join('\n'),
       );
-      expect(stderr.chunks.join('')).toContain('✗ execute.after.success 1/1 falhou — run: bunx choliba tests x\n');
+      expect(stderr.chunks.join('').match(/O agente terminou/g)).toHaveLength(1);
     } finally {
       tmp.cleanup();
     }
@@ -1147,12 +1166,13 @@ describe('runAgentsCli — run', () => {
     try {
       const failing = `${JSON.stringify({ type: 'result', is_error: true, result: 'boom' })}\n`;
       const after = jest.fn(() => [failedStep(3)]);
-      const { deps } = harness(claudeStdout(failing), { repoRoot: tmp.path, commands: [syncDocs(after)] });
+      const { deps, stderr } = harness(claudeStdout(failing), { repoRoot: tmp.path, commands: [syncDocs(after)] });
 
       const exitCode = await runAgentsCli(['sync-docs', '--agents-dir', FIXTURES], deps);
 
       expect(exitCode).not.toBe(0);
       expect(exitCode).not.toBe(3);
+      expect(stderr.chunks.join('')).toContain(`O agente terminou com código ${String(exitCode)}.\n`);
       expect(after).toHaveBeenCalledWith({ repoRoot: tmp.path, mode: 'execute', exitCode });
     } finally {
       tmp.cleanup();

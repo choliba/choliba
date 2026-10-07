@@ -49,13 +49,16 @@ function argAt(args: readonly string[], index: number, usage: string): string {
 /** The lines of a failed step's output worth showing: the last ones, where the reason usually is. */
 const OUTPUT_TAIL_LINES = 20;
 
-/** The end of what a command printed, its stdout then its stderr, without blank ends. */
+/** The end of what a command printed, its stdout then its stderr, without blank ends; says how much it left out. */
 function outputTail(...outputs: readonly string[]): string {
-  const text = outputs
+  const lines = outputs
     .map((output) => output.trim())
     .filter((output) => output !== '')
-    .join('\n');
-  return text.split('\n').slice(-OUTPUT_TAIL_LINES).join('\n');
+    .join('\n')
+    .split('\n');
+  const omitted = lines.length - OUTPUT_TAIL_LINES;
+  const tail = lines.slice(-OUTPUT_TAIL_LINES);
+  return (omitted > 0 ? [`… (${String(omitted)} linhas antes)`, ...tail] : tail).join('\n');
 }
 
 /** A `run` whose command exited with a status other than 0 (`undefined` when a signal ended it). */

@@ -113,6 +113,26 @@ describe('loadProjectSettings', () => {
     });
   });
 
+  it('keeps how the environment prepares and starts its application', () => {
+    const env = { ...ENV, setup: ['bun install', 'bun run build'], start: 'bun run dev' };
+    withProject({ envs: [env] }, { development: {} }, (projectsDir) => {
+      expect(loadProjectSettings(projectsDir, 'demo').environment).toEqual(env);
+    });
+  });
+
+  it('refuses a setup or start that still says CHANGE_ME', () => {
+    expectFailure(
+      { envs: [{ ...ENV, setup: ['bun install', PLACEHOLDER_VALUE], start: PLACEHOLDER_VALUE }] },
+      { development: {} },
+      'envs[development].start, ',
+    );
+    expectFailure(
+      { envs: [{ ...ENV, setup: [PLACEHOLDER_VALUE] }] },
+      { development: {} },
+      'envs[development].setup[0]',
+    );
+  });
+
   it('asks for .env.json, pointing at .env.example.json, when only config.json exists', () => {
     withProject({ envs: [ENV] }, undefined, (projectsDir, projectPath) => {
       expect(() => loadProjectSettings(projectsDir, 'demo')).toThrow(
@@ -147,6 +167,10 @@ describe('loadProjectSettings', () => {
       {},
       'envs[d].appDir é obrigatório',
     ],
+    ['a setup that is not a list', { envs: [{ ...ENV, setup: 'bun install' }] }, {}, 'envs[development].setup precisa'],
+    ['a setup with a blank command', { envs: [{ ...ENV, setup: ['bun install', ' '] }] }, {}, '.setup precisa'],
+    ['a start that is not text', { envs: [{ ...ENV, start: ['bun', 'dev'] }] }, {}, 'envs[development].start precisa'],
+    ['a blank start', { envs: [{ ...ENV, start: '' }] }, {}, 'envs[development].start precisa'],
     [
       'an unknown fixed environment',
       { envs: [ENV], environment: 'prod' },

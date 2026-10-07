@@ -1,6 +1,8 @@
 import type { AgentDefinition, AgentSections, McpDeclaration } from '../agents/interfaces/agent.interface';
 import type { ExecutionMode } from '../agents/interfaces/command.interface';
+import type { ProviderRequest } from '../providers/interfaces/provider.interface';
 import { type RunPlace, formatPermissions } from './permissions';
+import { formatProject } from './run-project';
 import { runToolLines } from './run-tools/run-tools';
 
 /**
@@ -72,17 +74,29 @@ export function formatMcps(mcps: readonly McpDeclaration[]): string {
 export function wrapInstructions(agent: AgentDefinition, skillsInstruction = '', place?: RunPlace): string {
   const attr = (value: string): string => value.replaceAll('"', '&quot;');
   const mcps = formatMcps(agent.mcps);
+  const project = formatProject(place?.project);
   return [
     `<agent_instructions id="${attr(agent.id)}" name="${attr(agent.displayName)}" version="${attr(agent.version)}" source="${attr(agent.sourcePath)}">`,
     ...(skillsInstruction === '' ? [] : [skillsInstruction, '']),
     formatPermissions(agent.permissions, place, runToolLines(agent.permissions, place)),
     '',
+    ...(project === '' ? [] : [project, '']),
     ...(mcps === '' ? [] : [mcps, '']),
     `Relative paths in the instructions below are relative to ${agent.dir}/.`,
     '',
     formatSections(agent.sections),
     '</agent_instructions>',
   ].join('\n');
+}
+
+/** Where a request runs, for `wrapInstructions`: its run folder, the workspace, its policy and its project. */
+export function runPlaceOf(request: ProviderRequest): RunPlace {
+  return {
+    runDir: request.runDir,
+    root: request.workspaceRoot,
+    policy: request.policy,
+    ...(request.project === undefined ? {} : { project: request.project }),
+  };
 }
 
 /**

@@ -60,15 +60,15 @@ function isSet(value: string | undefined): boolean {
 }
 
 /**
- * Color is for people at a terminal: off with `--no-color`, a non-empty `NO_COLOR` or `TERM=dumb`, and when
- * stdout is not a terminal; a non-empty `FORCE_COLOR` (other than `0`) turns it on even in a pipe.
+ * Color is for people at a terminal: off with `--no-color`, a non-empty `NO_COLOR`, `FORCE_COLOR=0` or
+ * `TERM=dumb`, and when stdout is not a terminal; any other non-empty `FORCE_COLOR` turns it on even in a pipe.
  */
 export function colorEnabled(settings: ColorSettings): boolean {
-  if (settings.noColorFlag || isSet(settings.env['NO_COLOR'])) {
+  const force = settings.env['FORCE_COLOR'];
+  if (settings.noColorFlag || isSet(settings.env['NO_COLOR']) || force === '0') {
     return false;
   }
-  const force = settings.env['FORCE_COLOR'];
-  if (isSet(force) && force !== '0') {
+  if (isSet(force)) {
     return true;
   }
   return settings.env['TERM'] !== 'dumb' && settings.isTTY;

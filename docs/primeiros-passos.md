@@ -118,6 +118,27 @@ pasta pessoal).
    Enquanto o `.env.json` não existir, o `check` marca o projeto com `✗`, e os agentes não rodam nele, nem com
    `--dry-run`.
 
+   Se a aplicação precisa de preparo ou de alguém que a suba para os testes, diga como no ambiente do
+   `projects/minha-app/config.json`. Os dois campos são opcionais:
+
+   ```json
+   {
+     "nome": "development",
+     "baseURL": "http://localhost:3000",
+     "appDir": "/home/voce/dev/minha-app",
+     "setup": ["bun install"],
+     "start": "bun run dev --port 3000",
+     "default": true
+   }
+   ```
+
+   - `setup`: comandos que o `choliba tests` roda em `appDir`, em ordem, antes de cada rodada de testes.
+   - `start`: o comando que sobe a aplicação. O `choliba tests` só o roda quando nada responde no `baseURL`, espera a
+     aplicação responder e a derruba no fim. Uma aplicação que você já subiu é usada como está.
+
+   Os agentes nunca sobem a aplicação. Sem `start`, quem sobe é você (veja
+   [Antes dos testes: a aplicação](referencia/cli.md#antes-dos-testes-a-aplicação)).
+
 4. Instale os três agentes do repositório do choliba. Cada um traz as skills e os MCPs que declara (as saídas
    completas estão em [Instalar agentes](guias/instalar-agentes.md#os-agentes-do-choliba)):
 
