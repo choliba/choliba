@@ -20,3 +20,5 @@ plans/
 # Site da documentação (VitePress)
 docs/.vitepress/cache
 docs/.vitepress/dist
+# A home do site, gerada de docs/.vitepress/home.ts (bun run docs:home)
+docs/index.md

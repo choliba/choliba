@@ -43,7 +43,8 @@ export function buildSidebar(readme: string, pages: readonly DocPage[]): readonl
     text,
     items: pages
       .filter((page) => path.posix.dirname(page.file) === (folder === '' ? '.' : folder))
-      .filter((page) => page.file !== 'README.md')
+      // The index (the "Índice" page) and the home are reached from the top bar, not listed as pages.
+      .filter((page) => page.file !== 'README.md' && page.file !== 'index.md')
       .toSorted((a, b) => rank(a.file) - rank(b.file) || a.file.localeCompare(b.file))
       .map((page) => ({ text: page.title.replaceAll('`', ''), link: `/${page.file.replace(/\.md$/, '')}` })),
   })).filter((section) => section.items.length > 0);
