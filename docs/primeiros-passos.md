@@ -132,12 +132,14 @@ pasta pessoal).
    }
    ```
 
-   - `setup`: comandos que o `choliba tests` roda em `appDir`, em ordem, antes de cada rodada de testes.
-   - `start`: o comando que sobe a aplicação. O `choliba tests` só o roda quando nada responde no `baseURL`, espera a
+   - `setup`: comandos que o choliba roda em `appDir`, em ordem, antes de cada rodada de testes e de cada execução
+     de agente.
+   - `start`: o comando que sobe a aplicação. O choliba só o roda quando nada responde no `baseURL`, espera a
      aplicação responder e a derruba no fim. Uma aplicação que você já subiu é usada como está.
 
-   Os agentes nunca sobem a aplicação. Sem `start`, quem sobe é você (veja
-   [Antes dos testes: a aplicação](referencia/cli.md#antes-dos-testes-a-aplicação)).
+   Os agentes nunca sobem a aplicação. Sem `start`, quem sobe é você, e um agente com a aplicação fora do ar não
+   roda (veja
+   [A aplicação do projeto](referencia/cli.md#a-aplicação-do-projeto)).
 
 4. Instale os três agentes do repositório do choliba. Cada um traz as skills e os MCPs que declara (as saídas
    completas estão em [Instalar agentes](guias/instalar-agentes.md#os-agentes-do-choliba)):

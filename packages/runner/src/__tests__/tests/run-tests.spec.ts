@@ -268,6 +268,33 @@ describe('runTests', () => {
     });
   });
 
+  it("stops before Playwright when the project's setup fails, saying which command", async () => {
+    await withProject(async (projectsDir, cwd) => {
+      writeProject(projectsDir, 'demo');
+      fs.writeFileSync(
+        path.join(projectsDir, 'demo', 'config.json'),
+        JSON.stringify({
+          name: 'Demo',
+          envs: [{ nome: 'development', baseURL: 'http://localhost/', appDir: '/app', setup: ['bun install'] }],
+        }),
+      );
+      const spawnPlaywright = jest.fn(() => 0);
+
+      await expect(
+        runTests({
+          ...TEST_ROOTS,
+          argv: ['demo'],
+          cwd,
+          stdinIsTTY: false,
+          loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: projectsDir }),
+          spawnSyncFn: () => ({ status: 7 }),
+          spawnPlaywright,
+        }),
+      ).rejects.toThrow('erro: a aplicação não ficou pronta: "bun install" saiu com código 7');
+      expect(spawnPlaywright).not.toHaveBeenCalled();
+    });
+  });
+
   it('runs all tickets when only the project is given', async () => {
     await withProject(async (projectsDir, cwd) => {
       writeProject(projectsDir, 'demo', [

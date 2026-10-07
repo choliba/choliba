@@ -1,8 +1,10 @@
+import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 
 import { formatHelp } from '@choliba/core/cli';
 import type { CommandSpec } from '@choliba/core/cli';
 import { CHOL_ROOT } from '@choliba/core/config';
+import { AppError, ensureApp, type ProjectSettings, type RunningApp } from '@choliba/projects';
 
 import { listAgents } from '../agents/agent-loader';
 import { agentCommandSpec, agentsCliSpec } from '../agents/agents.help';
@@ -27,7 +29,7 @@ import {
   resolveTaskAndMode,
 } from './run-checks';
 import type { PreparedRun, RunAgentsCliDeps, RunArgs, RunContext } from './run-context';
-import { errorMessage } from './run-context';
+import { errorMessage, projectsDir } from './run-context';
 import { prepareRun } from './run-preparation';
 import { specContext } from './spec-context';
 import type { TicketTarget } from './ticket-run';
@@ -64,6 +66,7 @@ function runDryRun(
   ticketTarget: TicketTarget | undefined,
   parsed: RunArgs,
   deps: RunAgentsCliDeps,
+  settings: ProjectSettings | undefined,
 ): number {
   const { resolved, providerRequest } = prepared;
   let args: readonly string[];
@@ -85,6 +88,7 @@ function runDryRun(
     hasTicket: ticketTarget !== undefined,
     showPrompt: parsed.showPrompt,
     workspaceFiles,
+    ...(settings === undefined ? {} : { app: settings.environment }),
   });
   deps.stdout.write(`${output}\n`);
   return 0;
@@ -199,12 +203,63 @@ async function runCommand(parsed: RunArgs, deps: RunAgentsCliDeps): Promise<numb
     synthesized: !deps.commands.some((candidate) => candidate.name === parsed.command),
   };
 
+  // The application is up before anything that may use it: the `before` steps (tests) and the agent. `--dry-run`
+  // only says it would be.
+  const app = parsed.dryRun ? NO_APP : await appFor(projectRun.settings, deps);
+  if (app === undefined) {
+    return 1;
+  }
+  try {
+    return await runPrepared(context, command, agent, ticketTarget, projectRun.settings);
+  } finally {
+    app.stop();
+  }
+}
+
+const NO_APP: RunningApp = { started: false, stop: () => undefined };
+
+/**
+ * The application of a run with `--project` (`ensureApp`): its setup run, and up at its `baseURL`, started by
+ * choliba when it was not. `undefined` when it could not be, with the reason on `stderr`: the agent does not run.
+ */
+async function appFor(settings: ProjectSettings | undefined, deps: RunAgentsCliDeps): Promise<RunningApp | undefined> {
+  if (settings === undefined) {
+    return NO_APP;
+  }
+  const ensure =
+    deps.ensureApp ??
+    ((project: ProjectSettings) =>
+      ensureApp(project, {
+        projectsDir: projectsDir(deps),
+        logDir: join(deps.repoRoot, '.cache', 'app'),
+        env: process.env,
+        stderr: deps.stderr,
+        spawn: spawnSync,
+      }));
+  try {
+    return await ensure(settings);
+  } catch (error) {
+    if (!(error instanceof AppError)) throw error;
+    deps.stderr.write(`✗ ${error.message}\n  O agente não foi executado.\n`);
+    return undefined;
+  }
+}
+
+/** From the steps before the agent to the ticket's check after it, with the application already up. */
+async function runPrepared(
+  context: RunContext,
+  command: CommandDefinition,
+  agent: AgentDefinition,
+  ticketTarget: TicketTarget | undefined,
+  settings: ProjectSettings | undefined,
+): Promise<number> {
+  const { parsed, deps } = context;
   const prepared = prepareRun(context, command, agent);
   if ('exitCode' in prepared) {
     return prepared.exitCode;
   }
   if (parsed.dryRun) {
-    return runDryRun(prepared, ticketTarget, parsed, deps);
+    return runDryRun(prepared, ticketTarget, parsed, deps, settings);
   }
   let createdContent: string | undefined;
   try {

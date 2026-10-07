@@ -1,6 +1,6 @@
 // The checks a run passes before anything is prepared; each writes why it failed on stderr.
 
-import { loadProjectSettings } from '@choliba/projects';
+import { loadProjectSettings, type ProjectSettings } from '@choliba/projects';
 
 import { loadAgent } from '../agents/agent-loader';
 import { agentFlagNames } from '../agents/agents.help';
@@ -94,7 +94,13 @@ export function resolveProjectVars(
   parsed: RunArgs,
   agent: AgentDefinition,
   deps: RunAgentsCliDeps,
-): { readonly vars: Readonly<Record<string, string>>; readonly project?: RunProject } | undefined {
+):
+  | {
+      readonly vars: Readonly<Record<string, string>>;
+      readonly project?: RunProject;
+      readonly settings?: ProjectSettings;
+    }
+  | undefined {
   if (parsed.project === undefined) {
     if (!agent.projectRequired) {
       return { vars: {} };
@@ -109,6 +115,7 @@ export function resolveProjectVars(
     return {
       vars: { PROJECT: settings.project, PROJECT_DIR: settings.projectPath, APP_DIR: settings.appDir },
       project: { name: settings.project, baseURL: settings.environment.baseURL, appDir: settings.appDir },
+      settings,
     };
   } catch (error) {
     deps.stderr.write(`${errorMessage(error)}\n`);
