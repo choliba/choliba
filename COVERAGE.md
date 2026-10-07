@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 06/10/2026 22:53:15 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 06/10/2026 23:14:56 — não editar manualmente.
 
 ## Resumo
 
@@ -165,7 +165,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 28 arquivos</summary>
+<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 29 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -191,6 +191,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/shared/errors.ts](packages/projects/src/shared/errors.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shared/json-file.ts](packages/projects/src/shared/json-file.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tickets/dto/create-ticket.dto.ts](packages/projects/src/tickets/dto/create-ticket.dto.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tickets/superseded.ts](packages/projects/src/tickets/superseded.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tickets/ticket-criteria.ts](packages/projects/src/tickets/ticket-criteria.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tickets/ticket-template.ts](packages/projects/src/tickets/ticket-template.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tickets/ticket.ts](packages/projects/src/tickets/ticket.ts)|100.00|100.00|100.00|100.00
@@ -201,7 +202,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/runner</b> — 100.00% das linhas, 17 arquivos</summary>
+<summary>🟢 <b>packages/runner</b> — 100.00% das linhas, 18 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -211,6 +212,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/tests/gate.ts](packages/runner/src/tests/gate.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/playwright-env.ts](packages/runner/src/tests/playwright-env.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/playwright-results.ts](packages/runner/src/tests/playwright-results.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tests/retired.ts](packages/runner/src/tests/retired.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/run-tests.ts](packages/runner/src/tests/run-tests.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/runner-root.ts](packages/runner/src/tests/runner-root.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/target.ts](packages/runner/src/tests/target.ts)|100.00|100.00|100.00|100.00
