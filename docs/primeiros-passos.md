@@ -1,5 +1,8 @@
 # Primeiros passos
 
+Esta página faz tudo à mão. Para montar a pasta de trabalho respondendo perguntas (instalar o choliba, escolher o
+provider e os agentes), use o [`choliba-cli`](choliba-cli.md).
+
 ## Instalação
 
 O choliba não está no npm: o pacote é o `.tgz` da pré-release
