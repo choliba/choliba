@@ -59,7 +59,7 @@ jobs:
       - name: Typecheck, lint, formatação e testes com cobertura
         run: bun run check
 
-      # O site da documentação (docs.yml publica a partir da master): um link quebrado ou uma config errada barra o PR.
+      # O site da documentação (choliba.github.io publica a partir da master): um link quebrado ou uma config errada barra o PR.
       - name: Gerar o site da documentação
         run: bun run docs:build
 
