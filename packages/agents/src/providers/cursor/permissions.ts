@@ -1,4 +1,5 @@
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { dirname, join, sep } from 'node:path';
 
 import type { PermissionPolicy } from '../../agents/interfaces/command.interface';
@@ -6,6 +7,7 @@ import type { McpServer } from '../../mcps/mcps';
 import type { AgentPermissions, ExecuteRule } from '../../runs/permissions';
 import { allowedCommands, blocksEveryCommand, pathBase, pathGlob, withoutTrailingSlash } from '../../runs/permissions';
 import type { RunToolCommands } from '../../runs/run-tools/run-tools';
+import { isRecord } from '../../shared/json';
 
 export interface CursorPermissions {
   readonly allow: readonly string[];
@@ -159,6 +161,29 @@ export function cursorPermissions(
       ...writable.map((path) => fileToken('Write', path)),
     ],
   };
+}
+
+/**
+ * The MCP servers the user set up for every Cursor session (`~/.cursor/mcp.json`), which Cursor adds to the ones
+ * of the run; none when the file is missing or unreadable.
+ */
+export function userMcpServers(home: string = homedir()): readonly string[] {
+  try {
+    const config: unknown = JSON.parse(readFileSync(join(home, '.cursor', 'mcp.json'), 'utf8'));
+    const servers = isRecord(config) ? config['mcpServers'] : undefined;
+    return isRecord(servers) ? Object.keys(servers) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Denies every server of the user's that the agent does not declare, so Cursor does not offer it in the
+ * session. Only a layer on top: any undeclared MCP use, `GetMcpTools` included, already stops the run
+ * (`mcp-guard.ts`), whatever the provider.
+ */
+export function undeclaredMcpTokens(userServers: readonly string[], declared: readonly McpServer[]): string[] {
+  return userServers.filter((name) => !declared.some((server) => server.name === name)).map((name) => `Mcp(${name}:*)`);
 }
 
 /** Cursor's tokens for an MCP server: one per tool it lists, or one for the whole server. */

@@ -9,7 +9,7 @@ import { AgentProvider } from '../agent-provider';
 import type { PlanContentContext, PlannedFile, ProviderRequest, StreamParser } from '../interfaces/provider.interface';
 import { RegisterAgentProvider } from '../register-agent-provider';
 import { applyCursorMcpServers, applyCursorPermissions, planCursorMcpServers, planCursorPermissions } from './cli-json';
-import { type CursorPermissions, cursorPermissions, readDir } from './permissions';
+import { type CursorPermissions, cursorPermissions, readDir, undeclaredMcpTokens, userMcpServers } from './permissions';
 
 function resolvePlanContent(context: PlanContentContext): string | undefined {
   const content = context.planMarkdown?.trim();
@@ -72,15 +72,17 @@ function buildArgs(request: ProviderRequest): readonly string[] {
  * already on disk (`runAgent` writes them first), so the complement of what may be written names them too.
  */
 function requestPermissions(request: ProviderRequest): CursorPermissions {
-  return cursorPermissions(
+  const mcpServers = request.mcpServers ?? [];
+  const permissions = cursorPermissions(
     absolutePermissions(request.agent.permissions, request.workspaceRoot),
     request.policy,
     request.workspaceRoot,
     request.runDir,
-    request.mcpServers ?? [],
+    mcpServers,
     readDir,
     runToolCommands(runToolsOf(request)),
   );
+  return { ...permissions, deny: [...permissions.deny, ...undeclaredMcpTokens(userMcpServers(), mcpServers)] };
 }
 
 function prepareWorkspace(request: ProviderRequest): () => void {

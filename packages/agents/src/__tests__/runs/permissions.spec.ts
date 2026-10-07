@@ -14,6 +14,8 @@ import {
   withoutTrailingSlash,
 } from '../../runs/permissions';
 
+const NO_MCPS = 'MCP: you have no MCP servers. Do not list, look for or call any MCP tool.';
+
 const DELEGATION =
   'You may not delegate: no subagents (Agent/Task tools), no parallel sessions, no other agent working for you. If you are stuck, stop and report.';
 
@@ -139,6 +141,7 @@ describe('formatPermissions', () => {
         '- in ./: git push',
         'Run each command exactly as listed, from where you are (a folder inside the workspace, where it works as is):',
         'chaining listed commands with && works, but any other part (cd, a pipe, a redirection, another program) gets the whole command refused.',
+        NO_MCPS,
         DELEGATION,
         '</permissions>',
       ].join('\n'),
@@ -148,7 +151,13 @@ describe('formatPermissions', () => {
   it('ends with the run tools it is given, which alone are enough to allow something', () => {
     const place = { runDir: '/w/.cache/runs/x', root: '/w' };
     const text = formatPermissions(DECLARED, place, ['Tools: …', '- `x.delete <path…>`']);
-    expect(text.split('\n').slice(-4)).toEqual(['Tools: …', '- `x.delete <path…>`', DELEGATION, '</permissions>']);
+    expect(text.split('\n').slice(-5)).toEqual([
+      'Tools: …',
+      '- `x.delete <path…>`',
+      NO_MCPS,
+      DELEGATION,
+      '</permissions>',
+    ]);
 
     const onlyTools = formatPermissions(NO_PERMISSIONS, place, ['Tools: …']);
     expect(onlyTools).not.toContain('Nothing is allowed');
@@ -161,6 +170,14 @@ describe('formatPermissions', () => {
 
   it('tells every agent it may not delegate, whatever it may do', () => {
     expect(formatPermissions(NO_PERMISSIONS).split('\n').slice(-2)).toEqual([DELEGATION, '</permissions>']);
+  });
+
+  it('tells every agent it uses only the MCP servers it declares, or none', () => {
+    expect(formatPermissions(NO_PERMISSIONS)).toContain(NO_MCPS);
+    expect(formatPermissions(DECLARED, undefined, [], true)).toContain(
+      'MCP: you may use only the servers and tools listed in <mcps>; there are no others. Do not list, look for or call any other MCP tool.',
+    );
+    expect(formatPermissions(DECLARED, undefined, [], true)).not.toContain(NO_MCPS);
     expect(formatPermissions(DECLARED)).toContain(DELEGATION);
   });
 });

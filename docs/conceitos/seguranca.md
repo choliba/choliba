@@ -26,6 +26,10 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
   se configura. O prompt de todo agente diz isso. No Claude, a ferramenta de subagente (`Agent`) nem existe na
   sessão. O Cursor não tem permissão que a tire, então o choliba interrompe a execução no primeiro `Task`, com
   código 1.
+- **MCP só declarado.** O agente só usa os servidores e as tools de `mcps`. O prompt diz isso, e o choliba
+  confere cada chamada: um servidor ou uma tool fora do declarado (ou procurar tools de MCP num agente sem `mcps`)
+  interrompe a execução com código 1, em qualquer provider. No Claude, a sessão só tem os servidores declarados. No
+  Cursor, que soma os MCPs do `~/.cursor/mcp.json` do usuário, o choliba também nega os que o agente não declara.
 - **`steps` não passam pelas permissões.** Os passos são executados pelo choliba, fora da sessão do modelo: um
   passo pode fazer o que o modelo não pode (o `docs-updater` proíbe o modelo de rodar o Prettier e o roda no
   `steps.execute.after`). Veja [Steps](../referencia/agent-yaml.md#steps).

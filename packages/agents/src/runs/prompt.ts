@@ -75,7 +75,7 @@ export function wrapInstructions(agent: AgentDefinition, skillsInstruction = '',
   return [
     `<agent_instructions id="${attr(agent.id)}" name="${attr(agent.displayName)}" version="${attr(agent.version)}" source="${attr(agent.sourcePath)}">`,
     ...(skillsInstruction === '' ? [] : [skillsInstruction, '']),
-    formatPermissions(agent.permissions, place, runToolLines(agent.permissions, place)),
+    formatPermissions(agent.permissions, place, runToolLines(agent.permissions, place), agent.mcps.length > 0),
     '',
     ...(mcps === '' ? [] : [mcps, '']),
     `Relative paths in the instructions below are relative to ${agent.dir}/.`,

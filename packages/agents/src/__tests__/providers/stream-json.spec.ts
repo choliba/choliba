@@ -132,6 +132,37 @@ describe('createStreamJsonParser', () => {
     ]);
   });
 
+  it('says which MCP a call uses: a tool of a server, or the resources of one', () => {
+    const events = createStreamJsonParser({ planFromExitPlanMode: false }).parseLine(
+      line({
+        type: 'assistant',
+        message: {
+          content: [
+            { type: 'tool_use', id: 't1', name: 'mcp__mcp-app__get_issue', input: {} },
+            { type: 'tool_use', id: 't2', name: 'ListMcpResourcesTool', input: { server: 'git' } },
+          ],
+        },
+      }),
+    );
+
+    expect(events).toEqual([
+      {
+        type: 'tool-call',
+        id: 't1',
+        name: 'mcp__mcp-app__get_issue',
+        summary: '',
+        mcp: { kind: 'call', server: 'mcp-app', tool: 'get_issue' },
+      },
+      {
+        type: 'tool-call',
+        id: 't2',
+        name: 'ListMcpResourcesTool',
+        summary: '',
+        mcp: { kind: 'discovery', server: 'git' },
+      },
+    ]);
+  });
+
   it('extractCreatePlanToolPlan reads nested createPlanToolCall args', () => {
     expect(
       extractCreatePlanToolPlan({
