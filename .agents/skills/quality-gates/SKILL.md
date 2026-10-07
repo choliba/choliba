@@ -20,6 +20,7 @@ coverage. CI and local runs use the same command, so "it passes here" means the 
 | `bun run test`         | Jest, no coverage (fast inner loop)                           |
 | `bun run test:cov`     | Jest with coverage thresholds and the ratchet                 |
 | `bun run check`        | All of the above in a deterministic order                     |
+| `bun run docs:build`   | The documentation site (VitePress); CI runs it after `check`  |
 
 ## When a gate fails
 

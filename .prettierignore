@@ -8,3 +8,5 @@ bun.lock
 .choliba/mcps
 .claude
 .playwright-cli
+docs/.vitepress/cache
+docs/.vitepress/dist

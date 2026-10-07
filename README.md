@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/owl-logo-choliba.svg" alt="" width="140" />
+  <img src="docs/public/owl-logo-choliba.svg" alt="" width="140" />
 </p>
 
 <h1 align="center">choliba</h1>
@@ -102,7 +102,8 @@ vazia. Detalhes e limites de cada provider: [Segurança](docs/conceitos/seguranc
 
 ## Documentação
 
-Em [`docs/`](docs/README.md), por tipo:
+No site [jacksonbicalho.github.io/choliba](https://jacksonbicalho.github.io/choliba/), com busca, ou em
+[`docs/`](docs/README.md), por tipo:
 
 - **Para começar:** [Primeiros passos](docs/primeiros-passos.md).
 - **Guias:** [escrever um agente](docs/guias/escrever-um-agente.md),

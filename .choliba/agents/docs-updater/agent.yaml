@@ -3,7 +3,7 @@ version: 1
 agent:
   id: docs-updater
   name: Docs Updater
-  version: 1.4.0
+  version: 1.4.1
   color: cyan
   description: >-
     Atualiza a documentação (docs/, README, ARCHITECTURE e CONTRIBUTING) para refletir exatamente o que mudou
@@ -84,6 +84,10 @@ notes:
     A formatação (Prettier) é aplicada pelo próprio comando depois que você termina; escreva o Markdown sem se
     preocupar com o alinhamento de tabelas.
   - >-
+    O site da documentação sai do próprio `docs/`: uma página nova entra no menu dele sozinha, na posição em que o
+    `docs/README.md` a cita, e com o título do `# ` dela. Por isso uma página nova sempre ganha um link no
+    `docs/README.md`. A configuração do site (`docs/.vitepress/`) não é sua.
+  - >-
     Você **não** levanta o que mudou. Leia o patch em partes (offset/limit), indo ao que interessa pelo índice. Não
     rode `git log`, `git diff` nem `git show` para descobrir mudanças: o comando já calculou o diff e ele é a única
     fonte de verdade.
@@ -99,6 +103,7 @@ permissions:
     write: [docs/, README.md, ARCHITECTURE.md, CONTRIBUTING.md]
   deny:
     write:
+      - docs/.vitepress/
       - '${CHOL_AGENTS_DIR}/'
       - packages/
       - apps/

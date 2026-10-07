@@ -16,3 +16,7 @@ plans/
 
 # Pacote gerado por `bun run chol:pack` (instalação local, nunca publicado)
 *.tgz
+
+# Site da documentação (VitePress)
+docs/.vitepress/cache
+docs/.vitepress/dist
