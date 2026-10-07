@@ -25,6 +25,8 @@ import {
   type ProjectLocations,
   type ProjectSettings,
   APP_PREPARED_ENV,
+  formatRetired,
+  fullyRetiredTickets,
   prepareApp,
 } from '@choliba/projects';
 
@@ -32,6 +34,7 @@ import { fillTicketTests } from './fill-ticket-tests';
 import { checkGate, hasGate, takeGateFlags, type TicketGate } from './gate';
 import { playwrightNodePath, WORKSPACE_ENV } from './playwright-env';
 import { parseTestsTarget, type TestsTarget } from './target';
+import { guardRetiredTicket, retiredOf } from './retired';
 import { fail } from './tests-error';
 import {
   expandTicketSelector,
@@ -317,6 +320,14 @@ async function runTarget(
   }
   const extras = argv.slice(target.consumedArgs);
   const once = { project, ticket, extras, gate, wholeProject: false };
+  // Criteria a later ticket replaces (`substitui`) leave the project's runs; a ticket run on its own says so.
+  const retired = retiredOf(projectsDir, project);
+  const inBatch = context.env['QA_BATCH'] !== undefined;
+  if (ticket && !isMultiTicketSelector(ticket) && !inBatch) {
+    guardRetiredTicket(ticket, retired, hasGate(gate), context.stderr);
+  } else if (retired.length > 0 && !inBatch) {
+    context.stderr.write(`${formatRetired(retired)}\n`);
+  }
 
   if (pathSuffix) {
     if (rawTicket && isMultiTicketSelector(rawTicket)) {
@@ -327,8 +338,17 @@ async function runTarget(
       targets: [path.join(projectDir(projectsDir, project), pathSuffix.replace(/^\//, ''))],
     });
   }
+  const skipRetired = (tickets: readonly string[]): readonly string[] => {
+    const retiredTickets = fullyRetiredTickets(projectsDir, project);
+    return tickets.filter((candidate) => !retiredTickets.has(candidate));
+  };
   if (rawTicket && isMultiTicketSelector(rawTicket)) {
-    return runTicketsSequentially(context, project, expandTicketSelector(projectsDir, project, rawTicket), extras);
+    return runTicketsSequentially(
+      context,
+      project,
+      skipRetired(expandTicketSelector(projectsDir, project, rawTicket)),
+      extras,
+    );
   }
   if (ticket) {
     return runOnce(context, { ...once, ...ticketTargets(context, project, ticket) });
@@ -337,7 +357,7 @@ async function runTarget(
     fullTicket(project, suffix),
   );
   if (tickets.length > 0) {
-    return runTicketsSequentially(context, project, tickets, extras);
+    return runTicketsSequentially(context, project, skipRetired(tickets), extras);
   }
   return runOnce(context, { ...once, targets: [projectDir(projectsDir, project)] });
 }

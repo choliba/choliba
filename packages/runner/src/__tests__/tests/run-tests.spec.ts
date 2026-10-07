@@ -295,6 +295,91 @@ describe('runTests', () => {
     });
   });
 
+  describe('tickets that replace criteria of others (substitui)', () => {
+    /** demo-1 (CA-01, CA-02) and demo-2; `substitui` of demo-2 as given. */
+    function writeReplacing(projectsDir: string, substitui: readonly string[]): void {
+      writeProject(projectsDir, 'demo', [
+        { suffix: '1', specs: ['demo-1.spec.ts'] },
+        { suffix: '2', specs: ['demo-2.spec.ts'] },
+      ]);
+      const tickets = path.join(projectsDir, 'demo', 'tickets');
+      fs.writeFileSync(
+        path.join(tickets, '1.json'),
+        JSON.stringify({
+          criterios: [
+            { id: 'CA-01', testes: ['demo-1.spec.ts › CA-01: a'] },
+            { id: 'CA-02', testes: [] },
+          ],
+        }),
+      );
+      fs.writeFileSync(
+        path.join(tickets, '2.json'),
+        JSON.stringify({ criterios: [{ id: 'CA-01', testes: ['demo-2.spec.ts › CA-01: b'] }], substitui }),
+      );
+    }
+
+    function stderr(): string {
+      return (terminalOutput.writeStderr as jest.Mock).mock.calls.map(([chunk]) => String(chunk)).join('');
+    }
+
+    function options(projectsDir: string, cwd: string, argv: readonly string[], runs: string[][]) {
+      return {
+        ...TEST_ROOTS,
+        argv,
+        cwd,
+        stdinIsTTY: false,
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: projectsDir }),
+        spawnPlaywright: (args: string[]) => {
+          runs.push(args);
+          return 0;
+        },
+      };
+    }
+
+    it('says which criteria are retired when the project runs, and skips a ticket with all of them retired', async () => {
+      await withProject(async (projectsDir, cwd) => {
+        writeReplacing(projectsDir, ['demo-1']);
+        const runs: string[][] = [];
+
+        await runTests(options(projectsDir, cwd, ['demo'], runs));
+
+        expect(stderr()).toContain('aposentados: demo-1 CA-01, CA-02 (substituídos por demo-2)\n');
+        expect(runs.map((args) => args.join(' '))).toEqual([expect.stringContaining('demo-2.spec.ts')]);
+      });
+    });
+
+    it('runs a ticket with criteria retired on its own, saying so, but refuses --expect on it', async () => {
+      await withProject(async (projectsDir, cwd) => {
+        writeReplacing(projectsDir, ['demo-1:CA-01']);
+        const runs: string[][] = [];
+
+        await runTests(options(projectsDir, cwd, ['demo:1'], runs));
+        expect(stderr()).toContain(
+          'aviso: demo-1 CA-01 (substituídos por demo-2); rodando assim mesmo, só nesta execução.\n',
+        );
+        expect(runs).toHaveLength(1);
+
+        await expect(runTests(options(projectsDir, cwd, ['demo:1', '--expect', 'green'], runs))).rejects.toThrow(
+          'erro: demo-1 CA-01 (substituídos por demo-2): não há o que conferir nele; confira o ticket que o substitui.',
+        );
+      });
+    });
+
+    it('says nothing for a ticket with nothing retired, and stops on an invalid reference', async () => {
+      await withProject(async (projectsDir, cwd) => {
+        writeReplacing(projectsDir, ['demo-1:CA-01']);
+        const runs: string[][] = [];
+        await runTests(options(projectsDir, cwd, ['demo:2'], runs));
+        expect(stderr()).not.toContain('aposentados');
+
+        writeReplacing(projectsDir, ['demo-9']);
+        await expect(runTests(options(projectsDir, cwd, ['demo'], runs))).rejects.toThrow(
+          'substitui[0]: o ticket demo-9 não existe.',
+        );
+      });
+    });
+  });
+
   it('runs all tickets when only the project is given', async () => {
     await withProject(async (projectsDir, cwd) => {
       writeProject(projectsDir, 'demo', [
