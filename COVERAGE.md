@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 06/10/2026 23:14:56 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 07/10/2026 03:55:39 — não editar manualmente.
 
 ## Resumo
 
@@ -8,6 +8,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
 🟢|**Total**|100.00|100.00|100.00|100.00
 🟢|[packages/agents](packages/agents)|100.00|100.00|100.00|100.00
+🟢|[packages/choliba-cli](packages/choliba-cli)|100.00|100.00|100.00|100.00
 🟢|[packages/choliba](packages/choliba)|100.00|100.00|100.00|100.00
 🟢|[packages/core](packages/core)|100.00|100.00|100.00|100.00
 🟢|[packages/projects](packages/projects)|100.00|100.00|100.00|100.00
@@ -84,6 +85,29 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/steps/index-diff.ts](packages/agents/src/steps/index-diff.ts)|100.00|100.00|100.00|100.00
 🟢|[src/steps/registry.ts](packages/agents/src/steps/registry.ts)|100.00|100.00|100.00|100.00
 🟢|[src/steps/working-tree-diff.ts](packages/agents/src/steps/working-tree-diff.ts)|100.00|100.00|100.00|100.00
+
+</details>
+
+<details>
+<summary>🟢 <b>packages/choliba-cli</b> — 100.00% das linhas, 15 arquivos</summary>
+
+Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
+--|--|--|--|--|--
+🟢|[src/app.module.ts](packages/choliba-cli/src/app.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/cli.help.ts](packages/choliba-cli/src/help/cli.help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/help.module.ts](packages/choliba-cli/src/help/help.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/root.command.ts](packages/choliba-cli/src/help/root.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/version.ts](packages/choliba-cli/src/help/version.ts)|100.00|100.00|100.00|100.00
+🟢|[src/new/env-file.ts](packages/choliba-cli/src/new/env-file.ts)|100.00|100.00|100.00|100.00
+🟢|[src/new/new-options.ts](packages/choliba-cli/src/new/new-options.ts)|100.00|100.00|100.00|100.00
+🟢|[src/new/new-workspace.ts](packages/choliba-cli/src/new/new-workspace.ts)|100.00|100.00|100.00|100.00
+🟢|[src/new/new.command.ts](packages/choliba-cli/src/new/new.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/new/new.help.ts](packages/choliba-cli/src/new/new.help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/new/new.module.ts](packages/choliba-cli/src/new/new.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/new/new.service.ts](packages/choliba-cli/src/new/new.service.ts)|100.00|100.00|100.00|100.00
+🟢|[src/new/prompter.ts](packages/choliba-cli/src/new/prompter.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runtime/runtime.constants.ts](packages/choliba-cli/src/runtime/runtime.constants.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runtime/runtime.module.ts](packages/choliba-cli/src/runtime/runtime.module.ts)|100.00|100.00|100.00|100.00
 
 </details>
 
