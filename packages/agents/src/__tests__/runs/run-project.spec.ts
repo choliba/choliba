@@ -36,7 +36,8 @@ describe('formatProject', () => {
     expect(block.split('\n')[0]).toBe(
       '<project name="a &quot;b&quot;" baseURL="http://localhost:3000" appDir="/code/site/">',
     );
-    expect(block).toContain('Never start, stop or restart it');
+    expect(block).toContain('made sure\nit is up before this run');
+    expect(block).toContain('Never start, stop or\nrestart it yourself');
     expect(block).toContain('never write a server, boot script or mock of it');
     expect(block).toContain('stop and report the message');
     expect(block.endsWith('</project>')).toBe(true);

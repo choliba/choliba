@@ -1,6 +1,8 @@
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { expandMcpConfig, mcpConfig, mcpServersMap, resolveMcps } from '../../mcps/mcps';
+import { makeTmpDir } from '../helpers/tmp';
 
 const MCPS = join(__dirname, '..', 'fixtures', 'mcps');
 
@@ -57,10 +59,45 @@ describe('expandMcpConfig', () => {
   });
 
   it('is applied by resolveMcps', () => {
-    expect(resolveMcps(MCPS, [{ name: 'with-var' }], { SERVER_DIR: '/srv' })[0]?.config).toEqual({
-      command: 'node',
-      args: ['/srv/main.js'],
-    });
+    const tmp = makeTmpDir('mcp-server');
+    try {
+      writeFileSync(join(tmp.path, 'main.js'), '');
+      expect(resolveMcps(MCPS, [{ name: 'with-var' }], { SERVER_DIR: tmp.path })[0]?.config).toEqual({
+        command: 'node',
+        args: [join(tmp.path, 'main.js')],
+      });
+    } finally {
+      tmp.cleanup();
+    }
+  });
+});
+
+describe('resolveMcps, when the server is not there', () => {
+  it('fails naming the missing file and the variable it came from, before any session starts', () => {
+    expect(() => resolveMcps(MCPS, [{ name: 'with-var' }], { SERVER_DIR: '/nowhere' })).toThrow(
+      'o servidor do MCP with-var não existe: /nowhere/main.js (veja SERVER_DIR no .env).',
+    );
+  });
+
+  it('checks an absolute command written as is too, and leaves relative paths and urls alone', () => {
+    const tmp = makeTmpDir('mcp-servers');
+    try {
+      mkdirSync(join(tmp.path, 'mcps'));
+      writeFileSync(join(tmp.path, 'mcps', 'abs.json'), JSON.stringify({ command: '/nowhere/server', args: ['x'] }));
+      writeFileSync(join(tmp.path, 'mcps', 'rel.json'), JSON.stringify({ command: 'node', args: ['dist/main.js', 1] }));
+      writeFileSync(join(tmp.path, 'mcps', 'url.json'), JSON.stringify({ url: 'http://localhost:9/mcp' }));
+      const dir = join(tmp.path, 'mcps');
+
+      expect(() => resolveMcps(dir, [{ name: 'abs' }], {})).toThrow(
+        'o servidor do MCP abs não existe: /nowhere/server.',
+      );
+      expect(resolveMcps(dir, [{ name: 'rel' }, { name: 'url' }], {}).map((server) => server.name)).toEqual([
+        'rel',
+        'url',
+      ]);
+    } finally {
+      tmp.cleanup();
+    }
   });
 });
 

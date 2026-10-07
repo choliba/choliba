@@ -20,22 +20,26 @@ Cores: a saída só tem cor num terminal. `--no-color` (em qualquer comando), `N
 ou um pipe tiram a cor; `FORCE_COLOR=1` força. Quais cores usar vem de `CHOL_COLORS` no `.env` (veja
 [`.env` da pasta de trabalho](env.md)) e, para o rótulo de um agente, do `agent.color` dele.
 
-## Antes dos testes: a aplicação
+## A aplicação do projeto
 
-`choliba tests` deixa a aplicação do projeto pronta antes de rodar o Playwright, pelo ambiente ativo do
-`config.json` do projeto:
+O choliba deixa a aplicação do projeto pronta, pelo ambiente ativo do `config.json`, em dois momentos: antes de
+rodar o Playwright no `choliba tests`, e antes de qualquer agente rodado com `--project` (antes até dos `before` dele):
 
 1. Roda cada comando de `envs[].setup` em `appDir`, em ordem (por exemplo, `["bun install"]`). Um que falha para
-   a rodada: `a aplicação não ficou pronta: "<comando>" saiu com código N`. Numa rodada de vários tickets, o setup
-   roda uma vez só.
-2. Com `envs[].start`, sobe a aplicação em `appDir` se nada responde no `baseURL`, espera ela responder (até 3
-   minutos) e a derruba no fim. O log do servidor sai junto com o dos testes. Uma aplicação que já está no ar, como
-   a que você subiu, é usada como está. Se ela não sobe: `a aplicação não subiu (envs[].start): …`.
-3. Roda os testes. Sem `start`, se a aplicação não está no ar, `--expect` falha com
+   tudo: `a aplicação não ficou pronta: "<comando>" saiu com código N`. Numa rodada de vários tickets, o setup roda
+   uma vez só.
+2. Confere o `baseURL`. Uma aplicação que já está no ar, como a que você subiu, é usada como está, e continua no ar
+   depois.
+3. Fora do ar, com `envs[].start`, sobe a aplicação em `appDir`, espera ela responder (até 3 minutos) e a derruba
+   no fim, também quando a execução é interrompida. No `choliba tests`, o log do servidor sai junto com o dos
+   testes. Numa execução de agente, ele vai para `.cache/app/<projeto>.log`. Se ela não sobe:
+   `a aplicação não subiu (envs[].start): …`, com o fim do log.
+4. Fora do ar e sem `envs[].start`, a execução de um agente para antes dele (`a aplicação não responde em … e o
+ambiente … não tem envs[].start`). No `choliba tests`, `--expect` falha com
    `a aplicação não respondeu no baseURL: …`.
 
 Os dois campos são opcionais. Um projeto com `global-setup.ts`, como o `exemplo`, continua subindo a aplicação por
-ele.
+ele nos testes. O `--dry-run` de um agente mostra o que seria feito, sem subir nada.
 
 Os agentes nunca sobem, derrubam ou simulam a aplicação, nem mexem nas dependências instaladas dela: todo agente
 rodado com `--project` recebe essa regra no prompt, e o choliba nega a ele escrever em `<appDir>/node_modules/`.

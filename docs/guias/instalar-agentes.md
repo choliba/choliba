@@ -130,6 +130,11 @@ CHOL_MCP_APP_DIR=/home/voce/mcp-app
 CHOL_MCP_APP_LOG_DIR=/home/voce/mcp-app/logs
 ```
 
+Enquanto o `dist/main.js` não existir (o mcp-app ainda não foi compilado, ou o `CHOL_MCP_APP_DIR` aponta para outro
+lugar), o `product-owner` não roda: a execução para antes dele com
+`o servidor do MCP mcp-app não existe: …/dist/main.js (veja CHOL_MCP_APP_DIR no .env)`, e o `choliba check` mostra o
+mesmo.
+
 Sem essas duas variáveis, o `check` marca o `product-owner` com `✗` e diz que o `mcp-app.json` usa
 `${CHOL_MCP_APP_DIR}` e `${CHOL_MCP_APP_LOG_DIR}` sem valor. Com elas, tudo carrega:
 

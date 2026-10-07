@@ -10,7 +10,7 @@ export interface RunProject {
 
 /**
  * The project in words, for every agent that runs with one, whatever its `agent.yaml` says: where the
- * application is, and that `choliba tests` (or the person) prepares and starts it, never the agent. Without
+ * application is, and that choliba prepares it and keeps it up for the run (`ensureApp`), never the agent. Without
  * this, agents that found it down started it themselves, and wrote servers and boot scripts to fake it.
  * Empty without a project.
  */
@@ -21,10 +21,10 @@ export function formatProject(project: RunProject | undefined): string {
   const attr = (value: string): string => value.replaceAll('"', '&quot;');
   return [
     `<project name="${attr(project.name)}" baseURL="${attr(project.baseURL)}" appDir="${attr(project.appDir)}">`,
-    'The application under test runs at its baseURL. `choliba tests` prepares it (config.json envs[].setup) and',
-    'starts it when it is not up (envs[].start); otherwise the user starts it. Never start, stop or restart it',
-    'yourself, never write a server, boot script or mock of it, and never change its installed dependencies',
-    '(node_modules). If it does not respond or does not start, stop and report the message.',
+    'The application under test runs at its baseURL. choliba prepared it (config.json envs[].setup) and made sure',
+    'it is up before this run (envs[].start when it was not); it stays up until the run ends. Never start, stop or',
+    'restart it yourself, never write a server, boot script or mock of it, and never change its installed',
+    'dependencies (node_modules). If it does not respond, stop and report the message.',
     '</project>',
   ].join('\n');
 }

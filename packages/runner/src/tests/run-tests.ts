@@ -24,12 +24,13 @@ import {
   ticketSuffix,
   type ProjectLocations,
   type ProjectSettings,
+  APP_PREPARED_ENV,
+  prepareApp,
 } from '@choliba/projects';
 
 import { fillTicketTests } from './fill-ticket-tests';
 import { checkGate, hasGate, takeGateFlags, type TicketGate } from './gate';
 import { playwrightNodePath, WORKSPACE_ENV } from './playwright-env';
-import { APP_PREPARED_ENV, prepareApp } from './prepare-app';
 import { parseTestsTarget, type TestsTarget } from './target';
 import { fail } from './tests-error';
 import {
@@ -309,7 +310,11 @@ async function runTarget(
     fail(`erro: --expect e --failures valem para um ticket só (ex.: ${project}:T-01).`);
   }
   const ticket = canonicalTicket(projectsDir, target);
-  prepareApp(settings, { projectsDir, env: context.env, stderr: context.stderr, spawn: context.spawnSyncFn });
+  try {
+    prepareApp(settings, { projectsDir, env: context.env, stderr: context.stderr, spawn: context.spawnSyncFn });
+  } catch (err) {
+    fail(`erro: ${(err as Error).message}`);
+  }
   const extras = argv.slice(target.consumedArgs);
   const once = { project, ticket, extras, gate, wholeProject: false };
 

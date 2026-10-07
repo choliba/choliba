@@ -52,9 +52,14 @@ describe('checkAgents', () => {
       expect(problem('sem-skill')).toContain('skill "dummy-skill" não encontrada');
       expect(problem('com-mcp')).toContain('usa ${APP_DIR}, sem valor');
 
-      expect(checkAgents(root, { APP_DIR: '/opt' }).items.find((item) => item.name === 'com-mcp')?.problem).toBe(
-        undefined,
+      const comMcp = (env: Record<string, string>): string | undefined =>
+        checkAgents(root, env).items.find((item) => item.name === 'com-mcp')?.problem;
+      // The server must be there too: a run would stop before the agent.
+      expect(comMcp({ APP_DIR: '/nowhere' })).toBe(
+        'o servidor do MCP app não existe: /nowhere/x (veja APP_DIR no .env).',
       );
+      fs.writeFileSync(path.join(root, 'x'), '');
+      expect(comMcp({ APP_DIR: root })).toBeUndefined();
     });
   });
 

@@ -10,14 +10,16 @@ permissões do `agent.yaml`.
 2. Carrega o `agent.yaml` e o valida (schema, pasta, modos, variáveis).
 3. Recusa as flags que o agente não aceita; `--help` mostra a ajuda do agente e sai.
 4. Valida o projeto (`--project`) e prepara o ticket (`--type` para um novo, `--ticket` para um existente).
+   Com `--project`, roda o `setup` da aplicação e garante que ela está no ar, subindo-a com o `start` se preciso;
+   sem `start` e fora do ar, para aqui (veja [A aplicação do projeto](../referencia/cli.md#a-aplicação-do-projeto)).
 5. Define a tarefa, o modo e o plano salvo (`--plan-from`).
-6. Preenche as [variáveis](../referencia/agent-yaml.md#variáveis), confere o `--model`, confere que cada skill e cada MCP existe e escolhe o
-   provider.
+6. Preenche as [variáveis](../referencia/agent-yaml.md#variáveis), confere o `--model`, confere que cada skill e cada MCP existe
+   (o servidor do MCP também, quando é um arquivo) e escolhe o provider.
 7. Roda o `steps.<modo>.before`. Uma falha para aqui.
 8. Monta os prompts: o de sistema (skills, permissões, o projeto, MCPs e o texto do agente) e o do usuário (aviso do
    modo, plano salvo e a tarefa, com o que o `before` produziu). Com `--project`, o projeto diz onde a aplicação
    roda e que o agente nunca a sobe nem mexe em `node_modules`, o que o choliba também aplica nas permissões (veja
-   [Antes dos testes: a aplicação](../referencia/cli.md#antes-dos-testes-a-aplicação)).
+   [A aplicação do projeto](../referencia/cli.md#a-aplicação-do-projeto)).
 9. Com `--dry-run`, mostra o que aconteceria e sai (veja [`--dry-run`](../guias/dry-run.md)).
 10. Cria o ticket novo (`--type`).
 
@@ -38,6 +40,7 @@ permissões do `agent.yaml`.
     Cursor), seja qual for o resultado.
 13. Roda o `steps.<modo>.after`: `success` ou `failure`, depois `always`.
 14. Fecha o ticket: um ticket novo que o agente não tocou é apagado; em `execute`, sobrar `CHANGE_ME` é erro.
+15. Derruba a aplicação, se foi ele quem a subiu no passo 4.
 
 O que cada agente do repositório faz em cada fase, em `execute`:
 
