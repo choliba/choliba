@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { applyLocations, resolveLocations } from '@choliba/projects';
 import * as projects from '@choliba/projects';
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices, type PlaywrightTestConfig } from '@playwright/test';
 
 import type { PlaywrightProjectConfig } from './shared/env';
 import { getTargetProject } from './shared/project-scope';
@@ -30,6 +30,9 @@ let resultsRoot: string | undefined;
 let targetProjectConfig: PlaywrightProjectConfig | undefined;
 // The active environment's URL: a spec just calls `page.goto('…')`, relative to it.
 let baseURL: string | undefined;
+// How the active environment starts its application (`envs[].start`): Playwright runs it in `appDir` when `baseURL`
+// does not answer, waits for it, and stops it at the end; one already up (started by the person) is reused.
+let webServer: PlaywrightTestConfig['webServer'];
 
 if (targetProject) {
   // Fails, naming the file and the field, unless the project is complete and configured (no CHANGE_ME).
@@ -40,6 +43,19 @@ if (targetProject) {
   Object.assign(process.env, settings.env);
   targetProjectConfig = settings.config;
   baseURL = settings.environment.baseURL;
+  const { start } = settings.environment;
+  if (start !== undefined) {
+    webServer = {
+      command: start,
+      cwd: settings.appDir,
+      url: baseURL,
+      reuseExistingServer: true,
+      timeout: 180_000,
+      // The server's log goes into the run's output, where whoever ran the tests sees why it did not start.
+      stdout: 'pipe',
+      stderr: 'pipe',
+    };
+  }
   resultsRoot = projects.resolveResultsRoot({
     runsFolder: projects.resolveTicketRunsFolder(projects.resolveTicketRunsRoot(playwrightEnv), targetProject),
     environmentResultsDir: settings.environment.resultsDir,
@@ -118,6 +134,7 @@ export default defineConfig({
   retries: process.env['CI'] ? 2 : 0,
   workers: process.env['CI'] ? 1 : 4,
   ...(outputDir ? { outputDir } : {}),
+  ...(webServer ? { webServer } : {}),
   reporter: [
     ticket ? [path.join(packageRoot, 'reporters', `detailed-ticket-reporter${EXT}`), ticketInfo] : ['list'],
     ['html', { outputFolder: reportFolderResolved, open: 'never' }],

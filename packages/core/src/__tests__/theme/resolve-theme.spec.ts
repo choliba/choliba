@@ -31,6 +31,8 @@ describe('colorEnabled', () => {
     expect(colorEnabled({ env: { FORCE_COLOR: '1' }, isTTY: false, noColorFlag: false })).toBe(true);
     expect(colorEnabled({ env: { FORCE_COLOR: '1', TERM: 'dumb' }, isTTY: false, noColorFlag: false })).toBe(true);
     expect(colorEnabled({ env: { FORCE_COLOR: '0' }, isTTY: false, noColorFlag: false })).toBe(false);
+    // FORCE_COLOR=0 turns color off even at a terminal (how `choliba tests` tells Playwright's process).
+    expect(colorEnabled({ env: { FORCE_COLOR: '0' }, isTTY: true, noColorFlag: false })).toBe(false);
     expect(colorEnabled({ env: { FORCE_COLOR: '1' }, isTTY: true, noColorFlag: true })).toBe(false);
     expect(colorEnabled({ env: { FORCE_COLOR: '1', NO_COLOR: '1' }, isTTY: true, noColorFlag: false })).toBe(false);
   });

@@ -2,6 +2,7 @@ import type { AgentDefinition } from '../../agents/interfaces/agent.interface';
 import type { ExecutionMode, PermissionPolicy } from '../../agents/interfaces/command.interface';
 import type { AgentEvent } from '../../runs/interfaces/event.interface';
 import type { McpServer } from '../../mcps/mcps';
+import type { RunProject } from '../../runs/run-project';
 
 export interface ProviderRequest {
   readonly agent: AgentDefinition;
@@ -24,6 +25,8 @@ export interface ProviderRequest {
   readonly skillsInstruction?: string;
   /** The MCP servers the agent lists (`agent.yaml#mcps`), already resolved; the session gets these and no other. */
   readonly mcpServers?: readonly McpServer[];
+  /** The project the run works on (`--project`), named in the prompt (`formatProject`); absent without one. */
+  readonly project?: RunProject;
 }
 
 /**

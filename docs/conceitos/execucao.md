@@ -14,8 +14,10 @@ permissões do `agent.yaml`.
 6. Preenche as [variáveis](../referencia/agent-yaml.md#variáveis), confere o `--model`, confere que cada skill e cada MCP existe e escolhe o
    provider.
 7. Roda o `steps.<modo>.before`. Uma falha para aqui.
-8. Monta os prompts: o de sistema (skills, permissões, MCPs e o texto do agente) e o do usuário (aviso do modo,
-   plano salvo e a tarefa, com o que o `before` produziu).
+8. Monta os prompts: o de sistema (skills, permissões, o projeto, MCPs e o texto do agente) e o do usuário (aviso do
+   modo, plano salvo e a tarefa, com o que o `before` produziu). Com `--project`, o projeto diz onde a aplicação
+   roda e que o agente nunca a sobe nem mexe em `node_modules`, o que o choliba também aplica nas permissões (veja
+   [Antes dos testes: a aplicação](../referencia/cli.md#antes-dos-testes-a-aplicação)).
 9. Com `--dry-run`, mostra o que aconteceria e sai (veja [`--dry-run`](../guias/dry-run.md)).
 10. Cria o ticket novo (`--type`).
 

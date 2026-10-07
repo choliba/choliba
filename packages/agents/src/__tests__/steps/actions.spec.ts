@@ -114,7 +114,7 @@ describe('runBeforeSteps', () => {
     expect(spawn.calls).toHaveLength(1);
   });
 
-  it('keeps only the last lines of a long output', () => {
+  it('keeps only the last lines of a long output, saying how many it left out', () => {
     const spawn = recordingSpawn(1, Array.from({ length: 30 }, (_, index) => `line ${String(index)}`).join('\n'));
     const { output } = failureOf(() =>
       runBeforeSteps(
@@ -124,8 +124,8 @@ describe('runBeforeSteps', () => {
       ),
     );
 
-    expect(output.split('\n')).toHaveLength(20);
-    expect(output.startsWith('line 10')).toBe(true);
+    expect(output.split('\n')).toHaveLength(21);
+    expect(output.startsWith('… (10 linhas antes)\nline 10\n')).toBe(true);
   });
 
   it('has no status for a command a signal ended, nor for an action that is not a command', () => {

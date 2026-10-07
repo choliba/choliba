@@ -1,6 +1,6 @@
 import { mcpServersMap } from '../../mcps/mcps';
 import { absolutePermissions } from '../../runs/permissions';
-import { assertArgvFits, wrapInstructions } from '../../runs/prompt';
+import { assertArgvFits, runPlaceOf, wrapInstructions } from '../../runs/prompt';
 import { runToolCommands, runToolsOf } from '../../runs/run-tools/run-tools';
 import { createStreamJsonParser } from '../stream-json';
 import { Injectable } from '@nestjs/common';
@@ -18,11 +18,7 @@ function buildArgs(request: ProviderRequest): readonly string[] {
     'stream-json',
     '--verbose',
     '--append-system-prompt',
-    wrapInstructions(request.agent, request.skillsInstruction, {
-      runDir: request.runDir,
-      root: request.workspaceRoot,
-      policy: request.policy,
-    }),
+    wrapInstructions(request.agent, request.skillsInstruction, runPlaceOf(request)),
   ];
   if (request.model !== undefined) {
     args.push('--model', request.model);

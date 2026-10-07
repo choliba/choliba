@@ -20,6 +20,10 @@ export interface ProjectEnvironment {
   readonly appDir: string;
   readonly default?: boolean;
   readonly resultsDir?: string;
+  /** Commands run in `appDir`, in order, before every test run (`bun install`); one that fails stops the run. */
+  readonly setup?: readonly string[];
+  /** The command that starts the application, run in `appDir` when `baseURL` does not answer. */
+  readonly start?: string;
 }
 
 /** `config.json`, validated. */
@@ -72,6 +76,25 @@ function stringField(item: Record<string, unknown>, key: string, file: string, w
     : fail(file, `${where}.${key} é obrigatório (texto não vazio).`);
 }
 
+function isCommand(value: unknown): value is string {
+  return typeof value === 'string' && value.trim() !== '';
+}
+
+/** `setup`: absent, or a list of commands. */
+function setupField(item: Record<string, unknown>, file: string, where: string): { setup?: readonly string[] } {
+  const setup = item['setup'];
+  if (setup === undefined) return {};
+  if (Array.isArray(setup) && setup.every(isCommand)) return { setup };
+  return fail(file, `${where}.setup precisa ser uma lista de comandos (textos não vazios).`);
+}
+
+/** `start`: absent, or one command. */
+function startField(item: Record<string, unknown>, file: string, where: string): { start?: string } {
+  const start = item['start'];
+  if (start === undefined) return {};
+  return isCommand(start) ? { start } : fail(file, `${where}.start precisa ser um comando (texto não vazio).`);
+}
+
 function parseEnvironment(value: unknown, index: number, file: string): ProjectEnvironment {
   const where = `envs[${String(index)}]`;
   if (!isRecord(value)) {
@@ -90,6 +113,8 @@ function parseEnvironment(value: unknown, index: number, file: string): ProjectE
     appDir: stringField(value, 'appDir', file, at),
     ...(defaultFlag === true ? { default: true } : {}),
     ...(typeof resultsDir === 'string' ? { resultsDir } : {}),
+    ...setupField(value, file, at),
+    ...startField(value, file, at),
   };
 }
 
@@ -175,7 +200,12 @@ export function loadProjectSettings(projectsDir: string, project: string): Proje
   const pending = [
     ...placeholders({ name: config.name }, `${configFile} config`),
     ...placeholders(
-      { baseURL: environment.baseURL, appDir: environment.appDir },
+      {
+        baseURL: environment.baseURL,
+        appDir: environment.appDir,
+        ...(environment.start === undefined ? {} : { start: environment.start }),
+        ...Object.fromEntries((environment.setup ?? []).map((command, index) => [`setup[${String(index)}]`, command])),
+      },
       `${configFile} envs[${environment.nome}]`,
     ),
     ...placeholders(credentials, `${envFile} ${environment.nome}`),

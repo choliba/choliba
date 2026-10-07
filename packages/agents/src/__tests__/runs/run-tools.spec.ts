@@ -122,10 +122,15 @@ describe('planRunTools and applyRunTools', () => {
     expect(files[1]?.content).toContain('const command = "cli"');
     expect(files[1]?.content).toContain('const outputDir = "saidas"');
     expect(files[2]?.content).toContain('const command = "trace"');
-    expect(files[2]?.content).toContain('const outputDir = null');
-    expect(
-      planRunTools(fakeRequest({ allow: { tools: { 'playwright-cli': ['*'] } } }, 'edits'), {})[0]?.content,
-    ).toContain(`const outputDir = "${DEFAULT_PLAYWRIGHT_OUTPUT_DIR}"`);
+    expect(files[2]?.content).toContain('const outputDir = "saidas"');
+    const defaults = planRunTools(
+      fakeRequest({ allow: { tools: { 'playwright-cli': ['*'], 'playwright-trace': ['*'] } } }, 'edits'),
+      {},
+    );
+    expect(defaults.map((file) => file.content)).toEqual([
+      expect.stringContaining(`const outputDir = "${DEFAULT_PLAYWRIGHT_OUTPUT_DIR}"`),
+      expect.stringContaining(`const outputDir = "${DEFAULT_PLAYWRIGHT_OUTPUT_DIR}"`),
+    ]);
   });
 
   it('writes the scripts as executables and removes them on restore, once', () => {
@@ -361,7 +366,7 @@ describe('the playwright scripts', () => {
     expect(call).toEqual({
       argv: ['cli', 'screenshot', '--filename=saidas/a.png', '--filename', 'saidas/b.png', '--filename', '/abs/c.png'],
       cwd: workspace,
-      out: 'saidas',
+      out: join(workspace, 'saidas'),
     });
   });
 
@@ -384,11 +389,39 @@ describe('the playwright scripts', () => {
     }
   });
 
-  it('trace passes its arguments as they are, with no output folder', () => {
-    const { status, call } = runPlaywrightScript('trace', ['open', 't.zip']);
+  it('trace runs in the output folder, opening the trace given from the workspace root', () => {
+    const { status, call, workspace } = runPlaywrightScript('trace', ['open', 't.zip'], 'saidas');
 
     expect(status).toBe(3);
-    expect(call.argv).toEqual(['trace', 'open', 't.zip']);
-    expect(call.out).toBeNull();
+    expect(call).toEqual({
+      argv: ['trace', 'open', join(workspace, 't.zip')],
+      cwd: join(workspace, 'saidas'),
+      out: join(workspace, 'saidas'),
+    });
+  });
+
+  it('trace writes each --output given from the workspace root there, and leaves the other arguments alone', () => {
+    const outputs = runPlaywrightScript('trace', ['screenshot', '3', '-o', 's.png', '--output', '/abs/x.png'], 'out');
+    const inline = runPlaywrightScript('trace', ['attachment', '1', '--output=a.txt'], 'out');
+    const others = runPlaywrightScript('trace', ['actions', '--grep', 'open'], 'out');
+
+    expect(outputs.call.argv).toEqual([
+      'trace',
+      'screenshot',
+      '3',
+      '-o',
+      join(outputs.workspace, 's.png'),
+      '--output',
+      '/abs/x.png',
+    ]);
+    expect(inline.call.argv).toEqual(['trace', 'attachment', '1', `--output=${join(inline.workspace, 'a.txt')}`]);
+    expect(others.call.argv).toEqual(['trace', 'actions', '--grep', 'open']);
+  });
+
+  it('trace without an output folder passes its arguments as they are, from the workspace root', () => {
+    const { status, call, workspace } = runPlaywrightScript('trace', ['open', 't.zip']);
+
+    expect(status).toBe(3);
+    expect(call).toEqual({ argv: ['trace', 'open', 't.zip'], cwd: workspace, out: null });
   });
 });
