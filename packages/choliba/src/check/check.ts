@@ -10,7 +10,7 @@ import {
   resolveSkills,
   resolveSkillsDir,
 } from '@choliba/agents';
-import { listProjectNames, loadProjectSettings, resolveLocations } from '@choliba/projects';
+import { listProjectNames, loadProjectSettings, resolveLocations, retiredCriteria } from '@choliba/projects';
 import { ENV_FILE } from '@choliba/core/config';
 
 type Config = Readonly<Record<string, string | undefined>>;
@@ -74,6 +74,8 @@ export function checkProjects(root: string, config: Config): CheckSection {
   const items = listProjectNames(projectsDir).map((name): CheckItem => {
     try {
       loadProjectSettings(projectsDir, name);
+      // A ticket that replaces a ticket or criterion that does not exist would stop every test run of the project.
+      retiredCriteria(projectsDir, name);
       return { name };
     } catch (error) {
       return { name, problem: problemOf(error) };
