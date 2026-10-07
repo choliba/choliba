@@ -11,6 +11,7 @@ import * as projects from '@choliba/projects';
 
 import type { SignalSource, Writable } from '@choliba/terminal';
 import { ProcessRunnerService } from '@choliba/terminal';
+import { AppError, type ProjectSettings } from '@choliba/projects';
 
 import { defineCommand } from '../../agents/commands/define-command';
 import { StepFailedError } from '../../steps/actions';
@@ -131,6 +132,8 @@ function harness(stdoutLines: readonly string[], overrides: Partial<RunAgentsCli
     stderr,
     signals: fakeSignalSource(),
     runsDir: RUNS,
+    // The application of a project run counts as up: the specs that care pass their own.
+    ensureApp: () => Promise.resolve({ started: false, stop: () => undefined }),
     ...overrides,
     // The fixture agents' skills live next to them; a test may still point elsewhere.
     config: { CHOL_SKILLS_DIR: SKILLS, ...overrides.config },
@@ -334,6 +337,81 @@ function withProjects(run: (projectsDir: string) => Promise<void>): Promise<void
   write('pending', 'CHANGE_ME');
   return run(tmp.path).finally(tmp.cleanup);
 }
+
+describe('runAgentsCli — the application of a project run', () => {
+  const RUN = ['with-project', '--agents-dir', FIXTURES, '--project', 'ready'];
+  const projectConfig = (projectsDir: string) => ({ CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: projectsDir });
+
+  it("makes sure it is up before the run and stops it once the run is over, the agent's failure included", async () => {
+    await withProjects(async (projectsDir) => {
+      const seen: string[] = [];
+      const ensureApp = (settings: ProjectSettings) => {
+        seen.push(`ensure ${settings.project}`);
+        return Promise.resolve({ started: true, stop: () => seen.push('stop') });
+      };
+      const failing = `${JSON.stringify({ type: 'result', is_error: true, result: 'boom' })}\n`;
+      const ok = harness(claudeStdout(claudeSuccessLine()), { config: projectConfig(projectsDir), ensureApp });
+      const failed = harness(claudeStdout(failing), { config: projectConfig(projectsDir), ensureApp });
+
+      expect(await runAgentsCli([...RUN, 'x'], ok.deps)).toBe(0);
+      expect(await runAgentsCli([...RUN, 'x'], failed.deps)).not.toBe(0);
+      expect(seen).toEqual(['ensure ready', 'stop', 'ensure ready', 'stop']);
+    });
+  });
+
+  it('does not run the agent when the application cannot be up, saying why', async () => {
+    await withProjects(async (projectsDir) => {
+      const ensureApp = () => Promise.reject(new AppError('a aplicação não responde em http://ready.test e …'));
+      const { deps, stdout, stderr } = harness(claudeStdout(claudeSuccessLine()), {
+        config: projectConfig(projectsDir),
+        ensureApp,
+      });
+
+      expect(await runAgentsCli([...RUN, 'x'], deps)).toBe(1);
+      expect(stderr.chunks.join('')).toBe(
+        '✗ a aplicação não responde em http://ready.test e …\n  O agente não foi executado.\n',
+      );
+      expect(stdout.chunks.join('')).not.toContain('[provider]');
+    });
+  });
+
+  it('lets any other failure through, as a bug', async () => {
+    await withProjects(async (projectsDir) => {
+      const { deps } = harness([], {
+        config: projectConfig(projectsDir),
+        ensureApp: () => Promise.reject(new Error('bug')),
+      });
+
+      await expect(runAgentsCli([...RUN, 'x'], deps)).rejects.toThrow('bug');
+    });
+  });
+
+  it('starts nothing on --dry-run, and says what it would do', async () => {
+    await withProjects(async (projectsDir) => {
+      const ensureApp = () => Promise.reject(new Error('must not be called'));
+      const { deps, stdout } = harness([], { config: projectConfig(projectsDir), ensureApp });
+
+      expect(await runAgentsCli([...RUN, '--dry-run'], deps)).toBe(0);
+      expect(stdout.chunks.join('')).toContain(
+        'confere http://ready.test: sem resposta, para aqui (o ambiente não tem envs[].start)',
+      );
+    });
+  });
+
+  it('checks the real application by default: down and without start, the agent does not run', async () => {
+    await withProjects(async (projectsDir) => {
+      const { ensureApp: _fake, ...deps } = harness(claudeStdout(claudeSuccessLine()), {
+        config: projectConfig(projectsDir),
+      }).deps;
+      const stderr = deps.stderr as Writable & { chunks: string[] };
+
+      expect(await runAgentsCli([...RUN, 'x'], deps)).toBe(1);
+      expect(stderr.chunks.join('')).toContain(
+        'a aplicação não responde em http://ready.test e o ambiente qa não tem envs[].start',
+      );
+    });
+  });
+});
 
 describe('runAgentsCli — tickets', () => {
   /** The `with-project` fixture as an agent with `ticket_types: [bug, story]` that writes only `${TICKET_FILE}`. */

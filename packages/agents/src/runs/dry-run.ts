@@ -1,3 +1,5 @@
+import type { ProjectEnvironment } from '@choliba/projects';
+
 import type { AgentStep, McpDeclaration } from '../agents/interfaces/agent.interface';
 import { describeStep } from '../steps/actions';
 import { runPlaceOf, wrapInstructions } from './prompt';
@@ -17,6 +19,8 @@ export interface DryRunInput {
   /** `--show-prompt`: the prompts and the command line in full, and the files the provider would write. */
   readonly showPrompt: boolean;
   readonly workspaceFiles: readonly PlannedFile[];
+  /** The project's application, which the CLI prepares and starts before anything else (`--project`). */
+  readonly app?: Pick<ProjectEnvironment, 'baseURL' | 'setup' | 'start'>;
 }
 
 /** One numbered entry: who does it (the CLI or the agent) and what, one line each. */
@@ -122,6 +126,17 @@ function section(title: string, body: string): string {
  * line), the `after` steps and the ticket check. Nothing is run or written. With `--show-prompt`,
  * the prompts and the command line in full, and the files the provider would write, follow.
  */
+/** What the CLI does with the project's application before the run: its setup, then making sure it is up. */
+function appEntries(app: DryRunInput['app']): readonly Entry[] {
+  if (app === undefined) return [];
+  const up =
+    app.start === undefined
+      ? `confere ${app.baseURL}: sem resposta, para aqui (o ambiente não tem envs[].start)`
+      : `sobe a aplicação com "${app.start}" se ${app.baseURL} não responder, e a derruba no fim`;
+  const setup = app.setup ?? [];
+  return [{ who: 'CLI', lines: setup.length === 0 ? [up] : [`roda o setup: ${setup.join(', ')}`, up] }];
+}
+
 export function formatDryRun(input: DryRunInput): string {
   const { request } = input;
   const { mode } = request;
@@ -148,6 +163,7 @@ export function formatDryRun(input: DryRunInput): string {
     ],
   };
   const entries: readonly Entry[] = [
+    ...appEntries(input.app),
     ...beforeEntries(steps.before, `${mode}.before`),
     ...ticketCreated,
     agentEntry(input, systemPrompt),

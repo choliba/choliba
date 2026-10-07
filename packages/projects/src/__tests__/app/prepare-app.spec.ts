@@ -1,6 +1,6 @@
-import type { ProjectSettings } from '@choliba/projects';
+import type { ProjectSettings } from '../../projects/settings';
 
-import { APP_PREPARED_ENV, prepareApp, type SetupSpawn } from '../../tests/prepare-app';
+import { APP_PREPARED_ENV, AppError, prepareApp, type SetupSpawn } from '../../app/prepare-app';
 
 function settingsWith(setup?: readonly string[]): ProjectSettings {
   const environment = {
@@ -61,11 +61,21 @@ describe('prepareApp', () => {
     ]);
   });
 
-  it('stops at the first command that fails, naming it, its code and where it is declared', () => {
+  it('stops at the first command that fails with an AppError, naming it, its code and where it is declared', () => {
     const { calls, run } = prepare(['bun install', 'bun run build'], [2]);
 
-    expect(run).toThrow(
-      'erro: a aplicação não ficou pronta: "bun install" saiu com código 2 (envs[development].setup em /p/demo/config.json).',
+    const error = (() => {
+      try {
+        run();
+        return undefined;
+      } catch (thrown) {
+        return thrown;
+      }
+    })();
+
+    expect(error).toBeInstanceOf(AppError);
+    expect((error as Error).message).toBe(
+      'a aplicação não ficou pronta: "bun install" saiu com código 2 (envs[development].setup em /p/demo/config.json).',
     );
     expect(calls).toHaveLength(1);
   });

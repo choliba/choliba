@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 06/10/2026 22:17:19 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 06/10/2026 22:53:15 — não editar manualmente.
 
 ## Resumo
 
@@ -165,10 +165,13 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 25 arquivos</summary>
+<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 28 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
+🟢|[src/app/ensure-app.ts](packages/projects/src/app/ensure-app.ts)|100.00|100.00|100.00|100.00
+🟢|[src/app/launch.ts](packages/projects/src/app/launch.ts)|100.00|100.00|100.00|100.00
+🟢|[src/app/prepare-app.ts](packages/projects/src/app/prepare-app.ts)|100.00|100.00|100.00|100.00
 🟢|[src/index.ts](packages/projects/src/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/locations/locations.module.ts](packages/projects/src/locations/locations.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/locations/locations.service.ts](packages/projects/src/locations/locations.service.ts)|100.00|100.00|100.00|100.00
@@ -198,7 +201,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/runner</b> — 100.00% das linhas, 18 arquivos</summary>
+<summary>🟢 <b>packages/runner</b> — 100.00% das linhas, 17 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -208,7 +211,6 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/tests/gate.ts](packages/runner/src/tests/gate.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/playwright-env.ts](packages/runner/src/tests/playwright-env.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/playwright-results.ts](packages/runner/src/tests/playwright-results.ts)|100.00|100.00|100.00|100.00
-🟢|[src/tests/prepare-app.ts](packages/runner/src/tests/prepare-app.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/run-tests.ts](packages/runner/src/tests/run-tests.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/runner-root.ts](packages/runner/src/tests/runner-root.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/target.ts](packages/runner/src/tests/target.ts)|100.00|100.00|100.00|100.00

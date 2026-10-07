@@ -81,3 +81,6 @@ export {
 } from './tickets/ticket-template';
 export { criteriaProblems, ticketCriteriaProblems } from './tickets/ticket-criteria';
 export { findReadme, readText, readmeSummary } from './projects/readme';
+export { APP_PREPARED_ENV, AppError, prepareApp, type PrepareAppContext, type SetupSpawn } from './app/prepare-app';
+export { ensureApp, type EnsureAppDeps, type RunningApp } from './app/ensure-app';
+export { answers, launchApp, type LaunchedApp } from './app/launch';

@@ -4,7 +4,7 @@ import { isAbsolute, join } from 'node:path';
 
 import type { GitRunner } from '@choliba/core/platform';
 import type { Theme } from '@choliba/core/theme';
-import { resolveLocations } from '@choliba/projects';
+import { resolveLocations, type ProjectSettings, type RunningApp } from '@choliba/projects';
 import type { ProcessRunnerService, SignalSource, Writable } from '@choliba/terminal';
 
 import type { ParsedAgentsArgs } from '../agents/dto/run-agent.dto';
@@ -36,6 +36,11 @@ export interface RunAgentsCliDeps {
   readonly git?: GitRunner;
   /** Where each run's empty folder is made (`ProviderRequest.runDir`); defaults to `<repoRoot>/.cache/runs`. */
   readonly runsDir?: string;
+  /**
+   * Makes sure the project's application is up for a run with `--project` (`ensureApp` of `@choliba/projects`,
+   * logging to `.cache/app/`); the specs pass a fake.
+   */
+  readonly ensureApp?: (settings: ProjectSettings) => Promise<RunningApp>;
 }
 
 export function toAbsolute(path: string, repoRoot: string): string {

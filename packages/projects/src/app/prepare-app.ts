@@ -1,9 +1,12 @@
-import { configJsonPath, type ProjectSettings } from '@choliba/projects';
-
-import { fail } from './tests-error';
+import { configJsonPath } from '../projects/project';
+import type { ProjectSettings } from '../projects/settings';
+import { ProjectsError } from '../shared/errors';
 
 /** Set for the runs of a batch once their project's application was prepared, so it is prepared only once. */
 export const APP_PREPARED_ENV = 'CHOL_APP_PREPARED';
+
+/** The project's application could not be prepared or started; the message says why and where to fix it. */
+export class AppError extends ProjectsError {}
 
 export type SetupSpawn = (
   command: string,
@@ -19,9 +22,9 @@ export interface PrepareAppContext {
 }
 
 /**
- * Runs the active environment's `setup` commands (`config.json#envs[].setup`) in its `appDir`, in order, before
- * the tests; the first that fails stops the run, naming the command and where it is declared. Nothing to do
- * without `setup`, or in a batch whose application is already prepared.
+ * Runs the active environment's `setup` commands (`config.json#envs[].setup`) in its `appDir`, in order; the
+ * first that fails throws `AppError`, naming the command and where it is declared. Nothing to do without `setup`,
+ * or in a batch whose application is already prepared.
  */
 export function prepareApp(settings: ProjectSettings, context: PrepareAppContext): void {
   const { setup = [], nome } = settings.environment;
@@ -35,8 +38,8 @@ export function prepareApp(settings: ProjectSettings, context: PrepareAppContext
       shell: true,
     });
     if (status === 0) continue;
-    fail(
-      `erro: a aplicação não ficou pronta: "${command}" saiu com código ${String(status)} ` +
+    throw new AppError(
+      `a aplicação não ficou pronta: "${command}" saiu com código ${String(status)} ` +
         `(envs[${nome}].setup em ${configJsonPath(context.projectsDir, settings.project)}).`,
     );
   }

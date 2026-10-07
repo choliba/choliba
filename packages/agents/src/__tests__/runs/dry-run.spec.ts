@@ -70,6 +70,23 @@ describe('formatDryRun', () => {
     ]);
   });
 
+  it("starts with the project's application: its setup, then starting it or stopping when it cannot be", () => {
+    const withStart = formatDryRun(
+      input({
+        app: { baseURL: 'http://localhost:3000', setup: ['bun install', 'bun run build'], start: 'bun run dev' },
+      }),
+    ).split('\n');
+    expect(withStart.slice(2, 4)).toEqual([
+      ' 1. [CLI]    roda o setup: bun install, bun run build',
+      '             sobe a aplicação com "bun run dev" se http://localhost:3000 não responder, e a derruba no fim',
+    ]);
+    expect(withStart[4]).toBe(' 2. [CLI]    execute.before: nada');
+
+    expect(formatDryRun(input({ app: { baseURL: 'http://localhost:3000' } })).split('\n')[2]).toBe(
+      ' 1. [CLI]    confere http://localhost:3000: sem resposta, para aqui (o ambiente não tem envs[].start)',
+    );
+  });
+
   it('shows each step, the ticket it creates and closes, the skills, the MCPs and the model', () => {
     const agent = {
       ...request().agent,
