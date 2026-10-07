@@ -58,25 +58,33 @@ describe('renderEvent', () => {
     ).toBeUndefined();
   });
 
-  it('renders a failed tool-result with the first line of its text', () => {
+  it('renders a failed tool-result with what it worked on and the first line of its error', () => {
     expect(
       renderEvent(
-        { type: 'tool-result', id: 't1', name: 'Bash', isError: true, denied: false, text: 'boom\nmore detail' },
+        {
+          type: 'tool-result',
+          id: 't1',
+          name: 'Bash',
+          isError: true,
+          denied: false,
+          text: 'boom\nmore detail',
+          target: 'bun test',
+        },
         OPTS,
       ),
-    ).toBe('[echo] ✗ Bash: boom');
+    ).toBe('[echo] ✗ Bash bun test: erro: boom');
   });
 
-  it('marks a denied tool-result distinctly from any other failure', () => {
+  it('renders a denied tool-result with the agent.yaml key that would allow it', () => {
     expect(
       renderEvent({ type: 'tool-result', id: 't1', name: 'Bash', isError: true, denied: true, text: 'no' }, OPTS),
-    ).toBe('[echo] ✗ Bash (denied): no');
+    ).toBe('[echo] ✗ Bash: negado (comando fora de allow.execute)');
   });
 
   it('renders an unnamed tool-result with a placeholder name', () => {
     expect(
       renderEvent({ type: 'tool-result', id: 't1', name: undefined, isError: true, denied: false, text: 'no' }, OPTS),
-    ).toBe('[echo] ✗ ?: no');
+    ).toBe('[echo] ✗ ?: erro: no');
   });
 
   it('renders a plan event as ready, not the full markdown (that goes to the plan file, not the terminal)', () => {

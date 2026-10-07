@@ -28,6 +28,10 @@ permissões do `agent.yaml`.
     dos MCPs; em `plan` e `ask`, não grava nada. Se ele chama um subagente, o choliba interrompe a execução (veja
     [Segurança](seguranca.md)).
 
+    O terminal mostra cada ferramenta que o agente chama (`→`) e, quando uma falha, onde e por quê, igual em
+    qualquer provider: `✗ Shell bun install: negado (comando fora de allow.execute)` diz qual chave do
+    `agent.yaml` liberaria a chamada; `✗ Read src/x.ts: erro: File not found` é o erro da própria ferramenta.
+
 **Fase 3: o choliba, depois do agente**
 
 12. Apaga a pasta da execução e as ferramentas da run e desfaz o que o provider preparou (os arquivos `.cursor/` do

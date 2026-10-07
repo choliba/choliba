@@ -43,17 +43,43 @@ function cursorMcpUse(key: string, args: Record<string, unknown>): McpUse | unde
  * refusal such as `permissionDenied` / `writePermissionDenied` (a deny rule matched) or `rejected`
  * (a command that needed approval nobody could give in a headless run), carrying `error`/`reason`.
  */
+/** The fields a refusal or an error carries its message in (`readToolCall` uses `errorMessage`). */
+const MESSAGE_FIELDS: readonly string[] = ['error', 'reason', 'message', 'errorMessage'];
+
+/**
+ * The first non-empty message of `detail` (itself, when it is text), looking inside an `error` that is an object
+ * too; `''` when none.
+ */
+function messageOf(detail: unknown): string {
+  if (!isRecord(detail)) {
+    return asString(detail) ?? '';
+  }
+  for (const field of MESSAGE_FIELDS) {
+    const value = detail[field];
+    const text = isRecord(value) ? messageOf(value) : (asString(value) ?? '');
+    if (text.trim() !== '') {
+      return text;
+    }
+  }
+  return '';
+}
+
+/**
+ * Whether Cursor refused the call rather than the tool failing: `rejected` (a command no rule allows, which would
+ * need an approval no one gives in a headless run), a `…PermissionDenied` outcome, or an `error` whose message is
+ * a denial (`readToolCall` reports a denied path as `{ error: { errorMessage: 'Permission denied' } }`).
+ */
+function isDenied(kind: string, message: string): boolean {
+  return kind === 'rejected' || /permissiondenied$/i.test(kind) || /^permission denied/i.test(message);
+}
+
 function toolResult(id: string, name: string, result: Record<string, unknown>): AgentEvent {
   const [kind = ''] = Object.keys(result);
   if (kind === 'success') {
     return { type: 'tool-result', id, name, isError: false, denied: false, text: '' };
   }
-  const detail = result[kind];
-  const message = isRecord(detail) ? (asString(detail['error']) ?? asString(detail['reason'])) : undefined;
-  // A `rejected` call comes with an empty reason; the outcome's own name is better than nothing.
-  const text = message === undefined || message === '' ? kind : message;
-  const denied = kind === 'rejected' || /permissiondenied$/i.test(kind);
-  return { type: 'tool-result', id, name, isError: true, denied, text };
+  const text = messageOf(result[kind]);
+  return { type: 'tool-result', id, name, isError: true, denied: isDenied(kind, text), text };
 }
 
 /**
