@@ -1,5 +1,6 @@
 import type { CommandSpec } from '@choliba/core/cli';
 
+import { AGENT_HELP } from '../agent/agent.help';
 import { NEW_HELP } from '../new/new.help';
 
 /** `choliba-cli --help`. */
@@ -12,6 +13,12 @@ export const CLI_HELP: CommandSpec = {
     '  choliba-cli new minha-pasta',
   commands: () => [
     { name: 'new', description: 'Cria uma pasta de trabalho do choliba', group: 'Commands', spec: NEW_HELP },
+    {
+      name: 'agent',
+      description: 'Cria um agente novo na pasta de trabalho (agent new)',
+      group: 'Commands',
+      spec: AGENT_HELP,
+    },
   ],
   flags: [
     { name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true },

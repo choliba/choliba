@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { writeAgent } from '../agent/create-agent';
 import { AGENTS, type AgentName, type NewOptions, PROVIDERS, type Provider, WorkspaceError } from './new-options';
 import { setEnvValue } from './env-file';
 import type { RunCommand } from '../runtime/interfaces/runtime.interface';
@@ -19,6 +20,8 @@ export interface NewResult {
   readonly dir: string;
   readonly provider: Provider;
   readonly agents: readonly AgentName[];
+  /** The agent created along the way (`agent new`), if any. */
+  readonly newAgent: string | undefined;
   /** Whether `choliba check` found nothing wrong. */
   readonly checked: boolean;
 }
@@ -74,10 +77,24 @@ async function configureMcpApp(options: NewOptions, dir: string, deps: NewDeps):
   }
 }
 
+/** The optional `agent new` step: asked, never with `--no-input` (its default is no). */
+async function maybeNewAgent(dir: string, deps: NewDeps): Promise<string | undefined> {
+  const answer = await deps.prompter.select(
+    'Criar um agente seu agora?',
+    [
+      { value: 'nao', label: 'não (depois: choliba-cli agent new)' },
+      { value: 'sim', label: 'sim' },
+    ],
+    'nao',
+  );
+  if (answer === 'nao') return undefined;
+  return (await writeAgent({ noInput: false }, { root: dir, prompter: deps.prompter, say: deps.say })).name;
+}
+
 /**
  * `choliba-cli new`: a new workspace, step by step. The folder and its `package.json`; the choliba, whose setup
  * makes the rest of the workspace; the agents' provider in `.env`; the agents of the choliba (and the mcp-app the
- * product-owner needs); and `choliba check` at the end. Every choice comes from `options` or is asked.
+ * product-owner needs); optionally a new agent of one's own; and `choliba check` at the end. Every choice comes from `options` or is asked.
  */
 export async function newWorkspace(options: NewOptions, deps: NewDeps): Promise<NewResult> {
   const dir = await workspaceDir(options, deps);
@@ -116,9 +133,11 @@ export async function newWorkspace(options: NewOptions, deps: NewDeps): Promise<
     ]);
   }
 
+  const newAgent = await maybeNewAgent(dir, deps);
+
   deps.say('conferindo: bunx choliba check');
   const checked = deps.run('bunx', ['choliba', 'check'], dir) === 0;
-  return { dir, provider, agents, checked };
+  return { dir, provider, agents, newAgent, checked };
 }
 
 /** The summary on stdout: where the workspace is, and what to do next. */
@@ -127,5 +146,5 @@ export function formatSummary(result: NewResult): string {
     ? `  cd ${result.dir}\n  bunx choliba projects create-project minha-app --app-dir ../minha-app --base-url http://localhost:3000\n  bunx choliba product-owner --project minha-app --type story "o que a aplicação deve fazer"`
     : `  cd ${result.dir}\n  bunx choliba --help`;
   const status = result.checked ? 'pronta' : 'criada, mas o `choliba check` apontou o que corrigir (acima)';
-  return `Pasta de trabalho ${status}: ${result.dir}\nProvider: ${result.provider}. Agentes: ${result.agents.length === 0 ? 'nenhum' : result.agents.join(', ')}.\n\nPróximos passos:\n${next}\n`;
+  return `Pasta de trabalho ${status}: ${result.dir}\nProvider: ${result.provider}. Agentes: ${result.agents.length === 0 ? 'nenhum' : result.agents.join(', ')}.\n${result.newAgent === undefined ? '' : `Agente novo: ${result.newAgent} (troque os CHANGE_ME do agent.yaml dele).\n`}\nPróximos passos:\n${next}\n`;
 }

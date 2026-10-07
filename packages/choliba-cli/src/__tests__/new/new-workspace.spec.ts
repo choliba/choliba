@@ -48,6 +48,7 @@ describe('newWorkspace', () => {
         dir: ws,
         provider: 'claude',
         agents: ['product-owner', 'test-writer', 'implementer'],
+        newAgent: undefined,
         checked: true,
       });
       expect(JSON.parse(readFileSync(path.join(ws, 'package.json'), 'utf8'))).toEqual({ name: 'ws', private: true });
@@ -102,9 +103,9 @@ describe('newWorkspace', () => {
       },
       select: (question, choices) => {
         asked.push(`${question} ${choices.map((choice) => choice.label).join('|')}`);
-        const third = choices[2];
-        if (third === undefined) throw new Error('três providers esperados');
-        return Promise.resolve(third.value);
+        const choice = choices[2] ?? choices[0];
+        if (choice === undefined) throw new Error('escolhas esperadas');
+        return Promise.resolve(choice.value);
       },
       multiselect: (question) => {
         asked.push(question);
@@ -120,8 +121,33 @@ describe('newWorkspace', () => {
         'Em que pasta criar a pasta de trabalho?',
         'Com que provider os agentes rodam? auto (o primeiro instalado)|claude|cursor',
         'Quais agentes do choliba instalar?',
+        'Criar um agente seu agora? não (depois: choliba-cli agent new)|sim',
       ]);
       expect(s.calls).toEqual([`perguntada$ bun add --trust ${CHOLIBA_PACKAGE}`, 'perguntada$ bunx choliba check']);
+    } finally {
+      rmSync(s.root, { recursive: true, force: true });
+    }
+  });
+
+  it('creates an agent of its own along the way, when asked to, before the check', async () => {
+    const prompter: Prompter = {
+      ...defaultsPrompter,
+      text: (_question, flag) => Promise.resolve(flag === 'NOME' ? 'revisor' : 'Texto.'),
+      select: (_question, choices, fallback) => {
+        const yes = choices.find((choice) => choice.value === 'sim');
+        return Promise.resolve(yes === undefined ? fallback : yes.value);
+      },
+    };
+    const s = scene(prompter);
+    try {
+      const result = await newWorkspace({ ...BASE, dir: 'ws', agents: [] }, s.deps);
+
+      expect(result.newAgent).toBe('revisor');
+      expect(readFileSync(path.join(s.root, 'ws', '.choliba', 'agents', 'revisor', 'agent.yaml'), 'utf8')).toContain(
+        'CHANGE_ME',
+      );
+      expect(s.calls.at(-1)).toBe('ws$ bunx choliba check');
+      expect(formatSummary(result)).toContain('Agente novo: revisor (troque os CHANGE_ME do agent.yaml dele).');
     } finally {
       rmSync(s.root, { recursive: true, force: true });
     }
@@ -177,11 +203,18 @@ describe('newWorkspace', () => {
 
 describe('formatSummary', () => {
   it('says where the workspace is and what to run next', () => {
-    const ready = formatSummary({ dir: '/ws', provider: 'auto', agents: ['product-owner'], checked: true });
+    const ready = formatSummary({
+      dir: '/ws',
+      provider: 'auto',
+      agents: ['product-owner'],
+      newAgent: undefined,
+      checked: true,
+    });
     expect(ready).toContain('Pasta de trabalho pronta: /ws\nProvider: auto. Agentes: product-owner.');
     expect(ready).toContain('bunx choliba product-owner --project minha-app');
+    expect(ready).not.toContain('Agente novo');
 
-    const bare = formatSummary({ dir: '/ws', provider: 'claude', agents: [], checked: false });
+    const bare = formatSummary({ dir: '/ws', provider: 'claude', agents: [], newAgent: undefined, checked: false });
     expect(bare).toContain('criada, mas o `choliba check` apontou o que corrigir');
     expect(bare).toContain('Agentes: nenhum.');
     expect(bare).toContain('bunx choliba --help');

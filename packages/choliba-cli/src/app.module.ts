@@ -3,6 +3,7 @@ import { Module, type DynamicModule } from '@nestjs/common';
 import { PlatformModule } from '@choliba/core/nest';
 import type { Platform } from '@choliba/core/platform';
 
+import { AgentModule } from './agent/agent.module';
 import { HelpModule } from './help/help.module';
 import { NewModule } from './new/new.module';
 import type { CliRuntime } from './runtime/interfaces/runtime.interface';
@@ -14,7 +15,7 @@ export class AppModule {
   static forRoot(platform: Platform, runtime: CliRuntime): DynamicModule {
     return {
       module: AppModule,
-      imports: [PlatformModule.forRoot(platform), RuntimeModule.forRoot(runtime), HelpModule, NewModule],
+      imports: [PlatformModule.forRoot(platform), RuntimeModule.forRoot(runtime), HelpModule, NewModule, AgentModule],
     };
   }
 }
