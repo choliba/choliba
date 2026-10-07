@@ -1,0 +1,112 @@
+/*
+ * The colors of the choliba owl (docs/public/owl-logo-choliba.svg): its deep green as the brand, its amber as the
+ * accent. Every text pair meets WCAG AA (4.5:1); the amber only colors the large hero name, where 3:1 is enough.
+ */
+
+:root {
+  --choliba-green: #1a3b34;
+  --choliba-amber: #d99b26;
+  --choliba-cream: #f4efe6;
+
+  --vp-c-brand-1: #1a3b34;
+  --vp-c-brand-2: #2b5a50;
+  --vp-c-brand-3: #1a3b34;
+  --vp-c-brand-soft: rgba(26, 59, 52, 0.14);
+
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #1a3b34 30%, #b07a12);
+  --vp-home-hero-image-background-image: linear-gradient(-45deg, var(--choliba-amber) 50%, var(--choliba-green) 50%);
+  --vp-home-hero-image-filter: blur(56px);
+}
+
+.dark {
+  --vp-c-brand-1: #8fd1be;
+  --vp-c-brand-2: #74bfaa;
+  --vp-c-brand-3: #2f6e60;
+  --vp-c-brand-soft: rgba(143, 209, 190, 0.16);
+
+  --vp-home-hero-name-background: linear-gradient(120deg, #8fd1be 30%, #e3ae45);
+}
+
+/* The hero image's glow is softer on small screens, where it sits behind the text. */
+@media (max-width: 639px) {
+  :root {
+    --vp-home-hero-image-filter: blur(40px);
+  }
+}
+
+/* The section cards of the home: the brand color marks the one under the pointer. */
+.VPFeature.link:hover {
+  border-color: var(--vp-c-brand-1);
+}
+
+/* A flag or file name in a card stays on one line: `--dry-run` would otherwise break after its dashes. */
+.VPFeature code {
+  white-space: nowrap;
+}
+
+/*
+ * Wider pages on wide screens: the docs are full of tables and command lines, which VitePress's 688px column wraps
+ * (the CLI table broke each command over three lines). Below 1440px nothing changes; prose stays near 95 characters.
+ * The layout's own max width stays: raising it squeezes the sidebar at 1440px.
+ */
+@media (min-width: 1440px) {
+  .VPDoc.has-aside .content .content-container {
+    max-width: 840px;
+  }
+}
+
+/* Very wide screens have room for a wider layout too, without squeezing the sidebar. */
+@media (min-width: 1680px) {
+  :root {
+    --vp-layout-max-width: 1680px;
+  }
+
+  .VPDoc.has-aside .content .content-container {
+    max-width: 920px;
+  }
+}
+
+/*
+ * The hero: the name leads and the sentence follows. VitePress gives both the same size, and with the sentence
+ * over two lines the brand looked like the smaller of the two.
+ */
+.VPHero .main .name {
+  font-size: 48px;
+  line-height: 56px;
+}
+
+.VPHero .main .text {
+  font-size: 26px;
+  line-height: 34px;
+}
+
+/* Lines of about the same length, never a word left alone on the last one. */
+.VPHero .main .text,
+.VPHero .main .tagline {
+  text-wrap: balance;
+}
+
+@media (min-width: 640px) {
+  .VPHero .main .name {
+    font-size: 64px;
+    line-height: 72px;
+  }
+
+  .VPHero .main .text {
+    font-size: 34px;
+    line-height: 42px;
+  }
+}
+
+@media (min-width: 960px) {
+  .VPHero .main .name {
+    font-size: 80px;
+    line-height: 88px;
+  }
+
+  .VPHero .main .text {
+    font-size: 40px;
+    line-height: 48px;
+  }
+}

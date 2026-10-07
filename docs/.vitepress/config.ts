@@ -19,8 +19,9 @@ export default defineConfig({
   description: 'Agentes que transformam um pedido em ticket, testes e código, com permissões e portões.',
   cleanUrls: true,
   lastUpdated: true,
-  // The index of `docs/` is its README, which GitHub shows; on the site it is the home.
-  rewrites: { 'README.md': 'index.md' },
+  // The index of `docs/` is its README, which GitHub shows; on the site the home is index.md, and the README is
+  // the "Índice" page.
+  rewrites: { 'README.md': 'indice.md' },
   head: [['link', { rel: 'icon', type: 'image/svg+xml', href: '/owl-logo-choliba.svg' }]],
   markdown: {
     // The anchors GitHub makes, which the pages already link to (`cli.md#a-aplicação-do-projeto`).
@@ -43,6 +44,7 @@ export default defineConfig({
     logo: '/owl-logo-choliba.svg',
     nav: [
       { text: 'Documentação', link: '/primeiros-passos' },
+      { text: 'Índice', link: '/indice' },
       { text: 'Releases', link: `${REPOSITORY}/releases/tag/v0.0.1-dev` },
     ],
     // From the index: a new page shows up on its own, where docs/README.md links it (scripts/libs/docs-sidebar.ts).

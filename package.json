@@ -36,9 +36,10 @@
     "chol:pack": "bun run --cwd packages/choliba build && cd packages/choliba/dist && bun pm pack --destination ..",
     "git:clean": "bun run scripts/git-clean.ts",
     "release:notes": "bun run scripts/release-notes.ts",
-    "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:dev": "bun run docs:home && vitepress dev docs",
+    "docs:build": "bun run docs:home && vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "docs:home": "bun scripts/docs-home.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
