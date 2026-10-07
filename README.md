@@ -70,6 +70,15 @@ bun add --trust \
 O `--trust` roda o `choliba setup`, que monta a pasta de trabalho e liga o autocomplete. Dependências, o que o setup
 cria e como atualizar: [Primeiros passos](docs/primeiros-passos.md).
 
+Também dá para começar pelo assistente [`choliba-cli`](docs/choliba-cli.md), instalado uma vez na máquina, que
+cria a pasta, instala o choliba e os agentes, e cria agentes novos:
+
+```
+bun add -g \
+  https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-cli-0.0.1-dev.tgz
+choliba-cli new dev-tools
+```
+
 ## Uso
 
 Numa pasta de trabalho com o choliba instalado, do projeto ao código implementado (o passo a passo completo, de
@@ -105,7 +114,7 @@ vazia. Detalhes e limites de cada provider: [Segurança](docs/conceitos/seguranc
 No site [choliba.github.io](https://choliba.github.io/), com busca, ou em
 [`docs/`](docs/README.md), por tipo:
 
-- **Para começar:** [Primeiros passos](docs/primeiros-passos.md).
+- **Para começar:** [Primeiros passos](docs/primeiros-passos.md) e o assistente [`choliba-cli`](docs/choliba-cli.md).
 - **Guias:** [escrever um agente](docs/guias/escrever-um-agente.md),
   [instalar agentes, skills e MCPs](docs/guias/instalar-agentes.md), [`--dry-run`](docs/guias/dry-run.md).
 - **Referência:** [CLI](docs/referencia/cli.md), [`agent.yaml`](docs/referencia/agent-yaml.md),
