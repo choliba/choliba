@@ -29,11 +29,11 @@ O que só os agentes usam não é comando do choliba: é uma ferramenta da run. 
 de cada ferramenta ao lado da pasta da run (`.cache/runs/<execução>.<ferramenta>`), libera só esse caminho para o
 agente, impede que ele seja reescrito e o apaga no fim. O prompt traz o caminho completo de cada uma.
 
-| Ferramenta         | Vem de                     | O que faz                                                                                                                                  |
-| ------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `delete`           | `permissions.allow.delete` | Apaga arquivos e pastas sob esses caminhos; recusa links para fora, a própria raiz e o que `deny.delete` nega. Não existe em `plan`/`ask`. |
-| `playwright-cli`   | `permissions.allow.tools`  | O navegador (`playwright cli`), na versão do choliba, na raiz da pasta de trabalho; grava em `CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR`.             |
-| `playwright-trace` | `permissions.allow.tools`  | Lê o `trace.zip` de um teste que falhou (`playwright trace`), na versão do choliba.                                                        |
+| Ferramenta         | Vem de                     | O que faz                                                                                                                                                       |
+| ------------------ | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `delete`           | `permissions.allow.delete` | Apaga arquivos e pastas sob esses caminhos; recusa links para fora, a própria raiz e o que `deny.delete` nega. Não existe em `plan`/`ask`.                      |
+| `playwright-cli`   | `permissions.allow.tools`  | O navegador (`playwright cli`), na versão do choliba, na raiz da pasta de trabalho; grava em `CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR`.                                  |
+| `playwright-trace` | `permissions.allow.tools`  | Lê o `trace.zip` de um teste que falhou (`playwright trace`), na versão do choliba; roda em `CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR`, com os caminhos relativos à raiz. |
 
 ```yaml
 permissions:

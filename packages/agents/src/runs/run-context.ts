@@ -11,6 +11,7 @@ import type { ParsedAgentsArgs } from '../agents/dto/run-agent.dto';
 import type { CommandDefinition, ExecutionMode } from '../agents/interfaces/command.interface';
 import type { ProviderRequest } from '../providers/interfaces/provider.interface';
 import type { ProviderRegistry, ResolvedProvider } from '../providers/provider-registry';
+import type { RunProject } from './run-project';
 
 export interface RunAgentsCliDeps {
   /**
@@ -70,6 +71,8 @@ export interface RunContext {
   readonly deps: RunAgentsCliDeps;
   readonly agentsDir: string;
   readonly vars: Readonly<Record<string, string>>;
+  /** The project of `--project`; absent without one. */
+  readonly project?: RunProject;
   readonly mode: ExecutionMode;
   readonly task: string;
   readonly planContent: string | undefined;

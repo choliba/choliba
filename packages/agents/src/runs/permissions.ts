@@ -2,6 +2,7 @@ import { dirname, isAbsolute, join } from 'node:path';
 
 import type { PermissionPolicy } from '../agents/interfaces/command.interface';
 import { asStringArray, isRecord } from '../shared/json';
+import type { RunProject } from './run-project';
 
 /** One entry of `permissions.allow.execute`/`.deny.execute`: a directory and the commands that go with it. */
 export interface ExecuteRule {
@@ -222,6 +223,8 @@ export interface RunPlace {
   readonly root: string;
   /** The run's effective policy: a read-only run has no `delete` tool. */
   readonly policy?: PermissionPolicy;
+  /** The project the run works on (`--project`). */
+  readonly project?: RunProject;
 }
 
 /**
