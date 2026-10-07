@@ -3,7 +3,7 @@
 ## Instalação
 
 O choliba não está no npm: o pacote é o `.tgz` da pré-release
-[`v0.0.1-dev`](https://github.com/jacksonbicalho/choliba/releases/tag/v0.0.1-dev), que é refeita a cada merge na
+[`v0.0.1-dev`](https://github.com/choliba/choliba/releases/tag/v0.0.1-dev), que é refeita a cada merge na
 `master` (o endereço não muda).
 
 Instale numa pasta que já tenha o próprio `package.json`:
@@ -11,7 +11,7 @@ Instale numa pasta que já tenha o próprio `package.json`:
 ```
 echo '{ "name": "dev-tools", "private": true }' > package.json
 bun add --trust \
-  https://github.com/jacksonbicalho/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
+  https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
 ```
 
 O `bun add` usa o primeiro `package.json` que encontra subindo a partir da pasta atual. Numa pasta vazia dentro de
@@ -23,7 +23,7 @@ O `--trust` deixa o Bun rodar o `postinstall` do pacote, que já executa `cholib
 
 ```
 bun add \
-  https://github.com/jacksonbicalho/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
+  https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
 bunx choliba setup
 ```
 
@@ -62,11 +62,11 @@ instale de novo:
 ```
 bun remove choliba
 bun add --trust \
-  https://github.com/jacksonbicalho/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
+  https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
 ```
 
 Para conferir qual versão ficou instalada, rode `bunx choliba --version` e compare com o título da última
-atualização nas [notas da release](https://github.com/jacksonbicalho/choliba/releases/tag/v0.0.1-dev). A saída tem
+atualização nas [notas da release](https://github.com/choliba/choliba/releases/tag/v0.0.1-dev). A saída tem
 este formato:
 
 ```
@@ -94,7 +94,7 @@ pasta pessoal).
 
    ```sh
    bun add --trust \
-     https://github.com/jacksonbicalho/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
+     https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
    ```
 
 3. Crie o projeto de teste da aplicação. Sem nome, o projeto leva o nome da pasta de `--app-dir`. O `--base-url` é o
@@ -145,9 +145,9 @@ pasta pessoal).
    completas estão em [Instalar agentes](guias/instalar-agentes.md#os-agentes-do-choliba)):
 
    ```sh
-   bunx choliba install github:jacksonbicalho/choliba --path .choliba/agents/product-owner
-   bunx choliba install github:jacksonbicalho/choliba --path .choliba/agents/test-writer
-   bunx choliba install github:jacksonbicalho/choliba --path .choliba/agents/implementer
+   bunx choliba install github:choliba/choliba --path .choliba/agents/product-owner
+   bunx choliba install github:choliba/choliba --path .choliba/agents/test-writer
+   bunx choliba install github:choliba/choliba --path .choliba/agents/implementer
    ```
 
 5. O `product-owner` traz o MCP `mcp-app`, que precisa de `CHOL_MCP_APP_DIR` e `CHOL_MCP_APP_LOG_DIR` no `.env`.

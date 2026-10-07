@@ -46,7 +46,7 @@ As saídas abaixo são de execuções reais, numa pasta de trabalho recém-criad
 Cada agente traz as skills e os MCPs que declara, do mesmo repositório:
 
 ```
-$ bunx choliba install github:jacksonbicalho/choliba --path .choliba/agents/product-owner
+$ bunx choliba install github:choliba/choliba --path .choliba/agents/product-owner
 Instalado:
   agente product-owner → .choliba/agents/product-owner
   skill playwright-cli → .choliba/skills/playwright-cli
@@ -59,7 +59,7 @@ Confira com: choliba check
 ```
 
 ```
-$ bunx choliba install github:jacksonbicalho/choliba --path .choliba/agents/test-writer
+$ bunx choliba install github:choliba/choliba --path .choliba/agents/test-writer
 Instalado:
   agente test-writer → .choliba/agents/test-writer
   skill playwright-cli → .choliba/skills/playwright-cli
@@ -69,7 +69,7 @@ Confira com: choliba check
 ```
 
 ```
-$ bunx choliba install github:jacksonbicalho/choliba --path .choliba/agents/implementer
+$ bunx choliba install github:choliba/choliba --path .choliba/agents/implementer
 Instalado:
   agente implementer → .choliba/agents/implementer
   skill playwright-trace → .choliba/skills/playwright-trace
@@ -78,7 +78,7 @@ Confira com: choliba check
 ```
 
 ```
-$ bunx choliba install github:jacksonbicalho/choliba --path .choliba/agents/docs-updater
+$ bunx choliba install github:choliba/choliba --path .choliba/agents/docs-updater
 Instalado:
   agente docs-updater → .choliba/agents/docs-updater
   skill documentation → .choliba/skills/documentation
@@ -89,7 +89,7 @@ Confira com: choliba check
 ### Uma skill ou um MCP sozinho
 
 ```
-$ bunx choliba install github:jacksonbicalho/choliba --path .choliba/skills/playwright-trace
+$ bunx choliba install github:choliba/choliba --path .choliba/skills/playwright-trace
 Instalado:
   skill playwright-trace → .choliba/skills/playwright-trace
 
@@ -97,7 +97,7 @@ Confira com: choliba check
 ```
 
 ```
-$ bunx choliba install github:jacksonbicalho/choliba --path .choliba/mcps/mcp-app.json
+$ bunx choliba install github:choliba/choliba --path .choliba/mcps/mcp-app.json
 Instalado:
   MCP mcp-app → .choliba/mcps/mcp-app.json
 
@@ -201,7 +201,7 @@ versão do Playwright do choliba (veja [Ferramentas da run](../referencia/agent-
 Uma branch ou tag, um clone local, ou só para ver o que seria instalado (`--dry-run`):
 
 ```
-$ bunx choliba install github:jacksonbicalho/choliba#develop --path .choliba/agents/test-writer --dry-run
+$ bunx choliba install github:choliba/choliba#develop --path .choliba/agents/test-writer --dry-run
 Instalaria (--dry-run, nada foi gravado):
   agente test-writer → .choliba/agents/test-writer
   skill playwright-cli → .choliba/skills/playwright-cli

@@ -59,6 +59,10 @@ jobs:
       - name: Typecheck, lint, formatação e testes com cobertura
         run: bun run check
 
+      # O site da documentação (docs.yml publica a partir da master): um link quebrado ou uma config errada barra o PR.
+      - name: Gerar o site da documentação
+        run: bun run docs:build
+
       # A cobertura só pode subir. O limite anterior é o threshold commitado na branch
       # de destino (o ratchet mantém esse valor igual à última cobertura aprovada).
       - name: Cobertura igual ou maior que a da branch de destino

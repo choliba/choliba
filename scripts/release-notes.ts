@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { highlightsOf, releaseNotes, type Commit, type Release } from './libs/release-notes';
 
 const repoRoot = join(import.meta.dirname, '..');
-const repository = process.env['GITHUB_REPOSITORY'] ?? 'jacksonbicalho/choliba';
+const repository = process.env['GITHUB_REPOSITORY'] ?? 'choliba/choliba';
 const tag = process.env['TAG'] ?? 'v0.0.1-dev';
 
 /** Separam campos e registros de um `git log --format` (caracteres de controle, que não aparecem em mensagens). */
