@@ -10,9 +10,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/jacksonbicalho/choliba/actions/workflows/ci.yml"><img src="https://github.com/jacksonbicalho/choliba/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI" /></a>
-  <a href="COVERAGE.md"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/jacksonbicalho/choliba/develop/.github/badges/coverage.json" alt="cobertura" /></a>
-  <a href="https://github.com/jacksonbicalho/choliba/releases/tag/v0.0.1-dev"><img src="https://img.shields.io/github/v/release/jacksonbicalho/choliba?include_prereleases" alt="release" /></a>
+  <a href="https://github.com/choliba/choliba/actions/workflows/ci.yml"><img src="https://github.com/choliba/choliba/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI" /></a>
+  <a href="COVERAGE.md"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/choliba/choliba/develop/.github/badges/coverage.json" alt="cobertura" /></a>
+  <a href="https://github.com/choliba/choliba/releases/tag/v0.0.1-dev"><img src="https://img.shields.io/github/v/release/choliba/choliba?include_prereleases" alt="release" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/licen%C3%A7a-MIT-blue.svg" alt="licença MIT" /></a>
 </p>
 
@@ -57,14 +57,14 @@ Agentes podem usar skills e servidores MCP, instalados na pasta de trabalho.
 ## Instalação
 
 O choliba não está no npm: o pacote é o `.tgz` da pré-release
-[`v0.0.1-dev`](https://github.com/jacksonbicalho/choliba/releases/tag/v0.0.1-dev), refeita a cada merge na `master`.
+[`v0.0.1-dev`](https://github.com/choliba/choliba/releases/tag/v0.0.1-dev), refeita a cada merge na `master`.
 
 Numa pasta com o próprio `package.json` (sem ele, o Bun pode instalar numa pasta acima):
 
 ```
 echo '{ "name": "dev-tools", "private": true }' > package.json
 bun add --trust \
-  https://github.com/jacksonbicalho/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
+  https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
 ```
 
 O `--trust` roda o `choliba setup`, que monta a pasta de trabalho e liga o autocomplete. Dependências, o que o setup
@@ -80,9 +80,9 @@ uma pasta vazia ao `check` verde, está em
 # um projeto para a aplicação em ../minha-app, e os agentes do repositório do choliba
 bunx choliba projects create-project minha-app \
   --app-dir ../minha-app --base-url http://localhost:3000
-bunx choliba install github:jacksonbicalho/choliba --path .choliba/agents/product-owner
-bunx choliba install github:jacksonbicalho/choliba --path .choliba/agents/test-writer
-bunx choliba install github:jacksonbicalho/choliba --path .choliba/agents/implementer
+bunx choliba install github:choliba/choliba --path .choliba/agents/product-owner
+bunx choliba install github:choliba/choliba --path .choliba/agents/test-writer
+bunx choliba install github:choliba/choliba --path .choliba/agents/implementer
 bunx choliba check
 
 # o ticket, os testes e a implementação
@@ -102,7 +102,7 @@ vazia. Detalhes e limites de cada provider: [Segurança](docs/conceitos/seguranc
 
 ## Documentação
 
-No site [jacksonbicalho.github.io/choliba](https://jacksonbicalho.github.io/choliba/), com busca, ou em
+No site [choliba.github.io/choliba](https://choliba.github.io/choliba/), com busca, ou em
 [`docs/`](docs/README.md), por tipo:
 
 - **Para começar:** [Primeiros passos](docs/primeiros-passos.md).
@@ -133,7 +133,7 @@ decisões de projeto que derivam deles estão em [PHILOSOPHY.md](PHILOSOPHY.md).
 
 ## Contribuindo
 
-Perguntas, bugs e sugestões vão para as [issues](https://github.com/jacksonbicalho/choliba/issues). Para enviar um
+Perguntas, bugs e sugestões vão para as [issues](https://github.com/choliba/choliba/issues). Para enviar um
 pull request, veja [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Mantenedores

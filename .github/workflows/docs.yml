@@ -1,6 +1,6 @@
 name: Docs
 
-# O site da documentação (VitePress, a partir de docs/) no GitHub Pages: https://jacksonbicalho.github.io/choliba/.
+# O site da documentação (VitePress, a partir de docs/) no GitHub Pages: https://choliba.github.io/choliba/.
 # Publica a cada push na master, ou seja, a cada release, para o site mostrar o que foi lançado. O Pages do
 # repositório usa a fonte "GitHub Actions" (Settings → Pages).
 on:

@@ -10,7 +10,7 @@ import { buildSidebar, readDocPages } from '../../scripts/libs/docs-sidebar';
 /** The `docs/` folder, this config's parent. */
 const DOCS = fileURLToPath(new URL('..', import.meta.url));
 
-const REPOSITORY = 'https://github.com/jacksonbicalho/choliba';
+const REPOSITORY = 'https://github.com/choliba/choliba';
 
 export default defineConfig({
   base: '/choliba/',

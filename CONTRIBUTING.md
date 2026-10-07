@@ -1,6 +1,6 @@
 # Contribuindo
 
-Perguntas, bugs e sugestões vão para as [issues](https://github.com/jacksonbicalho/choliba/issues). Pull requests são bem-vindos, sempre para a branch
+Perguntas, bugs e sugestões vão para as [issues](https://github.com/choliba/choliba/issues). Pull requests são bem-vindos, sempre para a branch
 `develop`, a partir de uma branch `<tipo>/<descrição>`, e seguindo as regras do projeto (detalhes em
 [`AGENTS.md`](AGENTS.md) e na skill [`git-workflow`](.agents/skills/git-workflow/SKILL.md)):
 
