@@ -9,6 +9,7 @@ import { AgentProvider } from '../agent-provider';
 import type { PlanContentContext, PlannedFile, ProviderRequest, StreamParser } from '../interfaces/provider.interface';
 import { RegisterAgentProvider } from '../register-agent-provider';
 import { applyCursorMcpServers, applyCursorPermissions, planCursorMcpServers, planCursorPermissions } from './cli-json';
+import { clearCursorState } from './cursor-state';
 import { type CursorPermissions, cursorPermissions, readDir, undeclaredMcpTokens, userMcpServers } from './permissions';
 
 function resolvePlanContent(context: PlanContentContext): string | undefined {
@@ -64,8 +65,9 @@ function buildArgs(request: ProviderRequest): readonly string[] {
 /**
  * The agent's permissions and MCP servers, written into `.cursor/cli.json` and `.cursor/mcp.json` of the
  * folder the run happens in (the permissions always: even an agent that declares none is denied the rest). Undone in reverse order, so
- * the `.cursor/` dir created for the first file is removed only once both are gone. The run tools' scripts are
- * already on disk (`runAgent` writes them first), so the complement of what may be written names them too.
+ * the `.cursor/` dir created for the first file is removed only once both are gone, and last what cursor-agent
+ * kept in `~/.cursor` for the run dir (`clearCursorState`). The run tools' scripts are already on disk (`runAgent`
+ * writes them first), so the complement of what may be written names them too.
  */
 function requestPermissions(request: ProviderRequest): CursorPermissions {
   const mcpServers = request.mcpServers ?? [];
@@ -84,7 +86,11 @@ function requestPermissions(request: ProviderRequest): CursorPermissions {
 function prepareWorkspace(request: ProviderRequest): () => void {
   const mcpServers = request.mcpServers ?? [];
   const permissions = requestPermissions(request);
-  const restores: (() => void)[] = [];
+  const restores: (() => void)[] = [
+    () => {
+      clearCursorState(request.runDir);
+    },
+  ];
   const restoreAll = (): void => {
     for (const restore of [...restores].reverse()) {
       restore();

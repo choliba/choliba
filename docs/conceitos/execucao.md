@@ -37,7 +37,8 @@ permissões do `agent.yaml`.
 **Fase 3: o choliba, depois do agente**
 
 12. Apaga a pasta da execução e as ferramentas da run e desfaz o que o provider preparou (os arquivos `.cursor/` do
-    Cursor), seja qual for o resultado.
+    Cursor), seja qual for o resultado. Com o Cursor, apaga também o que ele guardou para a pasta da execução em
+    `~/.cursor` (`projects/` e `chats/`), que de outro modo se acumularia a cada execução.
 13. Roda o `steps.<modo>.after`: `success` ou `failure`, depois `always`.
 14. Fecha o ticket: um ticket novo que o agente não tocou é apagado; em `execute`, sobrar `CHANGE_ME` é erro.
 15. Derruba a aplicação, se foi ele quem a subiu no passo 4.
