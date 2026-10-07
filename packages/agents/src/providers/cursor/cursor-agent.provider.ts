@@ -43,7 +43,17 @@ function policyArgs(request: ProviderRequest): readonly string[] {
  */
 function buildArgs(request: ProviderRequest): readonly string[] {
   const prompt = `${wrapInstructions(request.agent, request.skillsInstruction, runPlaceOf(request))}\n\n${request.userPrompt}`;
-  const args: string[] = ['-p', prompt, '--trust', '--output-format', 'stream-json', '--workspace', request.runDir];
+  // `--workspace` is the project root: that is where cursor-agent reads `.cursor/cli.json` and
+  // `.cursor/mcp.json`. Without them there it falls back to `~/.cursor/cli-config.json`.
+  const args: string[] = [
+    '-p',
+    prompt,
+    '--trust',
+    '--output-format',
+    'stream-json',
+    '--workspace',
+    request.workspaceRoot,
+  ];
   if (request.model !== undefined) {
     args.push('--model', request.model);
   }
@@ -64,10 +74,11 @@ function buildArgs(request: ProviderRequest): readonly string[] {
 
 /**
  * The agent's permissions and MCP servers, written into `.cursor/cli.json` and `.cursor/mcp.json` of the
- * folder the run happens in (the permissions always: even an agent that declares none is denied the rest). Undone in reverse order, so
- * the `.cursor/` dir created for the first file is removed only once both are gone, and last what cursor-agent
- * kept in `~/.cursor` for the run dir (`clearCursorState`). The run tools' scripts are already on disk (`runAgent`
- * writes them first), so the complement of what may be written names them too.
+ * workspace root (the permissions always: even an agent that declares none is denied the rest) — the same
+ * folder `--workspace` names, so cursor-agent finds and honours them. Undone in reverse order, so the
+ * `.cursor/` dir created for the first file is removed only once both are gone, and last what cursor-agent
+ * may still have kept for the run dir in `~/.cursor` (`clearCursorState`). The run tools' scripts are
+ * already on disk (`runAgent` writes them first), so the complement of what may be written names them too.
  */
 function requestPermissions(request: ProviderRequest): CursorPermissions {
   const mcpServers = request.mcpServers ?? [];
@@ -86,6 +97,7 @@ function requestPermissions(request: ProviderRequest): CursorPermissions {
 function prepareWorkspace(request: ProviderRequest): () => void {
   const mcpServers = request.mcpServers ?? [];
   const permissions = requestPermissions(request);
+  const root = request.workspaceRoot;
   const restores: (() => void)[] = [
     () => {
       clearCursorState(request.runDir);
@@ -96,10 +108,10 @@ function prepareWorkspace(request: ProviderRequest): () => void {
       restore();
     }
   };
-  restores.push(applyCursorPermissions(request.runDir, permissions));
+  restores.push(applyCursorPermissions(root, permissions));
   if (mcpServers.length > 0) {
     try {
-      restores.push(applyCursorMcpServers(request.runDir, mcpServersMap(mcpServers)));
+      restores.push(applyCursorMcpServers(root, mcpServersMap(mcpServers)));
     } catch (error) {
       restoreAll();
       throw error;
@@ -111,10 +123,11 @@ function prepareWorkspace(request: ProviderRequest): () => void {
 /** What `prepareWorkspace` would write, for `--dry-run --show-prompt`: `cli.json` always, `mcp.json` with servers. */
 function previewWorkspace(request: ProviderRequest): readonly PlannedFile[] {
   const mcpServers = request.mcpServers ?? [];
-  const permissions = planCursorPermissions(request.runDir, requestPermissions(request));
+  const root = request.workspaceRoot;
+  const permissions = planCursorPermissions(root, requestPermissions(request));
   return mcpServers.length === 0
     ? [permissions]
-    : [permissions, planCursorMcpServers(request.runDir, mcpServersMap(mcpServers))];
+    : [permissions, planCursorMcpServers(root, mcpServersMap(mcpServers))];
 }
 
 /** Cursor's agent CLI (`agent`, `cursor-agent` or `cursor agent`, whichever is installed). */
