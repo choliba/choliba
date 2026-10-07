@@ -27,6 +27,11 @@ interface RunToolSpec {
 
 const DELETE = 'delete';
 
+/** Where the Playwright run tools write: `CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR`, or `.cache/playwright-cli`. */
+function playwrightOutputDir(config: ScriptContext['config']): string {
+  return config[CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR] ?? DEFAULT_PLAYWRIGHT_OUTPUT_DIR;
+}
+
 /** The run tools there are: `delete`, and the ones `permissions.allow.tools` may name. */
 type RunToolName = typeof DELETE | 'playwright-cli' | 'playwright-trace';
 
@@ -45,16 +50,13 @@ const RUN_TOOLS: Readonly<Record<RunToolName, RunToolSpec>> = {
     purpose: 'the browser (playwright cli)',
     usage: '<command> [args]',
     script: ({ workspaceRoot, config }) =>
-      playwrightScript({
-        command: 'cli',
-        workspaceRoot,
-        outputDir: config[CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR] ?? DEFAULT_PLAYWRIGHT_OUTPUT_DIR,
-      }),
+      playwrightScript({ command: 'cli', workspaceRoot, outputDir: playwrightOutputDir(config) }),
   },
   'playwright-trace': {
     purpose: 'reads the trace.zip of a failed test (playwright trace)',
     usage: '<command> [args]',
-    script: ({ workspaceRoot }) => playwrightScript({ command: 'trace', workspaceRoot }),
+    script: ({ workspaceRoot, config }) =>
+      playwrightScript({ command: 'trace', workspaceRoot, outputDir: playwrightOutputDir(config) }),
   },
 };
 

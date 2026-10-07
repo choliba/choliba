@@ -105,7 +105,7 @@ describe('choliba tests — color', () => {
         return 0;
       };
       const colored = fakePlatform({ argv: ['tests', '--list'], cwd: root, env: { FORCE_COLOR: '1' } });
-      const plain = fakePlatform({ argv: ['tests', '--list'], cwd: root });
+      const plain = fakePlatform({ argv: ['tests', '--list'], cwd: root, env: { NO_COLOR: '1' } });
       for (const platform of [colored, plain]) {
         await runCommand([TestsModule], platform, [
           { provide: TESTS_HOOKS, useValue: { stdinIsTTY: false, spawnPlaywright } },
@@ -113,7 +113,11 @@ describe('choliba tests — color', () => {
         ]);
       }
 
-      expect(envs.map((env) => env['NO_COLOR'])).toEqual([undefined, '1']);
+      // FORCE_COLOR=0 and no NO_COLOR: Playwright's workers get FORCE_COLOR=1, and Node warns when both are set.
+      expect(envs.map((env) => [env['FORCE_COLOR'], env['NO_COLOR']])).toEqual([
+        ['1', undefined],
+        ['0', undefined],
+      ]);
     }));
 });
 

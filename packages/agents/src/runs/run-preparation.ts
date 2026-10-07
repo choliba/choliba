@@ -31,6 +31,7 @@ import { checkModelSupported, checkedExecuteDirs } from './run-checks';
 import type { PreparedRun, RunAgentsCliDeps, RunArgs, RunContext, Stopped } from './run-context';
 import { STOPPED, errorMessage, toAbsolute } from './run-context';
 import { LOCATION_VARS, agentTexts, withExpandedVars } from './vars';
+import { withProjectDenies } from './run-project';
 
 /**
  * The skills the agent lists, found in the skills dir. A missing or malformed skill stops the run
@@ -240,10 +241,11 @@ export function prepareRun(
   declaredAgent: AgentDefinition,
 ): (PreparedRun & { command: CommandDefinition }) | Stopped {
   const { parsed, deps } = context;
-  const agent = expandAgent(declaredAgent, context.vars, deps);
-  if (agent === undefined || !checkModelSupported(parsed, agent, deps)) {
+  const expanded = expandAgent(declaredAgent, context.vars, deps);
+  if (expanded === undefined || !checkModelSupported(parsed, expanded, deps)) {
     return STOPPED;
   }
+  const agent = withProjectDenies(expanded, context.project);
   const command = commandFor(context, declaredCommand, agent);
   const agentSkills = resolveAgentSkills(agent, deps);
   const mcpServers = agentSkills === undefined ? undefined : resolveAgentMcps(agent, deps);
@@ -272,5 +274,10 @@ export function prepareRun(
     parsed,
     deps,
   );
-  return 'exitCode' in built ? built : { ...built, resolved, command };
+  if ('exitCode' in built) {
+    return built;
+  }
+  const { project } = context;
+  const providerRequest = project === undefined ? built.providerRequest : { ...built.providerRequest, project };
+  return { ...built, providerRequest, resolved, command };
 }

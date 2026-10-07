@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 06/10/2026 21:58:35 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 06/10/2026 22:16:34 — não editar manualmente.
 
 ## Resumo
 
@@ -17,7 +17,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 61 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 62 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -65,6 +65,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/runs/run-checks.ts](packages/agents/src/runs/run-checks.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/run-context.ts](packages/agents/src/runs/run-context.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/run-preparation.ts](packages/agents/src/runs/run-preparation.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/run-project.ts](packages/agents/src/runs/run-project.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/run-tools/delete.tool.ts](packages/agents/src/runs/run-tools/delete.tool.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/run-tools/playwright.tool.ts](packages/agents/src/runs/run-tools/playwright.tool.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/run-tools/run-tool-path.ts](packages/agents/src/runs/run-tools/run-tool-path.ts)|100.00|100.00|100.00|100.00
@@ -196,7 +197,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/runner</b> — 100.00% das linhas, 17 arquivos</summary>
+<summary>🟢 <b>packages/runner</b> — 100.00% das linhas, 18 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -206,6 +207,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/tests/gate.ts](packages/runner/src/tests/gate.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/playwright-env.ts](packages/runner/src/tests/playwright-env.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/playwright-results.ts](packages/runner/src/tests/playwright-results.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tests/prepare-app.ts](packages/runner/src/tests/prepare-app.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/run-tests.ts](packages/runner/src/tests/run-tests.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/runner-root.ts](packages/runner/src/tests/runner-root.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/target.ts](packages/runner/src/tests/target.ts)|100.00|100.00|100.00|100.00

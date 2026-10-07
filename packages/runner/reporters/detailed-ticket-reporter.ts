@@ -25,7 +25,7 @@ function markerFor(status: TestResult['status'], theme: Theme): string {
 
 /**
  * The workspace's colors (`CHOL_COLORS`), read here because the reporter runs in Playwright's process, outside
- * choliba's: `choliba tests` passes the workspace (and `NO_COLOR` when color is off) in the environment.
+ * choliba's: `choliba tests` passes the workspace (and `FORCE_COLOR=0` when color is off) in the environment.
  */
 function workspaceTheme(env: NodeJS.ProcessEnv = process.env): Theme {
   const root = env[WORKSPACE_ENV];
@@ -103,10 +103,32 @@ export default class DetailedTicketReporter implements Reporter {
     this.liveRegion.printPermanent(finalLine);
   }
 
+  /**
+   * Output outside any test: the application's server (`envs[].start`), which Playwright hands over with each
+   * line prefixed `[WebServer]`. Shown, so whoever runs the tests sees why the application did not start.
+   */
+  onStdOut(chunk: string | Buffer, test?: TestCase): void {
+    this.printOutsideTests(chunk, test);
+  }
+
+  onStdErr(chunk: string | Buffer, test?: TestCase): void {
+    this.printOutsideTests(chunk, test);
+  }
+
   onEnd(): void {
     for (const timer of this.displayTimers.values()) clearTimeout(timer);
     this.displayTimers.clear();
     this.liveRegion.stop();
+  }
+
+  private printOutsideTests(chunk: string | Buffer, test: TestCase | undefined): void {
+    if (test !== undefined) return;
+    const text = chunk.toString();
+    if (this.liveMode) {
+      this.liveRegion.printPermanent(text);
+      return;
+    }
+    writeStdout(text);
   }
 
   private clearDisplayTimer(testId: string): void {
