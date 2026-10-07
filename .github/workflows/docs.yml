@@ -1,0 +1,59 @@
+name: Docs
+
+# O site da documentação (VitePress, a partir de docs/) no GitHub Pages: https://jacksonbicalho.github.io/choliba/.
+# Publica a cada push na master, ou seja, a cada release, para o site mostrar o que foi lançado. O Pages do
+# repositório usa a fonte "GitHub Actions" (Settings → Pages).
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Uma publicação de cada vez; uma nova não cancela a que já está saindo.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # O "Atualizado em" de cada página vem do histórico do git.
+          fetch-depth: 0
+
+      - name: Ler a versão do Bun em package.json
+        id: bun
+        run: echo "version=$(jq -r '.packageManager | sub("^bun@"; "")' package.json)" >> "$GITHUB_OUTPUT"
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ steps.bun.outputs.version }}
+
+      - uses: actions/configure-pages@v5
+
+      - name: Instalar dependências
+        run: bun install --frozen-lockfile
+
+      - name: Gerar o site
+        run: bun run docs:build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/.vitepress/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publicar no GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
