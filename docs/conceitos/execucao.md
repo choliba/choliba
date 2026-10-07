@@ -14,8 +14,10 @@ permissões do `agent.yaml`.
 6. Preenche as [variáveis](../referencia/agent-yaml.md#variáveis), confere o `--model`, confere que cada skill e cada MCP existe e escolhe o
    provider.
 7. Roda o `steps.<modo>.before`. Uma falha para aqui.
-8. Monta os prompts: o de sistema (skills, permissões, MCPs e o texto do agente) e o do usuário (aviso do modo,
-   plano salvo e a tarefa, com o que o `before` produziu).
+8. Monta os prompts: o de sistema (skills, permissões, o projeto, MCPs e o texto do agente) e o do usuário (aviso do
+   modo, plano salvo e a tarefa, com o que o `before` produziu). Com `--project`, o projeto diz onde a aplicação
+   roda e que o agente nunca a sobe nem mexe em `node_modules`, o que o choliba também aplica nas permissões (veja
+   [Antes dos testes: a aplicação](../referencia/cli.md#antes-dos-testes-a-aplicação)).
 9. Com `--dry-run`, mostra o que aconteceria e sai (veja [`--dry-run`](../guias/dry-run.md)).
 10. Cria o ticket novo (`--type`).
 
@@ -23,7 +25,12 @@ permissões do `agent.yaml`.
 
 11. O choliba cria as ferramentas da run ao lado de `.cache/runs/<id>/`, e o provider roda nessa pasta vazia, com os
     dois prompts. O agente lê, grava, roda os comandos de `allow.execute` e as ferramentas da run e chama as tools
-    dos MCPs; em `plan` e `ask`, não grava nada.
+    dos MCPs; em `plan` e `ask`, não grava nada. Se ele chama um subagente, o choliba interrompe a execução (veja
+    [Segurança](seguranca.md)).
+
+    O terminal mostra cada ferramenta que o agente chama (`→`) e, quando uma falha, onde e por quê, igual em
+    qualquer provider: `✗ Shell bun install: negado (comando fora de allow.execute)` diz qual chave do
+    `agent.yaml` liberaria a chamada; `✗ Read src/x.ts: erro: File not found` é o erro da própria ferramenta.
 
 **Fase 3: o choliba, depois do agente**
 

@@ -2,6 +2,7 @@ import { dirname, isAbsolute, join } from 'node:path';
 
 import type { PermissionPolicy } from '../agents/interfaces/command.interface';
 import { asStringArray, isRecord } from '../shared/json';
+import type { RunProject } from './run-project';
 
 /** One entry of `permissions.allow.execute`/`.deny.execute`: a directory and the commands that go with it. */
 export interface ExecuteRule {
@@ -222,7 +223,26 @@ export interface RunPlace {
   readonly root: string;
   /** The run's effective policy: a read-only run has no `delete` tool. */
   readonly policy?: PermissionPolicy;
+  /** The project the run works on (`--project`). */
+  readonly project?: RunProject;
 }
+
+/**
+ * Said to every agent, whatever its permissions: no agent of choliba delegates. Enforced too: Claude's session
+ * has no subagent tool, and a call to one in any provider stops the run (`delegation-guard.ts`).
+ */
+/**
+ * Said to every agent: it uses only the MCP servers its `agent.yaml#mcps` declares, the ones in `<mcps>`. Enforced
+ * too: any other MCP use stops the run (`mcp-guard.ts`).
+ */
+function mcpLine(hasMcps: boolean): string {
+  return hasMcps
+    ? 'MCP: you may use only the servers and tools listed in <mcps>; there are no others. Do not list, look for or call any other MCP tool.'
+    : 'MCP: you have no MCP servers. Do not list, look for or call any MCP tool.';
+}
+
+const DELEGATION_LINE =
+  'You may not delegate: no subagents (Agent/Task tools), no parallel sessions, no other agent working for you. If you are stuck, stop and report.';
 
 /**
  * The permissions in words, for the prompt: the model reads what it may do from the same data the
@@ -232,6 +252,7 @@ export function formatPermissions(
   permissions: AgentPermissions,
   place?: RunPlace,
   toolLines: readonly string[] = [],
+  hasMcps = false,
 ): string {
   const lines = [
     ...pathLines('You may read', permissions.allowRead),
@@ -260,6 +281,8 @@ export function formatPermissions(
     '<permissions>',
     'Enforced by the command, not only asked: anything not allowed below is blocked. Relative paths are relative to the workspace root; paths ending in / cover everything under them.',
     ...body,
+    mcpLine(hasMcps),
+    DELEGATION_LINE,
     '</permissions>',
   ].join('\n');
 }

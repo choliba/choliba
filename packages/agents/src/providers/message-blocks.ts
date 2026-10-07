@@ -15,6 +15,8 @@ export interface ContentBlock {
     readonly command?: string;
     readonly file_path?: string;
     readonly pattern?: string;
+    /** `ListMcpResourcesTool`/`ReadMcpResourceTool`: the MCP server asked about. */
+    readonly server?: string;
   };
   readonly tool_use_id?: string;
   readonly is_error?: boolean;

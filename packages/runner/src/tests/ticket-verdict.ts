@@ -23,6 +23,8 @@ export interface CriterionTest {
   readonly title: string;
   readonly status: string;
   readonly error?: string;
+  /** The device (Playwright project) it ran on: the same test runs once per device. */
+  readonly device?: string;
   /** The `trace.zip` its last run kept (the config keeps one per failed test). */
   readonly trace?: string;
 }
@@ -54,6 +56,7 @@ function toCriterionTest(row: FlatTestResult): CriterionTest {
     title: row.fullTitle,
     status: row.status,
     ...(error === undefined ? {} : { error }),
+    ...(row.projectName === undefined ? {} : { device: row.projectName }),
     ...(trace === undefined ? {} : { trace }),
   };
 }
@@ -66,34 +69,73 @@ export function criterionRuns(ticket: TicketCriteria, report: PlaywrightReport):
   }));
 }
 
+/** A page that could not be reached, in Chromium, Firefox or WebKit words: the application is not up. */
+const UNREACHABLE = /ERR_CONNECTION_REFUSED|NS_ERROR_CONNECTION_REFUSED|Could not connect to server/;
+
+const NOT_UP =
+  'a aplicação não respondeu no baseURL: configure envs[].start (e envs[].setup) no config.json do projeto, ou suba-a antes';
+
+/** An error outside any test that comes from starting the application (`config.webServer`, from `envs[].start`). */
+const WEB_SERVER = 'config.webServer';
+
+/** The first line of an error: the message, without Playwright's call log. */
+function firstLine(text: string): string {
+  return text.replace(/\n[\s\S]*$/, '').trim();
+}
+
+/**
+ * The test's own title, without the spec file and the suites before it, nor the `<id>:` it starts with (every
+ * test of a criterion does, see `criterionRuns`).
+ */
+function shortTitle(test: CriterionTest, id: string): string {
+  return test.title
+    .replace(/^.* › /, '')
+    .slice(id.length + 1)
+    .trim();
+}
+
 function passed(test: CriterionTest): boolean {
   return PASSED.includes(test.status);
 }
 
 /** A test that passes is no problem in red: its criterion is already met, and stays as a regression test. */
-function redProblem(test: CriterionTest): string | undefined {
+function redProblem(test: CriterionTest, title: string): string | undefined {
   if (passed(test)) return undefined;
-  if (!isRealFailure(test.status)) return `teste pulado: ${test.title}`;
+  if (!isRealFailure(test.status)) return `teste pulado: ${title}`;
   if (test.error !== undefined && BROKEN_TEST.test(test.error)) {
-    return `o teste quebra no próprio código, não no comportamento: ${test.error}`;
+    return `o teste quebra no próprio código, não no comportamento: ${firstLine(test.error)}`;
   }
   return undefined;
 }
 
-function greenProblem(test: CriterionTest): string | undefined {
+function greenProblem(test: CriterionTest, title: string): string | undefined {
   if (PASSED.includes(test.status)) return undefined;
-  return `ainda falha: ${test.title}${test.error === undefined ? '' : `: ${test.error}`}`;
+  return `ainda falha: ${title}${test.error === undefined ? '' : `: ${firstLine(test.error)}`}`;
 }
 
+/** One line per problem: the criterion and the device, then what is wrong, without the call log. */
 function runProblems(expectation: Expectation, run: CriterionRun): readonly string[] {
   if (run.tests.length === 0) {
     return [`${run.id}: nenhum teste (o título precisa começar com "${run.id}:")`];
   }
   const problemOf = expectation === 'red' ? redProblem : greenProblem;
   return run.tests.flatMap((test) => {
-    const problem = problemOf(test);
-    return problem === undefined ? [] : [`${run.id}: ${problem}`];
+    const problem = problemOf(test, shortTitle(test, run.id));
+    const device = test.device === undefined ? '' : ` [${test.device}]`;
+    return problem === undefined ? [] : [`${run.id}${device}: ${problem}`];
   });
+}
+
+/** Whether a test failed because the page could not be reached: then red and green both say so. */
+function unreachable(runs: readonly CriterionRun[]): boolean {
+  return runs.some((run) => run.tests.some((test) => test.error !== undefined && UNREACHABLE.test(test.error)));
+}
+
+function loadProblem(error: { readonly message?: string }): string {
+  const message = error.message ?? '';
+  return message.includes(WEB_SERVER)
+    ? `a aplicação não subiu (envs[].start): ${firstLine(message)}`
+    : `o spec não carregou: ${message}`;
 }
 
 /** A criterion is met when it has tests and all of them pass; otherwise it is still to implement. */
@@ -111,11 +153,11 @@ export function verdictProblems(
   ticket: TicketCriteria,
   report: PlaywrightReport,
 ): readonly string[] {
-  const loadErrors = (report.errors ?? []).map((error) => `o spec não carregou: ${error.message ?? ''}`);
+  const loadErrors = (report.errors ?? []).map(loadProblem);
   if (loadErrors.length > 0) return loadErrors;
   if ((ticket.criterios ?? []).length === 0) return ['o ticket não tem critérios'];
   const runs = criterionRuns(ticket, report);
-  const problems = runs.flatMap((run) => runProblems(expectation, run));
+  const problems = [...runs.flatMap((run) => runProblems(expectation, run)), ...(unreachable(runs) ? [NOT_UP] : [])];
   if (expectation === 'red' && runs.every(isMet)) {
     return [...problems, 'todos os critérios já passam: nada a implementar (é um ticket de regressão?)'];
   }

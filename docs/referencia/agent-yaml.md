@@ -12,7 +12,7 @@ completo e o passo a passo estão em [Escrevendo um agente](../guias/escrever-um
 | `role`, `input`, `flow`, `output` | sim         | —                   | O texto do agente (veja [O texto do agente](../guias/escrever-um-agente.md#o-texto-do-agente)).                                                                                                                                                           |
 | `context`, `notes`                | não         | nenhum              | Listas de textos que completam o texto do agente.                                                                                                                                                                                                         |
 | `skills`                          | não         | `[]`                | Pastas em `.choliba/skills/`, com a instrução de uso de cada uma (veja [Skills e MCPs](../guias/escrever-um-agente.md#skills-e-mcps)).                                                                                                                    |
-| `mcps`                            | não         | nenhum              | Servidores em `.choliba/mcps/<nome>.json`, com as tools liberadas e a instrução de uso de cada um.                                                                                                                                                        |
+| `mcps`                            | não         | nenhum              | Servidores em `.choliba/mcps/<nome>.json`, com as tools liberadas e a instrução de uso de cada um. Usar outro MCP interrompe a execução.                                                                                                                  |
 | `permissions.allow`/`.deny`       | não         | nada liberado       | `read`, `write` e `delete`: caminhos (terminado em `/` = tudo abaixo). `execute`: diretório → comandos. `tools`: ferramenta da run → subcomandos (`['*']` = todos; em `deny`, `['*']` tira a ferramenta). Veja [Ferramentas da run](#ferramentas-da-run). |
 | `modes.allow` / `.default`        | não         | os três / `execute` | Modos aceitos (`execute`, `plan`, `ask`) e o usado quando a linha de comando não diz.                                                                                                                                                                     |
 | `task.required` / `.default`      | não         | `true` / —          | Se a tarefa é obrigatória e, quando não é, qual usar (`default` passa a ser obrigatório).                                                                                                                                                                 |
@@ -20,7 +20,8 @@ completo e o passo a passo estão em [Escrevendo um agente](../guias/escrever-um
 | `allow_without_ticket`            | não         | `false`             | `true` deixa a execução seguir sem `--type`/`--ticket`: com `ticket_types`, o ticket fica opcional; sem, deixa explícito que o agente não usa ticket.                                                                                                     |
 | `steps.<modo>.before` / `.after`  | não         | nenhum              | Ações do choliba antes e depois do agente, em cada modo (veja [Steps](#steps)).                                                                                                                                                                           |
 
-Regras de permissão: veja [Segurança](../conceitos/seguranca.md).
+Regras de permissão: veja [Segurança](../conceitos/seguranca.md). Delegar a um subagente não é uma permissão: é
+negado a todo agente, sem chave no `agent.yaml`.
 
 ## Ferramentas da run
 
@@ -28,11 +29,11 @@ O que só os agentes usam não é comando do choliba: é uma ferramenta da run. 
 de cada ferramenta ao lado da pasta da run (`.cache/runs/<execução>.<ferramenta>`), libera só esse caminho para o
 agente, impede que ele seja reescrito e o apaga no fim. O prompt traz o caminho completo de cada uma.
 
-| Ferramenta         | Vem de                     | O que faz                                                                                                                                  |
-| ------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `delete`           | `permissions.allow.delete` | Apaga arquivos e pastas sob esses caminhos; recusa links para fora, a própria raiz e o que `deny.delete` nega. Não existe em `plan`/`ask`. |
-| `playwright-cli`   | `permissions.allow.tools`  | O navegador (`playwright cli`), na versão do choliba, na raiz da pasta de trabalho; grava em `CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR`.             |
-| `playwright-trace` | `permissions.allow.tools`  | Lê o `trace.zip` de um teste que falhou (`playwright trace`), na versão do choliba.                                                        |
+| Ferramenta         | Vem de                     | O que faz                                                                                                                                                       |
+| ------------------ | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `delete`           | `permissions.allow.delete` | Apaga arquivos e pastas sob esses caminhos; recusa links para fora, a própria raiz e o que `deny.delete` nega. Não existe em `plan`/`ask`.                      |
+| `playwright-cli`   | `permissions.allow.tools`  | O navegador (`playwright cli`), na versão do choliba, na raiz da pasta de trabalho; grava em `CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR`.                                  |
+| `playwright-trace` | `permissions.allow.tools`  | Lê o `trace.zip` de um teste que falhou (`playwright trace`), na versão do choliba; roda em `CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR`, com os caminhos relativos à raiz. |
 
 ```yaml
 permissions:

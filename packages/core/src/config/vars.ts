@@ -25,7 +25,10 @@ export const CHOL_PROJECTS_DIR = 'CHOL_PROJECTS_DIR';
 /** Optional ticket-runs/ root when different from CHOL_PROJECTS_DIR. */
 export const CHOL_TICKET_RUNS = 'CHOL_TICKET_RUNS';
 
-/** Where the `playwright-cli` run tool writes the files it names itself (default `.cache/playwright-cli`). */
+/**
+ * Where the `playwright-cli` run tool writes the files it names itself and where the `playwright-trace` one runs
+ * (default `.cache/playwright-cli`).
+ */
 export const CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR = 'CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR';
 
 /** The colors chosen for the workspace: `papel.nome=cor`, separated by commas (`agents.test-writer=red`). */

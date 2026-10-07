@@ -36,8 +36,7 @@ context:
     cada falha; por último os já atendidos, que só precisam continuar passando. Comece pelos que falham.
   - >-
     **Testes**: `bunx choliba tests ${PROJECT}:${TICKET}` roda os testes do ticket; `bunx choliba tests
-    ${PROJECT}/tests` roda todos os do projeto. A aplicação é iniciada a cada execução pelo projeto, então cada rodada
-    já testa o código que você acabou de mudar.
+    ${PROJECT}/tests` roda todos os do projeto.
 
 input: |
   - O projeto é `${PROJECT}`, o ticket é `${TICKET}` e os testes dele estão em `${PROJECT_DIR}/tests/`. Você não troca

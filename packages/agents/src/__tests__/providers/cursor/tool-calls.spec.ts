@@ -31,13 +31,16 @@ describe('cursor tool calls', () => {
         '[agent] → Shell: echo blocked',
         '[agent] → Edit: /workspace/notes.md',
         '[agent] → Edit: /workspace/locked/x.md',
-        '[agent] ✗ Shell (denied): rejected',
-        '[agent] ✗ Shell (denied): Command blocked by permissions configuration',
-        expect.stringMatching(/^\[agent\] ✗ Edit \(denied\): Write permission denied: \/workspace\/locked\/x\.md/),
+        '[agent] ✗ Shell ls src: negado (comando fora de allow.execute)',
+        '[agent] ✗ Shell echo blocked: negado (comando fora de allow.execute)',
+        '[agent] ✗ Edit /workspace/locked/x.md: negado (escrita fora de allow.write)',
+        // The completed Read repeats no path: the line takes it from the started call.
+        '[agent] ✗ Read /workspace/nao-existe.txt: erro: File not found',
+        '[agent] ✗ Read /workspace/secreto/s.txt: negado (leitura fora de allow.read)',
       ]),
     );
     // Successful calls stay quiet, as they do for claude.
-    expect(lines.filter((line) => line.includes('✗'))).toHaveLength(3);
+    expect(lines.filter((line) => line.includes('✗'))).toHaveLength(5);
   });
 
   it('pairs results with their call ids', () => {
@@ -73,13 +76,31 @@ describe('parseCursorToolCall', () => {
         tool_call: { fooToolCall: { result: { error: 'x' } } },
         subtype: 'completed',
       }),
-    ).toEqual([{ type: 'tool-result', id: 'c', name: 'Foo', isError: true, denied: false, text: 'error' }]);
+    ).toEqual([{ type: 'tool-result', id: 'c', name: 'Foo', isError: true, denied: false, text: 'x' }]);
     expect(
       parseCursorToolCall({
         tool_call: { fooToolCall: { result: { error: { reason: 'why' } } } },
         subtype: 'completed',
       }),
     ).toEqual([{ type: 'tool-result', id: '', name: 'Foo', isError: true, denied: false, text: 'why' }]);
+    // Read reports both a missing file and a denied path as an `error` with `errorMessage` (real stream, 2026.10.01).
+    const readError = (errorMessage: string) =>
+      parseCursorToolCall({
+        tool_call: { readToolCall: { result: { error: { errorMessage } } } },
+        subtype: 'completed',
+      });
+    expect(readError('File not found')).toEqual([
+      { type: 'tool-result', id: '', name: 'Read', isError: true, denied: false, text: 'File not found' },
+    ]);
+    expect(readError('Permission denied')).toEqual([
+      { type: 'tool-result', id: '', name: 'Read', isError: true, denied: true, text: 'Permission denied' },
+    ]);
+    expect(
+      parseCursorToolCall({
+        tool_call: { fooToolCall: { result: { error: { error: { message: 'deep' } } } } },
+        subtype: 'completed',
+      }),
+    ).toEqual([{ type: 'tool-result', id: '', name: 'Foo', isError: true, denied: false, text: 'deep' }]);
     expect(parseCursorToolCall({ tool_call: { fooToolCall: { result: {} } }, subtype: 'completed' })).toEqual([
       { type: 'tool-result', id: '', name: 'Foo', isError: true, denied: false, text: '' },
     ]);
@@ -88,6 +109,71 @@ describe('parseCursorToolCall', () => {
   it('names tools after their key', () => {
     expect(cursorToolName('readToolCall')).toBe('Read');
     expect(cursorToolName('semSearch')).toBe('SemSearch');
+  });
+
+  // The shapes below come from a real cursor-agent stream (2026.10.01), trimmed to the fields that matter.
+  it('says which MCP tool a call uses: toolName of serverIdentifier, or of providerIdentifier', () => {
+    const started = (args: Record<string, unknown>) => ({
+      type: 'tool_call',
+      subtype: 'started',
+      call_id: 'c1',
+      tool_call: { mcpToolCall: { args } },
+    });
+    const call = {
+      name: 'git-git_status',
+      args: { repo_path: '/repo' },
+      providerIdentifier: 'git',
+      toolName: 'git_status',
+      serverIdentifier: 'git',
+    };
+
+    expect(parseCursorToolCall(started(call))).toEqual([
+      {
+        type: 'tool-call',
+        id: 'c1',
+        name: 'Mcp',
+        summary: '',
+        mcp: { kind: 'call', server: 'git', tool: 'git_status' },
+      },
+    ]);
+    expect(parseCursorToolCall(started({ providerIdentifier: 'mcp-app', toolName: 'get_issue' }))[0]).toMatchObject({
+      mcp: { kind: 'call', server: 'mcp-app', tool: 'get_issue' },
+    });
+    // Without a tool name it cannot be checked as a call: it is taken as a look at the server.
+    expect(parseCursorToolCall(started({ serverIdentifier: 'git' }))[0]).toMatchObject({
+      mcp: { kind: 'discovery', server: 'git' },
+    });
+  });
+
+  it("takes GetMcpTools as a discovery, of the server it names (Cursor's own catalog is the server cursor)", () => {
+    const started = (args: Record<string, unknown>) => ({
+      type: 'tool_call',
+      subtype: 'started',
+      call_id: 'c2',
+      tool_call: { getMcpToolsToolCall: { args: { toolCallId: 'c2', ...args } } },
+    });
+
+    expect(parseCursorToolCall(started({}))).toEqual([
+      { type: 'tool-call', id: 'c2', name: 'GetMcpTools', summary: '', mcp: { kind: 'discovery' } },
+    ]);
+    expect(parseCursorToolCall(started({ pattern: 'git' }))[0]).toMatchObject({
+      summary: 'git',
+      mcp: { kind: 'discovery' },
+    });
+    expect(parseCursorToolCall(started({ server: 'cursor', toolName: 'FetchMcpResource' }))[0]).toMatchObject({
+      mcp: { kind: 'discovery', server: 'cursor' },
+    });
+  });
+
+  it('names a subagent call Task, which the run stops on', () => {
+    const started = {
+      type: 'tool_call',
+      subtype: 'started',
+      call_id: 'c1',
+      tool_call: { taskToolCall: { args: { description: 'investigar a falha' } } },
+    };
+
+    expect(parseCursorToolCall(started)).toEqual([{ type: 'tool-call', id: 'c1', name: 'Task', summary: '' }]);
   });
 });
 

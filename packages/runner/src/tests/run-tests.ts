@@ -23,11 +23,13 @@ import {
   ticketsFolderPath,
   ticketSuffix,
   type ProjectLocations,
+  type ProjectSettings,
 } from '@choliba/projects';
 
 import { fillTicketTests } from './fill-ticket-tests';
 import { checkGate, hasGate, takeGateFlags, type TicketGate } from './gate';
 import { playwrightNodePath, WORKSPACE_ENV } from './playwright-env';
+import { APP_PREPARED_ENV, prepareApp } from './prepare-app';
 import { parseTestsTarget, type TestsTarget } from './target';
 import { fail } from './tests-error';
 import {
@@ -42,7 +44,7 @@ export type SpawnPlaywright = (args: string[], env: NodeJS.ProcessEnv, cwd: stri
 export type SpawnSyncFn = (
   command: string,
   args: readonly string[],
-  options: { cwd: string; env: NodeJS.ProcessEnv; stdio: 'inherit' },
+  options: { cwd: string; env: NodeJS.ProcessEnv; stdio: 'inherit'; shell?: true },
 ) => { status: number | null };
 
 export interface RunTestsOptions {
@@ -132,6 +134,7 @@ interface RunContext {
   readonly stderr: Writable;
   readonly theme: Pick<Theme, 'paint'>;
   readonly spawnPlaywright: SpawnPlaywright;
+  readonly spawnSyncFn: SpawnSyncFn;
   readonly prompt: (prompt: string) => Promise<boolean>;
   readonly showReport: (locations: ProjectLocations, project: string, ticket: string | undefined) => void;
   /** Set once Playwright wrote this run's report to a folder of its own: then the default ones in `cwd` go. */
@@ -155,6 +158,7 @@ function contextFor(options: RunTestsOptions): RunContext {
     theme: options.theme ?? PLAIN,
     spawnPlaywright:
       options.spawnPlaywright ?? ((args, processEnv, runCwd) => runPlaywright(args, processEnv, runCwd, spawnSyncFn)),
+    spawnSyncFn,
     prompt: options.promptOpenReport ?? askOpenReport,
     showReport:
       options.openHtmlReport ??
@@ -188,7 +192,8 @@ async function runTicketsSequentially(
   const exitCode = await runBatch(
     context,
     tickets.map((ticket) => [`${project}:${ticket}`, ...extras]),
-    { ...context.env, QA_BATCH: '1' },
+    // The application was prepared once, for the whole batch.
+    { ...context.env, QA_BATCH: '1', [APP_PREPARED_ENV]: '1' },
   );
   if (isStdinInteractive(context.options.stdinIsTTY) && tickets.length === 1) {
     if (await context.prompt('Abrir o relatório HTML? [y/N] ')) {
@@ -294,8 +299,9 @@ async function runTarget(
   const target = parseTestsTarget(first, argv);
   const { project, rawTicket, pathSuffix } = target;
   // Nothing runs against a project that is missing a file, a valid environment or still holds CHANGE_ME.
+  let settings: ProjectSettings;
   try {
-    loadProjectSettings(projectsDir, project);
+    settings = loadProjectSettings(projectsDir, project);
   } catch (err) {
     fail(`erro: ${(err as Error).message}`);
   }
@@ -303,6 +309,7 @@ async function runTarget(
     fail(`erro: --expect e --failures valem para um ticket só (ex.: ${project}:T-01).`);
   }
   const ticket = canonicalTicket(projectsDir, target);
+  prepareApp(settings, { projectsDir, env: context.env, stderr: context.stderr, spawn: context.spawnSyncFn });
   const extras = argv.slice(target.consumedArgs);
   const once = { project, ticket, extras, gate, wholeProject: false };
 

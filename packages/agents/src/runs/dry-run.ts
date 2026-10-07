@@ -1,6 +1,6 @@
 import type { AgentStep, McpDeclaration } from '../agents/interfaces/agent.interface';
 import { describeStep } from '../steps/actions';
-import { wrapInstructions } from './prompt';
+import { runPlaceOf, wrapInstructions } from './prompt';
 import type { PlannedFile, ProviderRequest } from '../providers/interfaces/provider.interface';
 
 /** What `--dry-run` shows: everything a real run of this command line would do, in order. */
@@ -126,11 +126,7 @@ export function formatDryRun(input: DryRunInput): string {
   const { request } = input;
   const { mode } = request;
   const steps = request.agent.steps[mode];
-  const systemPrompt = wrapInstructions(request.agent, request.skillsInstruction, {
-    runDir: request.runDir,
-    root: request.workspaceRoot,
-    policy: request.policy,
-  });
+  const systemPrompt = wrapInstructions(request.agent, request.skillsInstruction, runPlaceOf(request));
   const ticketCreated: readonly Entry[] =
     input.newTicket === undefined ? [] : [{ who: 'CLI', lines: [`cria o ticket ${input.newTicket}`] }];
   const ticketClosed: readonly Entry[] = input.hasTicket

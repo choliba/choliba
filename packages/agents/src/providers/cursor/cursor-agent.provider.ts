@@ -1,6 +1,6 @@
 import { mcpServersMap } from '../../mcps/mcps';
 import { absolutePermissions } from '../../runs/permissions';
-import { assertArgvFits, wrapInstructions } from '../../runs/prompt';
+import { assertArgvFits, runPlaceOf, wrapInstructions } from '../../runs/prompt';
 import { runToolCommands, runToolsOf } from '../../runs/run-tools/run-tools';
 import { createStreamJsonParser } from '../stream-json';
 import { Injectable } from '@nestjs/common';
@@ -9,7 +9,7 @@ import { AgentProvider } from '../agent-provider';
 import type { PlanContentContext, PlannedFile, ProviderRequest, StreamParser } from '../interfaces/provider.interface';
 import { RegisterAgentProvider } from '../register-agent-provider';
 import { applyCursorMcpServers, applyCursorPermissions, planCursorMcpServers, planCursorPermissions } from './cli-json';
-import { type CursorPermissions, cursorPermissions, readDir } from './permissions';
+import { type CursorPermissions, cursorPermissions, readDir, undeclaredMcpTokens, userMcpServers } from './permissions';
 
 function resolvePlanContent(context: PlanContentContext): string | undefined {
   const content = context.planMarkdown?.trim();
@@ -41,11 +41,7 @@ function policyArgs(request: ProviderRequest): readonly string[] {
  * front of the prompt instead of appended as a separate flag.
  */
 function buildArgs(request: ProviderRequest): readonly string[] {
-  const prompt = `${wrapInstructions(request.agent, request.skillsInstruction, {
-    runDir: request.runDir,
-    root: request.workspaceRoot,
-    policy: request.policy,
-  })}\n\n${request.userPrompt}`;
+  const prompt = `${wrapInstructions(request.agent, request.skillsInstruction, runPlaceOf(request))}\n\n${request.userPrompt}`;
   const args: string[] = ['-p', prompt, '--trust', '--output-format', 'stream-json', '--workspace', request.runDir];
   if (request.model !== undefined) {
     args.push('--model', request.model);
@@ -72,15 +68,17 @@ function buildArgs(request: ProviderRequest): readonly string[] {
  * already on disk (`runAgent` writes them first), so the complement of what may be written names them too.
  */
 function requestPermissions(request: ProviderRequest): CursorPermissions {
-  return cursorPermissions(
+  const mcpServers = request.mcpServers ?? [];
+  const permissions = cursorPermissions(
     absolutePermissions(request.agent.permissions, request.workspaceRoot),
     request.policy,
     request.workspaceRoot,
     request.runDir,
-    request.mcpServers ?? [],
+    mcpServers,
     readDir,
     runToolCommands(runToolsOf(request)),
   );
+  return { ...permissions, deny: [...permissions.deny, ...undeclaredMcpTokens(userMcpServers(), mcpServers)] };
 }
 
 function prepareWorkspace(request: ProviderRequest): () => void {
