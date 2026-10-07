@@ -102,7 +102,7 @@ vazia. Detalhes e limites de cada provider: [Segurança](docs/conceitos/seguranc
 
 ## Documentação
 
-No site [choliba.github.io/choliba](https://choliba.github.io/choliba/), com busca, ou em
+No site [choliba.github.io](https://choliba.github.io/), com busca, ou em
 [`docs/`](docs/README.md), por tipo:
 
 - **Para começar:** [Primeiros passos](docs/primeiros-passos.md).
