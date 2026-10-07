@@ -1,6 +1,6 @@
 # Contribuindo
 
-Perguntas, bugs e sugestões vão para as [issues](https://github.com/jacksonbicalho/choliba/issues). Pull requests são bem-vindos, sempre para a branch
+Perguntas, bugs e sugestões vão para as [issues](https://github.com/choliba/choliba/issues). Pull requests são bem-vindos, sempre para a branch
 `develop`, a partir de uma branch `<tipo>/<descrição>`, e seguindo as regras do projeto (detalhes em
 [`AGENTS.md`](AGENTS.md) e na skill [`git-workflow`](.agents/skills/git-workflow/SKILL.md)):
 
@@ -17,6 +17,12 @@ Este repositório é, ele mesmo, uma pasta de trabalho do choliba (`choliba` est
 `devDependency: workspace:*`). Para testar o pacote instalável sem esperar um release, `bun run chol:pack`
 builda `packages/choliba` e empacota o resultado num `.tgz` local (ignorado pelo git), que outra pasta de trabalho
 instala pelo caminho do arquivo.
+
+O site da documentação é gerado do `docs/` pelo [VitePress](https://vitepress.dev): `bun run docs:dev` o serve
+localmente, com recarga a cada mudança, e `bun run docs:build` o gera em `docs/.vitepress/dist` (o CI faz o mesmo em
+cada PR, então um link quebrado barra o merge). Uma página nova em `docs/` também entra na barra lateral, em
+`docs/.vitepress/config.ts`. O workflow `docs.yml` publica o site no GitHub Pages a cada push na `master`, ou seja, a
+cada release.
 
 O release é o PR de `develop` para `master` (merge commit). O merge dispara o workflow `release-dev.yml`, que roda o
 mesmo `chol:pack`, move a tag `v0.0.1-dev` para o novo commit e troca o `.tgz`, as notas e o título da pré-release (a

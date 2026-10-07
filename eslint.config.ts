@@ -13,6 +13,7 @@ export default defineConfig(
       '.choliba/skills/**',
       '.claude/**',
       '.playwright-cli/**',
+      'docs/.vitepress/cache/**',
     ],
   },
   eslint.configs.recommended,
