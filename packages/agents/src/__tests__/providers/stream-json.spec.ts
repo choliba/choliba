@@ -163,6 +163,57 @@ describe('createStreamJsonParser', () => {
     ]);
   });
 
+  it('gives a tool result the target and MCP of its call, and reads both denial texts as denied', () => {
+    const parser = createStreamJsonParser({ planFromExitPlanMode: false });
+    parser.parseLine(
+      line({
+        type: 'assistant',
+        message: {
+          content: [
+            { type: 'tool_use', id: 't1', name: 'Bash', input: { command: 'bun install' } },
+            { type: 'tool_use', id: 't2', name: 'mcp__git__git_status', input: {} },
+            { type: 'tool_use', id: 't3', name: 'Write', input: { file_path: '/w/x.md' } },
+          ],
+        },
+      }),
+    );
+    const results = parser.parseLine(
+      line({
+        type: 'user',
+        message: {
+          content: [
+            {
+              type: 'tool_result',
+              tool_use_id: 't1',
+              is_error: true,
+              content: 'Permission to use Bash has been denied.',
+            },
+            { type: 'tool_result', tool_use_id: 't2', is_error: true, content: 'boom' },
+            {
+              type: 'tool_result',
+              tool_use_id: 't3',
+              is_error: true,
+              content: "The agent requested permissions to use Write, but you haven't granted it yet.",
+            },
+            { type: 'tool_result', tool_use_id: 'unknown', is_error: true, content: 'x' },
+          ],
+        },
+      }),
+    );
+
+    expect(results).toEqual([
+      expect.objectContaining({ id: 't1', name: 'Bash', denied: true, target: 'bun install' }),
+      expect.objectContaining({
+        id: 't2',
+        denied: false,
+        mcp: { kind: 'call', server: 'git', tool: 'git_status' },
+      }),
+      expect.objectContaining({ id: 't3', name: 'Write', denied: true, target: '/w/x.md' }),
+      { type: 'tool-result', id: 'unknown', name: undefined, isError: true, denied: false, text: 'x' },
+    ]);
+    expect(results[1]).not.toHaveProperty('target');
+  });
+
   it('extractCreatePlanToolPlan reads nested createPlanToolCall args', () => {
     expect(
       extractCreatePlanToolPlan({

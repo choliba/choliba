@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 06/10/2026 21:58:35 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 06/10/2026 22:08:59 — não editar manualmente.
 
 ## Resumo
 
@@ -17,7 +17,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 61 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 62 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -71,6 +71,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/runs/run-tools/run-tools.ts](packages/agents/src/runs/run-tools/run-tools.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/spec-context.ts](packages/agents/src/runs/spec-context.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/ticket-run.ts](packages/agents/src/runs/ticket-run.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/tool-failure.ts](packages/agents/src/runs/tool-failure.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/vars.ts](packages/agents/src/runs/vars.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shared/json.ts](packages/agents/src/shared/json.ts)|100.00|100.00|100.00|100.00
 🟢|[src/skills/skills.ts](packages/agents/src/skills/skills.ts)|100.00|100.00|100.00|100.00

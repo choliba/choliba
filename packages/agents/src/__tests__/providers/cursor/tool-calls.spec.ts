@@ -31,13 +31,16 @@ describe('cursor tool calls', () => {
         '[agent] → Shell: echo blocked',
         '[agent] → Edit: /workspace/notes.md',
         '[agent] → Edit: /workspace/locked/x.md',
-        '[agent] ✗ Shell (denied): rejected',
-        '[agent] ✗ Shell (denied): Command blocked by permissions configuration',
-        expect.stringMatching(/^\[agent\] ✗ Edit \(denied\): Write permission denied: \/workspace\/locked\/x\.md/),
+        '[agent] ✗ Shell ls src: negado (comando fora de allow.execute)',
+        '[agent] ✗ Shell echo blocked: negado (comando fora de allow.execute)',
+        '[agent] ✗ Edit /workspace/locked/x.md: negado (escrita fora de allow.write)',
+        // The completed Read repeats no path: the line takes it from the started call.
+        '[agent] ✗ Read /workspace/nao-existe.txt: erro: File not found',
+        '[agent] ✗ Read /workspace/secreto/s.txt: negado (leitura fora de allow.read)',
       ]),
     );
     // Successful calls stay quiet, as they do for claude.
-    expect(lines.filter((line) => line.includes('✗'))).toHaveLength(3);
+    expect(lines.filter((line) => line.includes('✗'))).toHaveLength(5);
   });
 
   it('pairs results with their call ids', () => {
@@ -73,13 +76,31 @@ describe('parseCursorToolCall', () => {
         tool_call: { fooToolCall: { result: { error: 'x' } } },
         subtype: 'completed',
       }),
-    ).toEqual([{ type: 'tool-result', id: 'c', name: 'Foo', isError: true, denied: false, text: 'error' }]);
+    ).toEqual([{ type: 'tool-result', id: 'c', name: 'Foo', isError: true, denied: false, text: 'x' }]);
     expect(
       parseCursorToolCall({
         tool_call: { fooToolCall: { result: { error: { reason: 'why' } } } },
         subtype: 'completed',
       }),
     ).toEqual([{ type: 'tool-result', id: '', name: 'Foo', isError: true, denied: false, text: 'why' }]);
+    // Read reports both a missing file and a denied path as an `error` with `errorMessage` (real stream, 2026.10.01).
+    const readError = (errorMessage: string) =>
+      parseCursorToolCall({
+        tool_call: { readToolCall: { result: { error: { errorMessage } } } },
+        subtype: 'completed',
+      });
+    expect(readError('File not found')).toEqual([
+      { type: 'tool-result', id: '', name: 'Read', isError: true, denied: false, text: 'File not found' },
+    ]);
+    expect(readError('Permission denied')).toEqual([
+      { type: 'tool-result', id: '', name: 'Read', isError: true, denied: true, text: 'Permission denied' },
+    ]);
+    expect(
+      parseCursorToolCall({
+        tool_call: { fooToolCall: { result: { error: { error: { message: 'deep' } } } } },
+        subtype: 'completed',
+      }),
+    ).toEqual([{ type: 'tool-result', id: '', name: 'Foo', isError: true, denied: false, text: 'deep' }]);
     expect(parseCursorToolCall({ tool_call: { fooToolCall: { result: {} } }, subtype: 'completed' })).toEqual([
       { type: 'tool-result', id: '', name: 'Foo', isError: true, denied: false, text: '' },
     ]);

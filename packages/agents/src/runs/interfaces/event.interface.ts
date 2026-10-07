@@ -30,6 +30,10 @@ export type AgentEvent =
       /** True when the failure was a permission denial rather than the tool itself failing. */
       readonly denied: boolean;
       readonly text: string;
+      /** What the call worked on (its `tool-call` summary: a path, a command), when the call was seen. */
+      readonly target?: string;
+      /** The MCP the call used, when the call was seen and used one. */
+      readonly mcp?: McpUse;
     }
   /** Plan markdown from claude `ExitPlanMode` or cursor `createPlanToolCall`. */
   | { readonly type: 'plan'; readonly markdown: string }

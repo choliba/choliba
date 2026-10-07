@@ -3,6 +3,7 @@ import type { AnsiColor } from '@choliba/terminal';
 import { formatLine } from '@choliba/terminal';
 
 import type { AgentEvent } from './interfaces/event.interface';
+import { failureLine } from './tool-failure';
 
 export interface RenderOptions {
   readonly label: string;
@@ -59,7 +60,7 @@ export function renderEvent(event: AgentEvent, options: RenderOptions): string |
       if (!event.isError) {
         return undefined;
       }
-      return line(`✗ ${event.name ?? '?'}${event.denied ? ' (denied)' : ''}: ${firstLine(event.text)}`);
+      return line(`✗ ${failureLine(event)}`);
     case 'plan':
       return line('· plan ready');
     case 'done':
