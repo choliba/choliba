@@ -1,6 +1,9 @@
 import { resourceStarts } from '@choliba/core/config';
 
-/** Where `playwright cli` writes the files it names itself, unless `CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR` says otherwise. */
+/**
+ * Where `playwright cli` writes the files it names itself and where `playwright trace` runs, unless
+ * `CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR` says otherwise.
+ */
 export const DEFAULT_PLAYWRIGHT_OUTPUT_DIR = '.cache/playwright-cli';
 
 export interface PlaywrightScriptOptions {
@@ -9,8 +12,9 @@ export interface PlaywrightScriptOptions {
   /** Where it runs: relative paths and the output folder are relative to it. */
   readonly workspaceRoot: string;
   /**
-   * `cli` only: where it writes the files it names itself and the relative `--filename`s, which would
-   * otherwise land in `.playwright-cli/` and in the workspace root.
+   * Where the files it writes go, instead of `.playwright-cli/` and the workspace root: `cli` writes there the
+   * files it names itself and the relative `--filename`s; `trace` runs there, since it keeps what it extracts in
+   * a `.playwright-cli/` of the folder it runs in, with the paths it is given still relative to the workspace root.
    */
   readonly outputDir?: string;
   /**
@@ -23,13 +27,14 @@ export interface PlaywrightScriptOptions {
 /**
  * The script of a Playwright run tool, self-contained like `deleteScript`: it runs `playwright <command>` of
  * the Playwright that ships with choliba (found from here when the script runs, so no other version is
- * fetched), under Node when installed, in the workspace root, and exits with its code.
+ * fetched), under Node when installed, in the workspace root (`trace` in the output folder), and exits with its code.
  */
 export function playwrightScript(options: PlaywrightScriptOptions): string {
   // --no-install: without it, Bun would fetch a package it cannot find from its own cache, i.e. another Playwright.
   return `#!/usr/bin/env -S bun --no-install
 import { spawnSync } from 'node:child_process';
-import { isAbsolute, join } from 'node:path';
+import { mkdirSync } from 'node:fs';
+import { isAbsolute, join, resolve } from 'node:path';
 
 const command = ${JSON.stringify(options.command)};
 const workspaceRoot = ${JSON.stringify(options.workspaceRoot)};
@@ -55,18 +60,54 @@ function inside(file) {
   return isAbsolute(file) ? file : join(outputDir, file);
 }
 
-const argv = process.argv.slice(2);
-const args =
-  outputDir === null
-    ? argv
-    : argv.map((arg, index) => {
-        if (arg.startsWith('--filename=')) {
-          return '--filename=' + inside(arg.slice('--filename='.length));
-        }
-        return argv[index - 1] === '--filename' ? inside(arg) : arg;
-      });
-const env = outputDir === null ? process.env : { ...process.env, PLAYWRIGHT_MCP_OUTPUT_DIR: outputDir };
-const result = spawnSync(node, [cli, command, ...args], { stdio: 'inherit', cwd: workspaceRoot, env });
+function fromRoot(file) {
+  return resolve(workspaceRoot, file);
+}
+
+// cli runs in the workspace root and writes the files it is named under the output folder.
+function cliArgs(argv) {
+  return argv.map((arg, index) => {
+    if (arg.startsWith('--filename=')) {
+      return '--filename=' + inside(arg.slice('--filename='.length));
+    }
+    return argv[index - 1] === '--filename' ? inside(arg) : arg;
+  });
+}
+
+// trace runs in the output folder, so the trace it opens and the --output it writes, given from the workspace
+// root, become absolute.
+function traceArgs(argv) {
+  return argv.map((arg, index) => {
+    if (arg.startsWith('--output=')) {
+      return '--output=' + fromRoot(arg.slice('--output='.length));
+    }
+    const previous = argv[index - 1];
+    if (previous === '-o' || previous === '--output') {
+      return fromRoot(arg);
+    }
+    return index === 1 && argv[0] === 'open' ? fromRoot(arg) : arg;
+  });
+}
+
+function argsOf(argv) {
+  if (outputDir === null) {
+    return argv;
+  }
+  return command === 'cli' ? cliArgs(argv) : traceArgs(argv);
+}
+
+function workDir() {
+  if (outputDir === null || command === 'cli') {
+    return workspaceRoot;
+  }
+  const dir = fromRoot(outputDir);
+  mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+const args = argsOf(process.argv.slice(2));
+const env = outputDir === null ? process.env : { ...process.env, PLAYWRIGHT_MCP_OUTPUT_DIR: fromRoot(outputDir) };
+const result = spawnSync(node, [cli, command, ...args], { stdio: 'inherit', cwd: workDir(), env });
 process.exit(result.status ?? 1);
 `;
 }
