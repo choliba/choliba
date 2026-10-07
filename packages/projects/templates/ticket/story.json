@@ -4,6 +4,7 @@
     "titulo": "CHANGE_ME",
     "contexto": "CHANGE_ME",
     "evidencias": [],
+    "substitui": [],
     "criterios": [
       {
         "id": "CA-01",

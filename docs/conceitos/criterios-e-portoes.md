@@ -30,3 +30,29 @@ eles mostram. É assim que os agentes `test-writer` e `implementer` garantem o T
 - **`--failures ARQUIVO`**: grava, em Markdown, os critérios a implementar com a falha de cada teste e, por último,
   os já atendidos. O `test-writer` grava esse arquivo no seu `steps.execute.after.success`, e o `implementer` o
   confere e o põe no prompt no seu `steps.<modo>.before` (veja [O que acontece numa execução](execucao.md)).
+
+## Quando um ticket substitui outro
+
+Um ticket novo pode tornar errado o que um ticket antigo pede: o antigo exige o link "Blog", o novo o tira. Os testes
+do antigo continuam valendo como regressão, então quebrariam assim que o novo fosse implementado. O campo
+`substitui` do ticket novo diz quais critérios ele aposenta:
+
+```json
+"substitui": ["minha-app-1:CA-03", "minha-app-1:CA-04"]
+```
+
+Cada item é `<ticket>:<critério>`, ou só `<ticket>` para todos os critérios dele. O ticket antigo não muda: fica como
+histórico.
+
+- **Os testes aposentados saem das rodadas do projeto** (`choliba tests minha-app`, `choliba tests minha-app/tests` e
+  as rodadas dos agentes). Cada rodada começa dizendo o que ficou de fora:
+  `aposentados: minha-app-1 CA-03, CA-04 (substituídos por minha-app-2)`. Um ticket com todos os critérios
+  aposentados não roda no lote.
+- **Rodar o ticket antigo sozinho** (`choliba tests minha-app:1`) ainda roda os testes dele, com um aviso. Com
+  `--expect`, falha: não há o que conferir num critério substituído.
+- **Uma referência inválida** (ticket ou critério que não existe, ou o próprio ticket) faz as rodadas do projeto
+  falharem e o `choliba check` marcar o projeto com `✗`.
+
+O `product-owner` lê os outros tickets do projeto e preenche o `substitui` quando a história nova troca um
+comportamento que outro ticket descreve. O `implementer` para e avisa quando um teste de outro ticket contradiz o seu
+sem estar em `substitui`.

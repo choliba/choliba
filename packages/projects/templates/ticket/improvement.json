@@ -6,6 +6,7 @@
     "comportamentoAtual": "CHANGE_ME",
     "comportamentoEsperado": "CHANGE_ME",
     "evidencias": [],
+    "substitui": [],
     "criterios": [
       {
         "id": "CA-01",

@@ -86,6 +86,15 @@ describe('checkProjects', () => {
       expect(section.title).toBe(`Projetos (${path.join(root, 'projects')})`);
       expect(section.items[0]).toEqual({ name: 'pendente', problem: expect.stringContaining('CHANGE_ME') as unknown });
       expect(section.items[1]).toEqual({ name: 'pronto' });
+
+      // A ticket that replaces one that does not exist.
+      const tickets = path.join(root, 'projects', 'pronto', 'tickets');
+      fs.mkdirSync(tickets);
+      fs.writeFileSync(path.join(tickets, '2.json'), JSON.stringify({ substitui: ['pronto-1'] }));
+      expect(checkProjects(root, { CHOL_GLOBAL_DIR: root }).items[1]).toEqual({
+        name: 'pronto',
+        problem: `${path.join(tickets, '2.json')} substitui[0]: o ticket pronto-1 não existe.`,
+      });
     });
   });
 });
