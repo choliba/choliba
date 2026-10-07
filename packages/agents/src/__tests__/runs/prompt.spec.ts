@@ -109,7 +109,9 @@ describe('wrapInstructions', () => {
   it('puts the MCP servers after the permissions and before the text', () => {
     const wrapped = wrapInstructions(fakeAgent({ mcps: [{ name: 'mcp-app' }] }));
 
-    expect(wrapped.indexOf('</permissions>')).toBeLessThan(wrapped.indexOf('<mcps>'));
+    // The tag on a line of its own: the permissions name <mcps> in a sentence too.
+    expect(wrapped.indexOf('</permissions>')).toBeLessThan(wrapped.indexOf('\n<mcps>\n'));
+    expect(wrapped).toContain('MCP: you may use only the servers and tools listed in <mcps>');
     expect(wrapped.indexOf('</mcps>')).toBeLessThan(wrapped.indexOf('<system_role>'));
   });
 

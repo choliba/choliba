@@ -1,4 +1,4 @@
-import type { AgentEvent } from '../../runs/interfaces/event.interface';
+import type { AgentEvent, McpUse } from '../../runs/interfaces/event.interface';
 import { asString, isRecord } from '../../shared/json';
 
 /** `readToolCall` → `Read`, `shellToolCall` → `Shell`: the name shown in the terminal. */
@@ -16,6 +16,26 @@ function summarizeArgs(args: Record<string, unknown>): string {
     asString(args['globPattern']) ??
     ''
   );
+}
+
+/** Any call key that speaks of MCP: `getMcpToolsToolCall` (Cursor's tool catalog), `fetchMcpResourceToolCall`… */
+const MCP_KEY = /mcp/i;
+
+/**
+ * How a Cursor call uses MCP, from its arguments: `mcpToolCall` calls `toolName` of `serverIdentifier` (or
+ * `providerIdentifier`); any other MCP call (`getMcpToolsToolCall`, which lists the tools of `server`, Cursor's
+ * own `cursor` catalog included) is a discovery. `undefined` for a call that is not about MCP.
+ */
+function cursorMcpUse(key: string, args: Record<string, unknown>): McpUse | undefined {
+  const server = asString(args['serverIdentifier']) ?? asString(args['providerIdentifier']) ?? asString(args['server']);
+  const tool = asString(args['toolName']);
+  if (key === 'mcpToolCall' && server !== undefined && tool !== undefined) {
+    return { kind: 'call', server, tool };
+  }
+  if (!MCP_KEY.test(key)) {
+    return undefined;
+  }
+  return server === undefined ? { kind: 'discovery' } : { kind: 'discovery', server };
 }
 
 /**
@@ -57,7 +77,8 @@ export function parseCursorToolCall(doc: Record<string, unknown>): readonly Agen
   const subtype = asString(doc['subtype']);
   if (subtype === 'started') {
     const args = isRecord(body['args']) ? body['args'] : {};
-    return [{ type: 'tool-call', id, name, summary: summarizeArgs(args) }];
+    const mcp = cursorMcpUse(key, args);
+    return [{ type: 'tool-call', id, name, summary: summarizeArgs(args), ...(mcp === undefined ? {} : { mcp }) }];
   }
   if (subtype === 'completed' && isRecord(body['result'])) {
     return [toolResult(id, name, body['result'])];

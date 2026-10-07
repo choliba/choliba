@@ -18,6 +18,7 @@ import type { Theme } from '@choliba/core/theme';
 import { agentRenderOptions, formatProviderLine, renderEvent } from './render';
 import { applyRunTools } from './run-tools/run-tools';
 import { delegationMessage, delegationOf } from './delegation-guard';
+import { mcpViolation } from './mcp-guard';
 
 export interface RunAgentDeps {
   /**
@@ -147,6 +148,12 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
       const subagent = delegationOf(agentEvent);
       if (subagent !== undefined) {
         stop(delegationMessage(subagent));
+        continue;
+      }
+
+      const undeclaredMcp = mcpViolation(agentEvent, label, request.providerRequest.agent.mcps);
+      if (undeclaredMcp !== undefined) {
+        stop(undeclaredMcp);
         continue;
       }
 

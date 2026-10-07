@@ -1,6 +1,7 @@
 import type { AgentEvent } from '../runs/interfaces/event.interface';
 import { asBoolean, asString, isRecord, parseJsonLine } from '../shared/json';
 import { contentBlocks, summarize, toolResultText } from './message-blocks';
+import { claudeMcpUse } from './mcp-use';
 import { parseCursorToolCall } from './cursor/tool-calls';
 import type { StreamParser } from './interfaces/provider.interface';
 
@@ -158,7 +159,14 @@ export function createStreamJsonParser(options: StreamJsonParserOptions): Stream
           if (block.type === 'tool_use' && block.id !== undefined) {
             const name = block.name ?? '?';
             toolNames.set(block.id, name);
-            events.push({ type: 'tool-call', id: block.id, name, summary: summarize(block.input) });
+            const mcp = claudeMcpUse(name, block.input?.server);
+            events.push({
+              type: 'tool-call',
+              id: block.id,
+              name,
+              summary: summarize(block.input),
+              ...(mcp === undefined ? {} : { mcp }),
+            });
             if (options.planFromExitPlanMode && name === 'ExitPlanMode' && block.input?.plan !== undefined) {
               events.push({ type: 'plan', markdown: block.input.plan });
             }

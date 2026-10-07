@@ -114,6 +114,8 @@ describe('claudeProvider.buildArgs', () => {
 
     expect(args).toEqual(expect.arrayContaining(['--permission-mode', 'dontAsk', '--strict-mcp-config']));
     expect(args.at(args.indexOf('--tools') + 1)).toBe('');
+    // No MCP declared: no server at all, not even the user's own (--strict-mcp-config, no --mcp-config).
+    expect(args.includes('--mcp-config')).toBe(false);
     expect(args.includes('--allowedTools')).toBe(false);
     expect(args.includes('--disallowedTools')).toBe(false);
   });

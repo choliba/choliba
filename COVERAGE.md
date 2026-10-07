@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 06/10/2026 22:15:22 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 06/10/2026 22:16:34 — não editar manualmente.
 
 ## Resumo
 
@@ -17,7 +17,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 60 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 62 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -46,6 +46,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/providers/cursor/cursor-provider.module.ts](packages/agents/src/providers/cursor/cursor-provider.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/cursor/permissions.ts](packages/agents/src/providers/cursor/permissions.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/cursor/tool-calls.ts](packages/agents/src/providers/cursor/tool-calls.ts)|100.00|100.00|100.00|100.00
+🟢|[src/providers/mcp-use.ts](packages/agents/src/providers/mcp-use.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/message-blocks.ts](packages/agents/src/providers/message-blocks.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/provider-registry.service.ts](packages/agents/src/providers/provider-registry.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/provider-registry.ts](packages/agents/src/providers/provider-registry.ts)|100.00|100.00|100.00|100.00
@@ -55,6 +56,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/runs/agent-detail.ts](packages/agents/src/runs/agent-detail.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/delegation-guard.ts](packages/agents/src/runs/delegation-guard.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/dry-run.ts](packages/agents/src/runs/dry-run.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/mcp-guard.ts](packages/agents/src/runs/mcp-guard.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/permissions.ts](packages/agents/src/runs/permissions.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/prompt.ts](packages/agents/src/runs/prompt.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/render.ts](packages/agents/src/runs/render.ts)|100.00|100.00|100.00|100.00

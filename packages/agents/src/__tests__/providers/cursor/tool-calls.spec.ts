@@ -90,6 +90,60 @@ describe('parseCursorToolCall', () => {
     expect(cursorToolName('semSearch')).toBe('SemSearch');
   });
 
+  // The shapes below come from a real cursor-agent stream (2026.10.01), trimmed to the fields that matter.
+  it('says which MCP tool a call uses: toolName of serverIdentifier, or of providerIdentifier', () => {
+    const started = (args: Record<string, unknown>) => ({
+      type: 'tool_call',
+      subtype: 'started',
+      call_id: 'c1',
+      tool_call: { mcpToolCall: { args } },
+    });
+    const call = {
+      name: 'git-git_status',
+      args: { repo_path: '/repo' },
+      providerIdentifier: 'git',
+      toolName: 'git_status',
+      serverIdentifier: 'git',
+    };
+
+    expect(parseCursorToolCall(started(call))).toEqual([
+      {
+        type: 'tool-call',
+        id: 'c1',
+        name: 'Mcp',
+        summary: '',
+        mcp: { kind: 'call', server: 'git', tool: 'git_status' },
+      },
+    ]);
+    expect(parseCursorToolCall(started({ providerIdentifier: 'mcp-app', toolName: 'get_issue' }))[0]).toMatchObject({
+      mcp: { kind: 'call', server: 'mcp-app', tool: 'get_issue' },
+    });
+    // Without a tool name it cannot be checked as a call: it is taken as a look at the server.
+    expect(parseCursorToolCall(started({ serverIdentifier: 'git' }))[0]).toMatchObject({
+      mcp: { kind: 'discovery', server: 'git' },
+    });
+  });
+
+  it("takes GetMcpTools as a discovery, of the server it names (Cursor's own catalog is the server cursor)", () => {
+    const started = (args: Record<string, unknown>) => ({
+      type: 'tool_call',
+      subtype: 'started',
+      call_id: 'c2',
+      tool_call: { getMcpToolsToolCall: { args: { toolCallId: 'c2', ...args } } },
+    });
+
+    expect(parseCursorToolCall(started({}))).toEqual([
+      { type: 'tool-call', id: 'c2', name: 'GetMcpTools', summary: '', mcp: { kind: 'discovery' } },
+    ]);
+    expect(parseCursorToolCall(started({ pattern: 'git' }))[0]).toMatchObject({
+      summary: 'git',
+      mcp: { kind: 'discovery' },
+    });
+    expect(parseCursorToolCall(started({ server: 'cursor', toolName: 'FetchMcpResource' }))[0]).toMatchObject({
+      mcp: { kind: 'discovery', server: 'cursor' },
+    });
+  });
+
   it('names a subagent call Task, which the run stops on', () => {
     const started = {
       type: 'tool_call',

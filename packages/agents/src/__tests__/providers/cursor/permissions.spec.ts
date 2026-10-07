@@ -3,7 +3,14 @@ import { join } from 'node:path';
 
 import { absolutePermissions, readAgentPermissions } from '../../../runs/permissions';
 import type { DirEntry, ReadDir } from '../../../providers/cursor/permissions';
-import { complementOf, cursorPermissions, readDir, shellToken } from '../../../providers/cursor/permissions';
+import {
+  complementOf,
+  cursorPermissions,
+  readDir,
+  shellToken,
+  undeclaredMcpTokens,
+  userMcpServers,
+} from '../../../providers/cursor/permissions';
 import { activeRunTools, runToolCommands } from '../../../runs/run-tools/run-tools';
 import { makeTmpDir } from '../../helpers/tmp';
 
@@ -193,5 +200,33 @@ describe('cursorPermissions', () => {
 
     expect(permissions.allow).toEqual(['Read(/repo/src/**)']);
     expect([...permissions.allow, ...permissions.deny].join(' ')).not.toContain('.delete');
+  });
+});
+
+describe("the user's own MCP servers", () => {
+  it('reads the servers of ~/.cursor/mcp.json, and none when it is missing, unreadable or has no servers', () => {
+    const tmp = makeTmpDir('cursor-home');
+    try {
+      expect(userMcpServers(tmp.path)).toEqual([]);
+      mkdirSync(join(tmp.path, '.cursor'));
+      const file = join(tmp.path, '.cursor', 'mcp.json');
+      writeFileSync(file, '{ not json');
+      expect(userMcpServers(tmp.path)).toEqual([]);
+      writeFileSync(file, JSON.stringify({ mcpServers: [] }));
+      expect(userMcpServers(tmp.path)).toEqual([]);
+      writeFileSync(file, JSON.stringify(['x']));
+      expect(userMcpServers(tmp.path)).toEqual([]);
+      writeFileSync(file, JSON.stringify({ mcpServers: { git: {}, 'mcp-app': {} } }));
+      expect(userMcpServers(tmp.path)).toEqual(['git', 'mcp-app']);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('denies each one the agent does not declare', () => {
+    const declared = [{ name: 'mcp-app', config: {}, path: '/m/mcp-app.json' }];
+
+    expect(undeclaredMcpTokens(['git', 'mcp-app'], declared)).toEqual(['Mcp(git:*)']);
+    expect(undeclaredMcpTokens([], declared)).toEqual([]);
   });
 });
