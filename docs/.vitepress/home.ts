@@ -3,6 +3,13 @@
  * config, so that `docs/` keeps only documentation; `scripts/docs-home.ts` writes it to `docs/index.md` (ignored by
  * git) before `docs:dev` and `docs:build`.
  */
+/**
+ * The site's description: the home's `<meta name="description">` and share card, which has no text of its own to
+ * quote. From 100 to 160 characters, like every page's (scripts/libs/docs-share.ts).
+ */
+export const description =
+  'Agentes que transformam um pedido em ticket, testes E2E e código, dentro das permissões e dos portões que o choliba aplica.';
+
 export const home = {
   layout: 'home',
   hero: {

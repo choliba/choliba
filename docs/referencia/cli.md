@@ -1,5 +1,8 @@
 # CLI
 
+> Cada comando da CLI do choliba: rodar agentes, criar projetos e tickets, rodar os testes, instalar, setup e
+> autocomplete, com cores e versão.
+
 | Comando                                      | O que faz                                                                                                 |
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | `choliba agents COMMAND [OPTIONS] [TASK...]` | Roda um agente da pasta de trabalho (`.choliba/agents/<nome>/`)                                           |

@@ -1,12 +1,21 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { defineConfig, type HeadConfig, type MarkdownEnv } from 'vitepress';
+import { defineConfig, type MarkdownEnv } from 'vitepress';
 
 import { githubSlug, outsideLink } from '../../scripts/libs/docs-links';
-import { pageDescription, pageUrl, shareTags, SITE_URL } from '../../scripts/libs/docs-share';
+import {
+  checkDescription,
+  pageDescription,
+  pageUrl,
+  publishedTime,
+  robotsTxt,
+  shareTags,
+  SITE_URL,
+} from '../../scripts/libs/docs-share';
 import { buildSidebar, readDocPages } from '../../scripts/libs/docs-sidebar';
+import { description as DESCRIPTION } from './home';
 
 /** The `docs/` folder, this config's parent. */
 const DOCS = fileURLToPath(new URL('..', import.meta.url));
@@ -14,7 +23,8 @@ const DOCS = fileURLToPath(new URL('..', import.meta.url));
 const REPOSITORY = 'https://github.com/choliba/choliba';
 
 const TITLE = 'choliba';
-const DESCRIPTION = 'Agentes que transformam um pedido em ticket, testes e código, com permissões e portões.';
+/** When this build publishes the site: each release builds it again, so every publication has its own date. */
+const PUBLISHED = publishedTime(new Date());
 
 export default defineConfig({
   base: '/',
@@ -28,23 +38,27 @@ export default defineConfig({
   rewrites: { 'README.md': 'indice.md' },
   head: [['link', { rel: 'icon', type: 'image/svg+xml', href: '/owl-logo-choliba.svg' }]],
   sitemap: { hostname: SITE_URL },
-  // Each page's share card (scripts/libs/docs-share.ts): its own description, from the frontmatter or else from its
-  // first paragraph, which also becomes its `<meta name="description">`; the home has the site's.
+  // Each page's description is the quote under its title (scripts/libs/docs-share.ts), which also becomes its
+  // `<meta name="description">`; a page without one, or with one too short or too long, stops the build. The home,
+  // generated from home.ts, has the site's.
   transformPageData(pageData) {
-    const frontmatter: Readonly<Record<string, unknown>> = pageData.frontmatter;
+    if (pageData.relativePath === 'index.md') return { description: DESCRIPTION };
     const source = readFileSync(path.join(DOCS, pageData.filePath), 'utf8');
-    const description =
-      typeof frontmatter['description'] === 'string'
-        ? frontmatter['description']
-        : (pageDescription(source) ?? DESCRIPTION);
-    const head: readonly HeadConfig[] = Array.isArray(frontmatter['head']) ? (frontmatter['head'] as HeadConfig[]) : [];
-    const tags = shareTags({
+    return { description: checkDescription(pageData.filePath, pageDescription(source)) };
+  },
+  // Each page's share card: Open Graph, the article's author and date, X's card and the canonical URL.
+  transformHead({ page, pageData, description }) {
+    if (page === '404.md') return [];
+    return shareTags({
       siteName: TITLE,
       title: pageData.title === '' ? TITLE : pageData.title,
       description,
       url: pageUrl(pageData.relativePath),
+      published: PUBLISHED,
     });
-    return { description, frontmatter: { ...frontmatter, head: [...head, ...tags] } };
+  },
+  buildEnd(siteConfig) {
+    writeFileSync(path.join(siteConfig.outDir, 'robots.txt'), robotsTxt(SITE_URL));
   },
   markdown: {
     // The anchors GitHub makes, which the pages already link to (`cli.md#a-aplicação-do-projeto`).

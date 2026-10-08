@@ -1,5 +1,8 @@
 # O que acontece numa execução
 
+> O que acontece quando você roda um agente: as três fases de um comando, o que o choliba faz sem modelo e o que
+> fica com o agente.
+
 Um comando (`bunx choliba <agente> …`) passa por três fases. Nas fases 1 e 3 quem executa é o **choliba**, sem
 modelo. Na fase 2 executa o **agente**: o provider (Claude Code ou Cursor) rodando o modelo, só dentro das
 permissões do `agent.yaml`.

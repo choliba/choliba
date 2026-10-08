@@ -1,5 +1,8 @@
 # O `agent.yaml`
 
+> Todas as chaves do `agent.yaml`, as variáveis `${NOME}` que ele aceita e as ações de `steps`, com o schema que
+> valida o arquivo.
+
 Todas as chaves do `agent.yaml` (padrão 1), as variáveis `${NOME}` que ele aceita e as ações de `steps`. Um exemplo
 completo e o passo a passo estão em [Escrevendo um agente](../guias/escrever-um-agente.md); o schema é
 `packages/agents/schemes/v1/agent.schema.json`.

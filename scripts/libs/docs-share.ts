@@ -12,8 +12,13 @@ const IMAGE = {
   alt: 'A coruja do choliba ao lado do nome e da frase “Testes E2E operados por agentes”.',
 } as const;
 
-/** The longest description a card shows without cutting it (X cuts at 200, search engines near 160). */
-const DESCRIPTION_LENGTH = 160;
+/** Who writes the site, for `article:author` and `<meta name="author">`. */
+const AUTHOR = 'choliba';
+
+/** A description shorter than this gets a warning from LinkedIn. */
+export const DESCRIPTION_MIN = 100;
+/** A description longer than this is cut by search engines (and X cuts at 200). */
+export const DESCRIPTION_MAX = 160;
 
 /** What a page's share card says about it. */
 export interface SharePage {
@@ -21,6 +26,8 @@ export interface SharePage {
   readonly title: string;
   readonly description: string;
   readonly url: string;
+  /** When the site was published, as `publishedTime` writes it. */
+  readonly published: string;
 }
 
 /**
@@ -40,42 +47,43 @@ function plainText(line: string): string {
     .trim();
 }
 
-/** The first paragraph of prose of `markdown`, after the frontmatter: headings, tables, lists, quotes and code skipped. */
-function firstParagraph(markdown: string): string | undefined {
-  const body = markdown.replace(/^---\n[\s\S]*?\n---\n/, '');
-  const blocks = body.replace(/```[\s\S]*?```/g, '').split(/\n\s*\n/);
-  const prose = blocks.map((block) => block.trim()).find((block) => block !== '' && !/^([#|>-]|\d+\.\s)/.test(block));
-  return prose === undefined ? undefined : prose.split('\n').map(plainText).join(' ');
-}
-
-/** `text` cut at the last word that fits in `DESCRIPTION_LENGTH`, with `…`. */
-function cutAtWord(text: string): string {
-  const cut = text.slice(0, DESCRIPTION_LENGTH - 1);
-  return `${cut.slice(0, cut.lastIndexOf(' ')).replace(/[\s,;:]+$/, '')}…`;
-}
-
-/** The sentences of `text`: each ends at a `.`, `!` or `?` followed by a space (so `agent.yaml` is not an end). */
-function sentences(text: string): string[] {
-  return (text.match(/.+?(?:[.!?:](?=\s|$)|$)/g) ?? []).map((sentence) => sentence.trim()).filter(Boolean);
+/**
+ * A page's description: the quote (`> …`) that is the first block after its `# ` title, as plain text, its lines
+ * joined. Every page of `docs/` opens with one, so the text is part of the page, on GitHub too, and not metadata.
+ * `undefined` when the block after the title is not a quote.
+ */
+export function pageDescription(markdown: string): string | undefined {
+  const afterTitle = markdown.replace(/^[\s\S]*?^# .*\n/m, '');
+  const block = afterTitle.trim().split(/\n\s*\n/)[0] ?? '';
+  const lines = block.split('\n');
+  if (!lines.every((line) => line.startsWith('>'))) return undefined;
+  return lines.map((line) => plainText(line.replace(/^>\s?/, ''))).join(' ');
 }
 
 /**
- * A page's description for its share card, from the text it already has: the whole sentences of its first
- * paragraph that fit in `DESCRIPTION_LENGTH` (the first one cut at a word if it alone does not). A last sentence
- * that ends in `:` introduces a list the card does not show, so it goes, or, when it is the only one, ends in `.`.
- * `undefined` for a page with no paragraph, such as the home.
+ * `description` as the description of `page`, or an error that names the page: the quote after the title must
+ * exist and fit between `DESCRIPTION_MIN` and `DESCRIPTION_MAX` characters, so no card has to cut it.
  */
-export function pageDescription(markdown: string): string | undefined {
-  const paragraph = firstParagraph(markdown);
-  if (paragraph === undefined) return undefined;
-  const kept: string[] = [];
-  for (const sentence of sentences(paragraph)) {
-    if ([...kept, sentence].join(' ').length > DESCRIPTION_LENGTH) break;
-    kept.push(sentence);
+export function checkDescription(page: string, description: string | undefined): string {
+  if (description === undefined) {
+    throw new Error(`${page}: falta a descrição, uma citação (> …) logo abaixo do título`);
   }
-  if (kept.length === 0) return cutAtWord(paragraph);
-  if (kept.length > 1 && kept.at(-1)?.endsWith(':') === true) kept.pop();
-  return kept.join(' ').replace(/:$/, '.');
+  if (description.length < DESCRIPTION_MIN || description.length > DESCRIPTION_MAX) {
+    throw new Error(
+      `${page}: a descrição tem ${String(description.length)} caracteres, e deve ter de ${String(DESCRIPTION_MIN)} a ${String(DESCRIPTION_MAX)}`,
+    );
+  }
+  return description;
+}
+
+/** `date` in ISO 8601, in UTC and to the second (`2026-10-08T16:28:36Z`), the DateTime of Open Graph. */
+export function publishedTime(date: Date): string {
+  return date.toISOString().replace(/\.\d{3}Z$/, 'Z');
+}
+
+/** The site's robots.txt: every crawler may read every page, and the sitemap is announced. */
+export function robotsTxt(siteUrl: string): string {
+  return `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`;
 }
 
 /** A `<meta property>` tag, the attribute Open Graph uses (not `name`). */
@@ -85,12 +93,13 @@ function property(name: string, content: string): HeadConfig {
 
 /**
  * The tags that make a link to the page a card on WhatsApp, LinkedIn, X, Discord, Slack and Facebook: the Open
- * Graph ones (https://ogp.me/) with the image's size, type and alt, X's `twitter:card` (its title, description and
- * image fall back to the `og:` ones) and the canonical URL, the same as `og:url`.
+ * Graph ones (https://ogp.me/) with the image's size, type and alt; the page as an `article`, the only type with an
+ * author and a publication date, which LinkedIn shows; X's `twitter:card` (its title, description and image fall
+ * back to the `og:` ones) and the canonical URL, the same as `og:url`.
  */
 export function shareTags(page: SharePage): HeadConfig[] {
   return [
-    property('og:type', 'website'),
+    property('og:type', 'article'),
     property('og:site_name', page.siteName),
     property('og:locale', 'pt_BR'),
     property('og:title', page.title),
@@ -101,6 +110,9 @@ export function shareTags(page: SharePage): HeadConfig[] {
     property('og:image:height', IMAGE.height),
     property('og:image:type', IMAGE.type),
     property('og:image:alt', IMAGE.alt),
+    property('article:published_time', page.published),
+    property('article:author', AUTHOR),
+    ['meta', { name: 'author', content: AUTHOR }],
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
     ['link', { rel: 'canonical', href: page.url }],
   ];
