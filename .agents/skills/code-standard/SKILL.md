@@ -28,19 +28,22 @@ written here, with its reason.
 
 ## 2. Layers of a package's `src/`
 
-Every folder of `src/` belongs to one layer and imports only the layers below it, from its own package, through the
-folder's public face:
+Every folder of `src/` belongs to one layer and imports only its own layer and the layers below it, from its own
+package, through the folder's public face (folders of one layer may build on each other; a cycle between them is
+rejected):
 
 | Layer | What it holds |
 | --- | --- |
-| `common/` | types and functions the other folders share |
+| `common/` | what two or more folders **of this package** share and no domain owns (what several packages share is `@choliba/core`) |
 | domain | folders of pure functions about one subject (`skills/`, `steps/`) |
 | orchestration | folders of pure functions that combine domains (`runs/`) |
 | module | folders that expose a service, a command or an injectable value: a `*.module.ts`, the Nest shell. A module may also import other modules |
 | entries | the files right in `src/`: `index.ts`, `nest.ts`, `main.ts`, `app.module.ts` |
 
 - **A folder is a module** when it exposes a service, a command or an injectable value; with only logic, it is a
-  folder of functions. A module folder keeps only its own functions: what another folder uses moves down.
+  folder of functions. A module folder keeps its domain's files (`tickets/` has `ticket.ts`, `ticket-template.ts`…);
+  they move down to a folder of functions only when a lower layer needs them or keeping them would make a cycle
+  (`projects`' paths live in `paths/` because `tickets/` needs them and `projects/` needs `tickets/`).
 - **Every folder has a public face**: `index.ts` (functions and types); a module folder also `nest.ts` (its module,
   services, commands), as the package has `.` and `./nest`, so that `src/index.ts` never loads a decorator. Nothing
   outside the folder imports any other file inside it. `src/index.ts` and `src/nest.ts` only gather the folders'
@@ -56,7 +59,8 @@ folder's public face:
   `decorator`, `interface` (in `interfaces/`), `dto`, `command` (nest-commander) and `constants` (injection tokens
   only, as `@nestjs/config`'s `config.constants.ts`). An agent provider is a Nest provider
   (`claude-agent.provider.ts`); the decorator that marks it is `register-agent-provider.decorator.ts`.
-- **Functions**: `domain-action.ts`, no type suffix (`delete-tool.ts`, `theme-defaults.ts`).
+- **Functions**: `domain-action.ts`, no type suffix, the domain first (`ticket-superseded.ts`, `project-settings.ts`,
+  `delete-tool.ts`, `theme-defaults.ts`).
 - **One word, one meaning**: `command` is only a CLI command class; an agent turned into what `choliba <agent>` runs
   is an **invocation** (`AgentInvocation`). The same holds for `provider`, `help`, `tool` and `registry`.
 
@@ -98,6 +102,6 @@ Specs (`src/__tests__/`) are not checked.
 
 ## Migration status
 
-Plan 035 migrates the packages in this order, all in one pull request at the end: `core` (done), `terminal` (done),
+Plan 035 migrates the packages in this order, all in one pull request at the end: `core` (done), `terminal` (done), `projects` (done),
 `projects`, `runner` (breaking: its public `shared/` files become kebab-case), `agents`, then the two apps. A package not yet in `STRUCTURE` keeps
 its current layout until its turn; new code in it already follows these rules where it can.
