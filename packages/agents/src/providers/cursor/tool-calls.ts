@@ -22,9 +22,16 @@ function summarizeArgs(args: Record<string, unknown>): string {
 const MCP_KEY = /mcp/i;
 
 /**
+ * Cursor's built-in tool catalog name in `getMcpToolsToolCall` args — not an MCP from `agent.yaml#mcps`.
+ * Naming it as the discovery server would stop any agent that declares real MCPs (`mcp-guard`).
+ */
+const CURSOR_CATALOG = 'cursor';
+
+/**
  * How a Cursor call uses MCP, from its arguments: `mcpToolCall` calls `toolName` of `serverIdentifier` (or
- * `providerIdentifier`); any other MCP call (`getMcpToolsToolCall`, which lists the tools of `server`, Cursor's
- * own `cursor` catalog included) is a discovery. `undefined` for a call that is not about MCP.
+ * `providerIdentifier`); any other MCP call (`getMcpToolsToolCall`, which lists the tools of `server`) is a
+ * discovery. Cursor's own catalog (`server: "cursor"`) counts as a discovery of no particular server.
+ * `undefined` for a call that is not about MCP.
  */
 function cursorMcpUse(key: string, args: Record<string, unknown>): McpUse | undefined {
   const server = asString(args['serverIdentifier']) ?? asString(args['providerIdentifier']) ?? asString(args['server']);
@@ -35,7 +42,10 @@ function cursorMcpUse(key: string, args: Record<string, unknown>): McpUse | unde
   if (!MCP_KEY.test(key)) {
     return undefined;
   }
-  return server === undefined ? { kind: 'discovery' } : { kind: 'discovery', server };
+  if (server === undefined || server === CURSOR_CATALOG) {
+    return { kind: 'discovery' };
+  }
+  return { kind: 'discovery', server };
 }
 
 /**

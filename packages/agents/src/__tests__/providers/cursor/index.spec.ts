@@ -68,11 +68,13 @@ describe('cursorProvider.buildArgs', () => {
     expect(prompt.indexOf('Utilize a skill docs.')).toBeLessThan(prompt.indexOf('be an echo'));
   });
 
-  it('always sends --trust, stream-json output and the workspace', () => {
-    const args = cursorProvider.buildArgs(fakeRequest({ runDir: '/repo/root/.cache/runs/x' }));
+  it('always sends --trust, stream-json output and the workspace root', () => {
+    const args = cursorProvider.buildArgs(
+      fakeRequest({ workspaceRoot: '/repo/root', runDir: '/repo/root/.cache/runs/x' }),
+    );
 
     expect(args).toEqual(
-      expect.arrayContaining(['--trust', '--output-format', 'stream-json', '--workspace', '/repo/root/.cache/runs/x']),
+      expect.arrayContaining(['--trust', '--output-format', 'stream-json', '--workspace', '/repo/root']),
     );
   });
 
@@ -345,17 +347,20 @@ function restoreEnv(name: string, value: string | undefined): void {
 }
 
 describe('cursorProvider.prepareWorkspace', () => {
-  it("writes the agent's permissions into its run dir for the run and removes them afterwards", () => {
+  it("writes the agent's permissions into the workspace root for the run and removes them afterwards", () => {
     const tmp = makeTmpDir('cursor-prepare');
     try {
+      const runDir = join(tmp.path, 'run');
+      mkdirSync(runDir);
       const permissions = readAgentPermissions({ deny: { execute: { './': ['prettier'] } } });
       const restore = cursorProvider.prepareWorkspace(
-        fakeRequest({ workspaceRoot: '/', runDir: tmp.path, agent: fakeAgent({ permissions }) }),
+        fakeRequest({ workspaceRoot: tmp.path, runDir, agent: fakeAgent({ permissions }) }),
       );
 
       const { allow, deny } = cliJsonIn(tmp.path);
       expect(allow).toEqual([]);
       expect(deny[0]).toBe('Shell(prettier)');
+      expect(existsSync(join(runDir, '.cursor'))).toBe(false);
       restore();
       expect(existsSync(join(tmp.path, '.cursor'))).toBe(false);
     } finally {
@@ -369,9 +374,11 @@ describe('cursorProvider.prepareWorkspace', () => {
     try {
       process.env['CURSOR_DATA_DIR'] = join(tmp.path, 'data');
       process.env['CURSOR_CONFIG_DIR'] = join(tmp.path, 'config');
+      const root = join(tmp.path, 'root');
       const runDir = join(tmp.path, 'run');
+      mkdirSync(root);
       mkdirSync(runDir);
-      const restore = cursorProvider.prepareWorkspace(fakeRequest({ workspaceRoot: '/', runDir }));
+      const restore = cursorProvider.prepareWorkspace(fakeRequest({ workspaceRoot: root, runDir }));
       const state = cursorStatePaths(runDir);
       for (const path of state) {
         mkdirSync(path, { recursive: true });
@@ -390,7 +397,9 @@ describe('cursorProvider.prepareWorkspace', () => {
   it('denies the rest of the disk even to an agent that declares no permissions', () => {
     const tmp = makeTmpDir('cursor-prepare-none');
     try {
-      const restore = cursorProvider.prepareWorkspace(fakeRequest({ workspaceRoot: '/', runDir: tmp.path }));
+      const runDir = join(tmp.path, 'run');
+      mkdirSync(runDir);
+      const restore = cursorProvider.prepareWorkspace(fakeRequest({ workspaceRoot: tmp.path, runDir }));
 
       const { allow, deny } = cliJsonIn(tmp.path);
       expect(allow).toEqual([]);
@@ -404,10 +413,12 @@ describe('cursorProvider.prepareWorkspace', () => {
   it('writes the listed MCP servers and their permission for the run, then removes both files', () => {
     const tmp = makeTmpDir('cursor-prepare-mcps');
     try {
+      const runDir = join(tmp.path, 'run');
+      mkdirSync(runDir);
       const restore = cursorProvider.prepareWorkspace(
         fakeRequest({
-          workspaceRoot: '/',
-          runDir: tmp.path,
+          workspaceRoot: tmp.path,
+          runDir,
           mcpServers: [
             {
               name: 'browser',
@@ -431,14 +442,16 @@ describe('cursorProvider.prepareWorkspace', () => {
   it('undoes the permissions already written when the MCP file cannot be', () => {
     const tmp = makeTmpDir('cursor-prepare-mcps-invalid');
     try {
+      const runDir = join(tmp.path, 'run');
+      mkdirSync(runDir);
       mkdirSync(join(tmp.path, '.cursor'));
       writeFileSync(join(tmp.path, '.cursor/mcp.json'), '{ nope');
 
       expect(() =>
         cursorProvider.prepareWorkspace(
           fakeRequest({
-            workspaceRoot: '/',
-            runDir: tmp.path,
+            workspaceRoot: tmp.path,
+            runDir,
             mcpServers: [
               {
                 name: 'browser',
@@ -460,8 +473,10 @@ describe('cursorProvider.previewWorkspace', () => {
   it('shows what prepareWorkspace would write, without writing anything', () => {
     const tmp = makeTmpDir('cursor-preview');
     try {
+      const runDir = join(tmp.path, 'run');
+      mkdirSync(runDir);
       const browser = { name: 'browser', config: { command: 'npx' }, path: '/repo/.choliba/mcps/browser.json' };
-      const request = fakeRequest({ workspaceRoot: '/', runDir: tmp.path, mcpServers: [browser] });
+      const request = fakeRequest({ workspaceRoot: tmp.path, runDir, mcpServers: [browser] });
 
       const files = cursorProvider.previewWorkspace(request);
 
@@ -475,7 +490,7 @@ describe('cursorProvider.previewWorkspace', () => {
       const restore = cursorProvider.prepareWorkspace(request);
       expect(readFileSync(join(tmp.path, '.cursor', 'cli.json'), 'utf8')).toBe(files[0]?.content);
       restore();
-      expect(cursorProvider.previewWorkspace(fakeRequest({ workspaceRoot: '/', runDir: tmp.path }))).toHaveLength(1);
+      expect(cursorProvider.previewWorkspace(fakeRequest({ workspaceRoot: tmp.path, runDir }))).toHaveLength(1);
     } finally {
       tmp.cleanup();
     }
@@ -497,13 +512,13 @@ describe('cursorProvider.previewWorkspace', () => {
       });
 
       expect(cursorProvider.previewWorkspace(request).map((file) => file.path)).toEqual([
-        join(run, '.cursor', 'cli.json'),
+        join(tmp.path, '.cursor', 'cli.json'),
       ]);
       const restore = cursorProvider.prepareWorkspace(request);
-      expect(cliJsonIn(run).allow).toEqual(
+      expect(cliJsonIn(tmp.path).allow).toEqual(
         expect.arrayContaining([`Shell(${run}.delete)`, `Shell(${run}.playwright-cli)`]),
       );
-      expect(cliJsonIn(run).deny).toEqual(
+      expect(cliJsonIn(tmp.path).deny).toEqual(
         expect.arrayContaining([`Write(${run}.delete)`, `Write(${run}.playwright-cli)`]),
       );
       restore();
