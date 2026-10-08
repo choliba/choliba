@@ -43,9 +43,12 @@ rejected):
 | entries | the files right in `src/`: `index.ts`, `nest.ts`, `main.ts`, `app.module.ts` |
 
 - **A folder is a module** when it exposes a service, a command or an injectable value; with only logic, it is a
-  folder of functions. A module folder keeps its domain's files (`tickets/` has `ticket.ts`, `ticket-template.ts`…);
-  they move down to a folder of functions only when a lower layer needs them or keeping them would make a cycle
-  (`projects`' paths live in `paths/` because `tickets/` needs them and `projects/` needs `tickets/`).
+  folder of functions. A module keeps its domain's files, in subfolders when they are many (`agents/` has
+  `agent-loader.ts`, `invocation.ts`, `steps/`, `runs/`; `tickets/` has `ticket.ts`, `ticket-template.ts`…).
+- **What two modules share goes down to `common/`** (or to a domain folder, as `projects`' `paths/`), so that they
+  never import each other in a cycle: `agents/` and `providers/` both use the agent's types, permissions,
+  variables and MCPs, the provider's contract, events and parser, the prompt and the run tools, so all of that is
+  in `agents`' `common/`. A subfolder belongs to its folder: inside it, files import each other directly.
 - **Every folder has a public face**: `index.ts` (functions and types); a module folder also `nest.ts` (its module,
   services, commands), as the package has `.` and `./nest`, so that `src/index.ts` never loads a decorator. Nothing
   outside the folder imports any other file inside it. `src/index.ts` and `src/nest.ts` only gather the folders'
@@ -106,6 +109,6 @@ Specs (`src/__tests__/`) are not checked.
 ## Migration status
 
 Plan 035 migrates the packages in this order, all in one pull request at the end: `core`, `terminal`, `projects` and
-`runner` (done; breaking: the runner's public `shared/` files became kebab-case, as `./shared/pages/base-page`), then
-`agents` and the two apps. A package not yet in `STRUCTURE` keeps its current layout until its turn; new code in it
+`runner` (done; breaking: the runner's public `shared/` files became kebab-case, as `./shared/pages/base-page`) and
+`agents` (done), then the two apps. A package not yet in `STRUCTURE` keeps its current layout until its turn; new code in it
 already follows these rules where it can.
