@@ -1,0 +1,32 @@
+<!--
+  Source of docs/public/og-choliba.png, the image of every page's share card (scripts/libs/docs-share.ts):
+  1200×630 (1.91:1), under 600 KB. After changing it, make the PNG again with
+  inkscape docs/.vitepress/og-image.svg -o docs/public/og-choliba.png -w 1200 -h 630
+  The owl is the one of docs/public/owl-logo-choliba.svg.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#F4EFE6"/>
+  <rect y="598" width="1200" height="32" fill="#1A3B34"/>
+  <g transform="translate(70 75) scale(0.88)">
+    <path fill="#1A3B34" d="M256 32 L392 96 L432 208 C432 352 352 464 256 480 C160 464 80 352 80 208 L120 96 Z"/>
+    <polygon fill="#122A25" points="120,96 256,176 80,208"/>
+    <polygon fill="#122A25" points="392,96 256,176 432,208"/>
+    <circle cx="176" cy="240" r="88" fill="#F4EFE6"/>
+    <circle cx="336" cy="240" r="88" fill="#F4EFE6"/>
+    <circle cx="176" cy="240" r="56" fill="#D99B26"/>
+    <circle cx="336" cy="240" r="56" fill="#D99B26"/>
+    <circle cx="176" cy="240" r="32" fill="#111B18"/>
+    <circle cx="336" cy="240" r="32" fill="#111B18"/>
+    <circle cx="160" cy="224" r="10" fill="#FFFFFF"/>
+    <circle cx="320" cy="224" r="10" fill="#FFFFFF"/>
+    <polygon fill="#111B18" points="256,220 236,280 256,310 276,280"/>
+    <polygon fill="#F4EFE6" points="256,320 160,380 256,460 352,380"/>
+    <polygon fill="#D99B26" points="256,350 210,390 256,430 302,390"/>
+  </g>
+  <g font-family="Noto Sans, DejaVu Sans, sans-serif" fill="#1A3B34">
+    <text x="560" y="270" font-size="120" font-weight="700">choliba</text>
+    <text x="564" y="350" font-size="40">Testes E2E operados</text>
+    <text x="564" y="400" font-size="40">por agentes</text>
+    <text x="564" y="470" font-size="26" fill="#2B5A50">choliba.github.io</text>
+  </g>
+</svg>
