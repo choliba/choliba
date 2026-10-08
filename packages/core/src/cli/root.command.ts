@@ -41,7 +41,7 @@ export class RootCommand extends CliCommand {
     const argv = this.io.args();
     const [first] = argv;
     if (first === undefined || HELP_WORDS.includes(first)) {
-      this.io.printHelp(this.registry.spec(this.options.spec));
+      this.io.printHelp(this.registry.spec(this.options.spec, this.options.groups));
       return;
     }
     if (first === '--version') {
@@ -50,7 +50,7 @@ export class RootCommand extends CliCommand {
     }
     const [fallback] = discover(this.discovery, RegisterRootFallback, isRootFallback);
     if (fallback === undefined) {
-      this.io.usageError(`Comando desconhecido: ${first}.`, programOf(this.options));
+      this.io.usageError(`comando desconhecido: ${first}.`, programOf(this.options));
       return;
     }
     try {

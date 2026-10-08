@@ -118,7 +118,7 @@ describe('RootModule', () => {
     const { code, err } = await demo(['revisor']);
 
     expect(code).toBe(1);
-    expect(err).toBe("Comando desconhecido: revisor.\nRun 'demo --help' for usage.\n");
+    expect(err).toBe("comando desconhecido: revisor.\nRun 'demo --help' for usage.\n");
   });
 
   it('completes and describes from the registered commands', async () => {

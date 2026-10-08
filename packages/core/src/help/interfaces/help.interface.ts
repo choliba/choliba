@@ -43,6 +43,8 @@ export interface CommandEntry {
   readonly spec: CommandSpec;
   /** Also accepted as `--<name>`, e.g. `agents --docs-updater`. */
   readonly asFlag?: boolean;
+  /** `false`: completed and described, but not listed by `--help` (`choliba <agent>` shortcuts). */
+  readonly listed?: boolean;
 }
 
 /** One description of a CLI (or of one of its commands) that both `complete` and `formatHelp` read. */

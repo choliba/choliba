@@ -32,8 +32,15 @@ export class HelpRegistryService {
     );
   }
 
-  /** The whole CLI as one spec: `root` with the registered commands, what `--help` and `__complete` read. */
-  spec(root: RootSpec): CommandSpec {
-    return { ...root, commands: () => this.entries() };
+  /**
+   * The whole CLI as one spec: `root` with the registered commands, sorted by `groups` (each group keeps the order
+   * of registration; groups it does not name come last), what `--help` and `__complete` read.
+   */
+  spec(root: RootSpec, groups: readonly string[] = []): CommandSpec {
+    const rank = (group: string): number => {
+      const index = groups.indexOf(group);
+      return index === -1 ? groups.length : index;
+    };
+    return { ...root, commands: () => this.entries().toSorted((a, b) => rank(a.group) - rank(b.group)) };
   }
 }

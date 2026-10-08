@@ -119,7 +119,7 @@ export function formatHelp(spec: CommandSpec): string {
   if (spec.description !== undefined) {
     sections.push(paragraph(spec.description));
   }
-  const entries = spec.commands?.() ?? [];
+  const entries = (spec.commands?.() ?? []).filter((entry) => entry.listed !== false);
   if (entries.length > 0) {
     sections.push(...commandSections(entries));
   }

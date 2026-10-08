@@ -20,7 +20,7 @@ export class CompleteCommand extends CliCommand {
   }
 
   run(): Promise<void> {
-    this.help.printCompletions(this.registry.spec(this.options.spec), this.io.args('__complete'));
+    this.help.printCompletions(this.registry.spec(this.options.spec, this.options.groups), this.io.args('__complete'));
     return Promise.resolve();
   }
 }

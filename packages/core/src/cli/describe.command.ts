@@ -20,7 +20,7 @@ export class DescribeCommand extends CliCommand {
   }
 
   run(): Promise<void> {
-    this.help.printDescription(this.registry.spec(this.options.spec), this.io.args('__describe'));
+    this.help.printDescription(this.registry.spec(this.options.spec, this.options.groups), this.io.args('__describe'));
     return Promise.resolve();
   }
 }
