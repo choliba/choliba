@@ -4,6 +4,8 @@ export type {
   FlagChoice,
   FlagSpec,
   FlagValueSpec,
+  HelpContributor,
+  RootSpec,
   Suggestions,
   TypedFlags,
 } from './interfaces/help.interface';

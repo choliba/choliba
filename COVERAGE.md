@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 07/10/2026 05:39:21 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 08/10/2026 17:42:28 — não editar manualmente.
 
 ## Resumo
 
@@ -155,42 +155,60 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 34 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 52 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
 🟢|[src/cli/cli-command.ts](packages/core/src/cli/cli-command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/cli/cli-help.service.ts](packages/core/src/cli/cli-help.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/cli/cli.module.ts](packages/core/src/cli/cli.module.ts)|100.00|100.00|100.00|100.00
-🟢|[src/cli/command-io.ts](packages/core/src/cli/command-io.ts)|100.00|100.00|100.00|100.00
-🟢|[src/cli/complete.ts](packages/core/src/cli/complete.ts)|100.00|100.00|100.00|100.00
-🟢|[src/cli/help.ts](packages/core/src/cli/help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/cli/command-io.service.ts](packages/core/src/cli/command-io.service.ts)|100.00|100.00|100.00|100.00
+🟢|[src/cli/complete.command.ts](packages/core/src/cli/complete.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/cli/describe.command.ts](packages/core/src/cli/describe.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/cli/index.ts](packages/core/src/cli/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/cli/message-of.ts](packages/core/src/cli/message-of.ts)|100.00|100.00|100.00|100.00
-🟢|[src/cli/scripts-help.ts](packages/core/src/cli/scripts-help.ts)|100.00|100.00|100.00|100.00
-🟢|[src/cli/wants-help.ts](packages/core/src/cli/wants-help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/cli/nest.ts](packages/core/src/cli/nest.ts)|100.00|100.00|100.00|100.00
+🟢|[src/cli/register-root-fallback.decorator.ts](packages/core/src/cli/register-root-fallback.decorator.ts)|100.00|100.00|100.00|100.00
+🟢|[src/cli/root.command.ts](packages/core/src/cli/root.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/cli/root.constants.ts](packages/core/src/cli/root.constants.ts)|100.00|100.00|100.00|100.00
+🟢|[src/cli/root.module.ts](packages/core/src/cli/root.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/discover.ts](packages/core/src/common/discover.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/nest.ts](packages/core/src/common/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/config.module.ts](packages/core/src/config/config.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/config.service.ts](packages/core/src/config/config.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/files.ts](packages/core/src/config/files.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/index.ts](packages/core/src/config/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/layout.ts](packages/core/src/config/layout.ts)|100.00|100.00|100.00|100.00
+🟢|[src/config/nest.ts](packages/core/src/config/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/repo-config.ts](packages/core/src/config/repo-config.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/resources.ts](packages/core/src/config/resources.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/vars.ts](packages/core/src/config/vars.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/workspace.ts](packages/core/src/config/workspace.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/cli-help.service.ts](packages/core/src/help/cli-help.service.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/complete.ts](packages/core/src/help/complete.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/format-help.ts](packages/core/src/help/format-help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/help-registry.service.ts](packages/core/src/help/help-registry.service.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/help.module.ts](packages/core/src/help/help.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/index.ts](packages/core/src/help/index.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/nest.ts](packages/core/src/help/nest.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/register-help.decorator.ts](packages/core/src/help/register-help.decorator.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/scripts-help.ts](packages/core/src/help/scripts-help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/wants-help.ts](packages/core/src/help/wants-help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/index.ts](packages/core/src/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/nest.ts](packages/core/src/nest.ts)|100.00|100.00|100.00|100.00
-🟢|[src/platform/exit-status.ts](packages/core/src/platform/exit-status.ts)|100.00|100.00|100.00|100.00
+🟢|[src/platform/exit-status.service.ts](packages/core/src/platform/exit-status.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/platform/git-run.ts](packages/core/src/platform/git-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/platform/global-flags.ts](packages/core/src/platform/global-flags.ts)|100.00|100.00|100.00|100.00
 🟢|[src/platform/index.ts](packages/core/src/platform/index.ts)|100.00|100.00|100.00|100.00
+🟢|[src/platform/nest.ts](packages/core/src/platform/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/platform/platform.constants.ts](packages/core/src/platform/platform.constants.ts)|100.00|100.00|100.00|100.00
 🟢|[src/platform/platform.module.ts](packages/core/src/platform/platform.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/platform/raw-args.ts](packages/core/src/platform/raw-args.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/index.ts](packages/core/src/testing/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/theme/ansi.ts](packages/core/src/theme/ansi.ts)|100.00|100.00|100.00|100.00
 🟢|[src/theme/index.ts](packages/core/src/theme/index.ts)|100.00|100.00|100.00|100.00
+🟢|[src/theme/nest.ts](packages/core/src/theme/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/theme/resolve-theme.ts](packages/core/src/theme/resolve-theme.ts)|100.00|100.00|100.00|100.00
-🟢|[src/theme/theme.defaults.ts](packages/core/src/theme/theme.defaults.ts)|100.00|100.00|100.00|100.00
+🟢|[src/theme/theme-defaults.ts](packages/core/src/theme/theme-defaults.ts)|100.00|100.00|100.00|100.00
 🟢|[src/theme/theme.module.ts](packages/core/src/theme/theme.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/theme/theme.service.ts](packages/core/src/theme/theme.service.ts)|100.00|100.00|100.00|100.00
 

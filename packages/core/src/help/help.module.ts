@@ -1,10 +1,16 @@
 import { Module } from '@nestjs/common';
+import { DiscoveryModule } from '@nestjs/core';
 
 import { CliHelpService } from './cli-help.service';
+import { HelpRegistryService } from './help-registry.service';
 
-/** What every command prints from its `CommandSpec`: its help, its completions and its one-line summary. */
+/**
+ * The help, owned by core: what every command prints from its `CommandSpec` (`CliHelpService`) and the registry of
+ * the commands that show up in the app's root help (`HelpRegistryService`, fed by `@RegisterHelp()`).
+ */
 @Module({
-  providers: [CliHelpService],
-  exports: [CliHelpService],
+  imports: [DiscoveryModule],
+  providers: [CliHelpService, HelpRegistryService],
+  exports: [CliHelpService, HelpRegistryService],
 })
 export class HelpModule {}

@@ -60,3 +60,12 @@ export interface CommandSpec {
   /** Last line of `--help`. */
   readonly footer?: string;
 }
+
+/** A command that shows up in the app's `--help` and completion: what it registers with `@RegisterHelp()`. */
+export interface HelpContributor {
+  /** Its entries in the root help, usually one (`agents` adds one per agent of the workspace too). */
+  helpEntries(): readonly CommandEntry[];
+}
+
+/** What a CLI says about itself at the root: everything but its commands, which the commands register. */
+export type RootSpec = Omit<CommandSpec, 'commands'>;
