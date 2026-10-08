@@ -37,10 +37,10 @@ behavior already exists.
 8. **Dangerous actions are confirmed or previewable.** Anything that deletes or overwrites user files offers
    `--dry-run` (describe, write nothing) and asks before doing it on a TTY; `--force` skips the question.
 9. **Errors are for humans, in pt-BR**: what went wrong, the path or value involved, and how to fix it ("Projeto
-   "x" não encontrado (…/config.json não existe). Crie com `choliba projects create-project x`."). The most
+   "x" não encontrado (…/config.json não existe). Crie com `choliba generate project x`."). The most
    important line last; no stack trace unless it is an unexpected error, which goes with a hint to report it.
 10. **Say what changed and what comes next.** A command that changes state prints the new state briefly and
-    suggests the next command of the workflow (create-ticket → run the `product-owner`).
+    suggests the next command of the workflow (`generate ticket` → run the `product-owner`).
 11. **Configuration precedence: flags > process environment > workspace `.env` > defaults** (already what
     `loadRepoConfig` does in `packages/core/src/config/repo-config.ts`). Environment variable names are uppercase
     with underscores and prefixed (`CHOL_*`) unless they are general-purpose ones (`NO_COLOR`, `TERM`,
@@ -59,7 +59,7 @@ behavior already exists.
 clig.dev advises against a catch-all subcommand, because it blocks adding commands with those names later.
 choliba keeps `choliba <agent>` as a shortcut for `choliba agents <agent>` on purpose. The cost is real: **before
 adding a new top-level subcommand, check it does not shadow an agent name** (in `.choliba/agents/` and in the
-agents that `choliba install` offers), and mention it in the PR. Subcommands themselves are never abbreviated.
+agents that `choliba add` offers), and mention it in the PR. Subcommands themselves are never abbreviated.
 
 ## Checklist for a new or changed command
 

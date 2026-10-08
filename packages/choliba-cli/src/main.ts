@@ -37,7 +37,7 @@ if (Reflect.getMetadata(SELF_DECLARED_DEPS_METADATA, NewCommand) === undefined) 
     process.exit(again.status ?? 1);
   }
   process.stderr.write(
-    'O choliba-cli rodou do código-fonte sem os decorators ligados: rode-o a partir do repositório.\n',
+    'O choliba (da máquina) rodou do código-fonte sem os decorators ligados: rode-o a partir do repositório.\n',
   );
   process.exit(1);
 }
@@ -105,6 +105,12 @@ const platform: Platform = {
 const runtime: CliRuntime = {
   // The steps' own output goes to stderr with the rest of the progress: stdout keeps only the summary.
   run: (command, args, cwd) => spawnSync(command, [...args], { cwd, stdio: ['inherit', 2, 2] }).status ?? 1,
+  capture: (command, args, cwd) => {
+    const result = spawnSync(command, [...args], { cwd, encoding: 'utf8' });
+    return { status: result.status, stdout: result.stdout, stderr: result.stderr };
+  },
+  // The workspace's choliba runs with this terminal: what it prints and asks is what the person sees.
+  exec: (command, args, cwd) => spawnSync(command, [...args], { cwd, stdio: 'inherit' }).status ?? 1,
   prompter: clackPrompter,
   interactive: process.stdin.isTTY && process.stdout.isTTY,
   packageDir: join(import.meta.dir, '..'),
@@ -113,7 +119,7 @@ const runtime: CliRuntime = {
 const unexpected = { failed: false };
 const app = await CommandFactory.runWithoutClosing(AppModule.forRoot(platform, runtime), {
   logger: false,
-  cliName: 'choliba-cli',
+  cliName: 'choliba',
   serviceErrorHandler: (error) => {
     process.stderr.write(`${error.message}\n`);
     unexpected.failed = true;

@@ -1,13 +1,13 @@
-# `choliba install`
+# `choliba add`
 
 > Como trazer para a pasta de trabalho um agente, com as skills e os MCPs que ele declara, uma skill ou um MCP, com
-> o `choliba install`.
+> o `choliba add` (o comando da máquina).
 
 Traz um agente (com as skills e os MCPs que ele declara), uma skill ou um MCP para a pasta de trabalho,
 substituindo o que já estiver no destino:
 
 ```
-choliba install <origem> [--path <item na origem>] [--dry-run]
+choliba add <origem> [--path <item na origem>] [--dry-run]
 ```
 
 - `<origem>` é uma pasta local, um repositório git (`https://…`, `git@…`, `github:dono/repo[#ref]`, ...) ou um
@@ -49,7 +49,7 @@ As saídas abaixo são de execuções reais, numa pasta de trabalho recém-criad
 Cada agente traz as skills e os MCPs que declara, do mesmo repositório:
 
 ```
-$ bunx choliba install github:choliba/choliba --path .choliba/agents/product-owner
+$ choliba add github:choliba/choliba --path .choliba/agents/product-owner
 Instalado:
   agente product-owner → .choliba/agents/product-owner
   skill playwright-cli → .choliba/skills/playwright-cli
@@ -62,7 +62,7 @@ Confira com: choliba check
 ```
 
 ```
-$ bunx choliba install github:choliba/choliba --path .choliba/agents/test-writer
+$ choliba add github:choliba/choliba --path .choliba/agents/test-writer
 Instalado:
   agente test-writer → .choliba/agents/test-writer
   skill playwright-cli → .choliba/skills/playwright-cli
@@ -72,7 +72,7 @@ Confira com: choliba check
 ```
 
 ```
-$ bunx choliba install github:choliba/choliba --path .choliba/agents/implementer
+$ choliba add github:choliba/choliba --path .choliba/agents/implementer
 Instalado:
   agente implementer → .choliba/agents/implementer
   skill playwright-trace → .choliba/skills/playwright-trace
@@ -81,7 +81,7 @@ Confira com: choliba check
 ```
 
 ```
-$ bunx choliba install github:choliba/choliba --path .choliba/agents/docs-updater
+$ choliba add github:choliba/choliba --path .choliba/agents/docs-updater
 Instalado:
   agente docs-updater → .choliba/agents/docs-updater
   skill documentation → .choliba/skills/documentation
@@ -92,7 +92,7 @@ Confira com: choliba check
 ### Uma skill ou um MCP sozinho
 
 ```
-$ bunx choliba install github:choliba/choliba --path .choliba/skills/playwright-trace
+$ choliba add github:choliba/choliba --path .choliba/skills/playwright-trace
 Instalado:
   skill playwright-trace → .choliba/skills/playwright-trace
 
@@ -100,7 +100,7 @@ Confira com: choliba check
 ```
 
 ```
-$ bunx choliba install github:choliba/choliba --path .choliba/mcps/mcp-app.json
+$ choliba add github:choliba/choliba --path .choliba/mcps/mcp-app.json
 Instalado:
   MCP mcp-app → .choliba/mcps/mcp-app.json
 
@@ -155,7 +155,7 @@ Projetos (<pasta de trabalho>/projects)
 
 ### Skills oficiais do Playwright
 
-As skills oficiais estão em dois lugares, e o `install` aceita os dois:
+As skills oficiais estão em dois lugares, e o `add` aceita os dois:
 
 | Fonte                                                                               | `--path`                   |
 | ----------------------------------------------------------------------------------- | -------------------------- |
@@ -168,7 +168,7 @@ versão igual à do Playwright da pasta de trabalho (`bunx playwright --version`
 que você tem.
 
 ```
-$ bunx choliba install github:microsoft/playwright-cli --path skills/playwright-cli
+$ choliba add github:microsoft/playwright-cli --path skills/playwright-cli
 Instalado:
   skill playwright-cli → .choliba/skills/playwright-cli
 
@@ -176,7 +176,7 @@ Confira com: choliba check
 ```
 
 ```
-$ bunx choliba install playwright-core@1.63.0 --path lib/tools/skills/playwright-trace
+$ choliba add playwright-core@1.63.0 --path lib/tools/skills/playwright-trace
 Instalado:
   skill playwright-trace → .choliba/skills/playwright-trace
 
@@ -184,14 +184,14 @@ Confira com: choliba check
 ```
 
 ```
-$ bunx choliba install @playwright/cli --path skills/playwright-cli --dry-run
+$ choliba add @playwright/cli --path skills/playwright-cli --dry-run
 Instalaria (--dry-run, nada foi gravado):
   skill playwright-cli → .choliba/skills/playwright-cli
 
 Confira com: choliba check
 ```
 
-Nessas origens o `--path` é obrigatório, porque a origem não é o item. Sem ele, o `install` lista os itens que
+Nessas origens o `--path` é obrigatório, porque a origem não é o item. Sem ele, o `add` lista os itens que
 encontra numa origem organizada como uma pasta de trabalho (`.choliba/agents/`, `.choliba/skills/`, `.choliba/mcps/`) ou com essas
 pastas na raiz (`agents/`, `skills/`, `mcps/`); fora disso, não lista nada.
 
@@ -204,7 +204,7 @@ versão do Playwright do choliba (veja [Ferramentas da run](../referencia/agent-
 Uma branch ou tag, um clone local, ou só para ver o que seria instalado (`--dry-run`):
 
 ```
-$ bunx choliba install github:choliba/choliba#develop --path .choliba/agents/test-writer --dry-run
+$ choliba add github:choliba/choliba#develop --path .choliba/agents/test-writer --dry-run
 Instalaria (--dry-run, nada foi gravado):
   agente test-writer → .choliba/agents/test-writer
   skill playwright-cli → .choliba/skills/playwright-cli
@@ -214,7 +214,7 @@ Confira com: choliba check
 ```
 
 ```
-$ bunx choliba install ../choliba --path .choliba/agents/implementer --dry-run
+$ choliba add ../choliba --path .choliba/agents/implementer --dry-run
 Instalaria (--dry-run, nada foi gravado):
   agente implementer → .choliba/agents/implementer
   skill playwright-trace → .choliba/skills/playwright-trace

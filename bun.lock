@@ -84,10 +84,13 @@
       "name": "choliba-cli",
       "version": "0.0.1-dev",
       "bin": {
-        "choliba-cli": "./src/main.ts",
+        "choliba": "./src/main.ts",
+        "chol": "./src/main.ts",
       },
       "dependencies": {
+        "@choliba/agents": "workspace:*",
         "@choliba/core": "workspace:*",
+        "@choliba/projects": "workspace:*",
         "@choliba/terminal": "workspace:*",
         "@clack/prompts": "^1.8.1",
         "@nestjs/common": "~11.2",
@@ -97,7 +100,6 @@
         "rxjs": "^7.8.2",
       },
       "devDependencies": {
-        "@choliba/agents": "workspace:*",
         "@nestjs/testing": "~11.2",
         "nest-commander-testing": "~3.6",
       },

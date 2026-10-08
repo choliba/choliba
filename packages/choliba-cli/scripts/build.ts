@@ -2,7 +2,7 @@
 // package.json with its bin and the external dependencies (Nest cannot be bundled: it requires optional packages
 // at runtime), as the choliba's build does. `bun pm pack` inside `dist/` gives the tarball the release ships next
 // to the choliba's.
-import { chmodSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 interface Manifest {
@@ -16,7 +16,7 @@ interface Manifest {
 const packageDir = join(import.meta.dir, '..');
 const packagesDir = join(packageDir, '..');
 const out = join(packageDir, 'dist');
-const BUNDLED = ['core', 'terminal'];
+const BUNDLED = ['agents', 'core', 'projects', 'terminal'];
 
 function manifest(dir: string): Manifest {
   return JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')) as Manifest;
@@ -48,16 +48,21 @@ rmSync(out, { recursive: true, force: true });
 const result = await Bun.build({
   entrypoints: [join(packageDir, 'src', 'main.ts')],
   outdir: join(out, 'bin'),
-  naming: 'choliba-cli.js',
+  naming: 'choliba.js',
   target: 'bun',
   format: 'esm',
   external: Object.keys(dependencies),
 });
 if (!result.success) {
   for (const log of result.logs) console.error(log);
-  throw new Error('build de bin/choliba-cli.js falhou');
+  throw new Error('build de bin/choliba.js falhou');
 }
-chmodSync(join(out, 'bin', 'choliba-cli.js'), 0o755);
+chmodSync(join(out, 'bin', 'choliba.js'), 0o755);
+
+// The resources the bundled code finds next to itself: the agent.yaml schema (`add`, `generate agent`) and the
+// project and ticket templates (`generate project|ticket`), as the workspace's choliba ships them.
+cpSync(join(packagesDir, 'agents', 'schemes'), join(out, 'schemes'), { recursive: true });
+cpSync(join(packagesDir, 'projects', 'templates'), join(out, 'templates'), { recursive: true });
 
 const own = manifest(packageDir);
 const root = manifest(join(packagesDir, '..'));
@@ -73,7 +78,7 @@ writeFileSync(
       description: own.description,
       license: root.license,
       type: 'module',
-      bin: { 'choliba-cli': 'bin/choliba-cli.js' },
+      bin: { choliba: 'bin/choliba.js', chol: 'bin/choliba.js' },
       engines: { bun: '>=1.2' },
       dependencies,
     },

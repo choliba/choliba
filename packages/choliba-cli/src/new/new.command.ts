@@ -11,7 +11,7 @@ import { UsageError, WorkspaceError } from '../common';
 import { formatSummary } from './new-workspace';
 import { NewService } from './new.service';
 
-/** How `choliba-cli --help` lists `new`, and its own `--help`. */
+/** How `choliba --help` lists `new`, and its own `--help`. */
 const ENTRY: CommandEntry = {
   name: 'new',
   description: 'Cria uma pasta de trabalho do choliba',
@@ -19,9 +19,10 @@ const ENTRY: CommandEntry = {
   spec: NEW_HELP,
 };
 
-/** `choliba-cli new [PASTA]`: a new workspace; exit 1 when a step fails or `choliba check` finds problems. */
+/** `choliba new [PASTA]`: a new workspace; exit 1 when a step fails or `choliba check` finds problems. */
 @RegisterHelp()
 @Command({
+  aliases: ['n'],
   name: 'new',
   description: 'Cria uma pasta de trabalho do choliba',
   allowUnknownOptions: true,
@@ -40,7 +41,7 @@ export class NewCommand extends CliCommand implements HelpContributor {
   }
 
   async run(): Promise<void> {
-    const args = this.io.args('new');
+    const [, ...args] = this.io.args();
     if (this.io.wantsHelp(args)) {
       this.io.printHelp(NEW_HELP);
       return;
@@ -50,7 +51,7 @@ export class NewCommand extends CliCommand implements HelpContributor {
       this.io.write(formatSummary(result));
       this.io.exit(result.checked ? 0 : 1);
     } catch (error) {
-      if (error instanceof UsageError) this.io.usageError(error.message, 'choliba-cli new');
+      if (error instanceof UsageError) this.io.usageError(error.message, 'choliba new');
       else if (error instanceof WorkspaceError) this.io.fail(`erro: ${error.message}`);
       else throw error;
     }

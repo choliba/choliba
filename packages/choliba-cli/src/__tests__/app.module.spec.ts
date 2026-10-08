@@ -2,9 +2,11 @@ import { Test } from '@nestjs/testing';
 
 import { fakePlatform } from '@choliba/core/testing';
 
+import { AddCommand } from '../add/add.command';
 import { AppModule } from '../app.module';
-import { AgentCommand } from '../agent/agent.command';
+import { GenerateCommand } from '../generate/generate.command';
 import { NewCommand } from '../new/nest';
+import { WorkspaceService } from '../workspace/workspace.service';
 import { fakeRuntime } from './helpers/runtime';
 
 describe('AppModule', () => {
@@ -13,8 +15,10 @@ describe('AppModule', () => {
       imports: [AppModule.forRoot(fakePlatform(), fakeRuntime())],
     }).compile();
 
-    expect(module.get(AgentCommand)).toBeInstanceOf(AgentCommand);
     expect(module.get(NewCommand)).toBeInstanceOf(NewCommand);
+    expect(module.get(GenerateCommand)).toBeInstanceOf(GenerateCommand);
+    expect(module.get(AddCommand)).toBeInstanceOf(AddCommand);
+    expect(module.get(WorkspaceService)).toBeInstanceOf(WorkspaceService);
     await module.close();
   });
 });

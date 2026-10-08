@@ -28,6 +28,14 @@ export function fakeRuntime(overrides: Partial<CliRuntime> = {}, checkCode = 0):
       if (line.startsWith('bun add')) writeFileSync(path.join(cwd, '.env'), '# CHOL_AGENTS_PROVIDER=auto\n');
       return line.endsWith('choliba check') ? checkCode : 0;
     },
+    capture: (command, args, cwd) => {
+      calls.push(`${path.basename(cwd)}$ ${[command, ...args].join(' ')} (captured)`);
+      return { status: 0, stdout: '', stderr: '' };
+    },
+    exec: (command, args, cwd) => {
+      calls.push(`${path.basename(cwd)}$ ${[command, ...args].join(' ')} (terminal)`);
+      return 0;
+    },
     ...overrides,
   };
 }

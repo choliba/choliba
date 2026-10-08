@@ -4,7 +4,6 @@ import type { CommandSpec } from '@choliba/core';
 
 import { LocationsService } from '../locations/nest';
 import { resolveTicketSpecFiles, resolveTicketsFolder } from './ticket';
-import { createTicket, ticketTemplatesDir, type NewTicket } from './ticket-template';
 import { ticketsCliSpec } from './tickets-spec';
 
 /** The tickets of a project: where they are, their specs, and new ones from a type's template. */
@@ -18,11 +17,6 @@ export class TicketsService {
 
   specFiles(project: string, ticket: string): readonly string[] {
     return resolveTicketSpecFiles(this.locations.projectsDir(), project, ticket);
-  }
-
-  /** A ticket from the template of `type`, in `environment` of `project` (the caller knows which one is active). */
-  create(project: string, type: string, environment: string): NewTicket {
-    return createTicket(this.locations.projectsDir(), project, type, ticketTemplatesDir(), { environment });
   }
 
   /** `--help` and completion of the `choliba projects` commands about tickets alone. */
