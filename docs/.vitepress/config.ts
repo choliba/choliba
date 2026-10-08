@@ -4,13 +4,13 @@ import { fileURLToPath } from 'node:url';
 
 import { defineConfig, type MarkdownEnv } from 'vitepress';
 
+import { robotsTxt } from '../../scripts/libs/docs-crawlers';
 import { githubSlug, outsideLink } from '../../scripts/libs/docs-links';
 import {
   checkDescription,
   pageDescription,
   pageUrl,
   publishedTime,
-  robotsTxt,
   shareTags,
   SITE_URL,
 } from '../../scripts/libs/docs-share';
