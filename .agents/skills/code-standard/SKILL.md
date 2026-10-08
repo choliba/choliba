@@ -16,8 +16,10 @@ written here, with its reason.
 ## 1. Packages and entries
 
 - **Library** (no `bin`): exactly two entries, `.` (`src/index.ts`: functions and types) and `./nest`
-  (`src/nest.ts`: modules, services, commands). `.` never imports Nest decorators: the Playwright runner loads it
-  with a Babel that rejects them.
+  (`src/nest.ts`: the app's side: modules, services, commands, and what touches Bun). `.` must load anywhere,
+  under Node too, as the Playwright runner does: no Nest decorators (its Babel rejects them) and nothing of Bun,
+  not even its types (the runner's typecheck has none). `@choliba/terminal`'s `createBunProcessSpawner`, used only
+  by the apps' `main.ts`, is in `./nest` for that reason.
 - **Extra entries**, only these: `@choliba/core/testing` (fakes for specs) and the runner's entries that projects'
   specs import (public surface).
 - **App** (`bin`): `src/main.ts` and `app.module.ts`; nothing imports an app. What both apps need lives in
@@ -96,6 +98,6 @@ Specs (`src/__tests__/`) are not checked.
 
 ## Migration status
 
-Plan 035 migrates the packages in this order, all in one pull request at the end: `core` (done), `terminal`,
+Plan 035 migrates the packages in this order, all in one pull request at the end: `core` (done), `terminal` (done),
 `projects`, `runner` (breaking: its public `shared/` files become kebab-case), `agents`, then the two apps. A package not yet in `STRUCTURE` keeps
 its current layout until its turn; new code in it already follows these rules where it can.
