@@ -7,7 +7,6 @@ import { defineConfig, type MarkdownEnv } from 'vitepress';
 import { githubSlug, outsideLink } from '../../scripts/libs/docs-links';
 import {
   checkDescription,
-  googleSiteVerification,
   pageDescription,
   pageUrl,
   publishedTime,
@@ -26,9 +25,6 @@ const REPOSITORY = 'https://github.com/choliba/choliba';
 const TITLE = 'choliba';
 /** When this build publishes the site: each release builds it again, so every publication has its own date. */
 const PUBLISHED = publishedTime(new Date());
-
-/** The token of the Google Search Console property https://choliba.github.io/ (verified by an HTML file). */
-const GOOGLE_VERIFICATION = 'google308d029138ef5dca';
 
 export default defineConfig({
   base: '/',
@@ -61,11 +57,8 @@ export default defineConfig({
       published: PUBLISHED,
     });
   },
-  // Files served at the site's root that are not pages: robots.txt and Google Search Console's verification.
   buildEnd(siteConfig) {
-    const verification = googleSiteVerification(GOOGLE_VERIFICATION);
     writeFileSync(path.join(siteConfig.outDir, 'robots.txt'), robotsTxt(SITE_URL));
-    writeFileSync(path.join(siteConfig.outDir, verification.name), verification.content);
   },
   markdown: {
     // The anchors GitHub makes, which the pages already link to (`cli.md#a-aplicação-do-projeto`).

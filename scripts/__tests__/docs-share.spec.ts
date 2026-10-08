@@ -4,7 +4,6 @@ import path from 'node:path';
 import { description as siteDescription } from '../../docs/.vitepress/home';
 import {
   checkDescription,
-  googleSiteVerification,
   DESCRIPTION_MAX,
   DESCRIPTION_MIN,
   pageDescription,
@@ -82,15 +81,6 @@ describe('publishedTime', () => {
   it('writes the date in ISO 8601, in UTC and to the second', () => {
     expect(publishedTime(new Date('2026-10-08T13:28:36.789-03:00'))).toBe('2026-10-08T16:28:36Z');
     expect(publishedTime(new Date())).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/);
-  });
-});
-
-describe('googleSiteVerification', () => {
-  it('names the file after the token and writes the one line Google reads', () => {
-    expect(googleSiteVerification('google0123abcd')).toEqual({
-      name: 'google0123abcd.html',
-      content: 'google-site-verification: google0123abcd.html',
-    });
   });
 });
 

@@ -81,21 +81,6 @@ export function publishedTime(date: Date): string {
   return date.toISOString().replace(/\.\d{3}Z$/, 'Z');
 }
 
-/** A file the site serves at its root: its name and its content. */
-export interface RootFile {
-  readonly name: string;
-  readonly content: string;
-}
-
-/**
- * The file that proves to Google Search Console that the site is ours (the "HTML file" method): served at the root
- * as `<token>.html`, with only `google-site-verification: <token>.html` in it.
- */
-export function googleSiteVerification(token: string): RootFile {
-  const name = `${token}.html`;
-  return { name, content: `google-site-verification: ${name}` };
-}
-
 /** The site's robots.txt: every crawler may read every page, and the sitemap is announced. */
 export function robotsTxt(siteUrl: string): string {
   return `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`;
