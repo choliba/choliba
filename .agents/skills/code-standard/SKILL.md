@@ -19,7 +19,9 @@ written here, with its reason.
   (`src/nest.ts`: the app's side: modules, services, commands, and what touches Bun). `.` must load anywhere,
   under Node too, as the Playwright runner does: no Nest decorators (its Babel rejects them) and nothing of Bun,
   not even its types (the runner's typecheck has none). `@choliba/terminal`'s `createBunProcessSpawner`, used only
-  by the apps' `main.ts`, is in `./nest` for that reason.
+  by the apps' `main.ts`, is in `./nest` for that reason. Playwright reaches only `core`, `projects` and `terminal`
+  (`playwright-loaded.spec.ts` checks it); every other library keeps the same two entries anyway, so the convention is
+  one.
 - **Extra entries**, only these: `@choliba/core/testing` (fakes for specs) and the runner's entries that projects'
   specs import (public surface).
 - **App** (`bin`): `src/main.ts` and `app.module.ts`; nothing imports an app. What both apps need lives in
@@ -54,7 +56,8 @@ rejected):
 
 ## 3. Names
 
-- **Files and folders**: kebab-case (`run-tool-path.ts`), never camelCase or PascalCase, public surface included.
+- **Files and folders**: kebab-case (`run-tool-path.ts`), never camelCase or PascalCase, public surface included:
+  the runner's `shared/` and `reporters/`, which Playwright loads by path, are checked too.
 - **Nest pieces**: Nest's naming, `<name>.<type>.ts`, with only these types: `module`, `service`, `provider`,
   `decorator`, `interface` (in `interfaces/`), `dto`, `command` (nest-commander) and `constants` (injection tokens
   only, as `@nestjs/config`'s `config.constants.ts`). An agent provider is a Nest provider
@@ -102,6 +105,7 @@ Specs (`src/__tests__/`) are not checked.
 
 ## Migration status
 
-Plan 035 migrates the packages in this order, all in one pull request at the end: `core` (done), `terminal` (done), `projects` (done),
-`projects`, `runner` (breaking: its public `shared/` files become kebab-case), `agents`, then the two apps. A package not yet in `STRUCTURE` keeps
-its current layout until its turn; new code in it already follows these rules where it can.
+Plan 035 migrates the packages in this order, all in one pull request at the end: `core`, `terminal`, `projects` and
+`runner` (done; breaking: the runner's public `shared/` files became kebab-case, as `./shared/pages/base-page`), then
+`agents` and the two apps. A package not yet in `STRUCTURE` keeps its current layout until its turn; new code in it
+already follows these rules where it can.
