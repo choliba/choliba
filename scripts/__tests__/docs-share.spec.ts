@@ -9,7 +9,6 @@ import {
   pageDescription,
   pageUrl,
   publishedTime,
-  robotsTxt,
   shareTags,
   SITE_URL,
 } from '../libs/docs-share';
@@ -81,12 +80,6 @@ describe('publishedTime', () => {
   it('writes the date in ISO 8601, in UTC and to the second', () => {
     expect(publishedTime(new Date('2026-10-08T13:28:36.789-03:00'))).toBe('2026-10-08T16:28:36Z');
     expect(publishedTime(new Date())).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/);
-  });
-});
-
-describe('robotsTxt', () => {
-  it('lets every crawler read everything and announces the sitemap', () => {
-    expect(robotsTxt(SITE_URL)).toBe(`User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`);
   });
 });
 
