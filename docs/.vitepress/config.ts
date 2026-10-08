@@ -2,9 +2,10 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { defineConfig, type MarkdownEnv } from 'vitepress';
+import { defineConfig, type HeadConfig, type MarkdownEnv } from 'vitepress';
 
 import { githubSlug, outsideLink } from '../../scripts/libs/docs-links';
+import { pageDescription, pageUrl, shareTags, SITE_URL } from '../../scripts/libs/docs-share';
 import { buildSidebar, readDocPages } from '../../scripts/libs/docs-sidebar';
 
 /** The `docs/` folder, this config's parent. */
@@ -12,17 +13,39 @@ const DOCS = fileURLToPath(new URL('..', import.meta.url));
 
 const REPOSITORY = 'https://github.com/choliba/choliba';
 
+const TITLE = 'choliba';
+const DESCRIPTION = 'Agentes que transformam um pedido em ticket, testes e código, com permissões e portões.';
+
 export default defineConfig({
   base: '/',
   lang: 'pt-BR',
-  title: 'choliba',
-  description: 'Agentes que transformam um pedido em ticket, testes e código, com permissões e portões.',
+  title: TITLE,
+  description: DESCRIPTION,
   cleanUrls: true,
   lastUpdated: true,
   // The index of `docs/` is its README, which GitHub shows; on the site the home is index.md, and the README is
   // the "Índice" page.
   rewrites: { 'README.md': 'indice.md' },
   head: [['link', { rel: 'icon', type: 'image/svg+xml', href: '/owl-logo-choliba.svg' }]],
+  sitemap: { hostname: SITE_URL },
+  // Each page's share card (scripts/libs/docs-share.ts): its own description, from the frontmatter or else from its
+  // first paragraph, which also becomes its `<meta name="description">`; the home has the site's.
+  transformPageData(pageData) {
+    const frontmatter: Readonly<Record<string, unknown>> = pageData.frontmatter;
+    const source = readFileSync(path.join(DOCS, pageData.filePath), 'utf8');
+    const description =
+      typeof frontmatter['description'] === 'string'
+        ? frontmatter['description']
+        : (pageDescription(source) ?? DESCRIPTION);
+    const head: readonly HeadConfig[] = Array.isArray(frontmatter['head']) ? (frontmatter['head'] as HeadConfig[]) : [];
+    const tags = shareTags({
+      siteName: TITLE,
+      title: pageData.title === '' ? TITLE : pageData.title,
+      description,
+      url: pageUrl(pageData.relativePath),
+    });
+    return { description, frontmatter: { ...frontmatter, head: [...head, ...tags] } };
+  },
   markdown: {
     // The anchors GitHub makes, which the pages already link to (`cli.md#a-aplicação-do-projeto`).
     anchor: { slugify: githubSlug },
