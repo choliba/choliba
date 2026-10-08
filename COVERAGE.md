@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 08/10/2026 18:44:40 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 08/10/2026 18:50:17 — não editar manualmente.
 
 ## Resumo
 
@@ -127,7 +127,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 30 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 27 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -136,11 +136,8 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/check/check.module.ts](packages/choliba/src/check/check.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/check/check.ts](packages/choliba/src/check/check.ts)|100.00|100.00|100.00|100.00
 🟢|[src/check/nest.ts](packages/choliba/src/check/nest.ts)|100.00|100.00|100.00|100.00
-🟢|[src/completion/completion.command.ts](packages/choliba/src/completion/completion.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/completion/completion.module.ts](packages/choliba/src/completion/completion.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/completion/completion.ts](packages/choliba/src/completion/completion.ts)|100.00|100.00|100.00|100.00
 🟢|[src/completion/index.ts](packages/choliba/src/completion/index.ts)|100.00|100.00|100.00|100.00
-🟢|[src/completion/nest.ts](packages/choliba/src/completion/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/index.ts](packages/choliba/src/help/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/root-spec.ts](packages/choliba/src/help/root-spec.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/version.ts](packages/choliba/src/help/version.ts)|100.00|100.00|100.00|100.00

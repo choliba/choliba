@@ -13,7 +13,6 @@ describe('AppModule', () => {
     [['projects', '--help'], 'Usage:  choliba projects'],
     [['check', '--help'], 'Usage:  choliba check'],
     [['tests', '--help'], 'Usage:  choliba tests'],
-    [['completion', '--help'], 'Usage:  choliba completion'],
     [['--help'], 'Usage:  choliba COMMAND'],
   ])('runs every command of choliba: %j', async (argv, help) => {
     const platform = fakePlatform({ argv });

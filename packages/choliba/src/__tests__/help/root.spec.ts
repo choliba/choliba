@@ -111,8 +111,6 @@ describe('choliba __complete, per command', () => {
       expect(await complete('install', '--')).toBe('--path\n--dry-run\n');
       expect(await complete('install', '--path', '')).toBe(`${FILES_MARKER}\n`);
       expect(await complete('format', '--')).toBe('--write\n');
-      expect(await complete('completion', '')).toBe('bash\n');
-      expect(await complete('completion', 'bash', '')).toBe('');
       expect(await complete('tests', 'demo:')).toBe('');
     }));
 });

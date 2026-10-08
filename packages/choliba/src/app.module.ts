@@ -8,7 +8,6 @@ import { TestsModule } from '@choliba/runner/nest';
 import { TerminalModule } from '@choliba/terminal/nest';
 
 import { CheckModule } from './check/nest';
-import { CompletionModule } from './completion/nest';
 import { CHOLIBA_ROOT } from './help';
 import { cholibaManifest, PACKAGE_NAME } from './help';
 import { InstallModule } from './install/nest';
@@ -38,7 +37,6 @@ export class AppModule {
         CheckModule,
         ToolingModule,
         SetupModule,
-        CompletionModule,
       ],
     };
   }
