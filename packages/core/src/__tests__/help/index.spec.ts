@@ -12,9 +12,9 @@ import {
   readPackageScripts,
   resolveScriptCli,
   scriptsHelpSpec,
-} from '../../cli/index';
+} from '../../help';
 
-describe('cli barrel exports', () => {
+describe('help barrel exports', () => {
   it('re-exports the completion and help helpers', () => {
     expect(complete({ usage: 'x' }, [''])).toEqual({ kind: 'values', values: [] });
     expect(formatSuggestions({ kind: 'files' })).toBe(FILES_MARKER);

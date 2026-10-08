@@ -1,4 +1,4 @@
-import type { CommandSpec } from '@choliba/core/cli';
+import type { CommandSpec } from '@choliba/core';
 
 import { AGENT_HELP } from '../agent/agent.help';
 import { NEW_HELP } from '../new/new.help';

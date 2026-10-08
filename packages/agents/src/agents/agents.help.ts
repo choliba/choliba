@@ -1,5 +1,4 @@
-import type { CommandEntry, CommandSpec, FlagSpec, Suggestions, TypedFlags } from '@choliba/core/cli';
-import type { GitRunner } from '@choliba/core/platform';
+import type { CommandEntry, CommandSpec, FlagSpec, Suggestions, TypedFlags, GitRunner } from '@choliba/core';
 import { readTicketTemplate, ticketTemplatesDir } from '@choliba/projects';
 
 import type { AgentDefinition } from './interfaces/agent.interface';

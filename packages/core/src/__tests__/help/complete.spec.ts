@@ -1,5 +1,5 @@
-import type { CommandSpec, Suggestions } from '../../cli/interfaces/cli.interface';
-import { complete, describe as describeCommand, FILES_MARKER, formatSuggestions } from '../../cli/complete';
+import type { CommandSpec, Suggestions } from '../../help/interfaces/help.interface';
+import { complete, describe as describeCommand, FILES_MARKER, formatSuggestions } from '../../help/complete';
 
 const values = (...list: string[]): Suggestions => ({ kind: 'values', values: list });
 

@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { createSpawnGitRunner, type GitRunner } from '@choliba/core/platform';
+import { createSpawnGitRunner, type GitRunner } from '@choliba/core';
 
 import { DEFAULT_DIFF_BASE } from './git-working-tree-diff';
 

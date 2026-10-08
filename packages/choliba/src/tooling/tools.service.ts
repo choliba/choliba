@@ -3,9 +3,8 @@ import { dirname, join } from 'node:path';
 
 import { Inject, Injectable } from '@nestjs/common';
 
-import { locateResource } from '@choliba/core/config';
+import { locateResource, WHICH, type Which } from '@choliba/core';
 import { ConfigService } from '@choliba/core/nest';
-import { WHICH, type Which } from '@choliba/core/platform';
 
 import type { Runtime } from '../runtime/interfaces/runtime.interface';
 import { RUNTIME } from '../runtime/runtime.constants';

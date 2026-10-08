@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 
 import { ConfigService } from '@choliba/core/nest';
-import { STDERR, type Writable } from '@choliba/core/platform';
+import { STDERR, type Writable } from '@choliba/core';
 
 import { defaultsPrompter } from '../new/prompter';
 import type { CliRuntime } from '../runtime/interfaces/runtime.interface';

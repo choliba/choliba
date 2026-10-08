@@ -1,12 +1,6 @@
 import path from 'node:path';
 
-import {
-  CHOL_GLOBAL_DIR,
-  CHOL_PROJECTS_DIR,
-  PROJECTS_SUBDIR,
-  CHOL_TICKET_RUNS,
-  loadRepoConfig,
-} from '@choliba/core/config';
+import { CHOL_GLOBAL_DIR, CHOL_PROJECTS_DIR, PROJECTS_SUBDIR, CHOL_TICKET_RUNS, loadRepoConfig } from '@choliba/core';
 
 /**
  * Where the projects under test live, resolved from the monorepo's `.env` (and the shell, which wins):

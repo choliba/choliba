@@ -1,7 +1,7 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { GitRunner } from '@choliba/core/platform';
+import type { GitRunner } from '@choliba/core';
 import { getWorkingTreeDiff } from '../../steps/git-working-tree-diff';
 import { makeTmpGitRepo } from '../helpers/git-repo';
 import { makeTmpDir } from '../helpers/tmp';

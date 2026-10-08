@@ -1,4 +1,4 @@
-import { buildTheme } from '@choliba/core/theme';
+import { buildTheme } from '@choliba/core';
 
 import { agentRenderOptions, formatProviderLine, renderEvent } from '../../runs/render';
 

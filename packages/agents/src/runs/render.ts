@@ -1,4 +1,4 @@
-import type { Theme } from '@choliba/core/theme';
+import type { Theme } from '@choliba/core';
 import type { AnsiColor } from '@choliba/terminal';
 import { formatLine } from '@choliba/terminal';
 

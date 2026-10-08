@@ -12,7 +12,7 @@ import { SELF_DECLARED_DEPS_METADATA } from '@nestjs/common/constants';
 import { CommandFactory } from 'nest-commander';
 
 import { ExitStatus } from '@choliba/core/nest';
-import { createSpawnGitRunner, takeGlobalFlags, type Platform } from '@choliba/core/platform';
+import { createSpawnGitRunner, takeGlobalFlags, type Platform } from '@choliba/core';
 import { createBunProcessSpawner } from '@choliba/terminal';
 
 import { AppModule } from './app.module';

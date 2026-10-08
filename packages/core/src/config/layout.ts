@@ -1,51 +1,51 @@
 import { join } from 'node:path';
 
 /**
- * As pastas da pasta de trabalho e de um projeto: a única fonte delas. Os caminhos são relativos (à raiz da
- * pasta de trabalho, de um projeto ou de uma origem de `choliba install`).
+ * The folders of the workspace and of a project, in one place. The paths are relative (to the root of the workspace,
+ * of a project or of a `choliba install` source).
  */
 
-/** Onde ficam as aplicações testadas (`app/<app>/`). */
+/** Where the applications under test live (`app/<app>/`). */
 export const APP_DIR = 'app';
 
-/** Onde fica o que é do choliba na pasta de trabalho: agentes, skills, MCPs e o tema. */
+/** What belongs to choliba in the workspace: agents, skills, MCPs and the theme. */
 export const CHOLIBA_DIR = '.choliba';
 
-/** Os agentes, em qualquer raiz que os tenha (a pasta do choliba, uma origem de `choliba install`). */
+/** The agents, in any root that has them (choliba's folder, a `choliba install` source). */
 export const AGENTS_SUBDIR = 'agents';
 
-/** As skills, ao lado dos agentes. */
+/** The skills, next to the agents. */
 export const SKILLS_SUBDIR = 'skills';
 
-/** Os servidores MCP, ao lado dos agentes. */
+/** The MCP servers, next to the agents. */
 export const MCPS_SUBDIR = 'mcps';
 
 /** Default subdirectory of CHOL_GLOBAL_DIR where projects live. */
 export const PROJECTS_SUBDIR = 'projects';
 
-/** Os tickets de um projeto. */
+/** A project's tickets. */
 export const TICKETS_SUBDIR = 'tickets';
 
-/** Os specs de um projeto. */
+/** A project's specs. */
 export const TESTS_SUBDIR = 'tests';
 
-/** Os resultados das execuções de cada ticket, por projeto. */
+/** The results of each ticket's runs, per project. */
 export const TICKET_RUNS_SUBDIR = 'ticket-runs';
 
-/** Onde ficam os agentes quando `CHOL_AGENTS_DIR` não diz outra coisa. */
+/** Where the agents live when `CHOL_AGENTS_DIR` says nothing else. */
 export const DEFAULT_AGENTS_DIR = join(CHOLIBA_DIR, AGENTS_SUBDIR);
 
-/** Onde ficam as skills quando `CHOL_SKILLS_DIR` não diz outra coisa. */
+/** Where the skills live when `CHOL_SKILLS_DIR` says nothing else. */
 export const DEFAULT_SKILLS_DIR = join(CHOLIBA_DIR, SKILLS_SUBDIR);
 
-/** Onde ficam os servidores MCP quando `CHOL_MCPS_DIR` não diz outra coisa. */
+/** Where the MCP servers live when `CHOL_MCPS_DIR` says nothing else. */
 export const DEFAULT_MCPS_DIR = join(CHOLIBA_DIR, MCPS_SUBDIR);
 
-/** Arquivos que o choliba gera e apaga, fora do controle de versão. */
+/** Files choliba generates and deletes, outside version control. */
 export const CACHE_DIR = '.cache';
 
-/** A pasta vazia de cada execução de agente. */
+/** The empty folder of each agent run. */
 export const RUNS_DIR = join(CACHE_DIR, 'runs');
 
-/** Os artefatos das execuções (o `CHOL_GLOBAL_DIR` de uma pasta de trabalho nova). */
+/** The runs' artifacts (a new workspace's `CHOL_GLOBAL_DIR`). */
 export const ARTIFACTS_DIR = join(CACHE_DIR, 'choliba');

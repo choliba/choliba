@@ -1,6 +1,6 @@
 // What `--help` and completion read from the workspace: the agents, projects, tickets and refs.
 
-import { createSpawnGitRunner } from '@choliba/core/platform';
+import { createSpawnGitRunner } from '@choliba/core';
 import { listProjectNames, listTicketKeys } from '@choliba/projects';
 
 import type { AgentsCliSpecContext } from '../agents/agents.help';

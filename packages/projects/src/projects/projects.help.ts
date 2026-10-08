@@ -1,4 +1,4 @@
-import type { CommandSpec, Suggestions } from '@choliba/core/cli';
+import type { CommandSpec, Suggestions } from '@choliba/core';
 
 import { listProjectNames } from './project';
 import { listTicketKeys } from '../tickets/ticket';

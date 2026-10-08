@@ -1,7 +1,7 @@
 import { Inject } from '@nestjs/common';
 import { Command, SubCommand } from 'nest-commander';
 
-import { formatRows } from '@choliba/core/cli';
+import { formatRows } from '@choliba/core';
 import { CliCommand, CommandIo, ConfigService } from '@choliba/core/nest';
 
 import { UsageError } from '../shared/errors';

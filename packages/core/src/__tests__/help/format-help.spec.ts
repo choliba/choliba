@@ -1,5 +1,5 @@
-import type { CommandSpec } from '../../cli/interfaces/cli.interface';
-import { formatHelp, formatRows, HELP_WIDTH } from '../../cli/help';
+import type { CommandSpec } from '../../help/interfaces/help.interface';
+import { formatHelp, formatRows, HELP_WIDTH } from '../../help/format-help';
 
 describe('formatHelp', () => {
   it('lays out usage, description, command groups, options and footer like docker --help', () => {

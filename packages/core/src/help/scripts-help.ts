@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 
-import type { CommandEntry, CommandSpec } from './interfaces/cli.interface';
-import { PACKAGE_FILE } from '../config/files';
+import type { CommandEntry, CommandSpec } from './interfaces/help.interface';
+import { PACKAGE_FILE } from '../config';
 
 export interface PackageScripts {
   readonly scripts: Readonly<Record<string, string>>;

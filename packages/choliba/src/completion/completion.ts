@@ -1,4 +1,4 @@
-import { FILES_MARKER } from '@choliba/core/cli';
+import { FILES_MARKER } from '@choliba/core';
 
 /**
  * Bash completion for `choliba …` and `bunx choliba …` (`choliba completion bash`). On each Tab it asks

@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { formatHelp } from '../../cli/help';
+import { formatHelp } from '../../help/format-help';
 import {
   fileSummary,
   OTHER_GROUP,
@@ -10,7 +10,7 @@ import {
   resolveScriptFile,
   scriptsHelpSpec,
   scriptSummary,
-} from '../../cli/scripts-help';
+} from '../../help/scripts-help';
 import { makeTmpDir } from '../helpers/tmp';
 
 /**

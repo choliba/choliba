@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import { SIGNALS, STDERR, STDOUT, type SignalSource, type Writable } from '@choliba/core/platform';
+import { SIGNALS, STDERR, STDOUT, type SignalSource, type Writable } from '@choliba/core';
 import { ThemeService } from '@choliba/core/nest';
 
 import type { RunDto } from './dto/run.dto';

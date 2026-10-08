@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import type { GitRunner } from '@choliba/core/platform';
+import type { GitRunner } from '@choliba/core';
 
 import { getWorkingTreeDiff } from './git-working-tree-diff';
 import { indexDiff } from './index-diff';

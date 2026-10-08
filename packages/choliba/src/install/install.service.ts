@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 
 import { resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '@choliba/agents';
 import { ConfigService } from '@choliba/core/nest';
-import { GIT, type GitRunner } from '@choliba/core/platform';
+import { GIT, type GitRunner } from '@choliba/core';
 
 import type { Runtime } from '../runtime/interfaces/runtime.interface';
 import { RUNTIME } from '../runtime/runtime.constants';

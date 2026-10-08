@@ -5,7 +5,7 @@ import { readJsonFile } from '../shared/json-file';
 import type { ProjectLocations } from '../locations/locations';
 import { assertProjectExists, projectDir } from '../projects/project';
 import { REPORT_FOLDER, TEST_RESULTS_FOLDER } from '../locations/results';
-import { TICKETS_SUBDIR, TICKET_RUNS_SUBDIR } from '@choliba/core/config';
+import { TICKETS_SUBDIR, TICKET_RUNS_SUBDIR } from '@choliba/core';
 
 /** The part of a ticket JSON this package reads: which spec tests cover each acceptance criterion. */
 export interface TicketJson {

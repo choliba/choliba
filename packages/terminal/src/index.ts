@@ -1,6 +1,6 @@
 export { printBox, type BoxOptions } from './terminal/box';
 export { CircularBuffer } from './terminal/circular-buffer';
-export type { SignalSource } from '@choliba/core/platform';
+export type { SignalSource } from '@choliba/core';
 export { exitCodeFor } from './terminal/exit-code';
 export { formatDuration } from './terminal/format-duration';
 export { DEFAULT_SPINNER_FRAMES, LiveRegion, type LiveRow } from './terminal/live-region';

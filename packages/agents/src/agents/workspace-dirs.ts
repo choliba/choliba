@@ -7,7 +7,7 @@ import {
   DEFAULT_AGENTS_DIR,
   DEFAULT_MCPS_DIR,
   DEFAULT_SKILLS_DIR,
-} from '@choliba/core/config';
+} from '@choliba/core';
 
 type Config = Readonly<Record<string, string | undefined>>;
 

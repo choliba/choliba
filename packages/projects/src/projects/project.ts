@@ -3,7 +3,7 @@ import path from 'node:path';
 import { ProjectsError } from '../shared/errors';
 import { findReadme, readmeSummary, readText } from './readme';
 import { readJsonFile } from '../shared/json-file';
-import { PROJECT_CONFIG_FILE, PROJECT_ENV_EXAMPLE_FILE, PROJECT_ENV_FILE, TESTS_SUBDIR } from '@choliba/core/config';
+import { PROJECT_CONFIG_FILE, PROJECT_ENV_EXAMPLE_FILE, PROJECT_ENV_FILE, TESTS_SUBDIR } from '@choliba/core';
 
 export function projectDir(projectsDir: string, project: string): string {
   return path.join(projectsDir, project);

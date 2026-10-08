@@ -1,11 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import { ExitStatus } from '../platform/exit-status';
-import type { Writable } from '../platform/interfaces/platform.interface';
-import { ARGV, STDERR, STDOUT } from '../platform/platform.constants';
-import { rawArgsAfter } from '../platform/raw-args';
-import { CliHelpService } from './cli-help.service';
-import type { CommandSpec } from './interfaces/cli.interface';
+import type { CommandSpec } from '../help';
+import { CliHelpService } from '../help/nest';
+import { ARGV, rawArgsAfter, STDERR, STDOUT, type Writable } from '../platform';
+import { ExitStatus } from '../platform/nest';
 
 /**
  * What a command reads and writes: its arguments as typed, stdout for the result, stderr for messages, its

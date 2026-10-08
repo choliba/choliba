@@ -1,9 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 
-import { formatHelp } from '@choliba/core/cli';
-import type { CommandSpec } from '@choliba/core/cli';
-import { CHOL_ROOT } from '@choliba/core/config';
+import { formatHelp, type CommandSpec, CHOL_ROOT } from '@choliba/core';
 import { AppError, ensureApp, type ProjectSettings, type RunningApp } from '@choliba/projects';
 
 import { listAgents } from '../agents/agent-loader';

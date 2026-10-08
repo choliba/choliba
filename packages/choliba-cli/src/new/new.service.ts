@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import { CWD, STDERR, type Writable } from '@choliba/core/platform';
+import { CWD, STDERR, type Writable } from '@choliba/core';
 
 import type { CliRuntime } from '../runtime/interfaces/runtime.interface';
 import { RUNTIME } from '../runtime/runtime.constants';

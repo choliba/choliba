@@ -1,7 +1,7 @@
-import { colorForLabel, paintAnsi, type AnsiColor } from '@choliba/core/theme';
+import { colorForLabel, paintAnsi, type AnsiColor } from '@choliba/core';
 
-export type { AnsiColor } from '@choliba/core/theme';
-export { colorForLabel } from '@choliba/core/theme';
+export type { AnsiColor } from '@choliba/core';
+export { colorForLabel } from '@choliba/core';
 
 export interface FormatterOptions {
   readonly color?: AnsiColor;

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import type { CommandEntry, CommandSpec } from '@choliba/core/cli';
+import type { CommandEntry, CommandSpec } from '@choliba/core';
 import { AgentsService } from '@choliba/agents/nest';
 import { ProjectsService } from '@choliba/projects/nest';
 import { TestsService } from '@choliba/runner/nest';

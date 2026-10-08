@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 
-import { complete, formatHelp } from '@choliba/core/cli';
-import type { GitRunner } from '@choliba/core/platform';
+import { complete, formatHelp, type GitRunner } from '@choliba/core';
 
 import { loadAgent } from '../../agents/agent-loader';
 import { agentCommandSpec, agentsCliSpec, flagValueSuggestions } from '../../agents/agents.help';

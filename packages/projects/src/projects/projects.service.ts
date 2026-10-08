@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import type { CommandSpec } from '@choliba/core/cli';
+import type { CommandSpec } from '@choliba/core';
 
 import { LocationsService } from '../locations/locations.service';
 import { REPORT_FOLDER } from '../locations/results';

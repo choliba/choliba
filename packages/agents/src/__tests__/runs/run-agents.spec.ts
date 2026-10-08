@@ -3,8 +3,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { complete, describe as describeSpec, formatSuggestions } from '@choliba/core/cli';
-import type { GitRunner } from '@choliba/core/platform';
+import { complete, describe as describeSpec, formatSuggestions, type GitRunner, buildTheme } from '@choliba/core';
 
 import * as gitDiff from '../../steps/git-working-tree-diff';
 import * as projects from '@choliba/projects';
@@ -19,7 +18,6 @@ import { readPlan } from '../../plans/plan-store';
 import type { RunAgentsCliDeps } from '../../runs/run-agents';
 import { agentsHelpSpec, runAgentsCli } from '../../runs/run-agents';
 import { COMMAND_LINE_TITLE } from '../../runs/dry-run';
-import { buildTheme } from '@choliba/core/theme';
 
 import { PROVIDERS } from '../helpers/providers';
 import { fakeSpawner, streamFromChunks } from '../helpers/fake-spawner';

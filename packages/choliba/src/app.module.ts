@@ -2,7 +2,7 @@ import { Module, type DynamicModule } from '@nestjs/common';
 
 import { AgentsModule } from '@choliba/agents/nest';
 import { PlatformModule } from '@choliba/core/nest';
-import type { Platform } from '@choliba/core/platform';
+import type { Platform } from '@choliba/core';
 import { ProjectsModule } from '@choliba/projects/nest';
 import { TestsModule } from '@choliba/runner/nest';
 import { TerminalModule } from '@choliba/terminal/nest';

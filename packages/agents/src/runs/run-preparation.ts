@@ -12,7 +12,7 @@ import {
   CHOL_SKILLS_DIR,
   CHOL_TICKET_RUNS,
   RUNS_DIR,
-} from '@choliba/core/config';
+} from '@choliba/core';
 import { resolveLocations } from '@choliba/projects';
 
 import { commandFromAgent, effectivePolicy } from '../agents/commands/define-command';

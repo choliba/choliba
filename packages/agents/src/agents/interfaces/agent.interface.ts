@@ -1,4 +1,4 @@
-import type { AnsiColor } from '@choliba/core/theme';
+import type { AnsiColor } from '@choliba/core';
 import type { ExecutionMode, PermissionPolicy } from './command.interface';
 import type { AgentPermissions } from '../../runs/permissions';
 

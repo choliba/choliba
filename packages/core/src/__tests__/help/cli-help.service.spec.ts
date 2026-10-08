@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 
-import { type CommandSpec, wantsHelp } from '../../cli';
+import { type CommandSpec, wantsHelp } from '../../help';
 import { CliHelpService, CliModule, PlatformModule } from '../../nest';
 import { fakePlatform, type FakePlatform } from '../../testing';
 

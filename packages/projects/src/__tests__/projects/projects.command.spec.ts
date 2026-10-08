@@ -4,7 +4,7 @@ import path from 'node:path';
 
 import { Test } from '@nestjs/testing';
 
-import { complete, describe as describeWords, FILES_MARKER, formatSuggestions } from '@choliba/core/cli';
+import { complete, describe as describeWords, FILES_MARKER, formatSuggestions } from '@choliba/core';
 import { PlatformModule } from '@choliba/core/nest';
 import { fakePlatform, runCommand } from '@choliba/core/testing';
 

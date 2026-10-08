@@ -1,7 +1,7 @@
 import { Module, type DynamicModule } from '@nestjs/common';
 
 import { PlatformModule } from '@choliba/core/nest';
-import type { Platform } from '@choliba/core/platform';
+import type { Platform } from '@choliba/core';
 
 import { AgentModule } from './agent/agent.module';
 import { HelpModule } from './help/help.module';

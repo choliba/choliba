@@ -1,8 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type { Writable } from '@choliba/core/platform';
-import type { Theme } from '@choliba/core/theme';
+import type { Writable, Theme } from '@choliba/core';
 
 import { fail } from './tests-error';
 import {

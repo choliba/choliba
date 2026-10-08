@@ -1,7 +1,7 @@
 import { Inject } from '@nestjs/common';
 import { Command } from 'nest-commander';
 
-import { messageOf } from '@choliba/core/cli';
+import { messageOf } from '@choliba/core';
 import { CliCommand, CommandIo } from '@choliba/core/nest';
 
 import { TestsService } from './tests.service';

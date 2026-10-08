@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 
 import { ConfigService } from '@choliba/core/nest';
-import { ENV, type Environment } from '@choliba/core/platform';
+import { ENV, type Environment } from '@choliba/core';
 
 import { resolveTicketRunsRoot } from '../tickets/ticket';
 import { resolveLocations, type ProjectLocations } from './locations';

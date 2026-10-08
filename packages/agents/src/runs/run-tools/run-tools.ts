@@ -1,6 +1,6 @@
 import { chmodSync, rmSync, writeFileSync } from 'node:fs';
 
-import { CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR } from '@choliba/core/config';
+import { CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR } from '@choliba/core';
 
 import type { PermissionPolicy } from '../../agents/interfaces/command.interface';
 import type { PlannedFile, ProviderRequest } from '../../providers/interfaces/provider.interface';

@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 
 import { AgentsService } from '@choliba/agents/nest';
-import { complete } from '@choliba/core/cli';
+import { complete } from '@choliba/core';
 import { PlatformModule } from '@choliba/core/nest';
 import { fakePlatform } from '@choliba/core/testing';
 

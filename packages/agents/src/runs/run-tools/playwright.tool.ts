@@ -1,4 +1,4 @@
-import { resourceStarts } from '@choliba/core/config';
+import { resourceStarts } from '@choliba/core';
 
 /**
  * Where `playwright cli` writes the files it names itself and where `playwright trace` runs, unless

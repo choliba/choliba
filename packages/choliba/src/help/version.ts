@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { PACKAGE_FILE, resourceStarts } from '@choliba/core/config';
+import { PACKAGE_FILE, resourceStarts } from '@choliba/core';
 
 /** What `--version` reads from choliba's own package.json: the release build writes `version` and `gitHead`. */
 export interface CholibaManifest {

@@ -1,8 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import type { CommandSpec } from '@choliba/core/cli';
-import { ConfigService, ThemeService } from '@choliba/core/nest';
 import {
+  type CommandSpec,
   CLOCK,
   GIT,
   SIGNALS,
@@ -14,7 +13,8 @@ import {
   type SignalSource,
   type Which,
   type Writable,
-} from '@choliba/core/platform';
+} from '@choliba/core';
+import { ConfigService, ThemeService } from '@choliba/core/nest';
 import { ProcessRunnerService } from '@choliba/terminal';
 
 import { ProviderRegistryService } from '../providers/provider-registry.service';

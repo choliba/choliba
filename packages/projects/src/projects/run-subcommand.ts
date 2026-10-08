@@ -1,5 +1,5 @@
 import type { CommandIo } from '@choliba/core/nest';
-import { messageOf, type CommandSpec } from '@choliba/core/cli';
+import { messageOf, type CommandSpec } from '@choliba/core';
 
 import { UsageError } from '../shared/errors';
 import { commandHelp, PROGRAM_NAME } from './projects.help';

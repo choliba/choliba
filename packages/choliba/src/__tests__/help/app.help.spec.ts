@@ -1,4 +1,4 @@
-import { complete, formatHelp } from '@choliba/core/cli';
+import { complete, formatHelp } from '@choliba/core';
 
 import { CHOLIBA_HELP, COMMANDS, commandHelp } from '../../help/app.help';
 

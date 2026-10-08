@@ -1,10 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import type { Writable } from '../platform/interfaces/platform.interface';
-import { STDERR, STDOUT } from '../platform/platform.constants';
+import { STDERR, STDOUT, type Writable } from '../platform';
 import { complete, describe, formatSuggestions } from './complete';
-import { formatHelp } from './help';
-import type { CommandSpec } from './interfaces/cli.interface';
+import { formatHelp } from './format-help';
+import type { CommandSpec } from './interfaces/help.interface';
 import { wantsHelp } from './wants-help';
 
 /** What every command prints from its `CommandSpec`: its help, its completions and its one-line summary. */

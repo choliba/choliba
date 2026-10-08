@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { Test } from '@nestjs/testing';
 
-import { complete, formatSuggestions } from '@choliba/core/cli';
+import { complete, formatSuggestions } from '@choliba/core';
 import { PlatformModule } from '@choliba/core/nest';
 import { BufferWritable, fakePlatform, runCommand, type FakePlatform } from '@choliba/core/testing';
 

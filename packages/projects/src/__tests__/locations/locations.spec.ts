@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
 
-import { CHOL_GLOBAL_DIR, CHOL_PROJECTS_DIR, PROJECTS_SUBDIR, CHOL_TICKET_RUNS } from '@choliba/core/config';
+import { CHOL_GLOBAL_DIR, CHOL_PROJECTS_DIR, PROJECTS_SUBDIR, CHOL_TICKET_RUNS } from '@choliba/core';
 
 import { applyLocations, LocationsError, resolveLocations, resolveProjectsDir } from '../../index';
 

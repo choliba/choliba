@@ -13,7 +13,7 @@ import {
   modelReportMissingMessage,
   validateReportedModel,
 } from '../providers/stream-json';
-import type { Theme } from '@choliba/core/theme';
+import type { Theme } from '@choliba/core';
 
 import { agentRenderOptions, formatProviderLine, renderEvent } from './render';
 import { applyRunTools } from './run-tools/run-tools';

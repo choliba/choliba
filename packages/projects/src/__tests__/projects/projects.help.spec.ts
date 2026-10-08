@@ -1,4 +1,4 @@
-import type { CommandSpec } from '@choliba/core/cli';
+import type { CommandSpec } from '@choliba/core';
 
 import { commandHelp } from '../../projects/projects.help';
 

@@ -9,7 +9,7 @@ import {
   CHOL_SKILLS_DIR,
   CHOL_PROJECTS_DIR,
   CHOL_TICKET_RUNS,
-} from '@choliba/core/config';
+} from '@choliba/core';
 
 const VAR_PATTERN = /\$\{([A-Z_][A-Z0-9_]*)\}/g;
 /** Same pattern without `g`: `test` on a global regex keeps `lastIndex` between calls. */

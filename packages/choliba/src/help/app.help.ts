@@ -1,4 +1,4 @@
-import type { CommandEntry, CommandSpec, Suggestions } from '@choliba/core/cli';
+import type { CommandEntry, CommandSpec, Suggestions } from '@choliba/core';
 import { testsCliSpec } from '@choliba/runner';
 
 const FILES = (): Suggestions => ({ kind: 'files' });

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
-import { isAnsiColor } from '@choliba/core/theme';
+import { isAnsiColor, AGENT_FILE } from '@choliba/core';
 
 import type {
   AgentAfterSteps,
@@ -18,7 +18,6 @@ import { validateAgentYamlV1 } from './agent-validation';
 import { type AgentPermissions, readAgentPermissions } from '../runs/permissions';
 import { checkStep, type StepPhase } from '../steps/actions';
 import { PROJECT_VARS, TICKET_VARS, varProblems } from '../runs/vars';
-import { AGENT_FILE } from '@choliba/core/config';
 
 export class AgentConfigError extends Error {}
 

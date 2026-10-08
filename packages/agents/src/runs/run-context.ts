@@ -2,8 +2,7 @@
 
 import { isAbsolute, join } from 'node:path';
 
-import type { GitRunner } from '@choliba/core/platform';
-import type { Theme } from '@choliba/core/theme';
+import type { GitRunner, Theme } from '@choliba/core';
 import { resolveLocations, type ProjectSettings, type RunningApp } from '@choliba/projects';
 import type { ProcessRunnerService, SignalSource, Writable } from '@choliba/terminal';
 
