@@ -105,8 +105,11 @@ pushes, and GitHub refuses them: a ruleset on each branch (see the table below) 
    `develop` the branch does not need to be up to date with its base: the squash lands on top of the current
    `develop`, so merging one PR does not hold back the others.
 6. Merge a feature PR (into `develop`) with **squash**; the branch is deleted automatically. Do not merge on your
-   own: tell the user the PR is green and let them merge, or merge only when they ask you to.
-7. Releasing: a PR from `develop` into `master`, same checks, titled `chore(release): v0.0.1-dev`. See below.
+   own: tell the user the PR is green and let them merge, or merge only when they ask you to. Once it is merged,
+   sync the local repository: `git fetch --prune`, `git pull --ff-only` on `develop` and on `master`, back to
+   `develop`, then `bun run git:clean` to delete the local branches already merged.
+7. Releasing: a PR from `develop` into `master`, same checks, titled `chore(release): v0.0.1-dev`. Ask the user
+   whether to open it; never open it on your own after a merge. See below.
 
 ### Release PRs use a merge commit, never squash
 
@@ -117,8 +120,9 @@ branches". The rulesets fix the method per branch, so the merge dialog offers on
 - feature PR into `develop`: **Squash and merge** only,
 - release PR `develop` into `master`: **Create a merge commit** only.
 
-The agent prepares and opens the release PR (`gh pr create --base master --head develop`), confirms CI is green,
-then stops: the user merges it. A local `git merge` into `master` is refused on push.
+When the user says yes, the agent prepares and opens the release PR (`gh pr create --base master --head develop`),
+confirms CI is green, then stops: the user merges it. After that merge, sync the local repository as in step 6. A
+local `git merge` into `master` is refused on push.
 
 The release PR body has, in this order: `## Release v0.0.1-dev` (what the merge does to the pre-release and that it
 must be merged with **Create a merge commit**); `## Destaques`, one to three sentences in Portuguese for whoever
