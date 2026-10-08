@@ -30,10 +30,10 @@ import {
 } from '@choliba/projects';
 
 import { fillTicketTests } from './fill-ticket-tests';
-import { checkGate, hasGate, takeGateFlags, type TicketGate } from './gate';
+import { checkGate, hasGate, takeGateFlags, type TicketGate } from './tests-gate';
 import { playwrightNodePath, WORKSPACE_ENV } from './playwright-env';
-import { parseTestsTarget, type TestsTarget } from './target';
-import { guardRetiredTicket, retiredOf } from './retired';
+import { parseTestsTarget, type TestsTarget } from './tests-target';
+import { guardRetiredTicket, retiredOf } from './tests-retired';
 import { fail } from './tests-error';
 import {
   expandTicketSelector,

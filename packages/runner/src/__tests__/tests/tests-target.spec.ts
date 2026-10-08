@@ -1,4 +1,4 @@
-import { parseTestsTarget } from '../../tests/target';
+import { parseTestsTarget } from '../../tests/tests-target';
 import { TestsError } from '../../tests/tests-error';
 
 describe('parseTestsTarget', () => {

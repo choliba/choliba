@@ -7,7 +7,7 @@ import { LocationsService } from '@choliba/projects/nest';
 
 import { runTests } from './run-tests';
 import { RUNNER_ROOT, TESTS_HOOKS, type TestsHooks } from './tests.constants';
-import { testsCliSpec } from './tests.help';
+import { testsCliSpec } from './tests-spec';
 
 /** `choliba tests`: the workspace's E2E tests through the runner's Playwright. */
 @Injectable()

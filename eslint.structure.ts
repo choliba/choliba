@@ -15,6 +15,7 @@ const STRUCTURE: Readonly<Record<string, Partial<Record<Exclude<Layer, 'common'>
   core: { module: ['platform', 'config', 'help', 'cli', 'theme', 'runtime', 'testing'] },
   terminal: { module: ['terminal'] },
   projects: { domain: ['paths'], module: ['locations', 'tickets', 'projects'] },
+  runner: { module: ['tests'] },
 };
 
 /** The Nest file types (`<name>.<type>.ts`): the `nest generate` schematics in use, `dto`, nest-commander's `command`, and `constants` for injection tokens. */
@@ -108,6 +109,15 @@ export function structureConfig(): Linter.Config[] {
           { ignoreMiddleExtensions: false },
         ],
         'check-file/folder-naming-convention': ['error', { 'packages/*/src/**/': 'KEBAB_CASE' }],
+      },
+    },
+    // What the Playwright runner loads by path, outside `src/`: public surface, so its names are kebab-case too.
+    {
+      files: ['packages/runner/{shared,reporters}/**/*.ts'],
+      plugins: { 'check-file': checkFile },
+      rules: {
+        'check-file/filename-naming-convention': ['error', { '**/*.ts': KEBAB }, { ignoreMiddleExtensions: false }],
+        'check-file/folder-naming-convention': ['error', { 'packages/runner/{shared,reporters}/**/': 'KEBAB_CASE' }],
       },
     },
   ];

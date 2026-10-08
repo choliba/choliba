@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 08/10/2026 18:12:35 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 08/10/2026 18:16:21 — não editar manualmente.
 
 ## Resumo
 
@@ -269,24 +269,26 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/runner</b> — 100.00% das linhas, 18 arquivos</summary>
+<summary>🟢 <b>packages/runner</b> — 100.00% das linhas, 20 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
 🟢|[src/index.ts](packages/runner/src/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/nest.ts](packages/runner/src/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/fill-ticket-tests.ts](packages/runner/src/tests/fill-ticket-tests.ts)|100.00|100.00|100.00|100.00
-🟢|[src/tests/gate.ts](packages/runner/src/tests/gate.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tests/index.ts](packages/runner/src/tests/index.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tests/nest.ts](packages/runner/src/tests/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/playwright-env.ts](packages/runner/src/tests/playwright-env.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/playwright-results.ts](packages/runner/src/tests/playwright-results.ts)|100.00|100.00|100.00|100.00
-🟢|[src/tests/retired.ts](packages/runner/src/tests/retired.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/run-tests.ts](packages/runner/src/tests/run-tests.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/runner-root.ts](packages/runner/src/tests/runner-root.ts)|100.00|100.00|100.00|100.00
-🟢|[src/tests/target.ts](packages/runner/src/tests/target.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/tests-error.ts](packages/runner/src/tests/tests-error.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tests/tests-gate.ts](packages/runner/src/tests/tests-gate.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tests/tests-retired.ts](packages/runner/src/tests/tests-retired.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tests/tests-spec.ts](packages/runner/src/tests/tests-spec.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tests/tests-target.ts](packages/runner/src/tests/tests-target.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/tests.command.ts](packages/runner/src/tests/tests.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/tests.constants.ts](packages/runner/src/tests/tests.constants.ts)|100.00|100.00|100.00|100.00
-🟢|[src/tests/tests.help.ts](packages/runner/src/tests/tests.help.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/tests.module.ts](packages/runner/src/tests/tests.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/tests.service.ts](packages/runner/src/tests/tests.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/ticket-expand.ts](packages/runner/src/tests/ticket-expand.ts)|100.00|100.00|100.00|100.00

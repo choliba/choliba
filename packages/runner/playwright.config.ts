@@ -152,8 +152,8 @@ export default defineConfig({
     ['html', { outputFolder: reportFolderResolved, open: 'never' }],
     ['json', { outputFile: path.join(reportFolderResolved, 'results.json') }],
   ],
-  globalSetup: path.join(packageRoot, 'shared', `globalSetup${EXT}`),
-  globalTeardown: path.join(packageRoot, 'shared', `globalTeardown${EXT}`),
+  globalSetup: path.join(packageRoot, 'shared', `global-setup${EXT}`),
+  globalTeardown: path.join(packageRoot, 'shared', `global-teardown${EXT}`),
   use: {
     ...(baseURL ? { baseURL } : {}),
     // Kept for each failed test, so the agents (skill playwright-trace) can read what happened.

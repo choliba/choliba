@@ -65,8 +65,8 @@ await bundle(
     entrypoints: [
       'playwright.config.ts',
       'reporters/detailed-ticket-reporter.ts',
-      'shared/globalSetup.ts',
-      'shared/globalTeardown.ts',
+      'shared/global-setup.ts',
+      'shared/global-teardown.ts',
     ].map((file) => join(runnerDir, file)),
     root: runnerDir,
     outdir: out,

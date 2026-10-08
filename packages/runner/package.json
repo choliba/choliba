@@ -7,7 +7,7 @@
     ".": "./src/index.ts",
     "./nest": "./src/nest.ts",
     "./shared/env": "./shared/env.ts",
-    "./shared/pages/BasePage": "./shared/pages/BasePage.ts"
+    "./shared/pages/base-page": "./shared/pages/base-page.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
