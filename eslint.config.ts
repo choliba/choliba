@@ -3,6 +3,8 @@ import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import eslintConfigPrettier from 'eslint-config-prettier';
 
+import { structureConfig } from './eslint.structure';
+
 export default defineConfig(
   {
     ignores: [
@@ -42,6 +44,8 @@ export default defineConfig(
     files: ['**/*.{js,mjs,cjs}'],
     extends: [tseslint.configs.disableTypeChecked],
   },
+  // O padrão do código (plano 035), só nos pacotes já migrados.
+  ...structureConfig(),
   // Sempre por último: desliga regras de estilo do ESLint que colidiriam
   // com a formatação do Prettier.
   eslintConfigPrettier,
