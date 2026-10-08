@@ -13,7 +13,7 @@ import { CommandFactory } from 'nest-commander';
 
 import { ExitStatus } from '@choliba/core/nest';
 import { createSpawnGitRunner, takeGlobalFlags, type Platform } from '@choliba/core';
-import { createBunProcessSpawner } from '@choliba/terminal';
+import { createBunProcessSpawner } from '@choliba/terminal/nest';
 
 import { AppModule } from './app.module';
 import { CholibaRootCommand } from './help/root.command';

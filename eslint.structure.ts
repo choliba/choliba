@@ -13,6 +13,7 @@ type Layer = (typeof LAYERS)[number];
 /** The folders of `src/` of each package that follows the standard, by layer (`common` is always `common/`). */
 const STRUCTURE: Readonly<Record<string, Partial<Record<Exclude<Layer, 'common'>, readonly string[]>>>> = {
   core: { module: ['platform', 'config', 'help', 'cli', 'theme', 'runtime', 'testing'] },
+  terminal: { module: ['terminal'] },
 };
 
 /** The Nest file types (`<name>.<type>.ts`): the `nest generate` schematics in use, `dto`, nest-commander's `command`, and `constants` for injection tokens. */

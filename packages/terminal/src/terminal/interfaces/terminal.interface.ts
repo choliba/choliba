@@ -1,4 +1,4 @@
-import type { AnsiColor } from './formatter';
+import type { AnsiColor } from '../formatter';
 
 export type SessionStatus = 'running' | 'exited';
 

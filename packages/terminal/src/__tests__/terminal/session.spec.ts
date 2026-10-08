@@ -1,5 +1,5 @@
 import { Session } from '../../terminal/session';
-import type { SessionLineEvent } from '../../terminal/types';
+import type { SessionLineEvent } from '../../terminal/interfaces/terminal.interface';
 
 const AT = new Date('2024-05-05T10:00:00.000Z');
 

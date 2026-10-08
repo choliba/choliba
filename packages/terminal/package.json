@@ -5,7 +5,6 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./output": "./src/terminal/output.ts",
     "./nest": "./src/nest.ts"
   },
   "scripts": {

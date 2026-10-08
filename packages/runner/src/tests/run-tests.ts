@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 import readline from 'node:readline/promises';
 
 import type { Writable, Theme } from '@choliba/core';
-import { writeStderr, writeStdout } from '@choliba/terminal/output';
+import { writeStderr, writeStdout } from '@choliba/terminal';
 import {
   fullTicket,
   listProjectNames,

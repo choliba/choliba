@@ -7,7 +7,7 @@ import type { RunDto } from './dto/run.dto';
 import { ProcessRunnerService } from './process-runner.service';
 import type { Session } from './session';
 import { exitCodeFor } from './exit-code';
-import type { SessionExitEvent } from './types';
+import type { SessionExitEvent } from './interfaces/terminal.interface';
 
 function errorMessage(error: unknown): string {
   return String(error);
