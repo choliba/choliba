@@ -1,11 +1,12 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { writeAgent } from '../agent/create-agent';
-import { AGENTS, type AgentName, type NewOptions, PROVIDERS, type Provider, WorkspaceError } from './new-options';
+import { writeAgent } from '../agent';
+import { AGENTS, type AgentName, type NewOptions, PROVIDERS, type Provider } from './new-options';
+import { WorkspaceError } from '../common';
 import { setEnvValue } from './env-file';
-import type { RunCommand } from '../runtime/interfaces/runtime.interface';
-import type { Prompter } from './prompter';
+import type { RunCommand } from '../runtime';
+import type { Prompter } from '../runtime';
 
 export interface NewDeps {
   readonly cwd: string;

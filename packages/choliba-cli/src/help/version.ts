@@ -5,5 +5,5 @@ import { findManifest, versionLine as formatVersion } from '@choliba/core';
  * and, as build metadata, the commit; `(versão desconhecida)` when it cannot be read.
  */
 export function versionLine(packageDir: string): string {
-  return `${formatVersion('choliba-cli', findManifest('choliba-cli', [packageDir]))}\n`;
+  return formatVersion('choliba-cli', findManifest('choliba-cli', [packageDir]));
 }

@@ -5,8 +5,8 @@ import path from 'node:path';
 import { parseAgentYaml } from '@choliba/agents';
 
 import { createAgent, type CreateAgentDeps, formatCreatedAgent } from '../../agent/create-agent';
-import { UsageError, WorkspaceError } from '../../new/new-options';
-import { defaultsPrompter, type Prompter } from '../../new/prompter';
+import { UsageError, WorkspaceError } from '../../common/errors';
+import { defaultsPrompter, type Prompter } from '../../runtime/prompter';
 
 interface Scene {
   readonly root: string;

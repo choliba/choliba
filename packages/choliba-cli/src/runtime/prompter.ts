@@ -1,4 +1,4 @@
-import { UsageError } from './new-options';
+import { UsageError } from '../common';
 
 /** One choice of a list: what it is and how it reads. */
 export interface Choice<T extends string> {

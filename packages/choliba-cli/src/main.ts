@@ -15,10 +15,10 @@ import { createSpawnGitRunner, takeGlobalFlags, type Platform } from '@choliba/c
 import { createBunProcessSpawner } from '@choliba/terminal/nest';
 
 import { AppModule } from './app.module';
-import { CholibaCliRootCommand } from './help/root.command';
-import { UsageError } from './new/new-options';
-import type { Choice, Prompter } from './new/prompter';
-import type { CliRuntime } from './runtime/interfaces/runtime.interface';
+import { NewCommand } from './new/nest';
+import { UsageError } from './common';
+import type { Choice, Prompter } from './runtime';
+import type { CliRuntime } from './runtime';
 
 // The folder a run from the sources was started in, when it had to start again from this package's folder.
 const SOURCE_CWD = 'CHOLIBA_CLI_SOURCE_CWD';
@@ -27,7 +27,7 @@ delete process.env['CHOLIBA_CLI_SOURCE_CWD'];
 
 // From the sources, Bun takes the decorator settings only from a tsconfig.json in the current folder: start again
 // from this package's folder, which has one, keeping where the command was run (as the choliba's main.ts does).
-if (Reflect.getMetadata(SELF_DECLARED_DEPS_METADATA, CholibaCliRootCommand) === undefined) {
+if (Reflect.getMetadata(SELF_DECLARED_DEPS_METADATA, NewCommand) === undefined) {
   if (import.meta.path.endsWith('.ts') && sourceCwd === undefined) {
     const again = spawnSync(process.execPath, [import.meta.path, ...process.argv.slice(2)], {
       stdio: 'inherit',

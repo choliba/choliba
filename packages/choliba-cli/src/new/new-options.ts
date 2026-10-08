@@ -1,3 +1,5 @@
+import { UsageError } from '../common';
+
 /** The providers the choliba runs agents with (`CHOL_AGENTS_PROVIDER`). */
 export const PROVIDERS = ['auto', 'claude', 'cursor'] as const;
 export type Provider = (typeof PROVIDERS)[number];
@@ -22,12 +24,6 @@ export interface NewOptions {
   readonly agentsFrom: string;
   readonly noInput: boolean;
 }
-
-/** A command line `choliba-cli new` cannot run: the message says what is wrong. */
-export class UsageError extends Error {}
-
-/** A step of the assistant that could not be done: the message says which and what was left. */
-export class WorkspaceError extends Error {}
 
 function oneOf<T extends string>(value: string, allowed: readonly T[], flag: string): T {
   const found = allowed.find((item) => item === value);

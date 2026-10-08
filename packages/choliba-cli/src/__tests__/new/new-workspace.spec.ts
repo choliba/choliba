@@ -2,9 +2,10 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { AGENTS_SOURCE, CHOLIBA_PACKAGE, type NewOptions, WorkspaceError } from '../../new/new-options';
+import { AGENTS_SOURCE, CHOLIBA_PACKAGE, type NewOptions } from '../../new/new-options';
+import { WorkspaceError } from '../../common/errors';
 import { formatSummary, type NewDeps, newWorkspace } from '../../new/new-workspace';
-import { defaultsPrompter, type Prompter } from '../../new/prompter';
+import { defaultsPrompter, type Prompter } from '../../runtime/prompter';
 
 const ENV_TEMPLATE = 'CHOL_GLOBAL_DIR=\n# CHOL_AGENTS_PROVIDER=auto\n# CHOL_MCP_APP_DIR=\n# CHOL_MCP_APP_LOG_DIR=\n';
 

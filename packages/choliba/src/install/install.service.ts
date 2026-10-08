@@ -4,7 +4,7 @@ import { resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '@choliba/age
 import { ConfigService } from '@choliba/core/nest';
 import { GIT, type GitRunner, RUNTIME } from '@choliba/core';
 
-import type { Runtime } from '../runtime/interfaces/runtime.interface';
+import type { Runtime } from '../runtime';
 import { install, parseInstallArgs } from './install';
 
 /** `choliba install <origem>`: an agent (with its skills and MCPs), a skill or an MCP, into the workspace. */

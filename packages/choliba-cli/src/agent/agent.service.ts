@@ -3,8 +3,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@choliba/core/nest';
 import { STDERR, type Writable, RUNTIME } from '@choliba/core';
 
-import { defaultsPrompter } from '../new/prompter';
-import type { CliRuntime } from '../runtime/interfaces/runtime.interface';
+import { defaultsPrompter } from '../runtime';
+import type { CliRuntime } from '../runtime';
 import type { AgentNewOptions } from './agent-options';
 import { type CreatedAgent, createAgent } from './create-agent';
 

@@ -1,24 +1,32 @@
 import { Inject } from '@nestjs/common';
 import { Command } from 'nest-commander';
 
-import { CliCommand, CommandIo, ConfigService } from '@choliba/core/nest';
-import { ENV, type Environment, RUNTIME } from '@choliba/core';
+import { CliCommand, CommandIo, ConfigService, RegisterHelp } from '@choliba/core/nest';
+import { ENV, type Environment, RUNTIME, entryHelp, type CommandEntry, type HelpContributor } from '@choliba/core';
 
-import { commandHelp } from '../help/app.help';
-import type { Runtime } from '../runtime/interfaces/runtime.interface';
+import type { Runtime } from '../runtime';
 import { setup, setupWorkspace, updatePackageWhenListed } from './setup';
+
+/** How `choliba --help` lists `setup`, and its own `--help`. */
+const ENTRY: CommandEntry = {
+  name: 'setup',
+  description: 'Liga o autocomplete no bash (roda sozinho ao instalar com --trust)',
+  group: 'Commands',
+  spec: { usage: 'choliba setup' },
+};
 
 /**
  * `choliba setup`, also the postinstall: the workspace structure, bash completion and what to do next.
  * `--deferred` is its second half, run in the background once `bun add` has written package.json.
  */
+@RegisterHelp()
 @Command({
   name: 'setup',
   description: 'Liga o autocomplete no bash (roda sozinho ao instalar com --trust)',
   allowUnknownOptions: true,
   allowExcessArgs: true,
 })
-export class SetupCommand extends CliCommand {
+export class SetupCommand extends CliCommand implements HelpContributor {
   constructor(
     @Inject(CommandIo) private readonly io: CommandIo,
     @Inject(ConfigService) private readonly config: ConfigService,
@@ -28,10 +36,14 @@ export class SetupCommand extends CliCommand {
     super();
   }
 
+  helpEntries(): readonly CommandEntry[] {
+    return [ENTRY];
+  }
+
   async run(): Promise<void> {
     const args = this.io.args('setup');
     if (this.io.wantsHelp(args)) {
-      this.io.printHelp(commandHelp('setup'));
+      this.io.printHelp(entryHelp(ENTRY));
       return;
     }
     const cwd = this.config.startDir();

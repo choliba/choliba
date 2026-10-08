@@ -1,7 +1,7 @@
 import { isValidAgentName } from '@choliba/agents';
 
 import { agentName, parseAgentNewOptions } from '../../agent/agent-options';
-import { UsageError } from '../../new/new-options';
+import { UsageError } from '../../common/errors';
 
 describe('parseAgentNewOptions', () => {
   it('reads the name and every flag, with or without =', () => {

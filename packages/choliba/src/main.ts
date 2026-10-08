@@ -16,8 +16,8 @@ import { createSpawnGitRunner, takeGlobalFlags, type Platform } from '@choliba/c
 import { createBunProcessSpawner } from '@choliba/terminal/nest';
 
 import { AppModule } from './app.module';
-import { CholibaRootCommand } from './help/root.command';
-import type { Runtime } from './runtime/interfaces/runtime.interface';
+import { CheckCommand } from './check/nest';
+import type { Runtime } from './runtime';
 
 // The folder a run from the sources was started in, when it had to start again from this package's folder.
 const SOURCE_CWD = 'CHOLIBA_SOURCE_CWD';
@@ -28,7 +28,7 @@ delete process.env['CHOLIBA_SOURCE_CWD'];
 // From the sources, Bun takes the decorator settings only from a tsconfig.json in the current folder: from any other
 // (a subfolder of this repository, the folder an agent runs in) the `@Inject`s are dropped and every command gets
 // `undefined`. Start again from this package's folder, which has one, keeping where the command was run.
-if (Reflect.getMetadata(SELF_DECLARED_DEPS_METADATA, CholibaRootCommand) === undefined) {
+if (Reflect.getMetadata(SELF_DECLARED_DEPS_METADATA, CheckCommand) === undefined) {
   if (import.meta.path.endsWith('.ts') && sourceCwd === undefined) {
     const again = spawnSync(process.execPath, [import.meta.path, ...process.argv.slice(2)], {
       stdio: 'inherit',

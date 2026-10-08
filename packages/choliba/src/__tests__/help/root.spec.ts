@@ -1,9 +1,13 @@
 import { join } from 'node:path';
 
-import { fakePlatform, runCommand, type FakePlatform } from '@choliba/core/testing';
+import { CommandTestFactory } from 'nest-commander-testing';
 
-import { HelpModule } from '../../help/help.module';
-import { withFolder, withWorkspace } from '../helpers/runtime';
+import { FILES_MARKER } from '@choliba/core';
+import { ExitStatus } from '@choliba/core/nest';
+import { fakePlatform, type FakePlatform } from '@choliba/core/testing';
+
+import { AppModule } from '../../app.module';
+import { fakeRuntime, withFolder, withWorkspace } from '../helpers/runtime';
 
 const FIXTURES = join(__dirname, '..', '..', '..', '..', 'agents', 'src', '__tests__', 'fixtures');
 const ENV = ['agents', 'skills', 'mcps']
@@ -16,7 +20,12 @@ async function choliba(
   overrides: Partial<FakePlatform> = {},
 ): Promise<{ code: number; out: string; err: string }> {
   const platform = fakePlatform({ argv, cwd, ...overrides });
-  const code = await runCommand([HelpModule], platform);
+  const app = await CommandTestFactory.createTestingCommand({
+    imports: [AppModule.forRoot(platform, fakeRuntime())],
+  }).compile();
+  await CommandTestFactory.runWithoutClosing(app, [...argv]);
+  const code = app.get(ExitStatus).code();
+  await app.close();
   return { code, out: platform.stdout.text(), err: platform.stderr.text() };
 }
 
@@ -26,6 +35,8 @@ describe('choliba', () => {
       const { code, out } = await choliba(argv, dir);
       expect(code).toBe(0);
       expect(out).toContain('Usage:  choliba COMMAND [ARGS]');
+      expect(out).toContain('install');
+      expect(out).toContain('--no-color');
     }),
   );
 
@@ -85,6 +96,24 @@ describe('choliba __complete', () => {
     withFolder(async (dir) => {
       expect((await choliba(['__complete', 'p'], dir)).out).toBe('projects\n');
       expect((await choliba(['__complete', 'tests', 'x'], dir)).out).toBe('');
+    }));
+});
+
+describe('choliba __complete, per command', () => {
+  it('completes what each command takes after its name, outside a workspace too', () =>
+    withFolder(async (dir) => {
+      const complete = async (...words: string[]): Promise<string> =>
+        (await choliba(['__complete', ...words], dir)).out;
+
+      for (const name of ['install', 'lint', 'format']) {
+        expect(await complete(name, '..')).toBe(`${FILES_MARKER}\n`);
+      }
+      expect(await complete('install', '--')).toBe('--path\n--dry-run\n');
+      expect(await complete('install', '--path', '')).toBe(`${FILES_MARKER}\n`);
+      expect(await complete('format', '--')).toBe('--write\n');
+      expect(await complete('completion', '')).toBe('bash\n');
+      expect(await complete('completion', 'bash', '')).toBe('');
+      expect(await complete('tests', 'demo:')).toBe('');
     }));
 });
 

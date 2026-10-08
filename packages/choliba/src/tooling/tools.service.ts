@@ -6,7 +6,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { locateResource, WHICH, type Which, RUNTIME } from '@choliba/core';
 import { ConfigService } from '@choliba/core/nest';
 
-import type { Runtime } from '../runtime/interfaces/runtime.interface';
+import type { Runtime } from '../runtime';
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);

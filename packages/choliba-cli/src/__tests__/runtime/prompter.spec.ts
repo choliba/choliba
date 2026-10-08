@@ -1,5 +1,5 @@
-import { UsageError } from '../../new/new-options';
-import { defaultsPrompter } from '../../new/prompter';
+import { UsageError } from '../../common/errors';
+import { defaultsPrompter } from '../../runtime/prompter';
 
 describe('defaultsPrompter', () => {
   it('takes the default of each question', async () => {

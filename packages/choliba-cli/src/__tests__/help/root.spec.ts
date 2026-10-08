@@ -2,16 +2,23 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { fakePlatform, runCommand } from '@choliba/core/testing';
+import { CommandTestFactory } from 'nest-commander-testing';
 
-import { HelpModule } from '../../help/help.module';
+import { ExitStatus } from '@choliba/core/nest';
+import { fakePlatform } from '@choliba/core/testing';
+
+import { AppModule } from '../../app.module';
 import { versionLine } from '../../help/version';
-import { RuntimeModule } from '@choliba/core/nest';
 import { fakeRuntime } from '../helpers/runtime';
 
 async function run(argv: readonly string[], packageDir = '/nowhere') {
   const platform = fakePlatform({ argv: [...argv] });
-  const code = await runCommand([RuntimeModule.forRoot(fakeRuntime({ packageDir })), HelpModule], platform);
+  const app = await CommandTestFactory.createTestingCommand({
+    imports: [AppModule.forRoot(platform, fakeRuntime({ packageDir }))],
+  }).compile();
+  await CommandTestFactory.runWithoutClosing(app, [...argv]);
+  const code = app.get(ExitStatus).code();
+  await app.close();
   return { code, out: platform.stdout.text(), err: platform.stderr.text() };
 }
 
@@ -50,11 +57,11 @@ describe('versionLine', () => {
   it('reads the version, the commit when there is one, and says when it cannot', () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'choliba-cli-version-'));
     try {
-      expect(versionLine(dir)).toBe('choliba-cli (versão desconhecida)\n');
+      expect(versionLine(dir)).toBe('choliba-cli (versão desconhecida)');
       writeFileSync(path.join(dir, 'package.json'), JSON.stringify(['x']));
-      expect(versionLine(dir)).toBe('choliba-cli (versão desconhecida)\n');
+      expect(versionLine(dir)).toBe('choliba-cli (versão desconhecida)');
       writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 'choliba-cli', version: '0.0.1-dev' }));
-      expect(versionLine(dir)).toBe('choliba-cli 0.0.1-dev\n');
+      expect(versionLine(dir)).toBe('choliba-cli 0.0.1-dev');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
