@@ -4,13 +4,14 @@ import { fileURLToPath } from 'node:url';
 
 import { defineConfig, type MarkdownEnv } from 'vitepress';
 
+import { googleAnalyticsTags } from '../../scripts/libs/docs-analytics';
+import { robotsTxt } from '../../scripts/libs/docs-crawlers';
 import { githubSlug, outsideLink } from '../../scripts/libs/docs-links';
 import {
   checkDescription,
   pageDescription,
   pageUrl,
   publishedTime,
-  robotsTxt,
   shareTags,
   SITE_URL,
 } from '../../scripts/libs/docs-share';
@@ -21,6 +22,9 @@ import { description as DESCRIPTION } from './home';
 const DOCS = fileURLToPath(new URL('..', import.meta.url));
 
 const REPOSITORY = 'https://github.com/choliba/choliba';
+
+/** The Google Analytics property that measures the site's visits. */
+const GOOGLE_ANALYTICS = 'G-TMCFNCED9F';
 
 const TITLE = 'choliba';
 /** When this build publishes the site: each release builds it again, so every publication has its own date. */
@@ -46,16 +50,21 @@ export default defineConfig({
     const source = readFileSync(path.join(DOCS, pageData.filePath), 'utf8');
     return { description: checkDescription(pageData.filePath, pageDescription(source)) };
   },
-  // Each page's share card: Open Graph, the article's author and date, X's card and the canonical URL.
+  // Built pages only, so serving the site locally sends no visits: Google Analytics on every page, the 404 too, and
+  // each page's share card (Open Graph, the article's author and date, X's card and the canonical URL).
   transformHead({ page, pageData, description }) {
-    if (page === '404.md') return [];
-    return shareTags({
-      siteName: TITLE,
-      title: pageData.title === '' ? TITLE : pageData.title,
-      description,
-      url: pageUrl(pageData.relativePath),
-      published: PUBLISHED,
-    });
+    const analytics = googleAnalyticsTags(GOOGLE_ANALYTICS);
+    if (page === '404.md') return analytics;
+    return [
+      ...analytics,
+      ...shareTags({
+        siteName: TITLE,
+        title: pageData.title === '' ? TITLE : pageData.title,
+        description,
+        url: pageUrl(pageData.relativePath),
+        published: PUBLISHED,
+      }),
+    ];
   },
   buildEnd(siteConfig) {
     writeFileSync(path.join(siteConfig.outDir, 'robots.txt'), robotsTxt(SITE_URL));
