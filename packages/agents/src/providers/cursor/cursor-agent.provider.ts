@@ -125,9 +125,7 @@ function previewWorkspace(request: ProviderRequest): readonly PlannedFile[] {
   const mcpServers = request.mcpServers ?? [];
   const root = request.workspaceRoot;
   const permissions = planCursorPermissions(root, requestPermissions(request));
-  return mcpServers.length === 0
-    ? [permissions]
-    : [permissions, planCursorMcpServers(root, mcpServersMap(mcpServers))];
+  return mcpServers.length === 0 ? [permissions] : [permissions, planCursorMcpServers(root, mcpServersMap(mcpServers))];
 }
 
 /** Cursor's agent CLI (`agent`, `cursor-agent` or `cursor agent`, whichever is installed). */

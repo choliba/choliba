@@ -163,7 +163,7 @@ describe('parseCursorToolCall', () => {
     expect(parseCursorToolCall(started({ server: 'cursor', toolName: 'FetchMcpResource' }))[0]).toMatchObject({
       mcp: { kind: 'discovery' },
     });
-    expect(parseCursorToolCall(started({ server: 'cursor' }))[0]?.mcp).not.toHaveProperty('server');
+    expect(parseCursorToolCall(started({ server: 'cursor' }))[0]).toHaveProperty('mcp', { kind: 'discovery' });
     expect(parseCursorToolCall(started({ server: 'mcp-app' }))[0]).toMatchObject({
       mcp: { kind: 'discovery', server: 'mcp-app' },
     });
