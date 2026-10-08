@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 08/10/2026 17:42:28 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 08/10/2026 17:45:21 — não editar manualmente.
 
 ## Resumo
 
@@ -90,7 +90,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba-cli</b> — 100.00% das linhas, 22 arquivos</summary>
+<summary>🟢 <b>packages/choliba-cli</b> — 100.00% das linhas, 20 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -114,13 +114,11 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/new/new.module.ts](packages/choliba-cli/src/new/new.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/new/new.service.ts](packages/choliba-cli/src/new/new.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/new/prompter.ts](packages/choliba-cli/src/new/prompter.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runtime/runtime.constants.ts](packages/choliba-cli/src/runtime/runtime.constants.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runtime/runtime.module.ts](packages/choliba-cli/src/runtime/runtime.module.ts)|100.00|100.00|100.00|100.00
 
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 27 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 25 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -142,8 +140,6 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/install/install.module.ts](packages/choliba/src/install/install.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/install/install.service.ts](packages/choliba/src/install/install.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/install/install.ts](packages/choliba/src/install/install.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runtime/runtime.constants.ts](packages/choliba/src/runtime/runtime.constants.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runtime/runtime.module.ts](packages/choliba/src/runtime/runtime.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/setup/setup.command.ts](packages/choliba/src/setup/setup.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/setup/setup.module.ts](packages/choliba/src/setup/setup.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/setup/setup.ts](packages/choliba/src/setup/setup.ts)|100.00|100.00|100.00|100.00
@@ -155,7 +151,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 52 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 57 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -179,6 +175,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/config/index.ts](packages/core/src/config/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/layout.ts](packages/core/src/config/layout.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/nest.ts](packages/core/src/config/nest.ts)|100.00|100.00|100.00|100.00
+🟢|[src/config/package-version.ts](packages/core/src/config/package-version.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/repo-config.ts](packages/core/src/config/repo-config.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/resources.ts](packages/core/src/config/resources.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/vars.ts](packages/core/src/config/vars.ts)|100.00|100.00|100.00|100.00
@@ -203,6 +200,10 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/platform/platform.constants.ts](packages/core/src/platform/platform.constants.ts)|100.00|100.00|100.00|100.00
 🟢|[src/platform/platform.module.ts](packages/core/src/platform/platform.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/platform/raw-args.ts](packages/core/src/platform/raw-args.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runtime/index.ts](packages/core/src/runtime/index.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runtime/nest.ts](packages/core/src/runtime/nest.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runtime/runtime.constants.ts](packages/core/src/runtime/runtime.constants.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runtime/runtime.module.ts](packages/core/src/runtime/runtime.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/index.ts](packages/core/src/testing/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/theme/ansi.ts](packages/core/src/theme/ansi.ts)|100.00|100.00|100.00|100.00
 🟢|[src/theme/index.ts](packages/core/src/theme/index.ts)|100.00|100.00|100.00|100.00

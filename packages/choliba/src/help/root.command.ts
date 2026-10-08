@@ -1,12 +1,13 @@
 import { Inject } from '@nestjs/common';
 import { RootCommand } from 'nest-commander';
 
-import { messageOf } from '@choliba/core';
+import { messageOf, versionLine } from '@choliba/core';
 import { CliCommand, CommandIo } from '@choliba/core/nest';
 import { AgentsService } from '@choliba/agents/nest';
 
 import { CHOLIBA_HELP } from './app.help';
-import { cholibaManifest, versionLine } from './version';
+
+import { cholibaManifest, PACKAGE_NAME } from './version';
 
 const HELP_WORDS: readonly string[] = ['help', '--help', '-h'];
 
@@ -31,7 +32,7 @@ export class CholibaRootCommand extends CliCommand {
       return;
     }
     if (first === '--version') {
-      this.io.write(versionLine(cholibaManifest()));
+      this.io.write(`${versionLine(PACKAGE_NAME, cholibaManifest())}\n`);
       return;
     }
     try {

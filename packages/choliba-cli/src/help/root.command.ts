@@ -4,7 +4,7 @@ import { RootCommand } from 'nest-commander';
 import { CliCommand, CommandIo } from '@choliba/core/nest';
 
 import type { CliRuntime } from '../runtime/interfaces/runtime.interface';
-import { RUNTIME } from '../runtime/runtime.constants';
+import { RUNTIME } from '@choliba/core';
 import { CLI_HELP } from './cli.help';
 import { versionLine } from './version';
 

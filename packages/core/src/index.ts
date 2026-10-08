@@ -5,4 +5,5 @@ export * from './cli';
 export * from './config';
 export * from './help';
 export * from './platform';
+export * from './runtime';
 export * from './theme';

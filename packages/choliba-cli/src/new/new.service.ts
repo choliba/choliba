@@ -1,9 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import { CWD, STDERR, type Writable } from '@choliba/core';
+import { CWD, STDERR, type Writable, RUNTIME } from '@choliba/core';
 
 import type { CliRuntime } from '../runtime/interfaces/runtime.interface';
-import { RUNTIME } from '../runtime/runtime.constants';
 import type { NewOptions } from './new-options';
 import { type NewResult, newWorkspace } from './new-workspace';
 import { defaultsPrompter } from './prompter';

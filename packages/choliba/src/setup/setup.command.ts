@@ -2,11 +2,10 @@ import { Inject } from '@nestjs/common';
 import { Command } from 'nest-commander';
 
 import { CliCommand, CommandIo, ConfigService } from '@choliba/core/nest';
-import { ENV, type Environment } from '@choliba/core';
+import { ENV, type Environment, RUNTIME } from '@choliba/core';
 
 import { commandHelp } from '../help/app.help';
 import type { Runtime } from '../runtime/interfaces/runtime.interface';
-import { RUNTIME } from '../runtime/runtime.constants';
 import { setup, setupWorkspace, updatePackageWhenListed } from './setup';
 
 /**

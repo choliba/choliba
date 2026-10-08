@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { fakePlatform, runCommand } from '@choliba/core/testing';
 
 import { InstallModule } from '../../install/install.module';
-import { RuntimeModule } from '../../runtime/runtime.module';
+import { RuntimeModule } from '@choliba/core/nest';
 import { fakeRuntime, withFolder, withWorkspace } from '../helpers/runtime';
 
 const FIXTURES = join(__dirname, '..', '..', '..', '..', 'agents', 'src', '__tests__', 'fixtures');

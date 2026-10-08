@@ -6,7 +6,7 @@ import { fakePlatform, runCommand } from '@choliba/core/testing';
 
 import { HelpModule } from '../../help/help.module';
 import { versionLine } from '../../help/version';
-import { RuntimeModule } from '../../runtime/runtime.module';
+import { RuntimeModule } from '@choliba/core/nest';
 import { fakeRuntime } from '../helpers/runtime';
 
 async function run(argv: readonly string[], packageDir = '/nowhere') {
@@ -29,7 +29,10 @@ describe('choliba-cli', () => {
   it('prints its version, from its package.json', async () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'choliba-cli-version-'));
     try {
-      writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ version: '0.0.1-dev.25', gitHead: '1a2b3c4d5e' }));
+      writeFileSync(
+        path.join(dir, 'package.json'),
+        JSON.stringify({ name: 'choliba-cli', version: '0.0.1-dev.25', gitHead: '1a2b3c4d5e' }),
+      );
       expect((await run(['--version'], dir)).out).toBe('choliba-cli 0.0.1-dev.25+1a2b3c4\n');
     } finally {
       rmSync(dir, { recursive: true, force: true });
@@ -50,7 +53,7 @@ describe('versionLine', () => {
       expect(versionLine(dir)).toBe('choliba-cli (versão desconhecida)\n');
       writeFileSync(path.join(dir, 'package.json'), JSON.stringify(['x']));
       expect(versionLine(dir)).toBe('choliba-cli (versão desconhecida)\n');
-      writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ version: '0.0.1-dev' }));
+      writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 'choliba-cli', version: '0.0.1-dev' }));
       expect(versionLine(dir)).toBe('choliba-cli 0.0.1-dev\n');
     } finally {
       rmSync(dir, { recursive: true, force: true });
