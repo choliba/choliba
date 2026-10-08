@@ -85,8 +85,10 @@ rejected):
 - `core/src/cli/`: the root, as it is made of commands: `RootModule.forRoot({ spec, version })` gives the app
   `<app>`, `--help`, `--version`, `__complete` and `__describe`. A first word that is not a command goes to the
   provider marked `@RegisterRootFallback()` (`choliba <agent>`), or is a usage error when there is none.
-- An app only says who it is; nothing outside `core` lists commands or prints help. Direction inside core:
-  `platform` → `help` → `cli`.
+- An app only says who it is: `RootModule.forRoot({ spec, version, groups })`, `groups` being the order of its
+  root's sections (`['Commands', 'Agents']`). An entry with `listed: false` is completed and described but not
+  listed by `--help` (the `choliba <agent>` shortcuts). Nothing outside `core` lists commands or prints help.
+  Direction inside core: `platform` → `help` → `cli`.
 
 ## 6. Language
 
@@ -108,7 +110,6 @@ Specs (`src/__tests__/`) are not checked.
 
 ## Migration status
 
-Plan 035 migrates the packages in this order, all in one pull request at the end: `core`, `terminal`, `projects` and
-`runner` (done; breaking: the runner's public `shared/` files became kebab-case, as `./shared/pages/base-page`) and
-`agents` (done), then the two apps. A package not yet in `STRUCTURE` keeps its current layout until its turn; new code in it
-already follows these rules where it can.
+Plan 035 migrated every package (`core`, `terminal`, `projects`, `runner`, `agents` and the two apps); all of them
+are in `STRUCTURE`, so `bun run lint` holds the whole codebase to this standard. A new package is added there from its
+first commit.

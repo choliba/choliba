@@ -47,9 +47,10 @@ HTTP. The workspace (`packages/*`) stays: the Nest CLI "monorepo mode" (`nest-cl
 3. The command: `@Command({ name, allowUnknownOptions: true, allowExcessArgs: true })`, `extends CliCommand`,
    every constructor parameter with `@Inject(...)` (`references/typescript-and-di.md`): help first, then the
    service, then `io.exit(code)` or `io.fail(messageOf(error))`.
-4. Its entry in `COMMANDS` (`packages/choliba/src/help/app.help.ts`) for `choliba --help` and completion, and
-   the module in `AppModule`. Check it does not shadow an agent name (`cli-guidelines`). (Plan 035 replaces
-   `COMMANDS` with `@RegisterHelp()` in `@choliba/core`; see `code-standard`.)
+4. Its help: the command is `@RegisterHelp()` and returns its `CommandEntry` from `helpEntries()` (name, the line
+   `--help` lists it with, group, spec); its own `--help` prints `entryHelp(entry)`. The root's help and completion
+   list it with no other change (`code-standard`). Its module goes in `AppModule`; check it does not shadow an agent
+   name (`cli-guidelines`).
 5. `bun run check`; after a tool config change, `bash .agents/skills/quality-gates/scripts/verify.sh`.
 
 ## Adding an agent provider
