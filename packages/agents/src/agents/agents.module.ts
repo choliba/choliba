@@ -3,9 +3,9 @@ import { Module } from '@nestjs/common';
 import { CliModule, ConfigModule, ThemeModule } from '@choliba/core/nest';
 import { TerminalModule } from '@choliba/terminal/nest';
 
-import { ClaudeProviderModule } from '../providers/claude/claude-provider.module';
-import { CursorProviderModule } from '../providers/cursor/cursor-provider.module';
-import { ProvidersModule } from '../providers/providers.module';
+import { ClaudeProviderModule } from '../providers/nest';
+import { CursorProviderModule } from '../providers/nest';
+import { ProvidersModule } from '../providers/nest';
 import { AgentsCommand } from './agents.command';
 import { AgentsService } from './agents.service';
 

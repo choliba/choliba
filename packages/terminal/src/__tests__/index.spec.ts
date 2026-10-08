@@ -7,7 +7,7 @@ describe('public entrypoint', () => {
     expect(terminal.Session).toBeDefined();
     expect(terminal.CircularBuffer).toBeDefined();
     expect(terminal.TypedEventEmitter).toBeDefined();
-    expect(terminal.createBunProcessSpawner).toBeDefined();
+    expect(nest.createBunProcessSpawner).toBeDefined();
     expect(terminal.readLines).toBeDefined();
     expect(typeof terminal.colorForLabel).toBe('function');
     expect(typeof terminal.formatLine).toBe('function');

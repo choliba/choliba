@@ -1,16 +1,27 @@
-import { mcpServersMap } from '../../mcps/mcps';
-import { absolutePermissions } from '../../runs/permissions';
-import { assertArgvFits, runPlaceOf, wrapInstructions } from '../../runs/prompt';
-import { runToolCommands, runToolsOf } from '../../runs/run-tools/run-tools';
-import { createStreamJsonParser } from '../stream-json';
+import { mcpServersMap } from '../../common';
+import { absolutePermissions } from '../../common';
+import { assertArgvFits, runPlaceOf, wrapInstructions } from '../../common';
+import { runToolCommands, runToolsOf } from '../../common';
+import { createStreamJsonParser } from '../../common';
 import { Injectable } from '@nestjs/common';
 
-import { AgentProvider } from '../agent-provider';
-import type { PlanContentContext, PlannedFile, ProviderRequest, StreamParser } from '../interfaces/provider.interface';
-import { RegisterAgentProvider } from '../register-agent-provider';
-import { applyCursorMcpServers, applyCursorPermissions, planCursorMcpServers, planCursorPermissions } from './cli-json';
+import { AgentProvider } from '../../common';
+import type { PlanContentContext, PlannedFile, ProviderRequest, StreamParser } from '../../common';
+import { RegisterAgentProvider } from '../register-agent-provider.decorator';
+import {
+  applyCursorMcpServers,
+  applyCursorPermissions,
+  planCursorMcpServers,
+  planCursorPermissions,
+} from './cursor-cli-json';
 import { clearCursorState } from './cursor-state';
-import { type CursorPermissions, cursorPermissions, readDir, undeclaredMcpTokens, userMcpServers } from './permissions';
+import {
+  type CursorPermissions,
+  cursorPermissions,
+  readDir,
+  undeclaredMcpTokens,
+  userMcpServers,
+} from './cursor-permissions';
 
 function resolvePlanContent(context: PlanContentContext): string | undefined {
   const content = context.planMarkdown?.trim();

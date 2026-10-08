@@ -3,14 +3,14 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { ScriptCli } from '../packages/core/src/cli';
+import type { ScriptCli } from '../packages/core/src/help';
 import {
   formatHelp,
   readPackageScripts,
   resolveScriptCli,
   scriptsHelpSpec,
   scriptSummary,
-} from '../packages/core/src/cli';
+} from '../packages/core/src/help';
 
 const repoRoot = join(import.meta.dirname, '..');
 const pkg = readPackageScripts(JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')) as unknown);

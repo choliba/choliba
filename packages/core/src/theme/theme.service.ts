@@ -1,8 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import { ConfigService } from '../config/config.service';
-import type { Environment, WritableWithColumns } from '../platform/interfaces/platform.interface';
-import { ENV, NO_COLOR_FLAG, STDOUT } from '../platform/platform.constants';
+import { ConfigService } from '../config/nest';
+import { ENV, NO_COLOR_FLAG, STDOUT, type Environment, type WritableWithColumns } from '../platform';
 import type { AnsiColor } from './ansi';
 import type { Theme, ThemeRole } from './interfaces/theme.interface';
 import { resolveTheme } from './resolve-theme';

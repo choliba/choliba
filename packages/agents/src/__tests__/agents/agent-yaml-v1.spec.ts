@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { stringify } from 'yaml';
 
-import { ANSI_COLORS } from '@choliba/core/theme';
+import { ANSI_COLORS } from '@choliba/core';
 
 import { SUPPORTED_AGENT_YAML_VERSIONS, validateAgentYamlV1 } from '../../agents/agent-validation';
 

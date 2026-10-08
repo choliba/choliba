@@ -1,9 +1,9 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { WorkspaceError } from '../new/new-options';
-import type { Prompter } from '../new/prompter';
-import type { RunCommand } from '../runtime/interfaces/runtime.interface';
+import { WorkspaceError } from '../common';
+import type { Prompter } from '../runtime';
+import type { RunCommand } from '../runtime';
 import { ACCESS, ACCESS_LABELS, type Access, type AgentNewOptions, agentName, DEFAULT_MODELS } from './agent-options';
 import { agentYaml, type AgentSpec } from './agent-yaml';
 

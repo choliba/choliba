@@ -1,14 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import type { CommandSpec } from '@choliba/core/cli';
+import { type CommandSpec, ENV, STDERR, STDOUT, type Environment, type Writable } from '@choliba/core';
 import { ConfigService, ThemeService } from '@choliba/core/nest';
-import { ENV, STDERR, STDOUT, type Environment, type Writable } from '@choliba/core/platform';
 import { listProjectNames, listTicketSuffixes, ticketsFolderPath } from '@choliba/projects';
 import { LocationsService } from '@choliba/projects/nest';
 
 import { runTests } from './run-tests';
 import { RUNNER_ROOT, TESTS_HOOKS, type TestsHooks } from './tests.constants';
-import { testsCliSpec } from './tests.help';
+import { testsCliSpec } from './tests-spec';
 
 /** `choliba tests`: the workspace's E2E tests through the runner's Playwright. */
 @Injectable()

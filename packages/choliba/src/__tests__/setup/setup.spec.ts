@@ -5,8 +5,7 @@ import path from 'node:path';
 
 import { loadProjectSettings } from '@choliba/projects';
 
-import { FILES_MARKER } from '@choliba/core/cli';
-import { DEFAULT_THEME, parseColors } from '@choliba/core/theme';
+import { FILES_MARKER, DEFAULT_THEME, parseColors } from '@choliba/core';
 
 import { COMPLETION_BASH } from '../../completion/completion';
 import {

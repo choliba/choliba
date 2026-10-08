@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { cholibaManifest, versionLine } from '../../help/version';
+import { cholibaManifest } from '../../help/version';
 
 function withDir(run: (dir: string) => void): void {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'choliba-version-'));
@@ -50,15 +50,5 @@ describe('cholibaManifest', () => {
 
   it('is the package of these sources when run from them', () => {
     expect(cholibaManifest()?.version).toMatch(/^0\.0\.1-dev/);
-  });
-});
-
-describe('versionLine', () => {
-  it('prints the SemVer version, with the short commit as build metadata when the build wrote one', () => {
-    expect(versionLine({ version: '0.0.1-dev.44', gitHead: 'bbb4cdb2917b5fd1' })).toBe(
-      'choliba 0.0.1-dev.44+bbb4cdb\n',
-    );
-    expect(versionLine({ version: '0.0.1-dev' })).toBe('choliba 0.0.1-dev\n');
-    expect(versionLine(undefined)).toBe('choliba (versão desconhecida)\n');
   });
 });

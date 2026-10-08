@@ -1,7 +1,7 @@
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import type { Prompter } from '../../new/prompter';
+import type { Prompter } from '../../runtime/prompter';
 import type { CliRuntime } from '../../runtime/interfaces/runtime.interface';
 
 /** What the fake runtime ran, as `<folder>$ <command line>`. */

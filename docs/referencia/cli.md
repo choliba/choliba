@@ -11,7 +11,6 @@
 | `choliba tests [PROJECT[:TICKET]] [OPTIONS]` | Roda os testes E2E dos projetos com o Playwright                                                          |
 | `choliba install <origem> [OPTIONS]`         | Instala um agente (com suas skills e MCPs), uma skill ou um MCP numa pasta, repositório git ou pacote npm |
 | `choliba setup`                              | Cria a pasta de trabalho e liga o autocomplete (roda sozinho ao instalar com `--trust`)                   |
-| `choliba completion bash`                    | Imprime o script de autocomplete do bash                                                                  |
 
 `choliba --help` (ou `choliba COMMAND --help`) lista o mesmo, sempre a partir do binário instalado.
 
@@ -50,4 +49,4 @@ rodado com `--project` recebe essa regra no prompt, e o choliba nega a ele escre
 ## Autocomplete
 
 O `setup` já liga o autocomplete do bash: grava o script em `~/.local/share/choliba/completion.bash` e adiciona
-uma linha ao `~/.bashrc` que o carrega. Para imprimir o script sem rodar o setup, use `choliba completion bash`.
+uma linha ao `~/.bashrc` que o carrega.

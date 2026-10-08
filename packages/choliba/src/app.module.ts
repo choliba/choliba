@@ -1,20 +1,19 @@
 import { Module, type DynamicModule } from '@nestjs/common';
 
 import { AgentsModule } from '@choliba/agents/nest';
-import { PlatformModule } from '@choliba/core/nest';
-import type { Platform } from '@choliba/core/platform';
+import { PlatformModule, RootModule, RuntimeModule } from '@choliba/core/nest';
+import { versionLine, type Platform } from '@choliba/core';
 import { ProjectsModule } from '@choliba/projects/nest';
 import { TestsModule } from '@choliba/runner/nest';
 import { TerminalModule } from '@choliba/terminal/nest';
 
-import { CheckModule } from './check/check.module';
-import { CompletionModule } from './completion/completion.module';
-import { HelpModule } from './help/help.module';
-import { InstallModule } from './install/install.module';
-import type { Runtime } from './runtime/interfaces/runtime.interface';
-import { RuntimeModule } from './runtime/runtime.module';
-import { SetupModule } from './setup/setup.module';
-import { ToolingModule } from './tooling/tooling.module';
+import { CheckModule } from './check/nest';
+import { CHOLIBA_ROOT } from './help';
+import { cholibaManifest, PACKAGE_NAME } from './help';
+import { InstallModule } from './install/nest';
+import type { Runtime } from './runtime';
+import { SetupModule } from './setup/nest';
+import { ToolingModule } from './tooling/nest';
 
 /** The whole of choliba: every command, on the platform and runtime `main.ts` reads from Bun and the process. */
 @Module({})
@@ -25,7 +24,11 @@ export class AppModule {
       imports: [
         PlatformModule.forRoot(platform),
         RuntimeModule.forRoot(runtime),
-        HelpModule,
+        RootModule.forRoot({
+          spec: CHOLIBA_ROOT,
+          version: () => versionLine(PACKAGE_NAME, cholibaManifest()),
+          groups: ['Commands', 'Agents'],
+        }),
         AgentsModule,
         ProjectsModule,
         TestsModule,
@@ -34,7 +37,6 @@ export class AppModule {
         CheckModule,
         ToolingModule,
         SetupModule,
-        CompletionModule,
       ],
     };
   }

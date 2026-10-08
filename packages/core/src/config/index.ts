@@ -47,3 +47,4 @@ export {
   TICKET_RUNS_SUBDIR,
 } from './layout';
 export type { RepoConfig } from './repo-config';
+export { findManifest, versionLine, type PackageManifest } from './package-version';

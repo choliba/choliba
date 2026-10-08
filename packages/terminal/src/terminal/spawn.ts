@@ -12,9 +12,9 @@
  * excluded from the coverage ratchet as a thin wiring entrypoint.
  */
 
-import type { ProcessSpawner, SpawnCommandOptions, SpawnedProcess } from '@choliba/core/platform';
+import type { ProcessSpawner, SpawnCommandOptions, SpawnedProcess } from '@choliba/core';
 
-export type { ProcessSpawner, SpawnCommandOptions, SpawnedProcess } from '@choliba/core/platform';
+export type { ProcessSpawner, SpawnCommandOptions, SpawnedProcess } from '@choliba/core';
 
 export type BunSpawnFn = typeof Bun.spawn;
 

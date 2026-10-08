@@ -8,7 +8,7 @@ import type {
   SessionLineEvent,
   SessionStatus,
   StreamName,
-} from './types';
+} from './interfaces/terminal.interface';
 
 export interface SessionParams {
   readonly id: string;

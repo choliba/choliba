@@ -1,12 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import { CWD, STDERR, type Writable } from '@choliba/core/platform';
+import { CWD, STDERR, type Writable, RUNTIME } from '@choliba/core';
 
-import type { CliRuntime } from '../runtime/interfaces/runtime.interface';
-import { RUNTIME } from '../runtime/runtime.constants';
+import type { CliRuntime } from '../runtime';
 import type { NewOptions } from './new-options';
 import { type NewResult, newWorkspace } from './new-workspace';
-import { defaultsPrompter } from './prompter';
+import { defaultsPrompter } from '../runtime';
 
 /** `choliba-cli new`: the assistant, asking on a terminal and taking the defaults without one or with `--no-input`. */
 @Injectable()

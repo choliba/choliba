@@ -1,13 +1,14 @@
 import { randomUUID } from 'node:crypto';
 
+import type { ProcessSpawner } from '@choliba/core';
+
 import type { FormatterOptions } from './formatter';
 import { colorForLabel, formatLine } from './formatter';
 import type { Listener } from './event-emitter';
 import { TypedEventEmitter } from './event-emitter';
-import type { ProcessSpawner } from './spawn';
 import { Session } from './session';
 import { readLines } from './stream-lines';
-import type { ProcessRunnerEvents, RunOptions, StreamName } from './types';
+import type { ProcessRunnerEvents, RunOptions, StreamName } from './interfaces/terminal.interface';
 
 export interface ProcessRunnerOptions {
   /**

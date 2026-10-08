@@ -1,4 +1,4 @@
-import type { Prompter } from '../../new/prompter';
+import type { Prompter } from '../prompter';
 
 /** Runs a command in `cwd`, its output on stderr (stdout is for the result); resolves to its exit code. */
 export type RunCommand = (command: string, args: readonly string[], cwd: string) => number;

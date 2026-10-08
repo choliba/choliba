@@ -1,19 +1,19 @@
 /**
- * A raiz da pasta de trabalho no `agent.yaml` (`${CHOL_ROOT}`): sempre descoberta pelo choliba (a pasta cujo
- * `package.json` depende dele), nunca lida do `.env` nem do ambiente.
+ * The workspace root in `agent.yaml` (`${CHOL_ROOT}`): always found by choliba (the folder whose `package.json`
+ * depends on it), never read from the `.env` or the environment.
  */
 export const CHOL_ROOT = 'CHOL_ROOT';
 
-/** Nome da variável de ambiente para o provider padrão do CLI de agentes. */
+/** The environment variable with the agents CLI's default provider. */
 export const CHOL_AGENTS_PROVIDER = 'CHOL_AGENTS_PROVIDER';
 
-/** Nome da variável de ambiente para o diretório de definições de agentes. */
+/** The environment variable with the agents' folder. */
 export const CHOL_AGENTS_DIR = 'CHOL_AGENTS_DIR';
 
-/** Nome da variável de ambiente para o diretório das skills que os agentes podem usar. */
+/** The environment variable with the folder of the skills agents may use. */
 export const CHOL_SKILLS_DIR = 'CHOL_SKILLS_DIR';
 
-/** Nome da variável de ambiente para o diretório dos servidores MCP que os agentes podem usar. */
+/** The environment variable with the folder of the MCP servers agents may use. */
 export const CHOL_MCPS_DIR = 'CHOL_MCPS_DIR';
 
 /** External workspace root (artifacts and, by default, projects under test). */
@@ -31,5 +31,5 @@ export const CHOL_TICKET_RUNS = 'CHOL_TICKET_RUNS';
  */
 export const CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR = 'CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR';
 
-/** The colors chosen for the workspace: `papel.nome=cor`, separated by commas (`agents.test-writer=red`). */
+/** The colors chosen for the workspace: `role.name=color`, separated by commas (`agents.test-writer=red`). */
 export const CHOL_COLORS = 'CHOL_COLORS';

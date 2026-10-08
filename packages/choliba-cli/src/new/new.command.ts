@@ -1,26 +1,42 @@
 import { Inject } from '@nestjs/common';
 import { Command } from 'nest-commander';
 
-import { CliCommand, CommandIo } from '@choliba/core/nest';
+import type { CommandEntry, HelpContributor } from '@choliba/core';
 
-import { NEW_HELP } from './new.help';
-import { parseNewOptions, UsageError, WorkspaceError } from './new-options';
+import { CliCommand, CommandIo, RegisterHelp } from '@choliba/core/nest';
+
+import { NEW_HELP } from './new-spec';
+import { parseNewOptions } from './new-options';
+import { UsageError, WorkspaceError } from '../common';
 import { formatSummary } from './new-workspace';
 import { NewService } from './new.service';
 
+/** How `choliba-cli --help` lists `new`, and its own `--help`. */
+const ENTRY: CommandEntry = {
+  name: 'new',
+  description: 'Cria uma pasta de trabalho do choliba',
+  group: 'Commands',
+  spec: NEW_HELP,
+};
+
 /** `choliba-cli new [PASTA]`: a new workspace; exit 1 when a step fails or `choliba check` finds problems. */
+@RegisterHelp()
 @Command({
   name: 'new',
   description: 'Cria uma pasta de trabalho do choliba',
   allowUnknownOptions: true,
   allowExcessArgs: true,
 })
-export class NewCommand extends CliCommand {
+export class NewCommand extends CliCommand implements HelpContributor {
   constructor(
     @Inject(CommandIo) private readonly io: CommandIo,
     @Inject(NewService) private readonly service: NewService,
   ) {
     super();
+  }
+
+  helpEntries(): readonly CommandEntry[] {
+    return [ENTRY];
   }
 
   async run(): Promise<void> {

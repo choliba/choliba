@@ -1,14 +1,14 @@
-import { mcpServersMap } from '../../mcps/mcps';
-import { absolutePermissions } from '../../runs/permissions';
-import { assertArgvFits, runPlaceOf, wrapInstructions } from '../../runs/prompt';
-import { runToolCommands, runToolsOf } from '../../runs/run-tools/run-tools';
-import { createStreamJsonParser } from '../stream-json';
+import { mcpServersMap } from '../../common';
+import { absolutePermissions } from '../../common';
+import { assertArgvFits, runPlaceOf, wrapInstructions } from '../../common';
+import { runToolCommands, runToolsOf } from '../../common';
+import { createStreamJsonParser } from '../../common';
 import { Injectable } from '@nestjs/common';
 
-import { AgentProvider } from '../agent-provider';
-import type { ProviderRequest, StreamParser } from '../interfaces/provider.interface';
-import { RegisterAgentProvider } from '../register-agent-provider';
-import { claudePermissionArgs } from './permissions';
+import { AgentProvider } from '../../common';
+import type { ProviderRequest, StreamParser } from '../../common';
+import { RegisterAgentProvider } from '../register-agent-provider.decorator';
+import { claudePermissionArgs } from './claude-permissions';
 
 function buildArgs(request: ProviderRequest): readonly string[] {
   const args: string[] = [

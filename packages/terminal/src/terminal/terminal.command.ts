@@ -2,7 +2,7 @@ import { Inject } from '@nestjs/common';
 import { Command } from 'nest-commander';
 
 import { CliCommand, ExitStatus } from '@choliba/core/nest';
-import { ARGV, STDERR, rawArgsAfter, type Writable } from '@choliba/core/platform';
+import { ARGV, STDERR, rawArgsAfter, type Writable } from '@choliba/core';
 
 import { parseRunArgs, type RunDto } from './dto/run.dto';
 import { TerminalService } from './terminal.service';

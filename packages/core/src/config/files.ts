@@ -1,30 +1,30 @@
 /**
- * Os nomes dos arquivos que o choliba lê e grava: a única fonte deles. Um nome que precisa mudar muda aqui,
- * e todo pacote que o usa importa daqui.
+ * The names of the files choliba reads and writes, in one place: a name that has to change changes here, and every
+ * package that uses it imports it from here.
  */
 
-/** A declaração de um agente, em `<pasta dos agentes>/<id>/`. */
+/** An agent's declaration, in `<agents folder>/<id>/`. */
 export const AGENT_FILE = 'agent.yaml';
 
-/** A descrição de uma skill, em `<pasta das skills>/<nome>/`. */
+/** A skill's description, in `<skills folder>/<name>/`. */
 export const SKILL_FILE = 'SKILL.md';
 
-/** A configuração da pasta de trabalho, na raiz dela. */
+/** The workspace's configuration, at its root. */
 export const ENV_FILE = '.env';
 
-/** O manifesto de um pacote; o da pasta de trabalho depende de choliba. */
+/** A package's manifest; the workspace's depends on choliba. */
 export const PACKAGE_FILE = 'package.json';
 
-/** A configuração de um projeto de teste (ambientes, dispositivos). */
+/** A test project's configuration (environments, devices). */
 export const PROJECT_CONFIG_FILE = 'config.json';
 
-/** As credenciais de um projeto de teste, por ambiente. */
+/** A test project's credentials, per environment. */
 export const PROJECT_ENV_FILE = '.env.json';
 
-/** O modelo das credenciais de um projeto de teste, a partir do qual o `.env.json` é criado. */
+/** The template of a test project's credentials, from which its `.env.json` is created. */
 export const PROJECT_ENV_EXAMPLE_FILE = '.env.example.json';
 
-/** Os arquivos que o `choliba setup` grava numa pasta de trabalho nova, além do `.env`. */
+/** The files `choliba setup` writes in a new workspace, besides the `.env`. */
 export const ENV_EXAMPLE_FILE = '.env.example';
 export const GITIGNORE_FILE = '.gitignore';
 export const BUNFIG_FILE = 'bunfig.toml';

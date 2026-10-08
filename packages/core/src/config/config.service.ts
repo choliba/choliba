@@ -1,7 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import type { Environment } from '../platform/interfaces/platform.interface';
-import { CWD, ENV } from '../platform/platform.constants';
+import { CWD, ENV, type Environment } from '../platform';
 import { loadRepoConfig, type RepoConfig } from './repo-config';
 import { findWorkspaceRoot } from './workspace';
 
