@@ -1,5 +1,8 @@
 # `choliba-cli`
 
+> O `choliba-cli` é um assistente para começar com o choliba: cria a pasta de trabalho e os agentes respondendo
+> perguntas no terminal.
+
 O `choliba-cli` é um assistente para começar com o choliba. Você o instala uma vez, na máquina, e ele:
 
 - **`choliba-cli new`**: prepara uma pasta de trabalho do zero;

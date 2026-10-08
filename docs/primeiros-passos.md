@@ -1,5 +1,8 @@
 # Primeiros passos
 
+> Instale o choliba, crie a pasta de trabalho e leve o primeiro pedido até o código implementado, com ticket e
+> testes no caminho.
+
 Esta página faz tudo à mão. Para montar a pasta de trabalho respondendo perguntas (instalar o choliba, escolher o
 provider e os agentes), use o [`choliba-cli`](choliba-cli.md).
 
