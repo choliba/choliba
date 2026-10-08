@@ -1,10 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 
 import { ConfigService } from '@choliba/core/nest';
-import { ENV, type Environment } from '@choliba/core/platform';
+import { ENV, type Environment } from '@choliba/core';
 
-import { resolveTicketRunsRoot } from '../tickets/ticket';
-import { resolveLocations, type ProjectLocations } from './locations';
+import { resolveTicketRunsRoot } from '../tickets';
+import { resolveLocations, type ProjectLocations } from '../paths';
 
 /** Where the projects under test live, from the workspace's `.env` and the process environment. */
 @Injectable()

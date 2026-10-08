@@ -13,11 +13,11 @@ describe('public entrypoint', () => {
     expect(typeof agents.loadAgent).toBe('function');
     expect(typeof agents.parseAgentYaml).toBe('function');
 
-    expect(typeof agents.resolveCommand).toBe('function');
-    expect(typeof agents.defineCommand).toBe('function');
+    expect(typeof agents.resolveInvocation).toBe('function');
+    expect(typeof agents.defineInvocation).toBe('function');
     expect(typeof agents.effectivePolicy).toBe('function');
-    expect(typeof agents.commandFromAgent).toBe('function');
-    expect(typeof agents.implicitCommand).toBe('function');
+    expect(typeof agents.invocationFromAgent).toBe('function');
+    expect(typeof agents.implicitInvocation).toBe('function');
 
     expect(typeof agents.MAX_ARG_BYTES).toBe('number');
     expect(agents.PromptTooLargeError).toBeDefined();
@@ -42,7 +42,7 @@ describe('public entrypoint', () => {
   });
 
   it('exposes a working command definition end to end through the barrel', () => {
-    const command = agents.defineCommand({ name: 'x', agent: 'echo', description: 'd' });
+    const command = agents.defineInvocation({ name: 'x', agent: 'echo', description: 'd' });
 
     expect(command).toMatchObject({ policy: 'read-only', defaultMode: 'execute' });
     expect(agents.effectivePolicy(command, 'ask')).toBe('read-only');

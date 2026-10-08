@@ -6,7 +6,7 @@ import { fakePlatform, runCommand } from '@choliba/core/testing';
 
 import { AgentModule } from '../../agent/agent.module';
 import type { CliRuntime } from '../../runtime/interfaces/runtime.interface';
-import { RuntimeModule } from '../../runtime/runtime.module';
+import { RuntimeModule } from '@choliba/core/nest';
 import { type FakeRuntime, fakeRuntime } from '../helpers/runtime';
 
 interface Ran {

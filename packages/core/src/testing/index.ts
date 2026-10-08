@@ -1,15 +1,9 @@
 import type { ModuleMetadata } from '@nestjs/common';
 import { CommandTestFactory } from 'nest-commander-testing';
 
-import { ExitStatus } from '../platform/exit-status';
-import type { GitRunner } from '../platform/git-run';
-import type {
-  Platform,
-  ProcessSpawner,
-  SignalSource,
-  WritableWithColumns,
-} from '../platform/interfaces/platform.interface';
-import { PlatformModule } from '../platform/platform.module';
+import type { GitRunner } from '../platform';
+import type { Platform, ProcessSpawner, SignalSource, WritableWithColumns } from '../platform';
+import { ExitStatus, PlatformModule } from '../platform/nest';
 
 /** A stdout/stderr that keeps what was written, for specs. */
 export class BufferWritable implements WritableWithColumns {

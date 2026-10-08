@@ -26,7 +26,7 @@ NestJS 11 + nest-commander, sem HTTP: cada pacote é uma biblioteca Nest (`@chol
 `@choliba/<pkg>/nest` com módulos, services e comandos) e `packages/choliba` é o app (skill `nestjs`).
 
 Skills de desenvolvimento do projeto em `.agents/skills/`: `add-workspace-package`, `quality-gates`, `coverage-ratchet`,
-`git-workflow`, `object-calisthenics`, `nestjs`, `cli-guidelines`; e `documentation`, que também é do agente
+`git-workflow`, `object-calisthenics`, `nestjs`, `code-standard`, `cli-guidelines`; e `documentation`, que também é do agente
 `docs-updater`, em `.choliba/skills/`. Quando usar cada uma: a `description` do `SKILL.md` dela; o padrão de cada uma e o que o confere: tabela "Padrões do
 projeto" do [`CONTRIBUTING.md`](CONTRIBUTING.md). Como o código é organizado: [`ARCHITECTURE.md`](ARCHITECTURE.md). Agentes, skills e MCPs
 que os agentes usam ficam em `.choliba/` (o layout de uma pasta de trabalho instalada), sem precisar de `CHOL_*_DIR` no

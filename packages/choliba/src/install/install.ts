@@ -4,7 +4,7 @@ import { basename, dirname, join, relative } from 'node:path';
 import { isValidAgentName, loadAgent, mcpConfig, skillDescription } from '@choliba/agents';
 
 import { fetchSource, type FetchedSource, type SourceDeps } from './install-source';
-import { AGENTS_SUBDIR, AGENT_FILE, CHOLIBA_DIR, MCPS_SUBDIR, SKILLS_SUBDIR, SKILL_FILE } from '@choliba/core/config';
+import { AGENTS_SUBDIR, AGENT_FILE, CHOLIBA_DIR, MCPS_SUBDIR, SKILLS_SUBDIR, SKILL_FILE } from '@choliba/core';
 
 /** What `choliba install` installs, named as the report shows it. */
 export type ItemKind = 'agente' | 'skill' | 'MCP';

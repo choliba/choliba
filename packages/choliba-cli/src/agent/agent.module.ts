@@ -2,7 +2,8 @@ import { Module } from '@nestjs/common';
 
 import { CliModule, ConfigModule } from '@choliba/core/nest';
 
-import { AgentCommand, AgentNewCommand } from './agent.command';
+import { AgentNewCommand } from './agent-new.command';
+import { AgentCommand } from './agent.command';
 import { AgentService } from './agent.service';
 
 @Module({

@@ -11,7 +11,7 @@ import {
   resolveSkillsDir,
 } from '@choliba/agents';
 import { listProjectNames, loadProjectSettings, resolveLocations, retiredCriteria } from '@choliba/projects';
-import { ENV_FILE } from '@choliba/core/config';
+import { ENV_FILE } from '@choliba/core';
 
 type Config = Readonly<Record<string, string | undefined>>;
 

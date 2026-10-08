@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { fakePlatform, runCommand } from '@choliba/core/testing';
 
-import { RuntimeModule } from '../../runtime/runtime.module';
+import { RuntimeModule } from '@choliba/core/nest';
 import { SetupModule } from '../../setup/setup.module';
 import { fakeRuntime, withFolder, withWorkspace, type FakeRuntime } from '../helpers/runtime';
 

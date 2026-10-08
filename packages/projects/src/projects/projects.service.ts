@@ -1,15 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import type { CommandSpec } from '@choliba/core/cli';
+import type { CommandSpec } from '@choliba/core';
 
-import { LocationsService } from '../locations/locations.service';
-import { REPORT_FOLDER } from '../locations/results';
-import { listTicketKeys, resolveReportFolder } from '../tickets/ticket';
+import { LocationsService } from '../locations/nest';
+import { listProjectNames, projectDir, REPORT_FOLDER } from '../paths';
+import { listTicketKeys, resolveReportFolder } from '../tickets';
 import type { CreateProjectDto } from './dto/create-project.dto';
-import { createProject, listProjectNames, projectDir, readProjectConfig, type CreatedProject } from './project';
+import { createProject, readProjectConfig, type CreatedProject } from './project';
+import { loadProjectSettings, type ProjectSettings } from './project-settings';
 import { PROJECT_TEMPLATES_DIR } from './projects.constants';
-import { projectsCliSpec } from './projects.help';
-import { loadProjectSettings, type ProjectSettings } from './settings';
+import { projectsCliSpec } from './projects-spec';
 
 export interface ProjectSummary {
   readonly name: string;

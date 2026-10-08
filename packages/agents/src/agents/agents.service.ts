@@ -1,8 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import type { CommandSpec } from '@choliba/core/cli';
-import { ConfigService, ThemeService } from '@choliba/core/nest';
 import {
+  type CommandSpec,
   CLOCK,
   GIT,
   SIGNALS,
@@ -10,19 +9,23 @@ import {
   STDOUT,
   WHICH,
   type Clock,
+  type RootFallback,
   type GitRunner,
   type SignalSource,
   type Which,
   type Writable,
-} from '@choliba/core/platform';
+} from '@choliba/core';
+import { ConfigService, RegisterRootFallback, ThemeService } from '@choliba/core/nest';
 import { ProcessRunnerService } from '@choliba/terminal';
 
-import { ProviderRegistryService } from '../providers/provider-registry.service';
-import { agentsHelpSpec, runAgentsCli, type RunAgentsCliDeps } from '../runs/run-agents';
+import { ProviderRegistryService } from '../providers/nest';
+import { agentsHelpSpec, runAgentsCli } from './runs/run-agents';
+import type { RunAgentsCliDeps } from './runs/run-context';
 
 /** `choliba agents` (and `choliba <agent>`): the workspace's agents, run through a provider. */
+@RegisterRootFallback()
 @Injectable()
-export class AgentsService {
+export class AgentsService implements RootFallback {
   constructor(
     @Inject(ConfigService) private readonly config: ConfigService,
     @Inject(ProviderRegistryService) private readonly providers: ProviderRegistryService,
@@ -39,6 +42,11 @@ export class AgentsService {
   /** Runs the command line after `choliba agents`; resolves with the exit code. */
   run(argv: readonly string[]): Promise<number> {
     return runAgentsCli(argv, this.deps());
+  }
+
+  /** `choliba <agent> …`, a first word that is not a command: `choliba agents <agent> …`. */
+  runUnknown(argv: readonly string[]): Promise<number> {
+    return this.run(argv);
   }
 
   /** `--help` and completion: the agents on disk now, their flags and what their values complete to. */

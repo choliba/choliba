@@ -3,9 +3,8 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import readline from 'node:readline/promises';
 
-import type { Writable } from '@choliba/core/platform';
-import type { Theme } from '@choliba/core/theme';
-import { writeStderr, writeStdout } from '@choliba/terminal/output';
+import type { Writable, Theme } from '@choliba/core';
+import { writeStderr, writeStdout } from '@choliba/terminal';
 import {
   fullTicket,
   listProjectNames,
@@ -31,10 +30,10 @@ import {
 } from '@choliba/projects';
 
 import { fillTicketTests } from './fill-ticket-tests';
-import { checkGate, hasGate, takeGateFlags, type TicketGate } from './gate';
+import { checkGate, hasGate, takeGateFlags, type TicketGate } from './tests-gate';
 import { playwrightNodePath, WORKSPACE_ENV } from './playwright-env';
-import { parseTestsTarget, type TestsTarget } from './target';
-import { guardRetiredTicket, retiredOf } from './retired';
+import { parseTestsTarget, type TestsTarget } from './tests-target';
+import { guardRetiredTicket, retiredOf } from './tests-retired';
 import { fail } from './tests-error';
 import {
   expandTicketSelector,

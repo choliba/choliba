@@ -16,10 +16,10 @@ HTTP. The workspace (`packages/*`) stays: the Nest CLI "monorepo mode" (`nest-cl
 ## Where code goes
 
 - **One feature per folder** (as `cats/` in docs.nestjs.com/modules), the command in place of the controller:
-  `<feature>.module.ts`, `<feature>.service.ts`, `<feature>.command.ts`, `<feature>.help.ts` (the pt-BR
-  `CommandSpec`), `dto/<action>.dto.ts` (a class with a constructor, never `field!`), `interfaces/*.interface.ts`,
-  `<feature>.constants.ts` (injection tokens). The domain logic stays in plain functions next to them; the
-  service is thin and calls them.
+  `<feature>.module.ts`, `<feature>.service.ts`, one `<action>.command.ts` per command (its pt-BR `CommandSpec`
+  inside it), `dto/<action>.dto.ts` (a class with a constructor, never `field!`), `interfaces/*.interface.ts`,
+  `<feature>.constants.ts` (injection tokens). The domain logic stays in plain functions; the service is thin and
+  calls them. Names, layers and which folder is a module: the `code-standard` skill.
 - **Two entry points per package.** `@choliba/<pkg>` (and its subpaths) export plain functions and types only;
   `@choliba/<pkg>/nest` exports the modules, services and commands. The Playwright runner loads the first with
   its own Babel, which rejects parameter decorators; a spec walks its imports and fails on any decorator
@@ -47,8 +47,10 @@ HTTP. The workspace (`packages/*`) stays: the Nest CLI "monorepo mode" (`nest-cl
 3. The command: `@Command({ name, allowUnknownOptions: true, allowExcessArgs: true })`, `extends CliCommand`,
    every constructor parameter with `@Inject(...)` (`references/typescript-and-di.md`): help first, then the
    service, then `io.exit(code)` or `io.fail(messageOf(error))`.
-4. Its entry in `COMMANDS` (`packages/choliba/src/help/app.help.ts`) for `choliba --help` and completion, and
-   the module in `AppModule`. Check it does not shadow an agent name (`cli-guidelines`).
+4. Its help: the command is `@RegisterHelp()` and returns its `CommandEntry` from `helpEntries()` (name, the line
+   `--help` lists it with, group, spec); its own `--help` prints `entryHelp(entry)`. The root's help and completion
+   list it with no other change (`code-standard`). Its module goes in `AppModule`; check it does not shadow an agent
+   name (`cli-guidelines`).
 5. `bun run check`; after a tool config change, `bash .agents/skills/quality-gates/scripts/verify.sh`.
 
 ## Adding an agent provider

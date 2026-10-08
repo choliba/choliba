@@ -3,8 +3,8 @@ import { Test } from '@nestjs/testing';
 import { fakePlatform } from '@choliba/core/testing';
 
 import { AppModule } from '../app.module';
-import { CholibaCliRootCommand } from '../help/root.command';
-import { NewCommand } from '../new/new.command';
+import { AgentCommand } from '../agent/agent.command';
+import { NewCommand } from '../new/nest';
 import { fakeRuntime } from './helpers/runtime';
 
 describe('AppModule', () => {
@@ -13,7 +13,7 @@ describe('AppModule', () => {
       imports: [AppModule.forRoot(fakePlatform(), fakeRuntime())],
     }).compile();
 
-    expect(module.get(CholibaCliRootCommand)).toBeInstanceOf(CholibaCliRootCommand);
+    expect(module.get(AgentCommand)).toBeInstanceOf(AgentCommand);
     expect(module.get(NewCommand)).toBeInstanceOf(NewCommand);
     await module.close();
   });

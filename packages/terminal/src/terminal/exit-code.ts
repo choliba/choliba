@@ -1,6 +1,6 @@
 import { constants } from 'node:os';
 
-import type { SessionExitEvent } from './types';
+import type { SessionExitEvent } from './interfaces/terminal.interface';
 
 /**
  * Shell convention: a process killed by signal N reports 128 + N, so a caller can tell

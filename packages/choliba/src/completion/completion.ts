@@ -1,13 +1,13 @@
-import { FILES_MARKER } from '@choliba/core/cli';
+import { FILES_MARKER } from '@choliba/core';
 
 /**
- * Bash completion for `choliba …` and `bunx choliba …` (`choliba completion bash`). On each Tab it asks
+ * Bash completion for `choliba …` and `bunx choliba …`, which `choliba setup` installs. On each Tab it asks
  * the choliba of the workspace — the nearest `node_modules/.bin/choliba` up from the current folder —
  * what to suggest (`__complete`), so one script serves every workspace. Words are rebuilt from the
  * line without breaking at ":", and `FILES_MARKER` falls back to file names, as in the repository's
  * own completion.
  */
-export const COMPLETION_BASH = `# Autocomplete do choliba para \`choliba …\`, \`bunx choliba …\` e \`bun choliba …\` (gerado por \`choliba completion bash\`).
+export const COMPLETION_BASH = `# Autocomplete do choliba para \`choliba …\`, \`bunx choliba …\` e \`bun choliba …\` (gravado por \`choliba setup\`).
 
 _choliba_bin() {
     local dir="$PWD"

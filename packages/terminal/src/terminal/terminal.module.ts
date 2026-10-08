@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { ThemeModule } from '@choliba/core/nest';
-import { SPAWN, type ProcessSpawner } from '@choliba/core/platform';
+import { SPAWN, type ProcessSpawner } from '@choliba/core';
 
 import { ProcessRunnerService } from './process-runner.service';
 import { TerminalCommand } from './terminal.command';

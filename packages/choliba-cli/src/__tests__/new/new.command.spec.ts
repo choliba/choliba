@@ -4,7 +4,7 @@ import path from 'node:path';
 
 import { Test } from '@nestjs/testing';
 
-import { PlatformModule } from '@choliba/core/nest';
+import { PlatformModule, RuntimeModule } from '@choliba/core/nest';
 import { fakePlatform, runCommand } from '@choliba/core/testing';
 
 import { NewCommand } from '../../new/new.command';
@@ -12,7 +12,6 @@ import { NewCommand } from '../../new/new.command';
 import { NewModule } from '../../new/new.module';
 import { AGENTS_SOURCE, CHOLIBA_PACKAGE } from '../../new/new-options';
 import type { CliRuntime } from '../../runtime/interfaces/runtime.interface';
-import { RuntimeModule } from '../../runtime/runtime.module';
 import { type FakeRuntime, fakeRuntime } from '../helpers/runtime';
 
 interface Ran {

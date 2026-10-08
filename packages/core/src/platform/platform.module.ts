@@ -1,7 +1,7 @@
 import { Module, type DynamicModule } from '@nestjs/common';
 
 import type { Platform } from './interfaces/platform.interface';
-import { ExitStatus } from './exit-status';
+import { ExitStatus } from './exit-status.service';
 import { ARGV, CLOCK, CWD, ENV, GIT, NO_COLOR_FLAG, SIGNALS, SPAWN, STDERR, STDOUT, WHICH } from './platform.constants';
 
 const TOKENS = [ARGV, CWD, ENV, STDOUT, STDERR, CLOCK, SIGNALS, SPAWN, WHICH, GIT, NO_COLOR_FLAG] as const;

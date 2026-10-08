@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
-import { isAnsiColor } from '@choliba/core/theme';
+import { isAnsiColor, AGENT_FILE } from '@choliba/core';
 
 import type {
   AgentAfterSteps,
@@ -12,13 +12,12 @@ import type {
   AgentStep,
   McpDeclaration,
   SkillDeclaration,
-} from './interfaces/agent.interface';
-import type { ExecutionMode, PermissionPolicy } from './interfaces/command.interface';
+} from '../common';
+import type { ExecutionMode, PermissionPolicy } from '../common';
 import { validateAgentYamlV1 } from './agent-validation';
-import { type AgentPermissions, readAgentPermissions } from '../runs/permissions';
-import { checkStep, type StepPhase } from '../steps/actions';
-import { PROJECT_VARS, TICKET_VARS, varProblems } from '../runs/vars';
-import { AGENT_FILE } from '@choliba/core/config';
+import { type AgentPermissions, readAgentPermissions } from '../common';
+import { checkStep, type StepPhase } from './steps/step-actions';
+import { PROJECT_VARS, TICKET_VARS, varProblems } from '../common';
 
 export class AgentConfigError extends Error {}
 

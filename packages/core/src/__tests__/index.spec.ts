@@ -1,14 +1,8 @@
-import * as cli from '../cli';
-import * as config from '../config';
-import * as platform from '../platform';
+import * as core from '..';
 import * as nest from '../nest';
-import * as theme from '../theme';
 
 describe.each([
-  ['@choliba/core/cli', cli],
-  ['@choliba/core/config', config],
-  ['@choliba/core/platform', platform],
-  ['@choliba/core/theme', theme],
+  ['@choliba/core', core],
   ['@choliba/core/nest', nest],
 ])('%s', (_name, barrel) => {
   it('exports only defined values', () => {

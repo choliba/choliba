@@ -1,4 +1,5 @@
-import { AGENTS_SOURCE, CHOLIBA_PACKAGE, parseNewOptions, UsageError } from '../../new/new-options';
+import { AGENTS_SOURCE, CHOLIBA_PACKAGE, parseNewOptions } from '../../new/new-options';
+import { UsageError } from '../../common/errors';
 
 describe('parseNewOptions', () => {
   it('reads new with its folder and options, in both --flag value and --flag=value', () => {

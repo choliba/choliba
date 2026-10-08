@@ -1,4 +1,4 @@
-import { UsageError } from '../new/new-options';
+import { UsageError } from '../common';
 
 /** What a new agent may do on its project, from nothing to changing the application and running its tests. */
 export const ACCESS = ['nada', 'leitura', 'escrita', 'testes'] as const;
