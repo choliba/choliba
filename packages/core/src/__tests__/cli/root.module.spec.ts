@@ -2,7 +2,7 @@ import { Injectable, Module } from '@nestjs/common';
 import { Command } from 'nest-commander';
 
 import type { CommandEntry, HelpContributor, RootFallback, RootOptions } from '../..';
-import { CliCommand, CliModule, RegisterHelp, RegisterRootFallback, RootModule } from '../../nest';
+import { CliCommand, CliModule, HelpRegistryService, RegisterHelp, RegisterRootFallback, RootModule } from '../../nest';
 import { fakePlatform, runCommand } from '../../testing';
 
 const ROOT: RootOptions = {
@@ -119,6 +119,24 @@ describe('RootModule', () => {
 
     expect(code).toBe(1);
     expect(err).toBe("comando desconhecido: revisor.\nRun 'demo --help' for usage.\n");
+  });
+
+  it('lists nothing when the help spec has no commands', async () => {
+    const platform = fakePlatform({ argv: ['__entries'] });
+    const code = await runCommand([RootModule.forRoot(ROOT)], platform, [
+      { provide: HelpRegistryService, useValue: { spec: () => ({ usage: 'demo', description: 'x' }) } },
+    ]);
+    expect(code).toBe(0);
+    expect(platform.stdout.text()).toBe('[]\n');
+  });
+
+  it('gives the listed commands as JSON, for another program to show', async () => {
+    const { out } = await demo(['__entries']);
+
+    expect(JSON.parse(out)).toEqual([
+      { name: 'build', description: 'Monta o projeto', group: 'Commands' },
+      { name: 'serve', description: 'Sobe o servidor', group: 'Commands' },
+    ]);
   });
 
   it('completes and describes from the registered commands', async () => {

@@ -2,15 +2,15 @@ import type { CommandSpec } from '@choliba/core';
 
 import { AGENTS, AGENTS_SOURCE, PROVIDERS } from './new-options';
 
-/** `choliba-cli new --help`. */
+/** `choliba new --help`. */
 export const NEW_HELP: CommandSpec = {
-  usage: 'choliba-cli new [PASTA] [OPTIONS]',
+  usage: 'choliba new [PASTA] [OPTIONS]',
   description:
     'Prepara uma pasta de trabalho do choliba: cria a pasta, instala o choliba, escolhe o provider dos agentes, ' +
     'instala os agentes do choliba e confere tudo com `choliba check`. O que não vier nas opções é perguntado.\n\n' +
     'Exemplos:\n' +
-    '  choliba-cli new minha-pasta\n' +
-    '  choliba-cli new minha-pasta --provider claude --agents product-owner,test-writer --no-input',
+    '  choliba new minha-pasta\n' +
+    '  choliba new minha-pasta --provider claude --agents product-owner,test-writer --no-input',
   flags: [
     {
       name: '--provider',

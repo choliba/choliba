@@ -1,13 +1,7 @@
-import type { CommandSpec, Suggestions } from '@choliba/core';
+import type { CommandSpec } from '@choliba/core';
 
-import { NONE, PROGRAM_NAME } from '../common';
-import {
-  listTicketTypes,
-  projectCompletions,
-  ticketSpecsEntry,
-  ticketsFolderEntry,
-  ticketTemplatesDir,
-} from '../tickets';
+import { PROGRAM_NAME } from '../common';
+import { projectCompletions, ticketSpecsEntry, ticketsFolderEntry } from '../tickets';
 
 /**
  * The whole CLI as one spec: `--help` and shell completion are built from it, and the project and ticket names are
@@ -17,13 +11,6 @@ import {
 export function projectsCliSpec(projectsDir: () => string): CommandSpec {
   const completions = projectCompletions(projectsDir);
   const { projectOnly, projectThenTicket } = completions;
-  /** `PROJECT` first, then a ticket `TYPE`, then nothing. */
-  const projectThenType = (previous: readonly string[]): Suggestions => {
-    if (previous.length === 0) {
-      return completions.projects();
-    }
-    return previous.length === 1 ? { kind: 'values', values: listTicketTypes(ticketTemplatesDir()) } : NONE;
-  };
 
   return {
     usage: `${PROGRAM_NAME} COMMAND [ARGS]`,
@@ -50,29 +37,6 @@ export function projectsCliSpec(projectsDir: () => string): CommandSpec {
         spec: {
           usage: `${PROGRAM_NAME} list-projects [OPTIONS]`,
           flags: [{ name: '--tickets', description: 'Mostra também os tickets de cada projeto' }],
-        },
-      },
-      {
-        name: 'create-ticket',
-        description: `Cria um ticket a partir do template do tipo (${listTicketTypes(ticketTemplatesDir()).join(', ')})`,
-        group: 'Commands',
-        spec: { usage: `${PROGRAM_NAME} create-ticket PROJECT TYPE`, positionals: projectThenType },
-      },
-      {
-        name: 'create-project',
-        description: 'Cria um projeto novo a partir do template',
-        group: 'Commands',
-        spec: {
-          usage: `${PROGRAM_NAME} create-project [PROJECT] --app-dir DIR [OPTIONS]`,
-          flags: [
-            {
-              name: '--app-dir',
-              description:
-                'Pasta com o código da aplicação (obrigatória): precisa existir; relativa ao diretório atual. Sem PROJECT, o projeto leva o nome dela; o README na raiz dela vira o description',
-              value: { name: 'dir', suggest: () => ({ kind: 'files' }) },
-            },
-            { name: '--base-url', description: 'URL base do projeto', value: { name: 'url' } },
-          ],
         },
       },
     ],

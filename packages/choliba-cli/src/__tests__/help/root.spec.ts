@@ -22,14 +22,16 @@ async function run(argv: readonly string[], packageDir = '/nowhere') {
   return { code, out: platform.stdout.text(), err: platform.stderr.text() };
 }
 
-describe('choliba-cli', () => {
+describe('choliba', () => {
   it('prints its help with no command, help, --help or -h', async () => {
     for (const argv of [[], ['help'], ['--help'], ['-h']]) {
       const { code, out } = await run(argv);
       expect(code).toBe(0);
-      expect(out).toContain('Usage:  choliba-cli COMMAND [ARGS]');
+      expect(out).toContain('Usage:  choliba COMMAND [ARGS]');
       expect(out).toContain('new');
-      expect(out).toContain('choliba-cli new minha-pasta');
+      expect(out).toContain('generate');
+      expect(out).toContain('add');
+      expect(out).toContain('choliba new minha-pasta');
     }
   });
 
@@ -46,10 +48,12 @@ describe('choliba-cli', () => {
     }
   });
 
-  it('refuses a command it does not know, saying where to read the usage', async () => {
-    const { code, err } = await run(['outro']);
+  it('outside a workspace, a command it does not have says to create one', async () => {
+    const { code, err } = await run(['agents']);
     expect(code).toBe(1);
-    expect(err).toBe("comando desconhecido: outro.\nRun 'choliba-cli --help' for usage.\n");
+    expect(err).toBe(
+      '/nowhere não está numa pasta de trabalho do choliba: crie uma com `choliba new` ou entre numa.\n',
+    );
   });
 });
 

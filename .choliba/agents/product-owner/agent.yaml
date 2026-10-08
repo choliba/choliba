@@ -187,7 +187,6 @@ permissions:
       - '${PROJECT_DIR}/tests/'
     execute:
       '${CHOL_ROOT}/':
-        - bunx choliba projects create-project
         - git
     tools:
       playwright-cli: [eval, run-code, route, unroute]
