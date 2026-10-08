@@ -17,8 +17,9 @@ import {
 import { ConfigService, ThemeService } from '@choliba/core/nest';
 import { ProcessRunnerService } from '@choliba/terminal';
 
-import { ProviderRegistryService } from '../providers/provider-registry.service';
-import { agentsHelpSpec, runAgentsCli, type RunAgentsCliDeps } from '../runs/run-agents';
+import { ProviderRegistryService } from '../providers/nest';
+import { agentsHelpSpec, runAgentsCli } from './runs/run-agents';
+import type { RunAgentsCliDeps } from './runs/run-context';
 
 /** `choliba agents` (and `choliba <agent>`): the workspace's agents, run through a provider. */
 @Injectable()

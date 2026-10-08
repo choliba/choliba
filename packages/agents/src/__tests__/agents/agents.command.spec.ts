@@ -8,7 +8,8 @@ import { complete, formatSuggestions } from '@choliba/core';
 import { PlatformModule } from '@choliba/core/nest';
 import { BufferWritable, fakePlatform, runCommand, type FakePlatform } from '@choliba/core/testing';
 
-import { AgentsModule, AgentsService } from '../../nest';
+import { AgentsModule } from '../../agents/agents.module';
+import { AgentsService } from '../../agents/agents.service';
 import { fakeSpawner, streamFromChunks } from '../helpers/fake-spawner';
 
 const FIXTURES = join(__dirname, '..', 'fixtures');

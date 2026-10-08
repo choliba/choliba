@@ -11,7 +11,7 @@ import {
   parseAgentYaml,
   policyFromPermissions,
 } from '../../agents/agent-loader';
-import { NO_PERMISSIONS } from '../../runs/permissions';
+import { NO_PERMISSIONS } from '../../common/agent-permissions';
 import { makeTmpDir } from '../helpers/tmp';
 
 const FIXTURES = join(__dirname, '..', 'fixtures/agents');

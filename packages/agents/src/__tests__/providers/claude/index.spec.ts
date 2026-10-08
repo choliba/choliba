@@ -1,8 +1,8 @@
-import type { AgentDefinition } from '../../../agents/interfaces/agent.interface';
-import type { ProviderRequest } from '../../../providers/interfaces/provider.interface';
+import type { AgentDefinition } from '../../../common/interfaces/agent.interface';
+import type { ProviderRequest } from '../../../common/interfaces/provider.interface';
 import { claudeProvider } from '../../helpers/providers';
-import { PromptTooLargeError, MAX_ARG_BYTES } from '../../../runs/prompt';
-import { NO_PERMISSIONS, readAgentPermissions } from '../../../runs/permissions';
+import { PromptTooLargeError, MAX_ARG_BYTES } from '../../../common/prompt';
+import { NO_PERMISSIONS, readAgentPermissions } from '../../../common/agent-permissions';
 import { NO_MODE_STEPS, fakeSections } from '../../helpers/agent';
 
 function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {

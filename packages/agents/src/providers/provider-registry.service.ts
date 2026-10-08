@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { DiscoveryService } from '@nestjs/core';
 
-import { AgentProvider } from './agent-provider';
-import { ProviderRegistry } from './provider-registry';
-import { RegisterAgentProvider } from './register-agent-provider';
+import { AgentProvider } from '../common';
+import { ProviderRegistry } from '../common';
+import { RegisterAgentProvider } from './register-agent-provider.decorator';
 
 /** The registry of the providers registered in the app (`@RegisterAgentProvider()`), found once. */
 @Injectable()

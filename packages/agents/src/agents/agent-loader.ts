@@ -12,12 +12,12 @@ import type {
   AgentStep,
   McpDeclaration,
   SkillDeclaration,
-} from './interfaces/agent.interface';
-import type { ExecutionMode, PermissionPolicy } from './interfaces/command.interface';
+} from '../common';
+import type { ExecutionMode, PermissionPolicy } from '../common';
 import { validateAgentYamlV1 } from './agent-validation';
-import { type AgentPermissions, readAgentPermissions } from '../runs/permissions';
-import { checkStep, type StepPhase } from '../steps/actions';
-import { PROJECT_VARS, TICKET_VARS, varProblems } from '../runs/vars';
+import { type AgentPermissions, readAgentPermissions } from '../common';
+import { checkStep, type StepPhase } from './steps/step-actions';
+import { PROJECT_VARS, TICKET_VARS, varProblems } from '../common';
 
 export class AgentConfigError extends Error {}
 

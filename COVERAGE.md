@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 08/10/2026 18:16:21 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 08/10/2026 18:30:44 — não editar manualmente.
 
 ## Resumo
 
@@ -18,74 +18,77 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 64 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 67 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
+🟢|[src/agents/agent-dirs.ts](packages/agents/src/agents/agent-dirs.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agent-loader.ts](packages/agents/src/agents/agent-loader.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/agent-print.ts](packages/agents/src/agents/agent-print.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/agent-skills.ts](packages/agents/src/agents/agent-skills.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agent-validation.ts](packages/agents/src/agents/agent-validation.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents.command.ts](packages/agents/src/agents/agents.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/agents.help.ts](packages/agents/src/agents/agents.help.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents.module.ts](packages/agents/src/agents/agents.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents.service.ts](packages/agents/src/agents/agents.service.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/commands/agent.ts](packages/agents/src/agents/commands/agent.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/commands/command-registry.ts](packages/agents/src/agents/commands/command-registry.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/commands/define-command.ts](packages/agents/src/agents/commands/define-command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/commands/index.ts](packages/agents/src/agents/commands/index.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/dto/run-agent.dto.ts](packages/agents/src/agents/dto/run-agent.dto.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/workspace-dirs.ts](packages/agents/src/agents/workspace-dirs.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/index.ts](packages/agents/src/agents/index.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/invocation-registry.ts](packages/agents/src/agents/invocation-registry.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/invocation.ts](packages/agents/src/agents/invocation.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/nest.ts](packages/agents/src/agents/nest.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/agent-detail.ts](packages/agents/src/agents/runs/agent-detail.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/agents-flags.ts](packages/agents/src/agents/runs/agents-flags.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/agents-spec.ts](packages/agents/src/agents/runs/agents-spec.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/delegation-guard.ts](packages/agents/src/agents/runs/delegation-guard.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/dry-run.ts](packages/agents/src/agents/runs/dry-run.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/event-render.ts](packages/agents/src/agents/runs/event-render.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/mcp-guard.ts](packages/agents/src/agents/runs/mcp-guard.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/plan-store.ts](packages/agents/src/agents/runs/plan-store.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/run-agent.ts](packages/agents/src/agents/runs/run-agent.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/run-agents.ts](packages/agents/src/agents/runs/run-agents.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/run-checks.ts](packages/agents/src/agents/runs/run-checks.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/run-context.ts](packages/agents/src/agents/runs/run-context.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/run-preparation.ts](packages/agents/src/agents/runs/run-preparation.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/spec-context.ts](packages/agents/src/agents/runs/spec-context.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/ticket-run.ts](packages/agents/src/agents/runs/ticket-run.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/tool-failure.ts](packages/agents/src/agents/runs/tool-failure.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/steps/git-state.ts](packages/agents/src/agents/steps/git-state.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/steps/git-working-tree-diff.ts](packages/agents/src/agents/steps/git-working-tree-diff.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/steps/index-diff.ts](packages/agents/src/agents/steps/index-diff.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/steps/step-actions.ts](packages/agents/src/agents/steps/step-actions.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/steps/step-add-files.ts](packages/agents/src/agents/steps/step-add-files.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/steps/step-constants.ts](packages/agents/src/agents/steps/step-constants.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/steps/step-registry.ts](packages/agents/src/agents/steps/step-registry.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/steps/working-tree-diff.ts](packages/agents/src/agents/steps/working-tree-diff.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/agent-mcps.ts](packages/agents/src/common/agent-mcps.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/agent-permissions.ts](packages/agents/src/common/agent-permissions.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/agent-provider.ts](packages/agents/src/common/agent-provider.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/agent-vars.ts](packages/agents/src/common/agent-vars.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/cursor-tool-calls.ts](packages/agents/src/common/cursor-tool-calls.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/index.ts](packages/agents/src/common/index.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/json.ts](packages/agents/src/common/json.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/mcp-use.ts](packages/agents/src/common/mcp-use.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/message-blocks.ts](packages/agents/src/common/message-blocks.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/prompt.ts](packages/agents/src/common/prompt.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/provider-registry.ts](packages/agents/src/common/provider-registry.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/run-project.ts](packages/agents/src/common/run-project.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/run-tools/delete-tool.ts](packages/agents/src/common/run-tools/delete-tool.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/run-tools/playwright-tool.ts](packages/agents/src/common/run-tools/playwright-tool.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/run-tools/run-tool-path.ts](packages/agents/src/common/run-tools/run-tool-path.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/run-tools/run-tools.ts](packages/agents/src/common/run-tools/run-tools.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/stream-json.ts](packages/agents/src/common/stream-json.ts)|100.00|100.00|100.00|100.00
 🟢|[src/index.ts](packages/agents/src/index.ts)|100.00|100.00|100.00|100.00
-🟢|[src/mcps/mcps.ts](packages/agents/src/mcps/mcps.ts)|100.00|100.00|100.00|100.00
 🟢|[src/nest.ts](packages/agents/src/nest.ts)|100.00|100.00|100.00|100.00
-🟢|[src/plans/plan-store.ts](packages/agents/src/plans/plan-store.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/agent-provider.ts](packages/agents/src/providers/agent-provider.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/claude/claude-agent.provider.ts](packages/agents/src/providers/claude/claude-agent.provider.ts)|100.00|100.00|100.00|100.00
+🟢|[src/providers/claude/claude-permissions.ts](packages/agents/src/providers/claude/claude-permissions.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/claude/claude-provider.module.ts](packages/agents/src/providers/claude/claude-provider.module.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/claude/permissions.ts](packages/agents/src/providers/claude/permissions.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/cursor/cli-json.ts](packages/agents/src/providers/cursor/cli-json.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/cursor/cursor-agent.provider.ts](packages/agents/src/providers/cursor/cursor-agent.provider.ts)|100.00|100.00|100.00|100.00
+🟢|[src/providers/cursor/cursor-cli-json.ts](packages/agents/src/providers/cursor/cursor-cli-json.ts)|100.00|100.00|100.00|100.00
+🟢|[src/providers/cursor/cursor-permissions.ts](packages/agents/src/providers/cursor/cursor-permissions.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/cursor/cursor-provider.module.ts](packages/agents/src/providers/cursor/cursor-provider.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/cursor/cursor-state.ts](packages/agents/src/providers/cursor/cursor-state.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/cursor/permissions.ts](packages/agents/src/providers/cursor/permissions.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/cursor/tool-calls.ts](packages/agents/src/providers/cursor/tool-calls.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/mcp-use.ts](packages/agents/src/providers/mcp-use.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/message-blocks.ts](packages/agents/src/providers/message-blocks.ts)|100.00|100.00|100.00|100.00
+🟢|[src/providers/nest.ts](packages/agents/src/providers/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/provider-registry.service.ts](packages/agents/src/providers/provider-registry.service.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/provider-registry.ts](packages/agents/src/providers/provider-registry.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/providers.module.ts](packages/agents/src/providers/providers.module.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/register-agent-provider.ts](packages/agents/src/providers/register-agent-provider.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/stream-json.ts](packages/agents/src/providers/stream-json.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/agent-detail.ts](packages/agents/src/runs/agent-detail.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/delegation-guard.ts](packages/agents/src/runs/delegation-guard.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/dry-run.ts](packages/agents/src/runs/dry-run.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/mcp-guard.ts](packages/agents/src/runs/mcp-guard.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/permissions.ts](packages/agents/src/runs/permissions.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/prompt.ts](packages/agents/src/runs/prompt.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/render.ts](packages/agents/src/runs/render.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/run-agent.ts](packages/agents/src/runs/run-agent.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/run-agents.ts](packages/agents/src/runs/run-agents.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/run-checks.ts](packages/agents/src/runs/run-checks.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/run-context.ts](packages/agents/src/runs/run-context.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/run-preparation.ts](packages/agents/src/runs/run-preparation.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/run-project.ts](packages/agents/src/runs/run-project.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/run-tools/delete.tool.ts](packages/agents/src/runs/run-tools/delete.tool.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/run-tools/playwright.tool.ts](packages/agents/src/runs/run-tools/playwright.tool.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/run-tools/run-tool-path.ts](packages/agents/src/runs/run-tools/run-tool-path.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/run-tools/run-tools.ts](packages/agents/src/runs/run-tools/run-tools.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/spec-context.ts](packages/agents/src/runs/spec-context.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/ticket-run.ts](packages/agents/src/runs/ticket-run.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/tool-failure.ts](packages/agents/src/runs/tool-failure.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runs/vars.ts](packages/agents/src/runs/vars.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shared/json.ts](packages/agents/src/shared/json.ts)|100.00|100.00|100.00|100.00
-🟢|[src/skills/skills.ts](packages/agents/src/skills/skills.ts)|100.00|100.00|100.00|100.00
-🟢|[src/steps/actions.ts](packages/agents/src/steps/actions.ts)|100.00|100.00|100.00|100.00
-🟢|[src/steps/add-files.ts](packages/agents/src/steps/add-files.ts)|100.00|100.00|100.00|100.00
-🟢|[src/steps/constants.ts](packages/agents/src/steps/constants.ts)|100.00|100.00|100.00|100.00
-🟢|[src/steps/git-state.ts](packages/agents/src/steps/git-state.ts)|100.00|100.00|100.00|100.00
-🟢|[src/steps/git-working-tree-diff.ts](packages/agents/src/steps/git-working-tree-diff.ts)|100.00|100.00|100.00|100.00
-🟢|[src/steps/index-diff.ts](packages/agents/src/steps/index-diff.ts)|100.00|100.00|100.00|100.00
-🟢|[src/steps/registry.ts](packages/agents/src/steps/registry.ts)|100.00|100.00|100.00|100.00
-🟢|[src/steps/working-tree-diff.ts](packages/agents/src/steps/working-tree-diff.ts)|100.00|100.00|100.00|100.00
+🟢|[src/providers/register-agent-provider.decorator.ts](packages/agents/src/providers/register-agent-provider.decorator.ts)|100.00|100.00|100.00|100.00
 
 </details>
 

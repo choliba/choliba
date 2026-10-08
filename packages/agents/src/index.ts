@@ -1,15 +1,11 @@
-export type { AgentDefinition } from './agents/interfaces/agent.interface';
-export { AgentConfigError, isValidAgentName, listAgents, loadAgent, parseAgentYaml } from './agents/agent-loader';
-export type {
-  CommandDefinition,
-  ExecutionMode,
-  PermissionPolicy,
-  PromptInput,
-} from './agents/interfaces/command.interface';
-export { resolveCommand } from './agents/commands/command-registry';
-export { commandFromAgent, defineCommand, effectivePolicy, implicitCommand } from './agents/commands/define-command';
-export type { CommandSpec } from './agents/commands/define-command';
-export type { AgentEvent } from './runs/interfaces/event.interface';
+export type { AgentDefinition } from './common';
+export { AgentConfigError, isValidAgentName, listAgents, loadAgent, parseAgentYaml } from './agents';
+export type { AgentInvocation } from './agents';
+export type { ExecutionMode, PermissionPolicy, PromptInput } from './common';
+export { resolveInvocation } from './agents';
+export { invocationFromAgent, defineInvocation, effectivePolicy, implicitInvocation } from './agents';
+export type { InvocationSpec } from './agents';
+export type { AgentEvent } from './common';
 export {
   MAX_ARG_BYTES,
   PromptTooLargeError,
@@ -17,23 +13,18 @@ export {
   buildUserPrompt,
   modeInstruction,
   wrapInstructions,
-} from './runs/prompt';
-export { readPlan, resolvePlanPath, slugify, writePlan } from './plans/plan-store';
-export type { WritePlanOptions } from './plans/plan-store';
-export { AgentProvider } from './providers/agent-provider';
-export type { ProviderRequest, StreamParser } from './providers/interfaces/provider.interface';
-export {
-  AUTO,
-  InvalidProviderPreferenceError,
-  ProviderNotFoundError,
-  ProviderRegistry,
-} from './providers/provider-registry';
-export type { ResolvedProvider } from './providers/provider-registry';
-export { renderEvent } from './runs/render';
-export type { RenderOptions } from './runs/render';
-export { runAgent } from './runs/run-agent';
-export type { RunAgentDeps, RunAgentRequest } from './runs/run-agent';
-export { runAgentsCli, type RunAgentsCliDeps } from './runs/run-agents';
-export { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from './agents/workspace-dirs';
-export { resolveSkills, skillDescription } from './skills/skills';
-export { mcpConfig, resolveMcps } from './mcps/mcps';
+} from './common';
+export { readPlan, resolvePlanPath, slugify, writePlan } from './agents';
+export type { WritePlanOptions } from './agents';
+export { AgentProvider } from './common';
+export type { ProviderRequest, StreamParser } from './common';
+export { AUTO, InvalidProviderPreferenceError, ProviderNotFoundError, ProviderRegistry } from './common';
+export type { ResolvedProvider } from './common';
+export { renderEvent } from './agents';
+export type { RenderOptions } from './agents';
+export { runAgent } from './agents';
+export type { RunAgentDeps, RunAgentRequest } from './agents';
+export { runAgentsCli, type RunAgentsCliDeps } from './agents';
+export { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from './agents';
+export { resolveSkills, skillDescription } from './agents';
+export { mcpConfig, resolveMcps } from './common';
