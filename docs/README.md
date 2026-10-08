@@ -1,5 +1,8 @@
 # Documentação do choliba
 
+> O índice da documentação do choliba, organizado pelo que você precisa: começar do zero, fazer uma tarefa,
+> consultar um detalhe ou entender como funciona.
+
 Organizada pelo que você precisa agora:
 
 | Você quer...                     | Leia                                                                                                                                                                                                                                          |

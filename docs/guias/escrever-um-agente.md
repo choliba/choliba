@@ -1,5 +1,8 @@
 # Escrevendo um agente
 
+> Como escrever um agente: o `agent.yaml` declara identidade, modelos, skills, MCPs, permissões, modos, passos e o
+> texto que o modelo recebe.
+
 Um agente é uma pasta `.choliba/agents/<id>/` com um arquivo só, o `agent.yaml`. Ele declara tudo: o que o choliba lê e
 aplica (identidade, modelos, skills, MCPs, permissões, modos, passos) e o texto que o modelo recebe. O choliba monta
 o prompt a partir dele, e só entra no prompt o que o agente declara: uma skill ou um MCP que sai do `agent.yaml`

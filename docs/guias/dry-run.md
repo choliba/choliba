@@ -1,5 +1,8 @@
 # `--dry-run`
 
+> Com `--dry-run`, o choliba mostra na ordem o que um comando faria, sem executar nada: nenhum step, nenhum ticket,
+> nenhum provider.
+
 `--dry-run` mostra, na ordem, o que o comando faria sem ele, e **não executa nada**: nenhum step, nenhum ticket,
 nenhuma pasta de execução, nenhum provider. Vale em qualquer modo. Ele só lê o que precisa para montar a lista (o
 `agent.yaml`, as skills, os MCPs, o projeto e o ticket), então um problema que faria a execução falhar antes do

@@ -1,4 +1,21 @@
-import { pageDescription, pageUrl, shareTags, SITE_URL } from '../libs/docs-share';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
+import { description as siteDescription } from '../../docs/.vitepress/home';
+import {
+  checkDescription,
+  DESCRIPTION_MAX,
+  DESCRIPTION_MIN,
+  pageDescription,
+  pageUrl,
+  publishedTime,
+  robotsTxt,
+  shareTags,
+  SITE_URL,
+} from '../libs/docs-share';
+import { readDocPages } from '../libs/docs-sidebar';
+
+const DOCS = path.join(__dirname, '..', '..', 'docs');
 
 describe('pageUrl', () => {
   it('serves a page without .md, an index as its folder', () => {
@@ -10,60 +27,85 @@ describe('pageUrl', () => {
 });
 
 describe('pageDescription', () => {
-  it('takes the first paragraph as plain text: links as their text, no code or emphasis marks', () => {
-    const page = '# Título\n\nUm agente é uma pasta `.choliba/agents/<id>/` com o **[`agent.yaml`](a.md)**.\n';
-    expect(pageDescription(page)).toBe('Um agente é uma pasta .choliba/agents/<id>/ com o agent.yaml.');
+  it('is the quote right under the title, as plain text, its lines joined', () => {
+    const page =
+      '# Título\n\n> Um agente é uma pasta com o **[`agent.yaml`](a.md)**,\n> lido pelo choliba.\n\nTexto.\n';
+    expect(pageDescription(page)).toBe('Um agente é uma pasta com o agent.yaml, lido pelo choliba.');
   });
 
-  it('skips the frontmatter, headings, tables, lists, quotes and code to reach the prose', () => {
-    const page = [
-      '---\ntitle: x\n---',
-      '# Título',
-      '## Seção',
-      '| a | b |\n| - | - |',
-      '- item',
-      '1. passo',
-      '> nota',
-      '```\ncódigo\n\nmais\n```',
-      'O texto\nem duas linhas.',
-    ].join('\n\n');
-    expect(pageDescription(page)).toBe('O texto em duas linhas.');
+  it('is undefined when the block under the title is not a quote, even with a quote further down', () => {
+    expect(pageDescription('# Título\n\nTexto.\n\n> Uma citação no meio.\n')).toBeUndefined();
+    expect(pageDescription('# Título\n\n## Seção\n\n> Citação.\n')).toBeUndefined();
+    expect(pageDescription('# Título\n\n> Meia citação\ne meio parágrafo.\n')).toBeUndefined();
+  });
+});
+
+describe('checkDescription', () => {
+  const sized = (length: number): string => 'a'.repeat(length);
+
+  it('gives back a description from DESCRIPTION_MIN to DESCRIPTION_MAX characters', () => {
+    expect(checkDescription('x.md', sized(DESCRIPTION_MIN))).toBe(sized(DESCRIPTION_MIN));
+    expect(checkDescription('x.md', sized(DESCRIPTION_MAX))).toBe(sized(DESCRIPTION_MAX));
   });
 
-  it('keeps the whole sentences that fit in 160 characters, a dot inside a word not ending one', () => {
-    const second = 'Segunda frase que não cabe mais '.repeat(6);
-    const page = `# T\n\nO agent.yaml declara tudo. ${second}.\n`;
-    expect(pageDescription(page)).toBe('O agent.yaml declara tudo.');
-  });
-
-  it('cuts a first sentence longer than 160 characters at a word, with an ellipsis', () => {
-    const description = pageDescription(`# T\n\n${'palavra, '.repeat(30)}fim.\n`) ?? '';
-    expect(description).toMatch(/^palavra, .*palavra…$/);
-    expect(description.length).toBeLessThanOrEqual(160);
-  });
-
-  it('drops a last sentence that introduces a list, and ends with a dot one that is all there is', () => {
-    expect(pageDescription('# T\n\nO choliba-cli ajuda. Ele:\n\n- cria\n')).toBe('O choliba-cli ajuda.');
-    expect(pageDescription('# T\n\nO choliba restringe o que cada um alcança:\n\n- a\n')).toBe(
-      'O choliba restringe o que cada um alcança.',
+  it('names the page when the quote is missing, too short or too long', () => {
+    expect(() => checkDescription('guias/x.md', undefined)).toThrow('guias/x.md: falta a descrição');
+    expect(() => checkDescription('x.md', sized(DESCRIPTION_MIN - 1))).toThrow('x.md: a descrição tem 99 caracteres');
+    expect(() => checkDescription('x.md', sized(DESCRIPTION_MAX + 1))).toThrow(
+      'tem 161 caracteres, e deve ter de 100 a 160',
     );
   });
+});
 
-  it('is undefined for a page with no paragraph, such as the home', () => {
-    expect(pageDescription('---\n{ "layout": "home" }\n---\n')).toBeUndefined();
+describe('the pages of docs/', () => {
+  const pages = readDocPages(DOCS).filter((page) => page.file !== 'index.md');
+
+  it.each(pages.map((page) => page.file))('%s opens with a description of 100 to 160 characters', (file) => {
+    const source = readFileSync(path.join(DOCS, file), 'utf8');
+    expect(() => checkDescription(file, pageDescription(source))).not.toThrow();
+  });
+
+  it('gives the home, which has no quote, a site description of the same size', () => {
+    expect(() => checkDescription('home', siteDescription)).not.toThrow();
+  });
+
+  it('have a title each, unique and of at most 60 characters', () => {
+    const titles = pages.map((page) => page.title.replaceAll('`', ''));
+    expect(pages.every((page) => page.title !== page.file)).toBe(true);
+    expect(new Set(titles).size).toBe(titles.length);
+    expect(titles.filter((title) => title.length > 60)).toEqual([]);
+  });
+});
+
+describe('publishedTime', () => {
+  it('writes the date in ISO 8601, in UTC and to the second', () => {
+    expect(publishedTime(new Date('2026-10-08T13:28:36.789-03:00'))).toBe('2026-10-08T16:28:36Z');
+    expect(publishedTime(new Date())).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/);
+  });
+});
+
+describe('robotsTxt', () => {
+  it('lets every crawler read everything and announces the sitemap', () => {
+    expect(robotsTxt(SITE_URL)).toBe(`User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`);
   });
 });
 
 describe('shareTags', () => {
-  const page = { siteName: 'choliba', title: 'Dry run', description: 'O que faria.', url: `${SITE_URL}/guias/dry-run` };
+  const page = {
+    siteName: 'choliba',
+    title: 'Dry run',
+    description: 'O que faria.',
+    url: `${SITE_URL}/guias/dry-run`,
+    published: '2026-10-08T16:28:36Z',
+  };
 
-  it('gives the Open Graph tags as property, with the absolute image, its size, type and alt', () => {
+  it('gives the Open Graph tags as property: an article with its date and author, the absolute image, its size, type and alt', () => {
     const tags = shareTags(page);
     const properties = new Map(
       tags.flatMap(([, attrs]) => (attrs['property'] === undefined ? [] : [[attrs['property'], attrs['content']]])),
     );
     expect(Object.fromEntries(properties)).toEqual({
-      'og:type': 'website',
+      'og:type': 'article',
       'og:site_name': 'choliba',
       'og:locale': 'pt_BR',
       'og:title': 'Dry run',
@@ -74,6 +116,8 @@ describe('shareTags', () => {
       'og:image:height': '630',
       'og:image:type': 'image/png',
       'og:image:alt': expect.stringContaining('coruja') as string,
+      'article:published_time': '2026-10-08T16:28:36Z',
+      'article:author': 'choliba',
     });
   });
 
@@ -81,5 +125,6 @@ describe('shareTags', () => {
     const tags = shareTags(page);
     expect(tags).toContainEqual(['meta', { name: 'twitter:card', content: 'summary_large_image' }]);
     expect(tags).toContainEqual(['link', { rel: 'canonical', href: page.url }]);
+    expect(tags).toContainEqual(['meta', { name: 'author', content: 'choliba' }]);
   });
 });

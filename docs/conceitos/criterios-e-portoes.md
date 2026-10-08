@@ -1,5 +1,8 @@
 # Critérios de aceite e portões
 
+> Como os critérios de aceite em Gherkin viram testes E2E, os portões red e green que garantem o TDD e o que fazer
+> quando um ticket substitui outro.
+
 ## Critérios de aceite
 
 Cada critério do ticket (`criterios[]`) tem um `id` (`CA-01`, `CA-02`…) e uma `descricao` em Gherkin: uma lista de

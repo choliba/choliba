@@ -1,5 +1,8 @@
 # A pasta de trabalho
 
+> A pasta de trabalho é onde o choliba roda: a que depende do pacote `choliba`, com o `.env`, os agentes, as skills
+> e os MCPs dos comandos.
+
 `choliba` roda sempre numa **pasta de trabalho**: a pasta, subindo a partir de onde o comando é chamado, cujo
 `package.json` depende de `choliba` (é o que `bun add choliba` cria; o Bun também procura o `package.json`
 subindo de pasta, por isso a [instalação](../primeiros-passos.md#instalação) começa criando um na pasta nova). É
