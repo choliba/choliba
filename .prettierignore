@@ -10,3 +10,5 @@ bun.lock
 .playwright-cli
 docs/.vitepress/cache
 docs/.vitepress/dist
+# Verificação do Google Search Console: o arquivo fica idêntico ao que o Google gera (sem quebra de linha no fim)
+docs/public/google*.html
