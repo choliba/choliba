@@ -1,8 +1,19 @@
 import type { CommandIo } from '@choliba/core/nest';
-import { messageOf, type CommandSpec } from '@choliba/core';
+import { messageOf, type CommandSpec, type Suggestions } from '@choliba/core';
 
-import { UsageError } from '../shared/errors';
-import { commandHelp, PROGRAM_NAME } from './projects.help';
+import { UsageError } from './errors';
+
+/** The CLI `choliba projects`, whose commands the `projects` and `tickets` modules share. */
+export const PROGRAM_NAME = 'choliba projects';
+
+/** No suggestion. */
+export const NONE: Suggestions = { kind: 'values', values: [] };
+
+/** The help of one command of `spec`, described by the line `--help` lists it with. */
+export function commandHelp(spec: CommandSpec, name: string): CommandSpec {
+  const entry = spec.commands?.().find((candidate) => candidate.name === name);
+  return entry === undefined ? spec : { ...entry.spec, description: entry.description };
+}
 
 /**
  * The part every `choliba projects <name>` shares: its arguments as typed, `--help` from the spec, a usage

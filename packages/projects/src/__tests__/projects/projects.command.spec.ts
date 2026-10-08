@@ -450,16 +450,17 @@ describe('ProjectsService.helpSpec — completion and description', () => {
       expect(completions(service, ['create-project', 'novo', '--app-dir', ''])).toBe(FILES_MARKER);
     }));
 
-  it('is the same spec from the tickets side, reading the same projects', () =>
+  it('completes the ticket commands too, as they belong to the same CLI', () =>
     withWorkspace(async ({ root, projectsDir }) => {
       writeProject(projectsDir, 'demo');
       const moduleRef = await Test.createTestingModule({
         imports: [PlatformModule.forRoot(fakePlatform({ cwd: root })), ProjectsModule],
       }).compile();
 
-      expect(formatSuggestions(complete(moduleRef.get(TicketsService).helpSpec(), ['tickets-folder', '']))).toBe(
+      expect(formatSuggestions(complete(moduleRef.get(ProjectsService).helpSpec(), ['tickets-folder', '']))).toBe(
         'demo',
       );
+      expect(formatSuggestions(complete(moduleRef.get(TicketsService).helpSpec(), ['ticket-specs', '']))).toBe('demo');
     }));
 
   it('describes the CLI or the command the words select', () =>

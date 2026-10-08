@@ -1,5 +1,4 @@
-import { ProjectsError } from '../shared/errors';
-import { readJsonFile } from '../shared/json-file';
+import { ProjectsError, readJsonFile } from '../common';
 import { fullTicket, listTicketSuffixes, ticketFilePath, ticketsFolderPath } from './ticket';
 
 /** A criterion of one ticket that a later ticket replaces (`substitui`): its tests no longer run with the project. */

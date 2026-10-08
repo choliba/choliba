@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { answers, launchApp } from '../../app/launch';
+import { answers, launchApp } from '../../projects/project-app-launch';
 
 const wait = (ms: number): Promise<void> =>
   new Promise((resolve) => {

@@ -1,4 +1,4 @@
-import { readJsonFile } from '../shared/json-file';
+import { readJsonFile } from '../common';
 
 /** The steps of a criterion, in the order they must first appear; `E` and `Mas` continue the one before. */
 const MAIN_KEYWORDS = ['Dado', 'Quando', 'Então'] as const;

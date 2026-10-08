@@ -2,7 +2,12 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { formatRetired, fullyRetiredTickets, retiredCriteria, retiredTestPatterns } from '../../tickets/superseded';
+import {
+  formatRetired,
+  fullyRetiredTickets,
+  retiredCriteria,
+  retiredTestPatterns,
+} from '../../tickets/ticket-superseded';
 
 /** A project `demo` with the given tickets (`<suffix>.json` → its JSON). */
 function withTickets(tickets: Record<string, unknown>, run: (projectsDir: string, ticketsDir: string) => void): void {

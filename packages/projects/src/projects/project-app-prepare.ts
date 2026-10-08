@@ -1,6 +1,6 @@
-import { configJsonPath } from '../projects/project';
-import type { ProjectSettings } from '../projects/settings';
-import { ProjectsError } from '../shared/errors';
+import { configJsonPath } from '../paths';
+import type { ProjectSettings } from './project-settings';
+import { ProjectsError } from '../common';
 
 /** Set for the runs of a batch once their project's application was prepared, so it is prepared only once. */
 export const APP_PREPARED_ENV = 'CHOL_APP_PREPARED';

@@ -1,10 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { configJsonPath } from '../projects/project';
-import type { ProjectSettings } from '../projects/settings';
-import { answers, launchApp, type LaunchedApp } from './launch';
-import { AppError, prepareApp, type SetupSpawn } from './prepare-app';
+import { configJsonPath } from '../paths';
+import type { ProjectSettings } from './project-settings';
+import { answers, launchApp, type LaunchedApp } from './project-app-launch';
+import { AppError, prepareApp, type SetupSpawn } from './project-app-prepare';
 
 /** The application of a run: `stop` stops it when choliba started it, and does nothing otherwise. */
 export interface RunningApp {

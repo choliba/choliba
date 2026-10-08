@@ -2,11 +2,11 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { ensureApp, type EnsureAppDeps } from '../../app/ensure-app';
-import { answers } from '../../app/launch';
-import type { LaunchedApp } from '../../app/launch';
-import { AppError } from '../../app/prepare-app';
-import type { ProjectSettings } from '../../projects/settings';
+import { ensureApp, type EnsureAppDeps } from '../../projects/project-app-ensure';
+import { answers } from '../../projects/project-app-launch';
+import type { LaunchedApp } from '../../projects/project-app-launch';
+import { AppError } from '../../projects/project-app-prepare';
+import type { ProjectSettings } from '../../projects/project-settings';
 
 function settingsWith(environment: Partial<ProjectSettings['environment']> = {}): ProjectSettings {
   const env = { nome: 'development', baseURL: 'http://localhost:3417', appDir: '/code/app', ...environment };

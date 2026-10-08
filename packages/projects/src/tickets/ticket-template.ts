@@ -3,9 +3,8 @@ import path from 'node:path';
 
 import { findResource } from '@choliba/core';
 
-import { ProjectsError } from '../shared/errors';
-import { readJsonFile } from '../shared/json-file';
-import { PLACEHOLDER_VALUE } from '../projects/settings';
+import { ProjectsError, readJsonFile } from '../common';
+import { PLACEHOLDER_VALUE } from '../common';
 import { fullTicket, listTicketSuffixes, resolveTicketsFolder, ticketFilePath } from './ticket';
 
 const TEMPLATE_EXTENSION = '.json';

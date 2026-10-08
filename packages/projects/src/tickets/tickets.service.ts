@@ -2,12 +2,10 @@ import { Inject, Injectable } from '@nestjs/common';
 
 import type { CommandSpec } from '@choliba/core';
 
-import { LocationsService } from '../locations/locations.service';
-import { projectsCliSpec } from '../projects/projects.help';
-import { loadProjectSettings } from '../projects/settings';
-import type { CreateTicketDto } from './dto/create-ticket.dto';
+import { LocationsService } from '../locations/nest';
 import { resolveTicketSpecFiles, resolveTicketsFolder } from './ticket';
 import { createTicket, ticketTemplatesDir, type NewTicket } from './ticket-template';
+import { ticketsCliSpec } from './tickets-spec';
 
 /** The tickets of a project: where they are, their specs, and new ones from a type's template. */
 @Injectable()
@@ -22,17 +20,13 @@ export class TicketsService {
     return resolveTicketSpecFiles(this.locations.projectsDir(), project, ticket);
   }
 
-  /** A ticket from the template of `dto.type`, in the active environment of a ready project. */
-  create(dto: CreateTicketDto): NewTicket {
-    const projectsDir = this.locations.projectsDir();
-    const settings = loadProjectSettings(projectsDir, dto.project);
-    return createTicket(projectsDir, dto.project, dto.type, ticketTemplatesDir(), {
-      environment: settings.environment.nome,
-    });
+  /** A ticket from the template of `type`, in `environment` of `project` (the caller knows which one is active). */
+  create(project: string, type: string, environment: string): NewTicket {
+    return createTicket(this.locations.projectsDir(), project, type, ticketTemplatesDir(), { environment });
   }
 
-  /** `--help` and completion of `choliba projects`, which these commands belong to. */
+  /** `--help` and completion of the `choliba projects` commands about tickets alone. */
   helpSpec(): CommandSpec {
-    return projectsCliSpec(() => this.locations.projectsDir());
+    return ticketsCliSpec(() => this.locations.projectsDir());
   }
 }

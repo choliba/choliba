@@ -1,4 +1,4 @@
-import { UsageError } from '../../shared/errors';
+import { UsageError } from '../../common';
 
 /** `create-ticket PROJECT TYPE`, validated. */
 export class CreateTicketDto {

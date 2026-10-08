@@ -1,6 +1,6 @@
 import type { CommandSpec } from '@choliba/core';
 
-import { commandHelp } from '../../projects/projects.help';
+import { commandHelp } from '../../common';
 
 const SPEC: CommandSpec = {
   usage: 'demo COMMAND',

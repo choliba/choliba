@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { UsageError } from '../../shared/errors';
+import { UsageError } from '../../common';
 
 /** `create-project`, validated: the project's name, its application folder (absolute) and base URL. */
 export class CreateProjectDto {

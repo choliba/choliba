@@ -14,6 +14,7 @@ type Layer = (typeof LAYERS)[number];
 const STRUCTURE: Readonly<Record<string, Partial<Record<Exclude<Layer, 'common'>, readonly string[]>>>> = {
   core: { module: ['platform', 'config', 'help', 'cli', 'theme', 'runtime', 'testing'] },
   terminal: { module: ['terminal'] },
+  projects: { domain: ['paths'], module: ['locations', 'tickets', 'projects'] },
 };
 
 /** The Nest file types (`<name>.<type>.ts`): the `nest generate` schematics in use, `dto`, nest-commander's `command`, and `constants` for injection tokens. */
@@ -42,12 +43,13 @@ function elements(): Record<string, unknown>[] {
 const SAME_PACKAGE = { pkg: '{{ from.element.captured.pkg }}' };
 
 /**
- * What a folder of `layer` may import, besides its own files: the folders of the layers below it in its package
- * (a module also other modules, as Nest modules import each other), always through their `index.ts` (functions
- * and types) or `nest.ts` (modules, services, commands).
+ * What a folder of `layer` may import, besides its own files: the folders of its own layer and of the layers below
+ * it, in its package, always through their `index.ts` (functions and types) or `nest.ts` (modules, services,
+ * commands). Folders of one layer may build on each other (`project/` on `paths/`); a cycle between them
+ * is a cycle between their `index.ts` files, which `import-x/no-cycle` rejects.
  */
 function allowedBelow(layer: Layer): Record<string, unknown> {
-  const below = LAYERS.slice(0, LAYERS.indexOf(layer) + (layer === 'module' ? 1 : 0));
+  const below = LAYERS.slice(0, LAYERS.indexOf(layer) + 1);
   return {
     from: { element: { type: layer } },
     allow: { to: { element: { type: [...below], captured: SAME_PACKAGE, fileInternalPath: '{index,nest}.ts' } } },

@@ -1,13 +1,9 @@
 import path from 'node:path';
 
-import { ProjectsError } from '../shared/errors';
-import { readJsonFile } from '../shared/json-file';
 import fs from 'node:fs';
 
-import { assertProjectExists, configJsonPath, envJsonPath, projectDir, projectEnvExampleFile } from './project';
-
-/** The value the template ships in every field someone must fill in; a project still holding one does not run. */
-export const PLACEHOLDER_VALUE = 'CHANGE_ME';
+import { PLACEHOLDER_VALUE, ProjectsError, readJsonFile } from '../common';
+import { assertProjectExists, configJsonPath, envJsonPath, projectDir, projectEnvExampleFile } from '../paths';
 
 /** Reserved key of `.env.json`, merged into every environment; never an environment name. */
 const GLOBAL_KEY = '_global';

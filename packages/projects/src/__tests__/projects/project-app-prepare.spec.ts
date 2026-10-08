@@ -1,6 +1,6 @@
-import type { ProjectSettings } from '../../projects/settings';
+import type { ProjectSettings } from '../../projects/project-settings';
 
-import { APP_PREPARED_ENV, AppError, prepareApp, type SetupSpawn } from '../../app/prepare-app';
+import { APP_PREPARED_ENV, AppError, prepareApp, type SetupSpawn } from '../../projects/project-app-prepare';
 
 function settingsWith(setup?: readonly string[]): ProjectSettings {
   const environment = {
