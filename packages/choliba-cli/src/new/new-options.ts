@@ -12,7 +12,7 @@ export type AgentName = (typeof AGENTS)[number];
 export const CHOLIBA_PACKAGE = 'https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz';
 export const AGENTS_SOURCE = 'github:choliba/choliba';
 
-/** What `choliba-cli new` was told on the command line; what is missing is asked (or defaulted with --no-input). */
+/** What `choliba new` was told on the command line; what is missing is asked (or defaulted with --no-input). */
 export interface NewOptions {
   readonly dir?: string;
   readonly provider?: Provider;
@@ -47,7 +47,7 @@ function valueOf(flag: string, arg: string, rest: string[]): string {
   return value;
 }
 
-/** The arguments after `choliba-cli new`. */
+/** The arguments after `choliba new`. */
 export function parseNewOptions(argv: readonly string[]): NewOptions {
   const rest = [...argv];
   const options: { -readonly [K in keyof NewOptions]: NewOptions[K] } = {

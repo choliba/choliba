@@ -2,7 +2,7 @@ import { join } from 'node:path';
 
 /**
  * The folders of the workspace and of a project, in one place. The paths are relative (to the root of the workspace,
- * of a project or of a `choliba install` source).
+ * of a project or of a `choliba add` source).
  */
 
 /** Where the applications under test live (`app/<app>/`). */
@@ -11,7 +11,7 @@ export const APP_DIR = 'app';
 /** What belongs to choliba in the workspace: agents, skills, MCPs and the theme. */
 export const CHOLIBA_DIR = '.choliba';
 
-/** The agents, in any root that has them (choliba's folder, a `choliba install` source). */
+/** The agents, in any root that has them (choliba's folder, a `choliba add` source). */
 export const AGENTS_SUBDIR = 'agents';
 
 /** The skills, next to the agents. */

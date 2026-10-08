@@ -272,7 +272,9 @@ describe('addScripts', () => {
       const scripts = (JSON.parse(fs.readFileSync(file, 'utf8')) as { scripts: Record<string, string> }).scripts;
       expect(scripts['chol:tests']).toBe('meu');
       expect(scripts['build']).toBe('x');
-      expect(scripts['chol:project:create']).toBe('choliba projects create-project');
+      expect(scripts['chol:project:list']).toBe('choliba projects list-projects');
+      expect(scripts['chol:project:create']).toBeUndefined();
+      expect(scripts['chol:install']).toBeUndefined();
       expect(addScripts(root)).toEqual([]);
     });
   });
@@ -300,12 +302,20 @@ describe('removeRetiredScripts', () => {
           scripts: {
             'chol:playwright-cli': 'choliba playwright-cli',
             'chol:playwright-trace': 'meu trace',
+            'chol:project:create': 'choliba projects create-project',
+            'chol:ticket:create': 'choliba projects create-ticket',
+            'chol:install': 'choliba install',
             build: 'x',
           },
         }),
       );
 
-      expect(removeRetiredScripts(root)).toEqual(['chol:playwright-cli']);
+      expect(removeRetiredScripts(root)).toEqual([
+        'chol:playwright-cli',
+        'chol:project:create',
+        'chol:ticket:create',
+        'chol:install',
+      ]);
       const scripts = (JSON.parse(fs.readFileSync(file, 'utf8')) as { scripts: Record<string, string> }).scripts;
       expect(scripts).toEqual({ 'chol:playwright-trace': 'meu trace', build: 'x' });
       expect(removeRetiredScripts(root)).toEqual([]);

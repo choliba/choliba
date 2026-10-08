@@ -1,7 +1,9 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { writeAgent } from '../agent';
+import { messageOf } from '@choliba/core';
+
+import { writeAgent } from '../generate';
 import { AGENTS, type AgentName, type NewOptions, PROVIDERS, type Provider } from './new-options';
 import { WorkspaceError } from '../common';
 import { setEnvValue } from './env-file';
@@ -14,6 +16,8 @@ export interface NewDeps {
   readonly run: RunCommand;
   /** Messages along the way (stderr). */
   readonly say: (line: string) => void;
+  /** `choliba add <args>` into the workspace at `dir`: what it installed; throws saying what went wrong. */
+  readonly add: (dir: string, args: readonly string[]) => string;
 }
 
 /** What `new` did, for the summary on stdout. */
@@ -21,7 +25,7 @@ export interface NewResult {
   readonly dir: string;
   readonly provider: Provider;
   readonly agents: readonly AgentName[];
-  /** The agent created along the way (`agent new`), if any. */
+  /** The agent created along the way (`generate agent`), if any. */
   readonly newAgent: string | undefined;
   /** Whether `choliba check` found nothing wrong. */
   readonly checked: boolean;
@@ -78,12 +82,12 @@ async function configureMcpApp(options: NewOptions, dir: string, deps: NewDeps):
   }
 }
 
-/** The optional `agent new` step: asked, never with `--no-input` (its default is no). */
+/** The optional `generate agent` step: asked, never with `--no-input` (its default is no). */
 async function maybeNewAgent(dir: string, deps: NewDeps): Promise<string | undefined> {
   const answer = await deps.prompter.select(
     'Criar um agente seu agora?',
     [
-      { value: 'nao', label: 'não (depois: choliba-cli agent new)' },
+      { value: 'nao', label: 'não (depois: choliba generate agent)' },
       { value: 'sim', label: 'sim' },
     ],
     'nao',
@@ -93,7 +97,7 @@ async function maybeNewAgent(dir: string, deps: NewDeps): Promise<string | undef
 }
 
 /**
- * `choliba-cli new`: a new workspace, step by step. The folder and its `package.json`; the choliba, whose setup
+ * `choliba new`: a new workspace, step by step. The folder and its `package.json`; the choliba, whose setup
  * makes the rest of the workspace; the agents' provider in `.env`; the agents of the choliba (and the mcp-app the
  * product-owner needs); optionally a new agent of one's own; and `choliba check` at the end. Every choice comes from `options` or is asked.
  */
@@ -125,13 +129,13 @@ export async function newWorkspace(options: NewOptions, deps: NewDeps): Promise<
   // Before the install, so the product-owner's mcp-app finds its variables in .env.
   if (agents.includes('product-owner')) await configureMcpApp(options, dir, deps);
   for (const agent of agents) {
-    step(deps, dir, `instalando o ${agent}`, 'bunx', [
-      'choliba',
-      'install',
-      options.agentsFrom,
-      '--path',
-      `.choliba/agents/${agent}`,
-    ]);
+    const args = [options.agentsFrom, '--path', `.choliba/agents/${agent}`];
+    deps.say(`instalando o ${agent}: choliba add ${args.join(' ')}`);
+    try {
+      deps.say(deps.add(dir, args));
+    } catch (error) {
+      throw new WorkspaceError(`instalando o ${agent} falhou: ${messageOf(error)}. A pasta ${dir} ficou como está.`);
+    }
   }
 
   const newAgent = await maybeNewAgent(dir, deps);
@@ -144,7 +148,7 @@ export async function newWorkspace(options: NewOptions, deps: NewDeps): Promise<
 /** The summary on stdout: where the workspace is, and what to do next. */
 export function formatSummary(result: NewResult): string {
   const next = result.agents.includes('product-owner')
-    ? `  cd ${result.dir}\n  bunx choliba projects create-project minha-app --app-dir ../minha-app --base-url http://localhost:3000\n  bunx choliba product-owner --project minha-app --type story "o que a aplicação deve fazer"`
+    ? `  cd ${result.dir}\n  choliba generate project minha-app --app-dir ../minha-app --base-url http://localhost:3000\n  bunx choliba product-owner --project minha-app --type story "o que a aplicação deve fazer"`
     : `  cd ${result.dir}\n  bunx choliba --help`;
   const status = result.checked ? 'pronta' : 'criada, mas o `choliba check` apontou o que corrigir (acima)';
   return `Pasta de trabalho ${status}: ${result.dir}\nProvider: ${result.provider}. Agentes: ${result.agents.length === 0 ? 'nenhum' : result.agents.join(', ')}.\n${result.newAgent === undefined ? '' : `Agente novo: ${result.newAgent} (troque os CHANGE_ME do agent.yaml dele).\n`}\nPróximos passos:\n${next}\n`;

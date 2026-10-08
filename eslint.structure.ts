@@ -17,8 +17,8 @@ const STRUCTURE: Readonly<Record<string, Partial<Record<Exclude<Layer, 'common'>
   projects: { domain: ['paths'], module: ['locations', 'tickets', 'projects'] },
   runner: { module: ['tests'] },
   agents: { module: ['agents', 'providers'] },
-  choliba: { domain: ['completion', 'help', 'runtime'], module: ['check', 'install', 'setup', 'tooling'] },
-  'choliba-cli': { domain: ['help', 'runtime'], module: ['new', 'agent'] },
+  choliba: { domain: ['completion', 'help', 'runtime'], module: ['check', 'setup', 'tooling'] },
+  'choliba-cli': { domain: ['help', 'runtime'], module: ['new', 'generate', 'add', 'workspace'] },
 };
 
 /** The Nest file types (`<name>.<type>.ts`): the `nest generate` schematics in use, `dto`, nest-commander's `command`, and `constants` for injection tokens. */

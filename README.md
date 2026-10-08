@@ -70,13 +70,13 @@ bun add --trust \
 O `--trust` roda o `choliba setup`, que monta a pasta de trabalho e liga o autocomplete. Dependências, o que o setup
 cria e como atualizar: [Primeiros passos](docs/primeiros-passos.md).
 
-Também dá para começar pelo assistente [`choliba-cli`](docs/choliba-cli.md), instalado uma vez na máquina, que
-cria a pasta, instala o choliba e os agentes, e cria agentes novos:
+Também dá para começar pelo [`choliba` da máquina](docs/choliba-cli.md), instalado uma vez (os comandos `choliba` e
+`chol`), que cria a pasta, instala o choliba e os agentes, e cria agentes, projetos e tickets:
 
 ```
 bun add -g \
   https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-cli-0.0.1-dev.tgz
-choliba-cli new dev-tools
+choliba new dev-tools
 ```
 
 ## Uso
@@ -87,11 +87,11 @@ uma pasta vazia ao `check` verde, está em
 
 ```sh
 # um projeto para a aplicação em ../minha-app, e os agentes do repositório do choliba
-bunx choliba projects create-project minha-app \
+choliba generate project minha-app \
   --app-dir ../minha-app --base-url http://localhost:3000
-bunx choliba install github:choliba/choliba --path .choliba/agents/product-owner
-bunx choliba install github:choliba/choliba --path .choliba/agents/test-writer
-bunx choliba install github:choliba/choliba --path .choliba/agents/implementer
+choliba add github:choliba/choliba --path .choliba/agents/product-owner
+choliba add github:choliba/choliba --path .choliba/agents/test-writer
+choliba add github:choliba/choliba --path .choliba/agents/implementer
 bunx choliba check
 
 # o ticket, os testes e a implementação
@@ -114,7 +114,7 @@ vazia. Detalhes e limites de cada provider: [Segurança](docs/conceitos/seguranc
 No site [choliba.github.io](https://choliba.github.io/), com busca, ou em
 [`docs/`](docs/README.md), por tipo:
 
-- **Para começar:** [Primeiros passos](docs/primeiros-passos.md) e o assistente [`choliba-cli`](docs/choliba-cli.md).
+- **Para começar:** [Primeiros passos](docs/primeiros-passos.md) e o [`choliba` da máquina](docs/choliba-cli.md).
 - **Guias:** [escrever um agente](docs/guias/escrever-um-agente.md),
   [instalar agentes, skills e MCPs](docs/guias/instalar-agentes.md), [`--dry-run`](docs/guias/dry-run.md).
 - **Referência:** [CLI](docs/referencia/cli.md), [`agent.yaml`](docs/referencia/agent-yaml.md),

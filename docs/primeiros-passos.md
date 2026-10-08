@@ -4,7 +4,7 @@
 > testes no caminho.
 
 Esta página faz tudo à mão. Para montar a pasta de trabalho respondendo perguntas (instalar o choliba, escolher o
-provider e os agentes), use o [`choliba-cli`](choliba-cli.md).
+provider e os agentes), use o [`choliba` da máquina](choliba-cli.md).
 
 ## Instalação
 
@@ -107,7 +107,7 @@ pasta pessoal).
    endereço em que a aplicação vai rodar, com o `http://`:
 
    ```
-   $ bunx choliba projects create-project minha-app --app-dir ../minha-app --base-url http://localhost:3000
+   $ choliba generate project minha-app --app-dir ../minha-app --base-url http://localhost:3000
    Projeto "minha-app" criado em /home/voce/dev/dev-tools/projects/minha-app.
    Nenhum README na raiz de /home/voce/dev/minha-app; description ficou vazio.
    Antes de usar: crie /home/voce/dev/dev-tools/projects/minha-app/.env.json a partir de /home/voce/dev/dev-tools/projects/minha-app/.env.example.json e troque os valores CHANGE_ME (config.json e .env.json).
@@ -151,9 +151,9 @@ pasta pessoal).
    completas estão em [Instalar agentes](guias/instalar-agentes.md#os-agentes-do-choliba)):
 
    ```sh
-   bunx choliba install github:choliba/choliba --path .choliba/agents/product-owner
-   bunx choliba install github:choliba/choliba --path .choliba/agents/test-writer
-   bunx choliba install github:choliba/choliba --path .choliba/agents/implementer
+   choliba add github:choliba/choliba --path .choliba/agents/product-owner
+   choliba add github:choliba/choliba --path .choliba/agents/test-writer
+   choliba add github:choliba/choliba --path .choliba/agents/implementer
    ```
 
 5. O `product-owner` traz o MCP `mcp-app`, que precisa de `CHOL_MCP_APP_DIR` e `CHOL_MCP_APP_LOG_DIR` no `.env`.

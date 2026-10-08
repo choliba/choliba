@@ -3,12 +3,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { CommandSpec } from '@choliba/core';
 
 import { LocationsService } from '../locations/nest';
-import { listProjectNames, projectDir, REPORT_FOLDER } from '../paths';
+import { listProjectNames, REPORT_FOLDER } from '../paths';
 import { listTicketKeys, resolveReportFolder } from '../tickets';
-import type { CreateProjectDto } from './dto/create-project.dto';
-import { createProject, readProjectConfig, type CreatedProject } from './project';
+import { readProjectConfig } from './project';
 import { loadProjectSettings, type ProjectSettings } from './project-settings';
-import { PROJECT_TEMPLATES_DIR } from './projects.constants';
 import { projectsCliSpec } from './projects-spec';
 
 export interface ProjectSummary {
@@ -21,19 +19,10 @@ export interface ProjectTickets {
   readonly tickets: readonly string[];
 }
 
-/** The project just created, and the folder it lives in. */
-export interface NewProject {
-  readonly created: CreatedProject;
-  readonly dir: string;
-}
-
 /** The test projects of the workspace: listing, checking and creating them. */
 @Injectable()
 export class ProjectsService {
-  constructor(
-    @Inject(LocationsService) private readonly locations: LocationsService,
-    @Inject(PROJECT_TEMPLATES_DIR) private readonly templatesDir: string,
-  ) {}
+  constructor(@Inject(LocationsService) private readonly locations: LocationsService) {}
 
   projectsDir(): string {
     return this.locations.projectsDir();
@@ -53,15 +42,6 @@ export class ProjectsService {
   /** The settings a run of `project` would use; throws, naming what is still missing or CHANGE_ME. */
   check(project: string): ProjectSettings {
     return loadProjectSettings(this.projectsDir(), project);
-  }
-
-  create(dto: CreateProjectDto): NewProject {
-    const projectsDir = this.projectsDir();
-    const created = createProject(projectsDir, dto.project, this.templatesDir, {
-      appDir: dto.appDir,
-      ...(dto.baseUrl === undefined ? {} : { baseUrl: dto.baseUrl }),
-    });
-    return { created, dir: projectDir(projectsDir, dto.project) };
   }
 
   /** The report folder: the default name, or the one of a project (and ticket). */

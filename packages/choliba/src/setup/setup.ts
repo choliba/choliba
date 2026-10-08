@@ -233,11 +233,8 @@ export const WORKSPACE_SCRIPTS: Readonly<Record<string, string>> = {
   'chol:check': 'choliba check',
   'chol:agents': 'choliba agents',
   'chol:projects': 'choliba projects',
-  'chol:project:create': 'choliba projects create-project',
   'chol:project:list': 'choliba projects list-projects',
-  'chol:ticket:create': 'choliba projects create-ticket',
   'chol:tests': 'choliba tests',
-  'chol:install': 'choliba install',
   'chol:lint': 'choliba lint',
   'chol:format': 'choliba format',
   'chol:format:fix': 'choliba format --write',
@@ -247,6 +244,9 @@ export const WORKSPACE_SCRIPTS: Readonly<Record<string, string>> = {
 const RETIRED_SCRIPTS: Readonly<Record<string, string>> = {
   'chol:playwright-cli': 'choliba playwright-cli',
   'chol:playwright-trace': 'choliba playwright-trace',
+  'chol:project:create': 'choliba projects create-project',
+  'chol:ticket:create': 'choliba projects create-ticket',
+  'chol:install': 'choliba install',
 };
 
 /** The workspace package.json as an object; undefined when missing, unreadable or not an object. */

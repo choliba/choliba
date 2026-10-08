@@ -28,3 +28,13 @@ export { runAgentsCli, type RunAgentsCliDeps } from './agents';
 export { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from './agents';
 export { resolveSkills, skillDescription } from './agents';
 export { mcpConfig, resolveMcps } from './common';
+export {
+  formatInstall,
+  install,
+  InstallError,
+  parseInstallArgs,
+  planInstall,
+  type InstallArgs,
+  type InstallDeps,
+  type InstallTargets,
+} from './agents';

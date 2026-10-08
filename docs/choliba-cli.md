@@ -1,16 +1,19 @@
-# `choliba-cli`
+# `choliba` da máquina
 
-> O `choliba-cli` é um assistente para começar com o choliba: cria a pasta de trabalho e os agentes respondendo
-> perguntas no terminal.
+> O `choliba` da máquina cria a pasta de trabalho, gera agentes, projetos e tickets e instala agentes, skills e MCPs.
 
-O `choliba-cli` é um assistente para começar com o choliba. Você o instala uma vez, na máquina, e ele:
+Você instala esse comando uma vez, na máquina. Ele responde pelo nome `choliba` e pelo alias `chol`:
 
-- **`choliba-cli new`**: prepara uma pasta de trabalho do zero;
-- **`choliba-cli agent new`**: cria um agente novo numa pasta de trabalho.
+- **`choliba new`** (alias `n`): prepara uma pasta de trabalho do zero;
+- **`choliba generate`** (alias `g`): cria um agente, um projeto de teste ou um ticket;
+- **`choliba add`**: instala um agente (com as skills e os MCPs que ele declara), uma skill ou um MCP.
 
-Cada comando pergunta, no terminal, o que não vier nas opções. Com `--no-input` (ou fora de um terminal), não
-pergunta nada: usa as opções e os padrões, e falha dizendo qual opção falta quando um valor não tem padrão. O dia a
-dia (rodar agentes, testes, `check`) continua com o `choliba` da pasta de trabalho.
+Cada um desses pergunta, no terminal, o que não vier nas opções. Com `--no-input` (ou fora de um terminal), não
+pergunta nada: usa as opções e os padrões, e falha dizendo qual opção falta quando um valor não tem padrão.
+
+Dentro de uma pasta de trabalho, qualquer outro comando (`agents`, `tests`, `check`, o atalho `choliba <agente>`)
+é repassado para o `choliba` que aquela pasta instalou, na versão dela. Fora de uma pasta de trabalho, esse comando
+diz para criar uma com `choliba new`. Os agentes continuam chamando `bunx choliba`, que é o da pasta.
 
 ## Instalação
 
@@ -22,20 +25,23 @@ O pacote é o `choliba-cli-0.0.1-dev.tgz` da pré-release
 bun add -g https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-cli-0.0.1-dev.tgz
 ```
 
-Para conferir a versão:
+Os comandos que isso coloca no `PATH` são `choliba` e `chol`. Para conferir a versão:
 
 ```
-$ choliba-cli --version
+$ choliba --version
 choliba-cli 0.0.1-dev.25+516f9c1
 ```
+
+Dentro de uma pasta de trabalho, a mesma opção mostra as duas versões: a do comando da máquina e a do `choliba`
+instalado na pasta. `chol --version` é o mesmo que `choliba --version`.
 
 Para atualizar, remova e instale de novo (a URL não muda a cada versão): `bun remove -g choliba-cli` e o
 `bun add -g` acima.
 
-## Criar a pasta de trabalho: `choliba-cli new`
+## Criar a pasta de trabalho: `choliba new`
 
 ```sh
-choliba-cli new minha-pasta
+choliba new minha-pasta
 ```
 
 Em ordem, ele:
@@ -44,16 +50,16 @@ Em ordem, ele:
 2. instala o choliba com `bun add --trust`, e o [`choliba setup`](primeiros-passos.md#choliba-setup) monta o resto
    da pasta de trabalho;
 3. grava no `.env` o provider dos agentes (`CHOL_AGENTS_PROVIDER`);
-4. instala os agentes do choliba escolhidos (`product-owner`, `test-writer`, `implementer`). Com o
+4. instala os agentes do choliba escolhidos (`product-owner`, `test-writer`, `implementer`) com `choliba add`. Com o
    `product-owner`, pergunta antes onde está o servidor do `mcp-app` e grava `CHOL_MCP_APP_DIR` e
    `CHOL_MCP_APP_LOG_DIR` (veja [o servidor do MCP `mcp-app`](guias/instalar-agentes.md#o-servidor-do-mcp-mcp-app));
-5. pergunta se você quer criar um agente seu agora (o mesmo que o [`agent new`](#criar-um-agente-choliba-cli-agent-new));
+5. pergunta se você quer criar um agente seu agora (o mesmo que o [`generate agent`](#criar-um-agente-choliba-generate-agent));
 6. roda o `choliba check` e mostra os próximos passos.
 
 Sem perguntas:
 
 ```sh
-choliba-cli new minha-pasta --provider claude --agents product-owner,test-writer --no-input
+choliba new minha-pasta --provider claude --agents product-owner,test-writer --no-input
 ```
 
 | Opção                    | O que faz                                                                 | Padrão                   |
@@ -64,19 +70,19 @@ choliba-cli new minha-pasta --provider claude --agents product-owner,test-writer
 | `--no-agents`            | Não instala agentes                                                       |                          |
 | `--mcp-app-dir <pasta>`  | Onde está o servidor `mcp-app`, para o `product-owner`                    | deixar para depois       |
 | `--choliba <espec>`      | De onde instalar o choliba (o que o `bun add` aceita)                     | a release `v0.0.1-dev`   |
-| `--agents-from <origem>` | De onde instalar os agentes (o que o `choliba install` aceita)            | `github:choliba/choliba` |
+| `--agents-from <origem>` | De onde instalar os agentes (o que o `choliba add` aceita)                | `github:choliba/choliba` |
 | `--no-input`             | Não pergunta nada                                                         |                          |
 
-A saída de cada passo (`bun add`, `choliba install`) vai para o stderr; o stdout fica só com o resumo. Se um passo
-falha, o assistente para ali, diz qual foi e deixa a pasta como está. O código de saída é 1 quando um passo falha ou
+A saída de cada passo (`bun add`, `choliba add`) vai para o stderr; o stdout fica só com o resumo. Se um passo
+falha, o comando para ali, diz qual foi e deixa a pasta como está. O código de saída é 1 quando um passo falha ou
 quando o `check` aponta problemas.
 
-## Criar um agente: `choliba-cli agent new`
+## Criar um agente: `choliba generate agent`
 
 Dentro de uma pasta de trabalho (ou de uma subpasta dela):
 
 ```sh
-choliba-cli agent new revisor
+choliba generate agent revisor
 ```
 
 Ele pergunta a descrição, o papel, os modelos, se o agente age sobre um projeto e o que pode fazer nele, e grava
@@ -87,7 +93,7 @@ onde você escreve o texto do agente: o que ele recebe (`input`), como trabalha 
 Sem perguntas:
 
 ```sh
-choliba-cli agent new revisor --description "Revisa o código" --role "Você revisa código." \
+choliba generate agent revisor --description "Revisa o código" --role "Você revisa código." \
   --project --access leitura --no-input
 ```
 
@@ -121,3 +127,36 @@ bunx choliba revisor --project minha-app --dry-run --show-prompt "revise a busca
 
 O que mais um agente pode declarar (skills, MCPs, passos antes e depois, modos): [Escrevendo um
 agente](guias/escrever-um-agente.md).
+
+## Criar um projeto: `choliba generate project`
+
+Dentro de uma pasta de trabalho:
+
+```sh
+choliba generate project minha-app --app-dir ../minha-app --base-url http://localhost:3000
+```
+
+Copia o template para `CHOL_PROJECTS_DIR`. `--app-dir` é obrigatório e precisa ser uma pasta; um caminho relativo
+conta a partir da pasta em que você rodou o comando. Sem o nome, o projeto leva o nome dessa pasta. O título e o
+primeiro parágrafo do README na raiz dela viram o `description`. `--base-url` preenche o `baseURL` dos ambientes.
+
+O comando não cria o `.env.json`. Ele diz para copiar o `.env.example.json` e trocar os `CHANGE_ME`.
+
+## Criar um ticket: `choliba generate ticket`
+
+```sh
+choliba generate ticket minha-app story
+```
+
+Cria o próximo ticket do projeto a partir do template do tipo (`story`, `bug`, `improvement`, `task`), no ambiente
+ativo do projeto. O projeto precisa estar pronto (`.env.json` criado, sem `CHANGE_ME`). O arquivo sai com `CHANGE_ME`
+onde o texto do ticket ainda é seu.
+
+## Instalar: `choliba add`
+
+```sh
+choliba add github:choliba/choliba --path .choliba/agents/product-owner
+```
+
+Instala na pasta de trabalho em que você está. O passo a passo, as origens (pasta, git, npm) e o `--dry-run` estão
+em [Instalar agentes, skills e MCPs](guias/instalar-agentes.md).

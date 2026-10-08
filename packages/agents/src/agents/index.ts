@@ -3,6 +3,8 @@ export * from './agent-loader';
 export * from './agent-print';
 export * from './agent-skills';
 export * from './agent-validation';
+export * from './install/install';
+export * from './install/install-source';
 export * from './interfaces/invocation.interface';
 export * from './invocation';
 export * from './invocation-registry';

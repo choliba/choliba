@@ -32,6 +32,12 @@ function scene(prompter: Prompter = defaultsPrompter, failOn?: string, checkCode
       if (line.startsWith('bun add')) writeFileSync(path.join(cwd, '.env'), ENV_TEMPLATE);
       return line.endsWith('choliba check') ? checkCode : 0;
     },
+    add: (dir, args) => {
+      const line = `choliba add ${args.join(' ')}`;
+      calls.push(`${path.relative(root, dir)}$ ${line}`);
+      if (failOn !== undefined && line.includes(failOn)) throw new Error('código 2');
+      return 'Instalado:';
+    },
   };
   return { root, calls, said, deps };
 }
@@ -55,9 +61,9 @@ describe('newWorkspace', () => {
       expect(JSON.parse(readFileSync(path.join(ws, 'package.json'), 'utf8'))).toEqual({ name: 'ws', private: true });
       expect(s.calls).toEqual([
         `ws$ bun add --trust ${CHOLIBA_PACKAGE}`,
-        `ws$ bunx choliba install ${AGENTS_SOURCE} --path .choliba/agents/product-owner`,
-        `ws$ bunx choliba install ${AGENTS_SOURCE} --path .choliba/agents/test-writer`,
-        `ws$ bunx choliba install ${AGENTS_SOURCE} --path .choliba/agents/implementer`,
+        `ws$ choliba add ${AGENTS_SOURCE} --path .choliba/agents/product-owner`,
+        `ws$ choliba add ${AGENTS_SOURCE} --path .choliba/agents/test-writer`,
+        `ws$ choliba add ${AGENTS_SOURCE} --path .choliba/agents/implementer`,
         'ws$ bunx choliba check',
       ]);
       expect(readFileSync(path.join(ws, '.env'), 'utf8')).toContain('\nCHOL_AGENTS_PROVIDER=claude\n');
@@ -122,7 +128,7 @@ describe('newWorkspace', () => {
         'Em que pasta criar a pasta de trabalho?',
         'Com que provider os agentes rodam? auto (o primeiro instalado)|claude|cursor',
         'Quais agentes do choliba instalar?',
-        'Criar um agente seu agora? não (depois: choliba-cli agent new)|sim',
+        'Criar um agente seu agora? não (depois: choliba generate agent)|sim',
       ]);
       expect(s.calls).toEqual([`perguntada$ bun add --trust ${CHOLIBA_PACKAGE}`, 'perguntada$ bunx choliba check']);
     } finally {
@@ -173,14 +179,25 @@ describe('newWorkspace', () => {
     }
   });
 
+  it('stops when installing the choliba itself fails', async () => {
+    const failing = scene(defaultsPrompter, 'bun add');
+    try {
+      await expect(newWorkspace({ ...BASE, dir: 'ws', agents: [] }, failing.deps)).rejects.toThrow(
+        `instalando o choliba falhou (código 2). A pasta ${path.join(failing.root, 'ws')} ficou como está.`,
+      );
+    } finally {
+      rmSync(failing.root, { recursive: true, force: true });
+    }
+  });
+
   it('stops at a step that fails, naming it, and reports a check that found problems', async () => {
-    const failing = scene(defaultsPrompter, 'install');
+    const failing = scene(defaultsPrompter, 'choliba add');
     const unchecked = scene(defaultsPrompter, undefined, 1);
     try {
       const error = newWorkspace({ ...BASE, dir: 'ws', agents: ['test-writer'] }, failing.deps);
       await expect(error).rejects.toThrow(WorkspaceError);
       await expect(newWorkspace({ ...BASE, dir: 'ws2', agents: ['test-writer'] }, failing.deps)).rejects.toThrow(
-        `instalando o test-writer falhou (código 2). A pasta ${path.join(failing.root, 'ws2')} ficou como está.`,
+        `instalando o test-writer falhou: código 2. A pasta ${path.join(failing.root, 'ws2')} ficou como está.`,
       );
       const result = await newWorkspace({ ...BASE, dir: 'ws', agents: [] }, unchecked.deps);
       expect(result.checked).toBe(false);
@@ -212,6 +229,7 @@ describe('formatSummary', () => {
       checked: true,
     });
     expect(ready).toContain('Pasta de trabalho pronta: /ws\nProvider: auto. Agentes: product-owner.');
+    expect(ready).toContain('choliba generate project minha-app --app-dir ../minha-app');
     expect(ready).toContain('bunx choliba product-owner --project minha-app');
     expect(ready).not.toContain('Agente novo');
 

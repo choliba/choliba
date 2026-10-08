@@ -10,7 +10,6 @@ import { TerminalModule } from '@choliba/terminal/nest';
 import { CheckModule } from './check/nest';
 import { CHOLIBA_ROOT } from './help';
 import { cholibaManifest, PACKAGE_NAME } from './help';
-import { InstallModule } from './install/nest';
 import type { Runtime } from './runtime';
 import { SetupModule } from './setup/nest';
 import { ToolingModule } from './tooling/nest';
@@ -33,7 +32,6 @@ export class AppModule {
         ProjectsModule,
         TestsModule,
         TerminalModule,
-        InstallModule,
         CheckModule,
         ToolingModule,
         SetupModule,

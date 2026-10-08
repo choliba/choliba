@@ -35,7 +35,7 @@ describe('choliba', () => {
       const { code, out } = await choliba(argv, dir);
       expect(code).toBe(0);
       expect(out).toContain('Usage:  choliba COMMAND [ARGS]');
-      expect(out).toContain('install');
+      expect(out).toContain('check');
       expect(out).toContain('--no-color');
     }),
   );
@@ -87,7 +87,6 @@ describe('choliba __complete', () => {
         expect(await complete('echo', '--provider', '')).toBe('auto\nclaude\ncursor\n');
         expect(await complete('tests', '--ex')).toBe('--expect\n');
         expect(await complete('projects', 'li')).toBe('list-projects\n');
-        expect(await complete('in')).toBe('install\n');
       },
       { '.env': ENV },
     ));
@@ -105,11 +104,9 @@ describe('choliba __complete, per command', () => {
       const complete = async (...words: string[]): Promise<string> =>
         (await choliba(['__complete', ...words], dir)).out;
 
-      for (const name of ['install', 'lint', 'format']) {
+      for (const name of ['lint', 'format']) {
         expect(await complete(name, '..')).toBe(`${FILES_MARKER}\n`);
       }
-      expect(await complete('install', '--')).toBe('--path\n--dry-run\n');
-      expect(await complete('install', '--path', '')).toBe(`${FILES_MARKER}\n`);
       expect(await complete('format', '--')).toBe('--write\n');
       expect(await complete('tests', 'demo:')).toBe('');
     }));

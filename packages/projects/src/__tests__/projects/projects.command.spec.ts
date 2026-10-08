@@ -4,11 +4,10 @@ import path from 'node:path';
 
 import { Test } from '@nestjs/testing';
 
-import { complete, describe as describeWords, FILES_MARKER, formatSuggestions } from '@choliba/core';
+import { complete, describe as describeWords, formatSuggestions } from '@choliba/core';
 import { PlatformModule } from '@choliba/core/nest';
 import { fakePlatform, runCommand } from '@choliba/core/testing';
 
-import { PROJECT_TEMPLATES_DIR } from '../../projects/projects.constants';
 import { ProjectsModule, ProjectsService, TicketsService } from '../../nest';
 
 interface Workspace {
@@ -46,25 +45,6 @@ function withBrokenWorkspace<T>(fn: (root: string) => Promise<T>): Promise<T> {
   });
 }
 
-function makeTemplatesDir(parent: string): string {
-  const dir = path.join(parent, 'template');
-  fs.mkdirSync(path.join(dir, 'tests'), { recursive: true });
-  fs.writeFileSync(
-    path.join(dir, 'config.json'),
-    JSON.stringify({ name: 'Demo', envs: [{ nome: 'qa', baseURL: '', default: true }] }),
-  );
-  fs.writeFileSync(path.join(dir, '.env.example.json'), JSON.stringify({ qa: { TEST_USERNAME: 'CHANGE_ME' } }));
-  return dir;
-}
-
-/** An application folder for --app-dir under `parent`, with `readme` as its README.md when given. */
-function makeAppDir(parent: string, name: string, readme?: string): string {
-  const dir = path.join(parent, name);
-  fs.mkdirSync(dir, { recursive: true });
-  if (readme !== undefined) fs.writeFileSync(path.join(dir, 'README.md'), readme);
-  return dir;
-}
-
 function writeProject(projectsDir: string, name: string, tickets: string[] = []): void {
   const projectDir = path.join(projectsDir, name);
   fs.mkdirSync(projectDir, { recursive: true });
@@ -85,11 +65,10 @@ interface Run {
   readonly err: string;
 }
 
-/** `choliba projects <args…>` from `cwd`, optionally with another project template. */
-async function projects(args: readonly string[], cwd: string, templatesDir?: string): Promise<Run> {
+/** `choliba projects <args…>` from `cwd`. */
+async function projects(args: readonly string[], cwd: string): Promise<Run> {
   const platform = fakePlatform({ argv: ['projects', ...args], cwd });
-  const overrides = templatesDir === undefined ? [] : [{ provide: PROJECT_TEMPLATES_DIR, useValue: templatesDir }];
-  const exitCode = await runCommand([ProjectsModule], platform, overrides);
+  const exitCode = await runCommand([ProjectsModule], platform);
   return { exitCode, out: platform.stdout.text(), err: platform.stderr.text() };
 }
 
@@ -232,156 +211,6 @@ describe('choliba projects', () => {
       expect(exitCode).toBe(1);
       expect(err).toContain('CHOL_GLOBAL_DIR não definida');
     }));
-
-  it('creates a project from the template, with the app dir and the description from its README', () =>
-    withWorkspace(async ({ root, projectsDir }) => {
-      const appDir = makeAppDir(root, 'demo-app', '# Demo\n\nApp de teste.\n');
-
-      const { exitCode, out } = await projects(
-        ['create-project', 'demo', '--app-dir', appDir],
-        root,
-        makeTemplatesDir(root),
-      );
-
-      expect(exitCode).toBe(0);
-      const created = path.join(projectsDir, 'demo');
-      expect(out).toBe(
-        `Projeto "demo" criado em ${created}.\n` +
-          `description preenchido a partir de ${path.join(appDir, 'README.md')}: "Demo: App de teste."\n` +
-          `Antes de usar: crie ${path.join(created, '.env.json')} a partir de ${path.join(created, '.env.example.json')} ` +
-          `e troque os valores CHANGE_ME (config.json e .env.json).\n`,
-      );
-      expect(fs.existsSync(path.join(created, '.env.json'))).toBe(false);
-      const config = JSON.parse(fs.readFileSync(path.join(created, 'config.json'), 'utf-8')) as {
-        description: string;
-        envs: { appDir: string }[];
-      };
-      expect(config.description).toBe('Demo: App de teste.');
-      expect(config.envs[0]?.appDir).toBe(appDir);
-    }));
-
-  it('says why the description stayed empty: no README, or a README without usable text', () =>
-    withWorkspace(async ({ root }) => {
-      const templatesDir = makeTemplatesDir(root);
-      const noReadme = makeAppDir(root, 'sem-readme-app');
-      const emptyReadme = makeAppDir(root, 'readme-vazio-app', '## Só seções\n\n- item\n');
-
-      expect(
-        (await projects(['create-project', 'sem-readme', '--app-dir', noReadme], root, templatesDir)).out,
-      ).toContain(`Nenhum README na raiz de ${noReadme}; description ficou vazio.`);
-      expect(
-        (await projects(['create-project', 'readme-vazio', '--app-dir', emptyReadme], root, templatesDir)).out,
-      ).toContain('não tem título nem parágrafo aproveitáveis; description ficou vazio.');
-    }));
-
-  it('requires --app-dir, with a value, and creates nothing for a folder that does not exist', () =>
-    withWorkspace(async ({ root, projectsDir }) => {
-      const templatesDir = makeTemplatesDir(root);
-      const run = async (...args: string[]): Promise<string> => {
-        const { exitCode, err } = await projects(['create-project', 'demo', ...args], root, templatesDir);
-        expect(exitCode).toBe(1);
-        return err;
-      };
-
-      expect(await run()).toContain('Missing --app-dir for create-project');
-      expect(await run('--app-dir')).toContain('Missing value for --app-dir');
-      expect(await run('--app-dir', path.join(projectsDir, 'nope'))).toContain('não é uma pasta existente');
-      expect(await run('--base-url')).toContain('Missing value for --base-url');
-      expect(fs.existsSync(path.join(projectsDir, 'demo'))).toBe(false);
-    }));
-
-  it('fills the base url when --base-url is given', () =>
-    withWorkspace(async ({ root, projectsDir }) => {
-      const appDir = makeAppDir(root, 'app');
-      const { exitCode } = await projects(
-        ['create-project', 'demo', '--base-url', 'https://qa.exemplo.com', '--app-dir', appDir],
-        root,
-        makeTemplatesDir(root),
-      );
-
-      expect(exitCode).toBe(0);
-      const config = JSON.parse(fs.readFileSync(path.join(projectsDir, 'demo', 'config.json'), 'utf-8')) as {
-        envs: { baseURL: string }[];
-      };
-      expect(config.envs[0]?.baseURL).toBe('https://qa.exemplo.com');
-    }));
-
-  it('names the project after the app folder, resolving a relative --app-dir from where it ran', () =>
-    withWorkspace(async ({ root, projectsDir }) => {
-      const appDir = makeAppDir(root, 'minha-app');
-
-      const { exitCode, out } = await projects(
-        ['create-project', '--app-dir', './minha-app/', '--base-url', 'http://x'],
-        root,
-        makeTemplatesDir(root),
-      );
-
-      expect(exitCode).toBe(0);
-      expect(out).toContain(`Projeto "minha-app" criado em ${path.join(projectsDir, 'minha-app')}.`);
-      const config = JSON.parse(fs.readFileSync(path.join(projectsDir, 'minha-app', 'config.json'), 'utf-8')) as {
-        envs: { appDir: string }[];
-      };
-      expect(config.envs[0]?.appDir).toBe(appDir);
-    }));
-
-  it('takes the name from any position, never from a flag or a flag value', () =>
-    withWorkspace(async ({ root }) => {
-      const appDir = makeAppDir(root, 'app');
-      const { out } = await projects(
-        ['create-project', '--app-dir', appDir, '--base-url', 'http://x', 'nome'],
-        root,
-        makeTemplatesDir(root),
-      );
-
-      expect(out).toContain('Projeto "nome" criado');
-    }));
-
-  it('reports a project that already exists, or a missing template', () =>
-    withWorkspace(async ({ root, projectsDir }) => {
-      writeProject(projectsDir, 'demo');
-      const appDir = makeAppDir(root, 'app');
-
-      const exists = await projects(['create-project', 'demo', '--app-dir', appDir], root, makeTemplatesDir(root));
-      expect(exists.exitCode).toBe(1);
-      expect(exists.err).toContain('já existe');
-
-      const noTemplate = await projects(
-        ['create-project', 'novo', '--app-dir', appDir],
-        root,
-        path.join(root, 'sem-template'),
-      );
-      expect(noTemplate.exitCode).toBe(1);
-      expect(noTemplate.err).toContain('Template de projeto não encontrado');
-    }));
-
-  it('creates a ticket from the type template, in the active environment of a ready project', () =>
-    withWorkspace(async ({ root, projectsDir }) => {
-      const projectPath = path.join(projectsDir, 'demo');
-      fs.mkdirSync(projectPath, { recursive: true });
-      fs.writeFileSync(
-        path.join(projectPath, 'config.json'),
-        JSON.stringify({ name: 'Demo', envs: [{ nome: 'qa', baseURL: 'http://qa', appDir: '/app' }] }),
-      );
-      fs.writeFileSync(path.join(projectPath, '.env.json'), JSON.stringify({ qa: { TEST_USERNAME: 'ana' } }));
-
-      const created = await projects(['create-ticket', 'demo', 'story'], root);
-      expect(created.exitCode).toBe(0);
-      const file = path.join(projectPath, 'tickets', '1.json');
-      expect(created.out).toBe(`Ticket "demo-1" criado em ${file}. Troque os valores CHANGE_ME.\n`);
-      expect(JSON.parse(fs.readFileSync(file, 'utf8'))).toMatchObject({
-        ticket: 'demo-1',
-        tipo: 'story',
-        ambiente: 'qa',
-      });
-
-      const unknown = await projects(['create-ticket', 'demo', 'spike'], root);
-      expect(unknown.exitCode).toBe(1);
-      expect(unknown.err).toContain('Tipo de ticket "spike" não existe');
-
-      const missing = await projects(['create-ticket', 'demo'], root);
-      expect(missing.exitCode).toBe(1);
-      expect(missing.err).toContain('Missing project or type for create-ticket.');
-    }));
 });
 
 describe('choliba projects — help', () => {
@@ -396,17 +225,12 @@ describe('choliba projects — help', () => {
       }
     }));
 
-  it("prints a command's own help, for the project and the ticket commands", () =>
+  it("prints a command's own help", () =>
     withBrokenWorkspace(async (root) => {
-      const project = await projects(['create-project', '--help'], root);
-      expect(project.exitCode).toBe(0);
-      expect(project.out).toContain('Usage:  choliba projects create-project [PROJECT] --app-dir DIR [OPTIONS]');
-      expect(project.out).toContain('--base-url url');
-
       for (const command of ['list-projects', 'check-project', 'report-folder']) {
         expect((await projects([command, '-h'], root)).out).toContain(`Usage:  choliba projects ${command}`);
       }
-      for (const command of ['tickets-folder', 'ticket-specs', 'create-ticket']) {
+      for (const command of ['tickets-folder', 'ticket-specs']) {
         expect((await projects([command, '--help'], root)).out).toContain(`Usage:  choliba projects ${command}`);
       }
     }));
@@ -444,10 +268,6 @@ describe('ProjectsService.helpSpec — completion and description', () => {
       expect(completions(service, ['ticket-specs', 'demo', ''])).toBe('demo-01\ndemo-02');
       expect(completions(service, ['ticket-specs', 'demo', 'demo-01', ''])).toBe('');
       expect(completions(service, ['list-projects', '--'])).toBe('--tickets');
-      expect(completions(service, ['create-ticket', ''])).toBe('demo\nother');
-      expect(completions(service, ['create-ticket', 'demo', ''])).toBe('bug\nimprovement\nstory\ntask');
-      expect(completions(service, ['create-ticket', 'demo', 'bug', ''])).toBe('');
-      expect(completions(service, ['create-project', 'novo', '--app-dir', ''])).toBe(FILES_MARKER);
     }));
 
   it('completes the ticket commands too, as they belong to the same CLI', () =>
@@ -467,7 +287,7 @@ describe('ProjectsService.helpSpec — completion and description', () => {
     withBrokenWorkspace(async (root) => {
       const spec = (await serviceIn(root)).helpSpec();
       expect(describeWords(spec, [])).toBe('Resolve pastas e arquivos dos projetos Playwright em CHOL_PROJECTS_DIR.');
-      expect(describeWords(spec, ['create-project'])).toBe('Cria um projeto novo a partir do template');
+      expect(describeWords(spec, ['list-projects'])).toBe('Lista os projetos');
     }));
 
   it('suggests nothing when the projects or tickets cannot be read', () =>

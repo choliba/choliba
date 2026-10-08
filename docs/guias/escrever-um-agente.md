@@ -9,7 +9,7 @@ o prompt a partir dele, e só entra no prompt o que o agente declara: uma skill 
 some do prompt junto.
 
 Para começar de um `agent.yaml` válido, com `CHANGE_ME` onde vai o texto, use
-[`choliba-cli agent new`](../choliba-cli.md#criar-um-agente-choliba-cli-agent-new).
+[`choliba generate agent`](../choliba-cli.md#criar-um-agente-choliba-generate-agent).
 
 O `agent.yaml` segue um padrão versionado. A primeira chave, `version`, é a versão do padrão (hoje só `1`); um
 arquivo sem ela ou de outra versão não carrega. O schema é `schemes/v1/agent.schema.json`.
