@@ -145,7 +145,7 @@ describe('parseCursorToolCall', () => {
     });
   });
 
-  it("takes GetMcpTools as a discovery, of the server it names (Cursor's own catalog is the server cursor)", () => {
+  it("takes GetMcpTools as a discovery, and Cursor's own catalog (server cursor) as one of no particular server", () => {
     const started = (args: Record<string, unknown>) => ({
       type: 'tool_call',
       subtype: 'started',
@@ -161,7 +161,11 @@ describe('parseCursorToolCall', () => {
       mcp: { kind: 'discovery' },
     });
     expect(parseCursorToolCall(started({ server: 'cursor', toolName: 'FetchMcpResource' }))[0]).toMatchObject({
-      mcp: { kind: 'discovery', server: 'cursor' },
+      mcp: { kind: 'discovery' },
+    });
+    expect(parseCursorToolCall(started({ server: 'cursor' }))[0]).toHaveProperty('mcp', { kind: 'discovery' });
+    expect(parseCursorToolCall(started({ server: 'mcp-app' }))[0]).toMatchObject({
+      mcp: { kind: 'discovery', server: 'mcp-app' },
     });
   });
 

@@ -1454,9 +1454,7 @@ describe('runAgentsCli — run dir', () => {
       ),
     ).toBe(0);
     const printed = dryRunArgv(stdout);
-    expect(printed.at(printed.indexOf('--workspace') + 1)).toBe(
-      `/repo/.cache/runs/2026-01-01T00-00-00.000Z-${String(process.pid)}`,
-    );
+    expect(printed.at(printed.indexOf('--workspace') + 1)).toBe('/repo');
   });
 });
 
