@@ -29,5 +29,5 @@ Sem --dry-run, faria nesta ordem:
 ```
 
 Com `--show-prompt` (só junto de `--dry-run`), a saída segue com os dois prompts completos, a linha de comando
-completa (em JSON, um argumento por item) e, no Cursor, os arquivos `.cursor/cli.json` e `.cursor/mcp.json` como
-seriam gravados.
+completa (em JSON, um argumento por item) e, no Cursor, o `.cursor/cli.json` da pasta da execução e o
+`.cursor/mcp.json` da raiz, como seriam gravados.

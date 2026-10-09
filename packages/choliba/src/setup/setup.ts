@@ -1,4 +1,4 @@
-import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, sep } from 'node:path';
 
 import {
@@ -23,21 +23,9 @@ import {
   TICKETS_SUBDIR,
   findResource,
   findWorkspaceRoot,
+  installShellCompletion,
 } from '@choliba/core';
 import { createProject, projectTemplatesDir } from '@choliba/projects';
-
-import { COMPLETION_BASH } from '../completion';
-
-/** Where `setup` keeps the completion script: one place for every workspace. */
-export function completionFile(home: string): string {
-  return join(home, '.local', 'share', 'choliba', 'completion.bash');
-}
-
-/** The ~/.bashrc line that loads it; checking the file first keeps a new terminal quiet if it is ever removed. */
-export function sourceLine(home: string): string {
-  const file = completionFile(home);
-  return `if [ -f "${file}" ]; then source "${file}"; fi`;
-}
 
 /** What to do after installing: shown by `setup` (the postinstall), and enough to get going. */
 export const NEXT_STEPS = [
@@ -377,24 +365,9 @@ export function setupWorkspace(cwd: string): string {
   }
 }
 
-/**
- * Turns bash completion on: writes the script (always, so an upgrade refreshes it) and adds the
- * line that loads it to ~/.bashrc, once. Returns how it went.
- */
+/** Turns bash completion on: the script and the ~/.bashrc line, the same install the machine command uses. */
 export function setupShell(home: string): string {
-  const file = completionFile(home);
-  mkdirSync(dirname(file), { recursive: true });
-  writeFileSync(file, COMPLETION_BASH);
-
-  const bashrc = join(home, '.bashrc');
-  const line = sourceLine(home);
-  // Any line mentioning the script counts, so a line written by an older setup is not duplicated.
-  const present = existsSync(bashrc) && readFileSync(bashrc, 'utf8').includes(file);
-  if (!present) {
-    appendFileSync(bashrc, `\n# Autocomplete do choliba\n${line}\n`);
-  }
-  const status = present ? 'já estava ligado' : 'ligado';
-  return `Autocomplete ${status} no ~/.bashrc: abra um terminal novo (ou rode \`source ~/.bashrc\`).`;
+  return installShellCompletion(home);
 }
 
 /** `choliba setup`, also the postinstall: the workspace structure, bash completion and what to do next. */

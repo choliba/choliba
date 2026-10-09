@@ -31,24 +31,24 @@ export class GenerateProjectCommand extends CliCommand {
     super();
   }
 
-  run(): Promise<void> {
+  async run(): Promise<void> {
     const args = generateArgs(this.io.args(), 'project');
     if (this.io.wantsHelp(args)) {
       this.io.printHelp(GENERATE_PROJECT_HELP);
-      return Promise.resolve();
+      return;
     }
     try {
-      const dto = parseGenerateProjectArgs(args, this.generate.startDir());
-      const { created, dir } = this.generate.project(dto);
-      this.io.write(`Projeto "${dto.project}" criado em ${dir}.\n${describeCreated(created, dto.appDir)}`);
+      const created = await this.generate.project(parseGenerateProjectArgs(args));
       this.io.write(
-        `Antes de usar: crie ${projectEnvFile(dir)} a partir de ${projectEnvExampleFile(dir)} ` +
+        `Projeto "${created.project}" criado em ${created.dir}.\n${describeCreated(created.created, created.appDir)}`,
+      );
+      this.io.write(
+        `Antes de usar: crie ${projectEnvFile(created.dir)} a partir de ${projectEnvExampleFile(created.dir)} ` +
           `e troque os valores CHANGE_ME (config.json e .env.json).\n`,
       );
     } catch (error) {
       if (error instanceof UsageError) this.io.usageError(error.message, 'choliba generate project');
       else this.io.fail(messageOf(error));
     }
-    return Promise.resolve();
   }
 }

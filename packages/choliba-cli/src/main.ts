@@ -4,14 +4,15 @@
 import 'reflect-metadata';
 
 import { spawnSync } from 'node:child_process';
+import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 
 import { cancel, isCancel, multiselect, select, text } from '@clack/prompts';
 import { SELF_DECLARED_DEPS_METADATA } from '@nestjs/common/constants';
 import { CommandFactory } from 'nest-commander';
 
+import { createSpawnGitRunner, ensureShellCompletion, takeGlobalFlags, type Platform } from '@choliba/core';
 import { ExitStatus } from '@choliba/core/nest';
-import { createSpawnGitRunner, takeGlobalFlags, type Platform } from '@choliba/core';
 import { createBunProcessSpawner } from '@choliba/terminal/nest';
 
 import { AppModule } from './app.module';
@@ -87,6 +88,14 @@ const clackPrompter: Prompter = {
 
 const { argv, noColorFlag } = takeGlobalFlags(process.argv.slice(2));
 process.argv = [...process.argv.slice(0, 2), ...argv];
+
+// The postinstall of the published package only turns completion on. A normal run does it too, the first
+// time, and stays quiet after that. Completion itself never rewrites ~/.bashrc.
+if (process.env['npm_lifecycle_event'] === 'postinstall') {
+  ensureShellCompletion(homedir(), [], process.stderr);
+  process.exit(0);
+}
+ensureShellCompletion(homedir(), argv, process.stderr);
 
 const platform: Platform = {
   argv,

@@ -11,8 +11,11 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
   provider. Cada execução roda numa pasta vazia, `.cache/runs/<id>/`, criada antes e apagada depois, porque os dois
   providers liberam tudo na pasta em que rodam. No Claude, as regras dizem exatamente onde ele lê e escreve, e ele
   só tem as ferramentas que as permissões pedem. No Cursor, que não trata `allow` como limite, o choliba gera um
-  `deny` para todo o resto do disco. Limite do Cursor: um arquivo **novo**, criado direto numa pasta do caminho até
-  um item liberado (a raiz do workspace, por exemplo), não é bloqueado.
+  `deny` para todo o resto do disco e grava o `cli.json` nessa pasta da execução: é o diretório em que o
+  cursor-agent nasce, e sem um raiz de git ele só lê o `cli.json` dali. O de `~/.cursor` continua de base; as
+  listas `allow` e `deny` da run substituem as dele. O `mcp.json` fica na raiz do workspace. Limite do Cursor: um
+  arquivo **novo**, criado direto numa pasta do caminho até um item liberado (a raiz do workspace, por exemplo),
+  não é bloqueado.
 - **Caminhos.** Caminho relativo é relativo à raiz do workspace. As pastas das skills declaradas ficam liberadas para
   leitura sozinhas. Num glob, o Cursor libera a pasta antes dele inteira.
 - **`--add-dir <pasta>`** libera a leitura de uma pasta a mais só naquela execução (pode repetir), como se ela

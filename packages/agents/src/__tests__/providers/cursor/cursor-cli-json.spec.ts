@@ -66,57 +66,70 @@ describe('applyCursorMcpServers', () => {
 });
 
 describe('applyCursorPermissions', () => {
-  it('writes the permissions and removes the file and the .cursor dir it created', () => {
+  it('writes the permissions into the run dir and removes the file and the .cursor dir it created', () => {
     const tmp = makeTmpDir('cursor-cli-json-new');
     try {
-      const restore = applyCursorPermissions(tmp.path, PERMISSIONS);
-      const written: unknown = JSON.parse(readFileSync(join(tmp.path, '.cursor/cli.json'), 'utf8'));
+      const runDir = join(tmp.path, 'run');
+      mkdirSync(runDir);
+      const restore = applyCursorPermissions(runDir, tmp.path, PERMISSIONS);
+      const written: unknown = JSON.parse(readFileSync(join(runDir, '.cursor/cli.json'), 'utf8'));
       expect(written).toEqual({ permissions: PERMISSIONS });
+      expect(existsSync(join(tmp.path, '.cursor'))).toBe(false);
 
       restore();
       restore();
-      expect(existsSync(join(tmp.path, '.cursor'))).toBe(false);
+      expect(existsSync(join(runDir, '.cursor'))).toBe(false);
     } finally {
       tmp.cleanup();
     }
   });
 
-  it('keeps a .cursor dir that already existed, or that gained other files during the run', () => {
+  it('keeps a .cursor dir in the run dir that already existed', () => {
     const tmp = makeTmpDir('cursor-cli-json-dir');
     try {
-      mkdirSync(join(tmp.path, '.cursor'));
-      applyCursorPermissions(tmp.path, PERMISSIONS)();
-      expect(existsSync(join(tmp.path, '.cursor'))).toBe(true);
-      expect(existsSync(join(tmp.path, '.cursor/cli.json'))).toBe(false);
+      const runDir = join(tmp.path, 'run');
+      mkdirSync(join(runDir, '.cursor'), { recursive: true });
+      applyCursorPermissions(runDir, tmp.path, PERMISSIONS)();
+      expect(existsSync(join(runDir, '.cursor'))).toBe(true);
+      expect(existsSync(join(runDir, '.cursor/cli.json'))).toBe(false);
     } finally {
       tmp.cleanup();
     }
   });
 
-  it('puts an existing cli.json back byte for byte', () => {
+  it('unions the workspace cli.json into the run file and leaves the workspace file untouched', () => {
     const tmp = makeTmpDir('cursor-cli-json-existing');
     try {
+      const runDir = join(tmp.path, 'run');
+      mkdirSync(runDir);
       mkdirSync(join(tmp.path, '.cursor'));
       const original = '{ "editor": {"vim": true} }\n';
       writeFileSync(join(tmp.path, '.cursor/cli.json'), original);
 
-      const restore = applyCursorPermissions(tmp.path, PERMISSIONS);
-      expect(readFileSync(join(tmp.path, '.cursor/cli.json'), 'utf8')).toContain('Shell(prettier)');
+      const restore = applyCursorPermissions(runDir, tmp.path, PERMISSIONS);
+      const written = readFileSync(join(runDir, '.cursor/cli.json'), 'utf8');
+      expect(written).toContain('Shell(prettier)');
+      expect(written).toContain('"vim": true');
+      expect(readFileSync(join(tmp.path, '.cursor/cli.json'), 'utf8')).toBe(original);
       restore();
       expect(readFileSync(join(tmp.path, '.cursor/cli.json'), 'utf8')).toBe(original);
+      expect(existsSync(join(runDir, '.cursor/cli.json'))).toBe(false);
     } finally {
       tmp.cleanup();
     }
   });
 
-  it('refuses to touch an invalid cli.json', () => {
+  it('refuses to read an invalid workspace cli.json and writes nothing in the run dir', () => {
     const tmp = makeTmpDir('cursor-cli-json-invalid');
     try {
+      const runDir = join(tmp.path, 'run');
+      mkdirSync(runDir);
       mkdirSync(join(tmp.path, '.cursor'));
       writeFileSync(join(tmp.path, '.cursor/cli.json'), '{ nope');
 
-      expect(() => applyCursorPermissions(tmp.path, PERMISSIONS)).toThrow('não é um JSON válido');
+      expect(() => applyCursorPermissions(runDir, tmp.path, PERMISSIONS)).toThrow('não é um JSON válido');
       expect(readFileSync(join(tmp.path, '.cursor/cli.json'), 'utf8')).toBe('{ nope');
+      expect(existsSync(join(runDir, '.cursor'))).toBe(false);
     } finally {
       tmp.cleanup();
     }

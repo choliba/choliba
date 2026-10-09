@@ -34,6 +34,7 @@ export class GenerateCommand extends CliCommand implements HelpContributor {
       {
         name: 'generate',
         description: 'Gera um agente, um projeto de teste ou um ticket (alias: g)',
+        aliases: ['g'],
         group: 'Commands',
         spec: generateHelp(this.generate.ticketTypes()),
       },
