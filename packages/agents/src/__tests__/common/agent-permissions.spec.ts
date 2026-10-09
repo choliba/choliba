@@ -8,7 +8,7 @@ import {
   blocksEveryCommand,
   formatPermissions,
   mapPermissions,
-  pathGlob,
+  pathGlobs,
   permissionTexts,
   readAgentPermissions,
   withoutTrailingSlash,
@@ -120,7 +120,7 @@ describe('formatPermissions', () => {
     expect(formatPermissions(DECLARED)).toBe(
       [
         '<permissions>',
-        'Enforced by the command, not only asked: anything not allowed below is blocked. Relative paths are relative to the workspace root; paths ending in / cover everything under them.',
+        'Enforced by the command, not only asked: anything not allowed below is blocked. Relative paths are relative to the workspace root; a path without a glob covers everything under it. In the lists of what you may not do, a path starting with ! is an exception: it is taken out of the paths around it (you still need it among what you may do).',
         'You may read:',
         '- src/',
         'You may write:',
@@ -182,11 +182,15 @@ describe('formatPermissions', () => {
   });
 });
 
-describe('pathGlob', () => {
+describe('pathGlobs', () => {
   it('turns a directory into everything under it and keeps anything else', () => {
-    expect(pathGlob('docs/')).toBe('docs/**');
-    expect(pathGlob('README.md')).toBe('README.md');
-    expect(pathGlob('tsconfig*.json')).toBe('tsconfig*.json');
+    expect(pathGlobs('docs/')).toEqual(['docs/**']);
+    expect(pathGlobs('docs', (path) => path === 'docs')).toEqual(['docs', 'docs/**']);
+    expect(pathGlobs('README.md', () => false)).toEqual(['README.md']);
+    expect(pathGlobs('/nope/at/all')).toEqual(['/nope/at/all']);
+    expect(pathGlobs(__dirname)).toEqual([__dirname, `${__dirname}/**`]);
+    expect(pathGlobs('tsconfig*.json')).toEqual(['tsconfig*.json']);
+    expect(pathGlobs('/p/*/tickets/')).toEqual(['/p/*/tickets/**']);
   });
 });
 

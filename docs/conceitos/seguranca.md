@@ -7,7 +7,7 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
 `permissions` do [`agent.yaml`](../guias/escrever-um-agente.md):
 
 - **Negado por padrão, em qualquer lugar.** O agente só lê, escreve e roda o que está em `permissions.allow`, no
-  workspace ou fora dele; `deny` prevalece sobre `allow`. O choliba escreve as permissões no prompt e as aplica no
+  workspace ou fora dele; `deny` prevalece sobre `allow`, menos no que uma exceção `!` do deny tira dele. O choliba escreve as permissões no prompt e as aplica no
   provider. Cada execução roda numa pasta vazia, `.cache/runs/<id>/`, criada antes e apagada depois, porque os dois
   providers liberam tudo na pasta em que rodam. No Claude, as regras dizem exatamente onde ele lê e escreve, e ele
   só tem as ferramentas que as permissões pedem. No Cursor, que não trata `allow` como limite, o choliba gera um
@@ -16,8 +16,18 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
   listas `allow` e `deny` da run substituem as dele. O `mcp.json` fica na raiz do workspace. Limite do Cursor: um
   arquivo **novo**, criado direto numa pasta do caminho até um item liberado (a raiz do workspace, por exemplo),
   não é bloqueado.
-- **Caminhos.** Caminho relativo é relativo à raiz do workspace. As pastas das skills declaradas ficam liberadas para
-  leitura sozinhas. Num glob, o Cursor libera a pasta antes dele inteira.
+- **Caminhos.** Caminho relativo é relativo à raiz do workspace. Um caminho sem glob é o item e tudo abaixo dele,
+  com ou sem `/` no fim, em qualquer provider: o choliba entrega a cada um o glob explícito. Num glob, o Cursor libera
+  a pasta antes dele inteira.
+- **Exceções no deny.** Em `deny.read`, `deny.write` e `deny.delete`, `!caminho` tira esse caminho de um deny da
+  mesma lista, como no `.gitignore` (veja
+  [Exceções no deny](../referencia/agent-yaml.md#exceções-no-deny)). Nenhum provider entende `!`, então o choliba
+  resolve antes: o deny que contém a exceção vira tudo o que há dentro dele, menos o caminho até ela, lido do disco
+  no começo da execução. Assim Claude e Cursor recebem regras que não se contradizem e chegam ao mesmo resultado.
+  Limite: o que for criado depois, numa dessas pastas, fica fora do deny (no Claude continua bloqueado, porque nada
+  o libera).
+- **Skills.** A pasta de cada skill declarada fica liberada para leitura e é uma exceção dos `deny.read` do agente:
+  declarar a skill é pedir para lê-la. Vale só para essa pasta, não para `.choliba/skills/` inteira.
 - **`--add-dir <pasta>`** libera a leitura de uma pasta a mais só naquela execução (pode repetir), como se ela
   estivesse em `allow.read`; o `deny` do agente continua valendo por cima dela.
 - **Execução por diretório.** Os comandos rodam a partir da pasta da execução, dentro do workspace (por isso

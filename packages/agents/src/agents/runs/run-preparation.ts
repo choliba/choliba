@@ -28,11 +28,11 @@ import type { SkillSummary } from '../agent-skills';
 import { formatSkillsInstruction, resolveSkills } from '../agent-skills';
 import { StepFailedError, stepExitCode } from '../steps/step-actions';
 import { buildUserPrompt } from '../../common';
-import { checkModelSupported, checkedExecuteDirs } from './run-checks';
+import { checkModelSupported, checkedDenyExceptions, checkedExecuteDirs } from './run-checks';
 import type { PreparedRun, RunAgentsCliDeps, RunArgs, RunContext, Stopped } from './run-context';
 import { STOPPED, errorMessage, toAbsolute } from './run-context';
 import { LOCATION_VARS, agentTexts, withExpandedVars } from '../../common';
-import { withProjectDenies } from '../../common';
+import { EXCEPTION_PREFIX, withProjectDenies } from '../../common';
 
 /**
  * The skills the agent lists, found in the skills dir. A missing or malformed skill stops the run
@@ -225,6 +225,17 @@ function withReads(agent: AgentDefinition, folders: readonly string[]): AgentDef
 }
 
 /**
+ * The agent with the folder of each skill it lists taken out of `deny.read` (a `!` exception): declaring a skill
+ * is asking to read it, so no deny of the agent's hides it. Only that folder, not the skills dir.
+ */
+function withSkillExceptions(agent: AgentDefinition, skills: readonly SkillSummary[]): AgentDefinition {
+  const exceptions = skills.map((skill) => `${EXCEPTION_PREFIX}${dirname(skill.path)}/`);
+  return exceptions.length === 0
+    ? agent
+    : { ...agent, permissions: { ...agent.permissions, denyRead: [...agent.permissions.denyRead, ...exceptions] } };
+}
+
+/**
  * The folders the agent may read besides its own permissions: each skill it lists (using a skill is reading
  * it) and each `--add-dir` (the person who runs it gives it that folder to read).
  */
@@ -250,10 +261,13 @@ export function prepareRun(
   const command = commandFor(context, declaredCommand, agent);
   const agentSkills = resolveAgentSkills(agent, deps);
   const mcpServers = agentSkills === undefined ? undefined : resolveAgentMcps(agent, deps);
-  if (agentSkills === undefined || mcpServers === undefined) {
+  if (agentSkills === undefined || mcpServers === undefined || !checkedDenyExceptions(agent, deps)) {
     return STOPPED;
   }
-  const withSkills = withReads(agent, extraReads(agentSkills.skills, parsed, deps));
+  const withSkills = withReads(
+    withSkillExceptions(agent, agentSkills.skills),
+    extraReads(agentSkills.skills, parsed, deps),
+  );
   const executeDirs = checkedExecuteDirs(withSkills, deps);
   if (executeDirs === undefined) {
     return STOPPED;

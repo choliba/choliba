@@ -1,5 +1,5 @@
 import { mcpServersMap } from '../../common';
-import { absolutePermissions } from '../../common';
+import { absolutePermissions, readDir } from '../../common';
 import { assertArgvFits, runPlaceOf, wrapInstructions } from '../../common';
 import { runToolCommands, runToolsOf } from '../../common';
 import { createStreamJsonParser } from '../../common';
@@ -15,13 +15,7 @@ import {
   planCursorPermissions,
 } from './cursor-cli-json';
 import { clearCursorState } from './cursor-state';
-import {
-  type CursorPermissions,
-  cursorPermissions,
-  readDir,
-  undeclaredMcpTokens,
-  userMcpServers,
-} from './cursor-permissions';
+import { type CursorPermissions, cursorPermissions, undeclaredMcpTokens, userMcpServers } from './cursor-permissions';
 
 function resolvePlanContent(context: PlanContentContext): string | undefined {
   const content = context.planMarkdown?.trim();

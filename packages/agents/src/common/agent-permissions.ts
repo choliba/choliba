@@ -1,7 +1,9 @@
+import { statSync } from 'node:fs';
 import { dirname, isAbsolute, join } from 'node:path';
 
 import type { PermissionPolicy } from './interfaces/execution.interface';
 import { asStringArray, isRecord } from './json';
+import { EXCEPTION_PREFIX, exceptionPath, hasGlob, isException } from './resolve-denies';
 import type { RunProject } from './run-project';
 
 /** One entry of `permissions.allow.execute`/`.deny.execute`: a directory and the commands that go with it. */
@@ -152,8 +154,11 @@ export function withoutTrailingSlash(dir: string): string {
   return dir.length > 1 && dir.endsWith('/') ? dir.slice(0, -1) : dir;
 }
 
-/** `path` as an absolute path: a relative one is relative to the workspace root. */
+/** `path` as an absolute path: a relative one is relative to the workspace root; an exception keeps its `!`. */
 function absolute(path: string, root: string): string {
+  if (isException(path)) {
+    return `${EXCEPTION_PREFIX}${absolute(exceptionPath(path), root)}`;
+  }
   return isAbsolute(path) ? path : join(root, path);
 }
 
@@ -195,16 +200,33 @@ export function outsideExecuteDirs(permissions: AgentPermissions, root: string):
   return [...new Set(dirs)].filter((dir) => dir !== withoutTrailingSlash(root));
 }
 
-/** Whether `dir` is inside a folder `allow.read` names (a path ending in `/`). */
+/** Whether `dir` is a folder `allow.read` names (a path without a glob), or lies under one. */
 export function canRead(permissions: AgentPermissions, dir: string): boolean {
-  return permissions.allowRead.some(
-    (path) => path.endsWith('/') && (dir === withoutTrailingSlash(path) || dir.startsWith(path)),
-  );
+  return permissions.allowRead
+    .filter((path) => !hasGlob(path))
+    .map(withoutTrailingSlash)
+    .some((path) => dir === path || dir.startsWith(`${path}/`));
 }
 
-/** A declared path as a glob: `docs/` covers everything under it, anything else stays as written. */
-export function pathGlob(path: string): string {
-  return path.endsWith('/') ? `${path}**` : path;
+/** Whether `path` is a folder on disk; a file, or a path that does not exist, is not. */
+export function isFolder(path: string): boolean {
+  try {
+    return statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * A declared path as the globs a provider gets, so every provider reads it the same way: a path without a glob
+ * is the item and everything under it (`docs` and `docs/` both cover `docs/**`, `docs` once it is a folder on
+ * disk), a path ending in `/` covers everything under it even with a glob, any other glob stays as written.
+ */
+export function pathGlobs(path: string, folder: (path: string) => boolean = isFolder): readonly string[] {
+  if (path.endsWith('/')) {
+    return [`${path}**`];
+  }
+  return !hasGlob(path) && folder(path) ? [path, `${path}/**`] : [path];
 }
 
 function pathLines(label: string, items: readonly string[]): readonly string[] {
@@ -279,7 +301,7 @@ export function formatPermissions(
       : [...lines, ...commands, ...toolLines];
   return [
     '<permissions>',
-    'Enforced by the command, not only asked: anything not allowed below is blocked. Relative paths are relative to the workspace root; paths ending in / cover everything under them.',
+    'Enforced by the command, not only asked: anything not allowed below is blocked. Relative paths are relative to the workspace root; a path without a glob covers everything under it. In the lists of what you may not do, a path starting with ! is an exception: it is taken out of the paths around it (you still need it among what you may do).',
     ...body,
     mcpLine(hasMcps),
     DELEGATION_LINE,
