@@ -8,6 +8,7 @@ import {
   formatSections,
   modeInstruction,
   runPlaceOf,
+  unenforcedToolsLine,
   wrapInstructions,
 } from '../../common/prompt';
 import { NO_PERMISSIONS } from '../../common/agent-permissions';
@@ -222,5 +223,12 @@ describe('assertArgvFits', () => {
     expect(() => {
       assertArgvFits(['a'.repeat(MAX_ARG_BYTES)]);
     }).not.toThrow();
+  });
+});
+
+describe('unenforcedToolsLine', () => {
+  it('names the tools the model must never call, and says nothing when there are none', () => {
+    expect(unenforcedToolsLine([])).toBe('');
+    expect(unenforcedToolsLine(['Grep', 'Glob'])).toContain('Never use Grep or Glob');
   });
 });

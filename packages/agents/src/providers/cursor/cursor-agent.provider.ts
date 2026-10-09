@@ -1,6 +1,6 @@
 import { mcpServersMap } from '../../common';
 import { absolutePermissions, readDir } from '../../common';
-import { assertArgvFits, runPlaceOf, wrapInstructions } from '../../common';
+import { assertArgvFits, runPlaceOf, unenforcedToolsLine, wrapInstructions } from '../../common';
 import { runToolCommands, runToolsOf } from '../../common';
 import { createStreamJsonParser } from '../../common';
 import { Injectable } from '@nestjs/common';
@@ -16,6 +16,12 @@ import {
 } from './cursor-cli-json';
 import { clearCursorState } from './cursor-state';
 import { type CursorPermissions, cursorPermissions, undeclaredMcpTokens, userMcpServers } from './cursor-permissions';
+
+/**
+ * Cursor's `Grep` and `Glob` read what a `Read` deny covers (checked with real runs: a `Grep` returned the content of
+ * a denied file, a `Glob` listed a denied folder), and no permission removes them; a call to one stops the run.
+ */
+const UNENFORCED_TOOLS: readonly string[] = ['Grep', 'Glob'];
 
 function resolvePlanContent(context: PlanContentContext): string | undefined {
   const content = context.planMarkdown?.trim();
@@ -47,7 +53,8 @@ function policyArgs(request: ProviderRequest): readonly string[] {
  * front of the prompt instead of appended as a separate flag.
  */
 function buildArgs(request: ProviderRequest): readonly string[] {
-  const prompt = `${wrapInstructions(request.agent, request.skillsInstruction, runPlaceOf(request))}\n\n${request.userPrompt}`;
+  const instructions = wrapInstructions(request.agent, request.skillsInstruction, runPlaceOf(request));
+  const prompt = [instructions, unenforcedToolsLine(UNENFORCED_TOOLS), request.userPrompt].join('\n\n');
   // `--workspace` is where cursor-agent reads `.cursor/mcp.json`. It does not read `.cursor/cli.json`
   // from there: it walks from the git root down to the process cwd (the run dir) and, with no git
   // repo, only that cwd, otherwise falling back to `~/.cursor/cli-config.json`. The run's cli.json
@@ -141,6 +148,7 @@ function previewWorkspace(request: ProviderRequest): readonly PlannedFile[] {
 @Injectable()
 export class CursorAgentProvider extends AgentProvider {
   readonly id = 'cursor';
+  override readonly unenforcedTools = UNENFORCED_TOOLS;
   readonly binaries = [['agent'], ['cursor-agent'], ['cursor', 'agent']];
   /** First in `auto`. */
   readonly autoPriority = 1;
