@@ -347,7 +347,7 @@ function restoreEnv(name: string, value: string | undefined): void {
 }
 
 describe('cursorProvider.prepareWorkspace', () => {
-  it("writes the agent's permissions into the workspace root for the run and removes them afterwards", () => {
+  it("writes the agent's permissions into the run dir for the run and removes them afterwards", () => {
     const tmp = makeTmpDir('cursor-prepare');
     try {
       const runDir = join(tmp.path, 'run');
@@ -357,12 +357,12 @@ describe('cursorProvider.prepareWorkspace', () => {
         fakeRequest({ workspaceRoot: tmp.path, runDir, agent: fakeAgent({ permissions }) }),
       );
 
-      const { allow, deny } = cliJsonIn(tmp.path);
+      const { allow, deny } = cliJsonIn(runDir);
       expect(allow).toEqual([]);
       expect(deny[0]).toBe('Shell(prettier)');
-      expect(existsSync(join(runDir, '.cursor'))).toBe(false);
-      restore();
       expect(existsSync(join(tmp.path, '.cursor'))).toBe(false);
+      restore();
+      expect(existsSync(join(runDir, '.cursor'))).toBe(false);
     } finally {
       tmp.cleanup();
     }
@@ -401,7 +401,7 @@ describe('cursorProvider.prepareWorkspace', () => {
       mkdirSync(runDir);
       const restore = cursorProvider.prepareWorkspace(fakeRequest({ workspaceRoot: tmp.path, runDir }));
 
-      const { allow, deny } = cliJsonIn(tmp.path);
+      const { allow, deny } = cliJsonIn(runDir);
       expect(allow).toEqual([]);
       expect(deny).toEqual(expect.arrayContaining(['Read(/etc/**)', 'Write(/etc/**)']));
       restore();
@@ -431,9 +431,10 @@ describe('cursorProvider.prepareWorkspace', () => {
 
       const mcpJson: unknown = JSON.parse(readFileSync(join(tmp.path, '.cursor/mcp.json'), 'utf8'));
       expect(mcpJson).toEqual({ mcpServers: { browser: { command: 'npx', args: ['browser-mcp'] } } });
-      expect(cliJsonIn(tmp.path).allow).toEqual(['Mcp(browser:*)']);
+      expect(cliJsonIn(runDir).allow).toEqual(['Mcp(browser:*)']);
       restore();
       expect(existsSync(join(tmp.path, '.cursor'))).toBe(false);
+      expect(existsSync(join(runDir, '.cursor'))).toBe(false);
     } finally {
       tmp.cleanup();
     }
@@ -463,6 +464,7 @@ describe('cursorProvider.prepareWorkspace', () => {
         ),
       ).toThrow('não é um JSON válido');
       expect(existsSync(join(tmp.path, '.cursor/cli.json'))).toBe(false);
+      expect(existsSync(join(runDir, '.cursor/cli.json'))).toBe(false);
     } finally {
       tmp.cleanup();
     }
@@ -481,14 +483,14 @@ describe('cursorProvider.previewWorkspace', () => {
       const files = cursorProvider.previewWorkspace(request);
 
       expect(files.map((file) => file.path)).toEqual([
-        join(tmp.path, '.cursor', 'cli.json'),
+        join(runDir, '.cursor', 'cli.json'),
         join(tmp.path, '.cursor', 'mcp.json'),
       ]);
       expect(JSON.parse(files[1]?.content ?? '')).toEqual({ mcpServers: { browser: { command: 'npx' } } });
       expect(existsSync(join(tmp.path, '.cursor'))).toBe(false);
 
       const restore = cursorProvider.prepareWorkspace(request);
-      expect(readFileSync(join(tmp.path, '.cursor', 'cli.json'), 'utf8')).toBe(files[0]?.content);
+      expect(readFileSync(join(runDir, '.cursor', 'cli.json'), 'utf8')).toBe(files[0]?.content);
       restore();
       expect(cursorProvider.previewWorkspace(fakeRequest({ workspaceRoot: tmp.path, runDir }))).toHaveLength(1);
     } finally {
@@ -512,13 +514,13 @@ describe('cursorProvider.previewWorkspace', () => {
       });
 
       expect(cursorProvider.previewWorkspace(request).map((file) => file.path)).toEqual([
-        join(tmp.path, '.cursor', 'cli.json'),
+        join(run, '.cursor', 'cli.json'),
       ]);
       const restore = cursorProvider.prepareWorkspace(request);
-      expect(cliJsonIn(tmp.path).allow).toEqual(
+      expect(cliJsonIn(run).allow).toEqual(
         expect.arrayContaining([`Shell(${run}.delete)`, `Shell(${run}.playwright-cli)`]),
       );
-      expect(cliJsonIn(tmp.path).deny).toEqual(
+      expect(cliJsonIn(run).deny).toEqual(
         expect.arrayContaining([`Write(${run}.delete)`, `Write(${run}.playwright-cli)`]),
       );
       restore();

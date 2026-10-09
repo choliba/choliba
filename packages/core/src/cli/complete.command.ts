@@ -20,7 +20,13 @@ export class CompleteCommand extends CliCommand {
   }
 
   run(): Promise<void> {
-    this.help.printCompletions(this.registry.spec(this.options.spec, this.options.groups), this.io.args('__complete'));
+    const words = this.io.args('__complete');
+    const delegated = this.options.delegateComplete?.(words);
+    if (delegated !== undefined) {
+      this.io.write(delegated);
+      return Promise.resolve();
+    }
+    this.help.printCompletions(this.registry.spec(this.options.spec, this.options.groups), words);
     return Promise.resolve();
   }
 }

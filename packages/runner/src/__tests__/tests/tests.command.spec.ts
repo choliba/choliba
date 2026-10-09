@@ -148,7 +148,7 @@ describe('TestsService.helpSpec — completion and description', () => {
       const completions = (...words: string[]): string => formatSuggestions(complete(spec, words));
 
       expect(completions('--')).toBe('--expect\n--failures\n--help');
-      expect(completions('')).toBe('demo');
+      expect(completions('')).toBe('help\nversion\ndemo');
       expect(completions('demo', '--expect', '')).toBe('red\ngreen');
       expect(completions('demo', 'x')).toBe('');
       expect(completions('demo', '--failures', '')).toBe(':files');
@@ -159,7 +159,7 @@ describe('TestsService.helpSpec — completion and description', () => {
 
   it('completes no project when the workspace locations cannot be read', () =>
     withWorkspace(async ({ root }) => {
-      expect(formatSuggestions(complete(await specIn(root), ['']))).toBe('--expect\n--failures\n--help\n-h');
+      expect(formatSuggestions(complete(await specIn(root), ['']))).toBe('help\nversion');
     }, false));
 
   it('describes itself, examples after the first line', () =>

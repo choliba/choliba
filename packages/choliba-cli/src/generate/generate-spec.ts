@@ -34,17 +34,26 @@ export const GENERATE_AGENT_HELP: CommandSpec = {
 
 /** `choliba generate project --help`. */
 export const GENERATE_PROJECT_HELP: CommandSpec = {
-  usage: 'choliba generate project [PROJECT] --app-dir DIR [OPTIONS]',
-  description: 'Cria um projeto novo a partir do template',
+  usage: 'choliba generate project [PROJECT] [OPTIONS]',
+  description:
+    'Cria um projeto de teste a partir do template, em CHOL_PROJECTS_DIR. O que não vier nas opções é perguntado.\n\n' +
+    'Exemplos:\n' +
+    '  choliba generate project\n' +
+    '  choliba generate project minha-app --app-dir ../minha-app --base-url http://localhost:3000 --no-input',
   positionals: () => ({ kind: 'values', values: [] }),
   flags: [
     {
       name: '--app-dir',
       description:
-        'Pasta com o código da aplicação (obrigatória): precisa existir; relativa ao diretório atual. Sem PROJECT, o projeto leva o nome dela; o README na raiz dela vira o description',
+        'Pasta com o código da aplicação: precisa existir; relativa ao diretório atual. Sem PROJECT, o projeto leva o nome dela; o README na raiz dela vira o description',
       value: { name: 'dir', suggest: () => ({ kind: 'files' }) },
     },
-    { name: '--base-url', description: 'URL base do projeto', value: { name: 'url' } },
+    {
+      name: '--base-url',
+      description: 'URL base do projeto (vazia não grava baseURL)',
+      value: { name: 'url' },
+    },
+    { name: '--no-input', description: 'Não pergunta nada: usa as opções e os padrões' },
     { name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true },
   ],
 };

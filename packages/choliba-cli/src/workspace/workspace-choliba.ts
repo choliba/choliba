@@ -47,6 +47,41 @@ export function workspaceEntries(runtime: CliRuntime, root: string): readonly Co
   }));
 }
 
+/** Commands of this binary. Their completion stays here, even inside a workspace. */
+const MACHINE_COMMANDS = new Set(['new', 'n', 'generate', 'g', 'add']);
+
+/** The first word already typed (not the one being completed, and not a flag). */
+function typedCommand(words: readonly string[]): string | undefined {
+  return words.slice(0, -1).find((word) => word !== '' && !word.startsWith('-'));
+}
+
+/**
+ * When the first word is a command of the workspace's choliba, its `__complete` output (including `:files`).
+ * `undefined` when this binary should answer: no command yet, or `new` / `n` / `generate` / `g` / `add`.
+ */
+export function delegateWorkspaceComplete(
+  runtime: CliRuntime,
+  start: string,
+  words: readonly string[],
+): string | undefined {
+  const command = typedCommand(words);
+  if (command === undefined || MACHINE_COMMANDS.has(command)) return undefined;
+  const root = workspaceAt(start);
+  if (root === undefined) return undefined;
+  const names = workspaceCommandEntries(runtime, root).map((entry) => entry.name);
+  if (!names.includes(command)) return undefined;
+  const run = runtime.capture(workspaceCholiba(root), ['__complete', ...words], root);
+  if (run.status !== 0) return undefined;
+  if (run.stdout === '' || run.stdout.endsWith('\n')) return run.stdout;
+  return `${run.stdout}\n`;
+}
+
+/** The workspace commands, for this help. None outside a workspace or when its `choliba` cannot list them. */
+export function workspaceCommandEntries(runtime: CliRuntime, start: string): readonly CommandEntry[] {
+  const root = workspaceAt(start);
+  return root === undefined ? [] : workspaceEntries(runtime, root);
+}
+
 /** `--version`: this command's line, then, inside a workspace, its `choliba`'s, as it prints it. */
 export function versionLines(machineLine: string, runtime: CliRuntime, start: string): string {
   const root = workspaceAt(start);

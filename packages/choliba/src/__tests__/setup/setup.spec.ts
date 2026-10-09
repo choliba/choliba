@@ -5,17 +5,21 @@ import path from 'node:path';
 
 import { loadProjectSettings } from '@choliba/projects';
 
-import { FILES_MARKER, DEFAULT_THEME, parseColors } from '@choliba/core';
-
-import { COMPLETION_BASH } from '../../completion/completion';
 import {
+  COMPLETION_BASH,
   completionFile,
+  completionSourceLine,
+  FILES_MARKER,
+  DEFAULT_THEME,
+  parseColors,
+} from '@choliba/core';
+
+import {
   initialEnv,
   scaffoldWorkspace,
   setup,
   setupShell,
   setupWorkspace,
-  sourceLine,
   trustPackage,
   addEditorSettings,
   createExample,
@@ -41,6 +45,8 @@ function withDir(run: (dir: string) => void): void {
 describe('COMPLETION_BASH', () => {
   it('completes choliba and bunx choliba by asking the workspace choliba, falling back to files', () => {
     expect(COMPLETION_BASH).toContain('complete -F _choliba_complete choliba');
+    expect(COMPLETION_BASH).toContain('complete -F _choliba_complete chol');
+    expect(COMPLETION_BASH).toContain('command -v choliba');
     expect(COMPLETION_BASH).toContain('complete -F _choliba_complete_bunx bunx');
     expect(COMPLETION_BASH).toContain('complete -F _choliba_complete_bun bun');
     expect(COMPLETION_BASH).toContain('node_modules/.bin/choliba');
@@ -59,7 +65,8 @@ describe('COMPLETION_BASH as bash reads it', () => {
     expect(COMPLETION_BASH).toContain(`printf '%s\\n' "$dir/node_modules/.bin/choliba"`);
     expect(COMPLETION_BASH).toContain('_choliba_previous_bun="${_choliba_previous_bun#*-F }"');
     expect(COMPLETION_BASH).toContain('local root="${1%/node_modules/.bin/choliba}"');
-    expect(COMPLETION_BASH).toContain('_choliba_suggest "$at" "${script_words[@]:1}"');
+    expect(COMPLETION_BASH).toContain('_choliba_suggest _choliba_bin "$at" "${script_words[@]:1}"');
+    expect(COMPLETION_BASH).toContain('_choliba_suggest _choliba_machine_bin 0');
   });
 });
 
@@ -421,8 +428,10 @@ describe('setupShell / setup', () => {
       expect(fs.readFileSync(completionFile(home), 'utf8')).toBe(COMPLETION_BASH);
       expect(setupShell(home)).toContain('Autocomplete já estava ligado');
       const bashrc = fs.readFileSync(path.join(home, '.bashrc'), 'utf8');
-      expect(bashrc.split(sourceLine(home)).length - 1).toBe(1);
-      expect(sourceLine(home)).toBe(`if [ -f "${completionFile(home)}" ]; then source "${completionFile(home)}"; fi`);
+      expect(bashrc.split(completionSourceLine(home)).length - 1).toBe(1);
+      expect(completionSourceLine(home)).toBe(
+        `if [ -f "${completionFile(home)}" ]; then source "${completionFile(home)}"; fi`,
+      );
     });
   });
 

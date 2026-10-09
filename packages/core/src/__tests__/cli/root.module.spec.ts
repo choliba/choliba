@@ -90,8 +90,9 @@ describe('RootModule', () => {
     }
   });
 
-  it('prints the version', async () => {
+  it('prints the version for version and --version', async () => {
     expect(await demo(['--version'])).toEqual({ code: 0, out: 'demo 1.2.3\n', err: '' });
+    expect(await demo(['version'])).toEqual({ code: 0, out: 'demo 1.2.3\n', err: '' });
   });
 
   it('hands a word that is not a command to the fallback, with the whole command line', async () => {
@@ -140,8 +141,26 @@ describe('RootModule', () => {
   });
 
   it('completes and describes from the registered commands', async () => {
-    expect((await demo(['__complete', ''])).out).toBe('build\nserve\n');
+    expect((await demo(['__complete', ''])).out).toBe('build\nserve\nhelp\nversion\n');
     expect((await demo(['__complete', 'build', '--f'])).out).toBe('--fast\n');
     expect((await demo(['__describe', 'serve'])).out).toBe('Sobe o servidor\n');
+  });
+
+  it('prints a delegated completion, and completes locally when the delegate declines', async () => {
+    const delegated = fakePlatform({ argv: ['__complete', 'agents', ''] });
+    const delegatedCode = await runCommand(
+      [RootModule.forRoot({ ...ROOT, delegateComplete: () => ':files\n' }), CommandsModule],
+      delegated,
+    );
+    expect(delegatedCode).toBe(0);
+    expect(delegated.stdout.text()).toBe(':files\n');
+
+    const local = fakePlatform({ argv: ['__complete', ''] });
+    const localCode = await runCommand(
+      [RootModule.forRoot({ ...ROOT, delegateComplete: () => undefined }), CommandsModule],
+      local,
+    );
+    expect(localCode).toBe(0);
+    expect(local.stdout.text()).toBe('build\nserve\nhelp\nversion\n');
   });
 });

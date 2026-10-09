@@ -9,9 +9,21 @@ function findFlag(flags: readonly FlagSpec[], word: string): FlagSpec | undefine
   return flags.find((flag) => flag.name === word || (flag.aliases ?? []).includes(word));
 }
 
-function findCommand(entries: readonly CommandEntry[], word: string): CommandEntry | undefined {
-  return entries.find((entry) => entry.name === word || (entry.asFlag === true && word === `--${entry.name}`));
+function matchesCommand(entry: CommandEntry, word: string): boolean {
+  return entry.name === word || (entry.aliases ?? []).includes(word);
 }
+
+function findCommand(entries: readonly CommandEntry[], word: string): CommandEntry | undefined {
+  return entries.find((entry) => matchesCommand(entry, word) || (entry.asFlag === true && word === `--${entry.name}`));
+}
+
+/** Words offered for a command: its name, not its aliases (`g` still matches, it is just not suggested). */
+function commandWords(entries: readonly CommandEntry[]): readonly string[] {
+  return entries.map((entry) => entry.name);
+}
+
+/** Words of the program itself, beside its commands: `help` prints the help, `version` the version line. */
+const ROOT_WORDS: readonly string[] = ['help', 'version'];
 
 /**
  * Suggestions for the last item of `words` (the word being typed, `''` right after a space),
@@ -84,7 +96,8 @@ export function complete(root: CommandSpec, words: readonly string[]): Suggestio
     return byPrefix([...commandFlags, ...availableFlags]);
   }
 
-  const commands = positionals.length === 0 ? entries.map((entry) => entry.name) : [];
+  const rootWords = spec === root && positionals.length === 0 ? ROOT_WORDS : [];
+  const commands = positionals.length === 0 ? [...commandWords(entries), ...rootWords] : [];
   const positional = spec.positionals?.(positionals, current) ?? NONE;
   if (positional.kind === 'files') {
     return commands.length === 0 ? positional : byPrefix(commands);

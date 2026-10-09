@@ -130,16 +130,35 @@ agente](guias/escrever-um-agente.md).
 
 ## Criar um projeto: `choliba generate project`
 
-Dentro de uma pasta de trabalho:
+Dentro de uma pasta de trabalho, sem nenhuma opção, o comando pergunta o que falta:
+
+```sh
+choliba generate project
+```
+
+Também dá para passar tudo de uma vez:
 
 ```sh
 choliba generate project minha-app --app-dir ../minha-app --base-url http://localhost:3000
 ```
 
-Copia o template para `CHOL_PROJECTS_DIR`. `--app-dir` é obrigatório e precisa ser uma pasta; um caminho relativo
-conta a partir da pasta em que você rodou o comando. Sem o nome, o projeto leva o nome dessa pasta. O título e o
-primeiro parágrafo do README na raiz dela viram o `description`. `--base-url` preenche o `baseURL` dos ambientes.
+Copia o template para `CHOL_PROJECTS_DIR`. Um `--app-dir` relativo conta a partir da pasta em que você rodou o
+comando; o valor guardado é absoluto. A pasta precisa existir. Sem o nome, o projeto leva o nome dessa pasta. O
+título e o primeiro parágrafo do README na raiz dela viram o `description`. `--base-url` preenche o `baseURL` dos
+ambientes; vazio não grava.
 
+Quem já passou a opção não é perguntado de novo. Com só `--app-dir`, o nome sai da pasta e a URL fica de fora,
+sem perguntas. Sem terminal, ou com `--no-input`, não pergunta: `--app-dir` é obrigatório, o nome sai da pasta e
+a URL fica de fora.
+
+| Opção              | O que faz                                     | Padrão                         |
+| ------------------ | --------------------------------------------- | ------------------------------ |
+| `PROJECT`          | Nome do projeto                               | o nome da pasta de `--app-dir` |
+| `--app-dir <dir>`  | Pasta da aplicação                            | perguntado                     |
+| `--base-url <url>` | URL base (`baseURL`); vazio não grava         | não grava                      |
+| `--no-input`       | Não pergunta nada: usa as opções e os padrões |                                |
+
+No terminal, quando falta `--app-dir`, as três são perguntadas (o nome e a URL já vêm com padrão: Enter aceita).
 O comando não cria o `.env.json`. Ele diz para copiar o `.env.example.json` e trocar os `CHANGE_ME`.
 
 ## Criar um ticket: `choliba generate ticket`

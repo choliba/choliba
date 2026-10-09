@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 import { UsageError } from '../../common';
 
 /** `generate project`, validated: the project's name, its application folder (absolute) and base URL. */
@@ -9,6 +7,14 @@ export class GenerateProjectDto {
     readonly appDir: string,
     readonly baseUrl: string | undefined,
   ) {}
+}
+
+/** What `generate project` was given, before the questions fill in what is missing. */
+export interface GenerateProjectInput {
+  readonly project: string | undefined;
+  readonly appDir: string | undefined;
+  readonly baseUrl: string | undefined;
+  readonly noInput: boolean;
 }
 
 /** `--flag value`: the value; `undefined` when the flag is absent; throws when it has no value. */
@@ -26,17 +32,14 @@ function positional(args: readonly string[], valueFlags: readonly string[]): str
 }
 
 /**
- * `generate project [PROJECT] --app-dir DIR [--base-url URL]`. A relative `--app-dir` means "from `cwd`", as
- * anywhere on a command line; it is kept absolute, so config.json does not depend on where the project lives.
- * Without a name, the project is named after that folder.
+ * `generate project [PROJECT] [--app-dir DIR] [--base-url URL] [--no-input]`. A missing `--app-dir` stays
+ * missing: the command asks for it on a terminal. A flag with no value is still an error.
  */
-export function parseGenerateProjectArgs(args: readonly string[], cwd: string): GenerateProjectDto {
-  const baseUrl = flagValue(args, '--base-url');
-  const appDirArg = flagValue(args, '--app-dir');
-  if (appDirArg === undefined) {
-    throw new UsageError('Missing --app-dir for generate project: the folder with the application code.');
-  }
-  const appDir = path.resolve(cwd, appDirArg);
-  const project = positional(args, ['--base-url', '--app-dir']) ?? path.basename(appDir);
-  return new GenerateProjectDto(project, appDir, baseUrl);
+export function parseGenerateProjectArgs(args: readonly string[]): GenerateProjectInput {
+  return {
+    project: positional(args, ['--base-url', '--app-dir']),
+    appDir: flagValue(args, '--app-dir'),
+    baseUrl: flagValue(args, '--base-url'),
+    noInput: args.includes('--no-input'),
+  };
 }

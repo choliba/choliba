@@ -12,8 +12,14 @@ import { AppModule } from '../../app.module';
 import type { CliRuntime } from '../../runtime';
 import { defaultsPrompter } from '../../runtime';
 import { fakeRuntime } from '../helpers/runtime';
-import { WorkspaceService } from '../../workspace/workspace.service';
-import { versionLines, workspaceAt, workspaceCholiba, workspaceEntries } from '../../workspace/workspace-choliba';
+import { WorkspaceHelp } from '../../workspace/workspace.service';
+import {
+  delegateWorkspaceComplete,
+  versionLines,
+  workspaceAt,
+  workspaceCholiba,
+  workspaceEntries,
+} from '../../workspace/workspace-choliba';
 
 function runtime(capture: CliRuntime['capture']): CliRuntime {
   return {
@@ -122,7 +128,7 @@ describe('the workspace choliba', () => {
     const outside = await Test.createTestingModule({
       imports: [AppModule.forRoot(fakePlatform({ cwd: '/nowhere' }), fakeRuntime())],
     }).compile();
-    expect(outside.get(WorkspaceService).helpEntries()).toEqual([]);
+    expect(outside.get(WorkspaceHelp).helpEntries()).toEqual([]);
     await outside.close();
 
     const root = workspace();
@@ -141,7 +147,7 @@ describe('the workspace choliba', () => {
       ],
     }).compile();
     try {
-      expect(inside.get(WorkspaceService).helpEntries()).toEqual([
+      expect(inside.get(WorkspaceHelp).helpEntries()).toEqual([
         {
           name: 'agents',
           description: 'Lista os agentes',
@@ -151,6 +157,33 @@ describe('the workspace choliba', () => {
       ]);
     } finally {
       await inside.close();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('lists the workspace commands in __entries, beside its own', async () => {
+    const root = workspace();
+    const platform = fakePlatform({ argv: ['__entries'], cwd: root });
+    const app = await CommandTestFactory.createTestingCommand({
+      imports: [
+        AppModule.forRoot(
+          platform,
+          fakeRuntime({
+            capture: () => ({
+              status: 0,
+              stdout: JSON.stringify([{ name: 'agents', description: 'Lista os agentes' }]),
+              stderr: '',
+            }),
+          }),
+        ),
+      ],
+    }).compile();
+    try {
+      await CommandTestFactory.runWithoutClosing(app, ['__entries']);
+      const names = (JSON.parse(platform.stdout.text()) as { name: string }[]).map((entry) => entry.name);
+      expect(names).toEqual(expect.arrayContaining(['new', 'generate', 'add', 'agents']));
+    } finally {
+      await app.close();
       rmSync(root, { recursive: true, force: true });
     }
   });
@@ -178,6 +211,96 @@ describe('the workspace choliba', () => {
       expect(seen).toEqual([`${root} ${path.join(root, 'node_modules', '.bin', 'choliba')} tests --help`]);
     } finally {
       await app.close();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('completes g and project itself, and forwards a workspace command including :files', async () => {
+    const root = workspace();
+    const forwarded: string[][] = [];
+    const runtime = fakeRuntime({
+      capture: (_command, args) => {
+        forwarded.push([...args]);
+        if (args[0] === '__entries') {
+          return {
+            status: 0,
+            stdout: JSON.stringify([{ name: 'agents', description: 'Lista os agentes' }]),
+            stderr: '',
+          };
+        }
+        if (args[0] === '__complete') return { status: 0, stdout: ':files', stderr: '' };
+        return { status: 1, stdout: '', stderr: '' };
+      },
+    });
+    const complete = async (argv: readonly string[]): Promise<string> => {
+      const platform = fakePlatform({ argv: [...argv], cwd: root });
+      const app = await CommandTestFactory.createTestingCommand({
+        imports: [AppModule.forRoot(platform, runtime)],
+      }).compile();
+      try {
+        await CommandTestFactory.runWithoutClosing(app, [...argv]);
+        return platform.stdout.text();
+      } finally {
+        await app.close();
+      }
+    };
+    try {
+      expect(await complete(['__complete', 'g', ''])).toContain('project');
+      expect(await complete(['__complete', 'g', 'project', '--app-dir', ''])).toBe(':files\n');
+      expect(await complete(['__complete', 'agents', ''])).toBe(':files\n');
+      expect(forwarded.filter((args) => args[0] === '__complete')).toEqual([['__complete', 'agents', '']]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('delegateWorkspaceComplete', () => {
+  it('declines a machine command, an unknown command, a failure and a folder that is not a workspace', () => {
+    const root = workspace();
+    const listed = runtime(() => ({
+      status: 0,
+      stdout: JSON.stringify([{ name: 'agents', description: 'Lista os agentes' }]),
+      stderr: '',
+    }));
+    try {
+      expect(delegateWorkspaceComplete(listed, root, ['g', ''])).toBeUndefined();
+      expect(delegateWorkspaceComplete(listed, root, [''])).toBeUndefined();
+      expect(delegateWorkspaceComplete(listed, root, ['nope', ''])).toBeUndefined();
+      expect(delegateWorkspaceComplete(listed, '/nowhere', ['agents', ''])).toBeUndefined();
+      expect(
+        delegateWorkspaceComplete(
+          runtime((_command, args) =>
+            args[0] === '__entries'
+              ? { status: 0, stdout: JSON.stringify([{ name: 'agents', description: 'Lista' }]), stderr: '' }
+              : { status: 1, stdout: '', stderr: '' },
+          ),
+          root,
+          ['agents', ''],
+        ),
+      ).toBeUndefined();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('returns the workspace output, adding a newline when it omitted one', () => {
+    const root = workspace();
+    const answer = (stdout: string): string | undefined =>
+      delegateWorkspaceComplete(
+        runtime((_command, args) =>
+          args[0] === '__entries'
+            ? { status: 0, stdout: JSON.stringify([{ name: 'agents', description: 'Lista' }]), stderr: '' }
+            : { status: 0, stdout, stderr: '' },
+        ),
+        root,
+        ['agents', ''],
+      );
+    try {
+      expect(answer(':files')).toBe(':files\n');
+      expect(answer('agents\n')).toBe('agents\n');
+      expect(answer('')).toBe('');
+    } finally {
       rmSync(root, { recursive: true, force: true });
     }
   });

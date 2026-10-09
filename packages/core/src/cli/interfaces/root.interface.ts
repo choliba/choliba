@@ -10,6 +10,11 @@ export interface RootOptions {
    * section keeping the order the app registers its commands in. Sections it does not name come last.
    */
   readonly groups?: readonly string[];
+  /**
+   * Called before the local `__complete`. A string is printed as the answer (including the files marker);
+   * `undefined` completes from this CLI's spec.
+   */
+  readonly delegateComplete?: (words: readonly string[]) => string | undefined;
 }
 
 /**

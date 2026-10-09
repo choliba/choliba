@@ -26,12 +26,12 @@ const root: CommandSpec = {
 
 describe('complete', () => {
   it('suggests commands at the first position, filtered by prefix', () => {
-    expect(complete(root, [''])).toEqual(values('deploy', 'status'));
+    expect(complete(root, [''])).toEqual(values('deploy', 'status', 'help', 'version'));
     expect(complete(root, ['de'])).toEqual(values('deploy'));
   });
 
   it('treats an empty word list as completing an empty word', () => {
-    expect(complete(root, [])).toEqual(values('deploy', 'status'));
+    expect(complete(root, [])).toEqual(values('deploy', 'status', 'help', 'version'));
   });
 
   it('suggests flags and --<command> forms when the word starts with a dash', () => {
@@ -131,7 +131,7 @@ describe('complete', () => {
       positionals: (_previous, current) => values(...(current.includes(':') ? ['a:1', 'a:2'] : ['a', 'b'])),
     };
     expect(complete(spec, ['a:'])).toEqual(values('a:1', 'a:2'));
-    expect(complete(spec, [''])).toEqual(values('a', 'b'));
+    expect(complete(spec, [''])).toEqual(values('help', 'version', 'a', 'b'));
   });
 
   it('suggests nothing for a command without flags, commands or positionals', () => {
@@ -150,17 +150,19 @@ describe('complete', () => {
 
   it('shows the flags on an empty word when nothing else fits', () => {
     const task: CommandSpec = { usage: 'tool run [TASK...]', flags: deploy.flags ?? [] };
-    expect(complete(task, ['--force', ''])).toEqual(values('--env', '--tag', '--file', '--add'));
-    expect(complete({ ...task, flags: [{ name: '--help', aliases: ['-h'], description: '' }] }, [''])).toEqual(
-      values('--help', '-h'),
-    );
+    const nested: CommandSpec = {
+      usage: 'tool',
+      commands: () => [{ name: 'run', description: '', group: 'Commands', spec: task }],
+    };
+    expect(complete(nested, ['run', '--force', ''])).toEqual(values('--env', '--tag', '--file', '--add'));
+    expect(complete(nested, ['run', ''])).toEqual(values('--env', '--tag', '--file', '--force', '--add'));
     expect(complete(task, ['x'])).toEqual(values());
   });
 
   it('offers commands instead of files when both apply at the first position', () => {
     const spec: CommandSpec = { ...root, positionals: () => ({ kind: 'files' }) };
     expect(complete(spec, ['s'])).toEqual(values('status'));
-    expect(complete({ usage: 'x', positionals: () => ({ kind: 'files' }) }, [''])).toEqual({ kind: 'files' });
+    expect(complete({ usage: 'x', positionals: () => ({ kind: 'files' }) }, [''])).toEqual(values('help', 'version'));
   });
 
   it('walks words through a command without flags, and through nested commands', () => {
@@ -173,7 +175,29 @@ describe('complete', () => {
   });
 
   it('accepts --<command> only for commands marked asFlag', () => {
-    expect(complete(root, ['--status', ''])).toEqual(values('deploy', 'status'));
+    expect(complete(root, ['--status', ''])).toEqual(values('deploy', 'status', 'help', 'version'));
+  });
+
+  it('walks a command alias like the name, without offering it in the list', () => {
+    const spec: CommandSpec = {
+      usage: 'tool',
+      description: 'The tool.',
+      commands: () => [
+        {
+          name: 'generate',
+          description: 'Generate',
+          group: 'Commands',
+          aliases: ['g'],
+          spec: {
+            usage: 'tool generate',
+            commands: () => [{ name: 'project', description: 'Project', group: 'Commands', spec: { usage: 'x' } }],
+          },
+        },
+      ],
+    };
+    expect(complete(spec, [''])).toEqual(values('generate', 'help', 'version'));
+    expect(complete(spec, ['g', ''])).toEqual(values('project'));
+    expect(describeCommand(spec, ['g'])).toBe('Generate');
   });
 });
 

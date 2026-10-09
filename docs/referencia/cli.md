@@ -63,5 +63,14 @@ rodado com `--project` recebe essa regra no prompt, e o choliba nega a ele escre
 
 ## Autocomplete
 
-O `setup` já liga o autocomplete do bash: grava o script em `~/.local/share/choliba/completion.bash` e adiciona
-uma linha ao `~/.bashrc` que o carrega.
+O bash completa `choliba`, `chol`, `bunx choliba` e `bun chol:*`. O script fica em
+`~/.local/share/choliba/completion.bash` e uma linha do `~/.bashrc` o carrega.
+
+Ele é gravado pelo `choliba setup` da pasta de trabalho (o postinstall, com `--trust`) e também ao instalar o
+comando da máquina (`choliba-cli`), no postinstall ou na primeira vez que o comando roda. Se o terminal atual
+não completar, abra outro (ou rode `source ~/.bashrc`).
+
+`choliba` e `chol` perguntam ao `choliba` que está no `PATH`. `bunx choliba` e `bun chol:*` perguntam ao
+`node_modules/.bin/choliba` da pasta de trabalho. Dentro de uma pasta, o comando da máquina completa os comandos
+dela (`agents`, `tests`, …) com o detalhe do `choliba` dessa pasta. O primeiro Tab lista os comandos, `help` e
+`version`; `g` e `n` funcionam e não aparecem na lista.
