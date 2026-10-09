@@ -221,20 +221,24 @@ export const WORKSPACE_SCRIPTS: Readonly<Record<string, string>> = {
   'chol:check': 'choliba check',
   'chol:agents': 'choliba agents',
   'chol:projects': 'choliba projects',
-  'chol:project:list': 'choliba projects list-projects',
+  'chol:project:list': 'choliba projects list',
   'chol:tests': 'choliba tests',
   'chol:lint': 'choliba lint',
   'chol:format': 'choliba format',
   'chol:format:fix': 'choliba format --write',
 };
 
-/** Scripts an earlier `setup` added for commands that no longer exist, with the command they ran. */
+/**
+ * Scripts an earlier `setup` added for commands that no longer exist, with the command they ran. A script whose
+ * command was renamed is here too, with its old command: removed, then added again with the new one.
+ */
 const RETIRED_SCRIPTS: Readonly<Record<string, string>> = {
   'chol:playwright-cli': 'choliba playwright-cli',
   'chol:playwright-trace': 'choliba playwright-trace',
   'chol:project:create': 'choliba projects create-project',
   'chol:ticket:create': 'choliba projects create-ticket',
   'chol:install': 'choliba install',
+  'chol:project:list': 'choliba projects list-projects',
 };
 
 /** The workspace package.json as an object; undefined when missing, unreadable or not an object. */
@@ -319,8 +323,9 @@ export function packageListsCholiba(root: string): boolean {
 /** What `setup` changes in the workspace package.json: `trustedDependencies` and the `chol:*` scripts. */
 export function updatePackage(root: string): readonly string[] {
   const trusted = trustPackage(root);
-  const scripts = addScripts(root);
+  // Retired first: a renamed script is removed with its old command, so `addScripts` writes it again.
   const retired = removeRetiredScripts(root);
+  const scripts = addScripts(root);
   return [
     ...(trusted ? ['trustedDependencies no package.json'] : []),
     ...(scripts.length === 0 ? [] : [`scripts ${scripts.join(', ')} no package.json`]),

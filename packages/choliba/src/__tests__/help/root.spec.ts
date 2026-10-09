@@ -86,7 +86,7 @@ describe('choliba __complete', () => {
         expect(await complete('agents', 'ec')).toBe('echo\n');
         expect(await complete('echo', '--provider', '')).toBe('auto\nclaude\ncursor\n');
         expect(await complete('tests', '--ex')).toBe('--expect\n');
-        expect(await complete('projects', 'li')).toBe('list-projects\n');
+        expect(await complete('projects', 'li')).toBe('list\n');
       },
       { '.env': ENV },
     ));

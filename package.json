@@ -26,7 +26,7 @@
     "chol:implementer": "bun chol:agents --implementer",
     "chol:projects": "bun packages/choliba/src/main.ts projects",
     "chol:project:create": "bun packages/choliba-cli/src/main.ts generate project",
-    "chol:project:list": "bun run chol:projects list-projects",
+    "chol:project:list": "bun run chol:projects list",
     "chol:ticket:create": "bun packages/choliba-cli/src/main.ts generate ticket",
     "chol:tests": "bun packages/choliba/src/main.ts tests",
     "chol:playwright-cli": "bun packages/choliba/src/main.ts playwright-cli",

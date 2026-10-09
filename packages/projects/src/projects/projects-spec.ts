@@ -18,10 +18,10 @@ export function projectsCliSpec(projectsDir: () => string): CommandSpec {
     commands: () => [
       ticketsFolderEntry(completions),
       {
-        name: 'check-project',
+        name: 'check',
         description: 'Confere se um projeto está pronto para rodar (arquivos, ambiente, sem CHANGE_ME)',
         group: 'Commands',
-        spec: { usage: `${PROGRAM_NAME} check-project PROJECT`, positionals: projectOnly },
+        spec: { usage: `${PROGRAM_NAME} check PROJECT`, positionals: projectOnly },
       },
       {
         name: 'report-folder',
@@ -31,11 +31,11 @@ export function projectsCliSpec(projectsDir: () => string): CommandSpec {
       },
       ticketSpecsEntry(completions),
       {
-        name: 'list-projects',
+        name: 'list',
         description: 'Lista os projetos',
         group: 'Commands',
         spec: {
-          usage: `${PROGRAM_NAME} list-projects [OPTIONS]`,
+          usage: `${PROGRAM_NAME} list [OPTIONS]`,
           flags: [{ name: '--tickets', description: 'Mostra também os tickets de cada projeto' }],
         },
       },
