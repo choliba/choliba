@@ -279,7 +279,7 @@ describe('addScripts', () => {
       const scripts = (JSON.parse(fs.readFileSync(file, 'utf8')) as { scripts: Record<string, string> }).scripts;
       expect(scripts['chol:tests']).toBe('meu');
       expect(scripts['build']).toBe('x');
-      expect(scripts['chol:project:list']).toBe('choliba projects list-projects');
+      expect(scripts['chol:project:list']).toBe('choliba projects list');
       expect(scripts['chol:project:create']).toBeUndefined();
       expect(scripts['chol:install']).toBeUndefined();
       expect(addScripts(root)).toEqual([]);
@@ -312,6 +312,7 @@ describe('removeRetiredScripts', () => {
             'chol:project:create': 'choliba projects create-project',
             'chol:ticket:create': 'choliba projects create-ticket',
             'chol:install': 'choliba install',
+            'chol:project:list': 'choliba projects list-projects',
             build: 'x',
           },
         }),
@@ -322,6 +323,7 @@ describe('removeRetiredScripts', () => {
         'chol:project:create',
         'chol:ticket:create',
         'chol:install',
+        'chol:project:list',
       ]);
       const scripts = (JSON.parse(fs.readFileSync(file, 'utf8')) as { scripts: Record<string, string> }).scripts;
       expect(scripts).toEqual({ 'chol:playwright-trace': 'meu trace', build: 'x' });
@@ -396,6 +398,16 @@ describe('packageListsCholiba / updatePackage / updatePackageWhenListed', () => 
       expect(updatePackage(root)).toEqual([
         'scripts chol:playwright-cli removidos do package.json (comandos que saíram)',
       ]);
+      fs.writeFileSync(
+        file,
+        JSON.stringify({
+          ...pkg,
+          scripts: { ...pkg.scripts, 'chol:project:list': 'choliba projects list-projects' },
+        }),
+      );
+      updatePackage(root);
+      const renamed = JSON.parse(fs.readFileSync(file, 'utf8')) as { scripts: Record<string, string> };
+      expect(renamed.scripts['chol:project:list']).toBe('choliba projects list');
       expect(await updatePackageWhenListed(root, () => Promise.resolve())).toBe(true);
 
       fs.writeFileSync(file, JSON.stringify({ name: 'g' }));

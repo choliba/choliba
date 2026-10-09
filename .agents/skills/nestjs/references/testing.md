@@ -7,7 +7,7 @@ One Jest config at the root, specs only in `src/__tests__/**/*.spec.ts`. Never `
 ```ts
 import { fakePlatform, runCommand } from '@choliba/core/testing';
 
-const platform = fakePlatform({ argv: ['projects', 'list-projects'], cwd: workspace });
+const platform = fakePlatform({ argv: ['projects', 'list'], cwd: workspace });
 const exitCode = await runCommand([ProjectsModule], platform);
 expect(platform.stdout.text()).toContain('demo');
 ```

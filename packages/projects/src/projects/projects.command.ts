@@ -7,8 +7,8 @@ import { CliCommand, CommandIo, RegisterHelp } from '@choliba/core/nest';
 import { PROGRAM_NAME } from '../common';
 import { TicketSpecsCommand, TicketsFolderCommand } from '../tickets/nest';
 
-import { CheckProjectCommand } from './check-project.command';
-import { ListProjectsCommand } from './list-projects.command';
+import { ProjectsCheckCommand } from './projects-check.command';
+import { ProjectsListCommand } from './projects-list.command';
 import { ProjectsService } from './projects.service';
 import { ReportFolderCommand } from './report-folder.command';
 
@@ -27,8 +27,8 @@ const ENTRY: Omit<CommandEntry, 'spec'> = {
   name: 'projects',
   description: 'Lista e confere projetos e tickets em CHOL_PROJECTS_DIR',
   subCommands: [
-    ListProjectsCommand,
-    CheckProjectCommand,
+    ProjectsListCommand,
+    ProjectsCheckCommand,
     ReportFolderCommand,
     TicketsFolderCommand,
     TicketSpecsCommand,

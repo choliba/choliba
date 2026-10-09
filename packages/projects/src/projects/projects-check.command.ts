@@ -9,8 +9,8 @@ import { ProjectsService } from './projects.service';
 
 const OPTIONS = { allowUnknownOptions: true, allowExcessArgs: true } as const;
 
-@SubCommand({ name: 'check-project', ...OPTIONS })
-export class CheckProjectCommand extends CliCommand {
+@SubCommand({ name: 'check', ...OPTIONS })
+export class ProjectsCheckCommand extends CliCommand {
   constructor(
     @Inject(CommandIo) private readonly io: CommandIo,
     @Inject(ProjectsService) private readonly projects: ProjectsService,
@@ -22,9 +22,9 @@ export class CheckProjectCommand extends CliCommand {
     runSubcommand(
       this.io,
       () => this.projects.helpSpec(),
-      'check-project',
+      'check',
       ([project]) => {
-        if (!project) throw new UsageError('Missing project for check-project.');
+        if (!project) throw new UsageError('Missing project for check.');
         const { config, environment } = this.projects.check(project);
         this.io.write(
           `Projeto "${project}" (${config.name}) pronto: ambiente ${environment.nome}, ${environment.baseURL}\n`,
