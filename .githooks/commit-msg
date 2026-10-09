@@ -38,7 +38,10 @@ if [[ "$header" =~ ^Merge\  ]] || [[ "$header" =~ ^Revert\ \" ]]; then exit 0; f
 types='feat|fix|build|chore|ci|docs|perf|refactor|revert|style|test'
 pattern="^($types)(\\([a-z0-9._/-]+\\))?!?: [^ ].*$"
 [[ "$header" =~ $pattern ]] || fail "cabeçalho fora do padrão '<tipo>[(escopo)][!]: <descrição>' (tipos: ${types//|/, }): \"$header\""
-[[ ${#header} -le 100 ]] || fail "cabeçalho com ${#header} caracteres (máximo 100)"
+# O limite vale para o que o autor escreveu: o " (#N)" que o GitHub acrescenta no squash não conta.
+written="$header"
+if [[ "$header" =~ ^(.*)\ \(#[0-9]+\)$ ]]; then written="${BASH_REMATCH[1]}"; fi
+[[ ${#written} -le 100 ]] || fail "cabeçalho com ${#written} caracteres (máximo 100)"
 [[ "$header" != *. ]] || fail "a descrição não deve terminar com ponto final"
 
 # 4) Uma linha em branco separa o cabeçalho do corpo.
