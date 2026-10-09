@@ -1,42 +1,110 @@
-# `choliba` da máquina
+# choliba-cli
 
-> O `choliba` da máquina cria a pasta de trabalho, gera agentes, projetos e tickets e instala agentes, skills e MCPs.
+> O choliba-cli é a ferramenta de linha de comando que cria a pasta de trabalho, gera agentes, projetos e tickets e
+> instala agentes, skills e MCPs.
 
-Você instala esse comando uma vez, na máquina. Ele responde pelo nome `choliba` e pelo alias `chol`:
-
-- **`choliba new`** (alias `n`): prepara uma pasta de trabalho do zero;
-- **`choliba generate`** (alias `g`): cria um agente, um projeto de teste ou um ticket;
-- **`choliba add`**: instala um agente (com as skills e os MCPs que ele declara), uma skill ou um MCP.
-
-Cada um desses pergunta, no terminal, o que não vier nas opções. Com `--no-input` (ou fora de um terminal), não
-pergunta nada: usa as opções e os padrões, e falha dizendo qual opção falta quando um valor não tem padrão.
-
-Dentro de uma pasta de trabalho, qualquer outro comando (`agents`, `tests`, `check`, o atalho `choliba <agente>`)
-é repassado para o `choliba` que aquela pasta instalou, na versão dela. Fora de uma pasta de trabalho, esse comando
-diz para criar uma com `choliba new`. Os agentes continuam chamando `bunx choliba`, que é o da pasta.
+O `choliba-cli` é instalado uma vez, na máquina. O comando que ele põe no `PATH` é `choliba` (alias `chol`). Com ele
+você cria a pasta de trabalho e tudo o que vai dentro dela. Os agentes, os testes e o `check` rodam no `choliba` que
+cada pasta de trabalho instala.
 
 ## Instalação
 
-O pacote é o `choliba-cli-0.0.1-dev.tgz` da pré-release
-[`v0.0.1-dev`](https://github.com/choliba/choliba/releases/tag/v0.0.1-dev), a mesma do choliba. Precisa do
-[Bun](https://bun.sh):
-
 ```sh
-bun add -g https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-cli-0.0.1-dev.tgz
+$ bun add -g https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-cli-0.0.1-dev.tgz
 ```
 
-Os comandos que isso coloca no `PATH` são `choliba` e `chol`. Para conferir a versão:
+**Nota:** o choliba não está no npm. O pacote é o `.tgz` da pré-release
+[`v0.0.1-dev`](https://github.com/choliba/choliba/releases/tag/v0.0.1-dev), refeita a cada versão, com o mesmo
+endereço. Precisa do [Bun](https://bun.sh).
+
+**Dica:** `choliba --version` mostra a versão instalada; dentro de uma pasta de trabalho, mostra também a do
+`choliba` da pasta. Para atualizar, remova e instale de novo: `bun remove -g choliba-cli` e o `bun add -g` acima.
 
 ```
 $ choliba --version
 choliba-cli 0.0.1-dev.25+516f9c1
 ```
 
-Dentro de uma pasta de trabalho, a mesma opção mostra as duas versões: a do comando da máquina e a do `choliba`
-instalado na pasta. `chol --version` é o mesmo que `choliba --version`.
+## Fluxo básico
 
-Para atualizar, remova e instale de novo (a URL não muda a cada versão): `bun remove -g choliba-cli` e o
-`bun add -g` acima.
+`choliba --help` lista os comandos, e `choliba COMMAND --help` mostra as opções de cada um:
+
+```sh
+$ choliba --help
+$ choliba generate --help
+```
+
+Para começar, crie a pasta de trabalho, entre nela, crie o projeto de teste da sua aplicação e confira:
+
+```sh
+$ choliba new dev-tools
+$ cd dev-tools
+$ choliba generate project minha-app --app-dir ../minha-app --base-url http://localhost:3000
+$ choliba check
+```
+
+O `choliba new` cria a pasta e o `package.json`, instala o choliba nela, grava o provider dos agentes no `.env`,
+instala os agentes do choliba e roda o `check`. O passo a passo completo, até o primeiro ticket implementado, está
+em [Primeiros passos](primeiros-passos.md#do-zero-ao-primeiro-ticket).
+
+## Estrutura da pasta de trabalho
+
+```
+dev-tools/
+├── .choliba/
+│   ├── agents/       os agentes (um agent.yaml por pasta)
+│   ├── skills/       as skills que os agentes usam
+│   └── mcps/         os servidores MCP que os agentes usam
+├── projects/         os projetos de teste, um por aplicação
+├── app/exemplo/      uma aplicação de exemplo, com o projeto projects/exemplo/
+├── .env              a configuração (provider, pastas, MCPs)
+└── package.json      o choliba instalado, na versão desta pasta
+```
+
+O que cada parte faz e por quê: [A pasta de trabalho](conceitos/pasta-de-trabalho.md).
+
+## Sintaxe dos comandos
+
+```
+choliba comandoOuAlias argumento [argumentoOpcional] [opções]
+```
+
+- `chol` é o mesmo que `choliba`; `n` é o alias de `new`, e `g` o de `generate`
+  (`choliba g project` = `choliba generate project`).
+- Cada comando pergunta, no terminal, o que não vier nas opções. Com `--no-input` (ou fora de um terminal), não
+  pergunta nada: usa as opções e os padrões, e falha dizendo qual opção falta quando um valor não tem padrão.
+- Dentro de uma pasta de trabalho, os outros comandos (`agents`, `tests`, `check`, `choliba <agente>`…) são
+  repassados ao `choliba` que aquela pasta instalou, na versão dela. Fora de uma pasta, eles dizem para criar uma
+  com `choliba new`. Os agentes chamam `bunx choliba`, que é o da pasta.
+
+## Visão geral dos comandos
+
+Do `choliba-cli`:
+
+| Comando                        | Alias | Descrição                                                       |
+| ------------------------------ | ----- | --------------------------------------------------------------- |
+| `new [PASTA]`                  | `n`   | Cria uma pasta de trabalho do zero                              |
+| `generate agent [NOME]`        | `g`   | Cria um agente novo na pasta de trabalho                        |
+| `generate project [NOME]`      | `g`   | Cria um projeto de teste para uma aplicação                     |
+| `generate ticket PROJETO TIPO` | `g`   | Cria o próximo ticket de um projeto                             |
+| `add ORIGEM`                   |       | Instala um agente (com suas skills e MCPs), uma skill ou um MCP |
+
+Da pasta de trabalho, repassados ao `choliba` dela (detalhes em [CLI](referencia/cli.md)):
+
+| Comando              | Descrição                                       |
+| -------------------- | ----------------------------------------------- |
+| `agents`, `<agente>` | Roda um agente da pasta de trabalho             |
+| `projects`           | Lista e confere projetos e tickets              |
+| `tests`              | Roda os testes E2E dos projetos                 |
+| `check`              | Confere a pasta de trabalho: agentes e projetos |
+| `lint`, `format`     | ESLint e Prettier na pasta de trabalho          |
+| `setup`              | Monta a pasta de trabalho e liga o autocomplete |
+
+## Requisitos
+
+- [Bun](https://bun.sh).
+- Os navegadores do Playwright, uma vez por máquina: `bunx playwright install chromium`.
+- Para rodar agentes, o CLI de um provider instalado e autenticado: `claude` (Claude Code) ou `cursor-agent`.
 
 ## Criar a pasta de trabalho: `choliba new`
 

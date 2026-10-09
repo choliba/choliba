@@ -1,7 +1,7 @@
 # `choliba add`
 
 > Como trazer para a pasta de trabalho um agente, com as skills e os MCPs que ele declara, uma skill ou um MCP, com
-> o `choliba add` (o comando da máquina).
+> o `choliba add` (do `choliba-cli`).
 
 Traz um agente (com as skills e os MCPs que ele declara), uma skill ou um MCP para a pasta de trabalho,
 substituindo o que já estiver no destino:

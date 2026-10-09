@@ -1,9 +1,9 @@
 # CLI
 
-> Cada comando da CLI do choliba: o da máquina cria e instala; o da pasta de trabalho roda agentes, testes, check e setup.
+> Cada comando da CLI do choliba: o choliba-cli cria e instala; o da pasta de trabalho roda agentes, testes, check e setup.
 
-O `choliba` instalado na máquina (pacote `choliba-cli`, alias `chol`) cria e instala. O detalhe de cada um está em
-[`choliba` da máquina](../choliba-cli.md).
+O [`choliba-cli`](../choliba-cli.md), instalado uma vez na máquina (o comando `choliba`, alias `chol`), cria e
+instala. O detalhe de cada comando está na página dele.
 
 | Comando                          | O que faz                                                                            |
 | -------------------------------- | ------------------------------------------------------------------------------------ |
@@ -24,13 +24,13 @@ Dentro de uma pasta de trabalho, qualquer outro comando é repassado para o `cho
 | `choliba check`                              | Confere agentes, projetos e a pasta de trabalho                                         |
 | `choliba lint` / `choliba format`            | Lint e formatação da pasta de trabalho                                                  |
 
-`choliba --help` (ou `choliba COMMAND --help`), dentro de uma pasta de trabalho, lista os comandos da máquina e, em
+`choliba --help` (ou `choliba COMMAND --help`), dentro de uma pasta de trabalho, lista os comandos do `choliba-cli` e, em
 seguida, os da pasta.
 
 `choliba --version` do `choliba` da pasta mostra a versão instalada no formato [SemVer](https://semver.org/lang/pt-BR/): a base da
 pré-release, o número da release (a contagem das releases, que aparece no título de cada atualização nas notas) e,
 como metadado de build, o commit, por exemplo `choliba 0.0.1-dev.16+1a2b3c4`. Rodando dos fontes ou de um `chol:pack` local, sai só a base (`0.0.1-dev`).
-O comando da máquina imprime `choliba-cli <versão>`. Dentro de uma pasta de trabalho, a linha seguinte é a versão do
+O `choliba-cli` imprime `choliba-cli <versão>`. Dentro de uma pasta de trabalho, a linha seguinte é a versão do
 `choliba` dela.
 
 Cores: a saída só tem cor num terminal. `--no-color` (em qualquer comando), `NO_COLOR=1`, `FORCE_COLOR=0`, `TERM=dumb`
@@ -63,14 +63,9 @@ rodado com `--project` recebe essa regra no prompt, e o choliba nega a ele escre
 
 ## Autocomplete
 
-O bash completa `choliba`, `chol`, `bunx choliba` e `bun chol:*`. O script fica em
-`~/.local/share/choliba/completion.bash` e uma linha do `~/.bashrc` o carrega.
+O Tab completa comandos, opções e nomes (agentes, projetos, tickets) em `choliba`, `chol`, `bunx choliba` e
+`bun chol:*`, no bash. Ele liga sozinho: ao instalar o `choliba-cli` ou a pasta de trabalho (`choliba setup`).
 
-Ele é gravado pelo `choliba setup` da pasta de trabalho (o postinstall, com `--trust`) e também ao instalar o
-comando da máquina (`choliba-cli`), no postinstall ou na primeira vez que o comando roda. Se o terminal atual
-não completar, abra outro (ou rode `source ~/.bashrc`).
-
-`choliba` e `chol` perguntam ao `choliba` que está no `PATH`. `bunx choliba` e `bun chol:*` perguntam ao
-`node_modules/.bin/choliba` da pasta de trabalho. Dentro de uma pasta, o comando da máquina completa os comandos
-dela (`agents`, `tests`, …) com o detalhe do `choliba` dessa pasta. O primeiro Tab lista os comandos, `help` e
-`version`; `g` e `n` funcionam e não aparecem na lista.
+Se o Tab não completar no terminal que já estava aberto, abra outro ou rode `source ~/.bashrc`. O script fica em
+`~/.local/share/choliba/completion.bash`, carregado por um bloco do `~/.bashrc` que começa com
+`# Autocomplete do choliba`; apague esse bloco para desligar.
