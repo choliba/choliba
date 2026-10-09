@@ -16,6 +16,12 @@ export abstract class AgentProvider {
   /** Where it comes in `auto`'s search: the lowest installed one wins. */
   abstract readonly autoPriority: number;
 
+  /**
+   * Built-in tools of the provider that its permissions cannot limit (Cursor's `Grep` and `Glob` read files that a
+   * `Read` deny covers). A call to one stops the run (`unenforced-tool-guard.ts`); none by default.
+   */
+  readonly unenforcedTools: readonly string[] = [];
+
   /** The args *after* the binary. Calls `assertArgvFits` before returning. */
   abstract buildArgs(request: ProviderRequest): readonly string[];
 

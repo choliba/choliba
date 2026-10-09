@@ -157,3 +157,10 @@ export function assertArgvFits(args: readonly string[]): void {
     }
   });
 }
+
+/** The line the prompt carries so the model does not call them; `''` when the provider has none. */
+export function unenforcedToolsLine(tools: readonly string[]): string {
+  return tools.length === 0
+    ? ''
+    : `Never use ${tools.join(' or ')}: your permissions cannot limit them here, so calling one stops the run. Read the files you may read with Read.`;
+}

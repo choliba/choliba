@@ -19,6 +19,7 @@ import { agentRenderOptions, formatProviderLine, renderEvent } from './event-ren
 import { applyRunTools } from '../../common';
 import { delegationMessage, delegationOf } from './delegation-guard';
 import { mcpViolation } from './mcp-guard';
+import { unenforcedToolMessage, unenforcedToolOf } from './unenforced-tool-guard';
 
 export interface RunAgentDeps {
   /**
@@ -148,6 +149,12 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
       const subagent = delegationOf(agentEvent);
       if (subagent !== undefined) {
         stop(delegationMessage(subagent));
+        continue;
+      }
+
+      const unenforced = unenforcedToolOf(agentEvent, request.provider.adapter.unenforcedTools);
+      if (unenforced !== undefined) {
+        stop(unenforcedToolMessage(unenforced));
         continue;
       }
 

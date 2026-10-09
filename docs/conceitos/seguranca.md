@@ -13,7 +13,9 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
   só tem as ferramentas que as permissões pedem. No Cursor, que não trata `allow` como limite, o choliba gera um
   `deny` para todo o resto do disco e grava o `cli.json` nessa pasta da execução: é o diretório em que o
   cursor-agent nasce, e sem um raiz de git ele só lê o `cli.json` dali. O de `~/.cursor` continua de base; as
-  listas `allow` e `deny` da run substituem as dele. O `mcp.json` fica na raiz do workspace. Limite do Cursor: um
+  listas `allow` e `deny` da run substituem as dele. O `mcp.json` fica na raiz do workspace. O `Grep` e o `Glob` do Cursor
+  leem o que um `deny` de leitura cobre, e nenhuma permissão os tira: o prompt diz ao modelo para nunca usá-los, e o
+  choliba interrompe a execução na primeira chamada a um deles, com código 1. Limite do Cursor: um
   arquivo **novo**, criado direto numa pasta do caminho até um item liberado (a raiz do workspace, por exemplo),
   não é bloqueado.
 - **Caminhos.** Caminho relativo é relativo à raiz do workspace. Um caminho sem glob é o item e tudo abaixo dele,

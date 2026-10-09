@@ -101,6 +101,7 @@ function fakeAdapter(overrides: Partial<AgentProvider> = {}): AgentProvider {
     id: 'claude',
     binaries: [['fake']],
     autoPriority: 1,
+    unenforcedTools: [],
     buildArgs: () => ['--arg'],
     createParser: () => {
       let sawInitWithModel = false;
@@ -296,6 +297,24 @@ describe('runAgent', () => {
     expect(await run(s)).toBe(1);
     expect(s.stderr.chunks.join('')).toContain(
       `✗ o agente tentou delegar a um subagente (${tool}); a execução foi interrompida: nenhum agente do choliba delega trabalho.\n`,
+    );
+    expect(s.stdout.chunks.join('')).not.toContain('late line');
+    expect(spawnerHandle.kill).toHaveBeenCalledWith('SIGTERM');
+  });
+
+  it('stops the session and returns 1 when the agent calls a tool its provider cannot limit', async () => {
+    const lines = eventLines([
+      { type: 'tool-call', id: 't1', name: 'Read', summary: '/repo/ok.txt' },
+      { type: 'tool-call', id: 't2', name: 'Grep', summary: '/repo' },
+      { type: 'text', text: 'late line' },
+      { type: 'done', isError: false, text: 'ok' },
+    ]);
+    const spawnerHandle = fakeSpawner({ stdout: streamFromChunks([lines]) });
+    const s = setup(spawnerHandle.spawner, { unenforcedTools: ['Grep', 'Glob'] });
+
+    expect(await run(s)).toBe(1);
+    expect(s.stderr.chunks.join('')).toContain(
+      '✗ o agente usou Grep, que as permissões deste provider não conseguem limitar; a execução foi interrompida.\n',
     );
     expect(s.stdout.chunks.join('')).not.toContain('late line');
     expect(spawnerHandle.kill).toHaveBeenCalledWith('SIGTERM');
