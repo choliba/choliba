@@ -10,8 +10,8 @@ import { ProjectsService } from './projects.service';
 
 const OPTIONS = { allowUnknownOptions: true, allowExcessArgs: true } as const;
 
-@SubCommand({ name: 'list-projects', ...OPTIONS })
-export class ListProjectsCommand extends CliCommand {
+@SubCommand({ name: 'list', ...OPTIONS })
+export class ProjectsListCommand extends CliCommand {
   constructor(
     @Inject(CommandIo) private readonly io: CommandIo,
     @Inject(ProjectsService) private readonly projects: ProjectsService,
@@ -23,7 +23,7 @@ export class ListProjectsCommand extends CliCommand {
     runSubcommand(
       this.io,
       () => this.projects.helpSpec(),
-      'list-projects',
+      'list',
       (args) => {
         const projects = this.projects.list();
         if (projects.length === 0) {

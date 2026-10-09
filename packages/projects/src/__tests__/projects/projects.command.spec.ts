@@ -89,18 +89,18 @@ describe('choliba projects', () => {
         JSON.stringify({ development: { TEST_USERNAME: 'CHANGE_ME' } }),
       );
 
-      const pending = await projects(['check-project', 'demo'], root);
+      const pending = await projects(['check', 'demo'], root);
       expect(pending.exitCode).toBe(1);
       expect(pending.err).toContain('troque CHANGE_ME em:');
 
       fs.writeFileSync(path.join(projectPath, '.env.json'), JSON.stringify({ development: { TEST_USERNAME: 'ana' } }));
-      const ready = await projects(['check-project', 'demo'], root);
+      const ready = await projects(['check', 'demo'], root);
       expect(ready.exitCode).toBe(0);
       expect(ready.out).toBe('Projeto "demo" (Demo) pronto: ambiente development, http://localhost:5173/\n');
 
-      const missing = await projects(['check-project'], root);
+      const missing = await projects(['check'], root);
       expect(missing.exitCode).toBe(1);
-      expect(missing.err).toContain('Missing project for check-project.');
+      expect(missing.err).toContain('Missing project for check.');
     }));
 
   it('prints the tickets folder for a project, and usage without one', () =>
@@ -168,7 +168,7 @@ describe('choliba projects', () => {
       writeProject(projectsDir, 'sem-texto');
       fs.writeFileSync(path.join(projectsDir, 'sem-texto', 'config.json'), JSON.stringify({ description: 3 }));
 
-      expect((await projects(['list-projects'], root)).out).toBe(
+      expect((await projects(['list'], root)).out).toBe(
         [
           'curto       Curto.',
           '',
@@ -185,13 +185,13 @@ describe('choliba projects', () => {
 
   it('lists projects and optionally their tickets, and says when there is none', () =>
     withWorkspace(async ({ root, projectsDir }) => {
-      expect((await projects(['list-projects'], root)).out).toContain('No project found');
+      expect((await projects(['list'], root)).out).toContain('No project found');
 
       writeProject(projectsDir, 'zebra', ['02', '01']);
       writeProject(projectsDir, 'alpha');
 
-      expect((await projects(['list-projects'], root)).out).toBe('alpha\nzebra\n');
-      expect((await projects(['list-projects', '--tickets'], root)).out).toContain('zebra ["zebra-01","zebra-02"]');
+      expect((await projects(['list'], root)).out).toBe('alpha\nzebra\n');
+      expect((await projects(['list', '--tickets'], root)).out).toContain('zebra ["zebra-01","zebra-02"]');
     }));
 
   it('reports a missing or unknown command as a usage error', () =>
@@ -227,7 +227,7 @@ describe('choliba projects — help', () => {
 
   it("prints a command's own help", () =>
     withBrokenWorkspace(async (root) => {
-      for (const command of ['list-projects', 'check-project', 'report-folder']) {
+      for (const command of ['list', 'check', 'report-folder']) {
         expect((await projects([command, '-h'], root)).out).toContain(`Usage:  choliba projects ${command}`);
       }
       for (const command of ['tickets-folder', 'ticket-specs']) {
@@ -267,7 +267,7 @@ describe('ProjectsService.helpSpec — completion and description', () => {
       expect(completions(service, ['report-folder', 'd'])).toBe('demo');
       expect(completions(service, ['ticket-specs', 'demo', ''])).toBe('demo-01\ndemo-02');
       expect(completions(service, ['ticket-specs', 'demo', 'demo-01', ''])).toBe('');
-      expect(completions(service, ['list-projects', '--'])).toBe('--tickets');
+      expect(completions(service, ['list', '--'])).toBe('--tickets');
     }));
 
   it('completes the ticket commands too, as they belong to the same CLI', () =>
@@ -287,7 +287,7 @@ describe('ProjectsService.helpSpec — completion and description', () => {
     withBrokenWorkspace(async (root) => {
       const spec = (await serviceIn(root)).helpSpec();
       expect(describeWords(spec, [])).toBe('Resolve pastas e arquivos dos projetos Playwright em CHOL_PROJECTS_DIR.');
-      expect(describeWords(spec, ['list-projects'])).toBe('Lista os projetos');
+      expect(describeWords(spec, ['list'])).toBe('Lista os projetos');
     }));
 
   it('suggests nothing when the projects or tickets cannot be read', () =>

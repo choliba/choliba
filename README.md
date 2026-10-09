@@ -56,10 +56,20 @@ Agentes podem usar skills e servidores MCP, instalados na pasta de trabalho.
 
 ## Instalação
 
-O choliba não está no npm: o pacote é o `.tgz` da pré-release
+O choliba não está no npm: os pacotes são os `.tgz` da pré-release
 [`v0.0.1-dev`](https://github.com/choliba/choliba/releases/tag/v0.0.1-dev), refeita a cada merge na `master`.
 
-Numa pasta com o próprio `package.json` (sem ele, o Bun pode instalar numa pasta acima):
+Instale o [`choliba-cli`](docs/choliba-cli.md) uma vez, na máquina (os comandos `choliba` e `chol`), e crie a pasta de
+trabalho com ele. O `choliba new` instala o choliba na pasta, monta a pasta de trabalho, liga o autocomplete, grava o
+provider e instala os agentes:
+
+```
+bun add -g \
+  https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-cli-0.0.1-dev.tgz
+choliba new dev-tools
+```
+
+Sem o `choliba-cli`, numa pasta com o próprio `package.json` (sem ele, o Bun pode instalar numa pasta acima):
 
 ```
 echo '{ "name": "dev-tools", "private": true }' > package.json
@@ -69,15 +79,6 @@ bun add --trust \
 
 O `--trust` roda o `choliba setup`, que monta a pasta de trabalho e liga o autocomplete. Dependências, o que o setup
 cria e como atualizar: [Primeiros passos](docs/primeiros-passos.md).
-
-Também dá para começar pelo [`choliba` da máquina](docs/choliba-cli.md), instalado uma vez (os comandos `choliba` e
-`chol`), que cria a pasta, instala o choliba e os agentes, e cria agentes, projetos e tickets:
-
-```
-bun add -g \
-  https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-cli-0.0.1-dev.tgz
-choliba new dev-tools
-```
 
 ## Uso
 
@@ -114,7 +115,7 @@ vazia. Detalhes e limites de cada provider: [Segurança](docs/conceitos/seguranc
 No site [choliba.github.io](https://choliba.github.io/), com busca, ou em
 [`docs/`](docs/README.md), por tipo:
 
-- **Para começar:** [Primeiros passos](docs/primeiros-passos.md) e o [`choliba` da máquina](docs/choliba-cli.md).
+- **Para começar:** [Primeiros passos](docs/primeiros-passos.md) e o [`choliba-cli`](docs/choliba-cli.md).
 - **Guias:** [escrever um agente](docs/guias/escrever-um-agente.md),
   [instalar agentes, skills e MCPs](docs/guias/instalar-agentes.md), [`--dry-run`](docs/guias/dry-run.md).
 - **Referência:** [CLI](docs/referencia/cli.md), [`agent.yaml`](docs/referencia/agent-yaml.md),

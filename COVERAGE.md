@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 08/10/2026 23:44:17 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 09/10/2026 00:25:41 — não editar manualmente.
 
 ## Resumo
 
@@ -260,9 +260,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/paths/locations.ts](packages/projects/src/paths/locations.ts)|100.00|100.00|100.00|100.00
 🟢|[src/paths/project-paths.ts](packages/projects/src/paths/project-paths.ts)|100.00|100.00|100.00|100.00
 🟢|[src/paths/results.ts](packages/projects/src/paths/results.ts)|100.00|100.00|100.00|100.00
-🟢|[src/projects/check-project.command.ts](packages/projects/src/projects/check-project.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/index.ts](packages/projects/src/projects/index.ts)|100.00|100.00|100.00|100.00
-🟢|[src/projects/list-projects.command.ts](packages/projects/src/projects/list-projects.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/nest.ts](packages/projects/src/projects/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project-app-ensure.ts](packages/projects/src/projects/project-app-ensure.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project-app-launch.ts](packages/projects/src/projects/project-app-launch.ts)|100.00|100.00|100.00|100.00
@@ -270,6 +268,8 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/projects/project-readme.ts](packages/projects/src/projects/project-readme.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project-settings.ts](packages/projects/src/projects/project-settings.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project.ts](packages/projects/src/projects/project.ts)|100.00|100.00|100.00|100.00
+🟢|[src/projects/projects-check.command.ts](packages/projects/src/projects/projects-check.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/projects/projects-list.command.ts](packages/projects/src/projects/projects-list.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects-spec.ts](packages/projects/src/projects/projects-spec.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects.command.ts](packages/projects/src/projects/projects.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects.module.ts](packages/projects/src/projects/projects.module.ts)|100.00|100.00|100.00|100.00

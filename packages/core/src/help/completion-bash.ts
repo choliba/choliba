@@ -6,7 +6,7 @@ import { FILES_MARKER } from './complete';
  * `node_modules/.bin/choliba`. Words are rebuilt from the line without breaking at ":", and `FILES_MARKER`
  * falls back to file names.
  */
-export const COMPLETION_BASH = `# Autocomplete do choliba para \`choliba\`, \`chol\`, \`bunx choliba\` e \`bun choliba\` (gravado por \`choliba setup\` e pelo choliba da máquina).
+export const COMPLETION_BASH = `# Autocomplete do choliba para \`choliba\`, \`chol\`, \`bunx choliba\` e \`bun choliba\` (gravado por \`choliba setup\` e pelo choliba-cli).
 
 _choliba_bin() {
     local dir="$PWD"

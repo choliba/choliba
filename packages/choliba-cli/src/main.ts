@@ -38,7 +38,7 @@ if (Reflect.getMetadata(SELF_DECLARED_DEPS_METADATA, NewCommand) === undefined) 
     process.exit(again.status ?? 1);
   }
   process.stderr.write(
-    'O choliba (da máquina) rodou do código-fonte sem os decorators ligados: rode-o a partir do repositório.\n',
+    'O choliba-cli rodou do código-fonte sem os decorators ligados: rode-o a partir do repositório.\n',
   );
   process.exit(1);
 }

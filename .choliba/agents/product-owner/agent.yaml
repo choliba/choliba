@@ -33,7 +33,7 @@ context:
     **Projeto e tickets**: o projeto é `${PROJECT}` e já chega validado pelo CLI (`config.json` e `.env.json`
     existem, o ambiente ativo é válido, nenhum campo que ele usa tem `CHANGE_ME`); não há outro projeto para escolher
     nem checagem para refazer. O ticket desta execução é `${TICKET}`, em `${TICKET_FILE}`: o CLI já o criou (ou abriu
-    o existente), então não há chave para calcular nem arquivo para criar. `bunx choliba projects list-projects
+    o existente), então não há chave para calcular nem arquivo para criar. `bunx choliba projects list
     --tickets` lista os outros tickets (ex.: `${PROJECT} ["${PROJECT}-1","${PROJECT}-2"]`), úteis só como contexto;
     considere só a linha de `${PROJECT}`.
   - >-
@@ -57,7 +57,7 @@ input: |
 flow: |
   1. **Ambiente**: leia `${PROJECT_DIR}/config.json` (URL do ambiente ativo) e `${PROJECT_DIR}/.env.json` (credenciais).
   2. **Ticket**: leia `${TICKET_FILE}` (o `tipo` e os campos que ele traz dizem o que preencher). Leia também os outros
-     tickets de `${PROJECT}` (`list-projects --tickets` lista; os arquivos ficam em `${PROJECT_DIR}/tickets/`): os
+     tickets de `${PROJECT}` (`list --tickets` lista; os arquivos ficam em `${PROJECT_DIR}/tickets/`): os
      critérios deles são comportamentos que a aplicação já tem e que os testes conferem.
   3. **Usar a aplicação**: abra a `baseURL`, entre com as credenciais se preciso e percorra o fluxo do pedido como um
      usuário. Num bug, reproduza os passos e anote o que acontece de fato. Numa feature, veja como o fluxo é hoje.
@@ -169,7 +169,7 @@ permissions:
       - '${TICKET_FILE}'
     execute:
       '${CHOL_ROOT}/':
-        - bunx choliba projects list-projects
+        - bunx choliba projects list
     tools:
       playwright-cli: ['*']
   deny:

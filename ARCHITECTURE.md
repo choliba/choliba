@@ -36,8 +36,8 @@ pacote é uma biblioteca Nest; `packages/choliba` é o único app.
 
 ## O caminho de um comando
 
-`choliba projects list-projects`: o `main.ts` tira as flags globais (`--no-color`), monta a plataforma e roda o
-`AppModule`; o nest-commander despacha para o `ListProjectsCommand`, que pede ao `ProjectsService` a lista, que
+`choliba projects list`: o `main.ts` tira as flags globais (`--no-color`), monta a plataforma e roda o
+`AppModule`; o nest-commander despacha para o `ProjectsListCommand`, que pede ao `ProjectsService` a lista, que
 chama as funções de `projects/project.ts` com a pasta de `LocationsService`; o comando escreve o resultado e o
 código de saída pelo `CommandIo`. Uma primeira palavra que não é comando (`choliba product-owner …`) cai no comando
 da raiz, que a passa para o `AgentsService`.
