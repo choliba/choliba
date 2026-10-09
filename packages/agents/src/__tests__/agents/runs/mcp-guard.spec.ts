@@ -24,7 +24,7 @@ describe('mcpViolation', () => {
     ).toBeUndefined();
     expect(mcpViolation(call('Mcp', { kind: 'call', server: 'git', tool: 'anything' }), 'po', ANY_GIT)).toBeUndefined();
     expect(mcpViolation(call('Mcp', { kind: 'call', server: 'mcp-app', tool: 'delete_issue' }), 'po', APP)).toBe(
-      '✗ o agente tentou usar um MCP não declarado (mcp-app:delete_issue); a execução foi interrompida: po declara mcp-app em agent.yaml#mcps.',
+      '✗ o agente tentou usar uma tool que po não declara (mcp-app:delete_issue); a execução foi interrompida: mcp-app declara get_issue em agent.yaml#mcps.mcp-app.tools.',
     );
     expect(mcpViolation(call('Mcp', { kind: 'call', server: 'git', tool: 'log' }), 'po', APP)).toContain('(git:log)');
   });

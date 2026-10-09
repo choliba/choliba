@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 08/10/2026 21:08:56 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 08/10/2026 23:44:17 — não editar manualmente.
 
 ## Resumo
 
@@ -18,7 +18,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 69 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 70 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -71,6 +71,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/common/message-blocks.ts](packages/agents/src/common/message-blocks.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/prompt.ts](packages/agents/src/common/prompt.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/provider-registry.ts](packages/agents/src/common/provider-registry.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/resolve-denies.ts](packages/agents/src/common/resolve-denies.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-project.ts](packages/agents/src/common/run-project.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-tools/delete-tool.ts](packages/agents/src/common/run-tools/delete-tool.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-tools/playwright-tool.ts](packages/agents/src/common/run-tools/playwright-tool.ts)|100.00|100.00|100.00|100.00

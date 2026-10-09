@@ -1,11 +1,12 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { dirname, join, sep } from 'node:path';
+import { join } from 'node:path';
 
 import type { PermissionPolicy } from '../../common';
 import type { McpServer } from '../../common';
 import type { AgentPermissions, ExecuteRule } from '../../common';
-import { allowedCommands, blocksEveryCommand, pathBase, pathGlob, withoutTrailingSlash } from '../../common';
+import { allowedCommands, blocksEveryCommand, pathBase, pathGlobs, withoutTrailingSlash } from '../../common';
+import { complementOf, type ReadDir, readDir, resolveDenies } from '../../common';
 import type { RunToolCommands } from '../../common';
 import { isRecord } from '../../common';
 
@@ -13,26 +14,6 @@ export interface CursorPermissions {
   readonly allow: readonly string[];
   readonly deny: readonly string[];
 }
-
-/** One entry of a directory: its name and whether it is a folder (a symlink counts as a file). */
-export interface DirEntry {
-  readonly name: string;
-  readonly isDirectory: boolean;
-}
-
-/** The entries of `dir`, or none when it cannot be read. */
-export type ReadDir = (dir: string) => readonly DirEntry[];
-
-export const readDir: ReadDir = (dir) => {
-  try {
-    return readdirSync(dir, { withFileTypes: true }).map((entry) => ({
-      name: entry.name,
-      isDirectory: entry.isDirectory(),
-    }));
-  } catch {
-    return [];
-  }
-};
 
 /**
  * `Shell(...)` token for a command prefix: cursor matches the first word, with the rest as
@@ -44,44 +25,9 @@ export function shellToken(command: string): string {
   return space === -1 ? `Shell(${normalized})` : `Shell(${normalized.slice(0, space)}:${normalized.slice(space + 1)}*)`;
 }
 
-/** A declared path (already absolute) as cursor's `Read(...)`/`Write(...)` token. */
-function fileToken(kind: 'Read' | 'Write', path: string): string {
-  return `${kind}(${pathGlob(path)})`;
-}
-
-/** The folders from `/` down to (not including) `path`: `/a/b/c` → `/`, `/a`, `/a/b`. */
-function ancestors(path: string): readonly string[] {
-  const found: string[] = [];
-  for (let dir = dirname(path); ; dir = dirname(dir)) {
-    found.unshift(dir);
-    if (dir === dirname(dir)) {
-      return found;
-    }
-  }
-}
-
-function covers(kept: string, path: string): boolean {
-  return kept === path || kept.startsWith(`${path}${sep}`) || path.startsWith(`${kept}${sep}`);
-}
-
-/**
- * Everything on disk that is not one of `kept` nor on the way to one, as the fewest paths: in each
- * folder from `/` down to a kept path, every entry that leads to no kept path. Cursor treats `allow`
- * as no limit at all (it reads and writes outside it, sandbox or not) but always honors `deny`, which
- * wins over `allow`; so denying this complement is what makes only the kept paths reachable. What is
- * created after the list is made, right in one of those folders, is not in it.
- */
-export function complementOf(kept: readonly string[], read: ReadDir): readonly string[] {
-  const denied = new Set<string>();
-  for (const dir of new Set(kept.flatMap(ancestors))) {
-    for (const entry of read(dir)) {
-      const path = join(dir, entry.name);
-      if (!kept.some((keptPath) => covers(keptPath, path))) {
-        denied.add(entry.isDirectory ? `${path}/` : path);
-      }
-    }
-  }
-  return [...denied].sort();
+/** Declared paths (already absolute) as cursor's `Read(...)`/`Write(...)` tokens. */
+function fileTokens(kind: 'Read' | 'Write', paths: readonly string[]): readonly string[] {
+  return paths.flatMap((path) => pathGlobs(path)).map((glob) => `${kind}(${glob})`);
 }
 
 /** What a list of declared paths reaches: a folder or a file as is, a glob by the folder before it. */
@@ -124,6 +70,10 @@ function denyShellTokens(rule: ExecuteRule): readonly string[] {
 const NO_RUN_TOOLS: RunToolCommands = { allow: [], deny: [], scripts: [] };
 
 /**
+ * Cursor treats `allow` as no limit at all (it reads and writes outside it, sandbox or not) but always honors
+ * `deny`, which wins over `allow`; so denying the complement of what is allowed (`complementOf`) is what makes
+ * only the allowed paths reachable.
+ *
  * Translates what agent.yaml declares (`permissions`, already absolute, and the MCP servers in `mcps`)
  * into cursor's `permissions` (the `.cursor/cli.json` format). Nothing is hardcoded: an agent gets
  * exactly what it declares. Reading and writing anywhere else is denied through the complement of
@@ -143,22 +93,22 @@ export function cursorPermissions(
   const writable = complementOf([runDir, ...reached(writes)], read);
   return {
     allow: [
-      ...permissions.allowRead.map((path) => fileToken('Read', path)),
-      ...writes.map((path) => fileToken('Write', path)),
+      ...fileTokens('Read', permissions.allowRead),
+      ...fileTokens('Write', writes),
       ...allowedCommands(permissions).map(shellToken),
       ...runTools.allow.map(shellToken),
       ...cdTokens(permissions, workspaceRoot, runDir, runTools),
       ...mcpServers.flatMap(mcpTokens),
     ],
     deny: [
-      ...permissions.denyRead.map((path) => fileToken('Read', path)),
-      ...permissions.denyWrite.map((path) => fileToken('Write', path)),
+      ...fileTokens('Read', resolveDenies(permissions.denyRead, read)),
+      ...fileTokens('Write', resolveDenies(permissions.denyWrite, read)),
       // The run tools are allowed to run, so they must never be rewritten (once written, the complement names them too).
-      ...runTools.scripts.map((path) => fileToken('Write', path)),
+      ...fileTokens('Write', runTools.scripts),
       ...permissions.denyExecute.flatMap(denyShellTokens),
       ...runTools.deny.map(shellToken),
-      ...readable.map((path) => fileToken('Read', path)),
-      ...writable.map((path) => fileToken('Write', path)),
+      ...fileTokens('Read', readable),
+      ...fileTokens('Write', writable),
     ],
   };
 }

@@ -11,7 +11,7 @@ import type { AgentInvocation } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
 import { readPlan } from './plan-store';
 import { validateExplicitModel } from '../../common';
-import { absolutePermissions, canRead, outsideExecuteDirs } from '../../common';
+import { absolutePermissions, canRead, outsideExecuteDirs, strayExceptions } from '../../common';
 import type { RunAgentsCliDeps, RunArgs } from './run-context';
 import type { RunProject } from '../../common';
 import { errorMessage, projectsDir, toAbsolute } from './run-context';
@@ -203,4 +203,31 @@ export function checkedExecuteDirs(agent: AgentDefinition, deps: RunAgentsCliDep
       'add the folder to allow.read (running commands in it reaches what is there anyway).\n',
   );
   return undefined;
+}
+
+/**
+ * Every `!` exception in `deny.read`, `deny.write` and `deny.delete` must lie under a deny of the same list: one
+ * that does not takes nothing out, which is a mistake in `agent.yaml`. `false` when one does not; the reason is
+ * already on `stderr`.
+ */
+export function checkedDenyExceptions(agent: AgentDefinition, deps: RunAgentsCliDeps): boolean {
+  const permissions = absolutePermissions(agent.permissions, deps.repoRoot);
+  const lists: readonly (readonly [string, readonly string[]])[] = [
+    ['read', permissions.denyRead],
+    ['write', permissions.denyWrite],
+    ['delete', permissions.denyDelete],
+  ];
+  const problems = lists.flatMap(([key, entries]) =>
+    strayExceptions(entries).map(
+      (path) => `  deny.${key}: !${path} não está dentro de nenhum caminho de deny.${key} (uma pasta, sem glob)`,
+    ),
+  );
+  if (problems.length === 0) {
+    return true;
+  }
+  deps.stderr.write(
+    `"${agent.name}" tem exceções que não tiram nada de um deny:\n${problems.join('\n')}\n` +
+      'Corrija o caminho da exceção ou remova a linha do agent.yaml.\n',
+  );
+  return false;
 }

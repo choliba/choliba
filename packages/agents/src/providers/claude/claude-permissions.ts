@@ -1,7 +1,8 @@
 import type { PermissionPolicy } from '../../common';
 import type { McpServer } from '../../common';
 import type { AgentPermissions, ExecuteRule } from '../../common';
-import { allowedCommands, blocksEveryCommand, pathGlob, withoutTrailingSlash } from '../../common';
+import { allowedCommands, blocksEveryCommand, pathGlobs, withoutTrailingSlash } from '../../common';
+import { type ReadDir, readDir, resolveDenies } from '../../common';
 import type { RunToolCommands } from '../../common';
 
 /** The tools that read files, which the session gets once the agent may read somewhere. */
@@ -22,12 +23,16 @@ export interface ClaudePermissionArgs {
  * A declared path (always absolute here, see `absolutePermissions`) in Claude Code's rule syntax, where
  * `/x` means "relative to the project root" and a filesystem-absolute path needs two slashes.
  */
-export function claudePath(path: string): string {
-  return `/${pathGlob(path)}`;
+export function claudePaths(path: string): readonly string[] {
+  return pathGlobs(path).map((glob) => `/${glob}`);
+}
+
+function readRules(paths: readonly string[]): string[] {
+  return paths.flatMap(claudePaths).map((path) => `Read(${path})`);
 }
 
 function writeRules(paths: readonly string[]): string[] {
-  return paths.flatMap((path) => [`Edit(${claudePath(path)})`, `Write(${claudePath(path)})`]);
+  return paths.flatMap(claudePaths).flatMap((path) => [`Edit(${path})`, `Write(${path})`]);
 }
 
 /** Claude Code's rules for an MCP server: one per tool it lists, or one for the whole server. */
@@ -54,13 +59,15 @@ function denyRunRules(rule: ExecuteRule): readonly string[] {
  * declares. The mode is always `dontAsk`: anything not allowed is denied without prompting (a headless
  * run could never answer). The session only has the tools the permissions need, none when they allow
  * nothing; and since it runs in an empty folder (`ProviderRequest.runDir`), the only files it may read
- * or write are the ones the `Read`/`Edit`/`Write` rules name. Deny rules always apply.
+ * or write are the ones the `Read`/`Edit`/`Write` rules name. Deny rules always apply, so a deny's `!`
+ * exceptions are resolved first (`resolveDenies`).
  */
 export function claudePermissionArgs(
   permissions: AgentPermissions,
   policy: PermissionPolicy,
   mcpServers: readonly McpServer[],
   runTools: RunToolCommands,
+  read: ReadDir = readDir,
 ): ClaudePermissionArgs {
   const writes = policy === 'read-only' ? [] : permissions.allowWrite;
   const shellCommands = [...allowedCommands(permissions), ...runTools.allow];
@@ -75,14 +82,14 @@ export function claudePermissionArgs(
     permissionMode: 'dontAsk',
     tools,
     allowedTools: [
-      ...permissions.allowRead.map((path) => `Read(${claudePath(path)})`),
+      ...readRules(permissions.allowRead),
       ...writeRules(writes),
       ...shellCommands.map(commandRule),
       ...mcpServers.flatMap(mcpRules),
     ],
     disallowedTools: [
-      ...permissions.denyRead.map((path) => `Read(${claudePath(path)})`),
-      ...writeRules(permissions.denyWrite),
+      ...readRules(resolveDenies(permissions.denyRead, read)),
+      ...writeRules(resolveDenies(permissions.denyWrite, read)),
       // The run tools are allowed to run, so they must never be rewritten, even under an allowed write path.
       ...writeRules(runTools.scripts),
       ...permissions.denyExecute.flatMap(denyRunRules),

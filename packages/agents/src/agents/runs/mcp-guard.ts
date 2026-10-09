@@ -45,6 +45,10 @@ export function mcpViolation(
   if (use === undefined || event.type !== 'tool-call' || allows(use, declared)) {
     return undefined;
   }
+  const server = use.kind === 'call' ? declared.find(({ name }) => name === use.server) : undefined;
+  if (use.kind === 'call' && server?.tools !== undefined) {
+    return `✗ o agente tentou usar uma tool que ${agent} não declara (${use.server}:${use.tool}); a execução foi interrompida: ${use.server} declara ${server.tools.join(', ')} em agent.yaml#mcps.${use.server}.tools.`;
+  }
   const servers = declared.length === 0 ? 'nenhum MCP' : declared.map(({ name }) => name).join(', ');
   return `✗ o agente tentou usar um MCP não declarado (${what(use, event)}); a execução foi interrompida: ${agent} declara ${servers} em agent.yaml#mcps.`;
 }

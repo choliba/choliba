@@ -2,11 +2,10 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { absolutePermissions, readAgentPermissions } from '../../../common/agent-permissions';
-import type { DirEntry, ReadDir } from '../../../providers/cursor/cursor-permissions';
+import type { DirEntry, ReadDir } from '../../../common/resolve-denies';
+import { complementOf } from '../../../common/resolve-denies';
 import {
-  complementOf,
   cursorPermissions,
-  readDir,
   shellToken,
   undeclaredMcpTokens,
   userMcpServers,
@@ -47,39 +46,6 @@ describe('shellToken', () => {
   it('uses the first word, with the rest as word:args', () => {
     expect(shellToken('prettier')).toBe('Shell(prettier)');
     expect(shellToken(' bun  run format ')).toBe('Shell(bun:run format*)');
-  });
-});
-
-describe('complementOf', () => {
-  it('lists, in each folder from / down to a kept path, every entry that leads to none', () => {
-    expect(complementOf([RUN_DIR, '/repo/src', '/repo/README.md'], fakeDisk)).toEqual([
-      '/etc/',
-      '/home/',
-      '/repo/.cache/other/',
-      '/repo/.cache/runs/old/',
-      '/repo/docs/',
-      '/repo/packages/',
-      '/repo/secret.txt',
-    ]);
-  });
-
-  it('keeps everything under a kept folder, even another kept path inside it', () => {
-    expect(complementOf(['/repo', RUN_DIR], fakeDisk)).toEqual(['/etc/', '/home/']);
-  });
-});
-
-describe('readDir', () => {
-  it('reads a real folder, telling folders from files, and nothing from one that does not exist', () => {
-    const tmp = makeTmpDir('cursor-readdir');
-    try {
-      mkdirSync(join(tmp.path, 'sub'));
-      writeFileSync(join(tmp.path, 'a.txt'), 'a');
-
-      expect([...readDir(tmp.path)].sort((a, b) => a.name.localeCompare(b.name))).toEqual([file('a.txt'), dir('sub')]);
-      expect(readDir(join(tmp.path, 'nope'))).toEqual([]);
-    } finally {
-      tmp.cleanup();
-    }
   });
 });
 

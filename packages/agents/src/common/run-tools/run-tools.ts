@@ -5,6 +5,7 @@ import { CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR } from '@choliba/core';
 import type { PermissionPolicy } from '../interfaces/execution.interface';
 import type { PlannedFile, ProviderRequest } from '../interfaces/provider.interface';
 import { type AgentPermissions, absolutePermissions, EVERY_COMMAND, type RunPlace } from '../agent-permissions';
+import { denyExceptions, isException } from '../resolve-denies';
 import { deleteScript } from './delete-tool';
 import { DEFAULT_PLAYWRIGHT_OUTPUT_DIR, playwrightScript } from './playwright-tool';
 import { runToolPath } from './run-tool-path';
@@ -44,7 +45,12 @@ const RUN_TOOLS: Readonly<Record<RunToolName, RunToolSpec>> = {
   [DELETE]: {
     purpose: 'removes files and folders under the paths you may delete; it is the only way to delete',
     usage: '<path…>',
-    script: ({ permissions }) => deleteScript(permissions.allowDelete, permissions.denyDelete),
+    script: ({ permissions }) =>
+      deleteScript(
+        permissions.allowDelete,
+        permissions.denyDelete.filter((path) => !isException(path)),
+        denyExceptions(permissions.denyDelete),
+      ),
   },
   'playwright-cli': {
     purpose: 'the browser (playwright cli)',
