@@ -251,6 +251,17 @@ describe('validateAgentYamlV1', () => {
     });
   });
 
+  describe('! exceptions', () => {
+    it('accepts an exception in deny lists only', () => {
+      expect(
+        validate({ ...minimal(), permissions: { deny: { read: ['${CHOL_ROOT}/', '!${CHOL_ROOT}/docs/'] } } }).valid,
+      ).toBe(true);
+      expect(errorsOf({ ...minimal(), permissions: { allow: { read: ['!docs/'] } } })).toContain(
+        '/permissions/allow/read/0',
+      );
+    });
+  });
+
   describe('allow_without_ticket', () => {
     it('accepts a boolean', () => {
       expect(validate({ ...minimal(), allow_without_ticket: true }).valid).toBe(true);

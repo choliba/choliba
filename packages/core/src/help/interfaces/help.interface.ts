@@ -43,6 +43,8 @@ export interface CommandEntry {
   readonly spec: CommandSpec;
   /** Also accepted as `--<name>`, e.g. `agents --docs-updater`. */
   readonly asFlag?: boolean;
+  /** Also accepted as the command (`g` for `generate`): walked like the name, not offered in the list. */
+  readonly aliases?: readonly string[];
   /** `false`: completed and described, but not listed by `--help` (`choliba <agent>` shortcuts). */
   readonly listed?: boolean;
 }

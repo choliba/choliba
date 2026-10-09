@@ -79,6 +79,9 @@ writeFileSync(
       license: root.license,
       type: 'module',
       bin: { choliba: 'bin/choliba.js', chol: 'bin/choliba.js' },
+      // Turns bash completion on. Bun runs it only for a trusted package; the first normal run does it
+      // otherwise, the same way `choliba setup` does for the workspace package.
+      scripts: { postinstall: 'bun bin/choliba.js' },
       engines: { bun: '>=1.2' },
       dependencies,
     },

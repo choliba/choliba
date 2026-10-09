@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 08/10/2026 20:05:22 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 08/10/2026 23:44:17 — não editar manualmente.
 
 ## Resumo
 
@@ -18,7 +18,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 69 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 70 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -71,6 +71,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/common/message-blocks.ts](packages/agents/src/common/message-blocks.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/prompt.ts](packages/agents/src/common/prompt.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/provider-registry.ts](packages/agents/src/common/provider-registry.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/resolve-denies.ts](packages/agents/src/common/resolve-denies.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-project.ts](packages/agents/src/common/run-project.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-tools/delete-tool.ts](packages/agents/src/common/run-tools/delete-tool.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-tools/playwright-tool.ts](packages/agents/src/common/run-tools/playwright-tool.ts)|100.00|100.00|100.00|100.00
@@ -95,7 +96,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba-cli</b> — 100.00% das linhas, 41 arquivos</summary>
+<summary>🟢 <b>packages/choliba-cli</b> — 100.00% das linhas, 42 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -122,6 +123,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/generate/generate.service.ts](packages/choliba-cli/src/generate/generate.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/generate/index.ts](packages/choliba-cli/src/generate/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/generate/nest.ts](packages/choliba-cli/src/generate/nest.ts)|100.00|100.00|100.00|100.00
+🟢|[src/generate/resolve-project.ts](packages/choliba-cli/src/generate/resolve-project.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/index.ts](packages/choliba-cli/src/help/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/root-spec.ts](packages/choliba-cli/src/help/root-spec.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/version.ts](packages/choliba-cli/src/help/version.ts)|100.00|100.00|100.00|100.00
@@ -144,7 +146,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 21 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 19 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -153,8 +155,6 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/check/check.module.ts](packages/choliba/src/check/check.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/check/check.ts](packages/choliba/src/check/check.ts)|100.00|100.00|100.00|100.00
 🟢|[src/check/nest.ts](packages/choliba/src/check/nest.ts)|100.00|100.00|100.00|100.00
-🟢|[src/completion/completion.ts](packages/choliba/src/completion/completion.ts)|100.00|100.00|100.00|100.00
-🟢|[src/completion/index.ts](packages/choliba/src/completion/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/index.ts](packages/choliba/src/help/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/root-spec.ts](packages/choliba/src/help/root-spec.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/version.ts](packages/choliba/src/help/version.ts)|100.00|100.00|100.00|100.00
@@ -173,7 +173,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 59 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 61 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -205,6 +205,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/config/workspace.ts](packages/core/src/config/workspace.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/cli-help.service.ts](packages/core/src/help/cli-help.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/complete.ts](packages/core/src/help/complete.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/completion-bash.ts](packages/core/src/help/completion-bash.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/entry-help.ts](packages/core/src/help/entry-help.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/format-help.ts](packages/core/src/help/format-help.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/help-registry.service.ts](packages/core/src/help/help-registry.service.ts)|100.00|100.00|100.00|100.00
@@ -213,6 +214,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/help/nest.ts](packages/core/src/help/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/register-help.decorator.ts](packages/core/src/help/register-help.decorator.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/scripts-help.ts](packages/core/src/help/scripts-help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/shell-completion.ts](packages/core/src/help/shell-completion.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/wants-help.ts](packages/core/src/help/wants-help.ts)|100.00|100.00|100.00|100.00
 🟢|[src/index.ts](packages/core/src/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/nest.ts](packages/core/src/nest.ts)|100.00|100.00|100.00|100.00

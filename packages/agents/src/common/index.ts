@@ -12,6 +12,7 @@ export * from './mcp-use';
 export * from './message-blocks';
 export * from './prompt';
 export * from './provider-registry';
+export * from './resolve-denies';
 export * from './run-project';
 export * from './run-tools/delete-tool';
 export * from './run-tools/playwright-tool';

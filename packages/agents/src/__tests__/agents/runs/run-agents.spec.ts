@@ -1,7 +1,7 @@
 import { execSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import { complete, describe as describeSpec, formatSuggestions, type GitRunner, buildTheme } from '@choliba/core';
 
@@ -710,6 +710,47 @@ describe('runAgentsCli — skills', () => {
     expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'x'], deps)).toBe(1);
     expect(stderr.chunks.join('')).toContain('skill "dummy-skill" não encontrada: /repo/.choliba/skills/dummy-skill');
     expect(stdout.chunks).toEqual([]);
+  });
+
+  /** The `echo` fixture agent, copied to a tmp agents dir with `permissions.deny.read` set to `paths`. */
+  function withDenyRead(paths: readonly string[]): { agentsDir: string; cleanup: () => void } {
+    const tmp = makeTmpDir('run-deny-read');
+    cpSync(join(FIXTURES, 'echo'), join(tmp.path, 'echo'), { recursive: true });
+    const yamlPath = join(tmp.path, 'echo', 'agent.yaml');
+    writeFileSync(yamlPath, `${readFileSync(yamlPath, 'utf8')}    read: ${JSON.stringify(paths)}\n`);
+    return { agentsDir: tmp.path, cleanup: tmp.cleanup };
+  }
+
+  it('keeps a listed skill readable under a deny.read that covers it, and denies the rest of that folder', async () => {
+    const fixtures = dirname(SKILLS);
+    const agents = withDenyRead([`${fixtures}/`]);
+    try {
+      const { deps, stdout } = harness([]);
+
+      expect(
+        await runAgentsCli(['echo', '--agents-dir', agents.agentsDir, '--dry-run', '--show-prompt', 'x'], deps),
+      ).toBe(0);
+      const printed = dryRunArgv(stdout);
+      expect(printed).toContain(`Read(/${SKILLS}/dummy-skill/**)`);
+      expect(printed).toContain(`Read(/${fixtures}/agents/**)`);
+      expect(printed).not.toContain(`Read(/${fixtures}/**)`);
+      expect(printed.join('\n')).toContain(`- !${SKILLS}/dummy-skill/`);
+    } finally {
+      agents.cleanup();
+    }
+  });
+
+  it('stops before the provider when a ! exception lies under no deny of its list', async () => {
+    const agents = withDenyRead(['/elsewhere/', '!/repo/docs']);
+    try {
+      const { deps, stdout, stderr } = harness([]);
+
+      expect(await runAgentsCli(['echo', '--agents-dir', agents.agentsDir, '--dry-run', 'x'], deps)).toBe(1);
+      expect(stderr.chunks.join('')).toContain('deny.read: !/repo/docs não está dentro de nenhum caminho de deny.read');
+      expect(stdout.chunks).toEqual([]);
+    } finally {
+      agents.cleanup();
+    }
   });
 
   it('does not grant the skills dir to an agent without skills', async () => {

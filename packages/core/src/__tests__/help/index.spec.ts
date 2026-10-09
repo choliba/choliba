@@ -16,7 +16,7 @@ import {
 
 describe('help barrel exports', () => {
   it('re-exports the completion and help helpers', () => {
-    expect(complete({ usage: 'x' }, [''])).toEqual({ kind: 'values', values: [] });
+    expect(complete({ usage: 'x' }, [''])).toEqual({ kind: 'values', values: ['help', 'version'] });
     expect(formatSuggestions({ kind: 'files' })).toBe(FILES_MARKER);
     expect(formatHelp({ usage: 'x' })).toBe('Usage:  x');
     expect(HELP_WIDTH).toBe(80);

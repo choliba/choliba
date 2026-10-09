@@ -8,7 +8,7 @@ import { GenerateModule } from './generate/nest';
 import { CLI_ROOT, versionLine } from './help';
 import { NewModule } from './new/nest';
 import type { CliRuntime } from './runtime';
-import { versionLines, WORKSPACE_GROUP } from './workspace';
+import { delegateWorkspaceComplete, versionLines, WORKSPACE_GROUP } from './workspace';
 import { WorkspaceModule } from './workspace/nest';
 
 /** The machine's choliba (package choliba-cli), on the platform and runtime `main.ts` reads from Bun and the process. */
@@ -24,6 +24,7 @@ export class AppModule {
           spec: CLI_ROOT,
           version: () => versionLines(versionLine(runtime.packageDir), runtime, platform.cwd),
           groups: ['Commands', WORKSPACE_GROUP],
+          delegateComplete: (words) => delegateWorkspaceComplete(runtime, platform.cwd, words),
         }),
         NewModule,
         GenerateModule,

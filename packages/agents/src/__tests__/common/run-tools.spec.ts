@@ -105,7 +105,7 @@ describe('planRunTools and applyRunTools', () => {
     const request = fakeRequest(
       {
         allow: { delete: ['app/'], tools: { 'playwright-cli': ['*'], 'playwright-trace': ['*'] } },
-        deny: { delete: ['app/secrets/'] },
+        deny: { delete: ['app/secrets/', '!app/secrets/tmp/'] },
       },
       'edits',
     );
@@ -118,7 +118,8 @@ describe('planRunTools and applyRunTools', () => {
       `${RUN_DIR}.playwright-trace`,
     ]);
     expect(files[0]?.content).toContain('["/w/app/"]');
-    expect(files[0]?.content).toContain('["/w/app/secrets/"]');
+    expect(files[0]?.content).toContain('const denyRoots = ["/w/app/secrets/"]');
+    expect(files[0]?.content).toContain('const exceptRoots = ["/w/app/secrets/tmp"]');
     expect(files[1]?.content).toContain('const command = "cli"');
     expect(files[1]?.content).toContain('const outputDir = "saidas"');
     expect(files[2]?.content).toContain('const command = "trace"');
@@ -191,7 +192,7 @@ interface DeleteScene {
 /** A run dir and an `app/` root next to it, with the delete script written for `allow` and `deny`. */
 function withDeleteScript(
   fn: (scene: DeleteScene) => void,
-  roots: (app: string) => { allow: string[]; deny?: string[] } = (app) => ({ allow: [`${app}/`] }),
+  roots: (app: string) => { allow: string[]; deny?: string[]; except?: string[] } = (app) => ({ allow: [`${app}/`] }),
 ): void {
   const tmp = makeTmpDir('delete-script');
   try {
@@ -199,9 +200,9 @@ function withDeleteScript(
     const runDir = join(tmp.path, 'run');
     mkdirSync(app);
     mkdirSync(runDir);
-    const { allow, deny = [] } = roots(app);
+    const { allow, deny = [], except } = roots(app);
     const script = `${runDir}.delete`;
-    const restore = applyRunTools([{ path: script, content: deleteScript(allow, deny) }]);
+    const restore = applyRunTools([{ path: script, content: deleteScript(allow, deny, except) }]);
     try {
       fn({
         root: tmp.path,
@@ -281,6 +282,21 @@ describe('the delete script', () => {
         expect(existsSync(join(app, 'secrets', 'key'))).toBe(true);
       },
       (app) => ({ allow: [`${app}/`], deny: [`${app}/secrets/`] }),
+    );
+  });
+
+  it('removes a path under an exception of a deny root, and still refuses the rest of that root', () => {
+    withDeleteScript(
+      ({ app, run }) => {
+        mkdirSync(join(app, 'secrets', 'tmp'), { recursive: true });
+        writeFileSync(join(app, 'secrets', 'key'), 'x');
+        writeFileSync(join(app, 'secrets', 'tmp', 'a.txt'), 'x');
+
+        expect(run(join(app, 'secrets', 'tmp', 'a.txt')).status).toBe(0);
+        expect(run(join(app, 'secrets', 'key')).stderr).toMatch(/Apagar negado/);
+        expect(existsSync(join(app, 'secrets', 'key'))).toBe(true);
+      },
+      (app) => ({ allow: [`${app}/`], deny: [`${app}/secrets/`], except: [`${app}/secrets/tmp`] }),
     );
   });
 

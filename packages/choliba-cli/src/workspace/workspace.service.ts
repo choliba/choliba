@@ -4,16 +4,35 @@ import { RUNTIME, type CommandEntry, type HelpContributor, type RootFallback } f
 import { ConfigService, RegisterHelp, RegisterRootFallback } from '@choliba/core/nest';
 
 import type { CliRuntime } from '../runtime';
-import { workspaceAt, workspaceCholiba, workspaceEntries } from './workspace-choliba';
+import { workspaceAt, workspaceCholiba, workspaceCommandEntries } from './workspace-choliba';
+
+/**
+ * Nest keeps one discovery key per class (`DiscoverableMetaHostCollection` is a map of class → key).
+ * Help and the unknown-command fallback are therefore two classes: one class wearing both
+ * `@RegisterHelp()` and `@RegisterRootFallback()` is found as only one of them.
+ */
+
+/** Lists the workspace's commands in this `--help` and `__complete`. */
+@RegisterHelp()
+@Injectable()
+export class WorkspaceHelp implements HelpContributor {
+  constructor(
+    @Inject(ConfigService) private readonly config: ConfigService,
+    @Inject(RUNTIME) private readonly runtime: CliRuntime,
+  ) {}
+
+  helpEntries(): readonly CommandEntry[] {
+    return workspaceCommandEntries(this.runtime, this.config.startDir());
+  }
+}
 
 /**
  * The workspace's `choliba` behind this one: a command this one does not have (`agents`, `tests`, `check`,
- * `<agent>`…) runs there, in the version the workspace installed, and the help lists those commands too.
+ * `<agent>`…) runs there, in the version the workspace installed.
  */
 @RegisterRootFallback()
-@RegisterHelp()
 @Injectable()
-export class WorkspaceService implements RootFallback, HelpContributor {
+export class WorkspaceService implements RootFallback {
   constructor(
     @Inject(ConfigService) private readonly config: ConfigService,
     @Inject(RUNTIME) private readonly runtime: CliRuntime,
@@ -28,10 +47,5 @@ export class WorkspaceService implements RootFallback, HelpContributor {
       );
     }
     return Promise.resolve(this.runtime.exec(workspaceCholiba(root), argv, start));
-  }
-
-  helpEntries(): readonly CommandEntry[] {
-    const root = workspaceAt(this.config.startDir());
-    return root === undefined ? [] : workspaceEntries(this.runtime, root);
   }
 }

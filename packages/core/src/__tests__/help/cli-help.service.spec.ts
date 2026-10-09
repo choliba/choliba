@@ -50,7 +50,7 @@ describe('CliHelpService', () => {
     cli.printCompletions(SPEC, ['']);
     cli.printCompletions(SPEC, ['zzz']);
 
-    expect(platform.stdout.text()).toBe('list\nshow\n');
+    expect(platform.stdout.text()).toBe('list\nshow\nhelp\nversion\n');
   });
 
   it('describes what the words select', async () => {

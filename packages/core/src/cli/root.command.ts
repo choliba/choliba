@@ -12,6 +12,7 @@ import { RegisterRootFallback } from './register-root-fallback.decorator';
 import { ROOT_OPTIONS } from './root.constants';
 
 const HELP_WORDS: readonly string[] = ['help', '--help', '-h'];
+const VERSION_WORDS: readonly string[] = ['version', '--version'];
 
 function isRootFallback(value: unknown): value is RootFallback {
   return typeof (value as Partial<RootFallback> | undefined)?.runUnknown === 'function';
@@ -23,8 +24,8 @@ function programOf(options: RootOptions): string {
 }
 
 /**
- * The app with no command, or with `help`/`--help`/`-h`: its help, listing the registered commands; `--version`:
- * its version. Any other first word goes to the `RootFallback`, or is a usage error when there is none.
+ * The app with no command, or with `help`/`--help`/`-h`: its help, listing the registered commands; `version` or
+ * `--version`: its version. Any other first word goes to the `RootFallback`, or is a usage error when there is none.
  */
 @NestRootCommand({ arguments: '[words...]', allowUnknownOptions: true, allowExcessArgs: true })
 export class RootCommand extends CliCommand {
@@ -44,7 +45,7 @@ export class RootCommand extends CliCommand {
       this.io.printHelp(this.registry.spec(this.options.spec, this.options.groups));
       return;
     }
-    if (first === '--version') {
+    if (VERSION_WORDS.includes(first)) {
       this.io.write(`${this.options.version()}\n`);
       return;
     }

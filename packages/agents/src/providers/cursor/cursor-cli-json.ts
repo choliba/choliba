@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmdirSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import type { PlannedFile } from '../../common';
 import type { CursorPermissions } from './cursor-permissions';
@@ -45,13 +45,8 @@ export function mergeMcpJson(
 
 type Merge = (existing: unknown) => Record<string, unknown>;
 
-/** What `<workspaceRoot>/.cursor/<fileName>` held before the run (`undefined`: no file) and what it would hold. */
-interface CursorFilePlan extends PlannedFile {
-  readonly original: string | undefined;
-}
-
 /** `<workspaceRoot>/.cursor/<fileName>` with `merge` applied to what is there, without writing anything. */
-function planCursorFile(workspaceRoot: string, fileName: string, merge: Merge): CursorFilePlan {
+function planCursorFile(workspaceRoot: string, fileName: string, merge: Merge): PlannedFile {
   const path = join(workspaceRoot, '.cursor', fileName);
   const original = existsSync(path) ? readFileSync(path, 'utf8') : undefined;
 
@@ -63,22 +58,21 @@ function planCursorFile(workspaceRoot: string, fileName: string, merge: Merge): 
       throw new Error(`${path} não é um JSON válido; corrija ou remova antes de rodar o agente com o cursor.`);
     }
   }
-  return { path, original, content: `${JSON.stringify(merge(parsed), null, 2)}\n` };
+  return { path, content: `${JSON.stringify(merge(parsed), null, 2)}\n` };
 }
 
 /**
- * Rewrites `<workspaceRoot>/.cursor/<fileName>` with `merge` for one run, and returns the function
- * that puts things back: the original file byte for byte when there was one (kept in memory, never
- * in a temp file), otherwise the generated file is removed, and `.cursor/` too if it ends up empty.
- * Safe to call the returned function more than once.
+ * Writes `content` to `path` for one run and returns the function that puts that path back: the
+ * original bytes when there was a file, otherwise the generated file is removed, and its directory
+ * too when this write created it and it ends up empty. Safe to call the returned function more than once.
  */
-function applyCursorFile(workspaceRoot: string, fileName: string, merge: Merge): () => void {
-  const dir = join(workspaceRoot, '.cursor');
+function installFile(path: string, content: string): () => void {
+  const dir = dirname(path);
   const dirExisted = existsSync(dir);
-  const plan = planCursorFile(workspaceRoot, fileName, merge);
+  const original = existsSync(path) ? readFileSync(path, 'utf8') : undefined;
 
   mkdirSync(dir, { recursive: true });
-  writeFileSync(plan.path, plan.content, 'utf8');
+  writeFileSync(path, content, 'utf8');
 
   let restored = false;
   return () => {
@@ -86,23 +80,55 @@ function applyCursorFile(workspaceRoot: string, fileName: string, merge: Merge):
       return;
     }
     restored = true;
-    if (plan.original !== undefined) {
-      writeFileSync(plan.path, plan.original, 'utf8');
+    if (original !== undefined) {
+      writeFileSync(path, original, 'utf8');
       return;
     }
-    rmSync(plan.path, { force: true });
+    rmSync(path, { force: true });
     if (!dirExisted && readdirSync(dir).length === 0) {
       rmdirSync(dir);
     }
   };
 }
 
-/** What `applyCursorPermissions` would write into `.cursor/cli.json`, writing nothing. */
-export function planCursorPermissions(workspaceRoot: string, permissions: CursorPermissions): PlannedFile {
-  const { path, content } = planCursorFile(workspaceRoot, 'cli.json', (existing) =>
-    mergeCliJson(existing, permissions),
-  );
-  return { path, content };
+/** Rewrites `<workspaceRoot>/.cursor/<fileName>` with `merge` for one run (see `installFile`). */
+function applyCursorFile(workspaceRoot: string, fileName: string, merge: Merge): () => void {
+  const plan = planCursorFile(workspaceRoot, fileName, merge);
+  return installFile(plan.path, plan.content);
+}
+
+/**
+ * `<dir>/.cursor/cli.json` parsed, or `{}` when the file is absent. A file that is not JSON is refused:
+ * merging past it would hide the broken document.
+ */
+function readCliJson(dir: string): unknown {
+  const path = join(dir, '.cursor', 'cli.json');
+  if (!existsSync(path)) {
+    return {};
+  }
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    throw new Error(`${path} não é um JSON válido; corrija ou remova antes de rodar o agente com o cursor.`);
+  }
+}
+
+/**
+ * The `cli.json` cursor-agent loads: `.cursor/cli.json` of the directory it starts in (the run dir).
+ * Cursor walks from the git root down to that cwd and, with no git repo, looks only there, so a file
+ * at the workspace root is never read and `~/.cursor/cli-config.json` stays in force. A deeper file's
+ * arrays replace the ones above it, so this document is already the union of the workspace's own
+ * `cli.json` and the agent's permissions. Nothing is written.
+ */
+export function planCursorPermissions(
+  runDir: string,
+  workspaceRoot: string,
+  permissions: CursorPermissions,
+): PlannedFile {
+  return {
+    path: join(runDir, '.cursor', 'cli.json'),
+    content: `${JSON.stringify(mergeCliJson(readCliJson(workspaceRoot), permissions), null, 2)}\n`,
+  };
 }
 
 /** What `applyCursorMcpServers` would write into `.cursor/mcp.json`, writing nothing. */
@@ -114,9 +140,17 @@ export function planCursorMcpServers(
   return { path, content };
 }
 
-/** Writes the agent's permissions into `.cursor/cli.json` for one run (see `applyCursorFile`). */
-export function applyCursorPermissions(workspaceRoot: string, permissions: CursorPermissions): () => void {
-  return applyCursorFile(workspaceRoot, 'cli.json', (existing) => mergeCliJson(existing, permissions));
+/**
+ * Writes the agent's permissions into the run dir's `.cursor/cli.json` (see `planCursorPermissions`).
+ * The workspace file is only read. The returned function removes the run file.
+ */
+export function applyCursorPermissions(
+  runDir: string,
+  workspaceRoot: string,
+  permissions: CursorPermissions,
+): () => void {
+  const planned = planCursorPermissions(runDir, workspaceRoot, permissions);
+  return installFile(planned.path, planned.content);
 }
 
 /** Writes the agent's MCP servers into `.cursor/mcp.json` for one run (see `applyCursorFile`). */

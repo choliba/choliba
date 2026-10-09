@@ -14,7 +14,8 @@ import { NewService } from './new.service';
 /** How `choliba --help` lists `new`, and its own `--help`. */
 const ENTRY: CommandEntry = {
   name: 'new',
-  description: 'Cria uma pasta de trabalho do choliba',
+  description: 'Cria uma pasta de trabalho do choliba (alias: n)',
+  aliases: ['n'],
   group: 'Commands',
   spec: NEW_HELP,
 };
@@ -24,7 +25,7 @@ const ENTRY: CommandEntry = {
 @Command({
   aliases: ['n'],
   name: 'new',
-  description: 'Cria uma pasta de trabalho do choliba',
+  description: 'Cria uma pasta de trabalho do choliba (alias: n)',
   allowUnknownOptions: true,
   allowExcessArgs: true,
 })

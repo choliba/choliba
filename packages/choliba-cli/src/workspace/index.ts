@@ -1,1 +1,1 @@
-export { versionLines, WORKSPACE_GROUP } from './workspace-choliba';
+export { delegateWorkspaceComplete, versionLines, WORKSPACE_GROUP } from './workspace-choliba';

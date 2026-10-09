@@ -1,5 +1,5 @@
 import { mcpServersMap } from '../../common';
-import { absolutePermissions } from '../../common';
+import { absolutePermissions, readDir } from '../../common';
 import { assertArgvFits, runPlaceOf, wrapInstructions } from '../../common';
 import { runToolCommands, runToolsOf } from '../../common';
 import { createStreamJsonParser } from '../../common';
@@ -15,13 +15,7 @@ import {
   planCursorPermissions,
 } from './cursor-cli-json';
 import { clearCursorState } from './cursor-state';
-import {
-  type CursorPermissions,
-  cursorPermissions,
-  readDir,
-  undeclaredMcpTokens,
-  userMcpServers,
-} from './cursor-permissions';
+import { type CursorPermissions, cursorPermissions, undeclaredMcpTokens, userMcpServers } from './cursor-permissions';
 
 function resolvePlanContent(context: PlanContentContext): string | undefined {
   const content = context.planMarkdown?.trim();
@@ -54,8 +48,10 @@ function policyArgs(request: ProviderRequest): readonly string[] {
  */
 function buildArgs(request: ProviderRequest): readonly string[] {
   const prompt = `${wrapInstructions(request.agent, request.skillsInstruction, runPlaceOf(request))}\n\n${request.userPrompt}`;
-  // `--workspace` is the project root: that is where cursor-agent reads `.cursor/cli.json` and
-  // `.cursor/mcp.json`. Without them there it falls back to `~/.cursor/cli-config.json`.
+  // `--workspace` is where cursor-agent reads `.cursor/mcp.json`. It does not read `.cursor/cli.json`
+  // from there: it walks from the git root down to the process cwd (the run dir) and, with no git
+  // repo, only that cwd, otherwise falling back to `~/.cursor/cli-config.json`. The run's cli.json
+  // is written into the run dir so its allow/deny lists replace the home ones.
   const args: string[] = [
     '-p',
     prompt,
@@ -84,12 +80,13 @@ function buildArgs(request: ProviderRequest): readonly string[] {
 }
 
 /**
- * The agent's permissions and MCP servers, written into `.cursor/cli.json` and `.cursor/mcp.json` of the
- * workspace root (the permissions always: even an agent that declares none is denied the rest) — the same
- * folder `--workspace` names, so cursor-agent finds and honours them. Undone in reverse order, so the
- * `.cursor/` dir created for the first file is removed only once both are gone, and last what cursor-agent
- * may still have kept for the run dir in `~/.cursor` (`clearCursorState`). The run tools' scripts are
- * already on disk (`runAgent` writes them first), so the complement of what may be written names them too.
+ * The agent's permissions go into `.cursor/cli.json` of the run dir (the process cwd, the only place
+ * cursor-agent reads a project cli.json when the workspace is not a git repo). MCP servers stay in
+ * `.cursor/mcp.json` of the workspace root, which `--workspace` names. Permissions are written even
+ * when the agent declares none, so the rest of the disk stays denied. Undone in reverse order, and
+ * last what cursor-agent may still have kept for the run dir in `~/.cursor` (`clearCursorState`).
+ * The run tools' scripts are already on disk (`runAgent` writes them first), so the complement of
+ * what may be written names them too.
  */
 function requestPermissions(request: ProviderRequest): CursorPermissions {
   const mcpServers = request.mcpServers ?? [];
@@ -119,7 +116,7 @@ function prepareWorkspace(request: ProviderRequest): () => void {
       restore();
     }
   };
-  restores.push(applyCursorPermissions(root, permissions));
+  restores.push(applyCursorPermissions(request.runDir, root, permissions));
   if (mcpServers.length > 0) {
     try {
       restores.push(applyCursorMcpServers(root, mcpServersMap(mcpServers)));
@@ -135,7 +132,7 @@ function prepareWorkspace(request: ProviderRequest): () => void {
 function previewWorkspace(request: ProviderRequest): readonly PlannedFile[] {
   const mcpServers = request.mcpServers ?? [];
   const root = request.workspaceRoot;
-  const permissions = planCursorPermissions(root, requestPermissions(request));
+  const permissions = planCursorPermissions(request.runDir, root, requestPermissions(request));
   return mcpServers.length === 0 ? [permissions] : [permissions, planCursorMcpServers(root, mcpServersMap(mcpServers))];
 }
 
