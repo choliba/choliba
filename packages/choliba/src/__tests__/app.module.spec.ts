@@ -18,18 +18,18 @@ function appFor(
 }
 
 describe('AppModule', () => {
-  it.each([
-    [['projects', '--help'], 'Usage:  choliba projects'],
-    [['--help'], 'Usage:  choliba COMMAND'],
-  ])('runs every command of choliba still on Nest: %j', async (argv, help) => {
-    const platform = fakePlatform({ argv });
-    const app = await CommandTestFactory.createTestingCommand({ imports: [appFor(platform)] }).compile();
-    await CommandTestFactory.runWithoutClosing(app, [...argv]);
+  it.each([[['--help'], 'Usage:  choliba COMMAND']])(
+    'runs every command of choliba still on Nest: %j',
+    async (argv, help) => {
+      const platform = fakePlatform({ argv });
+      const app = await CommandTestFactory.createTestingCommand({ imports: [appFor(platform)] }).compile();
+      await CommandTestFactory.runWithoutClosing(app, [...argv]);
 
-    expect(app.get(ExitStatus).code()).toBe(0);
-    expect(platform.stdout.text()).toContain(help);
-    await app.close();
-  });
+      expect(app.get(ExitStatus).code()).toBe(0);
+      expect(platform.stdout.text()).toContain(help);
+      await app.close();
+    },
+  );
 
   it('lists a command a package puts in the shell, without touching the root', async () => {
     const deploy: ShellModule = {

@@ -1,34 +1,19 @@
-import { Inject } from '@nestjs/common';
-import { SubCommand } from 'nest-commander';
-
-import { CliCommand, CommandIo } from '@choliba/core/nest';
+import type { ShellIo } from '@choliba/core';
 
 import { runSubcommand, UsageError } from '../common';
-import { TicketsService } from './tickets.service';
+import type { TicketsService } from './tickets.service';
 
-const OPTIONS = { allowUnknownOptions: true, allowExcessArgs: true } as const;
-
-@SubCommand({ name: 'ticket-specs', ...OPTIONS })
-export class TicketSpecsCommand extends CliCommand {
-  constructor(
-    @Inject(CommandIo) private readonly io: CommandIo,
-    @Inject(TicketsService) private readonly tickets: TicketsService,
-  ) {
-    super();
-  }
-
-  async run(): Promise<void> {
-    runSubcommand(
-      this.io,
-      () => this.tickets.helpSpec(),
-      'ticket-specs',
-      ([project, ticket]) => {
-        if (!project || !ticket) throw new UsageError('Missing project or ticket for ticket-specs.');
-        for (const spec of this.tickets.specFiles(project, ticket)) {
-          this.io.write(`${spec}\n`);
-        }
-      },
-    );
-    return Promise.resolve();
-  }
+/** `choliba projects ticket-specs PROJECT TICKET`. */
+export function runTicketSpecs(io: ShellIo, tickets: TicketsService): void {
+  runSubcommand(
+    io,
+    () => tickets.helpSpec(),
+    'ticket-specs',
+    ([project, ticket]) => {
+      if (!project || !ticket) throw new UsageError('Missing project or ticket for ticket-specs.');
+      for (const spec of tickets.specFiles(project, ticket)) {
+        io.write(`${spec}\n`);
+      }
+    },
+  );
 }

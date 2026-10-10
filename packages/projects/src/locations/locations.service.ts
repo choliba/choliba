@@ -1,17 +1,13 @@
-import { Inject, Injectable } from '@nestjs/common';
-
-import { ConfigService } from '@choliba/core/nest';
-import { ENV, type Environment } from '@choliba/core';
+import type { ConfigService, Environment } from '@choliba/core';
 
 import { resolveTicketRunsRoot } from '../tickets';
 import { resolveLocations, type ProjectLocations } from '../paths';
 
 /** Where the projects under test live, from the workspace's `.env` and the process environment. */
-@Injectable()
 export class LocationsService {
   constructor(
-    @Inject(ConfigService) private readonly config: ConfigService,
-    @Inject(ENV) private readonly env: Environment,
+    private readonly config: ConfigService,
+    private readonly env: Environment,
   ) {}
 
   locations(): ProjectLocations {

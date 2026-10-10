@@ -27,20 +27,22 @@ describe('the choliba shell', () => {
     expect(shell.has('agents')).toBe(true);
     expect(shell.has('tests')).toBe(true);
     expect(shell.has('terminal')).toBe(true);
+    expect(shell.has('projects')).toBe(true);
     expect(shell.has('check')).toBe(true);
     expect(shell.has('setup')).toBe(true);
     expect(shell.has('lint')).toBe(true);
     expect(shell.has('format')).toBe(true);
     expect(shell.fallback).toBeDefined();
-    for (const word of ['projects', '__complete']) {
-      expect(shell.has(word)).toBe(false);
-    }
+    expect(shell.has('__complete')).toBe(false);
   });
 
-  it('runs a command that left Nest, through the shell', async () => {
-    const platform = fakePlatform({ argv: ['tests', '--help'] });
+  it.each([
+    [['tests', '--help'], 'Usage:  choliba tests'],
+    [['projects', '--help'], 'Usage:  choliba projects'],
+  ])('runs a command that left Nest, through the shell: %j', async (argv, help) => {
+    const platform = fakePlatform({ argv });
 
     await expect(createCholibaShell(platform, fakeRuntime()).run()).resolves.toBe(0);
-    expect(platform.stdout.text()).toContain('Usage:  choliba tests');
+    expect(platform.stdout.text()).toContain(help);
   });
 });

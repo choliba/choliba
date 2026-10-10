@@ -1,8 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
-
 import type { CommandSpec } from '@choliba/core';
 
-import { LocationsService } from '../locations/nest';
+import type { LocationsService } from '../locations';
 import { listProjectNames, REPORT_FOLDER } from '../paths';
 import { listTicketKeys, resolveReportFolder } from '../tickets';
 import { readProjectConfig } from './project';
@@ -20,9 +18,8 @@ export interface ProjectTickets {
 }
 
 /** The test projects of the workspace: listing, checking and creating them. */
-@Injectable()
 export class ProjectsService {
-  constructor(@Inject(LocationsService) private readonly locations: LocationsService) {}
+  constructor(private readonly locations: LocationsService) {}
 
   projectsDir(): string {
     return this.locations.projectsDir();
