@@ -17,7 +17,7 @@ interface Manifest {
 const packageDir = join(import.meta.dir, '..');
 const packagesDir = join(packageDir, '..');
 const out = join(packageDir, 'dist');
-const BUNDLED = ['agents', 'core', 'projects', 'runner', 'terminal'];
+const BUNDLED = ['agents', 'core', 'projects', 'runner'];
 
 function manifest(dir: string): Manifest {
   return JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')) as Manifest;

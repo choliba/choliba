@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import type { ProcessSpawner } from '@choliba/core';
+import type { ProcessSpawner } from '../platform';
 
 import type { FormatterOptions } from './formatter';
 import { colorForLabel, formatLine } from './formatter';

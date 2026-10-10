@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import * as path from 'node:path';
 
 const MAIN_TS = path.resolve(__dirname, '../../../../choliba/src/main.ts');
-const FIXTURE_TS = path.resolve(__dirname, '../helpers/fixtures/echo-lines.ts');
+const FIXTURE_TS = path.resolve(__dirname, 'helpers/fixtures/echo-lines.ts');
 
 interface RunResult {
   readonly stdout: string;

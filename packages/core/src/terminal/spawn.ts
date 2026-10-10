@@ -5,18 +5,32 @@
  * exist — referencing it at module scope (a default parameter value, an
  * eagerly-built singleton) would throw the moment any spec imports this module
  * transitively through the barrel. So `spawn.ts` itself never touches `Bun`: it
- * only describes the shape it needs (`BunSpawnFn`, taken from Bun's own ambient
- * types, which are erased at compile time and never evaluated at runtime) and
- * exports a factory that everything else can inject a fake into. The literal
+ * only describes the shape it needs (`BunSpawnFn`, a structural slice, never the
+ * `Bun` global) and exports a factory that everything else can inject a fake
+ * into. The literal
  * `Bun.spawn` value is read exactly once, in choliba's `main.ts`, which is already
  * excluded from the coverage ratchet as a thin wiring entrypoint.
  */
 
-import type { ProcessSpawner, SpawnCommandOptions, SpawnedProcess } from '@choliba/core';
+import type { ProcessSpawner, SpawnCommandOptions, SpawnedProcess } from '../platform';
 
-export type { ProcessSpawner, SpawnCommandOptions, SpawnedProcess } from '@choliba/core';
-
-export type BunSpawnFn = typeof Bun.spawn;
+/** The slice of `Bun.spawn` this factory calls. Named without the `Bun` global so every package can typecheck it. */
+export type BunSpawnFn = (
+  command: readonly string[],
+  options: {
+    readonly cwd?: string;
+    readonly env?: Record<string, string | undefined>;
+    readonly stdout: 'pipe';
+    readonly stderr: 'pipe';
+  },
+) => {
+  readonly pid: number;
+  readonly stdout: ReadableStream<Uint8Array> | null;
+  readonly stderr: ReadableStream<Uint8Array> | null;
+  readonly exited: Promise<number>;
+  readonly signalCode: NodeJS.Signals | number | null;
+  kill(signal?: NodeJS.Signals | number): void;
+};
 
 export function createBunProcessSpawner(spawnFn: BunSpawnFn): ProcessSpawner {
   return {
@@ -32,8 +46,8 @@ export function createBunProcessSpawner(spawnFn: BunSpawnFn): ProcessSpawner {
         stdout: child.stdout,
         stderr: child.stderr,
         exited: child.exited,
-        get signalCode() {
-          return child.signalCode;
+        get signalCode(): NodeJS.Signals | null {
+          return typeof child.signalCode === 'string' ? child.signalCode : null;
         },
         kill(signal) {
           child.kill(signal);

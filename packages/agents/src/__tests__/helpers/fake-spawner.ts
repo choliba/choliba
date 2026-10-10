@@ -1,10 +1,9 @@
-import type { ProcessSpawner, SpawnCommandOptions, SpawnedProcess } from '@choliba/terminal';
+import type { ProcessSpawner, SpawnCommandOptions, SpawnedProcess } from '@choliba/core';
 
 /**
  * A minimal fake `ProcessSpawner` for `ProcessRunnerService`, so `run-agent.spec.ts` exercises the
- * real runner and session lifecycle without ever touching `Bun.spawn`. Mirrors the shape of
- * `@choliba/terminal`'s own test helper, which lives under its `src/__tests__/` and is not
- * importable across packages.
+ * real runner and session lifecycle without ever touching `Bun.spawn`. Mirrors the helper under
+ * `packages/core/src/__tests__/terminal/`, which is not importable across packages.
  */
 
 export function streamFromChunks(chunks: readonly string[]): ReadableStream<Uint8Array> {

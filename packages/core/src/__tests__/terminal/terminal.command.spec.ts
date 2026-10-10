@@ -1,18 +1,17 @@
-import { coreShell } from '@choliba/core';
-import { BufferWritable, fakePlatform, FakeSignals, runShell, type FakePlatform } from '@choliba/core/testing';
+import { coreShell } from '../../shell';
+import { BufferWritable, fakePlatform, FakeSignals, runShell, type FakePlatform } from '../../testing';
 
 import { formatLine } from '../../terminal/formatter';
-import type { ProcessSpawner } from '../../terminal/spawn';
+import type { ProcessSpawner } from '../../platform';
 import { exitCodeFor } from '../../terminal/exit-code';
-import { terminalShell } from '../../terminal/terminal-shell';
-import { erroringStream, fakeSpawner, streamFromChunks, throwingSpawner } from '../helpers/fake-spawner';
+import { erroringStream, fakeSpawner, streamFromChunks, throwingSpawner } from './helpers/fake-spawner';
 
 function platformFor(args: readonly string[], overrides: Partial<FakePlatform> = {}): FakePlatform {
   return fakePlatform({ argv: ['terminal', ...args], ...overrides });
 }
 
 function run(platform: FakePlatform): Promise<number> {
-  return runShell([coreShell, terminalShell], platform);
+  return runShell([coreShell], platform);
 }
 
 describe('choliba terminal run', () => {

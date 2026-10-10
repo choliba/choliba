@@ -1,4 +1,5 @@
-import { colorForLabel, formatLine } from '../../terminal/formatter';
+import { formatLine } from '../../terminal/formatter';
+import { colorForLabel } from '../../theme';
 
 describe('colorForLabel', () => {
   it('is stable for the same label', () => {

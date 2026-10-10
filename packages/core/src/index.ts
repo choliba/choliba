@@ -6,4 +6,5 @@ export * from './help';
 export * from './platform';
 export * from './runtime';
 export * from './shell';
+export * from './terminal';
 export * from './theme';

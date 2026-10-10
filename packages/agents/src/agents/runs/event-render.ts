@@ -1,6 +1,4 @@
-import type { Theme } from '@choliba/core';
-import type { AnsiColor } from '@choliba/terminal';
-import { formatLine } from '@choliba/terminal';
+import { formatLine, type AnsiColor, type Theme } from '@choliba/core';
 
 import type { AgentEvent } from '../../common';
 import { failureLine } from './tool-failure';

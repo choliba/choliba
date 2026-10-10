@@ -1,12 +1,9 @@
-import type { BunSpawnFn } from '../../terminal/spawn';
-import { createBunProcessSpawner } from '../../terminal/spawn';
+import { createBunProcessSpawner, type BunSpawnFn } from '../../terminal/spawn';
 
 /**
- * `BunSpawnFn` is `typeof Bun.spawn`, an overloaded ambient type only Bun itself can
- * satisfy structurally. This fake is intentionally cast rather than shaped to match
- * every overload — it stands in for "whatever `Bun.spawn` would have returned" so
- * `createBunProcessSpawner`'s own mapping logic can be exercised without the real
- * `Bun` global, which does not exist under Jest's Node environment.
+ * The fake stands in for "whatever `Bun.spawn` would have returned" so
+ * `createBunProcessSpawner`'s mapping can run without the real `Bun` global,
+ * which does not exist under Jest's Node environment.
  */
 function fakeBunSpawn(recordedCalls: unknown[][]): BunSpawnFn {
   const fake = (...args: unknown[]): unknown => {
@@ -61,5 +58,27 @@ describe('createBunProcessSpawner', () => {
     spawned.kill('SIGTERM');
 
     expect(killSpy).toHaveBeenCalledWith('SIGTERM');
+  });
+
+  it('keeps a named signal and drops a numeric one', () => {
+    const named = createBunProcessSpawner(((): unknown => ({
+      pid: 1,
+      stdout: null,
+      stderr: null,
+      exited: Promise.resolve(0),
+      signalCode: 'SIGTERM',
+      kill: jest.fn(),
+    })) as unknown as BunSpawnFn).spawn({ command: ['sleep', '1'] });
+    const numbered = createBunProcessSpawner(((): unknown => ({
+      pid: 1,
+      stdout: null,
+      stderr: null,
+      exited: Promise.resolve(0),
+      signalCode: 15,
+      kill: jest.fn(),
+    })) as unknown as BunSpawnFn).spawn({ command: ['sleep', '1'] });
+
+    expect(named.signalCode).toBe('SIGTERM');
+    expect(numbered.signalCode).toBeNull();
   });
 });

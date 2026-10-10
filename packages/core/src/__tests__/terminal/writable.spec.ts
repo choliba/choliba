@@ -1,11 +1,5 @@
-import {
-  defaultStderr,
-  defaultStdout,
-  isStdoutTty,
-  writeStderr,
-  writeStdout,
-  type WritableWithColumns,
-} from '../../terminal/writable';
+import type { WritableWithColumns } from '../../platform';
+import { defaultStderr, defaultStdout, isStdoutTty, writeStderr, writeStdout } from '../../terminal/writable';
 
 describe('writable helpers', () => {
   it('writeStdout and writeStderr forward text to injectable streams', () => {

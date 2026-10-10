@@ -2,9 +2,8 @@
 
 import { isAbsolute, join } from 'node:path';
 
-import type { GitRunner, Theme } from '@choliba/core';
+import { type GitRunner, type ProcessRunnerService, type SignalSource, type Theme, type Writable } from '@choliba/core';
 import { resolveLocations, type ProjectSettings, type RunningApp } from '@choliba/projects';
-import type { ProcessRunnerService, SignalSource, Writable } from '@choliba/terminal';
 
 import type { ParsedAgentsArgs } from './agents-flags';
 import type { AgentInvocation } from '../interfaces/invocation.interface';

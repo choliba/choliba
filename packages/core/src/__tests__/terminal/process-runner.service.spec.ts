@@ -1,13 +1,7 @@
 import { ProcessRunnerService } from '../../terminal/process-runner.service';
 import type { Session } from '../../terminal/session';
 import type { SessionExitEvent, SessionLineEvent } from '../../terminal/interfaces/terminal.interface';
-import {
-  erroringStream,
-  fakeSpawner,
-  pendingSpawner,
-  streamFromChunks,
-  throwingSpawner,
-} from '../helpers/fake-spawner';
+import { erroringStream, fakeSpawner, pendingSpawner, streamFromChunks, throwingSpawner } from './helpers/fake-spawner';
 
 function waitForExit(runner: ProcessRunnerService): Promise<SessionExitEvent> {
   return new Promise((resolve) => {

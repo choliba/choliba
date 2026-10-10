@@ -5,8 +5,13 @@ import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 
-import { createSpawnGitRunner, takeGlobalFlags, type Platform } from '@choliba/core';
-import { createBunProcessSpawner } from '@choliba/terminal/nest';
+import {
+  createBunProcessSpawner,
+  createSpawnGitRunner,
+  takeGlobalFlags,
+  type BunSpawnFn,
+  type Platform,
+} from '@choliba/core';
 
 import { createCholibaShell } from './app-shell';
 import type { Runtime } from './runtime';
@@ -21,7 +26,7 @@ const platform: Platform = {
   stderr: process.stderr,
   clock: () => new Date(),
   signals: process,
-  spawn: createBunProcessSpawner(Bun.spawn),
+  spawn: createBunProcessSpawner(Bun.spawn as unknown as BunSpawnFn),
   which: (bin) => Bun.which(bin),
   git: createSpawnGitRunner(),
   noColorFlag,

@@ -1,4 +1,5 @@
-import type { SignalSource, ThemeService, Writable } from '@choliba/core';
+import type { SignalSource, Writable } from '../platform';
+import type { ThemeService } from '../theme';
 
 import type { RunDto } from './dto/run.dto';
 import type { ProcessRunnerService } from './process-runner.service';

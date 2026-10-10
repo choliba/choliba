@@ -14,8 +14,7 @@
   },
   "dependencies": {
     "@choliba/core": "workspace:*",
-    "@choliba/projects": "workspace:*",
-    "@choliba/terminal": "workspace:*"
+    "@choliba/projects": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "^1.47.0"

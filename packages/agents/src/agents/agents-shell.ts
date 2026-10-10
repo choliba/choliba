@@ -1,5 +1,4 @@
-import { CONFIG, PLATFORM, THEME, type ShellModule } from '@choliba/core';
-import { ProcessRunnerService } from '@choliba/terminal';
+import { CONFIG, PLATFORM, ProcessRunnerService, THEME, type ShellModule } from '@choliba/core';
 
 import { ProviderRegistry } from '../common';
 import { ClaudeAgentProvider, CursorAgentProvider } from '../providers';

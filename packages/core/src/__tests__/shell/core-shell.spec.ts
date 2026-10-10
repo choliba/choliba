@@ -21,7 +21,7 @@ describe('coreShell', () => {
     ).toBe(false);
   });
 
-  it('runs no command yet: the root and help are still on Nest', () => {
-    expect(coreShell.commands).toEqual([]);
+  it('runs the hidden terminal command', () => {
+    expect(coreShell.commands.map((command) => command.name)).toEqual(['terminal']);
   });
 });

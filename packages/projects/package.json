@@ -10,7 +10,6 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@choliba/core": "workspace:*",
-    "@choliba/terminal": "workspace:*"
+    "@choliba/core": "workspace:*"
   }
 }
