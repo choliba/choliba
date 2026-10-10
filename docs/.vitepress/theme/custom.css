@@ -110,3 +110,25 @@
     line-height: 48px;
   }
 }
+
+/*
+ * The footer on every page, not only the home: the default theme hides it beside the sidebar. It moves right of the
+ * sidebar the same way the content does (VPContent.vue), so it stays centered under the page; `.Layout` outweighs
+ * the theme's scoped rules.
+ */
+.Layout .VPFooter.has-sidebar {
+  display: block;
+}
+
+@media (min-width: 960px) {
+  .Layout .VPFooter.has-sidebar {
+    padding-left: calc(var(--vp-sidebar-width) + 32px);
+  }
+}
+
+@media (min-width: 1440px) {
+  .Layout .VPFooter.has-sidebar {
+    padding-right: calc((100vw - var(--vp-layout-max-width)) / 2 + 32px);
+    padding-left: calc((100vw - var(--vp-layout-max-width)) / 2 + var(--vp-sidebar-width) + 32px);
+  }
+}

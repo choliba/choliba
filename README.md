@@ -89,8 +89,8 @@ bunx choliba implementer --project minha-app --ticket minha-app-1
 bunx choliba tests minha-app:1
 ```
 
-Qualquer comando de agente aceita [`--dry-run`](docs/referencia/cli.md#--dry-run), que mostra o que ele faria, na
-ordem, sem executar nada. Todos os comandos: [CLI](docs/referencia/cli.md) ou `choliba --help`.
+Qualquer comando de agente aceita [`--dry-run`](docs/referencia/comandos.md#--dry-run), que mostra o que ele faria, na
+ordem, sem executar nada. Todos os comandos: [Comandos](docs/referencia/comandos.md) ou `choliba --help`.
 
 **Segurança:** cada agente só lê, escreve e roda o que o seu `agent.yaml` libera, e cada execução roda numa pasta
 vazia. Detalhes e limites de cada provider: [Segurança](docs/referencia/seguranca.md).
@@ -103,7 +103,7 @@ No site [choliba.github.io](https://choliba.github.io/), com busca, ou em
 - **Para começar:** [Primeiros passos](docs/primeiros-passos.md).
 - **Guias:** [escrever um agente](docs/guias/escrever-um-agente.md),
   [instalar agentes, skills e MCPs](docs/guias/instalar-agentes.md).
-- **Referência:** [CLI](docs/referencia/cli.md),
+- **Referência:** [Comandos](docs/referencia/comandos.md),
   [ciclo de execução de um agente](docs/referencia/ciclo-de-execucao-agente.md),
   [`agent.yaml`](docs/referencia/agent-yaml.md), [segurança](docs/referencia/seguranca.md),
   [`.env`](docs/referencia/env.md).

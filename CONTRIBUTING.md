@@ -23,7 +23,8 @@ localmente, com recarga a cada mudança, e `bun run docs:build` o gera em `docs/
 cada PR, então um link quebrado barra o merge). Uma página nova em `docs/` entra sozinha na barra lateral, na posição em que o
 `docs/README.md` (o índice) a cita e com o título do `# ` dela. A home do site (hero e cards) fica em `docs/.vitepress/home.ts`: o `bun run docs:home`, que o
 `docs:dev` e o `docs:build` chamam, a escreve em `docs/index.md`, ignorado pelo git, para o `docs/` do GitHub ter só
-documentação. O `docs/README.md` é a primeira página da documentação, em `/indice`. As cores e o tema ficam em `docs/.vitepress/theme/`. O site público é <https://choliba.github.io/>: a cada push na `master`, `docs.yml` pede
+documentação. Do mesmo jeito, o `bun run docs:philosophy` escreve o `PHILOSOPHY.md` em `docs/filosofia.md`, a página
+`/filosofia` que o rodapé do site liga. O `docs/README.md` é a primeira página da documentação, em `/indice`. As cores e o tema ficam em `docs/.vitepress/theme/`. O site público é <https://choliba.github.io/>: a cada push na `master`, `docs.yml` pede
 ao repositório [`choliba.github.io`](https://github.com/choliba/choliba.github.io) que publique (via
 `repository_dispatch`).
 

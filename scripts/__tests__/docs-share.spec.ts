@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { description as siteDescription } from '../../docs/.vitepress/home';
+import { description as philosophyDescription } from '../../docs/.vitepress/philosophy';
 import {
   checkDescription,
   DESCRIPTION_MAX,
@@ -57,7 +58,8 @@ describe('checkDescription', () => {
 });
 
 describe('the pages of docs/', () => {
-  const pages = readDocPages(DOCS).filter((page) => page.file !== 'index.md');
+  // The home and /filosofia are generated, ignored by git, and have their description elsewhere.
+  const pages = readDocPages(DOCS).filter((page) => !['index.md', 'filosofia.md'].includes(page.file));
 
   it.each(pages.map((page) => page.file))('%s opens with a description of 100 to 160 characters', (file) => {
     const source = readFileSync(path.join(DOCS, file), 'utf8');
@@ -66,6 +68,10 @@ describe('the pages of docs/', () => {
 
   it('gives the home, which has no quote, a site description of the same size', () => {
     expect(() => checkDescription('home', siteDescription)).not.toThrow();
+  });
+
+  it('gives /filosofia, whose quote is a motto, a description of the same size', () => {
+    expect(() => checkDescription('filosofia', philosophyDescription)).not.toThrow();
   });
 
   it('have a title each, unique and of at most 60 characters', () => {

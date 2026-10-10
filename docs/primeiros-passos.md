@@ -61,7 +61,7 @@ Sem sobrescrever o que já existe, ele:
 - lista `choliba` em `trustedDependencies` do `package.json`, para que instalações futuras rodem o setup de novo
   sem pedir `--trust`;
 - aponta o VS Code para o schema do `agent.yaml` (`.vscode/settings.json`);
-- liga o autocomplete do bash (veja [Autocomplete](referencia/cli.md#autocomplete)).
+- liga o autocomplete do bash (veja [Autocomplete](referencia/comandos.md#autocomplete)).
 
 ## A pasta de trabalho
 
