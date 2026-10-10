@@ -89,11 +89,11 @@ bunx choliba implementer --project minha-app --ticket minha-app-1
 bunx choliba tests minha-app:1
 ```
 
-Qualquer comando de agente aceita `--dry-run`, que mostra o que ele faria, na ordem, sem executar nada. Todos os
-comandos: [CLI](docs/referencia/cli.md) ou `choliba --help`.
+Qualquer comando de agente aceita [`--dry-run`](docs/referencia/cli.md#--dry-run), que mostra o que ele faria, na
+ordem, sem executar nada. Todos os comandos: [CLI](docs/referencia/cli.md) ou `choliba --help`.
 
 **Segurança:** cada agente só lê, escreve e roda o que o seu `agent.yaml` libera, e cada execução roda numa pasta
-vazia. Detalhes e limites de cada provider: [Segurança](docs/conceitos/seguranca.md).
+vazia. Detalhes e limites de cada provider: [Segurança](docs/referencia/seguranca.md).
 
 ## Documentação
 
@@ -102,13 +102,12 @@ No site [choliba.github.io](https://choliba.github.io/), com busca, ou em
 
 - **Para começar:** [Primeiros passos](docs/primeiros-passos.md).
 - **Guias:** [escrever um agente](docs/guias/escrever-um-agente.md),
-  [instalar agentes, skills e MCPs](docs/guias/instalar-agentes.md), [`--dry-run`](docs/guias/dry-run.md).
-- **Referência:** [CLI](docs/referencia/cli.md), [`agent.yaml`](docs/referencia/agent-yaml.md),
+  [instalar agentes, skills e MCPs](docs/guias/instalar-agentes.md).
+- **Referência:** [CLI](docs/referencia/cli.md),
+  [ciclo de execução de um agente](docs/referencia/ciclo-de-execucao-agente.md),
+  [`agent.yaml`](docs/referencia/agent-yaml.md), [segurança](docs/referencia/seguranca.md),
   [`.env`](docs/referencia/env.md).
-- **Conceitos:** [a pasta de trabalho](docs/conceitos/pasta-de-trabalho.md),
-  [o que acontece numa execução](docs/conceitos/execucao.md),
-  [critérios de aceite e portões](docs/conceitos/criterios-e-portoes.md), [segurança](docs/conceitos/seguranca.md),
-  e os princípios em [PHILOSOPHY.md](PHILOSOPHY.md).
+- **Princípios:** [PHILOSOPHY.md](PHILOSOPHY.md).
 
 Para quem mexe no código: [CONTRIBUTING.md](CONTRIBUTING.md) (como contribuir e os padrões do projeto) e
 [ARCHITECTURE.md](ARCHITECTURE.md) (como o código é organizado).

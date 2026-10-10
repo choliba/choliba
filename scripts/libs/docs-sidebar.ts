@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-/** One page of `docs/`: its path from there (`guias/dry-run.md`) and its title (its `# ` heading). */
+/** One page of `docs/`: its path from there (`guias/escrever-um-agente.md`) and its title (its `# ` heading). */
 export interface DocPage {
   readonly file: string;
   readonly title: string;
@@ -16,7 +16,6 @@ export interface SidebarSection {
 const SECTIONS: readonly { readonly folder: string; readonly text: string }[] = [
   { folder: '', text: 'Começar' },
   { folder: 'guias', text: 'Guias' },
-  { folder: 'conceitos', text: 'Conceitos' },
   { folder: 'referencia', text: 'Referência' },
 ];
 
@@ -43,7 +42,8 @@ export function buildSidebar(readme: string, pages: readonly DocPage[]): readonl
     text,
     items: pages
       .filter((page) => path.posix.dirname(page.file) === (folder === '' ? '.' : folder))
-      // The index (the "Índice" page) and the home are reached from the top bar, not listed as pages.
+      // The index is the first page of the documentation (the Documentação item) and the home is the
+      // hero; neither is listed here.
       .filter((page) => page.file !== 'README.md' && page.file !== 'index.md')
       .toSorted((a, b) => rank(a.file) - rank(b.file) || a.file.localeCompare(b.file))
       .map((page) => ({ text: page.title.replaceAll('`', ''), link: `/${page.file.replace(/\.md$/, '')}` })),

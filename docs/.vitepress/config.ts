@@ -37,8 +37,8 @@ export default defineConfig({
   description: DESCRIPTION,
   cleanUrls: true,
   lastUpdated: true,
-  // The index of `docs/` is its README, which GitHub shows; on the site the home is index.md, and the README is
-  // the "Índice" page.
+  // The index of `docs/` is its README, which GitHub shows. On the site it is the first page of the
+  // documentation (`/indice`); the home is index.md.
   rewrites: { 'README.md': 'indice.md' },
   head: [['link', { rel: 'icon', type: 'image/svg+xml', href: '/owl-logo-choliba.svg' }]],
   sitemap: { hostname: SITE_URL },
@@ -89,8 +89,12 @@ export default defineConfig({
   themeConfig: {
     logo: '/owl-logo-choliba.svg',
     nav: [
-      { text: 'Documentação', link: '/primeiros-passos' },
-      { text: 'Índice', link: '/indice' },
+      {
+        text: 'Documentação',
+        link: '/indice',
+        activeMatch: '^/(indice|primeiros-passos|guias)(/|$)',
+      },
+      { text: 'Referência', link: '/referencia/cli', activeMatch: '^/referencia/' },
       { text: 'Releases', link: `${REPOSITORY}/releases/tag/v0.0.1-dev` },
     ],
     // From the index: a new page shows up on its own, where docs/README.md links it (scripts/libs/docs-sidebar.ts).
