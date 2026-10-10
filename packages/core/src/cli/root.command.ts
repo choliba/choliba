@@ -42,7 +42,7 @@ export class RootCommand extends CliCommand {
     const argv = this.io.args();
     const [first] = argv;
     if (first === undefined || HELP_WORDS.includes(first)) {
-      this.io.printHelp(this.registry.spec(this.options.spec, this.options.groups));
+      this.io.printHelp(this.registry.spec(this.options.spec, this.options));
       return;
     }
     if (VERSION_WORDS.includes(first)) {

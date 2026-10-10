@@ -22,7 +22,7 @@ export class EntriesCommand extends CliCommand {
   }
 
   run(): Promise<void> {
-    const entries = (this.registry.spec(this.options.spec, this.options.groups).commands?.() ?? [])
+    const entries = (this.registry.spec(this.options.spec, this.options).commands?.() ?? [])
       .filter((entry) => entry.listed !== false)
       .map(({ name, description, group }) => ({ name, description, group }));
     this.io.write(`${JSON.stringify(entries)}\n`);
