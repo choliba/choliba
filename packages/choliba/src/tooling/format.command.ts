@@ -1,11 +1,6 @@
-import { Inject } from '@nestjs/common';
-import { Command } from 'nest-commander';
+import type { CommandEntry, ShellCommand, Suggestions } from '@choliba/core';
 
-import type { CommandEntry, HelpContributor, Suggestions } from '@choliba/core';
-import { CliCommand, CommandIo, RegisterHelp } from '@choliba/core/nest';
-
-import { passOn, PASS_THROUGH } from './tool-pass-on';
-import { ToolsService } from './tools.service';
+import { TOOLS } from './tooling.constants';
 
 /** Completes file names. */
 const FILES = (): Suggestions => ({ kind: 'files' });
@@ -22,26 +17,12 @@ const ENTRY: CommandEntry = {
   },
 };
 
-@RegisterHelp()
-@Command({
+/** `choliba format [--write] [PATHS...]`: every argument goes on to Prettier; its exit code is choliba's. */
+export const formatCommand: ShellCommand = {
   name: 'format',
-  description: 'Prettier na pasta de trabalho: confere, ou corrige com --write',
-  ...PASS_THROUGH,
-})
-export class FormatCommand extends CliCommand implements HelpContributor {
-  constructor(
-    @Inject(CommandIo) private readonly io: CommandIo,
-    @Inject(ToolsService) private readonly tools: ToolsService,
-  ) {
-    super();
-  }
-
-  helpEntries(): readonly CommandEntry[] {
-    return [ENTRY];
-  }
-
-  run(): Promise<void> {
-    passOn(this.io, () => this.tools.format(this.io.args('format')));
+  help: () => [ENTRY],
+  run: (container, io) => {
+    io.exit(container.get(TOOLS).format(io.args('format')));
     return Promise.resolve();
-  }
-}
+  },
+};

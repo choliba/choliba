@@ -4,12 +4,9 @@ import { PlatformModule, RootModule, RuntimeModule } from '@choliba/core/nest';
 import { versionLine, type Platform, type Shell } from '@choliba/core';
 import { TerminalModule } from '@choliba/terminal/nest';
 
-import { CheckModule } from './check/nest';
 import { CHOLIBA_ORDER, CHOLIBA_ROOT } from './help';
 import { cholibaManifest, PACKAGE_NAME } from './help';
 import type { Runtime } from './runtime';
-import { SetupModule } from './setup/nest';
-import { ToolingModule } from './tooling/nest';
 
 /**
  * The commands of choliba still on Nest, on the platform and runtime `main.ts` reads from Bun and the process. The root
@@ -33,9 +30,6 @@ export class AppModule {
           fallback: shell.fallback,
         }),
         TerminalModule,
-        CheckModule,
-        ToolingModule,
-        SetupModule,
       ],
     };
   }

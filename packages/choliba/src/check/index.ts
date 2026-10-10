@@ -1,2 +1,1 @@
-// Nothing of this folder is used outside it.
-export {};
+export { checkCommand } from './check.command';
