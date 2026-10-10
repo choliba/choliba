@@ -1,10 +1,10 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { fakePlatform, runCommand } from '@choliba/core/testing';
+import { coreShell } from '@choliba/core';
+import { fakePlatform, runShell } from '@choliba/core/testing';
 
-import { RuntimeModule } from '@choliba/core/nest';
-import { SetupModule } from '../../setup/setup.module';
+import { cholibaShell } from '../../app-shell';
 import { fakeRuntime, withFolder, withWorkspace, type FakeRuntime } from '../helpers/runtime';
 
 async function setup(
@@ -14,7 +14,7 @@ async function setup(
   env: Readonly<Record<string, string>> = {},
 ): Promise<{ code: number; out: string }> {
   const platform = fakePlatform({ argv: ['setup', ...args], cwd, env });
-  const code = await runCommand([RuntimeModule.forRoot(runtime), SetupModule], platform);
+  const code = await runShell([coreShell, cholibaShell(runtime)], platform);
   return { code, out: platform.stdout.text() };
 }
 

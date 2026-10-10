@@ -26,8 +26,10 @@ describe('the choliba shell', () => {
 
     expect(shell.has('agents')).toBe(true);
     expect(shell.has('tests')).toBe(true);
+    expect(shell.has('check')).toBe(true);
+    expect(shell.has('setup')).toBe(true);
     expect(shell.fallback).toBeDefined();
-    for (const word of ['projects', 'terminal', 'check', 'lint', 'format', 'setup', '__complete']) {
+    for (const word of ['projects', 'terminal', 'lint', 'format', '__complete']) {
       expect(shell.has(word)).toBe(false);
     }
   });

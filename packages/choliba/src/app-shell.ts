@@ -4,10 +4,12 @@ import { projectsShell } from '@choliba/projects';
 import { runnerShell } from '@choliba/runner';
 import { terminalShell } from '@choliba/terminal';
 
+import { checkCommand } from './check';
 import { RUNTIME, type Runtime } from './runtime';
+import { setupCommand } from './setup';
 
 /**
- * The commands of the choliba app itself in the shell, on its `runtime` (`check`, `setup`, `lint` and `format` move
+ * The commands of the choliba app itself in the shell, on its `runtime`: `check` and `setup` (`lint` and `format` move
  * here from Nest). The app's last module, as only the app has a runtime.
  */
 export function cholibaShell(runtime: Runtime): ShellModule {
@@ -16,7 +18,7 @@ export function cholibaShell(runtime: Runtime): ShellModule {
     provide: (container) => {
       container.provide(RUNTIME, () => runtime);
     },
-    commands: [],
+    commands: [checkCommand, setupCommand],
   };
 }
 

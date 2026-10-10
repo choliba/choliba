@@ -5,11 +5,9 @@ import { versionLine, type Platform, type Shell } from '@choliba/core';
 import { ProjectsModule } from '@choliba/projects/nest';
 import { TerminalModule } from '@choliba/terminal/nest';
 
-import { CheckModule } from './check/nest';
 import { CHOLIBA_ORDER, CHOLIBA_ROOT } from './help';
 import { cholibaManifest, PACKAGE_NAME } from './help';
 import type { Runtime } from './runtime';
-import { SetupModule } from './setup/nest';
 import { ToolingModule } from './tooling/nest';
 
 /**
@@ -35,9 +33,7 @@ export class AppModule {
         }),
         ProjectsModule,
         TerminalModule,
-        CheckModule,
         ToolingModule,
-        SetupModule,
       ],
     };
   }
