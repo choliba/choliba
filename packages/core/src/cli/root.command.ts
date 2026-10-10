@@ -49,7 +49,8 @@ export class RootCommand extends CliCommand {
       this.io.write(`${this.options.version()}\n`);
       return;
     }
-    const [fallback] = discover(this.discovery, RegisterRootFallback, isRootFallback);
+    const [registered] = discover(this.discovery, RegisterRootFallback, isRootFallback);
+    const fallback = registered ?? this.options.fallback;
     if (fallback === undefined) {
       this.io.usageError(`comando desconhecido: ${first}.`, programOf(this.options));
       return;

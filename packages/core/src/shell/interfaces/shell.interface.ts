@@ -24,4 +24,9 @@ export interface ShellModule {
   /** Registers the package's services. Nothing is built here: the container builds a service when asked for it. */
   readonly provide?: (container: Container) => void;
   readonly commands: readonly ShellCommand[];
+  /**
+   * Runs a first word that is no command, with the whole command line (`choliba <agent> …`). At most one module of an
+   * app has it; without one, such a word is a usage error.
+   */
+  readonly fallback?: (container: Container, io: ShellIo) => Promise<void>;
 }

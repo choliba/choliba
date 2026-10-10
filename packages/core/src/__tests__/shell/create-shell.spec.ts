@@ -121,4 +121,42 @@ describe('createShell', () => {
 
     expect(createShell(platform, []).container.get(PLATFORM)).toBe(platform);
   });
+
+  describe('fallback', () => {
+    const agents: ShellModule = {
+      name: 'agents',
+      commands: [],
+      fallback: (container, io) => {
+        if (io.args()[0] === 'quebrado') return Promise.reject(new Error('agente quebrado'));
+        io.write(`${container.get(GREETING)}: ${io.args().join(' ')}\n`);
+        io.exit(4);
+        return Promise.resolve();
+      },
+    };
+
+    it('runs a word that is no command with the whole command line, on the services of the shell', async () => {
+      const platform = fakePlatform({ argv: ['--help'] });
+      const shell = createShell(platform, [greeter, agents]);
+
+      await expect(shell.fallback?.runUnknown(['revisor', 'faça', 'isto'])).resolves.toBe(4);
+      expect(platform.stdout.text()).toBe('olá de /nowhere: revisor faça isto\n');
+    });
+
+    it('turns what the fallback throws into its message on stderr and exit code 1', async () => {
+      const platform = fakePlatform();
+
+      await expect(createShell(platform, [greeter, agents]).fallback?.runUnknown(['quebrado'])).resolves.toBe(1);
+      expect(platform.stderr.text()).toBe('agente quebrado\n');
+    });
+
+    it('has none when no module has one', () => {
+      expect(createShell(fakePlatform(), [greeter]).fallback).toBeUndefined();
+    });
+
+    it('refuses two modules claiming the words that are no command', () => {
+      expect(() => createShell(fakePlatform(), [agents, { ...agents, name: 'outro' }])).toThrow(
+        'mais de um módulo trata a palavra que não é comando: agents, outro.',
+      );
+    });
+  });
 });
