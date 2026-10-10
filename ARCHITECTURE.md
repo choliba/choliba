@@ -70,7 +70,10 @@ dele, um pacote por vez, para uma casca sem decorators em `packages/core/src/she
   como `c.get(CONFIG)`. O `ConfigService` e o `ThemeService` são classes comuns, e o `ConfigModule`/`ThemeModule` os
   constroem com `useFactory` para os comandos que ainda estão no Nest.
 - **Já na casca.** `agents` (com os providers: `AGENT_PROVIDERS` é a lista de classes em `agentsShell`, e o
-  fallback `choliba <agente>`) e `tests` (o `runner` só procura a configuração do Playwright quando os testes rodam).
+  fallback `choliba <agente>`), `tests` (o `runner` só procura a configuração do Playwright quando os testes rodam) e
+  os comandos do próprio app, `check`, `lint`, `format` e `setup`, no `cholibaShell(runtime)`: o `Runtime` do app
+  (rodar ESLint e Prettier, o passo adiado do `setup`) entra na casca pelo token `RUNTIME`, e o `main.ts` o monta antes
+  dela.
 
 Enquanto os dois convivem, o `main.ts` roda pela casca um comando cuja primeira palavra está na tabela, sem checar
 decorators, e manda todo o resto para o Nest. A help da raiz, `__complete`, `__describe` e `__entries` continuam no

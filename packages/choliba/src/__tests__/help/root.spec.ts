@@ -21,8 +21,9 @@ async function choliba(
   overrides: Partial<FakePlatform> = {},
 ): Promise<{ code: number; out: string; err: string }> {
   const platform = fakePlatform({ argv, cwd, ...overrides });
+  const runtime = fakeRuntime();
   const app = await CommandTestFactory.createTestingCommand({
-    imports: [AppModule.forRoot(platform, fakeRuntime(), createCholibaShell(platform))],
+    imports: [AppModule.forRoot(platform, runtime, createCholibaShell(platform, runtime))],
   }).compile();
   await CommandTestFactory.runWithoutClosing(app, [...argv]);
   const code = app.get(ExitStatus).code();
