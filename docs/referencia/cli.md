@@ -4,17 +4,26 @@
 
 O comando é `choliba` (alias `chol`), o binário que a pasta de trabalho instala. `bunx choliba` é esse.
 
-| Comando                                      | O que faz                                                                               |
-| -------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `choliba agents COMMAND [OPTIONS] [TASK...]` | Roda um agente da pasta de trabalho (`.choliba/agents/<nome>/`)                         |
-| `choliba <agente>`                           | Atalho para `choliba agents <agente>`                                                   |
-| `choliba projects COMMAND [ARGS]`            | Lista e confere projetos e tickets em `CHOL_PROJECTS_DIR`                               |
-| `choliba tests [PROJECT[:TICKET]] [OPTIONS]` | Roda os testes E2E dos projetos com o Playwright                                        |
-| `choliba setup`                              | Cria a pasta de trabalho e liga o autocomplete (roda sozinho ao instalar com `--trust`) |
-| `choliba check`                              | Confere agentes, projetos e a pasta de trabalho                                         |
-| `choliba lint` / `choliba format`            | Lint e formatação da pasta de trabalho                                                  |
+| Comando                                      | O que faz                                                                                    |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `choliba agents COMMAND [OPTIONS] [TASK...]` | Roda um agente da pasta de trabalho (`.choliba/agents/<nome>/`); `choliba <agente>` é atalho |
+| `choliba projects COMMAND [ARGS]`            | Lista e confere projetos e tickets em `CHOL_PROJECTS_DIR`                                    |
+| `choliba tests [PROJECT[:TICKET]] [OPTIONS]` | Roda os testes E2E dos projetos com o Playwright                                             |
+| `choliba check`                              | Confere a pasta de trabalho: agentes (schemas, skills, MCPs) e projetos                      |
+| `choliba lint`                               | ESLint na pasta de trabalho, com a configuração que vem no choliba                           |
+| `choliba format`                             | Prettier na pasta de trabalho: confere, ou corrige com `--write`                             |
+| `choliba setup`                              | Liga o autocomplete no bash (roda sozinho ao instalar com `--trust`)                         |
 
-`choliba --help` (ou `choliba COMMAND --help`) lista os comandos.
+`choliba --help` (ou `choliba COMMAND --help`) lista os comandos. `choliba setup` também prepara a pasta de
+trabalho na instalação; o que ele cria está em [Primeiros passos](../primeiros-passos.md#choliba-setup).
+
+`choliba terminal run` não aparece nessa lista. Ele roda um processo e rotula cada linha da saída, para um script:
+
+```
+choliba terminal run --label demo -- echo ok
+```
+
+A linha sai como `[demo] ok`, e o código de saída é o do processo.
 
 `choliba --version` mostra a versão instalada no formato [SemVer](https://semver.org/lang/pt-BR/): a base da
 pré-release, o número da release (a contagem das releases, que aparece no título de cada atualização nas notas) e,

@@ -9,7 +9,7 @@ import { ShellIo } from './shell-io';
 /** The process and the runtime, as `main.ts` reads them: what every package's services start from. */
 export const PLATFORM = token<Platform>('Platform');
 
-/** An app's commands without Nest: which first words it runs, their help entries, and running one. */
+/** An app's commands: which first words it runs, their help entries, and running one. */
 export interface Shell {
   readonly container: Container;
   /** Whether `word`, the first word of the command line, is one of its commands. */
@@ -18,7 +18,7 @@ export interface Shell {
   entries(): readonly CommandEntry[];
   /** Runs the command the platform's command line names and resolves to its exit code. */
   run(): Promise<number>;
-  /** What runs a first word that is no command, when a module has it: what the Nest root hands such a word to. */
+  /** What runs a first word that is no command, when a module has it. */
   readonly fallback: RootFallback | undefined;
 }
 

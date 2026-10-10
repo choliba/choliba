@@ -10,7 +10,7 @@ export interface ShellStreams {
 
 /**
  * What a shell command reads and writes: its arguments as typed, stdout for the result, stderr for messages, its help,
- * and the exit code. The same contract as the Nest `CommandIo`, which goes away once every command is in the shell.
+ * and the exit code.
  */
 export class ShellIo {
   private code = 0;

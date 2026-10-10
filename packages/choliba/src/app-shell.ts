@@ -45,7 +45,7 @@ export function cholibaShell(runtime: Runtime): ShellModule {
  */
 export const CHOLIBA_SHELL: readonly ShellModule[] = [coreShell, agentsShell, projectsShell, runnerShell];
 
-/** The shell of choliba on `platform` and `runtime`: the commands that no longer need Nest. */
+/** The shell of choliba on `platform` and `runtime`. */
 export function createCholibaShell(
   platform: Platform,
   runtime: Runtime,

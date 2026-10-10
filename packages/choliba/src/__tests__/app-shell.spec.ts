@@ -21,7 +21,7 @@ describe('the choliba shell', () => {
     expect(createCholibaShell(fakePlatform(), runtime).container.get(RUNTIME)).toBe(runtime);
   });
 
-  it('runs the commands that left Nest, and has the fallback for `choliba <agent>`', () => {
+  it('runs every command, and has the fallback for `choliba <agent>`', () => {
     const shell = createCholibaShell(fakePlatform(), fakeRuntime());
 
     expect(shell.has('agents')).toBe(true);
@@ -39,7 +39,7 @@ describe('the choliba shell', () => {
   it.each([
     [['tests', '--help'], 'Usage:  choliba tests'],
     [['projects', '--help'], 'Usage:  choliba projects'],
-  ])('runs a command that left Nest, through the shell: %j', async (argv, help) => {
+  ])('runs a command through the shell: %j', async (argv, help) => {
     const platform = fakePlatform({ argv });
 
     await expect(createCholibaShell(platform, fakeRuntime()).run()).resolves.toBe(0);
