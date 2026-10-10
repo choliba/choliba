@@ -1,18 +1,20 @@
 # Comandos
 
-> Cada comando do choliba, instalado na pasta de trabalho: agentes, testes, projetos, check, lint, format e setup.
+> Cada comando do choliba, instalado na pasta de trabalho: agentes, add, testes, projetos, check, lint, format e setup.
 
-O comando é `choliba` (alias `chol`), instalado na pasta de trabalho; `bunx choliba` roda o mesmo.
+O comando é `choliba`, instalado na pasta de trabalho, em `node_modules/.bin/`, que não está no `PATH`. Rode-o com o
+Bun na frente: `bunx choliba <comando>` (ou `bun choliba <comando>`). As tabelas abaixo omitem o `bunx`.
 
-| Comando                                      | O que faz                                                                                    |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `choliba agents COMMAND [OPTIONS] [TASK...]` | Roda um agente da pasta de trabalho (`.choliba/agents/<nome>/`); `choliba <agente>` é atalho |
-| `choliba projects COMMAND [ARGS]`            | Lista e confere projetos e tickets em `CHOL_PROJECTS_DIR`                                    |
-| `choliba tests [PROJECT[:TICKET]] [OPTIONS]` | Roda os testes E2E dos projetos com o Playwright                                             |
-| `choliba check`                              | Confere a pasta de trabalho: agentes (schemas, skills, MCPs) e projetos                      |
-| `choliba lint`                               | ESLint na pasta de trabalho, com a configuração que vem no choliba                           |
-| `choliba format`                             | Prettier na pasta de trabalho: confere, ou corrige com `--write`                             |
-| `choliba setup`                              | Liga o autocomplete no bash (roda sozinho ao instalar com `--trust`)                         |
+| Comando                                      | O que faz                                                                                                                             |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `choliba agents COMMAND [OPTIONS] [TASK...]` | Roda um agente da pasta de trabalho (`.choliba/agents/<nome>/`); `choliba <agente>` é atalho                                          |
+| `choliba add <origem> [OPTIONS]`             | Instala um agente (com suas skills e MCPs), uma skill ou um MCP; veja [Instalar agentes, skills e MCPs](../guias/instalar-agentes.md) |
+| `choliba projects COMMAND [ARGS]`            | Lista e confere projetos e tickets em `CHOL_PROJECTS_DIR`                                                                             |
+| `choliba tests [PROJECT[:TICKET]] [OPTIONS]` | Roda os testes E2E dos projetos com o Playwright                                                                                      |
+| `choliba check`                              | Confere a pasta de trabalho: agentes (schemas, skills, MCPs) e projetos                                                               |
+| `choliba lint`                               | ESLint na pasta de trabalho, com a configuração que vem no choliba                                                                    |
+| `choliba format`                             | Prettier na pasta de trabalho: confere, ou corrige com `--write`                                                                      |
+| `choliba setup`                              | Liga o autocomplete no bash (roda sozinho ao instalar com `--trust`)                                                                  |
 
 `choliba --help` (ou `choliba COMMAND --help`) lista os comandos. `choliba setup` também prepara a pasta de
 trabalho na instalação; o que ele cria está em [Primeiros passos](../primeiros-passos.md#choliba-setup).
@@ -153,7 +155,7 @@ sem estar em `substitui`.
 
 ## Autocomplete
 
-O Tab completa comandos, opções e nomes (agentes, projetos, tickets) em `choliba`, `chol`, `bunx choliba` e
+O Tab completa comandos, opções e nomes (agentes, projetos, tickets) em `bunx choliba`, `bun choliba` e
 `bun chol:*`, no bash. Ele liga sozinho no `choliba setup`.
 
 Se o Tab não completar no terminal que já estava aberto, abra outro ou rode `source ~/.bashrc`. O script fica em

@@ -1,9 +1,9 @@
 import { FILES_MARKER } from './complete';
 
 /**
- * Bash completion for `choliba`, `chol`, `bunx choliba` and `bun chol:*`. `choliba setup` and the machine
- * command both install it. `choliba` and `chol` ask the `choliba` on `PATH`; `bunx` and `bun` ask the nearest
- * `node_modules/.bin/choliba`. Words are rebuilt from the line without breaking at ":", and `FILES_MARKER`
+ * Bash completion for `bunx choliba`, `bun choliba` and `bun chol:*`, which ask the nearest
+ * `node_modules/.bin/choliba`; `choliba setup` installs it. `choliba` and `chol` ask the `choliba` on `PATH`, which
+ * exists only when someone installs the package globally. Words are rebuilt from the line without breaking at ":", and `FILES_MARKER`
  * falls back to file names.
  */
 export const COMPLETION_BASH = `# Autocomplete do choliba para \`choliba\`, \`chol\`, \`bunx choliba\` e \`bun choliba\` (gravado por \`choliba setup\`).

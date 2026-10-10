@@ -185,7 +185,7 @@ describe('install', () => {
       expect(text).toContain('  agente echo → .choliba/agents/echo');
       expect(text).toContain('  MCP with-var → .choliba/mcps/with-var.json');
       expect(text).toContain('o MCP with-var usa ${SERVER_DIR}, sem valor no .env: defina antes de rodar o agente.');
-      expect(text).toContain('Confira com: choliba check');
+      expect(text).toContain('Confira com: bunx choliba check');
     });
   });
 
@@ -218,6 +218,6 @@ describe('install', () => {
   it('formats a plan with no warnings', () => {
     expect(
       formatInstall('/w', [{ kind: 'skill', name: 's', from: '/o/s', to: '/w/.choliba/skills/s' }], [], false),
-    ).toBe(['Instalado:', '  skill s → .choliba/skills/s', '', 'Confira com: choliba check'].join('\n'));
+    ).toBe(['Instalado:', '  skill s → .choliba/skills/s', '', 'Confira com: bunx choliba check'].join('\n'));
   });
 });
