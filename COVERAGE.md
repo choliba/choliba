@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 09/10/2026 01:22:04 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 09/10/2026 23:52:48 — não editar manualmente.
 
 ## Resumo
 
@@ -174,7 +174,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 61 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 65 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -231,6 +231,10 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/runtime/nest.ts](packages/core/src/runtime/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runtime/runtime.constants.ts](packages/core/src/runtime/runtime.constants.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runtime/runtime.module.ts](packages/core/src/runtime/runtime.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/container.ts](packages/core/src/shell/container.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/create-shell.ts](packages/core/src/shell/create-shell.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/index.ts](packages/core/src/shell/index.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/shell-io.ts](packages/core/src/shell/shell-io.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/index.ts](packages/core/src/testing/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/theme/ansi.ts](packages/core/src/theme/ansi.ts)|100.00|100.00|100.00|100.00
 🟢|[src/theme/index.ts](packages/core/src/theme/index.ts)|100.00|100.00|100.00|100.00

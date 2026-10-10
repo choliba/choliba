@@ -12,7 +12,7 @@ type Layer = (typeof LAYERS)[number];
 
 /** The folders of `src/` of each package that follows the standard, by layer (`common` is always `common/`). */
 const STRUCTURE: Readonly<Record<string, Partial<Record<Exclude<Layer, 'common'>, readonly string[]>>>> = {
-  core: { module: ['platform', 'config', 'help', 'cli', 'theme', 'runtime', 'testing'] },
+  core: { module: ['platform', 'config', 'help', 'cli', 'theme', 'runtime', 'shell', 'testing'] },
   terminal: { module: ['terminal'] },
   projects: { domain: ['paths'], module: ['locations', 'tickets', 'projects'] },
   runner: { module: ['tests'] },
