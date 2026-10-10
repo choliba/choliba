@@ -68,7 +68,7 @@ de trabalho o deixa fora do git. Troque os `CHANGE_ME`. Se a aplicação ainda n
 ```
 
 Enquanto o `.env.json` não existir, o `check` marca o projeto com `✗`, e os agentes não rodam nele, nem com
-[`--dry-run`](../referencia/cli.md#--dry-run).
+[`--dry-run`](../referencia/comandos.md#--dry-run).
 
 Se a aplicação precisa de preparo ou de alguém que a suba para os testes, diga como no ambiente do
 `config.json`. Os dois campos são opcionais:
@@ -79,7 +79,7 @@ Se a aplicação precisa de preparo ou de alguém que a suba para os testes, dig
   responder e a derruba no fim. Uma aplicação que você já subiu é usada como está.
 
 Os agentes nunca sobem a aplicação. Sem `start`, quem sobe é você, e um agente com a aplicação fora do ar não roda
-(veja [A aplicação do projeto](../referencia/cli.md#a-aplicação-do-projeto)).
+(veja [A aplicação do projeto](../referencia/comandos.md#a-aplicação-do-projeto)).
 
 4. Instale os agentes que escrevem o ticket, os testes e o código
 

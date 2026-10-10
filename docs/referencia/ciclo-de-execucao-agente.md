@@ -13,7 +13,7 @@ permissões do `agent.yaml`.
 3. Recusa as flags que o agente não aceita; `--help` mostra a ajuda do agente e sai.
 4. Valida o projeto (`--project`) e prepara o ticket (`--type` para um novo, `--ticket` para um existente).
    Com `--project`, roda o `setup` da aplicação e garante que ela está no ar, subindo-a com o `start` se preciso;
-   sem `start` e fora do ar, para aqui (veja [A aplicação do projeto](cli.md#a-aplicação-do-projeto)).
+   sem `start` e fora do ar, para aqui (veja [A aplicação do projeto](comandos.md#a-aplicação-do-projeto)).
 5. Define a tarefa, o modo e o plano salvo (`--plan-from`).
 6. Preenche as [variáveis](agent-yaml.md#variáveis), confere o `--model`, confere que cada skill e cada MCP existe
    (o servidor do MCP também, quando é um arquivo) e escolhe o provider.
@@ -21,8 +21,8 @@ permissões do `agent.yaml`.
 8. Monta os prompts: o de sistema (skills, permissões, o projeto, MCPs e o texto do agente) e o do usuário (aviso do
    modo, plano salvo e a tarefa, com o que o `before` produziu). Com `--project`, o projeto diz onde a aplicação
    roda e que o agente nunca a sobe nem mexe em `node_modules`, o que o choliba também aplica nas permissões (veja
-   [A aplicação do projeto](cli.md#a-aplicação-do-projeto)).
-9. Com `--dry-run`, mostra o que aconteceria e sai (veja [`--dry-run`](cli.md#--dry-run)).
+   [A aplicação do projeto](comandos.md#a-aplicação-do-projeto)).
+9. Com `--dry-run`, mostra o que aconteceria e sai (veja [`--dry-run`](comandos.md#--dry-run)).
 10. Cria o ticket novo (`--type`).
 
 **Fase 2: o agente**

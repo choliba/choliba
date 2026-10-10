@@ -11,16 +11,17 @@ const README = [
 ].join('\n');
 
 describe('buildSidebar', () => {
-  it('groups the pages by folder, in the order the index links them, then the others by name', () => {
+  it('groups the pages by folder, in the order the index links them, then the others by name, without the index, the home and the philosophy', () => {
     const pages = [
       { file: 'README.md', title: 'Documentação' },
       { file: 'index.md', title: 'index.md' },
+      { file: 'filosofia.md', title: 'Filosofia do choliba' },
       { file: 'primeiros-passos.md', title: 'Primeiros passos' },
       { file: 'guias/a.md', title: 'Guia A' },
       { file: 'guias/b.md', title: 'O `b`' },
       { file: 'guias/novo.md', title: 'Novo' },
       { file: 'guias/c.md', title: 'C' },
-      { file: 'referencia/cli.md', title: 'CLI' },
+      { file: 'referencia/comandos.md', title: 'Comandos' },
     ];
 
     expect(buildSidebar(README, pages)).toEqual([
@@ -34,7 +35,7 @@ describe('buildSidebar', () => {
           { text: 'Novo', link: '/guias/novo' },
         ],
       },
-      { text: 'Referência', items: [{ text: 'CLI', link: '/referencia/cli' }] },
+      { text: 'Referência', items: [{ text: 'Comandos', link: '/referencia/comandos' }] },
     ]);
   });
 });

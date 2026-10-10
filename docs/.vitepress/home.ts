@@ -19,7 +19,7 @@ export const home = {
     image: { src: '/owl-logo-choliba.svg', alt: 'A coruja do choliba' },
     actions: [
       { theme: 'brand', text: 'Começar', link: '/primeiros-passos' },
-      { theme: 'alt', text: 'Referência', link: '/referencia/cli' },
+      { theme: 'alt', text: 'Referência', link: '/referencia/comandos' },
       { theme: 'alt', text: 'GitHub', link: 'https://github.com/choliba/choliba' },
     ],
   },
@@ -40,8 +40,8 @@ export const home = {
     {
       title: 'Referência',
       details:
-        'Cada comando da CLI, a segurança de cada agente, cada chave do <code>agent.yaml</code> e cada variável do <code>.env</code>.',
-      link: '/referencia/cli',
+        'Cada comando do choliba, a segurança de cada agente, cada chave do <code>agent.yaml</code> e cada variável do <code>.env</code>.',
+      link: '/referencia/comandos',
       linkText: 'Consultar',
     },
   ],
