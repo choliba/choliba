@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 10/10/2026 00:09:51 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 10/10/2026 00:42:23 — não editar manualmente.
 
 ## Resumo
 
@@ -277,7 +277,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/terminal</b> — 100.00% das linhas, 21 arquivos</summary>
+<summary>🟢 <b>packages/terminal</b> — 100.00% das linhas, 20 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -298,7 +298,6 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/terminal/spawn.ts](packages/terminal/src/terminal/spawn.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/stream-lines.ts](packages/terminal/src/terminal/stream-lines.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/terminal-shell.ts](packages/terminal/src/terminal/terminal-shell.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/terminal.command.ts](packages/terminal/src/terminal/terminal.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/terminal.module.ts](packages/terminal/src/terminal/terminal.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/terminal.service.ts](packages/terminal/src/terminal/terminal.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/writable.ts](packages/terminal/src/terminal/writable.ts)|100.00|100.00|100.00|100.00

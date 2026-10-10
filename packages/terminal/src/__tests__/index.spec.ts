@@ -22,9 +22,9 @@ describe('public entrypoint', () => {
     expect(typeof terminal.writeStderr).toBe('function');
     expect(terminal.DEFAULT_SPINNER_FRAMES.length).toBeGreaterThan(0);
     expect(nest.TerminalModule).toBeDefined();
-    expect(nest.TerminalCommand).toBeDefined();
     expect(nest.TerminalService).toBeDefined();
-    expect(terminal.terminalShell).toEqual({ name: '@choliba/terminal', commands: [] });
+    expect(terminal.terminalShell.name).toBe('@choliba/terminal');
+    expect(terminal.terminalShell.commands.map((command) => command.name)).toEqual(['terminal']);
     expect(terminal.parseRunArgs(['run', '--label', 'x', '--', 'y'])).toBeInstanceOf(terminal.RunDto);
   });
 

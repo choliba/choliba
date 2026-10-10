@@ -14,10 +14,11 @@ describe('the choliba shell', () => {
     ]);
   });
 
-  it('runs no command yet: every one is still on Nest', () => {
+  it('runs terminal from the shell and leaves the other commands on Nest', () => {
     const shell = createCholibaShell(fakePlatform());
 
-    for (const word of ['agents', 'projects', 'tests', 'terminal', 'check', 'lint', 'format', 'setup', '__complete']) {
+    expect(shell.has('terminal')).toBe(true);
+    for (const word of ['agents', 'projects', 'tests', 'check', 'lint', 'format', 'setup', '__complete']) {
       expect(shell.has(word)).toBe(false);
     }
     expect(shell.entries()).toEqual([]);
