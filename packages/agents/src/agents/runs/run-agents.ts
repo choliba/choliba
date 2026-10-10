@@ -16,10 +16,10 @@ import type { ProviderRequest } from '../../common';
 import type { ResolvedProvider } from '../../common';
 import { formatStepFailure, stepExitCode } from '../steps/step-actions';
 import { formatAgentDetail, runList } from './agent-detail';
-import { formatDryRun } from './dry-run';
+import { formatDryRun, type DryRunInput } from './dry-run';
 import { runAgent } from './run-agent';
 import { planRunTools, readSandbox, type PlannedFile, type Sandbox, type SandboxConfigError } from '../../common';
-import { launchFor, realDisk, type LaunchDisk } from './sandbox-launch';
+import { launchFor, realDisk, type Launch, type LaunchDisk } from './sandbox-launch';
 import {
   foreignFlag,
   resolveAgentForCommand,
@@ -94,18 +94,23 @@ function runDryRun(
     ...(settings === undefined ? {} : { app: settings.environment }),
     ...(sandbox.kind === 'docker'
       ? {
-          container: {
-            image: sandbox.image,
-            mounts: launchFor(
+          container: containerOf(
+            sandbox.image,
+            launchFor(
               { sandbox, command: resolved.command, request: providerRequest, files: runFiles, config: deps.config },
               plannedDisk(providerRequest, runFiles),
-            ).mounts,
-          },
+            ),
+          ),
         }
       : {}),
   });
   deps.stdout.write(`${output}\n`);
   return 0;
+}
+
+/** What `--dry-run` says about the container: the image, the mounts and the paths left to the image. */
+function containerOf(image: string, launch: Launch): NonNullable<DryRunInput['container']> {
+  return { image, mounts: launch.mounts, skipped: launch.skipped };
 }
 
 /**

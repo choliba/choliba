@@ -63,6 +63,7 @@ describe('formatDryRun', () => {
             { path: '/repo/.cache/runs/1', access: 'write', directory: true },
             { path: '/repo/.env', access: 'hidden', directory: false },
           ],
+          skipped: ['/etc/passwd'],
         },
       }),
     );
@@ -72,6 +73,7 @@ describe('formatDryRun', () => {
         '               leitura /repo',
         '               escrita /repo/.cache/runs/1',
         '               oculto  /repo/.env',
+        '               ignorado /etc/passwd (da imagem)',
       ].join('\n'),
     );
   });
