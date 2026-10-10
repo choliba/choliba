@@ -53,6 +53,29 @@ function input(overrides: Partial<DryRunInput> = {}): DryRunInput {
 }
 
 describe('formatDryRun', () => {
+  it('says, under the agent, which container it runs in and what that container sees', () => {
+    const output = formatDryRun(
+      input({
+        container: {
+          image: 'choliba-agent',
+          mounts: [
+            { path: '/repo', access: 'read', directory: true },
+            { path: '/repo/.cache/runs/1', access: 'write', directory: true },
+            { path: '/repo/.env', access: 'hidden', directory: false },
+          ],
+        },
+      }),
+    );
+    expect(output).toContain(
+      [
+        '             num container (docker, imagem choliba-agent), que só vê:',
+        '               leitura /repo',
+        '               escrita /repo/.cache/runs/1',
+        '               oculto  /repo/.env',
+      ].join('\n'),
+    );
+  });
+
   it('lists, in order, what the CLI and the agent would do, without the prompts', () => {
     expect(formatDryRun(input()).split('\n')).toEqual([
       'Sem --dry-run, faria nesta ordem:',

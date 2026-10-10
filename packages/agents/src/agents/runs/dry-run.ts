@@ -3,7 +3,7 @@ import type { ProjectEnvironment } from '@choliba/projects';
 import type { AgentStep, McpDeclaration } from '../../common';
 import { describeStep } from '../steps/step-actions';
 import { runPlaceOf, wrapInstructions } from '../../common';
-import type { PlannedFile, ProviderRequest } from '../../common';
+import type { ContainerMount, PlannedFile, ProviderRequest } from '../../common';
 
 /** What `--dry-run` shows: everything a real run of this command line would do, in order. */
 export interface DryRunInput {
@@ -21,6 +21,8 @@ export interface DryRunInput {
   readonly workspaceFiles: readonly PlannedFile[];
   /** The project's application, which the CLI prepares and starts before anything else (`--project`). */
   readonly app?: Pick<ProjectEnvironment, 'baseURL' | 'setup' | 'start'>;
+  /** `CHOL_SANDBOX=docker`: the image the provider runs in and what the container mounts. */
+  readonly container?: { readonly image: string; readonly mounts: readonly ContainerMount[] };
 }
 
 /** One numbered entry: who does it (the CLI or the agent) and what, one line each. */
@@ -102,8 +104,24 @@ function agentEntry(input: DryRunInput, systemPrompt: string): Entry {
       )} · MCPs: ${listOr(request.agent.mcps.map(mcpSummary), 'nenhum')}`,
       `prompt de sistema: ${String(bytes(systemPrompt))} bytes · prompt do usuário: ${String(bytes(user))} bytes${hint}`,
       `comando: ${commandLine}`,
+      ...containerLines(input.container),
     ],
   };
+}
+
+const ACCESS_LABEL: Readonly<Record<ContainerMount['access'], string>> = {
+  read: 'leitura',
+  write: 'escrita',
+  hidden: 'oculto ',
+};
+
+/** The container the provider runs in and, one per line, what it sees; nothing on this machine. */
+function containerLines(container: DryRunInput['container']): readonly string[] {
+  if (container === undefined) return [];
+  return [
+    `num container (docker, imagem ${container.image}), que só vê:`,
+    ...container.mounts.map((mount) => `  ${ACCESS_LABEL[mount.access]} ${mount.path}`),
+  ];
 }
 
 function formatEntry(entry: Entry, index: number): string {

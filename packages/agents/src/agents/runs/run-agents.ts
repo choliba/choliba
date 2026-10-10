@@ -18,7 +18,8 @@ import { formatStepFailure, stepExitCode } from '../steps/step-actions';
 import { formatAgentDetail, runList } from './agent-detail';
 import { formatDryRun } from './dry-run';
 import { runAgent } from './run-agent';
-import { planRunTools } from '../../common';
+import { planRunTools, readSandbox, type PlannedFile, type Sandbox, type SandboxConfigError } from '../../common';
+import { launchFor, realDisk, type LaunchDisk } from './sandbox-launch';
 import {
   foreignFlag,
   resolveAgentForCommand,
@@ -66,6 +67,7 @@ function runDryRun(
   parsed: RunArgs,
   deps: RunAgentsCliDeps,
   settings: ProjectSettings | undefined,
+  sandbox: Sandbox,
 ): number {
   const { resolved, providerRequest } = prepared;
   let args: readonly string[];
@@ -75,9 +77,11 @@ function runDryRun(
     deps.stderr.write(`${errorMessage(error)}\n`);
     return 1;
   }
-  const workspaceFiles = parsed.showPrompt
-    ? [...planRunTools(providerRequest, deps.config), ...(resolved.adapter.previewWorkspace?.(providerRequest) ?? [])]
-    : [];
+  const runFiles = [
+    ...planRunTools(providerRequest, deps.config),
+    ...(resolved.adapter.previewWorkspace?.(providerRequest) ?? []),
+  ];
+  const workspaceFiles = parsed.showPrompt ? runFiles : [];
   const output = formatDryRun({
     providerId: resolved.adapter.id,
     command: resolved.command,
@@ -88,9 +92,52 @@ function runDryRun(
     showPrompt: parsed.showPrompt,
     workspaceFiles,
     ...(settings === undefined ? {} : { app: settings.environment }),
+    ...(sandbox.kind === 'docker'
+      ? {
+          container: {
+            image: sandbox.image,
+            mounts: launchFor(
+              { sandbox, command: resolved.command, request: providerRequest, files: runFiles, config: deps.config },
+              plannedDisk(providerRequest, runFiles),
+            ).mounts,
+          },
+        }
+      : {}),
   });
   deps.stdout.write(`${output}\n`);
   return 0;
+}
+
+/**
+ * The disk as a run would leave it before the provider starts, for `--dry-run`, which writes nothing: the run folder
+ * and the files planned next to it exist, and no folder is created. It shows the mounts, not the container's user.
+ */
+function plannedDisk(request: ProviderRequest, files: readonly PlannedFile[]): LaunchDisk {
+  const planned = new Set(files.map((file) => file.path));
+  return {
+    ...realDisk,
+    exists: (path) => path === request.runDir || planned.has(path) || realDisk.exists(path),
+    isDirectory: (path) => path === request.runDir || (!planned.has(path) && realDisk.isDirectory(path)),
+    ensureDir: () => undefined,
+    owner: () => ({ uid: 0, gid: 0 }),
+  };
+}
+
+/** `CHOL_SANDBOX`, checked before anything runs: a value it does not take, or `docker` without Docker, stops here. */
+function sandboxFor(deps: RunAgentsCliDeps): Sandbox | undefined {
+  let sandbox: Sandbox;
+  try {
+    sandbox = readSandbox(deps.config);
+  } catch (error) {
+    // `readSandbox` only throws `SandboxConfigError`, shown as is.
+    deps.stderr.write(`${(error as SandboxConfigError).message}\n`);
+    return undefined;
+  }
+  if (sandbox.kind === 'docker' && deps.which('docker') === null) {
+    deps.stderr.write('CHOL_SANDBOX=docker, mas o comando docker não foi encontrado: instale o Docker ou use local.\n');
+    return undefined;
+  }
+  return sandbox;
 }
 
 /**
@@ -120,7 +167,10 @@ async function runAndRecord(
   resolved: ResolvedProvider,
   providerRequest: ProviderRequest,
   deps: RunAgentsCliDeps,
+  sandbox: Sandbox,
 ): Promise<number> {
+  const toolFiles = planRunTools(providerRequest, deps.config);
+  const files = [...toolFiles, ...(resolved.adapter.previewWorkspace?.(providerRequest) ?? [])];
   const exitCode = await runAgent(
     {
       provider: resolved,
@@ -129,7 +179,9 @@ async function runAndRecord(
       task: effectiveTask,
       plansDir: join(deps.repoRoot, 'plans'),
       theme: deps.theme,
-      toolFiles: planRunTools(providerRequest, deps.config),
+      toolFiles,
+      launch: (providerCommand) =>
+        launchFor({ sandbox, command: providerCommand, request: providerRequest, files, config: deps.config }),
     },
     { runner: deps.runner, stdout: deps.stdout, stderr: deps.stderr, signals: deps.signals, now: deps.now },
   );
@@ -171,6 +223,11 @@ async function runCommand(parsed: RunArgs, deps: RunAgentsCliDeps): Promise<numb
     return 0;
   }
 
+  const sandbox = sandboxFor(deps);
+  if (sandbox === undefined) {
+    return 1;
+  }
+
   const projectRun = resolveProjectVars(parsed, agent, deps);
   if (projectRun === undefined) {
     return 1;
@@ -209,7 +266,7 @@ async function runCommand(parsed: RunArgs, deps: RunAgentsCliDeps): Promise<numb
     return 1;
   }
   try {
-    return await runPrepared(context, command, agent, ticketTarget, projectRun.settings);
+    return await runPrepared(context, command, agent, ticketTarget, projectRun.settings, sandbox);
   } finally {
     app.stop();
   }
@@ -251,6 +308,7 @@ async function runPrepared(
   agent: AgentDefinition,
   ticketTarget: TicketTarget | undefined,
   settings: ProjectSettings | undefined,
+  sandbox: Sandbox,
 ): Promise<number> {
   const { parsed, deps } = context;
   const prepared = prepareRun(context, command, agent);
@@ -258,7 +316,7 @@ async function runPrepared(
     return prepared.exitCode;
   }
   if (parsed.dryRun) {
-    return runDryRun(prepared, ticketTarget, parsed, deps, settings);
+    return runDryRun(prepared, ticketTarget, parsed, deps, settings, sandbox);
   }
   let createdContent: string | undefined;
   try {
@@ -274,6 +332,7 @@ async function runPrepared(
     prepared.resolved,
     prepared.providerRequest,
     deps,
+    sandbox,
   );
   return finishTicket(ticketTarget, createdContent, context.mode, exitCode, deps.stderr);
 }

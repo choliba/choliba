@@ -1544,3 +1544,64 @@ describe('runAgentsCli — folder variables', () => {
     });
   });
 });
+
+describe('runAgentsCli — CHOL_SANDBOX', () => {
+  it('stops before anything runs on a value it does not take, or docker without Docker', async () => {
+    const wrong = harness([], { config: { CHOL_SANDBOX: 'podman' } });
+    expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, 'x'], wrong.deps)).toBe(1);
+    expect(wrong.stderr.chunks.join('')).toContain('CHOL_SANDBOX="podman" não existe');
+
+    const noDocker = harness([], { config: { CHOL_SANDBOX: 'docker' } });
+    expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, 'x'], noDocker.deps)).toBe(1);
+    expect(noDocker.stderr.chunks.join('')).toContain('o comando docker não foi encontrado');
+  });
+
+  it('says in --dry-run which container the provider would run in, writing nothing', async () => {
+    const { deps, stdout } = harness([], { which: whichOf(['agent', 'docker']), config: { CHOL_SANDBOX: 'docker' } });
+
+    expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--provider', 'cursor', '--dry-run', 'x'], deps)).toBe(
+      0,
+    );
+    const text = stdout.chunks.join('');
+    expect(text).toContain('num container (docker, imagem choliba-agent), que só vê:');
+    expect(text).toMatch(/escrita .*cli-run-spec-\d+\//);
+  });
+
+  it("opens the project's ticket-runs in --dry-run without creating it", async () => {
+    await withProjects(async (projectsDir) => {
+      const { deps, stdout } = harness([], {
+        which: whichOf(['claude', 'docker']),
+        config: { CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: projectsDir, CHOL_SANDBOX: 'docker' },
+      });
+
+      expect(
+        await runAgentsCli(['with-project', '--agents-dir', FIXTURES, '--project', 'ready', '--dry-run', 'x'], deps),
+      ).toBe(0);
+      expect(stdout.chunks.join('')).toContain(`escrita ${projectsDir}`);
+      expect(existsSync(join(projectsDir, 'ready', 'ticket-runs'))).toBe(false);
+    });
+  });
+
+  it('starts the provider with docker run, passing the credentials by name and their values in its environment', async () => {
+    const tmp = makeTmpDir('cli-sandbox');
+    try {
+      const spawnerHandle = fakeSpawner({ stdout: streamFromChunks([claudeSuccessLine()]) });
+      const { deps } = harness([], {
+        runner: new ProcessRunnerService({ spawner: spawnerHandle.spawner }),
+        which: whichOf(['claude', 'docker']),
+        repoRoot: tmp.path,
+        config: { CHOL_SANDBOX: 'docker', CHOL_SANDBOX_IMAGE: 'minha:1', CLAUDE_CODE_OAUTH_TOKEN: 'segredo' },
+      });
+
+      expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, 'x'], deps)).toBe(0);
+      const [call] = spawnerHandle.spawnCalls;
+      expect(call?.command.slice(0, 2)).toEqual(['docker', 'run']);
+      expect(call?.command).toContain('minha:1');
+      expect(call?.command.join(' ')).toContain('--env CLAUDE_CODE_OAUTH_TOKEN');
+      expect(call?.command.join(' ')).not.toContain('segredo');
+      expect(call?.env).toMatchObject({ CLAUDE_CODE_OAUTH_TOKEN: 'segredo' });
+    } finally {
+      tmp.cleanup();
+    }
+  });
+});
