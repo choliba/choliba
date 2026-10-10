@@ -2,13 +2,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { Test } from '@nestjs/testing';
+import { complete, ConfigService, coreShell, describe as describeWords, formatSuggestions } from '@choliba/core';
+import { fakePlatform, runShell } from '@choliba/core/testing';
 
-import { complete, describe as describeWords, formatSuggestions } from '@choliba/core';
-import { PlatformModule } from '@choliba/core/nest';
-import { fakePlatform, runCommand } from '@choliba/core/testing';
-
-import { ProjectsModule, ProjectsService, TicketsService } from '../../nest';
+import { LocationsService } from '../../locations/locations.service';
+import { projectsShell } from '../../projects/projects-shell';
+import { ProjectsService } from '../../projects/projects.service';
+import { TicketsService } from '../../tickets/tickets.service';
 
 interface Workspace {
   readonly root: string;
@@ -17,7 +17,7 @@ interface Workspace {
 
 /** A workspace whose .env points CHOL_PROJECTS_DIR (and, when given, CHOL_TICKET_RUNS) at temp folders. */
 function withWorkspace<T>(
-  fn: (workspace: Workspace) => Promise<T>,
+  fn: (workspace: Workspace) => T | Promise<T>,
   env: Readonly<Record<string, string>> = {},
 ): Promise<T> {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'projects-cmd-'));
@@ -31,16 +31,16 @@ function withWorkspace<T>(
       .map(([key, value]) => `${key}=${value}\n`)
       .join(''),
   );
-  return fn({ root, projectsDir }).finally(() => {
+  return Promise.resolve(fn({ root, projectsDir })).finally(() => {
     fs.rmSync(root, { recursive: true, force: true });
   });
 }
 
 /** A workspace without CHOL_GLOBAL_DIR: every location fails. */
-function withBrokenWorkspace<T>(fn: (root: string) => Promise<T>): Promise<T> {
+function withBrokenWorkspace<T>(fn: (root: string) => T | Promise<T>): Promise<T> {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'projects-cmd-broken-'));
   fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ dependencies: { choliba: '*' } }));
-  return fn(root).finally(() => {
+  return Promise.resolve(fn(root)).finally(() => {
     fs.rmSync(root, { recursive: true, force: true });
   });
 }
@@ -68,7 +68,7 @@ interface Run {
 /** `choliba projects <args…>` from `cwd`. */
 async function projects(args: readonly string[], cwd: string): Promise<Run> {
   const platform = fakePlatform({ argv: ['projects', ...args], cwd });
-  const exitCode = await runCommand([ProjectsModule], platform);
+  const exitCode = await runShell([coreShell, projectsShell], platform);
   return { exitCode, out: platform.stdout.text(), err: platform.stderr.text() };
 }
 
@@ -245,21 +245,20 @@ describe('choliba projects — help', () => {
 });
 
 describe('ProjectsService.helpSpec — completion and description', () => {
-  async function serviceIn(cwd: string): Promise<ProjectsService> {
-    const moduleRef = await Test.createTestingModule({
-      imports: [PlatformModule.forRoot(fakePlatform({ cwd })), ProjectsModule],
-    }).compile();
-    return moduleRef.get(ProjectsService);
+  function serviceIn(cwd: string): { projects: ProjectsService; tickets: TicketsService } {
+    const platform = fakePlatform({ cwd });
+    const locations = new LocationsService(new ConfigService(platform.cwd, platform.env), platform.env);
+    return { projects: new ProjectsService(locations), tickets: new TicketsService(locations) };
   }
 
   const completions = (service: ProjectsService, words: readonly string[]): string =>
     formatSuggestions(complete(service.helpSpec(), words));
 
   it('completes commands, projects, tickets, ticket types and flags from disk', () =>
-    withWorkspace(async ({ root, projectsDir }) => {
+    withWorkspace(({ root, projectsDir }) => {
       writeProject(projectsDir, 'demo', ['demo-01', 'demo-02']);
       writeProject(projectsDir, 'other');
-      const service = await serviceIn(root);
+      const { projects: service } = serviceIn(root);
 
       expect(completions(service, ['ti'])).toBe('tickets-folder\nticket-specs');
       expect(completions(service, ['tickets-folder', ''])).toBe('demo\nother');
@@ -271,21 +270,17 @@ describe('ProjectsService.helpSpec — completion and description', () => {
     }));
 
   it('completes the ticket commands too, as they belong to the same CLI', () =>
-    withWorkspace(async ({ root, projectsDir }) => {
+    withWorkspace(({ root, projectsDir }) => {
       writeProject(projectsDir, 'demo');
-      const moduleRef = await Test.createTestingModule({
-        imports: [PlatformModule.forRoot(fakePlatform({ cwd: root })), ProjectsModule],
-      }).compile();
+      const { projects, tickets } = serviceIn(root);
 
-      expect(formatSuggestions(complete(moduleRef.get(ProjectsService).helpSpec(), ['tickets-folder', '']))).toBe(
-        'demo',
-      );
-      expect(formatSuggestions(complete(moduleRef.get(TicketsService).helpSpec(), ['ticket-specs', '']))).toBe('demo');
+      expect(formatSuggestions(complete(projects.helpSpec(), ['tickets-folder', '']))).toBe('demo');
+      expect(formatSuggestions(complete(tickets.helpSpec(), ['ticket-specs', '']))).toBe('demo');
     }));
 
   it('describes the CLI or the command the words select', () =>
-    withBrokenWorkspace(async (root) => {
-      const spec = (await serviceIn(root)).helpSpec();
+    withBrokenWorkspace((root) => {
+      const spec = serviceIn(root).projects.helpSpec();
       expect(describeWords(spec, [])).toBe('Resolve pastas e arquivos dos projetos Playwright em CHOL_PROJECTS_DIR.');
       expect(describeWords(spec, ['list'])).toBe('Lista os projetos');
     }));
@@ -294,10 +289,10 @@ describe('ProjectsService.helpSpec — completion and description', () => {
     withWorkspace(async ({ root, projectsDir }) => {
       writeProject(projectsDir, 'demo');
       fs.writeFileSync(path.join(projectsDir, 'demo', 'tickets'), 'not a directory');
-      expect(completions(await serviceIn(root), ['ticket-specs', 'demo', ''])).toBe('');
+      expect(completions(serviceIn(root).projects, ['ticket-specs', 'demo', ''])).toBe('');
 
-      await withBrokenWorkspace(async (broken) => {
-        const service = await serviceIn(broken);
+      await withBrokenWorkspace((broken) => {
+        const service = serviceIn(broken).projects;
         expect(completions(service, ['tickets-folder', ''])).toBe('');
         expect(completions(service, ['ticket-specs', 'demo', ''])).toBe('');
       });

@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 10/10/2026 00:48:46 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 10/10/2026 01:07:17 — não editar manualmente.
 
 ## Resumo
 
@@ -192,7 +192,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 41 arquivos</summary>
+<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 36 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -202,16 +202,13 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/common/placeholder.ts](packages/projects/src/common/placeholder.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/projects-cli.ts](packages/projects/src/common/projects-cli.ts)|100.00|100.00|100.00|100.00
 🟢|[src/index.ts](packages/projects/src/index.ts)|100.00|100.00|100.00|100.00
-🟢|[src/locations/locations.module.ts](packages/projects/src/locations/locations.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/locations/index.ts](packages/projects/src/locations/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/locations/locations.service.ts](packages/projects/src/locations/locations.service.ts)|100.00|100.00|100.00|100.00
-🟢|[src/locations/nest.ts](packages/projects/src/locations/nest.ts)|100.00|100.00|100.00|100.00
-🟢|[src/nest.ts](packages/projects/src/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/paths/index.ts](packages/projects/src/paths/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/paths/locations.ts](packages/projects/src/paths/locations.ts)|100.00|100.00|100.00|100.00
 🟢|[src/paths/project-paths.ts](packages/projects/src/paths/project-paths.ts)|100.00|100.00|100.00|100.00
 🟢|[src/paths/results.ts](packages/projects/src/paths/results.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/index.ts](packages/projects/src/projects/index.ts)|100.00|100.00|100.00|100.00
-🟢|[src/projects/nest.ts](packages/projects/src/projects/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project-app-ensure.ts](packages/projects/src/projects/project-app-ensure.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project-app-launch.ts](packages/projects/src/projects/project-app-launch.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project-app-prepare.ts](packages/projects/src/projects/project-app-prepare.ts)|100.00|100.00|100.00|100.00
@@ -223,11 +220,10 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/projects/projects-shell.ts](packages/projects/src/projects/projects-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects-spec.ts](packages/projects/src/projects/projects-spec.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects.command.ts](packages/projects/src/projects/projects.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/projects/projects.module.ts](packages/projects/src/projects/projects.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/projects/projects.constants.ts](packages/projects/src/projects/projects.constants.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects.service.ts](packages/projects/src/projects/projects.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/report-folder.command.ts](packages/projects/src/projects/report-folder.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tickets/index.ts](packages/projects/src/tickets/index.ts)|100.00|100.00|100.00|100.00
-🟢|[src/tickets/nest.ts](packages/projects/src/tickets/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tickets/ticket-criteria.ts](packages/projects/src/tickets/ticket-criteria.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tickets/ticket-specs.command.ts](packages/projects/src/tickets/ticket-specs.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tickets/ticket-superseded.ts](packages/projects/src/tickets/ticket-superseded.ts)|100.00|100.00|100.00|100.00
@@ -235,7 +231,6 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/tickets/ticket.ts](packages/projects/src/tickets/ticket.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tickets/tickets-folder.command.ts](packages/projects/src/tickets/tickets-folder.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tickets/tickets-spec.ts](packages/projects/src/tickets/tickets-spec.ts)|100.00|100.00|100.00|100.00
-🟢|[src/tickets/tickets.module.ts](packages/projects/src/tickets/tickets.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tickets/tickets.service.ts](packages/projects/src/tickets/tickets.service.ts)|100.00|100.00|100.00|100.00
 
 </details>
