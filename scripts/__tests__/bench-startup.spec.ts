@@ -1,0 +1,33 @@
+import { summarize, timingTable } from '../libs/bench-startup';
+
+describe('summarize', () => {
+  it('reports min, median, mean and max of unordered samples', () => {
+    expect(summarize([30, 10, 20])).toEqual({ min: 10, median: 20, mean: 20, max: 30 });
+  });
+
+  it('takes the median of an even count as the mean of the two middle samples', () => {
+    expect(summarize([40, 10, 30, 20]).median).toBe(25);
+  });
+
+  it('refuses a scenario with no samples', () => {
+    expect(() => summarize([])).toThrow('nenhuma amostra para resumir');
+  });
+});
+
+describe('timingTable', () => {
+  it('writes one Markdown row per scenario, in whole milliseconds', () => {
+    const table = timingTable([
+      { scenario: 'Bun vazio', timing: { min: 4.4, median: 5.5, mean: 5.6, max: 9.49 } },
+      { scenario: 'fonte: --version', timing: { min: 200, median: 210.2, mean: 212.7, max: 250 } },
+    ]);
+
+    expect(table).toBe(
+      [
+        '| Cenário | mín (ms) | mediana (ms) | média (ms) | máx (ms) |',
+        '| --- | --: | --: | --: | --: |',
+        '| Bun vazio | 4 | 6 | 6 | 9 |',
+        '| fonte: --version | 200 | 210 | 213 | 250 |',
+      ].join('\n'),
+    );
+  });
+});
