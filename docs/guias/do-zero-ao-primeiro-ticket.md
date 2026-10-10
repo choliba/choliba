@@ -25,19 +25,24 @@ O `setup` roda sozinho com `--trust` e cria o projeto de exemplo `projects/exemp
 
 3. Crie o projeto de teste da aplicação
 
-O projeto segue o `projects/exemplo`: uma pasta `projects/<nome>/` com `config.json` e `.env.json`.
+O `projects new` cria `projects/<nome>/` a partir do modelo, com `config.json`, `.env.example.json`, `tests/` e
+`tickets/`. O nome sai da pasta da aplicação quando você não o dá, e o `description` vem do README dela:
 
 ```bash
-mkdir -p projects/minha-app
-cp projects/exemplo/.env.example.json projects/minha-app/.env.json
+bunx choliba projects new minha-app --app-dir /home/voce/dev/minha-app --base-url http://localhost:3000
+cp projects/minha-app/.env.example.json projects/minha-app/.env.json
 ```
 
-Grave `projects/minha-app/config.json`. O `baseURL` leva `http://`, e o `appDir` é a pasta da aplicação. Só o
-Chromium fica ligado, o navegador de [Dependências](../primeiros-passos.md#dependências):
+Tudo é opcional: num terminal, o comando pergunta o que faltar, e uma resposta vazia deixa o campo como `CHANGE_ME`
+para você preencher depois. Sem terminal, ou com `--no-input`, ele não pergunta nada.
+
+O `config.json` criado fica assim. O `baseURL` leva `http://`, e o `appDir` é a pasta da aplicação. Deixe ligado só o
+Chromium, o navegador de [Dependências](../primeiros-passos.md#dependências):
 
 ```json
 {
   "name": "minha-app",
+  "description": "Minha App",
   "envs": [
     {
       "nome": "development",
@@ -84,9 +89,9 @@ Os agentes nunca sobem a aplicação. Sem `start`, quem sobe é você, e um agen
 4. Instale os agentes que escrevem o ticket, os testes e o código
 
 ```bash
-bunx choliba add github:choliba/choliba --path .agents/agents/product-owner
-bunx choliba add github:choliba/choliba --path .agents/agents/test-writer
-bunx choliba add github:choliba/choliba --path .agents/agents/implementer
+bunx choliba add github:choliba/choliba --path .choliba/agents/product-owner
+bunx choliba add github:choliba/choliba --path .choliba/agents/test-writer
+bunx choliba add github:choliba/choliba --path .choliba/agents/implementer
 ```
 
 Cada um traz as skills que declara. O que mais dá para instalar está em

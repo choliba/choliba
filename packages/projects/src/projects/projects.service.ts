@@ -1,9 +1,10 @@
 import type { CommandSpec } from '@choliba/core';
 
 import type { LocationsService } from '../locations';
-import { listProjectNames, REPORT_FOLDER } from '../paths';
-import { listTicketKeys, resolveReportFolder } from '../tickets';
-import { readProjectConfig } from './project';
+import { listProjectNames, projectDir, REPORT_FOLDER } from '../paths';
+import { listTicketKeys, projectTemplatesDir, resolveReportFolder } from '../tickets';
+import type { NewProject } from './new-project';
+import { createProject, readProjectConfig, type CreatedProject } from './project';
 import { loadProjectSettings, type ProjectSettings } from './project-settings';
 import { projectsCliSpec } from './projects-spec';
 
@@ -39,6 +40,16 @@ export class ProjectsService {
   /** The settings a run of `project` would use; throws, naming what is still missing or CHANGE_ME. */
   check(project: string): ProjectSettings {
     return loadProjectSettings(this.projectsDir(), project);
+  }
+
+  /** `project` from the template, in the projects folder: where it went, and what its README gave. */
+  create(project: NewProject): { readonly dir: string; readonly created: CreatedProject } {
+    const projectsDir = this.projectsDir();
+    const created = createProject(projectsDir, project.name, projectTemplatesDir(), {
+      ...(project.appDir === undefined ? {} : { appDir: project.appDir }),
+      ...(project.baseUrl === undefined ? {} : { baseUrl: project.baseUrl }),
+    });
+    return { dir: projectDir(projectsDir, project.name), created };
   }
 
   /** The report folder: the default name, or the one of a project (and ticket). */

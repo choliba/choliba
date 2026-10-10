@@ -27,7 +27,7 @@ cujo `main.ts` só monta a plataforma e o runtime e chama a casca (skill `cli-sh
 
 Skills de desenvolvimento do projeto em `.agents/skills/`: `plans`, `add-workspace-package`, `quality-gates`, `coverage-ratchet`,
 `git-workflow`, `object-calisthenics`, `cli-shell`, `code-standard`, `cli-guidelines`; e `documentation`, que também é do agente
-`docs-updater`, em `.agents/skills/`. Quando usar cada uma: a `description` do `SKILL.md` dela; o padrão de cada uma e o que o confere: tabela "Padrões do
-projeto" do [`CONTRIBUTING.md`](CONTRIBUTING.md). Como o código é organizado: [`ARCHITECTURE.md`](ARCHITECTURE.md). Os agentes deste
-repositório ficam em `.agents/agents/` e as skills deles em `.agents/skills/`. `.choliba/` é o layout de uma pasta de
-trabalho instalada; sem `CHOL_*_DIR` no `.env`, a resolução usa um ou outro.
+`docs-updater` e por isso fica em `.choliba/skills/`. Quando usar cada uma: a `description` do `SKILL.md` dela; o padrão de cada uma e o que o confere: tabela "Padrões do
+projeto" do [`CONTRIBUTING.md`](CONTRIBUTING.md). Como o código é organizado: [`ARCHITECTURE.md`](ARCHITECTURE.md). `.agents/` é só o
+ferramental de quem desenvolve o choliba. `.choliba/` é o que vai para o usuário, no layout de uma pasta de trabalho:
+os agentes oficiais em `.choliba/agents/` e as skills deles em `.choliba/skills/`, que o choliba também roda daqui.

@@ -31,6 +31,23 @@ export function projectsCliSpec(projectsDir: () => string): CommandSpec {
       },
       ticketSpecsEntry(completions),
       {
+        name: 'new',
+        description: 'Cria um projeto a partir do modelo; o que faltar é perguntado no terminal',
+        group: 'Commands',
+        spec: {
+          usage: `${PROGRAM_NAME} new [NOME] [OPTIONS]`,
+          flags: [
+            {
+              name: '--app-dir',
+              value: { name: 'pasta', suggest: () => ({ kind: 'files' }) },
+              description: 'Pasta da aplicação; o nome do projeto sai dela quando falta NOME',
+            },
+            { name: '--base-url', value: { name: 'url' }, description: 'URL base da aplicação' },
+            { name: '--no-input', description: 'Não pergunta nada: o que faltar fica CHANGE_ME' },
+          ],
+        },
+      },
+      {
         name: 'list',
         description: 'Lista os projetos',
         group: 'Commands',
