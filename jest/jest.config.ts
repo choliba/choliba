@@ -20,7 +20,6 @@ const config: Config = {
     '<rootDir>/.choliba/skills',
     '<rootDir>/.claude',
   ],
-  // Os decorators do Nest guardam o que declaram com o reflect-metadata, que precisa estar carregado antes.
   setupFiles: ['<rootDir>/jest/jest.setup.ts'],
   detectOpenHandles: true,
 };
