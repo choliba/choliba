@@ -73,3 +73,19 @@ export interface HelpContributor {
 
 /** What a CLI says about itself at the root: everything but its commands, which the commands register. */
 export type RootSpec = Omit<CommandSpec, 'commands'>;
+
+/** How the root help lays out the commands: which sections come first, in what order, and entries from elsewhere. */
+export interface RootLayout {
+  /**
+   * The order of the root's sections (`['Commands', 'Agents']`): the entries are sorted by it. Sections it does not
+   * name come last.
+   */
+  readonly groups?: readonly string[];
+  /**
+   * The order of the commands inside a section, by name. Names it does not list come after, in the order they were
+   * registered: without it, a section keeps that order.
+   */
+  readonly order?: readonly string[];
+  /** Entries registered outside Nest (the shell's commands), listed with the Nest ones while the app runs on both. */
+  readonly entries?: () => readonly CommandEntry[];
+}

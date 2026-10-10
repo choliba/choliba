@@ -163,4 +163,22 @@ describe('RootModule', () => {
     expect(localCode).toBe(0);
     expect(local.stdout.text()).toBe('build\nserve\nhelp\nversion\n');
   });
+
+  it('lists entries from outside Nest with the registered ones, in the order the app names', async () => {
+    const platform = fakePlatform({ argv: ['__entries'] });
+    const layout: RootOptions = {
+      ...ROOT,
+      groups: ['Commands', 'Agents'],
+      order: ['serve', 'deploy', 'build'],
+      entries: () => [{ ...entry('revisor', 'Um agente'), group: 'Agents' }, entry('deploy', 'Publica')],
+    };
+    await runCommand([RootModule.forRoot(layout), CommandsModule], platform);
+
+    expect((JSON.parse(platform.stdout.text()) as { name: string }[]).map(({ name }) => name)).toEqual([
+      'serve',
+      'deploy',
+      'build',
+      'revisor',
+    ]);
+  });
 });

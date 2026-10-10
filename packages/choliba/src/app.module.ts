@@ -2,22 +2,25 @@ import { Module, type DynamicModule } from '@nestjs/common';
 
 import { AgentsModule } from '@choliba/agents/nest';
 import { PlatformModule, RootModule, RuntimeModule } from '@choliba/core/nest';
-import { versionLine, type Platform } from '@choliba/core';
+import { versionLine, type Platform, type Shell } from '@choliba/core';
 import { ProjectsModule } from '@choliba/projects/nest';
 import { TestsModule } from '@choliba/runner/nest';
 import { TerminalModule } from '@choliba/terminal/nest';
 
 import { CheckModule } from './check/nest';
-import { CHOLIBA_ROOT } from './help';
+import { CHOLIBA_ORDER, CHOLIBA_ROOT } from './help';
 import { cholibaManifest, PACKAGE_NAME } from './help';
 import type { Runtime } from './runtime';
 import { SetupModule } from './setup/nest';
 import { ToolingModule } from './tooling/nest';
 
-/** The whole of choliba: every command, on the platform and runtime `main.ts` reads from Bun and the process. */
+/**
+ * The commands of choliba still on Nest, on the platform and runtime `main.ts` reads from Bun and the process. The root
+ * help also lists the commands already in `shell`, so `choliba --help` shows them all.
+ */
 @Module({})
 export class AppModule {
-  static forRoot(platform: Platform, runtime: Runtime): DynamicModule {
+  static forRoot(platform: Platform, runtime: Runtime, shell: Shell): DynamicModule {
     return {
       module: AppModule,
       imports: [
@@ -27,6 +30,8 @@ export class AppModule {
           spec: CHOLIBA_ROOT,
           version: () => versionLine(PACKAGE_NAME, cholibaManifest()),
           groups: ['Commands', 'Agents'],
+          order: CHOLIBA_ORDER,
+          entries: () => shell.entries(),
         }),
         AgentsModule,
         ProjectsModule,

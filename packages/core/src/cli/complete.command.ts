@@ -26,7 +26,7 @@ export class CompleteCommand extends CliCommand {
       this.io.write(delegated);
       return Promise.resolve();
     }
-    this.help.printCompletions(this.registry.spec(this.options.spec, this.options.groups), words);
+    this.help.printCompletions(this.registry.spec(this.options.spec, this.options), words);
     return Promise.resolve();
   }
 }

@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 09/10/2026 23:57:29 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 10/10/2026 00:09:51 — não editar manualmente.
 
 ## Resumo
 
@@ -17,7 +17,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 71 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 72 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -26,6 +26,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/agent-print.ts](packages/agents/src/agents/agent-print.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agent-skills.ts](packages/agents/src/agents/agent-skills.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agent-validation.ts](packages/agents/src/agents/agent-validation.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/agents-shell.ts](packages/agents/src/agents/agents-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents.command.ts](packages/agents/src/agents/agents.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents.module.ts](packages/agents/src/agents/agents.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents.service.ts](packages/agents/src/agents/agents.service.ts)|100.00|100.00|100.00|100.00
@@ -96,10 +97,11 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 19 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 20 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
+🟢|[src/app-shell.ts](packages/choliba/src/app-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/app.module.ts](packages/choliba/src/app.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/check/check.command.ts](packages/choliba/src/check/check.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/check/check.module.ts](packages/choliba/src/check/check.module.ts)|100.00|100.00|100.00|100.00
@@ -123,7 +125,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 61 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 66 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -180,6 +182,11 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/runtime/nest.ts](packages/core/src/runtime/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runtime/runtime.constants.ts](packages/core/src/runtime/runtime.constants.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runtime/runtime.module.ts](packages/core/src/runtime/runtime.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/container.ts](packages/core/src/shell/container.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/core-shell.ts](packages/core/src/shell/core-shell.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/create-shell.ts](packages/core/src/shell/create-shell.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/index.ts](packages/core/src/shell/index.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/shell-io.ts](packages/core/src/shell/shell-io.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/index.ts](packages/core/src/testing/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/theme/ansi.ts](packages/core/src/theme/ansi.ts)|100.00|100.00|100.00|100.00
 🟢|[src/theme/index.ts](packages/core/src/theme/index.ts)|100.00|100.00|100.00|100.00
@@ -192,7 +199,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 40 arquivos</summary>
+<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 41 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -220,6 +227,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/projects/project.ts](packages/projects/src/projects/project.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects-check.command.ts](packages/projects/src/projects/projects-check.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects-list.command.ts](packages/projects/src/projects/projects-list.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/projects/projects-shell.ts](packages/projects/src/projects/projects-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects-spec.ts](packages/projects/src/projects/projects-spec.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects.command.ts](packages/projects/src/projects/projects.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects.module.ts](packages/projects/src/projects/projects.module.ts)|100.00|100.00|100.00|100.00
@@ -240,7 +248,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/runner</b> — 100.00% das linhas, 20 arquivos</summary>
+<summary>🟢 <b>packages/runner</b> — 100.00% das linhas, 21 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -256,6 +264,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/tests/tests-error.ts](packages/runner/src/tests/tests-error.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/tests-gate.ts](packages/runner/src/tests/tests-gate.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/tests-retired.ts](packages/runner/src/tests/tests-retired.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tests/tests-shell.ts](packages/runner/src/tests/tests-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/tests-spec.ts](packages/runner/src/tests/tests-spec.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/tests-target.ts](packages/runner/src/tests/tests-target.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/tests.command.ts](packages/runner/src/tests/tests.command.ts)|100.00|100.00|100.00|100.00
@@ -268,7 +277,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/terminal</b> — 100.00% das linhas, 20 arquivos</summary>
+<summary>🟢 <b>packages/terminal</b> — 100.00% das linhas, 21 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -288,6 +297,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/terminal/session.ts](packages/terminal/src/terminal/session.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/spawn.ts](packages/terminal/src/terminal/spawn.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/stream-lines.ts](packages/terminal/src/terminal/stream-lines.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/terminal-shell.ts](packages/terminal/src/terminal/terminal-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/terminal.command.ts](packages/terminal/src/terminal/terminal.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/terminal.module.ts](packages/terminal/src/terminal/terminal.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/terminal.service.ts](packages/terminal/src/terminal/terminal.service.ts)|100.00|100.00|100.00|100.00

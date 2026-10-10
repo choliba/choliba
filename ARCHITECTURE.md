@@ -43,3 +43,23 @@ código de saída pelo `CommandIo`. Uma primeira palavra que não é comando (`c
 da raiz, que a passa para o `AgentsService`.
 
 Detalhes, receitas (um comando novo, um provider novo) e os testes: skill [`nestjs`](.agents/skills/nestjs/SKILL.md).
+
+## A casca sem Nest (em transição)
+
+O boot do Nest custa uns 220 ms a cada comando (veja [PERFORMANCE.md](PERFORMANCE.md)), e os comandos estão saindo
+dele, um pacote por vez, para uma casca sem decorators em `packages/core/src/shell/`:
+
+- **Container.** Cada pacote registra uma fábrica por token (`token<T>()`, `container.provide`); um serviço é
+  construído na primeira vez que um comando pede (`container.get`) e reaproveitado depois. Só o comando que roda
+  constrói o que usa.
+- **Tabela de comandos.** Um `ShellCommand` tem a primeira palavra que o roda, as entradas na help da raiz (`help`) e
+  o `run(container, io)`; o `ShellIo` tem o mesmo contrato do `CommandIo`.
+- **Um módulo por pacote.** Cada pacote exporta o seu `ShellModule` (`coreShell`, `agentsShell`, `projectsShell`,
+  `runnerShell`, `terminalShell`) com os seus serviços e comandos, e o app os lista numa ordem fixa em
+  `packages/choliba/src/app-shell.ts`. Mover um comando para a casca só mexe no pacote dele.
+
+Enquanto os dois convivem, o `main.ts` roda pela casca um comando cuja primeira palavra está na tabela, sem checar
+decorators, e manda todo o resto para o Nest. A help da raiz, `__complete`, `__describe` e `__entries` continuam no
+Nest e listam também as entradas da casca, na ordem de `CHOLIBA_ORDER`, para a help não mudar quando um comando
+muda de lado. Nos specs, `runShell(modules, platform, [replace(TOKEN, fake)])` faz para a casca o que o `runCommand`
+faz para o Nest.

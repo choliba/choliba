@@ -38,3 +38,4 @@ export {
   type InstallDeps,
   type InstallTargets,
 } from './agents';
+export { agentsShell } from './agents';

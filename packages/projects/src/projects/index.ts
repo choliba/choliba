@@ -19,3 +19,4 @@ export { APP_PREPARED_ENV, AppError, prepareApp, type PrepareAppContext, type Se
 export { ensureApp, type EnsureAppDeps, type RunningApp } from './project-app-ensure';
 export { answers, launchApp, type LaunchedApp } from './project-app-launch';
 export { projectsCliSpec } from './projects-spec';
+export { projectsShell } from './projects-shell';

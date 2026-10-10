@@ -17,3 +17,6 @@ export const CHOLIBA_ROOT: RootSpec = {
   flags: GLOBAL_FLAGS,
   footer: "Run 'choliba COMMAND --help' for more information on a command.",
 };
+
+/** The order of `choliba --help`'s commands, by name: kept fixed while the commands move from Nest to the shell. */
+export const CHOLIBA_ORDER: readonly string[] = ['agents', 'projects', 'tests', 'check', 'lint', 'format', 'setup'];

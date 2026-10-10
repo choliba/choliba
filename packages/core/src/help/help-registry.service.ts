@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { DiscoveryService } from '@nestjs/core';
 
 import { discover } from '../common/nest';
-import type { CommandEntry, CommandSpec, HelpContributor, RootSpec } from './interfaces/help.interface';
+import type { CommandEntry, CommandSpec, HelpContributor, RootLayout, RootSpec } from './interfaces/help.interface';
 import { RegisterHelp } from './register-help.decorator';
 
 function isHelpContributor(value: unknown): value is HelpContributor {
@@ -33,14 +33,22 @@ export class HelpRegistryService {
   }
 
   /**
-   * The whole CLI as one spec: `root` with the registered commands, sorted by `groups` (each group keeps the order
-   * of registration; groups it does not name come last), what `--help` and `__complete` read.
+   * The whole CLI as one spec, what `--help` and `__complete` read: `root` with the registered commands and the
+   * layout's own entries, sorted by section, then by name, as `layout` says.
    */
-  spec(root: RootSpec, groups: readonly string[] = []): CommandSpec {
-    const rank = (group: string): number => {
-      const index = groups.indexOf(group);
-      return index === -1 ? groups.length : index;
+  spec(root: RootSpec, layout: RootLayout): CommandSpec {
+    const groups = layout.groups ?? [];
+    const order = layout.order ?? [];
+    const rank = (list: readonly string[], value: string): number => {
+      const index = list.indexOf(value);
+      return index === -1 ? list.length : index;
     };
-    return { ...root, commands: () => this.entries().toSorted((a, b) => rank(a.group) - rank(b.group)) };
+    return {
+      ...root,
+      commands: () =>
+        [...this.entries(), ...(layout.entries?.() ?? [])].toSorted(
+          (a, b) => rank(groups, a.group) - rank(groups, b.group) || rank(order, a.name) - rank(order, b.name),
+        ),
+    };
   }
 }

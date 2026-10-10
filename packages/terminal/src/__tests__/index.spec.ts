@@ -24,6 +24,7 @@ describe('public entrypoint', () => {
     expect(nest.TerminalModule).toBeDefined();
     expect(nest.TerminalCommand).toBeDefined();
     expect(nest.TerminalService).toBeDefined();
+    expect(terminal.terminalShell).toEqual({ name: '@choliba/terminal', commands: [] });
     expect(terminal.parseRunArgs(['run', '--label', 'x', '--', 'y'])).toBeInstanceOf(terminal.RunDto);
   });
 
