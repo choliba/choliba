@@ -64,6 +64,9 @@ export function dockerRunArgs(run: DockerRun): readonly string[] {
     `${CONTAINER_HOME}:exec,mode=1777`,
     '--env',
     `HOME=${CONTAINER_HOME}`,
+    // Chrome's own sandbox needs the privileges the container drops; the container is the sandbox there.
+    '--env',
+    'PLAYWRIGHT_MCP_SANDBOX=false',
     ...run.env.flatMap((name) => ['--env', name]),
     ...run.mounts.flatMap((mount) => ['--mount', mountArg(mount)]),
     '--workdir',

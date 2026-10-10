@@ -4,13 +4,19 @@
 #
 #   docker build -f docker/agent.Dockerfile -t choliba-agent .
 ARG BUN_VERSION=1.4.2
+# The @playwright/test choliba pins (packages/*/package.json): the browsers here are the ones that version expects.
+ARG PLAYWRIGHT_VERSION=1.63.0
 FROM oven/bun:${BUN_VERSION} AS bun
 
-FROM mcr.microsoft.com/playwright:v1.63.0-noble
+FROM mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
+ARG PLAYWRIGHT_VERSION
 
 # Bun, for the run tools and `bunx choliba`.
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 RUN ln -s /usr/local/bin/bun /usr/local/bin/bunx
+
+# Google Chrome, the browser playwright-cli opens by default, as on the machine outside the container.
+RUN npx -y "playwright@${PLAYWRIGHT_VERSION}" install --with-deps chrome && npm cache clean --force
 
 # Claude Code (`claude`).
 RUN npm install -g @anthropic-ai/claude-code && npm cache clean --force
