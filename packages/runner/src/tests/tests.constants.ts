@@ -1,12 +1,12 @@
-import type { RunTestsOptions } from './run-tests';
+import { token } from '@choliba/core';
 
-/** The parts of a run specs replace: how Playwright starts, the report prompt, and whether stdin is a terminal. */
-export type TestsHooks = Pick<
-  RunTestsOptions,
-  'spawnPlaywright' | 'promptOpenReport' | 'openHtmlReport' | 'stdinIsTTY'
->;
+import type { TestsHooks, TestsService } from './tests.service';
 
-export const TESTS_HOOKS = Symbol('TESTS_HOOKS');
+/** What specs replace in a run (see `TestsHooks`); nothing in the app. */
+export const TESTS_HOOKS = token<TestsHooks>('TestsHooks');
 
 /** The folder with the runner's Playwright config (`findRunnerRoot`). */
-export const RUNNER_ROOT = Symbol('RUNNER_ROOT');
+export const RUNNER_ROOT = token<string>('RunnerRoot');
+
+/** What runs `choliba tests`. */
+export const TESTS = token<TestsService>('TestsService');

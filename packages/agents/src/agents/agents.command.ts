@@ -1,10 +1,6 @@
-import { Inject } from '@nestjs/common';
-import { Command } from 'nest-commander';
+import type { CommandEntry, CommandSpec, ShellCommand } from '@choliba/core';
 
-import { messageOf, type CommandEntry, type CommandSpec, type HelpContributor } from '@choliba/core';
-import { CliCommand, CommandIo, RegisterHelp } from '@choliba/core/nest';
-
-import { AgentsService } from './agents.service';
+import { AGENTS } from './agents.constants';
 
 /** How `choliba --help` lists `agents` when the workspace's agents cannot be read. */
 const ENTRY: CommandEntry = {
@@ -25,38 +21,22 @@ function agentShortcuts(spec: CommandSpec): readonly CommandEntry[] {
   }
 }
 
-/** `choliba agents <agent> [OPTIONS] [TASK...]`, `agents list`, `agents --help`: its flags as typed. */
-@RegisterHelp()
-@Command({
-  name: 'agents',
-  description: 'Roda um agente da pasta de trabalho (.choliba/agents/<nome>/); `choliba <agente>` é atalho',
-  allowUnknownOptions: true,
-  allowExcessArgs: true,
-})
-export class AgentsCommand extends CliCommand implements HelpContributor {
-  constructor(
-    @Inject(CommandIo) private readonly io: CommandIo,
-    @Inject(AgentsService) private readonly agents: AgentsService,
-  ) {
-    super();
+/** `agents`, with the spec it builds from the workspace now, then the workspace's agents as shortcuts. */
+export function agentsEntries(helpSpec: () => CommandSpec): readonly CommandEntry[] {
+  let spec: CommandSpec;
+  try {
+    spec = helpSpec();
+  } catch {
+    return [ENTRY];
   }
-
-  /** `agents`, with the spec it builds from the workspace now, then the workspace's agents as shortcuts. */
-  helpEntries(): readonly CommandEntry[] {
-    let spec: CommandSpec;
-    try {
-      spec = this.agents.helpSpec();
-    } catch {
-      return [ENTRY];
-    }
-    return [{ ...ENTRY, spec }, ...agentShortcuts(spec)];
-  }
-
-  async run(): Promise<void> {
-    try {
-      this.io.exit(await this.agents.run(this.io.args('agents')));
-    } catch (error) {
-      this.io.fail(messageOf(error));
-    }
-  }
+  return [{ ...ENTRY, spec }, ...agentShortcuts(spec)];
 }
+
+/** `choliba agents <agent> [OPTIONS] [TASK...]`, `agents list`, `agents --help`: its flags as typed. */
+export const agentsCommand: ShellCommand = {
+  name: 'agents',
+  help: (container) => agentsEntries(() => container.get(AGENTS).helpSpec()),
+  run: async (container, io) => {
+    io.exit(await container.get(AGENTS).run(io.args('agents')));
+  },
+};

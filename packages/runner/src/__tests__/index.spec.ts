@@ -10,6 +10,14 @@ describe('playwright package entrypoint', () => {
     expect(typeof playwright.isRealFailure).toBe('function');
     expect(typeof playwright.fillTicketTests).toBe('function');
     expect(typeof playwright.runTests).toBe('function');
+    expect(playwright.runnerShell.name).toBe('@choliba/runner');
+    expect(playwright.testsCommand.name).toBe('tests');
+    expect([playwright.RUNNER_ROOT, playwright.TESTS, playwright.TESTS_HOOKS].map(({ name }) => name)).toEqual([
+      'RunnerRoot',
+      'TestsService',
+      'TestsHooks',
+    ]);
+    expect(playwright.TestsService).toBeDefined();
   });
 });
 

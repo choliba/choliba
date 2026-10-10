@@ -21,7 +21,7 @@ export interface RunAgentsCliDeps {
   readonly runner: ProcessRunnerService;
   /** `Bun.which` in production; a lookup table in specs. */
   readonly which: (bin: string) => string | null;
-  /** The providers choliba found (`ProviderRegistryService`); the specs build one from the provider classes. */
+  /** The providers choliba knows (`AGENT_PROVIDERS`); the specs build one from the provider classes. */
   readonly providers: ProviderRegistry;
   /** The colors of what a run prints (`ThemeService`), and whether to color at all. */
   readonly theme: Theme;

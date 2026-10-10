@@ -40,7 +40,7 @@ pacote é uma biblioteca Nest; `packages/choliba` é o único app.
 `AppModule`; o nest-commander despacha para o `ProjectsListCommand`, que pede ao `ProjectsService` a lista, que
 chama as funções de `projects/project.ts` com a pasta de `LocationsService`; o comando escreve o resultado e o
 código de saída pelo `CommandIo`. Uma primeira palavra que não é comando (`choliba product-owner …`) cai no comando
-da raiz, que a passa para o `AgentsService`.
+da raiz, que a passa para o fallback da casca: o `agentsShell` roda como `choliba agents product-owner …`.
 
 Detalhes, receitas (um comando novo, um provider novo) e os testes: skill [`nestjs`](.agents/skills/nestjs/SKILL.md).
 
@@ -69,9 +69,12 @@ dele, um pacote por vez, para uma casca sem decorators em `packages/core/src/she
   `ConfigService`) e o tema (`THEME`, um `ThemeService`); a fábrica de um serviço de outro pacote pede o que precisa,
   como `c.get(CONFIG)`. O `ConfigService` e o `ThemeService` são classes comuns, e o `ConfigModule`/`ThemeModule` os
   constroem com `useFactory` para os comandos que ainda estão no Nest.
+- **Já na casca.** `agents` (com os providers: `AGENT_PROVIDERS` é a lista de classes em `agentsShell`, e o
+  fallback `choliba <agente>`) e `tests` (o `runner` só procura a configuração do Playwright quando os testes rodam).
 
 Enquanto os dois convivem, o `main.ts` roda pela casca um comando cuja primeira palavra está na tabela, sem checar
 decorators, e manda todo o resto para o Nest. A help da raiz, `__complete`, `__describe` e `__entries` continuam no
 Nest e listam também as entradas da casca, na ordem de `CHOLIBA_ORDER`, para a help não mudar quando um comando
-muda de lado. Nos specs, `runShell(modules, platform, [replace(TOKEN, fake)])` faz para a casca o que o `runCommand`
-faz para o Nest.
+muda de lado. A raiz do Nest também passa a palavra que não é comando para o fallback da casca
+(`RootOptions.fallback`). Nos specs, `runShell(modules, platform, [replace(TOKEN, fake)])` faz para a casca o que o
+`runCommand` faz para o Nest.
