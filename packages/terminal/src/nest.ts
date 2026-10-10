@@ -1,2 +1,2 @@
-// The Nest side of @choliba/terminal (see @choliba/core/nest for why it is apart).
+// What only an app's `main.ts` reads (Bun). Kept out of `.`, which the Playwright runner loads under Node.
 export * from './terminal/nest';

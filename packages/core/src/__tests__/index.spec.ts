@@ -1,12 +1,8 @@
 import * as core from '..';
-import * as nest from '../nest';
 
-describe.each([
-  ['@choliba/core', core],
-  ['@choliba/core/nest', nest],
-])('%s', (_name, barrel) => {
+describe('@choliba/core', () => {
   it('exports only defined values', () => {
-    const exported = Object.entries(barrel);
+    const exported = Object.entries(core);
 
     expect(exported.length).toBeGreaterThan(0);
     for (const [name, value] of exported) {

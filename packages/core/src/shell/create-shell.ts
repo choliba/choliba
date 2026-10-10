@@ -3,6 +3,7 @@ import type { CommandEntry } from '../help';
 import type { Platform } from '../platform';
 import { Container, token } from './container';
 import type { ShellCommand, ShellModule } from './interfaces/shell.interface';
+import { rootAction, rootOf, unknownCommand } from './root-run';
 import { ShellIo } from './shell-io';
 
 /** The process and the runtime, as `main.ts` reads them: what every package's services start from. */
@@ -72,8 +73,13 @@ export function createShell(platform: Platform, modules: readonly ShellModule[])
   const byWord = commandsByWord(modules);
   const commands = modules.flatMap((module) => module.commands);
   const fallback = fallbackOf(modules);
+  const root = rootOf(modules);
 
-  /** Runs `action` on `argv`: what it throws is its message on stderr and exit code 1, as with Nest. */
+  function entries(): readonly CommandEntry[] {
+    return commands.flatMap((command) => safely(() => command.help?.(container) ?? [], []));
+  }
+
+  /** Runs `action` on `argv`: what it throws is its message on stderr and exit code 1. */
   async function execute(action: Action, argv: readonly string[]): Promise<number> {
     const io = new ShellIo({ argv, stdout: platform.stdout, stderr: platform.stderr });
     try {
@@ -84,19 +90,30 @@ export function createShell(platform: Platform, modules: readonly ShellModule[])
     return io.exitCode();
   }
 
+  function runIo(action: (io: ShellIo) => void): Promise<number> {
+    return execute((_container, io) => {
+      action(io);
+      return Promise.resolve();
+    }, platform.argv);
+  }
+
   return {
     container,
     has: (word) => word !== undefined && byWord.has(word),
-    entries: () => commands.flatMap((command) => safely(() => command.help?.(container) ?? [], [])),
+    entries,
     run() {
       const [first] = platform.argv;
-      const command = first === undefined ? undefined : byWord.get(first);
-      if (command === undefined) {
-        return Promise.reject(
-          new Error(`a linha de comando não começa com um comando da tabela: ${platform.argv.join(' ')}`),
-        );
+      if (root !== undefined) {
+        const action = rootAction(root, platform.argv, entries);
+        if (action !== undefined) return runIo(action);
       }
-      return execute(command.run, platform.argv);
+      const command = first === undefined ? undefined : byWord.get(first);
+      if (command !== undefined) return execute(command.run, platform.argv);
+      if (fallback !== undefined) return execute(fallback, platform.argv);
+      if (root !== undefined && first !== undefined) return runIo(unknownCommand(root, first));
+      return Promise.reject(
+        new Error(`a linha de comando não começa com um comando da tabela: ${platform.argv.join(' ')}`),
+      );
     },
     fallback: fallback === undefined ? undefined : { runUnknown: (argv) => execute(fallback, argv) },
   };

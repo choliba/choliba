@@ -1,9 +1,5 @@
-import type { ModuleMetadata } from '@nestjs/common';
-import { CommandTestFactory } from 'nest-commander-testing';
-
 import type { GitRunner } from '../platform';
 import type { Platform, ProcessSpawner, SignalSource, WritableWithColumns } from '../platform';
-import { ExitStatus, PlatformModule } from '../platform/nest';
 import { createShell, type Container, type ShellModule, type Token } from '../shell';
 
 /** A stdout/stderr that keeps what was written, for specs. */
@@ -87,34 +83,6 @@ export function fakePlatform(overrides: Partial<FakePlatform> = {}): FakePlatfor
   };
 }
 
-/** A provider a spec replaces (`overrideProvider(provide).useValue(useValue)`). */
-export interface ProviderOverride {
-  readonly provide: string | symbol | (abstract new (...args: never[]) => unknown);
-  readonly useValue: unknown;
-}
-
-/**
- * Runs `platform.argv` as a command line against `imports` (the modules under test, with
- * `PlatformModule.forRoot(platform)`), the way `main.ts` does, and resolves with the exit code the command set.
- */
-export async function runCommand(
-  imports: NonNullable<ModuleMetadata['imports']>,
-  platform: Platform,
-  overrides: readonly ProviderOverride[] = [],
-): Promise<number> {
-  const builder = CommandTestFactory.createTestingCommand({
-    imports: [PlatformModule.forRoot(platform), ...imports],
-  });
-  for (const { provide, useValue } of overrides) {
-    builder.overrideProvider(provide).useValue(useValue);
-  }
-  const app = await builder.compile();
-  await CommandTestFactory.runWithoutClosing(app, [...platform.argv]);
-  const code = app.get(ExitStatus).code();
-  await app.close();
-  return code;
-}
-
 /** A service a spec replaces in the shell, made with `replace`. */
 export interface ShellOverride {
   readonly apply: (container: Container) => void;
@@ -131,7 +99,7 @@ export function replace<T>(key: Token<T>, value: T): ShellOverride {
 
 /**
  * Runs `platform.argv` as a command line against the shell of `modules` (the packages under test), the way `main.ts`
- * does, and resolves with the exit code the command set. The shell counterpart of `runCommand`.
+ * does, and resolves with the exit code the command set.
  */
 export function runShell(
   modules: readonly ShellModule[],

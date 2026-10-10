@@ -4,7 +4,7 @@ import { findWorkspaceRoot } from './workspace';
 
 /**
  * The workspace a command runs in and its configuration, read from where the process started. A plain class: the
- * shell builds it from the platform, and `ConfigModule` gives it to the commands still on Nest.
+ * shell builds it from the platform.
  */
 export class ConfigService {
   constructor(

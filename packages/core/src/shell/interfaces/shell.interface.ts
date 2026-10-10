@@ -1,6 +1,24 @@
-import type { CommandEntry } from '../../help';
+import type { CommandEntry, RootSpec } from '../../help';
 import type { Container } from '../container';
 import type { ShellIo } from '../shell-io';
+
+/**
+ * What an app says about its root: the spec without the commands (they are the modules' `help`), the version line,
+ * and how `--help` lays the commands out. At most one module of an app has it.
+ */
+export interface ShellRoot {
+  readonly spec: RootSpec;
+  /** The line `--version` prints, as `choliba 0.0.1-dev.16+1a2b3c4`. */
+  readonly version: () => string;
+  /** The order of the root's sections. Sections it does not name come last. */
+  readonly groups?: readonly string[];
+  /** The order of the commands inside a section, by name. Names it does not list come after, as they were registered. */
+  readonly order?: readonly string[];
+  /**
+   * Called before the local `__complete`. A string is printed as the answer; `undefined` completes from this CLI.
+   */
+  readonly delegateComplete?: (words: readonly string[]) => string | undefined;
+}
 
 /** A command of the shell: the first word that runs it, its help entries, and what it does. */
 export interface ShellCommand {
@@ -24,6 +42,8 @@ export interface ShellModule {
   /** Registers the package's services. Nothing is built here: the container builds a service when asked for it. */
   readonly provide?: (container: Container) => void;
   readonly commands: readonly ShellCommand[];
+  /** The app's root: no command, `--help`, `--version`, `__complete`, `__describe` and `__entries`. */
+  readonly root?: ShellRoot;
   /**
    * Runs a first word that is no command, with the whole command line (`choliba <agent> …`). At most one module of an
    * app has it; without one, such a word is a usage error.
