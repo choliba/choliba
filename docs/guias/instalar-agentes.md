@@ -22,17 +22,16 @@ também aparece como aviso.
 
 ## O que o repositório do choliba oferece
 
-| Tipo   | Caminho na origem                              | Para quê                                                                            |
-| ------ | ---------------------------------------------- | ----------------------------------------------------------------------------------- |
-| agente | `.choliba/agents/product-owner`                | Escreve o ticket com critérios de aceite, usando a aplicação no navegador.          |
-| agente | `.choliba/agents/test-writer`                  | Escreve um teste por critério, antes da implementação.                              |
-| agente | `.choliba/agents/implementer`                  | Muda a aplicação até os testes do ticket passarem.                                  |
-| agente | `.choliba/agents/docs-updater`                 | Atualiza a documentação a partir do diff.                                           |
-| skill  | `.choliba/skills/playwright-cli`               | Ensina o agente a usar o navegador (a ferramenta da run `playwright-cli`).          |
-| skill  | `.choliba/skills/playwright-trace`             | Ensina o agente a ler o `trace.zip` de um teste que falhou.                         |
-| skill  | `.choliba/skills/playwright-component-testing` | Testes de componente com Playwright.                                                |
-| skill  | `.choliba/skills/documentation`                | Boas práticas de documentação (usada pelo `docs-updater`).                          |
-| MCP    | `.choliba/mcps/mcp-app.json`                   | O servidor [mcp-app](https://github.com/jacksonbicalho/mcp-app) (Jira e ambientes). |
+| Tipo   | Caminho na origem                              | Para quê                                                                   |
+| ------ | ---------------------------------------------- | -------------------------------------------------------------------------- |
+| agente | `.choliba/agents/product-owner`                | Escreve o ticket com critérios de aceite, usando a aplicação no navegador. |
+| agente | `.choliba/agents/test-writer`                  | Escreve um teste por critério, antes da implementação.                     |
+| agente | `.choliba/agents/implementer`                  | Muda a aplicação até os testes do ticket passarem.                         |
+| agente | `.choliba/agents/docs-updater`                 | Atualiza a documentação a partir do diff.                                  |
+| skill  | `.choliba/skills/playwright-cli`               | Ensina o agente a usar o navegador (a ferramenta da run `playwright-cli`). |
+| skill  | `.choliba/skills/playwright-trace`             | Ensina o agente a ler o `trace.zip` de um teste que falhou.                |
+| skill  | `.choliba/skills/playwright-component-testing` | Testes de componente com Playwright.                                       |
+| skill  | `.choliba/skills/documentation`                | Boas práticas de documentação (usada pelo `docs-updater`).                 |
 
 As três skills `playwright-*` são cópias das skills oficiais do Playwright, na versão do `@playwright/test` que o
 choliba usa (1.63.0). Para instalá-las direto da fonte oficial, veja
@@ -52,10 +51,6 @@ $ choliba add github:choliba/choliba --path .choliba/agents/product-owner
 Instalado:
   agente product-owner → .choliba/agents/product-owner
   skill playwright-cli → .choliba/skills/playwright-cli
-  MCP mcp-app → .choliba/mcps/mcp-app.json
-
-Avisos:
-  - o MCP mcp-app usa ${CHOL_MCP_APP_DIR}, ${CHOL_MCP_APP_LOG_DIR}, sem valor no .env: defina antes de rodar o agente.
 
 Confira com: choliba check
 ```
@@ -96,60 +91,6 @@ Instalado:
   skill playwright-trace → .choliba/skills/playwright-trace
 
 Confira com: choliba check
-```
-
-```
-$ choliba add github:choliba/choliba --path .choliba/mcps/mcp-app.json
-Instalado:
-  MCP mcp-app → .choliba/mcps/mcp-app.json
-
-Avisos:
-  - o MCP mcp-app usa ${CHOL_MCP_APP_DIR}, ${CHOL_MCP_APP_LOG_DIR}, sem valor no .env: defina antes de rodar o agente.
-
-Confira com: choliba check
-```
-
-### O servidor do MCP `mcp-app`
-
-O `mcp-app.json` só diz como iniciar o servidor: `node ${CHOL_MCP_APP_DIR}/dist/main.js`. O servidor é outro
-repositório, [jacksonbicalho/mcp-app](https://github.com/jacksonbicalho/mcp-app), que você clona e compila uma vez
-(os passos são os do README dele):
-
-```sh
-git clone https://github.com/jacksonbicalho/mcp-app ~/mcp-app
-cd ~/mcp-app
-yarn install
-yarn build
-```
-
-A configuração do Jira e dos ambientes (`.env` e `environments.json` do próprio mcp-app) está no
-[README do mcp-app](https://github.com/jacksonbicalho/mcp-app#configura%C3%A7%C3%A3o). Na pasta de trabalho do
-choliba, o `.env` diz onde ele está:
-
-```sh
-# .env da pasta de trabalho
-CHOL_MCP_APP_DIR=/home/voce/mcp-app
-CHOL_MCP_APP_LOG_DIR=/home/voce/mcp-app/logs
-```
-
-Enquanto o `dist/main.js` não existir (o mcp-app ainda não foi compilado, ou o `CHOL_MCP_APP_DIR` aponta para outro
-lugar), o `product-owner` não roda: a execução para antes dele com
-`o servidor do MCP mcp-app não existe: …/dist/main.js (veja CHOL_MCP_APP_DIR no .env)`, e o `choliba check` mostra o
-mesmo.
-
-Sem essas duas variáveis, o `check` marca o `product-owner` com `✗` e diz que o `mcp-app.json` usa
-`${CHOL_MCP_APP_DIR}` e `${CHOL_MCP_APP_LOG_DIR}` sem valor. Com elas, tudo carrega:
-
-```
-$ bunx choliba check
-Agentes (<pasta de trabalho>/.choliba/agents)
-  ✓ docs-updater
-  ✓ implementer
-  ✓ product-owner
-  ✓ test-writer
-
-Projetos (<pasta de trabalho>/projects)
-  ✓ exemplo
 ```
 
 ### Skills oficiais do Playwright

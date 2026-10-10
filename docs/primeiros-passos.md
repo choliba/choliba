@@ -130,11 +130,7 @@ pasta pessoal).
    roda (veja
    [A aplicação do projeto](referencia/cli.md#a-aplicação-do-projeto)).
 
-3. O `product-owner` traz o MCP `mcp-app`, que precisa de `CHOL_MCP_APP_DIR` e `CHOL_MCP_APP_LOG_DIR` no `.env`.
-   Como instalar o servidor e preencher as duas:
-   [O servidor do MCP `mcp-app`](guias/instalar-agentes.md#o-servidor-do-mcp-mcp-app).
-
-4. Confira. Com tudo no lugar, nada sai com `✗`:
+3. Confira. Com tudo no lugar, nada sai com `✗`:
 
    ```
    $ bunx choliba check
@@ -155,7 +151,7 @@ pasta pessoal).
    bunx choliba product-owner --project minha-app --type story "a página inicial mostra o nome do site" --dry-run
    ```
 
-5. Do ticket ao código implementado:
+4. Do ticket ao código implementado:
 
    ```sh
    # o ticket, os testes e a implementação
