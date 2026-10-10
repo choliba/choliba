@@ -2,7 +2,8 @@
 
 > Cada comando do choliba, instalado na pasta de trabalho: agentes, testes, projetos, check, lint, format e setup.
 
-O comando é `choliba` (alias `chol`), instalado na pasta de trabalho; `bunx choliba` roda o mesmo.
+O comando é `choliba`, instalado na pasta de trabalho, em `node_modules/.bin/`, que não está no `PATH`. Rode-o com o
+Bun na frente: `bunx choliba <comando>` (ou `bun choliba <comando>`). As tabelas abaixo omitem o `bunx`.
 
 | Comando                                      | O que faz                                                                                    |
 | -------------------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -153,7 +154,7 @@ sem estar em `substitui`.
 
 ## Autocomplete
 
-O Tab completa comandos, opções e nomes (agentes, projetos, tickets) em `choliba`, `chol`, `bunx choliba` e
+O Tab completa comandos, opções e nomes (agentes, projetos, tickets) em `bunx choliba`, `bun choliba` e
 `bun chol:*`, no bash. Ele liga sozinho no `choliba setup`.
 
 Se o Tab não completar no terminal que já estava aberto, abra outro ou rode `source ~/.bashrc`. O script fica em
