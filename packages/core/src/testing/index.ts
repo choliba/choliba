@@ -4,6 +4,7 @@ import { CommandTestFactory } from 'nest-commander-testing';
 import type { GitRunner } from '../platform';
 import type { Platform, ProcessSpawner, SignalSource, WritableWithColumns } from '../platform';
 import { ExitStatus, PlatformModule } from '../platform/nest';
+import { createShell, type Container, type ShellModule, type Token } from '../shell';
 
 /** A stdout/stderr that keeps what was written, for specs. */
 export class BufferWritable implements WritableWithColumns {
@@ -112,4 +113,34 @@ export async function runCommand(
   const code = app.get(ExitStatus).code();
   await app.close();
   return code;
+}
+
+/** A service a spec replaces in the shell, made with `replace`. */
+export interface ShellOverride {
+  readonly apply: (container: Container) => void;
+}
+
+/** Makes `key` give `value` in the shell `runShell` builds: the spec's fake in place of a package's service. */
+export function replace<T>(key: Token<T>, value: T): ShellOverride {
+  return {
+    apply: (container) => {
+      container.override(key, value);
+    },
+  };
+}
+
+/**
+ * Runs `platform.argv` as a command line against the shell of `modules` (the packages under test), the way `main.ts`
+ * does, and resolves with the exit code the command set. The shell counterpart of `runCommand`.
+ */
+export function runShell(
+  modules: readonly ShellModule[],
+  platform: Platform,
+  overrides: readonly ShellOverride[] = [],
+): Promise<number> {
+  const shell = createShell(platform, modules);
+  for (const override of overrides) {
+    override.apply(shell.container);
+  }
+  return shell.run();
 }
