@@ -55,10 +55,12 @@ HTTP. The workspace (`packages/*`) stays: the Nest CLI "monorepo mode" (`nest-cl
 
 ## Adding an agent provider
 
-1. `packages/agents/src/providers/<id>/<id>-agent.provider.ts`: a class `extends AgentProvider` with `id`,
-   `binaries`, `autoPriority`, `buildArgs`, `createParser` (and the optional hooks), decorated
-   `@RegisterAgentProvider()` and `@Injectable()`.
-2. `<id>-provider.module.ts` with it in `providers`, imported by `AgentsModule`. The registry finds it:
+Providers are no longer Nest: `agents` runs in the shell (`ARCHITECTURE.md`, "A casca sem Nest").
+
+1. `packages/agents/src/providers/<id>/<id>-agent.provider.ts`: a plain class `extends AgentProvider` with `id`,
+   `binaries`, `autoPriority`, `buildArgs`, `createParser` (and the optional hooks), exported from
+   `providers/index.ts`.
+2. Add an instance to the list `agentsShell` builds `AGENT_PROVIDERS` from (`agents/agents-shell.ts`):
    `--provider <id>`, `--<id>`, `auto`'s order and completion follow with no other change.
 3. Specs: its args and parser, and the registry spec, which the new provider must not break.
 
