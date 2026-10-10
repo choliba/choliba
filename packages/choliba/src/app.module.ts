@@ -3,7 +3,6 @@ import { Module, type DynamicModule } from '@nestjs/common';
 import { PlatformModule, RootModule, RuntimeModule } from '@choliba/core/nest';
 import { versionLine, type Platform, type Shell } from '@choliba/core';
 import { ProjectsModule } from '@choliba/projects/nest';
-import { TestsModule } from '@choliba/runner/nest';
 import { TerminalModule } from '@choliba/terminal/nest';
 
 import { CheckModule } from './check/nest';
@@ -35,7 +34,6 @@ export class AppModule {
           fallback: shell.fallback,
         }),
         ProjectsModule,
-        TestsModule,
         TerminalModule,
         CheckModule,
         ToolingModule,

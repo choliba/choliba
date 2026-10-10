@@ -18,9 +18,17 @@ describe('the choliba shell', () => {
     const shell = createCholibaShell(fakePlatform());
 
     expect(shell.has('agents')).toBe(true);
+    expect(shell.has('tests')).toBe(true);
     expect(shell.fallback).toBeDefined();
-    for (const word of ['projects', 'tests', 'terminal', 'check', 'lint', 'format', 'setup', '__complete']) {
+    for (const word of ['projects', 'terminal', 'check', 'lint', 'format', 'setup', '__complete']) {
       expect(shell.has(word)).toBe(false);
     }
+  });
+
+  it('runs a command that left Nest, through the shell', async () => {
+    const platform = fakePlatform({ argv: ['tests', '--help'] });
+
+    await expect(createCholibaShell(platform).run()).resolves.toBe(0);
+    expect(platform.stdout.text()).toContain('Usage:  choliba tests');
   });
 });
