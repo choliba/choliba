@@ -33,8 +33,7 @@ export const home = {
     },
     {
       title: 'Guias',
-      details:
-        'Escrever um agente e instalar agentes, skills e MCPs.',
+      details: 'Escrever um agente e instalar agentes, skills e MCPs.',
       link: '/guias/escrever-um-agente',
       linkText: 'Ver os guias',
     },
