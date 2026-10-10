@@ -33,3 +33,9 @@ export const CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR = 'CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR';
 
 /** The colors chosen for the workspace: `role.name=color`, separated by commas (`agents.test-writer=red`). */
 export const CHOL_COLORS = 'CHOL_COLORS';
+
+/** Where the agent's provider runs: `local` (the default, on this machine) or `docker` (in a container). */
+export const CHOL_SANDBOX = 'CHOL_SANDBOX';
+
+/** The image the `docker` sandbox runs the provider in. */
+export const CHOL_SANDBOX_IMAGE = 'CHOL_SANDBOX_IMAGE';

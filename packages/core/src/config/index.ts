@@ -10,6 +10,8 @@ export {
   CHOL_TICKET_RUNS,
   CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR,
   CHOL_COLORS,
+  CHOL_SANDBOX,
+  CHOL_SANDBOX_IMAGE,
 } from './vars';
 export { loadRepoConfig, mergeConfig, parseConfigFile } from './repo-config';
 export { findWorkspaceRoot, PACKAGE_NAME, WorkspaceNotFoundError } from './workspace';
