@@ -23,7 +23,7 @@ describe('AppModule', () => {
     [['check', '--help'], 'Usage:  choliba check'],
     [['tests', '--help'], 'Usage:  choliba tests'],
     [['--help'], 'Usage:  choliba COMMAND'],
-  ])('runs every command of choliba: %j', async (argv, help) => {
+  ])('runs every command of choliba still on Nest: %j', async (argv, help) => {
     const platform = fakePlatform({ argv });
     const app = await CommandTestFactory.createTestingCommand({ imports: [appFor(platform)] }).compile();
     await CommandTestFactory.runWithoutClosing(app, [...argv]);

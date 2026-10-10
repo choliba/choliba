@@ -3,11 +3,9 @@ import { absolutePermissions } from '../../common';
 import { assertArgvFits, runPlaceOf, wrapInstructions } from '../../common';
 import { runToolCommands, runToolsOf } from '../../common';
 import { createStreamJsonParser } from '../../common';
-import { Injectable } from '@nestjs/common';
 
 import { AgentProvider } from '../../common';
 import type { ProviderRequest, StreamParser } from '../../common';
-import { RegisterAgentProvider } from '../register-agent-provider.decorator';
 import { claudePermissionArgs } from './claude-permissions';
 
 function buildArgs(request: ProviderRequest): readonly string[] {
@@ -58,8 +56,6 @@ function buildArgs(request: ProviderRequest): readonly string[] {
 }
 
 /** Claude Code (`claude -p … --output-format stream-json`). */
-@RegisterAgentProvider()
-@Injectable()
 export class ClaudeAgentProvider extends AgentProvider {
   readonly id = 'claude';
   readonly binaries = [['claude']];

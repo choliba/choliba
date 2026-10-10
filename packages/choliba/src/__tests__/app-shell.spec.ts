@@ -14,12 +14,13 @@ describe('the choliba shell', () => {
     ]);
   });
 
-  it('runs no command yet: every one is still on Nest', () => {
+  it('runs the commands that left Nest, and has the fallback for `choliba <agent>`', () => {
     const shell = createCholibaShell(fakePlatform());
 
-    for (const word of ['agents', 'projects', 'tests', 'terminal', 'check', 'lint', 'format', 'setup', '__complete']) {
+    expect(shell.has('agents')).toBe(true);
+    expect(shell.fallback).toBeDefined();
+    for (const word of ['projects', 'tests', 'terminal', 'check', 'lint', 'format', 'setup', '__complete']) {
       expect(shell.has(word)).toBe(false);
     }
-    expect(shell.entries()).toEqual([]);
   });
 });

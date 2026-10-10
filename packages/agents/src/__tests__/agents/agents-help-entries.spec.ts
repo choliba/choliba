@@ -1,13 +1,8 @@
 import type { CommandSpec } from '@choliba/core';
-import type { CommandIo } from '@choliba/core/nest';
 
-import { AgentsCommand, type AgentsService } from '../../nest';
+import { agentsEntries } from '../..';
 
-function commandWith(helpSpec: () => CommandSpec): AgentsCommand {
-  return new AgentsCommand({} as unknown as CommandIo, { helpSpec } as unknown as AgentsService);
-}
-
-describe('AgentsCommand.helpEntries', () => {
+describe('agentsEntries', () => {
   it('lists `agents` with its live spec, then each agent as a shortcut the root help does not list', () => {
     const spec: CommandSpec = {
       usage: 'choliba agents',
@@ -17,7 +12,7 @@ describe('AgentsCommand.helpEntries', () => {
       ],
     };
 
-    const [agents, ...shortcuts] = commandWith(() => spec).helpEntries();
+    const [agents, ...shortcuts] = agentsEntries(() => spec);
 
     expect(agents?.spec).toBe(spec);
     expect(shortcuts).toEqual([
@@ -26,20 +21,20 @@ describe('AgentsCommand.helpEntries', () => {
   });
 
   it('lists no shortcut when the spec has no commands or cannot read them', () => {
-    expect(commandWith(() => ({ usage: 'choliba agents' })).helpEntries()).toHaveLength(1);
-    const broken = commandWith(() => ({
+    expect(agentsEntries(() => ({ usage: 'choliba agents' }))).toHaveLength(1);
+    const broken = agentsEntries(() => ({
       usage: 'choliba agents',
       commands: () => {
         throw new Error('sem pasta de trabalho');
       },
     }));
-    expect(broken.helpEntries()).toHaveLength(1);
+    expect(broken).toHaveLength(1);
   });
 
   it('keeps `agents` listed, with its usage only, when the workspace cannot be read', () => {
-    const entries = commandWith(() => {
+    const entries = agentsEntries(() => {
       throw new Error('sem pasta de trabalho');
-    }).helpEntries();
+    });
 
     expect(entries).toEqual([
       expect.objectContaining({ name: 'agents', spec: { usage: expect.any(String) as string } }),

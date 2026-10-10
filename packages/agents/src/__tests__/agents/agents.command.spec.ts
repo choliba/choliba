@@ -2,14 +2,10 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { Test } from '@nestjs/testing';
+import { complete, coreShell, createShell, formatSuggestions } from '@choliba/core';
+import { BufferWritable, fakePlatform, runShell, type FakePlatform } from '@choliba/core/testing';
 
-import { complete, formatSuggestions } from '@choliba/core';
-import { PlatformModule } from '@choliba/core/nest';
-import { BufferWritable, fakePlatform, runCommand, type FakePlatform } from '@choliba/core/testing';
-
-import { AgentsModule } from '../../agents/agents.module';
-import { AgentsService } from '../../agents/agents.service';
+import { AGENTS, agentsShell } from '../..';
 import { fakeSpawner, streamFromChunks } from '../helpers/fake-spawner';
 
 const FIXTURES = join(__dirname, '..', 'fixtures');
@@ -43,7 +39,7 @@ async function agents(
   platform: Partial<FakePlatform>,
 ): Promise<{ code: number; platform: FakePlatform }> {
   const run = fakePlatform({ argv: ['agents', ...args], ...platform });
-  return { code: await runCommand([AgentsModule], run), platform: run };
+  return { code: await runShell([coreShell, agentsShell], run), platform: run };
 }
 
 describe('choliba agents', () => {
@@ -87,16 +83,24 @@ describe('choliba agents', () => {
   });
 });
 
+describe('choliba <agent>', () => {
+  it('runs a first word that is no command as `choliba agents <word> …`', () =>
+    withWorkspace(async (cwd) => {
+      const platform = fakePlatform({ cwd });
+      const code = await createShell(platform, [coreShell, agentsShell]).fallback?.runUnknown(['list']);
+
+      expect(code).toBe(0);
+      expect(platform.stdout.text()).toContain('id: echo');
+    }));
+});
+
 describe('AgentsService.helpSpec', () => {
   it('completes the agents on disk, the commands and the providers', () =>
-    withWorkspace(async (cwd) => {
-      const moduleRef = await Test.createTestingModule({
-        imports: [PlatformModule.forRoot(fakePlatform({ cwd })), AgentsModule],
-      }).compile();
-      await moduleRef.init();
-      const spec = moduleRef.get(AgentsService).helpSpec();
+    withWorkspace((cwd) => {
+      const spec = createShell(fakePlatform({ cwd }), [coreShell, agentsShell]).container.get(AGENTS).helpSpec();
 
       expect(formatSuggestions(complete(spec, ['ec']))).toBe('echo');
       expect(formatSuggestions(complete(spec, ['echo', '--provider', '']))).toBe('auto\nclaude\ncursor');
+      return Promise.resolve();
     }));
 });
