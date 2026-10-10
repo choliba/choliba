@@ -1,7 +1,6 @@
-# `choliba add`
+# Instalar agentes, skills e MCPs
 
-> Como trazer para a pasta de trabalho um agente, com as skills e os MCPs que ele declara, uma skill ou um MCP, com
-> o `choliba add` (do `choliba-cli`).
+> Como trazer para a pasta de trabalho um agente, com as skills e os MCPs que ele declara, uma skill ou um MCP.
 
 Traz um agente (com as skills e os MCPs que ele declara), uma skill ou um MCP para a pasta de trabalho,
 substituindo o que já estiver no destino:

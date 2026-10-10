@@ -59,8 +59,7 @@ jobs:
           echo "version=$base.$(git rev-list --first-parent --merges --count HEAD)" >> "$GITHUB_OUTPUT"
           echo "date=$(git log -1 --format=%ad --date=short)" >> "$GITHUB_OUTPUT"
 
-      # O endereço de instalação não muda: o .tgz desta versão sobe com o nome fixo da release. O choliba-cli, o
-      # assistente que cria uma pasta de trabalho e instala o choliba, sai na mesma release e na mesma versão.
+      # O endereço de instalação não muda: o .tgz desta versão sobe com o nome fixo da release.
       - name: Empacotar
         env:
           CHOL_VERSION: ${{ steps.version.outputs.version }}
@@ -68,8 +67,6 @@ jobs:
         run: |
           bun run chol:pack
           cp "packages/choliba/choliba-$CHOL_VERSION.tgz" "$RUNNER_TEMP/choliba-${TAG#v}.tgz"
-          bun run chol:cli:pack
-          cp "packages/choliba-cli/choliba-cli-$CHOL_VERSION.tgz" "$RUNNER_TEMP/choliba-cli-${TAG#v}.tgz"
 
       # Os Destaques de cada release vêm do corpo do PR de release, lido pelo gh.
       - name: Notas da release
@@ -94,5 +91,4 @@ jobs:
           body_path: ${{ runner.temp }}/notes.md
           files: |
             ${{ runner.temp }}/choliba-0.0.1-dev.tgz
-            ${{ runner.temp }}/choliba-cli-0.0.1-dev.tgz
           overwrite_files: true

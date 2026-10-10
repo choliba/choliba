@@ -43,10 +43,10 @@ describe('formatHelp', () => {
   });
 
   it('wraps a wide indented line (an example) under its indentation, continuations two columns further', () => {
-    const example = `  choliba-cli new pasta ${'--opcao valor '.repeat(6).trim()}`;
+    const example = `  choliba projects list ${'--opcao valor '.repeat(6).trim()}`;
     const help = formatHelp({ usage: 'x', description: `Exemplos:\n${example}\n  curto` });
     const lines = help.split('\n').slice(help.split('\n').indexOf('Exemplos:') + 1);
-    expect(lines[0]).toMatch(/^ {2}choliba-cli new pasta --opcao/);
+    expect(lines[0]).toMatch(/^ {2}choliba projects list --opcao/);
     expect(lines[1]).toMatch(/^ {4}--opcao|^ {4}valor/);
     expect(lines.slice(0, 2).join(' ').replace(/\s+/g, ' ').trim()).toBe(example.trim());
     expect(lines[2]).toBe('  curto');
