@@ -3,6 +3,7 @@ import { dirname } from 'node:path';
 import { pathBase, withoutTrailingSlash, type AgentPermissions } from '../agent-permissions';
 import type { PermissionPolicy } from '../interfaces/execution.interface';
 import { hasGlob, isWithin, resolveDenies, type ReadDir } from '../resolve-denies';
+import { CONTAINER_HOME } from './docker-run';
 
 /**
  * One path the container sees, at the same absolute path as on this machine: read-only, writable, or hidden (an
@@ -27,6 +28,42 @@ export interface SandboxReach {
   readonly alsoRead: readonly string[];
   /** What the session's commands write beyond the permissions: choliba's own output folders. */
   readonly alsoWrite: readonly string[];
+}
+
+/** What the container mounts, and the paths the run reaches that it leaves to the image. */
+export interface ContainerPlan {
+  readonly mounts: readonly ContainerMount[];
+  /** Paths the agent may reach that are the image's own folders (`isImagePath`): not mounted, the image's are seen. */
+  readonly skipped: readonly string[];
+}
+
+/**
+ * The folders of the image's own system: programs, libraries, configuration, the browsers and the session's home.
+ * The container keeps them as the image has them; nothing of this machine is mounted over them.
+ */
+export const IMAGE_FOLDERS: readonly string[] = [
+  '/bin',
+  '/boot',
+  '/dev',
+  '/etc',
+  '/lib',
+  '/lib32',
+  '/lib64',
+  '/libx32',
+  '/ms-playwright',
+  '/opt',
+  '/proc',
+  '/root',
+  '/run',
+  '/sbin',
+  '/sys',
+  '/usr',
+  CONTAINER_HOME,
+];
+
+/** Whether `path` is the root, which holds every image folder, or one of them, or inside one. */
+export function isImagePath(path: string): boolean {
+  return path === '/' || IMAGE_FOLDERS.some((folder) => isWithin(folder, path));
 }
 
 /** The disk, as the mounts are planned from it; specs pass a table. */
@@ -99,9 +136,20 @@ function deniedInside(
  * What the container mounts for a run, each path at the same absolute path, so the run folder, the run tools and
  * every path in the prompt stay valid. Reads: `allow.read`, `--add-dir`, the folders commands run in and `alsoRead`.
  * Writes: the run folder, `alsoWrite` and, outside `read-only`, `allow.write`. A `deny.read` inside a mount is hidden;
- * a `deny.write` inside a writable one goes back to read-only. Anything else does not exist in the container.
+ * a `deny.write` inside a writable one goes back to read-only. Anything else does not exist in the container, and the
+ * image's own folders (`isImagePath`) are never mounted: the agent sees the image's, and they are `skipped`.
  */
-export function containerMounts(reach: SandboxReach, disk: DiskFacts): readonly ContainerMount[] {
+export function containerMounts(reach: SandboxReach, disk: DiskFacts): ContainerPlan {
+  const planned = plannedMounts(reach, disk);
+  const skipped = planned.filter((mount) => isImagePath(mount.path) && mount.access !== 'hidden');
+  return {
+    mounts: planned.filter((mount) => !isImagePath(mount.path)),
+    skipped: skipped.map((mount) => mount.path),
+  };
+}
+
+/** Every mount the reach asks for, the image's folders included. */
+function plannedMounts(reach: SandboxReach, disk: DiskFacts): readonly ContainerMount[] {
   const { permissions } = reach;
   const writes = reach.policy === 'read-only' ? [] : permissions.allowWrite;
   const opened = merged([

@@ -660,3 +660,28 @@ describe('runAgent', () => {
     });
   });
 });
+
+describe('runAgent — launch', () => {
+  it('starts what the launch says, with its environment, and names the paths left to the image first', async () => {
+    const handle = fakeSpawner({
+      stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'ok' }])]),
+    });
+    const s = setup(handle.spawner);
+
+    const exitCode = await run(s, {
+      launch: (command) => ({
+        command: ['docker', 'run', 'img', ...command],
+        env: { TOKEN: 't' },
+        mounts: [],
+        skipped: ['/etc/passwd', '/usr'],
+      }),
+    });
+
+    expect(exitCode).toBe(0);
+    expect(handle.spawnCalls[0]?.command.slice(0, 4)).toEqual(['docker', 'run', 'img', 'fake-bin']);
+    expect(handle.spawnCalls[0]?.env).toEqual({ TOKEN: 't' });
+    expect(s.stderr.chunks.join('')).toContain(
+      'No container, estes caminhos são da imagem e não vêm desta máquina: /etc/passwd, /usr.',
+    );
+  });
+});

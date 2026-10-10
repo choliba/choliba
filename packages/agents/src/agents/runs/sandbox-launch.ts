@@ -29,6 +29,8 @@ export interface Launch {
   readonly env?: Readonly<Record<string, string>>;
   /** What the container mounts; empty on this machine. */
   readonly mounts: readonly ContainerMount[];
+  /** Paths the agent may reach that are the image's own folders, so not mounted; empty on this machine. */
+  readonly skipped: readonly string[];
 }
 
 /** What a launch is planned from: the run, what it writes next to it, and the workspace's configuration. */
@@ -87,12 +89,12 @@ function outputFolders(request: ProviderRequest, config: Config): readonly strin
  * credentials by name.
  */
 export function launchFor(input: LaunchInput, disk: LaunchDisk = realDisk): Launch {
-  if (input.sandbox.kind === 'local') return { command: input.command, mounts: [] };
+  if (input.sandbox.kind === 'local') return { command: input.command, mounts: [], skipped: [] };
   const { request, config } = input;
   const root = request.workspaceRoot;
   const outputs = outputFolders(request, config);
   outputs.forEach(disk.ensureDir);
-  const mounts = containerMounts(
+  const { mounts, skipped } = containerMounts(
     {
       permissions: absolutePermissions(request.agent.permissions, root),
       policy: request.policy,
@@ -114,5 +116,6 @@ export function launchFor(input: LaunchInput, disk: LaunchDisk = realDisk): Laun
     }),
     env: definedConfig(config),
     mounts,
+    skipped,
   };
 }

@@ -62,7 +62,7 @@ describe('launchFor', () => {
   it('starts the command as it is on this machine', () => {
     expect(
       launchFor({ sandbox: { kind: 'local' }, command: ['claude', '-p'], request: request(), files: [], config: {} }),
-    ).toEqual({ command: ['claude', '-p'], mounts: [] });
+    ).toEqual({ command: ['claude', '-p'], mounts: [], skipped: [] });
   });
 
   it('in a container, mounts the run, the packages and the run files, and passes the credentials by name', () => {
