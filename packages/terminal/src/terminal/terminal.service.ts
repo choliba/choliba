@@ -1,10 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
-
-import { SIGNALS, STDERR, STDOUT, type SignalSource, type Writable } from '@choliba/core';
-import { ThemeService } from '@choliba/core/nest';
+import type { SignalSource, ThemeService, Writable } from '@choliba/core';
 
 import type { RunDto } from './dto/run.dto';
-import { ProcessRunnerService } from './process-runner.service';
+import type { ProcessRunnerService } from './process-runner.service';
 import type { Session } from './session';
 import { exitCodeFor } from './exit-code';
 import type { SessionExitEvent } from './interfaces/terminal.interface';
@@ -18,14 +15,13 @@ function errorMessage(error: unknown): string {
  * forwards SIGINT/SIGTERM to the child so a wrapped dev server does not linger as an orphan,
  * and resolves with the session's exit code.
  */
-@Injectable()
 export class TerminalService {
   constructor(
-    @Inject(ProcessRunnerService) private readonly runner: ProcessRunnerService,
-    @Inject(ThemeService) private readonly theme: ThemeService,
-    @Inject(STDOUT) private readonly stdout: Writable,
-    @Inject(STDERR) private readonly stderr: Writable,
-    @Inject(SIGNALS) private readonly signals: SignalSource,
+    private readonly runner: ProcessRunnerService,
+    private readonly theme: ThemeService,
+    private readonly stdout: Writable,
+    private readonly stderr: Writable,
+    private readonly signals: SignalSource,
   ) {}
 
   async run(dto: RunDto): Promise<number> {
