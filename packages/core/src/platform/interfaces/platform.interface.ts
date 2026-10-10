@@ -39,6 +39,9 @@ export type Environment = Readonly<Record<string, string | undefined>>;
 
 export type Clock = () => Date;
 
+/** Asks the person at the terminal `question` and resolves with what they typed, trimmed. */
+export type Ask = (question: string) => Promise<string>;
+
 /** `Bun.which`: the path of an executable on PATH, or null. */
 export type Which = (bin: string) => string | null;
 
@@ -58,6 +61,8 @@ export interface Platform {
   readonly spawn: ProcessSpawner;
   readonly which: Which;
   readonly git: GitRunner;
+  /** Asks at the terminal; absent when stdin is no terminal, so a command takes its defaults or names the flag. */
+  readonly ask?: Ask;
   /** `--no-color` was passed: a global flag, removed from the arguments before any command parses them. */
   readonly noColorFlag: boolean;
 }

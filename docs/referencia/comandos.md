@@ -9,7 +9,7 @@ Bun na frente: `bunx choliba <comando>` (ou `bun choliba <comando>`). As tabelas
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `choliba agents COMMAND [OPTIONS] [TASK...]` | Roda um agente da pasta de trabalho (`.choliba/agents/<nome>/`); `choliba <agente>` é atalho                                          |
 | `choliba add <origem> [OPTIONS]`             | Instala um agente (com suas skills e MCPs), uma skill ou um MCP; veja [Instalar agentes, skills e MCPs](../guias/instalar-agentes.md) |
-| `choliba projects COMMAND [ARGS]`            | Lista e confere projetos e tickets em `CHOL_PROJECTS_DIR`                                                                             |
+| `choliba projects COMMAND [ARGS]`            | Cria, lista e confere projetos e tickets em `CHOL_PROJECTS_DIR`                                                                       |
 | `choliba tests [PROJECT[:TICKET]] [OPTIONS]` | Roda os testes E2E dos projetos com o Playwright                                                                                      |
 | `choliba check`                              | Confere a pasta de trabalho: agentes (schemas, skills, MCPs) e projetos                                                               |
 | `choliba lint`                               | ESLint na pasta de trabalho, com a configuração que vem no choliba                                                                    |
