@@ -89,9 +89,9 @@ Os agentes nunca sobem a aplicação. Sem `start`, quem sobe é você, e um agen
 4. Instale os agentes que escrevem o ticket, os testes e o código
 
 ```bash
-bunx choliba add github:choliba/choliba --path .agents/agents/product-owner
-bunx choliba add github:choliba/choliba --path .agents/agents/test-writer
-bunx choliba add github:choliba/choliba --path .agents/agents/implementer
+bunx choliba add github:choliba/choliba --path .choliba/agents/product-owner
+bunx choliba add github:choliba/choliba --path .choliba/agents/test-writer
+bunx choliba add github:choliba/choliba --path .choliba/agents/implementer
 ```
 
 Cada um traz as skills que declara. O que mais dá para instalar está em
