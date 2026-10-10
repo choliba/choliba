@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 10/10/2026 00:35:47 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 10/10/2026 00:53:34 — não editar manualmente.
 
 ## Resumo
 
@@ -90,29 +90,28 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 20 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 19 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
 🟢|[src/app-shell.ts](packages/choliba/src/app-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/app.module.ts](packages/choliba/src/app.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/check/check.command.ts](packages/choliba/src/check/check.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/check/check.module.ts](packages/choliba/src/check/check.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/check/check.ts](packages/choliba/src/check/check.ts)|100.00|100.00|100.00|100.00
-🟢|[src/check/nest.ts](packages/choliba/src/check/nest.ts)|100.00|100.00|100.00|100.00
+🟢|[src/check/index.ts](packages/choliba/src/check/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/index.ts](packages/choliba/src/help/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/root-spec.ts](packages/choliba/src/help/root-spec.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/version.ts](packages/choliba/src/help/version.ts)|100.00|100.00|100.00|100.00
-🟢|[src/setup/nest.ts](packages/choliba/src/setup/nest.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runtime/index.ts](packages/choliba/src/runtime/index.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runtime/runtime.constants.ts](packages/choliba/src/runtime/runtime.constants.ts)|100.00|100.00|100.00|100.00
+🟢|[src/setup/index.ts](packages/choliba/src/setup/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/setup/setup.command.ts](packages/choliba/src/setup/setup.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/setup/setup.module.ts](packages/choliba/src/setup/setup.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/setup/setup.ts](packages/choliba/src/setup/setup.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tooling/eslint-config.ts](packages/choliba/src/tooling/eslint-config.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tooling/format.command.ts](packages/choliba/src/tooling/format.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tooling/index.ts](packages/choliba/src/tooling/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tooling/lint.command.ts](packages/choliba/src/tooling/lint.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/tooling/nest.ts](packages/choliba/src/tooling/nest.ts)|100.00|100.00|100.00|100.00
-🟢|[src/tooling/tool-pass-on.ts](packages/choliba/src/tooling/tool-pass-on.ts)|100.00|100.00|100.00|100.00
-🟢|[src/tooling/tooling.module.ts](packages/choliba/src/tooling/tooling.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tooling/tooling.constants.ts](packages/choliba/src/tooling/tooling.constants.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tooling/tools.service.ts](packages/choliba/src/tooling/tools.service.ts)|100.00|100.00|100.00|100.00
 
 </details>

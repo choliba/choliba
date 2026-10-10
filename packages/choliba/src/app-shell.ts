@@ -1,5 +1,5 @@
 import { agentsShell } from '@choliba/agents';
-import { coreShell, createShell, type Platform, type Shell, type ShellModule } from '@choliba/core';
+import { CONFIG, coreShell, createShell, PLATFORM, type Platform, type Shell, type ShellModule } from '@choliba/core';
 import { projectsShell } from '@choliba/projects';
 import { runnerShell } from '@choliba/runner';
 import { terminalShell } from '@choliba/terminal';
@@ -7,18 +7,20 @@ import { terminalShell } from '@choliba/terminal';
 import { checkCommand } from './check';
 import { RUNTIME, type Runtime } from './runtime';
 import { setupCommand } from './setup';
+import { formatCommand, lintCommand, TOOLS, ToolsService } from './tooling';
 
 /**
- * The commands of the choliba app itself in the shell, on its `runtime`: `check` and `setup` (`lint` and `format` move
- * here from Nest). The app's last module, as only the app has a runtime.
+ * The commands of the choliba app itself in the shell, on its `runtime`: `check`, `lint`, `format` and `setup`. The
+ * app's last module, as only the app has a runtime.
  */
 export function cholibaShell(runtime: Runtime): ShellModule {
   return {
     name: 'choliba',
     provide: (container) => {
       container.provide(RUNTIME, () => runtime);
+      container.provide(TOOLS, (c) => new ToolsService(c.get(RUNTIME), c.get(CONFIG), c.get(PLATFORM).which));
     },
-    commands: [checkCommand, setupCommand],
+    commands: [checkCommand, lintCommand, formatCommand, setupCommand],
   };
 }
 

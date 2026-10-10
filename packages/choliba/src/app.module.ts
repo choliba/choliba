@@ -8,7 +8,6 @@ import { TerminalModule } from '@choliba/terminal/nest';
 import { CHOLIBA_ORDER, CHOLIBA_ROOT } from './help';
 import { cholibaManifest, PACKAGE_NAME } from './help';
 import type { Runtime } from './runtime';
-import { ToolingModule } from './tooling/nest';
 
 /**
  * The commands of choliba still on Nest, on the platform and runtime `main.ts` reads from Bun and the process. The root
@@ -33,7 +32,6 @@ export class AppModule {
         }),
         ProjectsModule,
         TerminalModule,
-        ToolingModule,
       ],
     };
   }
