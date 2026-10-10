@@ -6,12 +6,12 @@ Traz um agente (com as skills e os MCPs que ele declara), uma skill ou um MCP pa
 substituindo o que já estiver no destino:
 
 ```
-choliba add <origem> [--path <item na origem>] [--dry-run]
+bunx choliba add <origem> [--path <item na origem>] [--dry-run]
 ```
 
 - `<origem>` é uma pasta local, um repositório git (`https://…`, `git@…`, `github:dono/repo[#ref]`, ...) ou um
   pacote npm (nome ou `nome@versão`).
-- `--path` escolhe o item dentro da origem (ex.: `--path .choliba/agents/test-writer`), para origens com mais de um agente,
+- `--path` escolhe o item dentro da origem (ex.: `--path .agents/agents/test-writer`), para origens com mais de um agente,
   skill ou MCP. Sem `--path`, a origem já precisa ser o item: uma pasta com `agent.yaml` ou `SKILL.md`, ou um
   arquivo `.json`.
 - `--dry-run` mostra o que seria instalado, sem gravar nada.
@@ -47,50 +47,50 @@ As saídas abaixo são de execuções reais, numa pasta de trabalho recém-criad
 Cada agente traz as skills e os MCPs que declara, do mesmo repositório:
 
 ```
-$ choliba add github:choliba/choliba --path .choliba/agents/product-owner
+$ bunx choliba add github:choliba/choliba --path .agents/agents/product-owner
 Instalado:
   agente product-owner → .choliba/agents/product-owner
   skill playwright-cli → .choliba/skills/playwright-cli
 
-Confira com: choliba check
+Confira com: bunx choliba check
 ```
 
 ```
-$ choliba add github:choliba/choliba --path .choliba/agents/test-writer
+$ bunx choliba add github:choliba/choliba --path .agents/agents/test-writer
 Instalado:
   agente test-writer → .choliba/agents/test-writer
   skill playwright-cli → .choliba/skills/playwright-cli
   skill playwright-trace → .choliba/skills/playwright-trace
 
-Confira com: choliba check
+Confira com: bunx choliba check
 ```
 
 ```
-$ choliba add github:choliba/choliba --path .choliba/agents/implementer
+$ bunx choliba add github:choliba/choliba --path .agents/agents/implementer
 Instalado:
   agente implementer → .choliba/agents/implementer
   skill playwright-trace → .choliba/skills/playwright-trace
 
-Confira com: choliba check
+Confira com: bunx choliba check
 ```
 
 ```
-$ choliba add github:choliba/choliba --path .choliba/agents/docs-updater
+$ bunx choliba add github:choliba/choliba --path .agents/agents/docs-updater
 Instalado:
   agente docs-updater → .choliba/agents/docs-updater
   skill documentation → .choliba/skills/documentation
 
-Confira com: choliba check
+Confira com: bunx choliba check
 ```
 
 ### Uma skill ou um MCP sozinho
 
 ```
-$ choliba add github:choliba/choliba --path .choliba/skills/playwright-trace
+$ bunx choliba add github:choliba/choliba --path .agents/skills/playwright-trace
 Instalado:
   skill playwright-trace → .choliba/skills/playwright-trace
 
-Confira com: choliba check
+Confira com: bunx choliba check
 ```
 
 ### Skills oficiais do Playwright
@@ -108,27 +108,27 @@ versão igual à do Playwright da pasta de trabalho (`bunx playwright --version`
 que você tem.
 
 ```
-$ choliba add github:microsoft/playwright-cli --path skills/playwright-cli
+$ bunx choliba add github:microsoft/playwright-cli --path skills/playwright-cli
 Instalado:
   skill playwright-cli → .choliba/skills/playwright-cli
 
-Confira com: choliba check
+Confira com: bunx choliba check
 ```
 
 ```
-$ choliba add playwright-core@1.63.0 --path lib/tools/skills/playwright-trace
+$ bunx choliba add playwright-core@1.63.0 --path lib/tools/skills/playwright-trace
 Instalado:
   skill playwright-trace → .choliba/skills/playwright-trace
 
-Confira com: choliba check
+Confira com: bunx choliba check
 ```
 
 ```
-$ choliba add @playwright/cli --path skills/playwright-cli --dry-run
+$ bunx choliba add @playwright/cli --path skills/playwright-cli --dry-run
 Instalaria (--dry-run, nada foi gravado):
   skill playwright-cli → .choliba/skills/playwright-cli
 
-Confira com: choliba check
+Confira com: bunx choliba check
 ```
 
 Nessas origens o `--path` é obrigatório, porque a origem não é o item. Sem ele, o `add` lista os itens que
@@ -144,20 +144,20 @@ versão do Playwright do choliba (veja [Ferramentas da run](../referencia/agent-
 Uma branch ou tag, um clone local, ou só para ver o que seria instalado (`--dry-run`):
 
 ```
-$ choliba add github:choliba/choliba#develop --path .choliba/agents/test-writer --dry-run
+$ bunx choliba add github:choliba/choliba#develop --path .agents/agents/test-writer --dry-run
 Instalaria (--dry-run, nada foi gravado):
   agente test-writer → .choliba/agents/test-writer
   skill playwright-cli → .choliba/skills/playwright-cli
   skill playwright-trace → .choliba/skills/playwright-trace
 
-Confira com: choliba check
+Confira com: bunx choliba check
 ```
 
 ```
-$ choliba add ../choliba --path .choliba/agents/implementer --dry-run
+$ bunx choliba add ../choliba --path .agents/agents/implementer --dry-run
 Instalaria (--dry-run, nada foi gravado):
   agente implementer → .choliba/agents/implementer
   skill playwright-trace → .choliba/skills/playwright-trace
 
-Confira com: choliba check
+Confira com: bunx choliba check
 ```

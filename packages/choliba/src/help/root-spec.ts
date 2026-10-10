@@ -19,4 +19,13 @@ export const CHOLIBA_ROOT: RootSpec = {
 };
 
 /** The order of `choliba --help`'s commands, by name. Names missing here come after, as they were registered. */
-export const CHOLIBA_ORDER: readonly string[] = ['agents', 'projects', 'tests', 'check', 'lint', 'format', 'setup'];
+export const CHOLIBA_ORDER: readonly string[] = [
+  'agents',
+  'add',
+  'projects',
+  'tests',
+  'check',
+  'lint',
+  'format',
+  'setup',
+];
