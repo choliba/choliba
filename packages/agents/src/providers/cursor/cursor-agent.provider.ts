@@ -3,11 +3,9 @@ import { absolutePermissions, readDir } from '../../common';
 import { assertArgvFits, runPlaceOf, unenforcedToolsLine, wrapInstructions } from '../../common';
 import { runToolCommands, runToolsOf } from '../../common';
 import { createStreamJsonParser } from '../../common';
-import { Injectable } from '@nestjs/common';
 
 import { AgentProvider } from '../../common';
 import type { PlanContentContext, PlannedFile, ProviderRequest, StreamParser } from '../../common';
-import { RegisterAgentProvider } from '../register-agent-provider.decorator';
 import {
   applyCursorMcpServers,
   applyCursorPermissions,
@@ -144,8 +142,6 @@ function previewWorkspace(request: ProviderRequest): readonly PlannedFile[] {
 }
 
 /** Cursor's agent CLI (`agent`, `cursor-agent` or `cursor agent`, whichever is installed). */
-@RegisterAgentProvider()
-@Injectable()
 export class CursorAgentProvider extends AgentProvider {
   readonly id = 'cursor';
   override readonly unenforcedTools = UNENFORCED_TOOLS;

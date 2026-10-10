@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 10/10/2026 00:09:51 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 10/10/2026 00:35:47 — não editar manualmente.
 
 ## Resumo
 
@@ -17,7 +17,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 72 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 65 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -28,14 +28,13 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/agent-validation.ts](packages/agents/src/agents/agent-validation.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-shell.ts](packages/agents/src/agents/agents-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents.command.ts](packages/agents/src/agents/agents.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/agents.module.ts](packages/agents/src/agents/agents.module.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/agents.constants.ts](packages/agents/src/agents/agents.constants.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents.service.ts](packages/agents/src/agents/agents.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/index.ts](packages/agents/src/agents/index.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/install/install-source.ts](packages/agents/src/agents/install/install-source.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/install/install.ts](packages/agents/src/agents/install/install.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/invocation-registry.ts](packages/agents/src/agents/invocation-registry.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/invocation.ts](packages/agents/src/agents/invocation.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/nest.ts](packages/agents/src/agents/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/agent-detail.ts](packages/agents/src/agents/runs/agent-detail.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/agents-flags.ts](packages/agents/src/agents/runs/agents-flags.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/agents-spec.ts](packages/agents/src/agents/runs/agents-spec.ts)|100.00|100.00|100.00|100.00
@@ -80,19 +79,13 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/common/run-tools/run-tools.ts](packages/agents/src/common/run-tools/run-tools.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/stream-json.ts](packages/agents/src/common/stream-json.ts)|100.00|100.00|100.00|100.00
 🟢|[src/index.ts](packages/agents/src/index.ts)|100.00|100.00|100.00|100.00
-🟢|[src/nest.ts](packages/agents/src/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/claude/claude-agent.provider.ts](packages/agents/src/providers/claude/claude-agent.provider.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/claude/claude-permissions.ts](packages/agents/src/providers/claude/claude-permissions.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/claude/claude-provider.module.ts](packages/agents/src/providers/claude/claude-provider.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/cursor/cursor-agent.provider.ts](packages/agents/src/providers/cursor/cursor-agent.provider.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/cursor/cursor-cli-json.ts](packages/agents/src/providers/cursor/cursor-cli-json.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/cursor/cursor-permissions.ts](packages/agents/src/providers/cursor/cursor-permissions.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/cursor/cursor-provider.module.ts](packages/agents/src/providers/cursor/cursor-provider.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/cursor/cursor-state.ts](packages/agents/src/providers/cursor/cursor-state.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/nest.ts](packages/agents/src/providers/nest.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/provider-registry.service.ts](packages/agents/src/providers/provider-registry.service.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/providers.module.ts](packages/agents/src/providers/providers.module.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/register-agent-provider.decorator.ts](packages/agents/src/providers/register-agent-provider.decorator.ts)|100.00|100.00|100.00|100.00
+🟢|[src/providers/index.ts](packages/agents/src/providers/index.ts)|100.00|100.00|100.00|100.00
 
 </details>
 
@@ -248,15 +241,13 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/runner</b> — 100.00% das linhas, 21 arquivos</summary>
+<summary>🟢 <b>packages/runner</b> — 100.00% das linhas, 18 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
 🟢|[src/index.ts](packages/runner/src/index.ts)|100.00|100.00|100.00|100.00
-🟢|[src/nest.ts](packages/runner/src/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/fill-ticket-tests.ts](packages/runner/src/tests/fill-ticket-tests.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/index.ts](packages/runner/src/tests/index.ts)|100.00|100.00|100.00|100.00
-🟢|[src/tests/nest.ts](packages/runner/src/tests/nest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/playwright-env.ts](packages/runner/src/tests/playwright-env.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/playwright-results.ts](packages/runner/src/tests/playwright-results.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/run-tests.ts](packages/runner/src/tests/run-tests.ts)|100.00|100.00|100.00|100.00
@@ -269,7 +260,6 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/tests/tests-target.ts](packages/runner/src/tests/tests-target.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/tests.command.ts](packages/runner/src/tests/tests.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/tests.constants.ts](packages/runner/src/tests/tests.constants.ts)|100.00|100.00|100.00|100.00
-🟢|[src/tests/tests.module.ts](packages/runner/src/tests/tests.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/tests.service.ts](packages/runner/src/tests/tests.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/ticket-expand.ts](packages/runner/src/tests/ticket-expand.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/ticket-verdict.ts](packages/runner/src/tests/ticket-verdict.ts)|100.00|100.00|100.00|100.00

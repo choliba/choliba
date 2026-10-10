@@ -1,10 +1,8 @@
 import { Module, type DynamicModule } from '@nestjs/common';
 
-import { AgentsModule } from '@choliba/agents/nest';
 import { PlatformModule, RootModule, RuntimeModule } from '@choliba/core/nest';
 import { versionLine, type Platform, type Shell } from '@choliba/core';
 import { ProjectsModule } from '@choliba/projects/nest';
-import { TestsModule } from '@choliba/runner/nest';
 import { TerminalModule } from '@choliba/terminal/nest';
 
 import { CheckModule } from './check/nest';
@@ -16,7 +14,8 @@ import { ToolingModule } from './tooling/nest';
 
 /**
  * The commands of choliba still on Nest, on the platform and runtime `main.ts` reads from Bun and the process. The root
- * help also lists the commands already in `shell`, so `choliba --help` shows them all.
+ * help also lists the commands already in `shell`, so `choliba --help` shows them all, and hands a first word that is no
+ * command (`choliba <agent> …`) to the shell's fallback.
  */
 @Module({})
 export class AppModule {
@@ -32,10 +31,9 @@ export class AppModule {
           groups: ['Commands', 'Agents'],
           order: CHOLIBA_ORDER,
           entries: () => shell.entries(),
+          fallback: shell.fallback,
         }),
-        AgentsModule,
         ProjectsModule,
-        TestsModule,
         TerminalModule,
         CheckModule,
         ToolingModule,

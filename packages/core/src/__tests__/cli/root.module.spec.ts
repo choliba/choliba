@@ -122,6 +122,22 @@ describe('RootModule', () => {
     expect(err).toBe("comando desconhecido: revisor.\nRun 'demo --help' for usage.\n");
   });
 
+  it('hands a word that is no command to the fallback the app gives, when none is registered', async () => {
+    const seen: (readonly string[])[] = [];
+    const platform = fakePlatform({ argv: ['revisor', 'x'] });
+    const fallback = {
+      runUnknown: (argv: readonly string[]): Promise<number> => {
+        seen.push(argv);
+        return Promise.resolve(5);
+      },
+    };
+
+    const code = await runCommand([RootModule.forRoot({ ...ROOT, fallback }), CommandsModule], platform);
+
+    expect(code).toBe(5);
+    expect(seen).toEqual([['revisor', 'x']]);
+  });
+
   it('lists nothing when the help spec has no commands', async () => {
     const platform = fakePlatform({ argv: ['__entries'] });
     const code = await runCommand([RootModule.forRoot(ROOT)], platform, [

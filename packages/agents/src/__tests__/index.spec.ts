@@ -39,6 +39,14 @@ describe('public entrypoint', () => {
 
     expect(typeof agents.renderEvent).toBe('function');
     expect(typeof agents.runAgent).toBe('function');
+    expect(agents.agentsShell.name).toBe('@choliba/agents');
+    expect(agents.agentsCommand.name).toBe('agents');
+    expect(typeof agents.agentsEntries).toBe('function');
+    expect(agents.AGENTS.name).toBe('AgentsService');
+    expect(agents.AGENT_PROVIDERS.name).toBe('ProviderRegistry');
+    expect(new agents.ClaudeAgentProvider().id).toBe('claude');
+    expect(new agents.CursorAgentProvider().id).toBe('cursor');
+    expect(agents.AgentsService).toBeDefined();
   });
 
   it('exposes a working command definition end to end through the barrel', () => {

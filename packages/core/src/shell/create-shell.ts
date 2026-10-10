@@ -1,4 +1,4 @@
-import { messageOf } from '../cli';
+import { messageOf, type RootFallback } from '../cli';
 import type { CommandEntry } from '../help';
 import type { Platform } from '../platform';
 import { Container, token } from './container';
@@ -17,6 +17,21 @@ export interface Shell {
   entries(): readonly CommandEntry[];
   /** Runs the command the platform's command line names and resolves to its exit code. */
   run(): Promise<number>;
+  /** What runs a first word that is no command, when a module has it: what the Nest root hands such a word to. */
+  readonly fallback: RootFallback | undefined;
+}
+
+type Action = (container: Container, io: ShellIo) => Promise<void>;
+
+/** The one module's fallback; two modules each claiming the words that are no command is a bug in the app's list. */
+function fallbackOf(modules: readonly ShellModule[]): Action | undefined {
+  const owners = modules.filter((module) => module.fallback !== undefined);
+  if (owners.length > 1) {
+    throw new Error(
+      `mais de um módulo trata a palavra que não é comando: ${owners.map(({ name }) => name).join(', ')}.`,
+    );
+  }
+  return owners[0]?.fallback;
 }
 
 /** `read()`, or `fallback` when it throws (a workspace that cannot be read leaves the help and completion quiet). */
@@ -56,24 +71,33 @@ export function createShell(platform: Platform, modules: readonly ShellModule[])
   }
   const byWord = commandsByWord(modules);
   const commands = modules.flatMap((module) => module.commands);
+  const fallback = fallbackOf(modules);
+
+  /** Runs `action` on `argv`: what it throws is its message on stderr and exit code 1, as with Nest. */
+  async function execute(action: Action, argv: readonly string[]): Promise<number> {
+    const io = new ShellIo({ argv, stdout: platform.stdout, stderr: platform.stderr });
+    try {
+      await action(container, io);
+    } catch (error) {
+      io.fail(messageOf(error));
+    }
+    return io.exitCode();
+  }
 
   return {
     container,
     has: (word) => word !== undefined && byWord.has(word),
     entries: () => commands.flatMap((command) => safely(() => command.help?.(container) ?? [], [])),
-    async run() {
+    run() {
       const [first] = platform.argv;
       const command = first === undefined ? undefined : byWord.get(first);
       if (command === undefined) {
-        throw new Error(`a linha de comando não começa com um comando da tabela: ${platform.argv.join(' ')}`);
+        return Promise.reject(
+          new Error(`a linha de comando não começa com um comando da tabela: ${platform.argv.join(' ')}`),
+        );
       }
-      const io = new ShellIo(platform);
-      try {
-        await command.run(container, io);
-      } catch (error) {
-        io.fail(messageOf(error));
-      }
-      return io.exitCode();
+      return execute(command.run, platform.argv);
     },
+    fallback: fallback === undefined ? undefined : { runUnknown: (argv) => execute(fallback, argv) },
   };
 }

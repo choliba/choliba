@@ -5,7 +5,6 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./nest": "./src/nest.ts",
     "./shared/env": "./shared/env.ts",
     "./shared/pages/base-page": "./shared/pages/base-page.ts"
   },

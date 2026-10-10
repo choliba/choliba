@@ -2,13 +2,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { Test } from '@nestjs/testing';
+import { complete, coreShell, createShell, describe as describeWords, formatSuggestions } from '@choliba/core';
+import { fakePlatform, replace, runShell, type FakePlatform } from '@choliba/core/testing';
 
-import { complete, describe as describeWords, formatSuggestions } from '@choliba/core';
-import { PlatformModule } from '@choliba/core/nest';
-import { fakePlatform, runCommand, type FakePlatform } from '@choliba/core/testing';
-
-import { RUNNER_ROOT, TESTS_HOOKS, TestsModule, TestsService, type TestsHooks } from '../../nest';
+import { RUNNER_ROOT, runnerShell, TESTS, TESTS_HOOKS, type TestsHooks, type TestsService } from '../..';
 
 interface Workspace {
   readonly root: string;
@@ -45,9 +42,9 @@ async function tests(
   hooks: TestsHooks,
 ): Promise<{ code: number; platform: FakePlatform }> {
   const platform = fakePlatform({ argv: ['tests', ...args], cwd });
-  const code = await runCommand([TestsModule], platform, [
-    { provide: TESTS_HOOKS, useValue: { stdinIsTTY: false, ...hooks } },
-    { provide: RUNNER_ROOT, useValue: cwd },
+  const code = await runShell([coreShell, runnerShell], platform, [
+    replace(TESTS_HOOKS, { stdinIsTTY: false, ...hooks }),
+    replace(RUNNER_ROOT, cwd),
   ]);
   return { code, platform };
 }
@@ -107,9 +104,9 @@ describe('choliba tests — color', () => {
       const colored = fakePlatform({ argv: ['tests', '--list'], cwd: root, env: { FORCE_COLOR: '1' } });
       const plain = fakePlatform({ argv: ['tests', '--list'], cwd: root, env: { NO_COLOR: '1' } });
       for (const platform of [colored, plain]) {
-        await runCommand([TestsModule], platform, [
-          { provide: TESTS_HOOKS, useValue: { stdinIsTTY: false, spawnPlaywright } },
-          { provide: RUNNER_ROOT, useValue: root },
+        await runShell([coreShell, runnerShell], platform, [
+          replace(TESTS_HOOKS, { stdinIsTTY: false, spawnPlaywright }),
+          replace(RUNNER_ROOT, root),
         ]);
       }
 
@@ -121,30 +118,22 @@ describe('choliba tests — color', () => {
     }));
 });
 
-describe('TestsModule', () => {
-  it("finds the runner's Playwright config on its own", async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [PlatformModule.forRoot(fakePlatform()), TestsModule],
-    }).compile();
+describe('runnerShell', () => {
+  it("finds the runner's Playwright config on its own", () => {
+    const { container } = createShell(fakePlatform(), [coreShell, runnerShell]);
 
-    expect(fs.existsSync(path.join(moduleRef.get<string>(RUNNER_ROOT), 'playwright.config.ts'))).toBe(true);
+    expect(fs.existsSync(path.join(container.get(RUNNER_ROOT), 'playwright.config.ts'))).toBe(true);
   });
 });
 
 describe('TestsService.helpSpec — completion and description', () => {
-  async function specIn(cwd: string): Promise<ReturnType<TestsService['helpSpec']>> {
-    const moduleRef = await Test.createTestingModule({
-      imports: [PlatformModule.forRoot(fakePlatform({ cwd })), TestsModule],
-    })
-      .overrideProvider(RUNNER_ROOT)
-      .useValue(cwd)
-      .compile();
-    return moduleRef.get(TestsService).helpSpec();
+  function specIn(cwd: string): ReturnType<TestsService['helpSpec']> {
+    return createShell(fakePlatform({ cwd }), [coreShell, runnerShell]).container.get(TESTS).helpSpec();
   }
 
   it('completes its flags, the projects, their tickets and the values of --expect', () =>
-    withWorkspace(async ({ root }) => {
-      const spec = await specIn(root);
+    withWorkspace(({ root }) => {
+      const spec = specIn(root);
       const completions = (...words: string[]): string => formatSuggestions(complete(spec, words));
 
       expect(completions('--')).toBe('--expect\n--failures\n--help');
@@ -155,17 +144,20 @@ describe('TestsService.helpSpec — completion and description', () => {
       expect(completions('demo:')).toBe('demo:T-01\ndemo:T-02');
       expect(completions('demo:T-02')).toBe('demo:T-02');
       expect(completions('nope:')).toBe('');
+      return Promise.resolve();
     }));
 
   it('completes no project when the workspace locations cannot be read', () =>
-    withWorkspace(async ({ root }) => {
-      expect(formatSuggestions(complete(await specIn(root), ['']))).toBe('help\nversion');
+    withWorkspace(({ root }) => {
+      expect(formatSuggestions(complete(specIn(root), ['']))).toBe('help\nversion');
+      return Promise.resolve();
     }, false));
 
   it('describes itself, examples after the first line', () =>
-    withWorkspace(async ({ root }) => {
-      expect(describeWords(await specIn(root), []).split('\n')[0]).toBe(
+    withWorkspace(({ root }) => {
+      expect(describeWords(specIn(root), []).split('\n')[0]).toBe(
         'Roda os testes E2E dos projetos com o Playwright. Sem PROJECT, roda todos os projetos.',
       );
+      return Promise.resolve();
     }));
 });

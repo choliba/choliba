@@ -13,6 +13,11 @@ export interface RootOptions extends RootLayout {
    * `undefined` completes from this CLI's spec.
    */
   readonly delegateComplete?: (words: readonly string[]) => string | undefined;
+  /**
+   * What runs a first word that is no command when no provider is registered with `@RegisterRootFallback()`: the
+   * shell's, while the app runs on both.
+   */
+  readonly fallback?: RootFallback | undefined;
 }
 
 /**

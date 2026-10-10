@@ -33,3 +33,6 @@ export * from './steps/step-constants';
 export * from './steps/step-registry';
 export * from './steps/working-tree-diff';
 export { agentsShell } from './agents-shell';
+export { agentsCommand, agentsEntries } from './agents.command';
+export { AGENT_PROVIDERS, AGENTS } from './agents.constants';
+export { AgentsService, type AgentsPlatform } from './agents.service';

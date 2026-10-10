@@ -1,9 +1,8 @@
 import type { PlanContentContext, PlannedFile, ProviderRequest, StreamParser } from './interfaces/provider.interface';
 
 /**
- * The contract every agent provider (claude, cursor…) meets, and its injection token: a provider module
- * registers one subclass with `@RegisterAgentProvider()`, and the registry finds it. Adding a provider is
- * adding a module.
+ * The contract every agent provider (claude, cursor…) meets. Adding a provider is adding its subclass to the list
+ * `agentsShell` builds the registry from.
  */
 export abstract class AgentProvider {
   /** What `--provider`, `--<id>` and `CHOL_AGENTS_PROVIDER` call it. */
