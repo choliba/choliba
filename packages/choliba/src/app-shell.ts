@@ -12,6 +12,7 @@ import {
 import { projectsShell } from '@choliba/projects';
 import { runnerShell } from '@choliba/runner';
 
+import { addCommand } from './add';
 import { checkCommand } from './check';
 import { CHOLIBA_ORDER, CHOLIBA_ROOT, cholibaManifest, PACKAGE_NAME } from './help';
 import { RUNTIME, type Runtime } from './runtime';
@@ -19,7 +20,7 @@ import { setupCommand } from './setup';
 import { formatCommand, lintCommand, TOOLS, ToolsService } from './tooling';
 
 /**
- * The commands of the choliba app itself in the shell, on its `runtime`: `check`, `lint`, `format` and `setup`. The
+ * The commands of the choliba app itself in the shell, on its `runtime`: `add`, `check`, `lint`, `format` and `setup`. The
  * app's last module, as only the app has a runtime.
  */
 export function cholibaShell(runtime: Runtime): ShellModule {
@@ -35,7 +36,7 @@ export function cholibaShell(runtime: Runtime): ShellModule {
       container.provide(RUNTIME, () => runtime);
       container.provide(TOOLS, (c) => new ToolsService(c.get(RUNTIME), c.get(CONFIG), c.get(PLATFORM).which));
     },
-    commands: [checkCommand, lintCommand, formatCommand, setupCommand],
+    commands: [addCommand, checkCommand, lintCommand, formatCommand, setupCommand],
   };
 }
 

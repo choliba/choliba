@@ -72,7 +72,7 @@ export function createProject(
   }
   if (!fs.existsSync(templatesDir)) {
     throw new ProjectsError(
-      `Template de projeto não encontrado em ${templatesDir}. Crie esse diretório antes de rodar choliba generate project.`,
+      `Template de projeto não encontrado em ${templatesDir}. Reinstale o choliba, que traz esse diretório.`,
     );
   }
   const missing = [projectConfigFile(templatesDir), projectEnvExampleFile(templatesDir)].filter(

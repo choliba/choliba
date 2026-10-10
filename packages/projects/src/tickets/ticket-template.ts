@@ -9,7 +9,7 @@ import { fullTicket, listTicketSuffixes, resolveTicketsFolder, ticketFilePath } 
 
 const TEMPLATE_EXTENSION = '.json';
 
-/** `templates/project/` of this package: what `generate project` copies into a new project. */
+/** `templates/project/` of this package: what `choliba setup` copies into the example project. */
 export function projectTemplatesDir(): string {
   return findResource(path.join('templates', 'project'), __dirname);
 }
