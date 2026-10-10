@@ -19,7 +19,7 @@ export const home = {
     image: { src: '/owl-logo-choliba.svg', alt: 'A coruja do choliba' },
     actions: [
       { theme: 'brand', text: 'Começar', link: '/primeiros-passos' },
-      { theme: 'alt', text: 'Índice', link: '/indice' },
+      { theme: 'alt', text: 'Referência', link: '/referencia/cli' },
       { theme: 'alt', text: 'GitHub', link: 'https://github.com/choliba/choliba' },
     ],
   },
@@ -34,19 +34,14 @@ export const home = {
     {
       title: 'Guias',
       details:
-        'Escrever um agente, instalar agentes, skills e MCPs, e ver o que uma execução faria com <code>--dry-run</code>.',
+        'Escrever um agente e instalar agentes, skills e MCPs.',
       link: '/guias/escrever-um-agente',
       linkText: 'Ver os guias',
     },
     {
-      title: 'Conceitos',
-      details: 'A pasta de trabalho, o que acontece numa execução, os critérios e portões dos testes e a segurança.',
-      link: '/conceitos/execucao',
-      linkText: 'Entender como funciona',
-    },
-    {
       title: 'Referência',
-      details: 'Cada comando da CLI, cada chave do <code>agent.yaml</code> e cada variável do <code>.env</code>.',
+      details:
+        'Cada comando da CLI, a segurança de cada agente, cada chave do <code>agent.yaml</code> e cada variável do <code>.env</code>.',
       link: '/referencia/cli',
       linkText: 'Consultar',
     },

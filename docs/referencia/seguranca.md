@@ -23,7 +23,7 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
   a pasta antes dele inteira.
 - **Exceções no deny.** Em `deny.read`, `deny.write` e `deny.delete`, `!caminho` tira esse caminho de um deny da
   mesma lista, como no `.gitignore` (veja
-  [Exceções no deny](../referencia/agent-yaml.md#exceções-no-deny)). Nenhum provider entende `!`, então o choliba
+  [Exceções no deny](agent-yaml.md#exceções-no-deny)). Nenhum provider entende `!`, então o choliba
   resolve antes: o deny que contém a exceção vira tudo o que há dentro dele, menos o caminho até ela, lido do disco
   no começo da execução. Assim Claude e Cursor recebem regras que não se contradizem e chegam ao mesmo resultado.
   Limite: o que for criado depois, numa dessas pastas, fica fora do deny (no Claude continua bloqueado, porque nada
@@ -39,7 +39,7 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
 - **Ferramentas da run.** O que só os agentes usam (apagar, o navegador, o leitor de trace) não é comando público do
   choliba: é um script que ele cria ao lado da pasta da execução, libera só para aquela sessão, nega para escrita e
   apaga no fim. O apagar resolve cada caminho antes de agir e recusa o que sai de `allow.delete`. Veja
-  [Ferramentas da run](../referencia/agent-yaml.md#ferramentas-da-run).
+  [Ferramentas da run](agent-yaml.md#ferramentas-da-run).
 - **Nenhum agente delega.** Nenhum agente chama um subagente nem põe outro agente para trabalhar por ele, e isso não
   se configura. O prompt de todo agente diz isso. No Claude, a ferramenta de subagente (`Agent`) nem existe na
   sessão. O Cursor não tem permissão que a tire, então o choliba interrompe a execução no primeiro `Task`, com
@@ -50,4 +50,4 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
   Cursor, que soma os MCPs do `~/.cursor/mcp.json` do usuário, o choliba também nega os que o agente não declara.
 - **`steps` não passam pelas permissões.** Os passos são executados pelo choliba, fora da sessão do modelo: um
   passo pode fazer o que o modelo não pode (o `docs-updater` proíbe o modelo de rodar o Prettier e o roda no
-  `steps.execute.after`). Veja [Steps](../referencia/agent-yaml.md#steps).
+  `steps.execute.after`). Veja [Steps](agent-yaml.md#steps).
