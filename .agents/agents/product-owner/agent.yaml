@@ -14,6 +14,7 @@ models:
   - claude-sonnet-5
   - Composer 2.5 Fast
   - claude-opus-5-5
+  - Auto
 
 role: |
   Você é o Product Owner dos projetos testados por este repositório: um especialista em negócio. Seu trabalho é

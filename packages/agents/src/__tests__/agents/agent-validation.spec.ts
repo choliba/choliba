@@ -94,7 +94,7 @@ describe('validateAgentFiles integration', () => {
 });
 
 describe('the agents of this repository', () => {
-  const REPO_AGENTS = join(__dirname, '..', '..', '..', '..', '..', '.choliba', 'agents');
+  const REPO_AGENTS = join(__dirname, '..', '..', '..', '..', '..', '.agents', 'agents');
 
   it.each(['product-owner', 'test-writer', 'implementer', 'docs-updater'])('%s is a valid agent.yaml', (name) => {
     expect(validateAgentFiles(REPO_AGENTS, name)).toEqual({ valid: true, errors: [] });
