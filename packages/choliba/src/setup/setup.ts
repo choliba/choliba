@@ -31,10 +31,8 @@ import { createProject, projectTemplatesDir } from '@choliba/projects';
 export const NEXT_STEPS = [
   'Próximos passos:',
   '  1. rode o exemplo: bunx playwright install chromium (uma vez) e bun chol:tests exemplo',
-  '  2. suas aplicações em app/<app>/, e um projeto de teste (em projects/) para cada uma:',
-  '     bun chol:project:create --app-dir app/<app> --base-url <url>',
-  '  3. instale agentes, skills e MCPs: bun chol:install <pasta, repositório git ou pacote npm> [--path agents/<nome>]',
-  '     (vão para .choliba/agents/<nome>/, .choliba/skills/<nome>/ e .choliba/mcps/<nome>.json)',
+  '  2. suas aplicações em app/<app>/, e um projeto de teste em projects/ para cada uma (projects/exemplo é o modelo)',
+  '  3. agentes, skills e MCPs ficam em .choliba/agents/<nome>/, .choliba/skills/<nome>/ e .choliba/mcps/<nome>.json',
   '  4. bun chol:check, bun chol:lint, bun chol:format e bun chol:help',
 ].join('\n');
 
