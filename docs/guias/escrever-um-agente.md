@@ -128,4 +128,4 @@ No prompt, os MCPs aparecem num bloco `<mcps>`, com as tools de cada servidor e 
 
 O agente só usa os MCPs que declara. Chamar uma tool de um servidor não declarado, ou uma tool fora das que o item
 lista, interrompe a execução com código 1. Num agente sem `mcps`, procurar tools de MCP (o `GetMcpTools` do
-Cursor, por exemplo) também interrompe. Veja [Segurança](../conceitos/seguranca.md).
+Cursor, por exemplo) também interrompe. Veja [Segurança](../referencia/seguranca.md).
