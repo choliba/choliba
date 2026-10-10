@@ -23,10 +23,8 @@ CHOL_PROJECTS_DIR=
 # playwright-trace roda (padrão: .cache/playwright-cli).
 # CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR=.cache/playwright-cli
 
-# MCPs: cada ${NOME} dos seus .choliba/mcps/*.json vem daqui. O mcp-app (instalado com o agente product-owner)
-# precisa da pasta onde ele foi clonado e compilado e da pasta dos logs dele, de preferência absolutas.
-# CHOL_MCP_APP_DIR=
-# CHOL_MCP_APP_LOG_DIR=
+# MCPs: cada ${NOME} dos seus .choliba/mcps/*.json vem daqui. Um caminho relativo é resolvido de onde o provider
+# sobe o servidor, então prefira caminhos absolutos.
 
 # Opcional: as cores do choliba, papel.nome=cor separados por vírgula (ex.: agents.test-writer=bright-red).
 # Cores: red, green, yellow, blue, magenta, cyan, white, gray e os tons claros bright-red, bright-green,

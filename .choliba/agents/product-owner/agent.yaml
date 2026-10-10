@@ -139,24 +139,6 @@ skills:
       Um `snapshot` descreve a tela para você navegar; ele não entra no ticket, nem os `ref`. No ticket vai o que um
       usuário veria: textos, mensagens, campos pelo rótulo, botões pelo nome.
 
-mcps:
-  mcp-app:
-    tools:
-      - jira_get_issue
-      - jira_search
-      - jira_search_by_filter
-      - use_environment
-      - list_environments
-      - get_current_environment
-    instructions: |
-      O Jira: use quando o pedido citar uma chave (ex.: `ABC-123`) ou quando um ticket de lá der contexto ao pedido.
-      Leia a issue antes de usar a aplicação: `jira_get_issue` lê uma issue; `jira_search` e `jira_search_by_filter`
-      buscam. Antes da primeira chamada, veja o ambiente com `get_current_environment` (e `list_environments`); troque
-      com `use_environment` só se o pedido pedir outro. O Jira conta o que foi pedido; o comportamento você confirma
-      na aplicação, que continua sendo a fonte de verdade: não copie para o ticket o que ela não confirmar. Nada de
-      credencial, token ou dado pessoal vindo do Jira no ticket. As outras tools do servidor (código, banco, logs,
-      GitLab) ficam de fora de propósito: são implementação.
-
 permissions:
   allow:
     read:

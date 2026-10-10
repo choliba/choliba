@@ -74,14 +74,14 @@ describe('formatMcps', () => {
   it('lists each server with its tools and how the agent uses it', () => {
     expect(
       formatMcps([
-        { name: 'mcp-app', tools: ['jira_get_issue', 'jira_search'], instructions: 'Use for Jira.\n' },
+        { name: 'issues', tools: ['jira_get_issue', 'jira_search'], instructions: 'Use for Jira.\n' },
         { name: 'docs' },
       ]),
     ).toBe(
       [
         '<mcps>',
         'Enforced by the command: these are the only MCP servers of this session, and each only has the tools listed.',
-        '<mcp name="mcp-app" tools="jira_get_issue, jira_search">',
+        '<mcp name="issues" tools="jira_get_issue, jira_search">',
         'Use for Jira.',
         '</mcp>',
         '<mcp name="docs" tools="every tool"></mcp>',
@@ -108,7 +108,7 @@ describe('wrapInstructions', () => {
   });
 
   it('puts the MCP servers after the permissions and before the text', () => {
-    const wrapped = wrapInstructions(fakeAgent({ mcps: [{ name: 'mcp-app' }] }));
+    const wrapped = wrapInstructions(fakeAgent({ mcps: [{ name: 'issues' }] }));
 
     // The tag on a line of its own: the permissions name <mcps> in a sentence too.
     expect(wrapped.indexOf('</permissions>')).toBeLessThan(wrapped.indexOf('\n<mcps>\n'));

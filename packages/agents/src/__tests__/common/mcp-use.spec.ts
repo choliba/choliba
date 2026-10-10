@@ -2,9 +2,9 @@ import { claudeMcpUse } from '../../common/mcp-use';
 
 describe('claudeMcpUse', () => {
   it('reads mcp__<server>__<tool> as a call to that tool of that server', () => {
-    expect(claudeMcpUse('mcp__mcp-app__get_issue', undefined)).toEqual({
+    expect(claudeMcpUse('mcp__issues__get_issue', undefined)).toEqual({
       kind: 'call',
-      server: 'mcp-app',
+      server: 'issues',
       tool: 'get_issue',
     });
     expect(claudeMcpUse('mcp__git__log__all', undefined)).toEqual({ kind: 'call', server: 'git', tool: 'log__all' });

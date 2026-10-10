@@ -94,7 +94,7 @@ function serverPaths(
 
 /**
  * Fails when a server that runs a `command` points at a file that is not there (an absolute `command` or argument,
- * like `${CHOL_MCP_APP_DIR}/dist/main.js` before the server is built): the provider would start the session
+ * like `${DATA_DIR}/dist/main.js` before the server is built): the provider would start the session
  * without it, and the agent would look for its tools in vain. When the path came from a variable, says which.
  */
 function assertServerFiles(

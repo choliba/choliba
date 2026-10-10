@@ -41,7 +41,7 @@ skills:
       Rode bunx choliba playwright-cli.
   playwright-trace:
 mcps:
-  mcp-app:
+  issues:
     tools: [jira_get_issue]
     instructions: Use quando o pedido citar uma issue.
 
@@ -211,11 +211,11 @@ describe('validateAgentYamlV1', () => {
   });
 
   it('accepts mcps as a list of names or a map to tools, instructions or null', () => {
-    expect(validate({ ...minimal(), mcps: ['mcp-app'] }).valid).toBe(true);
-    expect(validate({ ...minimal(), mcps: { 'mcp-app': null, other: { tools: ['a'] } } }).valid).toBe(true);
-    expect(validate({ ...minimal(), mcps: { 'mcp-app': { instructions: 'Use.' } } }).valid).toBe(true);
-    expect(validate({ ...minimal(), mcps: { 'mcp-app': { tools: [] } } }).valid).toBe(false);
-    expect(validate({ ...minimal(), mcps: { 'mcp-app': {} } }).valid).toBe(false);
+    expect(validate({ ...minimal(), mcps: ['issues'] }).valid).toBe(true);
+    expect(validate({ ...minimal(), mcps: { issues: null, other: { tools: ['a'] } } }).valid).toBe(true);
+    expect(validate({ ...minimal(), mcps: { issues: { instructions: 'Use.' } } }).valid).toBe(true);
+    expect(validate({ ...minimal(), mcps: { issues: { tools: [] } } }).valid).toBe(false);
+    expect(validate({ ...minimal(), mcps: { issues: {} } }).valid).toBe(false);
   });
 
   it('accepts skills as a list of names or a map to instructions or null', () => {

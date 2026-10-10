@@ -136,8 +136,8 @@ describe('parseCursorToolCall', () => {
         mcp: { kind: 'call', server: 'git', tool: 'git_status' },
       },
     ]);
-    expect(parseCursorToolCall(started({ providerIdentifier: 'mcp-app', toolName: 'get_issue' }))[0]).toMatchObject({
-      mcp: { kind: 'call', server: 'mcp-app', tool: 'get_issue' },
+    expect(parseCursorToolCall(started({ providerIdentifier: 'issues', toolName: 'get_issue' }))[0]).toMatchObject({
+      mcp: { kind: 'call', server: 'issues', tool: 'get_issue' },
     });
     // Without a tool name it cannot be checked as a call: it is taken as a look at the server.
     expect(parseCursorToolCall(started({ serverIdentifier: 'git' }))[0]).toMatchObject({
@@ -164,8 +164,8 @@ describe('parseCursorToolCall', () => {
       mcp: { kind: 'discovery' },
     });
     expect(parseCursorToolCall(started({ server: 'cursor' }))[0]).toHaveProperty('mcp', { kind: 'discovery' });
-    expect(parseCursorToolCall(started({ server: 'mcp-app' }))[0]).toMatchObject({
-      mcp: { kind: 'discovery', server: 'mcp-app' },
+    expect(parseCursorToolCall(started({ server: 'issues' }))[0]).toMatchObject({
+      mcp: { kind: 'discovery', server: 'issues' },
     });
   });
 

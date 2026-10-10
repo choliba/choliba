@@ -182,17 +182,17 @@ describe("the user's own MCP servers", () => {
       expect(userMcpServers(tmp.path)).toEqual([]);
       writeFileSync(file, JSON.stringify(['x']));
       expect(userMcpServers(tmp.path)).toEqual([]);
-      writeFileSync(file, JSON.stringify({ mcpServers: { git: {}, 'mcp-app': {} } }));
-      expect(userMcpServers(tmp.path)).toEqual(['git', 'mcp-app']);
+      writeFileSync(file, JSON.stringify({ mcpServers: { git: {}, issues: {} } }));
+      expect(userMcpServers(tmp.path)).toEqual(['git', 'issues']);
     } finally {
       tmp.cleanup();
     }
   });
 
   it('denies each one the agent does not declare', () => {
-    const declared = [{ name: 'mcp-app', config: {}, path: '/m/mcp-app.json' }];
+    const declared = [{ name: 'issues', config: {}, path: '/m/issues.json' }];
 
-    expect(undeclaredMcpTokens(['git', 'mcp-app'], declared)).toEqual(['Mcp(git:*)']);
+    expect(undeclaredMcpTokens(['git', 'issues'], declared)).toEqual(['Mcp(git:*)']);
     expect(undeclaredMcpTokens([], declared)).toEqual([]);
   });
 });

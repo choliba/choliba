@@ -91,7 +91,7 @@ describe('formatDryRun', () => {
     const agent = {
       ...request().agent,
       skills: [{ name: 'playwright-cli' }, { name: 'trace' }],
-      mcps: [{ name: 'mcp-app', tools: ['a', 'b'] }, { name: 'docs' }],
+      mcps: [{ name: 'issues', tools: ['a', 'b'] }, { name: 'docs' }],
       steps: {
         ...NO_MODE_STEPS,
         plan: {
@@ -113,7 +113,7 @@ describe('formatDryRun', () => {
     );
     expect(text).toContain(' 2. [CLI]    cria o ticket /p/tickets/1.json');
     expect(text).toContain('claude · modelo claude-sonnet-5 · modo plan');
-    expect(text).toContain('skills: playwright-cli, trace · MCPs: mcp-app (2 tools), docs (todas as tools)');
+    expect(text).toContain('skills: playwright-cli, trace · MCPs: issues (2 tools), docs (todas as tools)');
     expect(text).toContain('             plan.after.always:\n               1/1 run: rm -f d.patch');
     expect(text).toContain(' 5. [CLI]    fecha o ticket:');
   });
