@@ -1,5 +1,4 @@
-import type { CommandIo } from '@choliba/core/nest';
-import { messageOf, type CommandSpec, type Suggestions } from '@choliba/core';
+import { messageOf, type CommandSpec, type ShellIo, type Suggestions } from '@choliba/core';
 
 import { UsageError } from './errors';
 
@@ -20,7 +19,7 @@ export function commandHelp(spec: CommandSpec, name: string): CommandSpec {
  * error with where to read the usage, and any other error as a message on stderr with exit code 1.
  */
 export function runSubcommand(
-  io: CommandIo,
+  io: ShellIo,
   spec: () => CommandSpec,
   name: string,
   body: (args: readonly string[]) => void,
