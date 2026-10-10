@@ -21,12 +21,12 @@ Detalhes e o passo a passo: skill `git-workflow` (`.agents/skills/git-workflow/S
 ## Stack
 
 Monorepo Bun (`packages/*`, `apps/*`), TypeScript 6.0 com tipagem dura (nunca `any`), ESLint, Prettier com
-`.editorconfig`, Jest (nunca `bun test`) com ratchet de cobertura. Tudo roda com `bun run check`. A estrutura é
-NestJS 11 + nest-commander, sem HTTP: cada pacote é uma biblioteca Nest (`@choliba/<pkg>` puro,
-`@choliba/<pkg>/nest` com módulos, services e comandos) e `packages/choliba` é o app (skill `nestjs`).
+`.editorconfig`, Jest (nunca `bun test`) com ratchet de cobertura. Tudo roda com `bun run check`. Sem HTTP: cada
+pacote é uma biblioteca com uma entrada (`@choliba/<pkg>`, o `ShellModule` inclusive) e `packages/choliba` é o app,
+cujo `main.ts` só monta a plataforma e o runtime e chama a casca (skill `cli-shell`).
 
 Skills de desenvolvimento do projeto em `.agents/skills/`: `plans`, `add-workspace-package`, `quality-gates`, `coverage-ratchet`,
-`git-workflow`, `object-calisthenics`, `nestjs`, `code-standard`, `cli-guidelines`; e `documentation`, que também é do agente
+`git-workflow`, `object-calisthenics`, `cli-shell`, `code-standard`, `cli-guidelines`; e `documentation`, que também é do agente
 `docs-updater`, em `.agents/skills/`. Quando usar cada uma: a `description` do `SKILL.md` dela; o padrão de cada uma e o que o confere: tabela "Padrões do
 projeto" do [`CONTRIBUTING.md`](CONTRIBUTING.md). Como o código é organizado: [`ARCHITECTURE.md`](ARCHITECTURE.md). Os agentes deste
 repositório ficam em `.agents/agents/` e as skills deles em `.agents/skills/`. `.choliba/` é o layout de uma pasta de

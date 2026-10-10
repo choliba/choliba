@@ -142,8 +142,8 @@ Keep a Changelog and Common Changelog: the releases (one per release merge on `m
 day open and each older day folded under its date and versions; each release titled with its version and PR. The
 release itself is titled with the current version and date (the tag stays the channel) and the notes open with it,
 since the `.tgz` in Assets is that version. Inside each release, the release PR's `## Destaques`, then the commits
-grouped by type (Novidades, Correções, Alterações, Desempenho, Documentação) and, inside a type, by scope, as the
-NestJS releases do, each item led by its PR; `**Breaking:**` ones first with their footer as the migration note, and
+grouped by type (Novidades, Correções, Alterações, Desempenho, Documentação) and, inside a type, by scope,
+each item led by its PR; `**Breaking:**` ones first with their footer as the migration note, and
 refactoring, tests and maintenance folded under "Interno". A squash title's type and scope are what readers see
 there, so a change for users is never typed `chore` or `ci`.
 Never create another tag or release by hand. The version in `packages/choliba/package.json` stays `0.0.1-dev`, the
