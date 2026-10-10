@@ -1,19 +1,22 @@
 /**
  * Mede o cold start do CLI: quanto `choliba --version` e `choliba --help` levam do início ao fim, rodando do código-fonte
  * de dentro e de fora do repositório e instalado a partir do `.tgz`, comparados a um script Bun vazio (o piso). Uso:
- * `bun run bench:startup [execuções]` (padrão 10). O cenário instalado só entra se o `.tgz` existir; gere com
- * `bun run chol:pack`.
+ * `bun run bench:startup [execuções] [--write]` (padrão 10). O cenário instalado só entra se o `.tgz` existir; gere
+ * com `bun run chol:pack`. Com `--write`, a medição também substitui a de referência no PERFORMANCE.md.
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { summarize, timingTable, type ScenarioResult } from './libs/bench-startup';
+import { format, resolveConfig } from 'prettier';
+
+import { measuredOn, summarize, timingTable, withReference, type ScenarioResult } from './libs/bench-startup';
 
 const repoRoot = join(import.meta.dirname, '..');
 const source = join(repoRoot, 'packages', 'choliba', 'src', 'main.ts');
 const tarball = join(repoRoot, 'packages', 'choliba', 'choliba-0.0.1-dev.tgz');
+const performanceFile = join(repoRoot, 'PERFORMANCE.md');
 /** Runs discarded before measuring, so the file cache is warm in every scenario alike. */
 const WARMUP = 2;
 
@@ -70,7 +73,16 @@ function scenarios(scratch: string): Scenario[] {
   return list;
 }
 
-const runs = Number(process.argv[2] ?? '10');
+/** PERFORMANCE.md with `reference` as its reference measurement, formatted as `bun run check` expects. */
+async function writeReference(reference: string): Promise<void> {
+  const document = withReference(readFileSync(performanceFile, 'utf8'), reference);
+  const options = await resolveConfig(performanceFile);
+  writeFileSync(performanceFile, await format(document, { ...options, filepath: performanceFile }));
+}
+
+const args = process.argv.slice(2);
+const write = args.includes('--write');
+const runs = Number(args.find((arg) => arg !== '--write') ?? '10');
 if (!Number.isInteger(runs) || runs < 1) {
   console.error('❌ o número de execuções deve ser um inteiro positivo.');
   process.exit(1);
@@ -83,7 +95,14 @@ try {
     `⏱️  ${String(list.length)} cenários, ${String(runs)} execuções cada (Bun ${process.versions['bun'] ?? '?'})...`,
   );
   const results = list.map((scenario) => measure(scenario, runs));
-  console.log(`\n${timingTable(results)}`);
+  const table = timingTable(results);
+  console.log(`\n${table}`);
+  if (write) {
+    await writeReference(
+      `${measuredOn(new Date(), process.versions['bun'] ?? '?', process.platform, runs)}\n\n${table}`,
+    );
+    console.log('\n📝 PERFORMANCE.md atualizado: revise a Leitura e a comparação com a medição anterior.');
+  }
   if (!existsSync(tarball)) {
     console.log('\nℹ️  Sem .tgz: rode `bun run chol:pack` para medir também o choliba instalado.');
   }
