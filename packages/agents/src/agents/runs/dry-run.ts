@@ -22,7 +22,12 @@ export interface DryRunInput {
   /** The project's application, which the CLI prepares and starts before anything else (`--project`). */
   readonly app?: Pick<ProjectEnvironment, 'baseURL' | 'setup' | 'start'>;
   /** `CHOL_SANDBOX=docker`: the image the provider runs in and what the container mounts. */
-  readonly container?: { readonly image: string; readonly mounts: readonly ContainerMount[] };
+  readonly container?: {
+    readonly image: string;
+    readonly mounts: readonly ContainerMount[];
+    /** What the agent may reach that the image keeps as its own (`isImagePath`). */
+    readonly skipped: readonly string[];
+  };
 }
 
 /** One numbered entry: who does it (the CLI or the agent) and what, one line each. */
@@ -121,6 +126,7 @@ function containerLines(container: DryRunInput['container']): readonly string[] 
   return [
     `num container (docker, imagem ${container.image}), que só vê:`,
     ...container.mounts.map((mount) => `  ${ACCESS_LABEL[mount.access]} ${mount.path}`),
+    ...container.skipped.map((path) => `  ignorado ${path} (da imagem)`),
   ];
 }
 

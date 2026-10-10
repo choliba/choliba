@@ -57,6 +57,11 @@ export interface RunAgentRequest {
   readonly launch?: (command: readonly string[]) => Launch;
 }
 
+/** The paths the agent may reach that the container leaves to the image, said before the session starts. */
+export function imageFoldersNotice(skipped: readonly string[]): string {
+  return `No container, estes caminhos são da imagem e não vêm desta máquina: ${skipped.join(', ')}.`;
+}
+
 function errorMessage(error: unknown): string {
   return String(error);
 }
@@ -119,7 +124,10 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
   let session: Session;
   try {
     const command = [...request.provider.command, ...args];
-    const launch = request.launch?.(command) ?? { command, mounts: [] };
+    const launch: Launch = request.launch?.(command) ?? { command, mounts: [], skipped: [] };
+    if (launch.skipped.length > 0) {
+      deps.stderr.write(`${imageFoldersNotice(launch.skipped)}\n`);
+    }
     session = deps.runner.start({
       label,
       command: launch.command,
