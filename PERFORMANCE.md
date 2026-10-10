@@ -23,27 +23,31 @@ depois mede o tempo de parede de cada execução. Os cenários são:
 
 ## Referência
 
-Medido em 09/10/2026, no commit `7464ad2` do `develop`, com Bun 1.4.2, Linux, Intel Core i7-12650H (16 threads) e 20
-execuções por cenário:
+Medido em 10/10/2026, com Bun 1.4.2 e Linux, 10 execuções por cenário, depois de o `main.ts` passar a despachar só
+pela tabela (sem o grafo de injeção e sem relançar o processo):
 
 | Cenário                            | mín (ms) | mediana (ms) | média (ms) | máx (ms) |
 | ---------------------------------- | -------: | -----------: | ---------: | -------: |
-| Bun vazio (piso)                   |        2 |            3 |          3 |        4 |
-| fonte, dentro do repo: `--version` |      212 |          218 |        221 |      248 |
-| fonte, dentro do repo: `--help`    |      251 |          274 |        277 |      313 |
-| fonte, fora do repo: `--version`   |      421 |          463 |        461 |      517 |
-| instalado (.tgz): `--version`      |      208 |          219 |        219 |      240 |
-| instalado (.tgz): `--help`         |      211 |          221 |        222 |      236 |
+| Bun vazio (piso)                   |        4 |            7 |          7 |        8 |
+| fonte, dentro do repo: `--version` |       83 |           87 |         86 |       88 |
+| fonte, dentro do repo: `--help`    |      117 |          120 |        121 |      128 |
+| fonte, fora do repo: `--version`   |       86 |           90 |         90 |       95 |
+| instalado (.tgz): `--version`      |       78 |           80 |         80 |       84 |
+| instalado (.tgz): `--help`         |       81 |           85 |         85 |       88 |
+
+A medição anterior (09/10/2026, 20 execuções) tinha mediana de 218 ms para `--version` dentro do repo, 274 ms para
+`--help` e 463 ms fora do repo.
 
 ## Leitura
 
-- **O tempo é o boot, não o comando.** `--version` só imprime uma linha e custa uns 220 ms, contra 3 ms do piso. Esse
-  tempo vai em carregar o NestJS, o `nest-commander`, o `reflect-metadata` e o `rxjs`, e em montar o grafo de injeção
-  inteiro, com todos os módulos, seja qual for o comando.
-- **Fora do repositório o custo dobra.** Rodando do código-fonte numa pasta sem `tsconfig.json`, o Bun não liga os
-  decorators e o `main.ts` relança um segundo processo a partir da pasta do pacote: são dois boots, uns 460 ms.
-- **Instalado custa o mesmo que o código-fonte.** O bundle junta os pacotes do workspace num arquivo, mas as
-  dependências externas e o grafo continuam iguais, então o boot não cai.
+- **O boot caiu para cerca de um terço.** `--version` no fonte, dentro do repo, foi de 218 ms para 87 ms de mediana.
+  `--help` foi de 274 ms para 120 ms.
+- **Fora do repositório não dobra mais.** Sem o segundo processo, `--version` fora fica em 90 ms, ao lado dos 87 ms
+  de dentro.
+- **Instalado fica no mesmo patamar.** O `.tgz` mede 80 ms em `--version` e 85 ms em `--help`: um arquivo só, sem
+  as dependências que o boot antigo carregava.
+- **Ainda acima do piso.** O piso desta máquina foi 7 ms. O que resta é carregar o fonte (ou o bundle) e montar a
+  tabela.
 
 ## Alvo
 
