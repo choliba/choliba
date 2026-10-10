@@ -1,10 +1,20 @@
 import { agentsShell } from '@choliba/agents';
-import { CONFIG, coreShell, createShell, PLATFORM, type Platform, type Shell, type ShellModule } from '@choliba/core';
+import {
+  CONFIG,
+  coreShell,
+  createShell,
+  PLATFORM,
+  versionLine,
+  type Platform,
+  type Shell,
+  type ShellModule,
+} from '@choliba/core';
 import { projectsShell } from '@choliba/projects';
 import { runnerShell } from '@choliba/runner';
 import { terminalShell } from '@choliba/terminal';
 
 import { checkCommand } from './check';
+import { CHOLIBA_ORDER, CHOLIBA_ROOT, cholibaManifest, PACKAGE_NAME } from './help';
 import { RUNTIME, type Runtime } from './runtime';
 import { setupCommand } from './setup';
 import { formatCommand, lintCommand, TOOLS, ToolsService } from './tooling';
@@ -16,6 +26,12 @@ import { formatCommand, lintCommand, TOOLS, ToolsService } from './tooling';
 export function cholibaShell(runtime: Runtime): ShellModule {
   return {
     name: 'choliba',
+    root: {
+      spec: CHOLIBA_ROOT,
+      version: () => versionLine(PACKAGE_NAME, cholibaManifest()),
+      groups: ['Commands', 'Agents'],
+      order: CHOLIBA_ORDER,
+    },
     provide: (container) => {
       container.provide(RUNTIME, () => runtime);
       container.provide(TOOLS, (c) => new ToolsService(c.get(RUNTIME), c.get(CONFIG), c.get(PLATFORM).which));

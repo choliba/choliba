@@ -6,8 +6,7 @@ import { resolveTheme } from './resolve-theme';
 
 /**
  * The one place that decides whether choliba colors its output and with which colors. Read once, on first
- * use, so a command that never paints never reads the workspace's `.env`. A plain class: the shell builds it, and
- * `ThemeModule` gives it to the commands still on Nest.
+ * use, so a command that never paints never reads the workspace's `.env`. A plain class: the shell builds it.
  */
 export class ThemeService {
   private resolved: Theme | undefined;

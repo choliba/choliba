@@ -34,4 +34,5 @@ export type {
   SessionStatus,
   StreamName,
 } from './interfaces/terminal.interface';
+export { TerminalService } from './terminal.service';
 export { terminalShell } from './terminal-shell';

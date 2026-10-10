@@ -1,3 +1,4 @@
+import { type ShellModule } from '@choliba/core';
 import { fakePlatform } from '@choliba/core/testing';
 
 import { CHOLIBA_SHELL, createCholibaShell } from '../app-shell';
@@ -44,5 +45,25 @@ describe('the choliba shell', () => {
 
     await expect(createCholibaShell(platform, fakeRuntime()).run()).resolves.toBe(0);
     expect(platform.stdout.text()).toContain(help);
+  });
+
+  it('lists a command a package puts in the shell, after the ones the app orders', async () => {
+    const deploy: ShellModule = {
+      name: 'deploy',
+      commands: [
+        {
+          name: 'deploy',
+          help: () => [{ name: 'deploy', description: 'Publica o site', group: 'Commands', spec: { usage: 'deploy' } }],
+          run: () => Promise.resolve(),
+        },
+      ],
+    };
+    const platform = fakePlatform({ argv: ['--help'] });
+
+    await expect(createCholibaShell(platform, fakeRuntime(), [...CHOLIBA_SHELL, deploy]).run()).resolves.toBe(0);
+
+    const help = platform.stdout.text();
+    expect(help).toContain('Publica o site');
+    expect(help.indexOf('setup')).toBeLessThan(help.indexOf('deploy'));
   });
 });
