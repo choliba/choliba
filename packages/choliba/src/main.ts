@@ -11,13 +11,12 @@ import { dirname } from 'node:path';
 import { SELF_DECLARED_DEPS_METADATA } from '@nestjs/common/constants';
 import { CommandFactory } from 'nest-commander';
 
-import { ExitStatus } from '@choliba/core/nest';
+import { CommandIo, ExitStatus } from '@choliba/core/nest';
 import { createSpawnGitRunner, takeGlobalFlags, type Platform, type Shell } from '@choliba/core';
 import { createBunProcessSpawner } from '@choliba/terminal/nest';
 
 import { createCholibaShell } from './app-shell';
 import { AppModule } from './app.module';
-import { CheckCommand } from './check/nest';
 import type { Runtime } from './runtime';
 
 // The folder a run from the sources was started in, when it had to start again from this package's folder.
@@ -42,16 +41,41 @@ const platform: Platform = {
   noColorFlag,
 };
 
-const shell = createCholibaShell(platform);
+const runtime: Runtime = {
+  entryDir: import.meta.dir,
+  script: process.argv[1] ?? '',
+  execPath: process.execPath,
+  home: homedir(),
+  resolve: (specifier) => Bun.resolveSync(specifier, import.meta.dir),
+  run: (command, args, cwd) => spawnSync(command, [...args], { stdio: 'inherit', cwd }).status ?? 1,
+  capture: (command, args, cwd) => {
+    const result = spawnSync(command, [...args], { cwd, encoding: 'utf8' });
+    return { status: result.status, stderr: result.stderr };
+  },
+  spawnDetached: (command, cwd) => {
+    Bun.spawn([...command], { cwd, stdio: ['ignore', 'ignore', 'ignore'] }).unref();
+  },
+  sleep: (ms) => Bun.sleep(ms),
+  writeTerminal: (text) => {
+    try {
+      writeFileSync('/dev/tty', text);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+};
+
+const shell = createCholibaShell(platform, runtime);
 // A command already in the shell needs no decorators, so it runs from any folder without starting again.
 process.exitCode = shell.has(argv[0]) ? await shell.run() : await runNest(shell);
 
-/** The commands still on Nest: the app module, on the platform above and Bun as the runtime. */
+/** The commands still on Nest: the app module, on the platform and the runtime above. */
 async function runNest(cholibaShell: Shell): Promise<number> {
   // From the sources, Bun takes the decorator settings only from a tsconfig.json in the current folder: from any other
   // (a subfolder of this repository, the folder an agent runs in) the `@Inject`s are dropped and every command gets
   // `undefined`. Start again from this package's folder, which has one, keeping where the command was run.
-  if (Reflect.getMetadata(SELF_DECLARED_DEPS_METADATA, CheckCommand) === undefined) {
+  if (Reflect.getMetadata(SELF_DECLARED_DEPS_METADATA, CommandIo) === undefined) {
     if (import.meta.path.endsWith('.ts') && sourceCwd === undefined) {
       const again = spawnSync(process.execPath, [import.meta.path, ...process.argv.slice(2)], {
         stdio: 'inherit',
@@ -69,31 +93,6 @@ async function runNest(cholibaShell: Shell): Promise<number> {
 
   // The command-line parser reads process.argv: it gets the line without the global flags.
   process.argv = [...process.argv.slice(0, 2), ...argv];
-
-  const runtime: Runtime = {
-    entryDir: import.meta.dir,
-    script: process.argv[1] ?? '',
-    execPath: process.execPath,
-    home: homedir(),
-    resolve: (specifier) => Bun.resolveSync(specifier, import.meta.dir),
-    run: (command, args, cwd) => spawnSync(command, [...args], { stdio: 'inherit', cwd }).status ?? 1,
-    capture: (command, args, cwd) => {
-      const result = spawnSync(command, [...args], { cwd, encoding: 'utf8' });
-      return { status: result.status, stderr: result.stderr };
-    },
-    spawnDetached: (command, cwd) => {
-      Bun.spawn([...command], { cwd, stdio: ['ignore', 'ignore', 'ignore'] }).unref();
-    },
-    sleep: (ms) => Bun.sleep(ms),
-    writeTerminal: (text) => {
-      try {
-        writeFileSync('/dev/tty', text);
-        return true;
-      } catch {
-        return false;
-      }
-    },
-  };
 
   /** Set when a command threw something it did not expect. */
   const unexpected = { failed: false };

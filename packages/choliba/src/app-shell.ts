@@ -4,11 +4,24 @@ import { projectsShell } from '@choliba/projects';
 import { runnerShell } from '@choliba/runner';
 import { terminalShell } from '@choliba/terminal';
 
-/** The commands of the choliba app itself in the shell: `check`, `setup`, `lint` and `format` move here from Nest. */
-export const cholibaShell: ShellModule = { name: 'choliba', commands: [] };
+import { RUNTIME, type Runtime } from './runtime';
 
 /**
- * Every package's commands in the shell, in a fixed order. A package adds a command to its own module, never here, so
+ * The commands of the choliba app itself in the shell, on its `runtime` (`check`, `setup`, `lint` and `format` move
+ * here from Nest). The app's last module, as only the app has a runtime.
+ */
+export function cholibaShell(runtime: Runtime): ShellModule {
+  return {
+    name: 'choliba',
+    provide: (container) => {
+      container.provide(RUNTIME, () => runtime);
+    },
+    commands: [],
+  };
+}
+
+/**
+ * The packages' commands in the shell, in a fixed order. A package adds a command to its own module, never here, so
  * moving commands of different packages to the shell never touches the same file.
  */
 export const CHOLIBA_SHELL: readonly ShellModule[] = [
@@ -17,10 +30,13 @@ export const CHOLIBA_SHELL: readonly ShellModule[] = [
   projectsShell,
   runnerShell,
   terminalShell,
-  cholibaShell,
 ];
 
-/** The shell of choliba on `platform`: the commands that no longer need Nest. */
-export function createCholibaShell(platform: Platform, modules: readonly ShellModule[] = CHOLIBA_SHELL): Shell {
-  return createShell(platform, modules);
+/** The shell of choliba on `platform` and `runtime`: the commands that no longer need Nest. */
+export function createCholibaShell(
+  platform: Platform,
+  runtime: Runtime,
+  modules: readonly ShellModule[] = CHOLIBA_SHELL,
+): Shell {
+  return createShell(platform, [...modules, cholibaShell(runtime)]);
 }
