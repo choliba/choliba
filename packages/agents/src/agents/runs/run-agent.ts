@@ -22,6 +22,7 @@ import {
 } from '../../common';
 
 import { agentRenderOptions, formatProviderLine, renderEvent } from './event-render';
+import type { Launch } from './sandbox-launch';
 import { applyRunTools } from '../../common';
 import { delegationMessage, delegationOf } from './delegation-guard';
 import { mcpViolation } from './mcp-guard';
@@ -49,6 +50,11 @@ export interface RunAgentRequest {
   readonly theme: Theme;
   /** The run tools' scripts (`planRunTools`), written next to the run folder for the session only. */
   readonly toolFiles?: readonly PlannedFile[];
+  /**
+   * How the provider's command starts once the run folder and the tools exist (`launchFor`): as it is, or in a
+   * container. Absent, as it is.
+   */
+  readonly launch?: (command: readonly string[]) => Launch;
 }
 
 function errorMessage(error: unknown): string {
@@ -112,10 +118,13 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
 
   let session: Session;
   try {
+    const command = [...request.provider.command, ...args];
+    const launch = request.launch?.(command) ?? { command, mounts: [] };
     session = deps.runner.start({
       label,
-      command: [...request.provider.command, ...args],
+      command: launch.command,
       cwd: request.providerRequest.runDir,
+      ...(launch.env === undefined ? {} : { env: launch.env }),
     });
   } catch (error) {
     deps.stderr.write(`Failed to start ${providerId}: ${errorMessage(error)}\n`);
