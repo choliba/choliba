@@ -22,3 +22,5 @@ docs/.vitepress/cache
 docs/.vitepress/dist
 # A home do site, gerada de docs/.vitepress/home.ts (bun run docs:home)
 docs/index.md
+# A página da filosofia, gerada de PHILOSOPHY.md (bun run docs:philosophy)
+docs/filosofia.md

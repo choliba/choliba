@@ -44,11 +44,14 @@ export default defineConfig({
   sitemap: { hostname: SITE_URL },
   // Each page's description is the quote under its title (scripts/libs/docs-share.ts), which also becomes its
   // `<meta name="description">`; a page without one, or with one too short or too long, stops the build. The home,
-  // generated from home.ts, has the site's.
+  // generated from home.ts, has the site's; a page generated from a file of the root (/filosofia) has the one in its
+  // frontmatter.
   transformPageData(pageData) {
     if (pageData.relativePath === 'index.md') return { description: DESCRIPTION };
+    const { description } = pageData.frontmatter;
     const source = readFileSync(path.join(DOCS, pageData.filePath), 'utf8');
-    return { description: checkDescription(pageData.filePath, pageDescription(source)) };
+    const own = typeof description === 'string' ? description : pageDescription(source);
+    return { description: checkDescription(pageData.filePath, own) };
   },
   // Built pages only, so serving the site locally sends no visits: Google Analytics on every page, the 404 too, and
   // each page's share card (Open Graph, the article's author and date, X's card and the canonical URL).
@@ -70,7 +73,7 @@ export default defineConfig({
     writeFileSync(path.join(siteConfig.outDir, 'robots.txt'), robotsTxt(SITE_URL));
   },
   markdown: {
-    // The anchors GitHub makes, which the pages already link to (`cli.md#a-aplicação-do-projeto`).
+    // The anchors GitHub makes, which the pages already link to (`comandos.md#a-aplicação-do-projeto`).
     anchor: { slugify: githubSlug },
     headers: { slugify: githubSlug },
     config: (md) => {
@@ -94,7 +97,7 @@ export default defineConfig({
         link: '/indice',
         activeMatch: '^/(indice|primeiros-passos|guias)(/|$)',
       },
-      { text: 'Referência', link: '/referencia/cli', activeMatch: '^/referencia/' },
+      { text: 'Referência', link: '/referencia/comandos', activeMatch: '^/referencia/' },
       { text: 'Releases', link: `${REPOSITORY}/releases/tag/v0.0.1-dev` },
     ],
     // From the index: a new page shows up on its own, where docs/README.md links it (scripts/libs/docs-sidebar.ts).
@@ -127,6 +130,10 @@ export default defineConfig({
     darkModeSwitchLabel: 'Tema',
     lightModeSwitchTitle: 'Tema claro',
     darkModeSwitchTitle: 'Tema escuro',
-    footer: { message: 'Pré-lançamento: muda a cada release.' },
+    // Two lines, both HTML: the state of the project, then where its principles are.
+    footer: {
+      message: 'Pré-lançamento: muda a cada release.',
+      copyright: '<a href="/filosofia">Filosofia do choliba</a>',
+    },
   },
 });

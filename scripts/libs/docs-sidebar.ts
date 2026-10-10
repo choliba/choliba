@@ -19,6 +19,12 @@ const SECTIONS: readonly { readonly folder: string; readonly text: string }[] = 
   { folder: 'referencia', text: 'Referência' },
 ];
 
+/**
+ * The pages of the root the sidebar leaves out: the index is the first page of the documentation (the Documentação
+ * item), the home is the hero and the philosophy is in the footer.
+ */
+const OFF_SIDEBAR: ReadonlySet<string> = new Set(['README.md', 'index.md', 'filosofia.md']);
+
 /** The pages `readme` links to, in the order it links them (each once). */
 function linkOrder(readme: string): readonly string[] {
   const links = [...readme.matchAll(/\]\(([^)#]+\.md)(?:#[^)]*)?\)/g)].map((match) =>
@@ -42,9 +48,7 @@ export function buildSidebar(readme: string, pages: readonly DocPage[]): readonl
     text,
     items: pages
       .filter((page) => path.posix.dirname(page.file) === (folder === '' ? '.' : folder))
-      // The index is the first page of the documentation (the Documentação item) and the home is the
-      // hero; neither is listed here.
-      .filter((page) => page.file !== 'README.md' && page.file !== 'index.md')
+      .filter((page) => !OFF_SIDEBAR.has(page.file))
       .toSorted((a, b) => rank(a.file) - rank(b.file) || a.file.localeCompare(b.file))
       .map((page) => ({ text: page.title.replaceAll('`', ''), link: `/${page.file.replace(/\.md$/, '')}` })),
   })).filter((section) => section.items.length > 0);

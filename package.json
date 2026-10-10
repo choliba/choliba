@@ -32,10 +32,12 @@
     "git:clean": "bun run scripts/git-clean.ts",
     "bench:startup": "bun run scripts/bench-startup.ts",
     "release:notes": "bun run scripts/release-notes.ts",
-    "docs:dev": "bun run docs:home && vitepress dev docs",
-    "docs:build": "bun run docs:home && vitepress build docs",
+    "docs:dev": "bun run docs:pages && vitepress dev docs",
+    "docs:build": "bun run docs:pages && vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "docs:home": "bun scripts/docs-home.ts"
+    "docs:home": "bun scripts/docs-home.ts",
+    "docs:philosophy": "bun scripts/docs-philosophy.ts",
+    "docs:pages": "bun run docs:home && bun run docs:philosophy"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

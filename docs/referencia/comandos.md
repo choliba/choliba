@@ -1,8 +1,8 @@
-# CLI
+# Comandos
 
-> Cada comando da CLI do choliba, instalada na pasta de trabalho: agentes, testes, projetos, check e setup.
+> Cada comando do choliba, instalado na pasta de trabalho: agentes, testes, projetos, check, lint, format e setup.
 
-O comando é `choliba` (alias `chol`), o binário que a pasta de trabalho instala. `bunx choliba` é esse.
+O comando é `choliba` (alias `chol`), instalado na pasta de trabalho; `bunx choliba` roda o mesmo.
 
 | Comando                                      | O que faz                                                                                    |
 | -------------------------------------------- | -------------------------------------------------------------------------------------------- |
