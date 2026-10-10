@@ -11,7 +11,6 @@ import {
 } from '@choliba/core';
 import { projectsShell } from '@choliba/projects';
 import { runnerShell } from '@choliba/runner';
-import { terminalShell } from '@choliba/terminal';
 
 import { checkCommand } from './check';
 import { CHOLIBA_ORDER, CHOLIBA_ROOT, cholibaManifest, PACKAGE_NAME } from './help';
@@ -44,13 +43,7 @@ export function cholibaShell(runtime: Runtime): ShellModule {
  * The packages' commands in the shell, in a fixed order. A package adds a command to its own module, never here, so
  * moving commands of different packages to the shell never touches the same file.
  */
-export const CHOLIBA_SHELL: readonly ShellModule[] = [
-  coreShell,
-  agentsShell,
-  projectsShell,
-  runnerShell,
-  terminalShell,
-];
+export const CHOLIBA_SHELL: readonly ShellModule[] = [coreShell, agentsShell, projectsShell, runnerShell];
 
 /** The shell of choliba on `platform` and `runtime`: the commands that no longer need Nest. */
 export function createCholibaShell(

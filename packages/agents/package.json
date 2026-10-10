@@ -12,7 +12,6 @@
   "dependencies": {
     "@choliba/core": "workspace:*",
     "@choliba/projects": "workspace:*",
-    "@choliba/terminal": "workspace:*",
     "@playwright/test": "^1.47.0",
     "ajv": "^8.20.0",
     "yaml": "^2.8.1"

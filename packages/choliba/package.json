@@ -16,7 +16,6 @@
     "@choliba/core": "workspace:*",
     "@choliba/projects": "workspace:*",
     "@choliba/runner": "workspace:*",
-    "@choliba/terminal": "workspace:*",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.47.0",
     "@types/bun": "^1.4.2",

@@ -1,5 +1,4 @@
-import type { CommandSpec, ConfigService, Platform, ThemeService } from '@choliba/core';
-import type { ProcessRunnerService } from '@choliba/terminal';
+import type { CommandSpec, ConfigService, Platform, ProcessRunnerService, ThemeService } from '@choliba/core';
 
 import type { ProviderRegistry } from '../common';
 import { agentsHelpSpec, runAgentsCli } from './runs/run-agents';

@@ -1,5 +1,6 @@
 import { LiveRegion } from '../../terminal/live-region';
-import { defaultStdout, type WritableWithColumns } from '../../terminal/writable';
+import type { WritableWithColumns } from '../../platform';
+import { defaultStdout } from '../../terminal/writable';
 
 describe('LiveRegion', () => {
   it('prints permanent output and clears live rows on stop', () => {

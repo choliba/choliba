@@ -1,5 +1,6 @@
 import { printBox } from '../../terminal/box';
-import { defaultStdout, type WritableWithColumns } from '../../terminal/writable';
+import type { WritableWithColumns } from '../../platform';
+import { defaultStdout } from '../../terminal/writable';
 
 describe('printBox', () => {
   it('writes bordered lines to the provided stream', () => {

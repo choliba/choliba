@@ -2,10 +2,7 @@ import { existsSync } from 'node:fs';
 import { constants, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { buildTheme } from '@choliba/core';
-
-import type { ProcessSpawner, SignalSource, Writable } from '@choliba/terminal';
-import { ProcessRunnerService } from '@choliba/terminal';
+import { buildTheme, ProcessRunnerService, type ProcessSpawner, type SignalSource, type Writable } from '@choliba/core';
 
 import type { AgentDefinition } from '../../../common/interfaces/agent.interface';
 import type { AgentEvent } from '../../../common/interfaces/event.interface';
