@@ -5,7 +5,7 @@ function call(name: string, mcp?: McpUse): AgentEvent {
   return { type: 'tool-call', id: 'c1', name, summary: '', ...(mcp === undefined ? {} : { mcp }) };
 }
 
-const APP = [{ name: 'mcp-app', tools: ['get_issue'] }];
+const APP = [{ name: 'issues', tools: ['get_issue'] }];
 const ANY_GIT = [{ name: 'git' }];
 
 describe('mcpViolation', () => {
@@ -19,12 +19,10 @@ describe('mcpViolation', () => {
   });
 
   it('lets a declared server be called, within the tools it lists', () => {
-    expect(
-      mcpViolation(call('Mcp', { kind: 'call', server: 'mcp-app', tool: 'get_issue' }), 'po', APP),
-    ).toBeUndefined();
+    expect(mcpViolation(call('Mcp', { kind: 'call', server: 'issues', tool: 'get_issue' }), 'po', APP)).toBeUndefined();
     expect(mcpViolation(call('Mcp', { kind: 'call', server: 'git', tool: 'anything' }), 'po', ANY_GIT)).toBeUndefined();
-    expect(mcpViolation(call('Mcp', { kind: 'call', server: 'mcp-app', tool: 'delete_issue' }), 'po', APP)).toBe(
-      '✗ o agente tentou usar uma tool que po não declara (mcp-app:delete_issue); a execução foi interrompida: mcp-app declara get_issue em agent.yaml#mcps.mcp-app.tools.',
+    expect(mcpViolation(call('Mcp', { kind: 'call', server: 'issues', tool: 'delete_issue' }), 'po', APP)).toBe(
+      '✗ o agente tentou usar uma tool que po não declara (issues:delete_issue); a execução foi interrompida: issues declara get_issue em agent.yaml#mcps.issues.tools.',
     );
     expect(mcpViolation(call('Mcp', { kind: 'call', server: 'git', tool: 'log' }), 'po', APP)).toContain('(git:log)');
   });
@@ -32,7 +30,7 @@ describe('mcpViolation', () => {
   it('lets an agent that declares MCPs look for tools, but not in a server it does not declare', () => {
     expect(mcpViolation(call('GetMcpTools', { kind: 'discovery' }), 'po', APP)).toBeUndefined();
     expect(
-      mcpViolation(call('ListMcpResourcesTool', { kind: 'discovery', server: 'mcp-app' }), 'po', APP),
+      mcpViolation(call('ListMcpResourcesTool', { kind: 'discovery', server: 'issues' }), 'po', APP),
     ).toBeUndefined();
     expect(mcpViolation(call('ListMcpResourcesTool', { kind: 'discovery', server: 'git' }), 'po', APP)).toContain(
       '(ListMcpResourcesTool em git)',

@@ -138,7 +138,7 @@ describe('createStreamJsonParser', () => {
         type: 'assistant',
         message: {
           content: [
-            { type: 'tool_use', id: 't1', name: 'mcp__mcp-app__get_issue', input: {} },
+            { type: 'tool_use', id: 't1', name: 'mcp__issues__get_issue', input: {} },
             { type: 'tool_use', id: 't2', name: 'ListMcpResourcesTool', input: { server: 'git' } },
           ],
         },
@@ -149,9 +149,9 @@ describe('createStreamJsonParser', () => {
       {
         type: 'tool-call',
         id: 't1',
-        name: 'mcp__mcp-app__get_issue',
+        name: 'mcp__issues__get_issue',
         summary: '',
-        mcp: { kind: 'call', server: 'mcp-app', tool: 'get_issue' },
+        mcp: { kind: 'call', server: 'issues', tool: 'get_issue' },
       },
       {
         type: 'tool-call',

@@ -337,13 +337,13 @@ describe('runAgent', () => {
 
   it('lets the agent call a tool of an MCP it declares', async () => {
     const lines = eventLines([
-      { type: 'tool-call', id: 't1', name: 'Mcp', summary: '', mcp: { kind: 'call', server: 'mcp-app', tool: 'x' } },
+      { type: 'tool-call', id: 't1', name: 'Mcp', summary: '', mcp: { kind: 'call', server: 'issues', tool: 'x' } },
       { type: 'done', isError: false, text: 'ok' },
     ]);
     const spawnerHandle = fakeSpawner({ stdout: streamFromChunks([lines]) });
     const s = setup(spawnerHandle.spawner);
 
-    expect(await run(s, undefined, { agent: fakeAgent({ mcps: [{ name: 'mcp-app' }] }) })).toBe(0);
+    expect(await run(s, undefined, { agent: fakeAgent({ mcps: [{ name: 'issues' }] }) })).toBe(0);
     expect(spawnerHandle.kill).not.toHaveBeenCalled();
   });
 
