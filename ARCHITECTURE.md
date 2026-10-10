@@ -57,6 +57,10 @@ dele, um pacote por vez, para uma casca sem decorators em `packages/core/src/she
 - **Um módulo por pacote.** Cada pacote exporta o seu `ShellModule` (`coreShell`, `agentsShell`, `projectsShell`,
   `runnerShell`, `terminalShell`) com os seus serviços e comandos, e o app os lista numa ordem fixa em
   `packages/choliba/src/app-shell.ts`. Mover um comando para a casca só mexe no pacote dele.
+- **O que o `core` dá a todos.** O `coreShell` registra a plataforma (`PLATFORM`), a configuração (`CONFIG`, um
+  `ConfigService`) e o tema (`THEME`, um `ThemeService`); a fábrica de um serviço de outro pacote pede o que precisa,
+  como `c.get(CONFIG)`. O `ConfigService` e o `ThemeService` são classes comuns, e o `ConfigModule`/`ThemeModule` os
+  constroem com `useFactory` para os comandos que ainda estão no Nest.
 
 Enquanto os dois convivem, o `main.ts` roda pela casca um comando cuja primeira palavra está na tabela, sem checar
 decorators, e manda todo o resto para o Nest. A help da raiz, `__complete`, `__describe` e `__entries` continuam no

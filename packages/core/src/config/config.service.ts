@@ -1,15 +1,15 @@
-import { Inject, Injectable } from '@nestjs/common';
-
-import { CWD, ENV, type Environment } from '../platform';
+import type { Environment } from '../platform';
 import { loadRepoConfig, type RepoConfig } from './repo-config';
 import { findWorkspaceRoot } from './workspace';
 
-/** The workspace a command runs in and its configuration, read from where the process started. */
-@Injectable()
+/**
+ * The workspace a command runs in and its configuration, read from where the process started. A plain class: the
+ * shell builds it from the platform, and `ConfigModule` gives it to the commands still on Nest.
+ */
 export class ConfigService {
   constructor(
-    @Inject(CWD) private readonly cwd: string,
-    @Inject(ENV) private readonly env: Environment,
+    private readonly cwd: string,
+    private readonly env: Environment,
   ) {}
 
   /** The workspace root; throws `WorkspaceNotFoundError` (with how to make one) outside a workspace. */
