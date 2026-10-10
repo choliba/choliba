@@ -18,4 +18,5 @@ export * from './run-tools/delete-tool';
 export * from './run-tools/playwright-tool';
 export * from './run-tools/run-tool-path';
 export * from './run-tools/run-tools';
+export * from './sandbox';
 export * from './stream-json';

@@ -19,6 +19,12 @@ CHOL_PROJECTS_DIR=
 # ganha deste).
 # CHOL_AGENTS_PROVIDER=auto
 
+# Opcional: onde o provider roda, local (padrão) ou docker, num container que só enxerga o que o agent.yaml libera
+# (veja docs/referencia/seguranca.md). No docker, a credencial do provider vem daqui: CLAUDE_CODE_OAUTH_TOKEN (de
+# claude setup-token) ou ANTHROPIC_API_KEY, e CURSOR_API_KEY.
+# CHOL_SANDBOX=local
+# CHOL_SANDBOX_IMAGE=choliba-agent
+
 # Opcional: onde a ferramenta playwright-cli dos agentes grava snapshots e screenshots que eles leem, e onde a
 # playwright-trace roda (padrão: .cache/playwright-cli).
 # CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR=.cache/playwright-cli

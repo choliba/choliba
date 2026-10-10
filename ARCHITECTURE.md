@@ -46,6 +46,10 @@ service chama as funções de `projects/project.ts` com a pasta de `LocationsSer
 e o código de saída pelo `ShellIo`. Uma primeira palavra que não é comando (`choliba product-owner …`) cai no
 fallback do `agentsShell`, que a roda como `choliba agents product-owner …`. Sem fallback, a palavra é erro de uso.
 
+Um agente roda num só ponto, `runAgent` (`agents/runs/run-agent.ts`), que inicia o processo do provider. Com
+`CHOL_SANDBOX=docker`, o lançador (`agents/runs/sandbox-launch.ts`) troca esse comando por um `docker run` cujas
+montagens saem das permissões do agente (`common/sandbox/`): fora delas, nada da máquina existe para o provider.
+
 Detalhes e as receitas (um comando novo, um provider novo, um spec): skill
 [`cli-shell`](.agents/skills/cli-shell/SKILL.md).
 

@@ -51,3 +51,29 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
 - **`steps` não passam pelas permissões.** Os passos são executados pelo choliba, fora da sessão do modelo: um
   passo pode fazer o que o modelo não pode (o `docs-updater` proíbe o modelo de rodar o Prettier e o roda no
   `steps.execute.after`). Veja [Steps](agent-yaml.md#steps).
+
+## O container
+
+As regras acima são aplicadas pelo próprio provider, e cada um tem os limites descritos. Com `CHOL_SANDBOX=docker` no
+`.env`, o provider roda num container que só enxerga o que o agente alcança, e esses limites deixam de importar: o
+que não está montado não existe lá dentro, para nenhuma ferramenta do provider, nenhum comando que ele rode e nenhum
+MCP que ele suba.
+
+- **O que o container vê**, cada caminho no mesmo caminho absoluto: com leitura, `allow.read`, as skills, o
+  `--add-dir`, os diretórios de `execute` (um comando precisa enxergar onde roda), as ferramentas da run e o
+  `node_modules` da pasta de trabalho; com escrita, a pasta da execução, `allow.write` (fora de `plan` e `ask`), a
+  saída das ferramentas do Playwright e o `ticket-runs/` do projeto. Um `deny.read` dentro disso aparece vazio; um
+  `deny.write` dentro de algo com escrita volta a ser só leitura. Um arquivo que o agente pode criar e ainda não
+  existe abre a pasta dele; as regras do provider, que continuam valendo lá dentro, limitam ao arquivo.
+- **O que ele não vê**: o resto do disco, a sua pasta pessoal (a do container é vazia e some no fim) e o socket do
+  Docker. Roda com o seu usuário, na rede da máquina (a aplicação e os MCPs em `localhost` respondem), com a raiz
+  só de leitura e sem capabilities.
+- **A credencial do provider** entra por variável de ambiente: `CLAUDE_CODE_OAUTH_TOKEN` (gerado por
+  `claude setup-token`, usa a assinatura e só chama o modelo) ou `ANTHROPIC_API_KEY`, e `CURSOR_API_KEY`. O agente
+  consegue lê-la, como consegue fora do container: prefira o token, que não serve para mais nada.
+- **A imagem** traz o Node e os navegadores do Playwright da versão do choliba, o Bun, o Claude Code e o Cursor CLI.
+  Construa-a uma vez na raiz do repositório do choliba: `docker build -f docker/agent.Dockerfile -t choliba-agent .`
+  (outra imagem: `CHOL_SANDBOX_IMAGE`).
+- O [`--dry-run`](comandos.md#--dry-run) mostra o container e cada caminho que ele vê.
+
+Testado no Linux. No macOS e no Windows, a rede da máquina (`--network host`) ainda não é tratada.
