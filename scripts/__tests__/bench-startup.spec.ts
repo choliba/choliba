@@ -1,4 +1,11 @@
-import { summarize, timingTable } from '../libs/bench-startup';
+import {
+  measuredOn,
+  REFERENCE_BEGIN,
+  REFERENCE_END,
+  summarize,
+  timingTable,
+  withReference,
+} from '../libs/bench-startup';
 
 describe('summarize', () => {
   it('reports min, median, mean and max of unordered samples', () => {
@@ -29,5 +36,34 @@ describe('timingTable', () => {
         '| fonte: --version | 200 | 210 | 213 | 250 |',
       ].join('\n'),
     );
+  });
+});
+
+describe('measuredOn', () => {
+  it('says the day, the Bun, the system and the runs of the measurement', () => {
+    expect(measuredOn(new Date(2026, 9, 10), '1.4.2', 'linux', 20)).toBe(
+      'Medido em 10/10/2026, com Bun 1.4.2 e Linux, 20 execuções por cenário:',
+    );
+  });
+
+  it('names a system it does not know as Node does', () => {
+    expect(measuredOn(new Date(2026, 0, 2), '1.4.2', 'freebsd', 1)).toContain('e freebsd, 1 execuções');
+  });
+});
+
+describe('withReference', () => {
+  const document = ['# Desempenho', '', REFERENCE_BEGIN, '', 'antiga', '', REFERENCE_END, '', '## Leitura', ''].join(
+    '\n',
+  );
+
+  it('replaces only what is between the markers, keeping them and the text around', () => {
+    expect(withReference(document, 'nova')).toBe(
+      ['# Desempenho', '', REFERENCE_BEGIN, '', 'nova', '', REFERENCE_END, '', '## Leitura', ''].join('\n'),
+    );
+  });
+
+  it('refuses a document without both markers in order', () => {
+    expect(() => withReference('# Desempenho', 'nova')).toThrow('faltam os marcadores');
+    expect(() => withReference(`${REFERENCE_END}\n${REFERENCE_BEGIN}`, 'nova')).toThrow('faltam os marcadores');
   });
 });
