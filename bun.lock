@@ -33,7 +33,7 @@
       "dependencies": {
         "@choliba/core": "workspace:*",
         "@choliba/projects": "workspace:*",
-        "@playwright/test": "^1.47.0",
+        "@playwright/test": "1.63.0",
         "ajv": "^8.20.0",
         "yaml": "^2.8.1",
       },
@@ -53,7 +53,7 @@
         "@choliba/projects": "workspace:*",
         "@choliba/runner": "workspace:*",
         "@eslint/js": "^10.0.1",
-        "@playwright/test": "^1.47.0",
+        "@playwright/test": "1.63.0",
         "@types/bun": "^1.4.2",
         "eslint": "^10.11.0",
         "prettier": "^3.9.8",
@@ -83,7 +83,7 @@
         "@choliba/projects": "workspace:*",
       },
       "devDependencies": {
-        "@playwright/test": "^1.47.0",
+        "@playwright/test": "1.63.0",
       },
     },
   },
