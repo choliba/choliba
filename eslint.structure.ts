@@ -12,16 +12,15 @@ type Layer = (typeof LAYERS)[number];
 
 /** The folders of `src/` of each package that follows the standard, by layer (`common` is always `common/`). */
 const STRUCTURE: Readonly<Record<string, Partial<Record<Exclude<Layer, 'common'>, readonly string[]>>>> = {
-  core: { module: ['platform', 'config', 'help', 'cli', 'theme', 'runtime', 'shell', 'testing'] },
-  terminal: { module: ['terminal'] },
+  core: { module: ['platform', 'config', 'help', 'cli', 'theme', 'runtime', 'shell', 'terminal', 'testing'] },
   projects: { domain: ['paths'], module: ['locations', 'tickets', 'projects'] },
   runner: { module: ['tests'] },
   agents: { module: ['agents', 'providers'] },
   choliba: { domain: ['help', 'runtime'], module: ['check', 'setup', 'tooling'] },
 };
 
-/** The Nest file types (`<name>.<type>.ts`): the `nest generate` schematics in use, `dto`, nest-commander's `command`, and `constants` for injection tokens. */
-const NEST_TYPES = ['module', 'service', 'provider', 'decorator', 'interface', 'dto', 'command', 'constants'];
+/** File-name suffixes still in use: a service, a provider, a dto, a command and injection-token constants. */
+const NEST_TYPES = ['service', 'provider', 'interface', 'dto', 'command', 'constants'];
 
 const KEBAB = '+([a-z0-9])*(-+([a-z0-9]))';
 
@@ -37,8 +36,8 @@ function elements(): Record<string, unknown>[] {
       known.push({ type: layer, pattern: `packages/+(${pkg})/src/${folder}`, partialMatch: false, capture: ['pkg'] });
     }
   }
-  // Last, as the first matching descriptor wins: the files right in `src/` (`index.ts`, `nest.ts`, `main.ts`,
-  // `app.module.ts`) are the package's entries.
+  // Last, as the first matching descriptor wins: the files right in `src/` (`index.ts`, `main.ts`) are the
+  // package's entries.
   known.push({ type: 'entry', pattern: 'packages/*/src', partialMatch: false, capture: ['pkg'] });
   return known;
 }
@@ -47,22 +46,22 @@ const SAME_PACKAGE = { pkg: '{{ from.element.captured.pkg }}' };
 
 /**
  * What a folder of `layer` may import, besides its own files: the folders of its own layer and of the layers below
- * it, in its package, always through their `index.ts` (functions and types) or `nest.ts` (modules, services,
- * commands). Folders of one layer may build on each other (`project/` on `paths/`); a cycle between them
+ * it, in its package, always through their `index.ts`. Folders of one layer may build on each other
+ * (`project/` on `paths/`); a cycle between them
  * is a cycle between their `index.ts` files, which `import-x/no-cycle` rejects.
  */
 function allowedBelow(layer: Layer): Record<string, unknown> {
   const below = LAYERS.slice(0, LAYERS.indexOf(layer) + 1);
   return {
     from: { element: { type: layer } },
-    allow: { to: { element: { type: [...below], captured: SAME_PACKAGE, fileInternalPath: '{index,nest}.ts' } } },
+    allow: { to: { element: { type: [...below], captured: SAME_PACKAGE, fileInternalPath: 'index.ts' } } },
   };
 }
 
 /**
  * The import rules, in order (a later rule wins): no folder imports another folder or its own package's entries,
  * then each layer may import the layers below it through their `index.ts`. Another package's folders count as
- * folders, so a package is reached only through its entries (`.` and `./nest`).
+ * folders, so a package is reached only through its entry (`.`).
  */
 function dependencyRules(): Record<string, unknown>[] {
   return [
