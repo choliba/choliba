@@ -1,8 +1,6 @@
-import { Test } from '@nestjs/testing';
-
-import { type CommandSpec, wantsHelp } from '../../help';
-import { CliHelpService, CliModule, PlatformModule } from '../../nest';
-import { fakePlatform, type FakePlatform } from '../../testing';
+import { complete, describe as describeLine, formatSuggestions, wantsHelp, type CommandSpec } from '../../help';
+import { ShellIo } from '../../shell';
+import { fakePlatform } from '../../testing';
 
 const SPEC: CommandSpec = {
   usage: 'demo COMMAND',
@@ -12,13 +10,6 @@ const SPEC: CommandSpec = {
     { name: 'show', description: 'Mostra um', group: 'Commands', spec: { usage: 'demo show' } },
   ],
 };
-
-async function serviceWith(platform: FakePlatform): Promise<CliHelpService> {
-  const moduleRef = await Test.createTestingModule({
-    imports: [PlatformModule.forRoot(platform), CliModule],
-  }).compile();
-  return moduleRef.get(CliHelpService);
-}
 
 describe('wantsHelp', () => {
   it('is -h, --help anywhere, or help as the first word', () => {
@@ -30,44 +21,41 @@ describe('wantsHelp', () => {
   });
 });
 
-describe('CliHelpService', () => {
-  it('prints the help of a spec on stdout', async () => {
+describe('help printed from a spec', () => {
+  it('prints the help of a spec on stdout', () => {
     const platform = fakePlatform();
-    const cli = await serviceWith(platform);
+    const io = new ShellIo(platform);
 
-    expect(cli.wantsHelp(['-h'])).toBe(true);
-    cli.printHelp(SPEC);
+    expect(io.wantsHelp(['-h'])).toBe(true);
+    io.printHelp(SPEC);
 
     expect(platform.stdout.text()).toContain('Usage:  demo COMMAND');
     expect(platform.stdout.text()).toContain('Lista tudo');
     expect(platform.stderr.text()).toBe('');
   });
 
-  it('prints one completion per line, and nothing when none fits', async () => {
-    const platform = fakePlatform();
-    const cli = await serviceWith(platform);
+  it('prints one completion per line, and nothing when none fits', () => {
+    const fitted = formatSuggestions(complete(SPEC, ['']));
+    const none = formatSuggestions(complete(SPEC, ['zzz']));
 
-    cli.printCompletions(SPEC, ['']);
-    cli.printCompletions(SPEC, ['zzz']);
-
-    expect(platform.stdout.text()).toBe('list\nshow\nhelp\nversion\n');
+    expect(`${fitted}\n`).toBe('list\nshow\nhelp\nversion\n');
+    expect(none).toBe('');
   });
 
-  it('describes what the words select', async () => {
-    const platform = fakePlatform();
-    const cli = await serviceWith(platform);
+  it('describes what the words select', () => {
+    const show = describeLine(SPEC, ['show']).split('\n')[0];
+    const root = describeLine(SPEC, []).split('\n')[0];
 
-    cli.printDescription(SPEC, ['show']);
-    cli.printDescription(SPEC, []);
-
-    expect(platform.stdout.text()).toBe('Mostra um\nUma CLI de exemplo\n');
+    expect(`${String(show)}\n${String(root)}\n`).toBe('Mostra um\nUma CLI de exemplo\n');
   });
 
-  it('reports a usage error on stderr with where to read the usage, and exit code 1', async () => {
+  it('reports a usage error on stderr with where to read the usage, and exit code 1', () => {
     const platform = fakePlatform();
-    const cli = await serviceWith(platform);
+    const io = new ShellIo(platform);
 
-    expect(cli.usageError('Falta o projeto.', 'demo show')).toBe(1);
+    io.usageError('Falta o projeto.', 'demo show');
+
+    expect(io.exitCode()).toBe(1);
     expect(platform.stderr.text()).toBe("Falta o projeto.\nRun 'demo show --help' for usage.\n");
     expect(platform.stdout.text()).toBe('');
   });

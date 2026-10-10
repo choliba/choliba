@@ -1,9 +1,8 @@
 import type { PlanContentContext, PlannedFile, ProviderRequest, StreamParser } from './interfaces/provider.interface';
 
 /**
- * The contract every agent provider (claude, cursor…) meets, and its injection token: a provider module
- * registers one subclass with `@RegisterAgentProvider()`, and the registry finds it. Adding a provider is
- * adding a module.
+ * The contract every agent provider (claude, cursor…) meets. Adding a provider is adding its subclass to the list
+ * `agentsShell` builds the registry from.
  */
 export abstract class AgentProvider {
   /** What `--provider`, `--<id>` and `CHOL_AGENTS_PROVIDER` call it. */
@@ -15,6 +14,12 @@ export abstract class AgentProvider {
   abstract readonly binaries: readonly (readonly string[])[];
   /** Where it comes in `auto`'s search: the lowest installed one wins. */
   abstract readonly autoPriority: number;
+
+  /**
+   * Built-in tools of the provider that its permissions cannot limit (Cursor's `Grep` and `Glob` read files that a
+   * `Read` deny covers). A call to one stops the run (`unenforced-tool-guard.ts`); none by default.
+   */
+  readonly unenforcedTools: readonly string[] = [];
 
   /** The args *after* the binary. Calls `assertArgvFits` before returning. */
   abstract buildArgs(request: ProviderRequest): readonly string[];

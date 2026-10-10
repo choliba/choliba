@@ -1,7 +1,14 @@
 import { mkdirSync, rmSync } from 'node:fs';
 
-import type { ProcessRunnerService, Session, SessionExitEvent, SignalSource, Writable } from '@choliba/terminal';
-import { exitCodeFor } from '@choliba/terminal';
+import {
+  exitCodeFor,
+  type ProcessRunnerService,
+  type Session,
+  type SessionExitEvent,
+  type SignalSource,
+  type Theme,
+  type Writable,
+} from '@choliba/core';
 
 import type { AgentEvent } from '../../common';
 import { writePlan } from './plan-store';
@@ -13,17 +20,17 @@ import {
   modelReportMissingMessage,
   validateReportedModel,
 } from '../../common';
-import type { Theme } from '@choliba/core';
 
 import { agentRenderOptions, formatProviderLine, renderEvent } from './event-render';
 import { applyRunTools } from '../../common';
 import { delegationMessage, delegationOf } from './delegation-guard';
 import { mcpViolation } from './mcp-guard';
+import { unenforcedToolMessage, unenforcedToolOf } from './unenforced-tool-guard';
 
 export interface RunAgentDeps {
   /**
    * No default: building one needs a `ProcessSpawner`, and the only real one touches the
-   * `Bun` global. Every caller passes its own, same as `@choliba/terminal`'s own `runCli`.
+   * `Bun` global. Every caller passes its own, same as the shell's `terminal run`.
    */
   readonly runner: ProcessRunnerService;
   readonly stdout: Writable;
@@ -49,7 +56,7 @@ function errorMessage(error: unknown): string {
 }
 
 /**
- * Runs one agent through one provider, via `@choliba/terminal`'s `ProcessRunnerService`: it owns
+ * Runs one agent through one provider, via `ProcessRunnerService`: it owns
  * the child process, buffering and SIGINT/SIGTERM forwarding, exactly as the `terminal`
  * package's own CLI wrapper does. What this function adds on top is provider-specific: turning
  * each raw stdout line into `AgentEvent`s with the resolved provider's parser, rendering those
@@ -148,6 +155,12 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
       const subagent = delegationOf(agentEvent);
       if (subagent !== undefined) {
         stop(delegationMessage(subagent));
+        continue;
+      }
+
+      const unenforced = unenforcedToolOf(agentEvent, request.provider.adapter.unenforcedTools);
+      if (unenforced !== undefined) {
+        stop(unenforcedToolMessage(unenforced));
         continue;
       }
 

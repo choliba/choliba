@@ -53,7 +53,7 @@ file it writes is byte-identical to what `bun run format` accepts; without that 
 ## What is excluded from coverage, and why
 
 `collectCoverageFrom` keeps production source only. It excludes `*.spec.ts` and everything under `__tests__/` (test code and its helpers), `*.d.ts`, `main.ts` (entrypoints:
-wiring only, logic goes in a tested `run.ts`), `*.interface.ts` and `*.types.ts` (no executable code).
+wiring only, logic goes in a tested `run.ts`), `*.interface.ts` and `*.types.ts` (no executable code), and `index.ts` (a folder's public face, re-exports only; Istanbul would count each re-export getter as a function).
 
 Do not add an exclusion to make a number go up. Excluding a file that holds business logic hides exactly what the
 ratchet exists to protect; if a user asks for that, stop and confirm. Do not write tests that only execute

@@ -3,14 +3,20 @@ import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
-import { complete, describe as describeSpec, formatSuggestions, type GitRunner, buildTheme } from '@choliba/core';
-
-import * as gitDiff from '../../../agents/steps/git-working-tree-diff';
+import {
+  buildTheme,
+  complete,
+  describe as describeSpec,
+  formatSuggestions,
+  ProcessRunnerService,
+  type GitRunner,
+  type SignalSource,
+  type Writable,
+} from '@choliba/core';
+import { AppError, type ProjectSettings } from '@choliba/projects';
 import * as projects from '@choliba/projects';
 
-import type { SignalSource, Writable } from '@choliba/terminal';
-import { ProcessRunnerService } from '@choliba/terminal';
-import { AppError, type ProjectSettings } from '@choliba/projects';
+import * as gitDiff from '../../../agents/steps/git-working-tree-diff';
 
 import { defineInvocation } from '../../../agents/invocation';
 import { StepFailedError } from '../../../agents/steps/step-actions';

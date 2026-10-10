@@ -1,28 +1,22 @@
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { Test } from '@nestjs/testing';
-
 import { WorkspaceNotFoundError } from '../../config';
-import { ConfigModule, ConfigService, PlatformModule } from '../../nest';
-import { fakePlatform } from '../../testing';
+import { ConfigService } from '../../config';
 import { makeTmpDir } from '../helpers/tmp';
 import { makeWorkspace } from '../helpers/workspace';
 
-async function configFor(cwd: string, env: Readonly<Record<string, string>> = {}): Promise<ConfigService> {
-  const moduleRef = await Test.createTestingModule({
-    imports: [PlatformModule.forRoot(fakePlatform({ cwd, env })), ConfigModule],
-  }).compile();
-  return moduleRef.get(ConfigService);
+function configFor(cwd: string, env: Readonly<Record<string, string>> = {}): ConfigService {
+  return new ConfigService(cwd, env);
 }
 
 describe('ConfigService', () => {
-  it('finds the workspace from a subfolder of where the process started', async () => {
+  it('finds the workspace from a subfolder of where the process started', () => {
     const workspace = makeWorkspace({ '.env': 'A=from-file\nB=from-file\n' });
     try {
       const subfolder = join(workspace.path, '.choliba', 'agents');
       mkdirSync(subfolder, { recursive: true });
-      const config = await configFor(subfolder, { B: 'from-process' });
+      const config = configFor(subfolder, { B: 'from-process' });
 
       expect(config.startDir()).toBe(subfolder);
       expect(config.workspaceRoot()).toBe(workspace.path);
@@ -33,10 +27,10 @@ describe('ConfigService', () => {
     }
   });
 
-  it('says how to make a workspace outside one, or gives nothing when asked to stay quiet', async () => {
+  it('says how to make a workspace outside one, or gives nothing when asked to stay quiet', () => {
     const outside = makeTmpDir('no-workspace');
     try {
-      const config = await configFor(outside.path);
+      const config = configFor(outside.path);
 
       expect(() => config.workspaceRoot()).toThrow(WorkspaceNotFoundError);
       expect(config.workspaceRootOrNothing()).toBeUndefined();

@@ -1,14 +1,15 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { fakePlatform, runCommand } from '@choliba/core/testing';
+import { coreShell } from '@choliba/core';
+import { fakePlatform, runShell } from '@choliba/core/testing';
 
-import { CheckModule } from '../../check/check.module';
-import { withFolder, withWorkspace } from '../helpers/runtime';
+import { cholibaShell } from '../../app-shell';
+import { fakeRuntime, withFolder, withWorkspace } from '../helpers/runtime';
 
 async function check(args: readonly string[], cwd: string): Promise<{ code: number; out: string; err: string }> {
   const platform = fakePlatform({ argv: ['check', ...args], cwd });
-  const code = await runCommand([CheckModule], platform);
+  const code = await runShell([coreShell, cholibaShell(fakeRuntime())], platform);
   return { code, out: platform.stdout.text(), err: platform.stderr.text() };
 }
 

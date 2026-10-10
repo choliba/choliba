@@ -2,10 +2,7 @@ import { existsSync } from 'node:fs';
 import { constants, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { buildTheme } from '@choliba/core';
-
-import type { ProcessSpawner, SignalSource, Writable } from '@choliba/terminal';
-import { ProcessRunnerService } from '@choliba/terminal';
+import { buildTheme, ProcessRunnerService, type ProcessSpawner, type SignalSource, type Writable } from '@choliba/core';
 
 import type { AgentDefinition } from '../../../common/interfaces/agent.interface';
 import type { AgentEvent } from '../../../common/interfaces/event.interface';
@@ -101,6 +98,7 @@ function fakeAdapter(overrides: Partial<AgentProvider> = {}): AgentProvider {
     id: 'claude',
     binaries: [['fake']],
     autoPriority: 1,
+    unenforcedTools: [],
     buildArgs: () => ['--arg'],
     createParser: () => {
       let sawInitWithModel = false;
@@ -301,6 +299,24 @@ describe('runAgent', () => {
     expect(spawnerHandle.kill).toHaveBeenCalledWith('SIGTERM');
   });
 
+  it('stops the session and returns 1 when the agent calls a tool its provider cannot limit', async () => {
+    const lines = eventLines([
+      { type: 'tool-call', id: 't1', name: 'Read', summary: '/repo/ok.txt' },
+      { type: 'tool-call', id: 't2', name: 'Grep', summary: '/repo' },
+      { type: 'text', text: 'late line' },
+      { type: 'done', isError: false, text: 'ok' },
+    ]);
+    const spawnerHandle = fakeSpawner({ stdout: streamFromChunks([lines]) });
+    const s = setup(spawnerHandle.spawner, { unenforcedTools: ['Grep', 'Glob'] });
+
+    expect(await run(s)).toBe(1);
+    expect(s.stderr.chunks.join('')).toContain(
+      '✗ o agente usou Grep, que as permissões deste provider não conseguem limitar; a execução foi interrompida.\n',
+    );
+    expect(s.stdout.chunks.join('')).not.toContain('late line');
+    expect(spawnerHandle.kill).toHaveBeenCalledWith('SIGTERM');
+  });
+
   it('stops the session and returns 1 when the agent uses an MCP it does not declare', async () => {
     const lines = eventLines([
       { type: 'tool-call', id: 't1', name: 'GetMcpTools', summary: '', mcp: { kind: 'discovery' } },
@@ -318,13 +334,13 @@ describe('runAgent', () => {
 
   it('lets the agent call a tool of an MCP it declares', async () => {
     const lines = eventLines([
-      { type: 'tool-call', id: 't1', name: 'Mcp', summary: '', mcp: { kind: 'call', server: 'mcp-app', tool: 'x' } },
+      { type: 'tool-call', id: 't1', name: 'Mcp', summary: '', mcp: { kind: 'call', server: 'issues', tool: 'x' } },
       { type: 'done', isError: false, text: 'ok' },
     ]);
     const spawnerHandle = fakeSpawner({ stdout: streamFromChunks([lines]) });
     const s = setup(spawnerHandle.spawner);
 
-    expect(await run(s, undefined, { agent: fakeAgent({ mcps: [{ name: 'mcp-app' }] }) })).toBe(0);
+    expect(await run(s, undefined, { agent: fakeAgent({ mcps: [{ name: 'issues' }] }) })).toBe(0);
     expect(spawnerHandle.kill).not.toHaveBeenCalled();
   });
 

@@ -1,20 +1,23 @@
-import type { RootSpec } from '../../help';
+import type { RootLayout, RootSpec } from '../../help';
 
-/** What an app says about its root: its spec without the commands (they register themselves) and its version line. */
-export interface RootOptions {
+/**
+ * What an app says about its root: its spec without the commands (they register themselves), its version line, and how
+ * the help lays out the commands.
+ */
+export interface RootOptions extends RootLayout {
   readonly spec: RootSpec;
   /** The line `--version` prints, as `choliba 0.0.1-dev.16+1a2b3c4`. */
   readonly version: () => string;
-  /**
-   * The order of the root's sections (`['Commands', 'Agents']`): the registered entries are sorted by it, each
-   * section keeping the order the app registers its commands in. Sections it does not name come last.
-   */
-  readonly groups?: readonly string[];
   /**
    * Called before the local `__complete`. A string is printed as the answer (including the files marker);
    * `undefined` completes from this CLI's spec.
    */
   readonly delegateComplete?: (words: readonly string[]) => string | undefined;
+  /**
+   * What runs a first word that is no command when no provider is registered with `@RegisterRootFallback()`: the
+   * shell's, while the app runs on both.
+   */
+  readonly fallback?: RootFallback | undefined;
 }
 
 /**

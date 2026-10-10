@@ -1,7 +1,7 @@
 {
   "coverageConfig": {
     "collectCoverage": true,
-    "collectCoverageFrom": ["packages/*/src/**/*.ts", "apps/*/src/**/*.ts", "!**/*.spec.ts", "!**/__tests__/**", "!**/*.d.ts", "!**/main.ts", "!**/*.interface.ts", "!**/*.types.ts"],
+    "collectCoverageFrom": ["packages/*/src/**/*.ts", "apps/*/src/**/*.ts", "!**/*.spec.ts", "!**/__tests__/**", "!**/*.d.ts", "!**/main.ts", "!**/*.interface.ts", "!**/*.types.ts", "!**/index.ts"],
     "coverageDirectory": "<rootDir>/coverage",
     "coverageReporters": [
       "json",

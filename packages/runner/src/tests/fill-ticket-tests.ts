@@ -9,7 +9,7 @@ import {
   ticketSuffix,
   type ProjectLocations,
 } from '@choliba/projects';
-import { writeStderr, writeStdout, type Writable } from '@choliba/terminal';
+import { writeStderr, writeStdout, type Writable } from '@choliba/core';
 
 import { flattenResults, isRealFailure } from './playwright-results';
 

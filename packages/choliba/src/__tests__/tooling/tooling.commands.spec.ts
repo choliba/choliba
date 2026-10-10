@@ -2,10 +2,10 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { fakePlatform, runCommand } from '@choliba/core/testing';
+import { coreShell } from '@choliba/core';
+import { fakePlatform, runShell } from '@choliba/core/testing';
 
-import { RuntimeModule } from '@choliba/core/nest';
-import { ToolingModule } from '../../tooling/tooling.module';
+import { cholibaShell } from '../../app-shell';
 import { fakeRuntime, withFolder, withWorkspace, type FakeRuntime } from '../helpers/runtime';
 
 async function tool(
@@ -15,7 +15,7 @@ async function tool(
   which: (bin: string) => string | null = () => '/usr/bin/node',
 ): Promise<{ code: number; err: string }> {
   const platform = fakePlatform({ argv: args, cwd, which });
-  const code = await runCommand([RuntimeModule.forRoot(runtime), ToolingModule], platform);
+  const code = await runShell([coreShell, cholibaShell(runtime)], platform);
   return { code, err: platform.stderr.text() };
 }
 

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { Writable } from '@choliba/terminal';
+import type { Writable } from '@choliba/core';
 
 import { AgentConfigError } from '../../agents/agent-loader';
 import { printAgentDefinition } from '../../agents/agent-print';

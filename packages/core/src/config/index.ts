@@ -1,3 +1,4 @@
+export { ConfigService } from './config.service';
 export {
   CHOL_ROOT,
   CHOL_GLOBAL_DIR,

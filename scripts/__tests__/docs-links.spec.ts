@@ -20,7 +20,7 @@ describe('outsideLink', () => {
 describe('githubSlug', () => {
   it('makes the anchors GitHub makes: lowercase, accents kept, punctuation out, spaces as hyphens', () => {
     expect(githubSlug('A aplicação do projeto')).toBe('a-aplicação-do-projeto');
-    expect(githubSlug('O servidor do MCP `mcp-app`')).toBe('o-servidor-do-mcp-mcp-app');
+    expect(githubSlug('O servidor do MCP `exemplo`')).toBe('o-servidor-do-mcp-exemplo');
     expect(githubSlug(' `${CHOL_ROOT}` ')).toBe('chol_root');
     expect(githubSlug('Do zero ao primeiro ticket!')).toBe('do-zero-ao-primeiro-ticket');
   });

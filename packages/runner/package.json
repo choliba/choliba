@@ -5,7 +5,6 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./nest": "./src/nest.ts",
     "./shared/env": "./shared/env.ts",
     "./shared/pages/base-page": "./shared/pages/base-page.ts"
   },
@@ -15,17 +14,9 @@
   },
   "dependencies": {
     "@choliba/core": "workspace:*",
-    "@choliba/projects": "workspace:*",
-    "@choliba/terminal": "workspace:*",
-    "@nestjs/common": "~11.2",
-    "@nestjs/core": "~11.2",
-    "nest-commander": "~3.21",
-    "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2"
+    "@choliba/projects": "workspace:*"
   },
   "devDependencies": {
-    "@nestjs/testing": "~11.2",
-    "@playwright/test": "^1.47.0",
-    "nest-commander-testing": "~3.6"
+    "@playwright/test": "^1.47.0"
   }
 }

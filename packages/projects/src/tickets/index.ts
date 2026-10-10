@@ -48,3 +48,6 @@ export {
   ticketsFolderEntry,
   type ProjectCompletions,
 } from './tickets-spec';
+export { runTicketSpecs } from './ticket-specs.command';
+export { TicketsService } from './tickets.service';
+export { runTicketsFolder } from './tickets-folder.command';

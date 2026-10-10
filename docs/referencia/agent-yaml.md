@@ -224,12 +224,12 @@ preenchido com **qualquer** variável do `.env`, sem catálogo:
 ```json
 {
   "command": "node",
-  "args": ["${CHOL_MCP_APP_DIR}/dist/main.js"],
-  "env": { "LOG_DIR": "${CHOL_MCP_APP_LOG_DIR}" }
+  "args": ["${SERVER_DIR}/dist/main.js"],
+  "env": { "LOG_DIR": "${LOG_DIR}" }
 }
 ```
 
-`CHOL_MCP_APP_DIR` e `CHOL_MCP_APP_LOG_DIR` vêm do `.env`; não fazem parte do catálogo do `agent.yaml`.
+`SERVER_DIR` e `LOG_DIR` vêm do `.env`; não fazem parte do catálogo do `agent.yaml`.
 
 ## Steps
 

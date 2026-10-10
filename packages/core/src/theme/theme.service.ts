@@ -1,24 +1,21 @@
-import { Inject, Injectable } from '@nestjs/common';
-
-import { ConfigService } from '../config/nest';
-import { ENV, NO_COLOR_FLAG, STDOUT, type Environment, type WritableWithColumns } from '../platform';
+import type { ConfigService } from '../config';
+import type { Environment, WritableWithColumns } from '../platform';
 import type { AnsiColor } from './ansi';
 import type { Theme, ThemeRole } from './interfaces/theme.interface';
 import { resolveTheme } from './resolve-theme';
 
 /**
  * The one place that decides whether choliba colors its output and with which colors. Read once, on first
- * use, so a command that never paints never reads the workspace's `.env`.
+ * use, so a command that never paints never reads the workspace's `.env`. A plain class: the shell builds it.
  */
-@Injectable()
 export class ThemeService {
   private resolved: Theme | undefined;
 
   constructor(
-    @Inject(ConfigService) private readonly config: ConfigService,
-    @Inject(ENV) private readonly env: Environment,
-    @Inject(STDOUT) private readonly stdout: WritableWithColumns,
-    @Inject(NO_COLOR_FLAG) private readonly noColorFlag: boolean,
+    private readonly config: ConfigService,
+    private readonly env: Environment,
+    private readonly stdout: WritableWithColumns,
+    private readonly noColorFlag: boolean,
   ) {}
 
   /** The theme itself, for code that takes a `Theme` (decided once, like everything here). */

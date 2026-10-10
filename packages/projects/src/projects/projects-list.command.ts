@@ -1,45 +1,28 @@
-import { Inject } from '@nestjs/common';
-import { SubCommand } from 'nest-commander';
-
-import { CliCommand, CommandIo } from '@choliba/core/nest';
-
-import { formatRows } from '@choliba/core';
+import { formatRows, type ShellIo } from '@choliba/core';
 
 import { runSubcommand } from '../common';
-import { ProjectsService } from './projects.service';
+import type { ProjectsService } from './projects.service';
 
-const OPTIONS = { allowUnknownOptions: true, allowExcessArgs: true } as const;
-
-@SubCommand({ name: 'list', ...OPTIONS })
-export class ProjectsListCommand extends CliCommand {
-  constructor(
-    @Inject(CommandIo) private readonly io: CommandIo,
-    @Inject(ProjectsService) private readonly projects: ProjectsService,
-  ) {
-    super();
-  }
-
-  async run(): Promise<void> {
-    runSubcommand(
-      this.io,
-      () => this.projects.helpSpec(),
-      'list',
-      (args) => {
-        const projects = this.projects.list();
-        if (projects.length === 0) {
-          this.io.write(`No project found in ${this.projects.projectsDir()}.\n`);
-          return;
+/** `choliba projects list [--tickets]`. */
+export function runProjectsList(io: ShellIo, projects: ProjectsService): void {
+  runSubcommand(
+    io,
+    () => projects.helpSpec(),
+    'list',
+    (args) => {
+      const found = projects.list();
+      if (found.length === 0) {
+        io.write(`No project found in ${projects.projectsDir()}.\n`);
+        return;
+      }
+      if (args.includes('--tickets')) {
+        // One `project ["key", …]` line per project: the product-owner agent reads this format.
+        for (const { name, tickets } of projects.listWithTickets()) {
+          io.write(`${name} ${JSON.stringify(tickets)}\n`);
         }
-        if (args.includes('--tickets')) {
-          // One `project ["key", …]` line per project: the product-owner agent reads this format.
-          for (const { name, tickets } of this.projects.listWithTickets()) {
-            this.io.write(`${name} ${JSON.stringify(tickets)}\n`);
-          }
-          return;
-        }
-        this.io.write(`${formatRows(projects.map(({ name, description }) => [name, description]))}\n`);
-      },
-    );
-    return Promise.resolve();
-  }
+        return;
+      }
+      io.write(`${formatRows(found.map(({ name, description }) => [name, description]))}\n`);
+    },
+  );
 }

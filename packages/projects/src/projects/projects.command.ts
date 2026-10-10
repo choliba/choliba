@@ -1,18 +1,11 @@
-import { Inject } from '@nestjs/common';
-import { Command } from 'nest-commander';
-
-import type { CommandEntry, HelpContributor } from '@choliba/core';
-import { CliCommand, CommandIo, RegisterHelp } from '@choliba/core/nest';
+import type { CommandEntry, Container, ShellCommand, ShellIo } from '@choliba/core';
 
 import { PROGRAM_NAME } from '../common';
-import { TicketSpecsCommand, TicketsFolderCommand } from '../tickets/nest';
-
-import { ProjectsCheckCommand } from './projects-check.command';
-import { ProjectsListCommand } from './projects-list.command';
-import { ProjectsService } from './projects.service';
-import { ReportFolderCommand } from './report-folder.command';
-
-const OPTIONS = { allowUnknownOptions: true, allowExcessArgs: true } as const;
+import { runTicketSpecs, runTicketsFolder } from '../tickets';
+import { PROJECTS, TICKETS } from './projects.constants';
+import { runProjectsCheck } from './projects-check.command';
+import { runProjectsList } from './projects-list.command';
+import { runReportFolder } from './report-folder.command';
 
 /** How `choliba --help` lists `projects`; its spec is built from the workspace when asked for. */
 const ENTRY: Omit<CommandEntry, 'spec'> = {
@@ -21,41 +14,44 @@ const ENTRY: Omit<CommandEntry, 'spec'> = {
   group: 'Commands',
 };
 
+const COMMANDS: Record<string, (io: ShellIo, container: Container) => void> = {
+  list: (io, container) => {
+    runProjectsList(io, container.get(PROJECTS));
+  },
+  check: (io, container) => {
+    runProjectsCheck(io, container.get(PROJECTS));
+  },
+  'report-folder': (io, container) => {
+    runReportFolder(io, container.get(PROJECTS));
+  },
+  'tickets-folder': (io, container) => {
+    runTicketsFolder(io, container.get(TICKETS));
+  },
+  'ticket-specs': (io, container) => {
+    runTicketSpecs(io, container.get(TICKETS));
+  },
+};
+
 /** `choliba projects`: its help, or what is wrong when no known command follows. */
-@RegisterHelp()
-@Command({
+export const projectsCommand: ShellCommand = {
   name: 'projects',
-  description: 'Lista e confere projetos e tickets em CHOL_PROJECTS_DIR',
-  subCommands: [
-    ProjectsListCommand,
-    ProjectsCheckCommand,
-    ReportFolderCommand,
-    TicketsFolderCommand,
-    TicketSpecsCommand,
-  ],
-  ...OPTIONS,
-})
-export class ProjectsCommand extends CliCommand implements HelpContributor {
-  constructor(
-    @Inject(CommandIo) private readonly io: CommandIo,
-    @Inject(ProjectsService) private readonly projects: ProjectsService,
-  ) {
-    super();
-  }
-
-  helpEntries(): readonly CommandEntry[] {
-    return [{ ...ENTRY, spec: this.projects.helpSpec() }];
-  }
-
-  async run(): Promise<void> {
-    const [command] = this.io.args('projects');
+  help: (container) => [{ ...ENTRY, spec: container.get(PROJECTS).helpSpec() }],
+  run(container, io) {
+    const [command] = io.args('projects');
     if (command === undefined) {
-      this.io.usageError('Missing command.', PROGRAM_NAME);
-    } else if (command === '--help' || command === '-h' || command === 'help') {
-      this.io.printHelp(this.projects.helpSpec());
-    } else {
-      this.io.usageError(`Unknown command "${command}".`, PROGRAM_NAME);
+      io.usageError('Missing command.', PROGRAM_NAME);
+      return Promise.resolve();
     }
+    if (command === '--help' || command === '-h' || command === 'help') {
+      io.printHelp(container.get(PROJECTS).helpSpec());
+      return Promise.resolve();
+    }
+    const runCommand = COMMANDS[command];
+    if (runCommand === undefined) {
+      io.usageError(`Unknown command "${command}".`, PROGRAM_NAME);
+      return Promise.resolve();
+    }
+    runCommand(io, container);
     return Promise.resolve();
-  }
-}
+  },
+};

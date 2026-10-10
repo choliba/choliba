@@ -7,7 +7,7 @@ const GLOBAL_FLAGS = [
   { name: '--version', description: 'Mostra a versão do choliba', terminal: true },
 ];
 
-/** `choliba --help` without its commands, which register themselves (`@RegisterHelp()`). */
+/** `choliba --help` without its commands: each command's `help` supplies those. */
 export const CHOLIBA_ROOT: RootSpec = {
   usage: 'choliba COMMAND [ARGS]',
   description:
@@ -17,3 +17,6 @@ export const CHOLIBA_ROOT: RootSpec = {
   flags: GLOBAL_FLAGS,
   footer: "Run 'choliba COMMAND --help' for more information on a command.",
 };
+
+/** The order of `choliba --help`'s commands, by name. Names missing here come after, as they were registered. */
+export const CHOLIBA_ORDER: readonly string[] = ['agents', 'projects', 'tests', 'check', 'lint', 'format', 'setup'];

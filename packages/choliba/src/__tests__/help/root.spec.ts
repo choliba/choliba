@@ -1,12 +1,9 @@
 import { join } from 'node:path';
 
-import { CommandTestFactory } from 'nest-commander-testing';
-
 import { FILES_MARKER } from '@choliba/core';
-import { ExitStatus } from '@choliba/core/nest';
 import { fakePlatform, type FakePlatform } from '@choliba/core/testing';
 
-import { AppModule } from '../../app.module';
+import { createCholibaShell } from '../../app-shell';
 import { fakeRuntime, withFolder, withWorkspace } from '../helpers/runtime';
 
 const FIXTURES = join(__dirname, '..', '..', '..', '..', 'agents', 'src', '__tests__', 'fixtures');
@@ -20,12 +17,7 @@ async function choliba(
   overrides: Partial<FakePlatform> = {},
 ): Promise<{ code: number; out: string; err: string }> {
   const platform = fakePlatform({ argv, cwd, ...overrides });
-  const app = await CommandTestFactory.createTestingCommand({
-    imports: [AppModule.forRoot(platform, fakeRuntime())],
-  }).compile();
-  await CommandTestFactory.runWithoutClosing(app, [...argv]);
-  const code = app.get(ExitStatus).code();
-  await app.close();
+  const code = await createCholibaShell(platform, fakeRuntime()).run();
   return { code, out: platform.stdout.text(), err: platform.stderr.text() };
 }
 

@@ -1,9 +1,17 @@
 import path from 'node:path';
 
-import { loadRepoConfig, resolveTheme, type Theme } from '@choliba/core';
+import {
+  formatDuration,
+  isStdoutTty,
+  LiveRegion,
+  loadRepoConfig,
+  printBox,
+  resolveTheme,
+  writeStdout,
+  type Theme,
+} from '@choliba/core';
 import { readAppliedLocations } from '@choliba/projects';
 import type { FullConfig, Reporter, TestCase, TestResult } from '@playwright/test/reporter';
-import { formatDuration, isStdoutTty, LiveRegion, printBox, writeStdout } from '@choliba/terminal';
 
 import { WORKSPACE_ENV } from '../src/tests/playwright-env';
 

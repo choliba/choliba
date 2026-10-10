@@ -65,7 +65,7 @@ export interface CommandSpec {
   readonly footer?: string;
 }
 
-/** A command that shows up in the app's `--help` and completion: what it registers with `@RegisterHelp()`. */
+/** A command that shows up in the app's `--help` and completion: its `helpEntries()` are the root's entries. */
 export interface HelpContributor {
   /** Its entries in the root help, usually one (`agents` adds one per agent of the workspace too). */
   helpEntries(): readonly CommandEntry[];
@@ -73,3 +73,19 @@ export interface HelpContributor {
 
 /** What a CLI says about itself at the root: everything but its commands, which the commands register. */
 export type RootSpec = Omit<CommandSpec, 'commands'>;
+
+/** How the root help lays out the commands: which sections come first, in what order, and entries from elsewhere. */
+export interface RootLayout {
+  /**
+   * The order of the root's sections (`['Commands', 'Agents']`): the entries are sorted by it. Sections it does not
+   * name come last.
+   */
+  readonly groups?: readonly string[];
+  /**
+   * The order of the commands inside a section, by name. Names it does not list come after, in the order they were
+   * registered: without it, a section keeps that order.
+   */
+  readonly order?: readonly string[];
+  /** Entries the caller already gathered, listed with the ones this spec's commands return. */
+  readonly entries?: () => readonly CommandEntry[];
+}

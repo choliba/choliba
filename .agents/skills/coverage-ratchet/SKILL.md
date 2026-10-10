@@ -36,9 +36,10 @@ the ratchet then locks that hollow number in.
   Suggest it only when a real, understood reason exists, and edit only the metric they name.
 - **Adding to `collectCoverageFrom` exclusions** in `jest/jest.coverage.config.json`. Today it excludes specs and the
   whole `__tests__/` folder (test code and helpers), `.d.ts`, `main.ts` (wiring-only entrypoints),
-  `*.interface.ts` and `*.types.ts` (no executable code). Excluding a file
-  that holds logic hides exactly what the ratchet protects. If a file is hard to cover, that is usually a
-  design signal: move the logic into a testable module and keep the excluded file thin.
+  `*.interface.ts` and `*.types.ts` (no executable code), and `index.ts` (a folder's public face: re-exports only,
+  the logic lives in the files it names). Excluding a file that holds logic hides exactly what the ratchet
+  protects. If a file is hard to cover, that is usually a design signal: move the logic into a testable module
+  and keep the excluded file thin.
 
 ## Design decisions
 

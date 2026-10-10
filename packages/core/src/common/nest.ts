@@ -1,1 +1,0 @@
-export { discover } from './discover';

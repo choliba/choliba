@@ -5,6 +5,7 @@ export type {
   FlagSpec,
   FlagValueSpec,
   HelpContributor,
+  RootLayout,
   RootSpec,
   Suggestions,
   TypedFlags,

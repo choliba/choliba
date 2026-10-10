@@ -1,9 +1,7 @@
-import { Test } from '@nestjs/testing';
+import { coreShell, createShell } from '@choliba/core';
+import { fakePlatform } from '@choliba/core/testing';
 
-import { ClaudeProviderModule } from '../../providers/claude/claude-provider.module';
-import { CursorProviderModule } from '../../providers/cursor/cursor-provider.module';
-import { ProviderRegistryService } from '../../providers/provider-registry.service';
-import { ProvidersModule } from '../../providers/providers.module';
+import { AGENT_PROVIDERS, agentsShell } from '../..';
 import {
   AUTO,
   InvalidProviderPreferenceError,
@@ -79,22 +77,11 @@ describe('ProviderRegistry — the names and descriptions --provider shows', () 
   });
 });
 
-describe('ProviderRegistryService', () => {
-  it('finds every provider registered by the imported provider modules, once', async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [ProvidersModule, ClaudeProviderModule, CursorProviderModule],
-    }).compile();
-    await moduleRef.init();
-    const service = moduleRef.get(ProviderRegistryService);
+describe('AGENT_PROVIDERS', () => {
+  it('gives claude and cursor, in that order, once', () => {
+    const { container } = createShell(fakePlatform(), [coreShell, agentsShell]);
 
-    expect(service.registry().choices()).toEqual(['auto', 'claude', 'cursor']);
-    expect(service.registry()).toBe(service.registry());
-  });
-
-  it('finds none without a provider module', async () => {
-    const moduleRef = await Test.createTestingModule({ imports: [ProvidersModule] }).compile();
-    await moduleRef.init();
-
-    expect(moduleRef.get(ProviderRegistryService).registry().choices()).toEqual(['auto']);
+    expect(container.get(AGENT_PROVIDERS).choices()).toEqual(['auto', 'claude', 'cursor']);
+    expect(container.get(AGENT_PROVIDERS)).toBe(container.get(AGENT_PROVIDERS));
   });
 });

@@ -1,10 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { Inject, Injectable } from '@nestjs/common';
-
-import { locateResource, WHICH, type Which, RUNTIME } from '@choliba/core';
-import { ConfigService } from '@choliba/core/nest';
+import { locateResource, type ConfigService, type Which } from '@choliba/core';
 
 import type { Runtime } from '../runtime';
 
@@ -13,12 +10,11 @@ function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
 }
 
 /** The Node tools choliba ships (ESLint, Prettier), run in the workspace with the terminal attached. */
-@Injectable()
 export class ToolsService {
   constructor(
-    @Inject(RUNTIME) private readonly runtime: Runtime,
-    @Inject(ConfigService) private readonly config: ConfigService,
-    @Inject(WHICH) private readonly which: Which,
+    private readonly runtime: Runtime,
+    private readonly config: ConfigService,
+    private readonly which: Which,
   ) {}
 
   /** `choliba lint`: ESLint, with the workspace's own eslint.config.* or, without one, the config shipped here. */

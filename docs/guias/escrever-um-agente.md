@@ -8,8 +8,7 @@ aplica (identidade, modelos, skills, MCPs, permissões, modos, passos) e o texto
 o prompt a partir dele, e só entra no prompt o que o agente declara: uma skill ou um MCP que sai do `agent.yaml`
 some do prompt junto.
 
-Para começar de um `agent.yaml` válido, com `CHANGE_ME` onde vai o texto, use
-[`choliba generate agent`](../choliba-cli.md#criar-um-agente-choliba-generate-agent).
+Para começar, copie um `agent.yaml` que já exista (os deste repositório ficam em `.agents/agents/`) e troque o texto.
 
 O `agent.yaml` segue um padrão versionado. A primeira chave, `version`, é a versão do padrão (hoje só `1`); um
 arquivo sem ela ou de outra versão não carrega. O schema é `schemes/v1/agent.schema.json`.
@@ -46,7 +45,7 @@ skills:
       Onde a skill escreve `playwright-cli <comando>`, rode a ferramenta `playwright-cli` pelo caminho que o bloco de
       permissões traz, seguida do `<comando>`.
 mcps:
-  mcp-app:
+  issues:
     tools: [jira_get_issue]
     instructions: |
       Use quando o pedido citar uma issue do Jira (ex.: `ABC-123`).
@@ -101,8 +100,8 @@ Cada campo vira uma seção do prompt, nesta ordem:
 
 Antes dessas seções, o choliba põe no prompt o que o resto do `agent.yaml` declara: a ordem de ler cada skill (com
 a instrução dela), as permissões e os servidores MCP (com a instrução de cada um). Por isso o texto do agente
-**não cita** skill, MCP nem permissão. Um texto que diz "use o Jira pelo MCP `mcp-app`" continua mandando o modelo
-procurar o Jira depois que o MCP sai do `agent.yaml`; a instrução de uso do Jira fica na declaração do MCP, e some
+**não cita** skill, MCP nem permissão. Um texto que diz "use o quadro pelo MCP `issues`" continua mandando o modelo
+procurar o quadro depois que o MCP sai do `agent.yaml`; a instrução de uso fica na declaração do MCP, e some
 com ele.
 
 Os textos são Markdown puro (`<comando>` é escrito assim, sem escape).
@@ -117,7 +116,7 @@ skills:
   - documentation # só o nome: o agente lê o SKILL.md, sem instrução deste agente
 
 mcps:
-  mcp-app:
+  issues:
     tools: [jira_get_issue, jira_search] # só essas tools; sem tools, todas
     instructions: |
       Use quando o pedido citar uma issue do Jira (ex.: `ABC-123`).

@@ -62,6 +62,14 @@ describe('cursorProvider.buildArgs', () => {
     expect(String(args[1]).indexOf('be an echo')).toBeLessThan(String(args[1]).indexOf('do the task'));
   });
 
+  it('declares Grep and Glob as tools it cannot limit, and tells the model never to use them', () => {
+    const prompt = String(cursorProvider.buildArgs(fakeRequest())[1]);
+
+    expect(cursorProvider.unenforcedTools).toEqual(['Grep', 'Glob']);
+    expect(prompt).toContain('Never use Grep or Glob: your permissions cannot limit them here');
+    expect(prompt.indexOf('Never use Grep')).toBeLessThan(prompt.indexOf('do the task'));
+  });
+
   it("opens the inlined instructions with the order to use the agent's skills", () => {
     const prompt = String(cursorProvider.buildArgs(fakeRequest({ skillsInstruction: 'Utilize a skill docs.' }))[1]);
 

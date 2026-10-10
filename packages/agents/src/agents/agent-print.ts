@@ -1,4 +1,4 @@
-import type { Writable } from '@choliba/terminal';
+import type { Writable } from '@choliba/core';
 
 import { loadAgent } from './agent-loader';
 

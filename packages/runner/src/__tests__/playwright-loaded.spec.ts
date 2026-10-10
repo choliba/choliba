@@ -6,9 +6,9 @@ import ts from 'typescript';
 /**
  * Playwright loads its config, the shared hooks, the reporters and everything they import straight from the
  * sources, compiled by its own Babel, which rejects parameter decorators (`@Inject(...)` in a constructor). So
- * nothing it reaches may use a decorator: the Nest side of each package lives behind `@choliba/<pkg>/nest`, which
- * this code never imports. Jest (ts-jest) accepts decorators, so without this spec a slip only shows up when
- * `choliba tests` runs.
+ * nothing it reaches may use a decorator. Every package has one entry, `.`, and this spec walks what Playwright
+ * loads. Jest (ts-jest) would accept a decorator, so without this spec a slip only shows up when `choliba tests`
+ * runs.
  */
 
 const RUNNER = resolve(__dirname, '..', '..');
