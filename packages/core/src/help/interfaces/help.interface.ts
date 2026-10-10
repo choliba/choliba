@@ -65,7 +65,7 @@ export interface CommandSpec {
   readonly footer?: string;
 }
 
-/** A command that shows up in the app's `--help` and completion: what it registers with `@RegisterHelp()`. */
+/** A command that shows up in the app's `--help` and completion: its `helpEntries()` are the root's entries. */
 export interface HelpContributor {
   /** Its entries in the root help, usually one (`agents` adds one per agent of the workspace too). */
   helpEntries(): readonly CommandEntry[];
@@ -86,6 +86,6 @@ export interface RootLayout {
    * registered: without it, a section keeps that order.
    */
   readonly order?: readonly string[];
-  /** Entries registered outside Nest (the shell's commands), listed with the Nest ones while the app runs on both. */
+  /** Entries the caller already gathered, listed with the ones this spec's commands return. */
   readonly entries?: () => readonly CommandEntry[];
 }

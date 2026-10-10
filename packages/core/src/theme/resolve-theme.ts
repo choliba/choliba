@@ -87,7 +87,7 @@ export function buildTheme(choices: ThemeChoices, enabled: boolean, defaults: Th
 
 /**
  * The theme of a workspace: `CHOL_COLORS` of its configuration (the `.env`, with the process environment on
- * top) over the defaults, with color on or off per `settings`. Also for code that runs outside Nest, like the
+ * top) over the defaults, with color on or off per `settings`. Also for code outside a command, like the
  * Playwright reporter.
  */
 export function resolveTheme(config: Readonly<Record<string, string | undefined>>, settings: ColorSettings): Theme {

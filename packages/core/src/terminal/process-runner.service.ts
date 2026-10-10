@@ -15,8 +15,8 @@ export interface ProcessRunnerOptions {
    * No default here on purpose: giving this a `Bun.spawn`-based default would put a
    * reference to the `Bun` global on a code path every caller of `ProcessRunner` can
    * reach, including specs running under Jest's Node environment (see `spawn.ts`).
-   * Production code gets the platform's spawner: the shell builds one for `terminal run`, and
-   * `TerminalModule` builds one for the commands still on Nest. `main.ts` is what reads Bun.
+   * Production code gets the platform's spawner: the shell builds one for `terminal run` and for
+   * the agent runner. `main.ts` is what reads Bun.
    */
   readonly spawner: ProcessSpawner;
   readonly bufferSize?: number;
