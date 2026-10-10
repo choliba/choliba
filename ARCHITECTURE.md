@@ -78,8 +78,8 @@ devolve o código de saída.
 
 ## `.choliba/` e `.agents/`
 
-`.choliba/` é o layout de uma pasta de trabalho instalada: `agents/`, `skills/` e `mcps/`, vazios até alguém
-colocar os seus. Este repositório roda os próprios agentes a partir de `.agents/agents/`, e as skills que eles
-nomeiam a partir de `.agents/skills/` (ao lado das skills de desenvolvimento). A resolução usa essa pasta quando
-ela existe e `CHOL_AGENTS_DIR` não foi definido; numa pasta instalada, sem `.agents/agents/`, continua
-`.choliba/`.
+`.choliba/` é o layout de uma pasta de trabalho: `agents/`, `skills/` e `mcps/`. Neste repositório ela guarda o
+que vai para o usuário: os agentes oficiais e as skills que eles nomeiam, que ele instala com
+`bunx choliba add github:choliba/choliba --path .choliba/agents/<agente>`. O choliba roda esses mesmos agentes daqui,
+pelo layout padrão, sem caso especial. `.agents/` guarda só o ferramental de quem desenvolve o choliba: as skills de
+desenvolvimento, que nenhum usuário recebe.
