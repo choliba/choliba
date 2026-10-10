@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { dockerRunArgs } from '../../common/sandbox/docker-run';
 import {
   DEFAULT_SANDBOX_IMAGE,
@@ -54,6 +57,7 @@ describe('dockerRunArgs', () => {
     expect(args.join(' ')).toContain('--cap-drop ALL');
     expect(args.join(' ')).toContain('--security-opt no-new-privileges');
     expect(args.join(' ')).toContain('--env HOME=/home/choliba');
+    expect(args.join(' ')).toContain('--env PLAYWRIGHT_MCP_SANDBOX=false');
     expect(args.join(' ')).toContain('--env CLAUDE_CODE_OAUTH_TOKEN --mount');
     expect(args.slice(-5)).toEqual(['/w/.cache/runs/1', 'choliba-agent', 'claude', '-p', 'oi']);
     expect(args.join(' ')).not.toContain('docker.sock');
@@ -67,5 +71,21 @@ describe('dockerRunArgs', () => {
       'type=tmpfs,dst=/w/segredo',
       'type=bind,src=/dev/null,dst=/w/.env,readonly',
     ]);
+  });
+});
+
+describe('the agent image', () => {
+  const ROOT = join(__dirname, '..', '..', '..', '..', '..');
+
+  it('is built on the Playwright version every package pins, so its browsers are the ones that version expects', () => {
+    const dockerfile = readFileSync(join(ROOT, 'docker', 'agent.Dockerfile'), 'utf8');
+    const image = /^ARG PLAYWRIGHT_VERSION=(.+)$/m.exec(dockerfile)?.[1];
+    const pinned = ['agents', 'choliba', 'runner'].map((pkg) => {
+      const manifest = JSON.parse(readFileSync(join(ROOT, 'packages', pkg, 'package.json'), 'utf8')) as Readonly<
+        Record<'dependencies' | 'devDependencies', Readonly<Record<string, string>> | undefined>
+      >;
+      return { ...manifest.devDependencies, ...manifest.dependencies }['@playwright/test'];
+    });
+    expect(pinned).toEqual([image, image, image]);
   });
 });
