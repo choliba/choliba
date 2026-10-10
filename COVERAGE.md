@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 10/10/2026 00:04:07 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 10/10/2026 00:09:51 — não editar manualmente.
 
 ## Resumo
 
@@ -8,7 +8,6 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
 🟢|**Total**|100.00|100.00|100.00|100.00
 🟢|[packages/agents](packages/agents)|100.00|100.00|100.00|100.00
-🟢|[packages/choliba-cli](packages/choliba-cli)|100.00|100.00|100.00|100.00
 🟢|[packages/choliba](packages/choliba)|100.00|100.00|100.00|100.00
 🟢|[packages/core](packages/core)|100.00|100.00|100.00|100.00
 🟢|[packages/projects](packages/projects)|100.00|100.00|100.00|100.00
@@ -94,56 +93,6 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/providers/provider-registry.service.ts](packages/agents/src/providers/provider-registry.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/providers.module.ts](packages/agents/src/providers/providers.module.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/register-agent-provider.decorator.ts](packages/agents/src/providers/register-agent-provider.decorator.ts)|100.00|100.00|100.00|100.00
-
-</details>
-
-<details>
-<summary>🟢 <b>packages/choliba-cli</b> — 100.00% das linhas, 42 arquivos</summary>
-
-Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
---|--|--|--|--|--
-🟢|[src/add/add.command.ts](packages/choliba-cli/src/add/add.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/add/add.module.ts](packages/choliba-cli/src/add/add.module.ts)|100.00|100.00|100.00|100.00
-🟢|[src/add/add.service.ts](packages/choliba-cli/src/add/add.service.ts)|100.00|100.00|100.00|100.00
-🟢|[src/add/nest.ts](packages/choliba-cli/src/add/nest.ts)|100.00|100.00|100.00|100.00
-🟢|[src/app.module.ts](packages/choliba-cli/src/app.module.ts)|100.00|100.00|100.00|100.00
-🟢|[src/common/errors.ts](packages/choliba-cli/src/common/errors.ts)|100.00|100.00|100.00|100.00
-🟢|[src/common/index.ts](packages/choliba-cli/src/common/index.ts)|100.00|100.00|100.00|100.00
-🟢|[src/generate/agent-options.ts](packages/choliba-cli/src/generate/agent-options.ts)|100.00|100.00|100.00|100.00
-🟢|[src/generate/agent-yaml.ts](packages/choliba-cli/src/generate/agent-yaml.ts)|100.00|100.00|100.00|100.00
-🟢|[src/generate/agent.service.ts](packages/choliba-cli/src/generate/agent.service.ts)|100.00|100.00|100.00|100.00
-🟢|[src/generate/create-agent.ts](packages/choliba-cli/src/generate/create-agent.ts)|100.00|100.00|100.00|100.00
-🟢|[src/generate/dto/generate-project.dto.ts](packages/choliba-cli/src/generate/dto/generate-project.dto.ts)|100.00|100.00|100.00|100.00
-🟢|[src/generate/dto/generate-ticket.dto.ts](packages/choliba-cli/src/generate/dto/generate-ticket.dto.ts)|100.00|100.00|100.00|100.00
-🟢|[src/generate/generate-agent.command.ts](packages/choliba-cli/src/generate/generate-agent.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/generate/generate-args.ts](packages/choliba-cli/src/generate/generate-args.ts)|100.00|100.00|100.00|100.00
-🟢|[src/generate/generate-project.command.ts](packages/choliba-cli/src/generate/generate-project.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/generate/generate-spec.ts](packages/choliba-cli/src/generate/generate-spec.ts)|100.00|100.00|100.00|100.00
-🟢|[src/generate/generate-ticket.command.ts](packages/choliba-cli/src/generate/generate-ticket.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/generate/generate.command.ts](packages/choliba-cli/src/generate/generate.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/generate/generate.module.ts](packages/choliba-cli/src/generate/generate.module.ts)|100.00|100.00|100.00|100.00
-🟢|[src/generate/generate.service.ts](packages/choliba-cli/src/generate/generate.service.ts)|100.00|100.00|100.00|100.00
-🟢|[src/generate/index.ts](packages/choliba-cli/src/generate/index.ts)|100.00|100.00|100.00|100.00
-🟢|[src/generate/nest.ts](packages/choliba-cli/src/generate/nest.ts)|100.00|100.00|100.00|100.00
-🟢|[src/generate/resolve-project.ts](packages/choliba-cli/src/generate/resolve-project.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/index.ts](packages/choliba-cli/src/help/index.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/root-spec.ts](packages/choliba-cli/src/help/root-spec.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/version.ts](packages/choliba-cli/src/help/version.ts)|100.00|100.00|100.00|100.00
-🟢|[src/new/env-file.ts](packages/choliba-cli/src/new/env-file.ts)|100.00|100.00|100.00|100.00
-🟢|[src/new/nest.ts](packages/choliba-cli/src/new/nest.ts)|100.00|100.00|100.00|100.00
-🟢|[src/new/new-options.ts](packages/choliba-cli/src/new/new-options.ts)|100.00|100.00|100.00|100.00
-🟢|[src/new/new-spec.ts](packages/choliba-cli/src/new/new-spec.ts)|100.00|100.00|100.00|100.00
-🟢|[src/new/new-workspace.ts](packages/choliba-cli/src/new/new-workspace.ts)|100.00|100.00|100.00|100.00
-🟢|[src/new/new.command.ts](packages/choliba-cli/src/new/new.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/new/new.module.ts](packages/choliba-cli/src/new/new.module.ts)|100.00|100.00|100.00|100.00
-🟢|[src/new/new.service.ts](packages/choliba-cli/src/new/new.service.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runtime/index.ts](packages/choliba-cli/src/runtime/index.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runtime/prompter.ts](packages/choliba-cli/src/runtime/prompter.ts)|100.00|100.00|100.00|100.00
-🟢|[src/workspace/index.ts](packages/choliba-cli/src/workspace/index.ts)|100.00|100.00|100.00|100.00
-🟢|[src/workspace/nest.ts](packages/choliba-cli/src/workspace/nest.ts)|100.00|100.00|100.00|100.00
-🟢|[src/workspace/workspace-choliba.ts](packages/choliba-cli/src/workspace/workspace-choliba.ts)|100.00|100.00|100.00|100.00
-🟢|[src/workspace/workspace.module.ts](packages/choliba-cli/src/workspace/workspace.module.ts)|100.00|100.00|100.00|100.00
-🟢|[src/workspace/workspace.service.ts](packages/choliba-cli/src/workspace/workspace.service.ts)|100.00|100.00|100.00|100.00
 
 </details>
 

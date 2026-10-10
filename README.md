@@ -59,17 +59,8 @@ Agentes podem usar skills e servidores MCP, instalados na pasta de trabalho.
 O choliba não está no npm: os pacotes são os `.tgz` da pré-release
 [`v0.0.1-dev`](https://github.com/choliba/choliba/releases/tag/v0.0.1-dev), refeita a cada merge na `master`.
 
-Instale o [`choliba-cli`](docs/choliba-cli.md) uma vez, na máquina (os comandos `choliba` e `chol`), e crie a pasta de
-trabalho com ele. O `choliba new` instala o choliba na pasta, monta a pasta de trabalho, liga o autocomplete, grava o
-provider e instala os agentes:
-
-```
-bun add -g \
-  https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-cli-0.0.1-dev.tgz
-choliba new dev-tools
-```
-
-Sem o `choliba-cli`, numa pasta com o próprio `package.json` (sem ele, o Bun pode instalar numa pasta acima):
+Instale numa pasta que já tenha o próprio `package.json` (sem ele, o Bun pode instalar numa pasta acima). O
+`--trust` roda o `choliba setup`, que monta a pasta de trabalho e liga o autocomplete:
 
 ```
 echo '{ "name": "dev-tools", "private": true }' > package.json
@@ -77,8 +68,7 @@ bun add --trust \
   https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
 ```
 
-O `--trust` roda o `choliba setup`, que monta a pasta de trabalho e liga o autocomplete. Dependências, o que o setup
-cria e como atualizar: [Primeiros passos](docs/primeiros-passos.md).
+Dependências, o que o setup cria e como atualizar: [Primeiros passos](docs/primeiros-passos.md).
 
 ## Uso
 
@@ -87,12 +77,7 @@ uma pasta vazia ao `check` verde, está em
 [Do zero ao primeiro ticket](docs/primeiros-passos.md#do-zero-ao-primeiro-ticket)):
 
 ```sh
-# um projeto para a aplicação em ../minha-app, e os agentes do repositório do choliba
-choliba generate project minha-app \
-  --app-dir ../minha-app --base-url http://localhost:3000
-choliba add github:choliba/choliba --path .choliba/agents/product-owner
-choliba add github:choliba/choliba --path .choliba/agents/test-writer
-choliba add github:choliba/choliba --path .choliba/agents/implementer
+# o exemplo que o setup cria, e os agentes em .choliba/agents/
 bunx choliba check
 
 # o ticket, os testes e a implementação
@@ -115,7 +100,7 @@ vazia. Detalhes e limites de cada provider: [Segurança](docs/conceitos/seguranc
 No site [choliba.github.io](https://choliba.github.io/), com busca, ou em
 [`docs/`](docs/README.md), por tipo:
 
-- **Para começar:** [Primeiros passos](docs/primeiros-passos.md) e o [`choliba-cli`](docs/choliba-cli.md).
+- **Para começar:** [Primeiros passos](docs/primeiros-passos.md).
 - **Guias:** [escrever um agente](docs/guias/escrever-um-agente.md),
   [instalar agentes, skills e MCPs](docs/guias/instalar-agentes.md), [`--dry-run`](docs/guias/dry-run.md).
 - **Referência:** [CLI](docs/referencia/cli.md), [`agent.yaml`](docs/referencia/agent-yaml.md),

@@ -19,13 +19,13 @@ written here, with its reason.
   (`src/nest.ts`: the app's side: modules, services, commands, and what touches Bun). `.` must load anywhere,
   under Node too, as the Playwright runner does: no Nest decorators (its Babel rejects them) and nothing of Bun,
   not even its types (the runner's typecheck has none). `@choliba/terminal`'s `createBunProcessSpawner`, used only
-  by the apps' `main.ts`, is in `./nest` for that reason. Playwright reaches only `core`, `projects` and `terminal`
+  by the app's `main.ts`, is in `./nest` for that reason. Playwright reaches only `core`, `projects` and `terminal`
   (`playwright-loaded.spec.ts` checks it); every other library keeps the same two entries anyway, so the convention is
   one.
 - **Extra entries**, only these: `@choliba/core/testing` (fakes for specs) and the runner's entries that projects'
   specs import (public surface).
-- **App** (`bin`): `src/main.ts` and `app.module.ts`; nothing imports an app. What both apps need lives in
-  `@choliba/core`: `RuntimeModule.forRoot(runtime)` with the `RUNTIME` token (each app keeps the interface of its
+- **App** (`bin`): `src/main.ts` and `app.module.ts`; nothing imports an app. What the app needs lives in
+  `@choliba/core`: `RuntimeModule.forRoot(runtime)` with the `RUNTIME` token (the app keeps the interface of its
   runtime) and `findManifest`/`versionLine` for `--version`.
 
 ## 2. Layers of a package's `src/`

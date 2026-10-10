@@ -50,6 +50,6 @@ describe('versionLine', () => {
       'choliba 0.0.1-dev.44+bbb4cdb',
     );
     expect(versionLine('choliba', { version: '0.0.1-dev' })).toBe('choliba 0.0.1-dev');
-    expect(versionLine('choliba-cli', undefined)).toBe('choliba-cli (versão desconhecida)');
+    expect(versionLine('pacote', undefined)).toBe('pacote (versão desconhecida)');
   });
 });

@@ -9,18 +9,6 @@ O choliba não está no npm: os pacotes são os `.tgz` da pré-release
 [`v0.0.1-dev`](https://github.com/choliba/choliba/releases/tag/v0.0.1-dev), que é refeita a cada merge na
 `master` (o endereço não muda).
 
-Instale o [`choliba-cli`](choliba-cli.md) uma vez, na máquina, e crie a pasta de trabalho com ele:
-
-```
-bun add -g https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-cli-0.0.1-dev.tgz
-choliba new dev-tools
-```
-
-O `choliba new` cria a pasta e o `package.json`, instala o choliba nela com `--trust` (o
-[`choliba setup`](#choliba-setup) roda sozinho), pergunta o provider e os agentes e roda o `check`.
-
-### Sem o `choliba-cli`
-
 Instale numa pasta que já tenha o próprio `package.json`:
 
 ```
@@ -72,14 +60,7 @@ ele:
 ## Atualização
 
 A URL da release não muda a cada versão. Para o Bun baixar o pacote novo (e não reaproveitar o do cache), remova e
-instale de novo. O `choliba-cli`:
-
-```
-bun remove -g choliba-cli
-bun add -g https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-cli-0.0.1-dev.tgz
-```
-
-E o choliba de cada pasta de trabalho, dentro dela:
+instale de novo, dentro da pasta de trabalho:
 
 ```
 bun remove choliba
@@ -102,40 +83,18 @@ Este passo a passo monta uma pasta de trabalho `~/dev/dev-tools` para testar e d
 `~/dev/minha-app`, que ainda pode estar vazia. As saídas são de uma execução real (com `/home/voce` no lugar da
 pasta pessoal).
 
-1. Instale o [`choliba-cli`](choliba-cli.md), se ainda não tiver:
+1. Crie a pasta da aplicação e a pasta de trabalho, e instale o choliba nela. O `setup` roda sozinho com `--trust`
+   e cria o projeto de exemplo `projects/exemplo`:
 
    ```sh
-   bun add -g https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-cli-0.0.1-dev.tgz
+   mkdir -p ~/dev/minha-app ~/dev/dev-tools
+   cd ~/dev/dev-tools
+   echo '{ "name": "dev-tools", "private": true }' > package.json
+   bun add --trust https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
    ```
 
-2. Crie a pasta da aplicação e a pasta de trabalho, com os três agentes do choliba. Sem as opções, o `new`
-   pergunta o provider e os agentes. O progresso de cada passo vai para o stderr; abaixo, o resumo:
-
-   ```
-   $ mkdir -p ~/dev/minha-app
-   $ cd ~/dev
-   $ choliba new dev-tools --provider claude --agents product-owner,test-writer,implementer --no-input
-   Pasta de trabalho criada, mas o `choliba check` apontou o que corrigir (acima): /home/voce/dev/dev-tools
-   Provider: claude. Agentes: product-owner, test-writer, implementer.
-
-   Próximos passos:
-     cd /home/voce/dev/dev-tools
-     choliba generate project minha-app --app-dir ../minha-app --base-url http://localhost:3000
-     bunx choliba product-owner --project minha-app --type story "o que a aplicação deve fazer"
-   $ cd dev-tools
-   ```
-
-   O que o `check` apontou é o passo 4: o `product-owner` traz o MCP `mcp-app`, que ainda não está configurado.
-
-3. Crie o projeto de teste da aplicação. Sem nome, o projeto leva o nome da pasta de `--app-dir`. O `--base-url` é o
-   endereço em que a aplicação vai rodar, com o `http://`:
-
-   ```
-   $ choliba generate project minha-app --app-dir ../minha-app --base-url http://localhost:3000
-   Projeto "minha-app" criado em /home/voce/dev/dev-tools/projects/minha-app.
-   Nenhum README na raiz de /home/voce/dev/minha-app; description ficou vazio.
-   Antes de usar: crie /home/voce/dev/dev-tools/projects/minha-app/.env.json a partir de /home/voce/dev/dev-tools/projects/minha-app/.env.example.json e troque os valores CHANGE_ME (config.json e .env.json).
-   ```
+2. O projeto de teste da aplicação segue o `projects/exemplo` que o setup criou: uma pasta em `projects/<nome>/`
+   com `config.json` (o `baseURL` com `http://` e o `appDir`) e o `.env.json` a partir do exemplo.
 
    O `.env.json` guarda os dados que os testes usam em cada ambiente, como um usuário de teste. O `.gitignore` da
    pasta de trabalho o deixa fora do git. Crie-o a partir do exemplo e troque os `CHANGE_ME`. Se a aplicação ainda
@@ -171,12 +130,11 @@ pasta pessoal).
    roda (veja
    [A aplicação do projeto](referencia/cli.md#a-aplicação-do-projeto)).
 
-4. O `product-owner` traz o MCP `mcp-app`, que precisa de `CHOL_MCP_APP_DIR` e `CHOL_MCP_APP_LOG_DIR` no `.env`.
+3. O `product-owner` traz o MCP `mcp-app`, que precisa de `CHOL_MCP_APP_DIR` e `CHOL_MCP_APP_LOG_DIR` no `.env`.
    Como instalar o servidor e preencher as duas:
-   [O servidor do MCP `mcp-app`](guias/instalar-agentes.md#o-servidor-do-mcp-mcp-app). Com o servidor já
-   instalado, o `choliba new` grava as duas sozinho com `--mcp-app-dir <pasta>`.
+   [O servidor do MCP `mcp-app`](guias/instalar-agentes.md#o-servidor-do-mcp-mcp-app).
 
-5. Confira. Com tudo no lugar, nada sai com `✗`:
+4. Confira. Com tudo no lugar, nada sai com `✗`:
 
    ```
    $ bunx choliba check
@@ -197,7 +155,7 @@ pasta pessoal).
    bunx choliba product-owner --project minha-app --type story "a página inicial mostra o nome do site" --dry-run
    ```
 
-6. Do ticket ao código implementado:
+5. Do ticket ao código implementado:
 
    ```sh
    # o ticket, os testes e a implementação
