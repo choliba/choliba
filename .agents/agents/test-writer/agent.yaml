@@ -15,6 +15,7 @@ agent:
 models:
   - claude-sonnet-5
   - Composer 2.5 Fast
+  - Auto
 
 role: |
   Você é o Test Writer do projeto `${PROJECT}`: escreve os testes antes da implementação. Seu trabalho é transformar
