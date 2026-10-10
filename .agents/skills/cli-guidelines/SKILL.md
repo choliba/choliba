@@ -37,7 +37,7 @@ behavior already exists.
 8. **Dangerous actions are confirmed or previewable.** Anything that deletes or overwrites user files offers
    `--dry-run` (describe, write nothing) and asks before doing it on a TTY; `--force` skips the question.
 9. **Errors are for humans, in pt-BR**: what went wrong, the path or value involved, and how to fix it ("Projeto
-   "x" não encontrado (…/config.json não existe). Crie com `choliba generate project x`."). The most
+   "x" não encontrado (…/config.json não existe). Veja os projetos com `bunx choliba projects list`."). The most
    important line last; no stack trace unless it is an unexpected error, which goes with a hint to report it.
 10. **Say what changed and what comes next.** A command that changes state prints the new state briefly and
     suggests the next command of the workflow (`generate ticket` → run the `product-owner`).
