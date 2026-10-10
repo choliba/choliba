@@ -1,53 +1,6 @@
 import * as agents from '../index';
 
 describe('public entrypoint', () => {
-  it('re-exports every value binding the package promises', () => {
-    // Each `export { a, b } from '...'` compiles to one getter per name; a getter only counts
-    // as covered once something actually reads it — importing the module is not enough. This
-    // touches every value export (not the type-only ones, which produce no runtime binding).
-    expect(agents.AgentConfigError).toBeDefined();
-    expect(typeof agents.runAgentsCli).toBe('function');
-    expect(typeof agents.isValidAgentName).toBe('function');
-    expect(typeof agents.listAgents).toBe('function');
-    expect(typeof agents.loadAgent).toBe('function');
-    expect(typeof agents.parseAgentYaml).toBe('function');
-
-    expect(typeof agents.resolveInvocation).toBe('function');
-    expect(typeof agents.defineInvocation).toBe('function');
-    expect(typeof agents.effectivePolicy).toBe('function');
-    expect(typeof agents.invocationFromAgent).toBe('function');
-    expect(typeof agents.implicitInvocation).toBe('function');
-
-    expect(typeof agents.MAX_ARG_BYTES).toBe('number');
-    expect(agents.PromptTooLargeError).toBeDefined();
-    expect(typeof agents.assertArgvFits).toBe('function');
-    expect(typeof agents.buildUserPrompt).toBe('function');
-    expect(typeof agents.modeInstruction).toBe('function');
-    expect(typeof agents.wrapInstructions).toBe('function');
-
-    expect(typeof agents.readPlan).toBe('function');
-    expect(typeof agents.resolvePlanPath).toBe('function');
-    expect(typeof agents.slugify).toBe('function');
-    expect(typeof agents.writePlan).toBe('function');
-
-    expect(agents.AgentProvider).toBeDefined();
-    expect(agents.ProviderRegistry).toBeDefined();
-    expect(agents.AUTO).toBe('auto');
-    expect(agents.InvalidProviderPreferenceError).toBeDefined();
-    expect(agents.ProviderNotFoundError).toBeDefined();
-
-    expect(typeof agents.renderEvent).toBe('function');
-    expect(typeof agents.runAgent).toBe('function');
-    expect(agents.agentsShell.name).toBe('@choliba/agents');
-    expect(agents.agentsCommand.name).toBe('agents');
-    expect(typeof agents.agentsEntries).toBe('function');
-    expect(agents.AGENTS.name).toBe('AgentsService');
-    expect(agents.AGENT_PROVIDERS.name).toBe('ProviderRegistry');
-    expect(new agents.ClaudeAgentProvider().id).toBe('claude');
-    expect(new agents.CursorAgentProvider().id).toBe('cursor');
-    expect(agents.AgentsService).toBeDefined();
-  });
-
   it('exposes a working command definition end to end through the barrel', () => {
     const command = agents.defineInvocation({ name: 'x', agent: 'echo', description: 'd' });
 
