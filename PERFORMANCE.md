@@ -7,8 +7,9 @@ comparar mudanças que mexem no boot do CLI.
 ## Como medir
 
 ```sh
-bun run chol:pack          # gera o .tgz, para medir também o choliba instalado
-bun run bench:startup 20   # 20 execuções por cenário (padrão: 10)
+bun run chol:pack                  # gera o .tgz, para medir também o choliba instalado
+bun run bench:startup 20           # 20 execuções por cenário (padrão: 10), só no terminal
+bun run bench:startup 20 --write   # o mesmo, e grava a medição na Referência abaixo
 ```
 
 O script ([`scripts/bench-startup.ts`](scripts/bench-startup.ts)) roda cada cenário duas vezes para aquecer o cache e
@@ -23,8 +24,12 @@ depois mede o tempo de parede de cada execução. Os cenários são:
 
 ## Referência
 
-Medido em 10/10/2026, com Bun 1.4.2 e Linux, 10 execuções por cenário, depois de o `main.ts` passar a despachar só
-pela tabela (sem o grafo de injeção e sem relançar o processo):
+A medição abaixo é de depois de o `main.ts` passar a despachar só pela tabela (sem o grafo de injeção e sem relançar
+o processo). O `--write` substitui o que está entre os marcadores; o resto é escrito à mão.
+
+<!-- bench-startup:begin -->
+
+Medido em 10/10/2026, com Bun 1.4.2 e Linux, 10 execuções por cenário:
 
 | Cenário                            | mín (ms) | mediana (ms) | média (ms) | máx (ms) |
 | ---------------------------------- | -------: | -----------: | ---------: | -------: |
@@ -34,6 +39,8 @@ pela tabela (sem o grafo de injeção e sem relançar o processo):
 | fonte, fora do repo: `--version`   |       86 |           90 |         90 |       95 |
 | instalado (.tgz): `--version`      |       78 |           80 |         80 |       84 |
 | instalado (.tgz): `--help`         |       81 |           85 |         85 |       88 |
+
+<!-- bench-startup:end -->
 
 A medição anterior (09/10/2026, 20 execuções) tinha mediana de 218 ms para `--version` dentro do repo, 274 ms para
 `--help` e 463 ms fora do repo.
@@ -52,5 +59,5 @@ A medição anterior (09/10/2026, 20 execuções) tinha mediana de 218 ms para `
 ## Alvo
 
 O alvo de uma mudança no boot do CLI é aproximar `--version` e `--help` do piso, mais o trabalho real do comando, e
-eliminar a diferença entre rodar de dentro e de fora do repositório. Ao mudar o boot, rode de novo
-`bun run bench:startup 20` e atualize a tabela e a data acima no mesmo PR.
+eliminar a diferença entre rodar de dentro e de fora do repositório. Ao mudar o boot, rode
+`bun run bench:startup 20 --write` e, no mesmo PR, revise a Leitura e a comparação com a medição anterior.
