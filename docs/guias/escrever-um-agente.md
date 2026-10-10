@@ -8,7 +8,7 @@ aplica (identidade, modelos, skills, MCPs, permissões, modos, passos) e o texto
 o prompt a partir dele, e só entra no prompt o que o agente declara: uma skill ou um MCP que sai do `agent.yaml`
 some do prompt junto.
 
-Para começar, copie um `agent.yaml` que já exista (os do repositório ficam em `.choliba/agents/`) e troque o texto.
+Para começar, copie um `agent.yaml` que já exista (os deste repositório ficam em `.agents/agents/`) e troque o texto.
 
 O `agent.yaml` segue um padrão versionado. A primeira chave, `version`, é a versão do padrão (hoje só `1`); um
 arquivo sem ela ou de outra versão não carrega. O schema é `schemes/v1/agent.schema.json`.

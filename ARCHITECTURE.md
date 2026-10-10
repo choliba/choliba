@@ -44,6 +44,14 @@ da raiz, que a passa para o `AgentsService`.
 
 Detalhes, receitas (um comando novo, um provider novo) e os testes: skill [`nestjs`](.agents/skills/nestjs/SKILL.md).
 
+## `.choliba/` e `.agents/`
+
+`.choliba/` é o layout de uma pasta de trabalho instalada: `agents/`, `skills/` e `mcps/`, vazios até alguém
+colocar os seus. Este repositório roda os próprios agentes a partir de `.agents/agents/`, e as skills que eles
+nomeiam a partir de `.agents/skills/` (ao lado das skills de desenvolvimento). A resolução usa essa pasta quando
+ela existe e `CHOL_AGENTS_DIR` não foi definido; numa pasta instalada, sem `.agents/agents/`, continua
+`.choliba/`.
+
 ## A casca sem Nest (em transição)
 
 O boot do Nest custa uns 220 ms a cada comando (veja [PERFORMANCE.md](PERFORMANCE.md)), e os comandos estão saindo

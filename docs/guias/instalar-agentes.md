@@ -22,16 +22,16 @@ também aparece como aviso.
 
 ## O que o repositório do choliba oferece
 
-| Tipo   | Caminho na origem                              | Para quê                                                                   |
-| ------ | ---------------------------------------------- | -------------------------------------------------------------------------- |
-| agente | `.choliba/agents/product-owner`                | Escreve o ticket com critérios de aceite, usando a aplicação no navegador. |
-| agente | `.choliba/agents/test-writer`                  | Escreve um teste por critério, antes da implementação.                     |
-| agente | `.choliba/agents/implementer`                  | Muda a aplicação até os testes do ticket passarem.                         |
-| agente | `.choliba/agents/docs-updater`                 | Atualiza a documentação a partir do diff.                                  |
-| skill  | `.choliba/skills/playwright-cli`               | Ensina o agente a usar o navegador (a ferramenta da run `playwright-cli`). |
-| skill  | `.choliba/skills/playwright-trace`             | Ensina o agente a ler o `trace.zip` de um teste que falhou.                |
-| skill  | `.choliba/skills/playwright-component-testing` | Testes de componente com Playwright.                                       |
-| skill  | `.choliba/skills/documentation`                | Boas práticas de documentação (usada pelo `docs-updater`).                 |
+| Tipo   | Caminho na origem                             | Para quê                                                                   |
+| ------ | --------------------------------------------- | -------------------------------------------------------------------------- |
+| agente | `.agents/agents/product-owner`                | Escreve o ticket com critérios de aceite, usando a aplicação no navegador. |
+| agente | `.agents/agents/test-writer`                  | Escreve um teste por critério, antes da implementação.                     |
+| agente | `.agents/agents/implementer`                  | Muda a aplicação até os testes do ticket passarem.                         |
+| agente | `.agents/agents/docs-updater`                 | Atualiza a documentação a partir do diff.                                  |
+| skill  | `.agents/skills/playwright-cli`               | Ensina o agente a usar o navegador (a ferramenta da run `playwright-cli`). |
+| skill  | `.agents/skills/playwright-trace`             | Ensina o agente a ler o `trace.zip` de um teste que falhou.                |
+| skill  | `.agents/skills/playwright-component-testing` | Testes de componente com Playwright.                                       |
+| skill  | `.agents/skills/documentation`                | Boas práticas de documentação (usada pelo `docs-updater`).                 |
 
 As três skills `playwright-*` são cópias das skills oficiais do Playwright, na versão do `@playwright/test` que o
 choliba usa (1.63.0). Para instalá-las direto da fonte oficial, veja
