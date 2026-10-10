@@ -4,11 +4,13 @@
 import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
+import { createInterface, type Interface } from 'node:readline';
 
 import {
   createBunProcessSpawner,
   createSpawnGitRunner,
   takeGlobalFlags,
+  type Ask,
   type BunSpawnFn,
   type Platform,
 } from '@choliba/core';
@@ -17,6 +19,43 @@ import { createCholibaShell } from './app-shell';
 import type { Runtime } from './runtime';
 
 const { argv, noColorFlag } = takeGlobalFlags(process.argv.slice(2));
+
+/**
+ * Asks on the terminal (the question on stderr), one stdin line per answer. Lines typed ahead wait in a queue, and
+ * stdin is paused while no question waits, so the process can end; once stdin closes, every answer is blank.
+ */
+function terminalAsk(): Ask {
+  const typed: string[] = [];
+  const waiting: ((line: string) => void)[] = [];
+  let reader: Interface | undefined;
+  let closed = false;
+  const open = (): Interface => {
+    const lines = createInterface({ input: process.stdin });
+    lines.on('line', (line) => {
+      const answer = waiting.shift();
+      if (answer === undefined) typed.push(line);
+      else answer(line);
+      if (waiting.length === 0) lines.pause();
+    });
+    lines.on('close', () => {
+      closed = true;
+      for (const answer of waiting.splice(0)) answer('');
+    });
+    return lines;
+  };
+  return (question) => {
+    process.stderr.write(question);
+    reader ??= open();
+    const ready = typed.shift();
+    if (ready !== undefined || closed) return Promise.resolve((ready ?? '').trim());
+    reader.resume();
+    return new Promise((resolve) => {
+      waiting.push((line) => {
+        resolve(line.trim());
+      });
+    });
+  };
+}
 
 const platform: Platform = {
   argv,
@@ -29,6 +68,8 @@ const platform: Platform = {
   spawn: createBunProcessSpawner(Bun.spawn as unknown as BunSpawnFn),
   which: (bin) => Bun.which(bin),
   git: createSpawnGitRunner(),
+  // Questions go to stderr, so stdout keeps only what the command prints.
+  ...(process.stdin.isTTY ? { ask: terminalAsk() } : {}),
   noColorFlag,
 };
 
