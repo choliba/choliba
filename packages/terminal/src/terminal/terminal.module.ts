@@ -1,22 +1,17 @@
 import { Module } from '@nestjs/common';
 
-import { ThemeModule } from '@choliba/core/nest';
 import { SPAWN, type ProcessSpawner } from '@choliba/core';
 
 import { ProcessRunnerService } from './process-runner.service';
-import { TerminalCommand } from './terminal.command';
-import { TerminalService } from './terminal.service';
 
+/** `ProcessRunnerService` for the commands still on Nest. `terminal run` is built by `terminalShell`. */
 @Module({
-  imports: [ThemeModule],
   providers: [
     {
       provide: ProcessRunnerService,
       useFactory: (spawner: ProcessSpawner) => new ProcessRunnerService({ spawner }),
       inject: [SPAWN],
     },
-    TerminalService,
-    TerminalCommand,
   ],
   exports: [ProcessRunnerService],
 })
