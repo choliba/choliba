@@ -36,19 +36,30 @@ permissões do `agent.yaml`.
     qualquer provider: `✗ Shell bun install: negado (comando fora de allow.execute)` diz qual chave do
     `agent.yaml` liberaria a chamada; `✗ Read src/x.ts: erro: File not found` é o erro da própria ferramenta.
 
-    Num terminal, enquanto o provider roda, um painel fica fixo no rodapé e a saída do agente entra acima dele:
+    Num terminal, a saída do agente vai num quadro com o nome dele, uma linha abaixo do comando, e um painel fica
+    fixo no rodapé com o contexto da execução:
 
     ```
-    [product-owner] → Read: …/projects/app/.env.json
-    ────────────────────────────────────────────────────────────────────────────
-    provider  sandbox  imagem                container                       decorrido
-    cursor    docker   choliba-agent:latest  choliba-2026-10-12T05-53-29.…  00:01:42
+    $ bunx choliba run agent product-owner --project app --ticket app-1 "liste o conteúdo do ticket"
+
+    ┌─ product-owner ─────────────────────────────────────────────────────────────────┐
+    │ Vou ler o ticket app-1.                                                         │
+    │ → Read: …/projects/app/tickets/1.json                                           │
+    └─────────────────────────────────────────────────────────────────────────────────┘
+    provider │ modelo │ sandbox │ imagem        │ container          │ decorrido
+    ─────────┼────────┼─────────┼───────────────┼────────────────────┼─────────────
+    cursor   │ Auto   │ docker  │ choliba-agent │ choliba-2026-10-1… │ 00:00:17.312
     ```
 
-    `imagem` e `container` mostram `—` sem container. Num terminal estreito, as colunas longas são cortadas com `…`
-    e, se a tabela não couber, o painel vira uma linha só (`cursor · docker · 00:01:42`). Quando a sessão termina,
-    o painel dá lugar a uma linha de resumo: `cursor · docker · decorrido 00:03:10 · código 0`. Os passos das fases
-    1 e 3 rodam sem o painel.
+    As linhas novas entram no quadro, acima do painel; uma linha comprida quebra dentro dele (uma palavra maior que
+    a linha, como um caminho, quebra no meio). O modelo aparece quando o provider o informa. Sem container, a tabela
+    não tem `imagem` nem `container`. Num terminal estreito, as colunas longas são cortadas com `…` e, se a tabela não
+    couber, o painel vira uma linha só (`cursor · Auto · docker · 00:00:17.312`). Quando a sessão termina, o quadro
+    se fecha e fica uma linha de resumo: `cursor · Auto · docker · decorrido 00:03:10.482 · código 0`. Os passos das
+    fases 1 e 3 rodam fora do quadro.
+
+    Num pipe, num arquivo ou com `TERM=dumb`, não há quadro nem painel: cada linha leva o rótulo do agente
+    (`[product-owner] → Read: …`), e a primeira diz o provider e onde ele roda (`[provider] cursor · docker · …`).
 
 **Fase 3: o choliba, depois do agente**
 

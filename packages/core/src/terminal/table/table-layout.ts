@@ -1,7 +1,8 @@
 import type { ColumnLayout, PlacedCell, TableAlign, TableColumn, TableRow } from './interfaces/table.interface';
 
-/** The spaces between two columns. */
-export const COLUMN_GAP = 2;
+/** Between two columns: two spaces, or a `│` with a space on each side when the table draws column rules. */
+export const COLUMN_SPACES = '  ';
+export const COLUMN_RULE = ' │ ';
 
 const ELLIPSIS = '…';
 
@@ -32,9 +33,9 @@ export function rowColumns(row: TableRow): number {
   return row.reduce((sum, cell) => sum + cell.colspan, 0);
 }
 
-/** The width of `columns` side by side, with the gaps between them. */
-export function spanWidth(columns: readonly ColumnLayout[]): number {
-  return columns.reduce((sum, column) => sum + column.width, 0) + COLUMN_GAP * Math.max(columns.length - 1, 0);
+/** The width of `columns` side by side, with a `gap` between each two (the two spaces when absent). */
+export function spanWidth(columns: readonly ColumnLayout[], gap = COLUMN_SPACES.length): number {
+  return columns.reduce((sum, column) => sum + column.width, 0) + gap * Math.max(columns.length - 1, 0);
 }
 
 /** The `<col>`s expanded to one rule per column. */
@@ -57,9 +58,9 @@ function widestCell(cells: readonly PlacedCell[], column: number): number {
 }
 
 /** Grows the last column a spanning cell covers until its text fits across the span. */
-function fitSpan(columns: readonly ColumnLayout[], { cell, start }: PlacedCell): void {
+function fitSpan(columns: readonly ColumnLayout[], { cell, start }: PlacedCell, gap: number): void {
   const covered = columns.slice(start, start + cell.colspan);
-  const missing = textWidth(cell.text) - spanWidth(covered);
+  const missing = textWidth(cell.text) - spanWidth(covered, gap);
   const last = covered.at(-1);
   if (missing > 0 && last !== undefined) last.width += missing;
 }
@@ -72,6 +73,7 @@ export function layColumns(
   cols: readonly TableColumn[],
   rows: readonly TableRow[],
   count: number,
+  gap: number,
 ): readonly ColumnLayout[] {
   const cells = rows.flatMap(placeCells);
   const rules = columnRules(cols);
@@ -82,7 +84,7 @@ export function layColumns(
   cells
     .filter(({ cell }) => cell.colspan > 1)
     .forEach((placed) => {
-      fitSpan(columns, placed);
+      fitSpan(columns, placed, gap);
     });
   return columns.map((column) => ({ ...column, natural: column.width }));
 }
@@ -101,10 +103,10 @@ function widestAboveMinimum(candidates: readonly ColumnLayout[]): ColumnLayout |
  * Narrows `columns` to fit `available`: one at a time, the widest first, the ones marked `shrink` before the rest, none
  * below its `minWidth`. A table that cannot fit at the minimums stays at them.
  */
-export function fitColumns(columns: readonly ColumnLayout[], available: number): void {
+export function fitColumns(columns: readonly ColumnLayout[], available: number, gap: number): void {
   for (const candidates of [columns.filter((column) => column.shrink), columns]) {
     let column = widestAboveMinimum(candidates);
-    while (spanWidth(columns) > available && column !== undefined) {
+    while (spanWidth(columns, gap) > available && column !== undefined) {
       column.width -= 1;
       column = widestAboveMinimum(candidates);
     }

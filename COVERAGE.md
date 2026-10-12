@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 12/10/2026 04:04:07 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 12/10/2026 04:48:19 — não editar manualmente.
 
 ## Resumo
 
@@ -117,7 +117,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 56 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 58 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -158,6 +158,8 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/terminal/exit-code.ts](packages/core/src/terminal/exit-code.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/format-duration.ts](packages/core/src/terminal/format-duration.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/formatter.ts](packages/core/src/terminal/formatter.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/frame/ansi-text.ts](packages/core/src/terminal/frame/ansi-text.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/frame/frame.ts](packages/core/src/terminal/frame/frame.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/live-region.ts](packages/core/src/terminal/live-region.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/process-runner.service.ts](packages/core/src/terminal/process-runner.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/session.ts](packages/core/src/terminal/session.ts)|100.00|100.00|100.00|100.00

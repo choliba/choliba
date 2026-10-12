@@ -11,7 +11,7 @@ import type { AgentProvider } from '../../../common/agent-provider';
 import type { PlanContentContext, ProviderRequest } from '../../../common/interfaces/provider.interface';
 import type { ResolvedProvider } from '../../../common/provider-registry';
 import type { RunAgentRequest } from '../../../agents/runs/run-agent';
-import { everySecond, runAgent } from '../../../agents/runs/run-agent';
+import { everySecond, FOOTER_REFRESH_MS, runAgent } from '../../../agents/runs/run-agent';
 import { erroringStream, fakeSpawner, streamFromChunks, throwingSpawner } from '../../helpers/fake-spawner';
 import { makeTmpDir } from '../../helpers/tmp';
 import { NO_PERMISSIONS } from '../../../common/agent-permissions';
@@ -692,10 +692,12 @@ describe('runAgent — footer', () => {
   async function withFooter(
     lines: string,
     launch?: RunAgentRequest['launch'],
-  ): Promise<{ code: number; out: string; err: string; ticks: (() => void)[]; stopped: number }> {
-    const s = setup(fakeSpawner({ stdout: streamFromChunks([lines]) }).spawner);
+    stderr: readonly string[] = [],
+    fakeTimer = true,
+  ): Promise<{ code: number; out: string; err: string; intervals: number[]; stopped: number }> {
+    const s = setup(fakeSpawner({ stdout: streamFromChunks([lines]), stderr: streamFromChunks([...stderr]) }).spawner);
     let seconds = 0;
-    const ticks: (() => void)[] = [];
+    const intervals: number[] = [];
     let stopped = 0;
     const code = await runAgent(s.request(launch === undefined ? {} : { launch }), {
       runner: s.runner,
@@ -704,19 +706,25 @@ describe('runAgent — footer', () => {
       signals: s.signals,
       now: () => new Date(Date.UTC(2026, 0, 1, 0, 0, seconds++)),
       footer: true,
-      every: (_ms, tick) => {
-        ticks.push(tick);
-        return () => {
-          stopped += 1;
-        };
-      },
+      ...(fakeTimer
+        ? {
+            every: (ms: number, tick: () => void) => {
+              intervals.push(ms);
+              tick();
+              return () => {
+                stopped += 1;
+              };
+            },
+          }
+        : {}),
     });
-    return { code, out: s.stdout.chunks.join(''), err: s.stderr.chunks.join(''), ticks, stopped };
+    return { code, out: s.stdout.chunks.join(''), err: s.stderr.chunks.join(''), intervals, stopped };
   }
 
-  it('keeps a table at the bottom while the session prints, then leaves the summary in its place', async () => {
+  it('frames the session under the command and keeps the table at the bottom, without repeating them', async () => {
     const run = await withFooter(
       eventLines([
+        { type: 'init', model: 'sonnet-5', sessionId: 's1' },
         { type: 'text', text: 'olá' },
         { type: 'done', isError: false, text: 'ok' },
       ]),
@@ -729,25 +737,30 @@ describe('runAgent — footer', () => {
     );
 
     expect(run.code).toBe(0);
-    expect(run.out).toContain('[provider] claude · docker · choliba-agent · choliba-1\n');
-    expect(run.out).toMatch(/provider\s+sandbox\s+imagem\s+container\s+decorrido\n/);
-    expect(run.out).toMatch(/claude\s+docker\s+choliba-agent\s+choliba-1\s+00:00:0\d\n/);
-    expect(run.out).toContain('\x1B[3A\x1B[0J');
-    expect(run.out.indexOf('olá')).toBeGreaterThan(run.out.indexOf('decorrido'));
-    expect(run.out).toMatch(/claude · docker · decorrido 00:00:0\d · código 0\n$/);
-    expect(run.ticks).toHaveLength(1);
+    expect(run.out.startsWith('\n┌─ echo ─')).toBe(true);
+    expect(run.out).toMatch(/│ olá +│\n/);
+    expect(run.out).toMatch(/provider │ modelo +│ sandbox │ imagem +│ container │ decorrido\n/);
+    expect(run.out).toMatch(/claude +│ sonnet-5 │ docker +│ choliba-agent │ choliba-1 +│ 00:00:0\d\.000\n/);
+    expect(run.out).not.toContain('[provider]');
+    expect(run.out).not.toContain('[echo]');
+    expect(run.out).not.toContain('ready');
+    expect(run.out).toMatch(/└─+┘\nclaude · sonnet-5 · docker · decorrido 00:00:0\d\.000 · código 0\n$/);
+    expect(run.intervals).toEqual([FOOTER_REFRESH_MS]);
     expect(run.stopped).toBe(1);
   });
 
-  it('draws again on every tick, and still closes with the exit code when the session fails', async () => {
-    const run = await withFooter(eventLines([{ type: 'done', isError: true, text: 'falhou' }]));
-    const before = run.out.length;
-
-    run.ticks[0]?.();
+  it('frames what the session says on stderr too, and still closes with the exit code when it fails', async () => {
+    // The real timer (no fake one): it is stopped when the session closes.
+    const run = await withFooter(
+      eventLines([{ type: 'done', isError: true, text: 'falhou' }]),
+      undefined,
+      ['\n', 'aviso do provider\n', '\n'],
+      false,
+    );
 
     expect(run.code).toBe(1);
-    expect(run.out).toMatch(/claude · local · decorrido 00:00:0\d · código 1\n$/);
-    expect(before).toBeGreaterThan(0);
+    expect(run.err).toMatch(/^│ aviso do provider +│\n$/);
+    expect(run.out).toMatch(/claude · — · local · decorrido 00:00:0\d\.000 · código 1\n$/);
   });
 });
 

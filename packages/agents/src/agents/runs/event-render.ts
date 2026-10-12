@@ -5,6 +5,8 @@ import { failureLine } from './tool-failure';
 
 export interface RenderOptions {
   readonly label: string;
+  /** `false`: the lines go without the `[agent]` label (inside a frame titled with the agent). */
+  readonly labeled?: boolean;
   readonly colorize: boolean;
   readonly color?: AnsiColor;
 }
@@ -42,10 +44,12 @@ function firstLine(text: string): string {
  */
 export function renderEvent(event: AgentEvent, options: RenderOptions): string | undefined {
   const line = (text: string): string =>
-    formatLine(options.label, text, {
-      colorize: options.colorize,
-      ...(options.color !== undefined ? { color: options.color } : {}),
-    });
+    options.labeled === false
+      ? text
+      : formatLine(options.label, text, {
+          colorize: options.colorize,
+          ...(options.color !== undefined ? { color: options.color } : {}),
+        });
 
   switch (event.type) {
     case 'init':

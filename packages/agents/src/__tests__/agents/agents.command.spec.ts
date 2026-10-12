@@ -79,7 +79,7 @@ describe('choliba run agent and list agents', () => {
     withWorkspace(async (cwd) => {
       const { code, platform } = await choliba(['run', 'agent', 'echo', 'repita isto'], {
         cwd,
-        env: { FORCE_COLOR: '1', CHOL_COLORS: 'agents.echo=gray' },
+        env: { FORCE_COLOR: '1', CHOL_COLORS: 'agents.echo=gray', TERM: 'dumb' },
         which: (bin) => (bin === 'claude' ? '/usr/bin/claude' : null),
         spawn: fakeSpawner({ stdout: streamFromChunks(claudeStdout('repetido')) }).spawner,
         stdout: new BufferWritable(true),

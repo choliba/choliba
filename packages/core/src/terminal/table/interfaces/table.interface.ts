@@ -50,8 +50,11 @@ export interface PlacedCell {
   readonly start: number;
 }
 
-/** The `─` lines between rows: none, between the groups (head, each body, foot), or between every row. */
-export type TableRules = 'none' | 'groups' | 'rows';
+/**
+ * The lines the table draws, as HTML's `rules`: none; `─` between the groups (head, each body, foot); `─` between
+ * every row; `│` between the columns; or all of them (`│` between the columns and `─` between every row and group).
+ */
+export type TableRules = 'none' | 'groups' | 'rows' | 'cols' | 'all';
 
 /**
  * A table as HTML's `<table>` has it, in the same order: an optional `caption`, the `cols` (`<colgroup>`/`<col>`), at
