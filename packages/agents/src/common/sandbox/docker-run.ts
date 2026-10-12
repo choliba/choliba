@@ -1,4 +1,5 @@
 import type { ContainerMount } from './container-mounts';
+import type { SandboxNetwork } from './sandbox';
 
 /** Where the session's home is inside the container: an empty folder in memory, nothing of this machine's. */
 export const CONTAINER_HOME = '/home/choliba';
@@ -17,7 +18,13 @@ export interface DockerRun {
   readonly user: ContainerUser;
   /** The variables the container gets, by name: `docker` reads each value from its own environment. */
   readonly env: readonly string[];
+  readonly network: SandboxNetwork;
   readonly command: readonly string[];
+}
+
+function networkArgs(network: SandboxNetwork): readonly string[] {
+  if (network === 'host') return ['--network', 'host'];
+  return ['--network', 'bridge', '--add-host', 'host.docker.internal:host-gateway'];
 }
 
 /** A `--mount` value: a field with a comma or a quote goes in quotes, as Docker reads the list as CSV. */
@@ -36,8 +43,8 @@ function mountArg(mount: ContainerMount): string {
 
 /**
  * `docker run` for one session: the mounts and nothing else of this machine, as the workspace's owner, on the host's
- * network (the application and the MCPs at `localhost` answer), with a read-only root, no capabilities and no way to
- * gain privileges. `/tmp` and the home are empty folders in memory. The Docker socket is never mounted.
+ * bridge network by default (the host is available as `host.docker.internal`), with a read-only root, no capabilities
+ * and no way to gain privileges. `/tmp` and the home are empty folders in memory. The Docker socket is never mounted.
  */
 export function dockerRunArgs(run: DockerRun): readonly string[] {
   return [
@@ -46,8 +53,7 @@ export function dockerRunArgs(run: DockerRun): readonly string[] {
     '--rm',
     '-i',
     '--init',
-    '--network',
-    'host',
+    ...networkArgs(run.network),
     '--user',
     `${String(run.user.uid)}:${String(run.user.gid)}`,
     '--read-only',

@@ -69,7 +69,7 @@ describe('launchFor', () => {
     const fake = disk();
     const launch = launchFor(
       {
-        sandbox: { kind: 'docker', image: 'choliba-agent' },
+        sandbox: { kind: 'docker', image: 'choliba-agent', network: 'isolated' },
         command: ['claude', '-p'],
         request: request({ allowRead: ['docs/'] }),
         files: [{ path: '/w/.cache/runs/1.delete', content: '' }],
@@ -95,7 +95,7 @@ describe('launchFor', () => {
     const fake = disk();
     const launch = launchFor(
       {
-        sandbox: { kind: 'docker', image: 'choliba-agent' },
+        sandbox: { kind: 'docker', image: 'choliba-agent', network: 'isolated' },
         command: ['claude'],
         request: request(
           { allowTools: [{ tool: 'playwright-cli', subcommands: ['*'] }] },
@@ -121,7 +121,7 @@ describe('launchFor — CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR', () => {
     const fake = disk();
     launchFor(
       {
-        sandbox: { kind: 'docker', image: 'choliba-agent' },
+        sandbox: { kind: 'docker', image: 'choliba-agent', network: 'isolated' },
         command: ['claude'],
         request: request({ allowTools: [{ tool: 'playwright-trace', subcommands: ['*'] }] }),
         files: [],
