@@ -23,7 +23,10 @@ completo e o passo a passo estão em [Escrevendo um agente](../guias/escrever-um
 | `allow_without_ticket`            | não         | `false`             | `true` deixa a execução seguir sem `--type`/`--ticket`: com `ticket_types`, o ticket fica opcional; sem, deixa explícito que o agente não usa ticket.                                                                                                                                           |
 | `steps.<modo>.before` / `.after`  | não         | nenhum              | Ações do choliba antes e depois do agente, em cada modo (veja [Steps](#steps)).                                                                                                                                                                                                                 |
 
-Regras de permissão: veja [Segurança](seguranca.md). Delegar a um subagente não é uma permissão: é
+Regras de permissão: veja [Segurança](seguranca.md). Em toda execução o choliba acrescenta `deny.write` e
+`deny.delete` das pastas de agentes, skills e MCPs; uma exceção `!` dentro delas é recusada. No fim,
+compara o sha256 de cada arquivo dessas pastas: se algum foi criado, alterado ou apagado, a execução
+termina com código 1 e lista os caminhos, sem desfazer. Delegar a um subagente não é uma permissão: é
 negado a todo agente, sem chave no `agent.yaml`.
 
 ### Exceções no deny
@@ -41,7 +44,9 @@ permissions:
 
 O agente lê o app em `/home/jackson/dev/teste/` e, da pasta de trabalho, só `docs/publico/`. A pasta de cada skill
 que o agente declara já é uma exceção sozinha: ela não precisa de `!`. Uma exceção que não está dentro de nenhum
-deny da lista (ou que fica dentro de um glob) para a execução antes do provider, porque não tira nada.
+deny da lista (ou que fica dentro de um glob) para a execução antes do provider, porque não tira nada. Uma
+exceção `!` de `deny.write` ou `deny.delete` dentro das pastas de agentes, skills ou MCPs também para: o choliba
+nega escrita e exclusão nelas em toda execução, e nenhuma exceção reabre.
 
 ## Ferramentas da run
 
