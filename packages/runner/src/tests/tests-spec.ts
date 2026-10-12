@@ -19,13 +19,25 @@ export function testsCliSpec(
   };
   return {
     usage: 'choliba run tests [PROJECT[:TICKET][/PATH]] [OPTIONS] [PLAYWRIGHT OPTIONS]',
-    description: [
-      'Roda os testes E2E dos projetos com o Playwright. Sem PROJECT, roda todos os projetos.',
-      '',
-      '  demo                 todos os tickets do projeto demo',
-      '  demo:T-01            os testes do ticket T-01',
-      '  demo:T-01,T-02       uma lista de tickets (também glob e intervalo)',
-      '  demo/tests/a.spec.ts um arquivo do projeto',
+    description:
+      'Roda os testes E2E dos projetos com o Playwright. Sem projeto, roda todos; com projeto:ticket, só os daquele ticket.',
+    examples: [
+      { description: 'Roda os testes de todos os projetos', command: 'choliba run tests' },
+      { description: 'Roda os testes de todos os tickets do projeto loja', command: 'choliba run tests loja' },
+      { description: 'Roda os testes do ticket loja-1', command: 'choliba run tests loja:1' },
+      { description: 'Roda uma lista de tickets (também glob e intervalo)', command: 'choliba run tests loja:1,2' },
+      { description: 'Roda um arquivo do projeto', command: 'choliba run tests loja/tests/a.spec.ts' },
+      {
+        description: 'Confere que os testes do ticket falham pelo comportamento, gravando as falhas',
+        command: 'choliba run tests loja:1 --expect red --failures falhas.md',
+      },
+    ],
+    details: [
+      'Antes de rodar, o choliba deixa a aplicação do projeto pronta: veja',
+      '[A aplicação do projeto](../referencia/aplicacao-do-projeto.md). `--expect` e `--failures` são os portões que os',
+      'agentes usam no TDD; os testes de critérios que outro ticket substituiu saem das rodadas do projeto. Os dois estão',
+      'em [Critérios de aceite e portões](../referencia/criterios-e-portoes.md). Qualquer outra opção vai para o',
+      '`playwright test` (veja `bunx playwright test --help`).',
     ].join('\n'),
     flags: [
       {

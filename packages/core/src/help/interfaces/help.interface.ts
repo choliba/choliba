@@ -49,11 +49,28 @@ export interface CommandEntry {
   readonly listed?: boolean;
 }
 
-/** One description of a CLI (or of one of its commands) that both `complete` and `formatHelp` read. */
+/** One example of a command: what it does, in a short sentence, and the command line that does it. */
+export interface CommandExample {
+  readonly description: string;
+  readonly command: string;
+}
+
+/**
+ * One description of a CLI (or of one of its commands) that `complete`, `formatHelp` and the command reference pages
+ * of the documentation read.
+ */
 export interface CommandSpec {
   /** Text after `Usage:`, e.g. `agents [OPTIONS] COMMAND [TASK...]`. */
   readonly usage: string;
+  /** One or two sentences: what the command does. */
   readonly description?: string;
+  /** The most common uses first: `--help` and the command's page show them under Exemplos. */
+  readonly examples?: readonly CommandExample[];
+  /**
+   * What the command's reference page says beyond the description (Markdown): behavior, defaults, links. Not in
+   * `--help`, which stays short and points to the page.
+   */
+  readonly details?: string;
   readonly commands?: () => readonly CommandEntry[];
   readonly flags?: readonly FlagSpec[];
   /**

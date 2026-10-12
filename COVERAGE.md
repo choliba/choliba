@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 12/10/2026 04:48:19 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 12/10/2026 05:44:35 — não editar manualmente.
 
 ## Resumo
 
@@ -117,7 +117,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 58 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 59 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -131,6 +131,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/config/resources.ts](packages/core/src/config/resources.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/vars.ts](packages/core/src/config/vars.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/workspace.ts](packages/core/src/config/workspace.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/command-page.ts](packages/core/src/help/command-page.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/complete.ts](packages/core/src/help/complete.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/completion-bash.ts](packages/core/src/help/completion-bash.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/entry-help.ts](packages/core/src/help/entry-help.ts)|100.00|100.00|100.00|100.00

@@ -1,4 +1,4 @@
-import { githubSlug, outsideLink } from '../libs/docs-links';
+import { githubSlug, outsideLink } from '../libs/docs';
 
 const REPO = 'https://github.com/o/r';
 

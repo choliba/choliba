@@ -166,4 +166,30 @@ describe('formatHelp', () => {
     expect(formatHelp({ usage: 'tool' })).toBe('Usage:  tool');
     expect(formatHelp({ usage: 'tool', commands: () => [], flags: [] })).toBe('Usage:  tool');
   });
+
+  it('lists structured examples and points a choliba command at its reference page', () => {
+    const text = formatHelp({
+      usage: 'choliba run agent [OPTIONS]',
+      examples: [
+        { description: 'Roda o implementer', command: 'choliba run agent implementer' },
+        { description: 'Mostra o plano', command: 'choliba run agent implementer --mode plan' },
+      ],
+    });
+
+    expect(text).toContain(
+      [
+        'Exemplos:',
+        '  Roda o implementer:',
+        '    choliba run agent implementer',
+        '',
+        '  Mostra o plano:',
+        '    choliba run agent implementer --mode plan',
+      ].join('\n'),
+    );
+    expect(text).toContain('Mais em https://choliba.github.io/comandos/run');
+  });
+
+  it('points the root usage at the command index', () => {
+    expect(formatHelp({ usage: 'choliba' })).toBe('Usage:  choliba\n\nMais em https://choliba.github.io/comandos/');
+  });
 });

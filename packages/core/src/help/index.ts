@@ -1,5 +1,7 @@
+export { commandPage, commandWords, DOCS_URL } from './command-page';
 export type {
   CommandEntry,
+  CommandExample,
   CommandSpec,
   FlagChoice,
   FlagSpec,

@@ -131,6 +131,7 @@ export function createShell(platform: Platform, modules: readonly ShellModule[])
     return {
       usage: `${program} ${verb.name} TYPE [ARGS]`,
       description: verb.description,
+      ...(verb.examples === undefined ? {} : { examples: verb.examples }),
       commands: () => types.flatMap(helpOf),
       flags: [{ name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true }],
       footer: `Run '${program} ${verb.name} TYPE --help' for more information on a type.`,

@@ -1,4 +1,4 @@
-import { rootPage } from '../libs/docs-root-page';
+import { rootPage } from '../libs/docs';
 
 describe('rootPage', () => {
   it('puts the description, no previous or next page and no edit link in the frontmatter, above the page', () => {

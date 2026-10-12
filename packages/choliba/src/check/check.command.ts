@@ -12,7 +12,7 @@ import { PROJECTS, projectCompletions } from '@choliba/projects';
 import { allFine, checkWorkspace, formatCheck } from './check';
 
 const DESCRIPTION =
-  'Confere a pasta de trabalho: agentes (schemas, skills, MCPs) e projetos; com PROJETO, só esse projeto\n\nExemplo:\n  choliba check loja';
+  'Confere a pasta de trabalho: agentes (schemas, skills, MCPs) e projetos; com PROJETO, só esse projeto';
 
 /** `check`'s spec: PROJETO completes to the projects on disk, read on every call. */
 function checkSpec(container: Container): CommandSpec {
@@ -20,6 +20,14 @@ function checkSpec(container: Container): CommandSpec {
   return {
     usage: 'choliba check [PROJETO]',
     description: DESCRIPTION,
+    examples: [
+      { description: 'Confere os agentes e os projetos da pasta de trabalho', command: 'choliba check' },
+      { description: 'Confere se o projeto loja está pronto para rodar', command: 'choliba check loja' },
+    ],
+    details:
+      'Sem PROJETO, lista os agentes (schema, skills e MCPs de cada um) e os projetos, com `✓` ou `✗` e o que está ' +
+      'errado embaixo; sai com 1 se algum está errado. Com PROJETO, confere os arquivos dele, o ambiente ativo e os ' +
+      '`CHANGE_ME` que faltam trocar.',
     positionals: projectOnly,
     flags: [{ name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true }],
   };

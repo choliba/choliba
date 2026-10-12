@@ -105,7 +105,7 @@ MCP que ele suba.
   este numa versão fixa e baixado como pacote conferido pelo sha256, sem rodar script de instalação, e que não se
   atualiza durante a run (o choliba passa `--disable-auto-update` ao Cursor, também fora do container). Construa-a uma vez na raiz do repositório do choliba: `docker build -f docker/agent.Dockerfile -t choliba-agent .`
   (outra imagem: `CHOL_SANDBOX_IMAGE`).
-- O [`--dry-run`](comandos.md#--dry-run) mostra o container e cada caminho que ele vê.
+- O [`--dry-run`](../comandos/run.md#--dry-run) mostra o container e cada caminho que ele vê.
 
 Testado no Linux. `host.docker.internal` também existe no Docker Desktop. O opt-in `CHOL_NETWORK=host` depende do
 suporte do Docker à rede do host em cada sistema.

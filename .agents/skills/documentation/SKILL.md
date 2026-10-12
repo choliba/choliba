@@ -72,7 +72,10 @@ More rules, word choices and examples: `references/style.md`.
   Docs written "later" are docs that drift.
 - Automate what can be checked: formatting, broken links, prose style (e.g. Vale), examples that can run.
 - Remove or rewrite what is no longer true. Outdated docs are worse than missing docs, because readers trust them.
-- Generated docs (API reference from code comments, CLI help) should be generated, not copied by hand.
+- Generated docs (API reference from code comments, CLI help) should be generated, not copied by hand. In this
+  repository, `docs/comandos/` is generated from each command's `CommandSpec`: change the spec and run
+  `bun run docs:commands`. Do not edit those pages by hand. CI runs `bun run docs:commands --check` and fails when a
+  page is stale.
 
 Checks and tooling notes: `references/docs-as-code.md`.
 
