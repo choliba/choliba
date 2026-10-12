@@ -20,7 +20,7 @@ CHOL_PROJECTS_DIR=
 # CHOL_AGENTS_PROVIDER=auto
 
 # Opcional: onde o provider roda, local (padrão) ou docker, num container que só enxerga o que o agent.yaml libera
-# (veja docs/referencia/seguranca.md). No docker, a credencial do provider vem daqui: CLAUDE_CODE_OAUTH_TOKEN (de
+# (veja docs/referencia/sandbox.md). No docker, a credencial do provider vem daqui: CLAUDE_CODE_OAUTH_TOKEN (de
 # claude setup-token) ou ANTHROPIC_API_KEY, e CURSOR_API_KEY.
 # CHOL_SANDBOX=local
 # CHOL_SANDBOX_IMAGE=choliba-agent
