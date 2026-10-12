@@ -123,3 +123,26 @@ export function structureConfig(): Linter.Config[] {
     },
   ];
 }
+
+/** Docker sandbox details stay behind the neutral exports of `common/sandbox/index.ts`. */
+export function sandboxBackendConfig(): Linter.Config[] {
+  return [
+    {
+      files: ['packages/agents/src/**/*.ts'],
+      ignores: ['packages/agents/src/common/sandbox/**', 'packages/agents/src/**/__tests__/**'],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            patterns: [
+              {
+                regex: 'common/sandbox/(container-mounts|docker-run|docker-sandbox)(\\.ts)?$',
+                message: 'Importe a interface neutra por common/sandbox/index.ts.',
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ];
+}
