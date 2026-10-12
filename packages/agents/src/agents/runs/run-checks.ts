@@ -13,7 +13,8 @@ import { readPlan } from './plan-store';
 import { validateExplicitModel } from '../../common';
 import { absolutePermissions, canRead, outsideExecuteDirs, strayExceptions } from '../../common';
 import type { RunAgentsCliDeps, RunArgs } from './run-context';
-import type { RunProject } from '../../common';
+import type { RunProject, Sandbox } from '../../common';
+import { agentURL } from '../../common';
 import { errorMessage, projectsDir, toAbsolute } from './run-context';
 import { specContext } from './spec-context';
 import type { TicketTarget } from './ticket-run';
@@ -95,6 +96,7 @@ export function resolveProjectVars(
   parsed: RunArgs,
   agent: AgentDefinition,
   deps: RunAgentsCliDeps,
+  sandbox: Sandbox,
 ):
   | {
       readonly vars: Readonly<Record<string, string>>;
@@ -115,7 +117,12 @@ export function resolveProjectVars(
     const settings = loadProjectSettings(projectsDir(deps), parsed.project);
     return {
       vars: { PROJECT: settings.project, PROJECT_DIR: settings.projectPath, APP_DIR: settings.appDir },
-      project: { name: settings.project, baseURL: settings.environment.baseURL, appDir: settings.appDir },
+      project: {
+        name: settings.project,
+        baseURL: settings.environment.baseURL,
+        agentBaseURL: agentURL(settings.environment.baseURL, sandbox),
+        appDir: settings.appDir,
+      },
       settings,
     };
   } catch (error) {

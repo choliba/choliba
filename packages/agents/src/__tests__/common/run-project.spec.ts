@@ -27,7 +27,12 @@ function fakeAgent(permissions: AgentDefinition['permissions']): AgentDefinition
   };
 }
 
-const PROJECT = { name: 'site', baseURL: 'http://localhost:3000', appDir: '/code/site/' };
+const PROJECT = {
+  name: 'site',
+  baseURL: 'http://localhost:3000',
+  agentBaseURL: 'http://localhost:3000',
+  appDir: '/code/site/',
+};
 
 describe('formatProject', () => {
   it('names the application and says the agent never starts, fakes or patches it', () => {
@@ -41,6 +46,16 @@ describe('formatProject', () => {
     expect(block).toContain('never write a server, boot script or mock of it');
     expect(block).toContain('stop and report the message');
     expect(block.endsWith('</project>')).toBe(true);
+  });
+
+  it('gives the address the agent reaches, saying config.json has the one the machine sees', () => {
+    const block = formatProject({ ...PROJECT, agentBaseURL: 'http://host.docker.internal:3000' });
+
+    expect(block.split('\n')[0]).toBe(
+      '<project name="site" baseURL="http://host.docker.internal:3000" appDir="/code/site/">',
+    );
+    expect(block).toContain('config.json gives http://localhost:3000, the address as the machine running choliba');
+    expect(formatProject(PROJECT)).not.toContain('config.json gives');
   });
 
   it('is empty without a project', () => {

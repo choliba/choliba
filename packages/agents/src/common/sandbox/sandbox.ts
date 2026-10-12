@@ -44,6 +44,22 @@ export function readSandbox(config: Readonly<Record<string, string | undefined>>
   throw new SandboxConfigError(`${CHOL_SANDBOX}="${kind}" não existe: use local ou docker.`);
 }
 
+/** The scheme and any `user@` of a URL, then a host that names this machine, which the container reaches by another name. */
+const LOOPBACK_HOST = /^([a-z][a-z\d+.-]*:\/\/(?:[^@/?#]*@)?)(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)(?=[:/?#]|$)/i;
+
+/** The name a container on Docker's isolated network gives this machine (`--add-host host.docker.internal:host-gateway`). */
+export const CONTAINER_HOST_NAME = 'host.docker.internal';
+
+/**
+ * `url` as the agent reaches it. In a container on the isolated network, `localhost` is the container itself, so a host
+ * that names this machine (`localhost`, `127.0.0.1`, `[::1]`, `0.0.0.0`) becomes `host.docker.internal`, with the rest
+ * of the URL as is. On this machine or on the host network, and for any other host, `url` is unchanged.
+ */
+export function agentURL(url: string, sandbox: Sandbox): string {
+  if (sandbox.kind === 'local' || sandbox.network === 'host') return url;
+  return url.replace(LOOPBACK_HOST, `$1${CONTAINER_HOST_NAME}`);
+}
+
 /** The credentials set in `config`, by name. */
 export function presentCredentials(config: Readonly<Record<string, string | undefined>>): readonly string[] {
   return SANDBOX_CREDENTIALS.filter((name) => (config[name] ?? '') !== '');

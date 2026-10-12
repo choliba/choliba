@@ -1582,6 +1582,53 @@ describe('runAgentsCli — CHOL_SANDBOX', () => {
     });
   });
 
+  it('gives the agent in the container the address of a local application and of a local MCP server', async () => {
+    await withProjects(async (projectsDir) => {
+      const local = join(projectsDir, 'local');
+      mkdirSync(local);
+      writeFileSync(
+        join(local, 'config.json'),
+        JSON.stringify({ name: 'Local', envs: [{ nome: 'qa', baseURL: 'http://localhost:3000', appDir: 'app' }] }),
+      );
+      writeFileSync(join(local, '.env.json'), JSON.stringify({ qa: {} }));
+      const mcps = join(projectsDir, 'mcps');
+      mkdirSync(mcps);
+      writeFileSync(join(mcps, 'web.json'), JSON.stringify({ url: 'http://localhost:8931/mcp' }));
+      const agents = makeTmpDir('run-mcp-url');
+      cpSync(join(FIXTURES, 'with-project'), join(agents.path, 'with-project'), { recursive: true });
+      const yamlPath = join(agents.path, 'with-project', 'agent.yaml');
+      writeFileSync(yamlPath, `${readFileSync(yamlPath, 'utf8')}mcps:\n  - web\n`);
+      try {
+        const { deps, stdout } = harness([], {
+          which: whichOf(['claude', 'docker']),
+          config: {
+            CHOL_GLOBAL_DIR: '/g',
+            CHOL_PROJECTS_DIR: projectsDir,
+            CHOL_MCPS_DIR: mcps,
+            CHOL_SANDBOX: 'docker',
+          },
+        });
+
+        expect(
+          await runAgentsCli(
+            ['with-project', '--agents-dir', agents.path, '--project', 'local', '--dry-run', '--show-prompt', 'x'],
+            deps,
+          ),
+        ).toBe(0);
+        const text = stdout.chunks.join('');
+        expect(text).toContain('confere http://localhost:3000');
+        expect(text).toContain('o agente, no container, a acessa em http://host.docker.internal:3000');
+        expect(text).toContain('baseURL="http://host.docker.internal:3000"');
+        const printed = dryRunArgv(stdout);
+        expect(printed.at(printed.indexOf('--mcp-config') + 1)).toBe(
+          JSON.stringify({ mcpServers: { web: { url: 'http://host.docker.internal:8931/mcp' } } }),
+        );
+      } finally {
+        agents.cleanup();
+      }
+    });
+  });
+
   it('starts the provider with docker run, passing the credentials by name and their values in its environment', async () => {
     const tmp = makeTmpDir('cli-sandbox');
     try {

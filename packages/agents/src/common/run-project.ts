@@ -3,7 +3,10 @@ import type { AgentDefinition } from './interfaces/agent.interface';
 /** The project a run works on (`--project`): its name and its active environment's application. */
 export interface RunProject {
   readonly name: string;
+  /** The application's address as this machine sees it: the active environment's `baseURL` of `config.json`. */
   readonly baseURL: string;
+  /** The same address as the agent reaches it (`agentURL`): different only in a container on the isolated network. */
+  readonly agentBaseURL: string;
   /** The application's code, absolute. */
   readonly appDir: string;
 }
@@ -19,8 +22,16 @@ export function formatProject(project: RunProject | undefined): string {
     return '';
   }
   const attr = (value: string): string => value.replaceAll('"', '&quot;');
+  const translated =
+    project.agentBaseURL === project.baseURL
+      ? []
+      : [
+          `config.json gives ${project.baseURL}, the address as the machine running choliba sees it; from where you run,`,
+          'the application is at the baseURL above. Use it.',
+        ];
   return [
-    `<project name="${attr(project.name)}" baseURL="${attr(project.baseURL)}" appDir="${attr(project.appDir)}">`,
+    `<project name="${attr(project.name)}" baseURL="${attr(project.agentBaseURL)}" appDir="${attr(project.appDir)}">`,
+    ...translated,
     'The application under test runs at its baseURL. choliba prepared it (config.json envs[].setup) and made sure',
     'it is up before this run (envs[].start when it was not); it stays up until the run ends. Never start, stop or',
     'restart it yourself, never write a server, boot script or mock of it, and never change its installed',

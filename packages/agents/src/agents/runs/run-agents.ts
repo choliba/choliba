@@ -233,7 +233,7 @@ async function runCommand(parsed: RunArgs, deps: RunAgentsCliDeps): Promise<numb
     return 1;
   }
 
-  const projectRun = resolveProjectVars(parsed, agent, deps);
+  const projectRun = resolveProjectVars(parsed, agent, deps, sandbox);
   if (projectRun === undefined) {
     return 1;
   }
@@ -257,6 +257,7 @@ async function runCommand(parsed: RunArgs, deps: RunAgentsCliDeps): Promise<numb
     parsed,
     deps,
     agentsDir,
+    sandbox,
     vars: { ...projectRun.vars, ...ticketVars(ticketTarget) },
     ...(projectRun.project === undefined ? {} : { project: projectRun.project }),
     ...taskAndMode,
