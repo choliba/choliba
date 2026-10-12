@@ -59,14 +59,19 @@ Agentes podem usar skills e servidores MCP, instalados na pasta de trabalho.
 O choliba não está no npm: os pacotes são os `.tgz` da pré-release
 [`v0.0.1-dev`](https://github.com/choliba/choliba/releases/tag/v0.0.1-dev), refeita a cada merge na `master`.
 
-Instale numa pasta que já tenha o próprio `package.json` (sem ele, o Bun pode instalar numa pasta acima). O
-`--trust` roda o `choliba setup`, que monta a pasta de trabalho e liga o autocomplete:
+Instale numa pasta que já tenha o próprio `package.json` (sem ele, o Bun pode instalar numa pasta acima). Baixe o
+pacote e o checksum publicado na mesma release e verifique o arquivo antes de instalar:
 
-```
+```sh
 echo '{ "name": "dev-tools", "private": true }' > package.json
-bun add --trust \
-  https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
+curl -LO https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
+curl -LO https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz.sha256
+sha256sum -c choliba-0.0.1-dev.tgz.sha256
+bun add --trust ./choliba-0.0.1-dev.tgz
 ```
+
+Não instale se `sha256sum -c` não terminar em `OK`. O `--trust` autoriza o pacote a executar o `postinstall`, que
+roda `choliba setup`, monta a pasta de trabalho e liga o autocomplete.
 
 Dependências, o que o setup cria e como atualizar: [Primeiros passos](docs/primeiros-passos.md).
 
