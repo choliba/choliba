@@ -156,6 +156,15 @@ function withCallDetails(events: readonly AgentEvent[], calls: Map<string, ToolC
  */
 const CLAUDE_DENIED = /^Permission to use|requested permissions to use/;
 
+/** Cursor's `{type:thinking, subtype:delta, text}`: one piece of its reasoning (the `completed` line has none). */
+function thinkingDelta(doc: Record<string, unknown>): readonly AgentEvent[] {
+  const text = asString(doc['text']);
+  if (asString(doc['subtype']) !== 'delta' || text === undefined || text === '') {
+    return [];
+  }
+  return [{ type: 'thinking', text }];
+}
+
 export function createStreamJsonParser(options: StreamJsonParserOptions): StreamJsonParser {
   const toolNames = new Map<string, string>();
   const calls = new Map<string, ToolCall>();
@@ -191,6 +200,10 @@ export function createStreamJsonParser(options: StreamJsonParserOptions): Stream
       for (const block of contentBlocks(parsed['message'])) {
         if (block.type === 'text' && block.text !== undefined) {
           events.push({ type: 'text', text: block.text });
+          continue;
+        }
+        if (block.type === 'thinking' && block.thinking !== undefined && block.thinking !== '') {
+          events.push({ type: 'thinking', text: block.thinking });
           continue;
         }
         if (block.type === 'tool_use' && block.id !== undefined) {
@@ -229,6 +242,10 @@ export function createStreamJsonParser(options: StreamJsonParserOptions): Stream
         }
       }
       return events;
+    }
+
+    if (type === 'thinking') {
+      return thinkingDelta(parsed);
     }
 
     if (type === 'result') {
