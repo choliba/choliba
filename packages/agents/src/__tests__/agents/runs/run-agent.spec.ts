@@ -672,7 +672,7 @@ describe('runAgent — launch', () => {
       launch: (command) => ({
         command: ['docker', 'run', 'img', ...command],
         env: { TOKEN: 't' },
-        mounts: [],
+        paths: [],
         skipped: ['/etc/passwd', '/usr'],
       }),
     });

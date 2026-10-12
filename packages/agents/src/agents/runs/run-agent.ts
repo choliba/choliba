@@ -124,7 +124,7 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
   let session: Session;
   try {
     const command = [...request.provider.command, ...args];
-    const launch: Launch = request.launch?.(command) ?? { command, mounts: [], skipped: [] };
+    const launch: Launch = request.launch?.(command) ?? { command, paths: [], skipped: [] };
     if (launch.skipped.length > 0) {
       deps.stderr.write(`${imageFoldersNotice(launch.skipped)}\n`);
     }

@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 10/10/2026 08:24:56 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 11/10/2026 23:12:01 — não editar manualmente.
 
 ## Resumo
 
@@ -16,7 +16,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 65 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 67 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -77,6 +77,8 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/common/run-tools/run-tools.ts](packages/agents/src/common/run-tools/run-tools.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/sandbox/container-mounts.ts](packages/agents/src/common/sandbox/container-mounts.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/sandbox/docker-run.ts](packages/agents/src/common/sandbox/docker-run.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/sandbox/docker-sandbox.ts](packages/agents/src/common/sandbox/docker-sandbox.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/sandbox/local-sandbox.ts](packages/agents/src/common/sandbox/local-sandbox.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/sandbox/sandbox.ts](packages/agents/src/common/sandbox/sandbox.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/stream-json.ts](packages/agents/src/common/stream-json.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/claude/claude-agent.provider.ts](packages/agents/src/providers/claude/claude-agent.provider.ts)|100.00|100.00|100.00|100.00

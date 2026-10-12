@@ -62,7 +62,7 @@ describe('launchFor', () => {
   it('starts the command as it is on this machine', () => {
     expect(
       launchFor({ sandbox: { kind: 'local' }, command: ['claude', '-p'], request: request(), files: [], config: {} }),
-    ).toEqual({ command: ['claude', '-p'], mounts: [], skipped: [] });
+    ).toEqual({ command: ['claude', '-p'], paths: [], skipped: [] });
   });
 
   it('in a container, mounts the run, the packages and the run files, and passes the credentials by name', () => {
@@ -77,7 +77,7 @@ describe('launchFor', () => {
       },
       fake,
     );
-    expect(launch.mounts.map((mount) => `${mount.access} ${mount.path}`)).toEqual([
+    expect(launch.paths.map((path) => `${path.access} ${path.path}`)).toEqual([
       'write /w/.cache/runs/1',
       'read /w/.cache/runs/1.delete',
       'read /w/docs',
@@ -107,7 +107,7 @@ describe('launchFor', () => {
       fake,
     );
     expect(fake.made).toEqual(['/w/.cache/playwright-cli', '/g/projects/loja/ticket-runs']);
-    expect(launch.mounts).toEqual(
+    expect(launch.paths).toEqual(
       expect.arrayContaining([
         { path: '/w/.cache/playwright-cli', access: 'write', directory: true },
         { path: '/g/projects/loja/ticket-runs', access: 'write', directory: true },
