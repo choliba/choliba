@@ -3,6 +3,22 @@ export { CircularBuffer } from './circular-buffer';
 export { exitCodeFor } from './exit-code';
 export { formatDuration } from './format-duration';
 export { DEFAULT_SPINNER_FRAMES, LiveRegion, type LiveRow } from './live-region';
+export {
+  Table,
+  TableError,
+  td,
+  textWidth,
+  th,
+  type CellOptions,
+  type HeaderCellOptions,
+  type TableAlign,
+  type TableCell,
+  type TableColumn,
+  type TableRow,
+  type TableRules,
+  type TableSpec,
+  type TableStyle,
+} from './table';
 export { defaultStderr, defaultStdout, isStdoutTty, writeStderr, writeStdout } from './writable';
 export type { Listener } from './event-emitter';
 export { TypedEventEmitter } from './event-emitter';
