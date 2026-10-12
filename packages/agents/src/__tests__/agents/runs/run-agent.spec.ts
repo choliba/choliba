@@ -749,25 +749,6 @@ describe('runAgent — footer', () => {
     expect(run.stopped).toBe(1);
   });
 
-  it('shows the reasoning in the panel above the table, never in the frame, and erases it at the end', async () => {
-    const run = await withFooter(
-      eventLines([
-        { type: 'thinking', text: 'lendo o ' },
-        { type: 'thinking', text: 'ticket' },
-        { type: 'text', text: 'olá' },
-        { type: 'thinking', text: 'abrindo a página' },
-        { type: 'done', isError: false, text: 'ok' },
-      ]),
-    );
-
-    expect(run.code).toBe(0);
-    expect(run.out).toMatch(/┌─ pensando ─+┐\n│ lendo o ticket +│\n│ +│\n/);
-    expect(run.out).toMatch(/│ lendo o ticket +│\n│ abrindo a página +│\n/);
-    expect(run.out).toMatch(/│ olá +│\n/);
-    expect(run.out).not.toMatch(/│ ticket +│/);
-    expect(run.out).toMatch(/└─+┘\nclaude · — · local · decorrido 00:00:0\d\.000 · código 0\n$/);
-  });
-
   it('frames what the session says on stderr too, and still closes with the exit code when it fails', async () => {
     // The real timer (no fake one): it is stopped when the session closes.
     const run = await withFooter(

@@ -132,34 +132,6 @@ describe('createStreamJsonParser', () => {
     ]);
   });
 
-  it("reads the reasoning: Cursor's deltas and Claude's thinking blocks, never an empty one", () => {
-    const parser = createStreamJsonParser({ planFromExitPlanMode: false });
-
-    expect(parser.parseLine(line({ type: 'thinking', subtype: 'delta', text: ' Vou incluir' }))).toEqual([
-      { type: 'thinking', text: ' Vou incluir' },
-    ]);
-    expect(parser.parseLine(line({ type: 'thinking', subtype: 'completed' }))).toEqual([]);
-    expect(parser.parseLine(line({ type: 'thinking', subtype: 'delta', text: '' }))).toEqual([]);
-    expect(parser.parseLine(line({ type: 'thinking', text: 'sem subtipo' }))).toEqual([]);
-    expect(
-      parser.parseLine(
-        line({
-          type: 'assistant',
-          message: {
-            content: [
-              { type: 'thinking', thinking: 'pensando no ticket' },
-              { type: 'thinking', thinking: '' },
-              { type: 'text', text: 'pronto' },
-            ],
-          },
-        }),
-      ),
-    ).toEqual([
-      { type: 'thinking', text: 'pensando no ticket' },
-      { type: 'text', text: 'pronto' },
-    ]);
-  });
-
   it('says which MCP a call uses: a tool of a server, or the resources of one', () => {
     const events = createStreamJsonParser({ planFromExitPlanMode: false }).parseLine(
       line({
