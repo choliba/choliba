@@ -86,6 +86,12 @@ describe('cursorProvider.buildArgs', () => {
     );
   });
 
+  it('keeps the CLI from updating itself during the run', () => {
+    const args = cursorProvider.buildArgs(fakeRequest());
+
+    expect(args.indexOf('--disable-auto-update')).toBe(args.indexOf('--trust') + 1);
+  });
+
   it('maps ask mode to --mode ask', () => {
     expect(cursorProvider.buildArgs(fakeRequest({ mode: 'ask', policy: 'read-only' }))).toEqual(
       expect.arrayContaining(['--mode', 'ask']),

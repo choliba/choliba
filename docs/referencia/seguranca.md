@@ -91,7 +91,8 @@ MCP que ele suba.
   `claude setup-token`, usa a assinatura e só chama o modelo) ou `ANTHROPIC_API_KEY`, e `CURSOR_API_KEY`. O agente
   consegue lê-la, como consegue fora do container: prefira o token, que não serve para mais nada.
 - **A imagem** traz o Node e os navegadores do Playwright da versão do choliba, o Bun, o Claude Code e o Cursor CLI,
-  este numa versão fixa e baixado como pacote conferido pelo sha256, sem rodar script de instalação. Construa-a uma vez na raiz do repositório do choliba: `docker build -f docker/agent.Dockerfile -t choliba-agent .`
+  este numa versão fixa e baixado como pacote conferido pelo sha256, sem rodar script de instalação, e que não se
+  atualiza durante a run (o choliba passa `--disable-auto-update` ao Cursor, também fora do container). Construa-a uma vez na raiz do repositório do choliba: `docker build -f docker/agent.Dockerfile -t choliba-agent .`
   (outra imagem: `CHOL_SANDBOX_IMAGE`).
 - O [`--dry-run`](comandos.md#--dry-run) mostra o container e cada caminho que ele vê.
 
