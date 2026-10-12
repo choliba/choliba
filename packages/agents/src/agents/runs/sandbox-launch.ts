@@ -3,20 +3,22 @@ import { isAbsolute, join } from 'node:path';
 
 import { CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR } from '@choliba/core';
 import { resolveLocations, resolveTicketRunsFolder, resolveTicketRunsRoot } from '@choliba/projects';
-
 import {
-  absolutePermissions,
-  createSandboxBackend,
-  DEFAULT_PLAYWRIGHT_OUTPUT_DIR,
-  readDir,
-  runToolsOf,
   type ContainerUser,
+  createSandboxBackend,
   type DiskFacts,
-  type PlannedFile,
-  type ProviderRequest,
+  readDir,
   type Sandbox,
   type SandboxPath,
   type SandboxPlace,
+} from '@choliba/sandbox';
+
+import {
+  absolutePermissions,
+  DEFAULT_PLAYWRIGHT_OUTPUT_DIR,
+  runToolsOf,
+  type PlannedFile,
+  type ProviderRequest,
 } from '../../common';
 import { definedConfig } from '../agent-dirs';
 

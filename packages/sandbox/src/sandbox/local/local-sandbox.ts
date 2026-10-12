@@ -1,4 +1,4 @@
-import type { SandboxBackend, SandboxPlan, SandboxPlanInput } from './sandbox-backend';
+import type { SandboxBackend, SandboxPlan, SandboxPlanInput } from '../interfaces/sandbox-backend.interface';
 
 export class LocalSandbox implements SandboxBackend {
   readonly kind = 'local';

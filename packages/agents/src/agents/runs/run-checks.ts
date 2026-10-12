@@ -2,6 +2,7 @@
 
 import { unknownWordMessage } from '@choliba/core';
 import { loadProjectSettings, type ProjectSettings } from '@choliba/projects';
+import { agentURL, type Sandbox, strayExceptions } from '@choliba/sandbox';
 
 import { listAgents, loadAgent } from '../agent-loader';
 import { agentFlagNames } from './agents-spec';
@@ -12,16 +13,9 @@ import type { AgentInvocation } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
 import { readPlan } from './plan-store';
 import { validateExplicitModel } from '../../common';
-import {
-  absolutePermissions,
-  canRead,
-  definitionExceptionProblems,
-  outsideExecuteDirs,
-  strayExceptions,
-} from '../../common';
+import { absolutePermissions, canRead, definitionExceptionProblems, outsideExecuteDirs } from '../../common';
 import type { RunAgentsCliDeps, RunArgs } from './run-context';
-import type { RunProject, Sandbox } from '../../common';
-import { agentURL } from '../../common';
+import type { RunProject } from '../../common';
 import { errorMessage, projectsDir, toAbsolute } from './run-context';
 import { specContext } from './spec-context';
 import type { TicketTarget } from './ticket-run';

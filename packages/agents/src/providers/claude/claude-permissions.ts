@@ -1,8 +1,9 @@
+import { type ReadDir, readDir, resolveDenies, withoutTrailingSlash } from '@choliba/sandbox';
+
 import type { PermissionPolicy } from '../../common';
 import type { McpServer } from '../../common';
 import type { AgentPermissions, ExecuteRule } from '../../common';
-import { allowedCommands, blocksEveryCommand, pathGlobs, withoutTrailingSlash } from '../../common';
-import { type ReadDir, readDir, resolveDenies } from '../../common';
+import { allowedCommands, blocksEveryCommand, pathGlobs } from '../../common';
 import type { RunToolCommands } from '../../common';
 
 /** The tools that read files, which the session gets once the agent may read somewhere. */

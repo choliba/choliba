@@ -1,5 +1,7 @@
+import { readDir } from '@choliba/sandbox';
+
 import { mcpServersMap } from '../../common';
-import { absolutePermissions, readDir } from '../../common';
+import { absolutePermissions } from '../../common';
 import { assertArgvFits, runPlaceOf, unenforcedToolsLine, wrapInstructions } from '../../common';
 import { runToolCommands, runToolsOf } from '../../common';
 import { createStreamJsonParser } from '../../common';

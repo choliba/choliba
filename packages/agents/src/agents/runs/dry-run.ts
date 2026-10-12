@@ -1,9 +1,10 @@
 import type { ProjectEnvironment } from '@choliba/projects';
+import type { SandboxPath } from '@choliba/sandbox';
 
 import type { AgentStep, McpDeclaration } from '../../common';
 import { describeStep } from '../steps/step-actions';
 import { runPlaceOf, wrapInstructions } from '../../common';
-import type { PlannedFile, ProviderRequest, SandboxPath } from '../../common';
+import type { PlannedFile, ProviderRequest } from '../../common';
 
 /** What `--dry-run` shows: everything a real run of this command line would do, in order. */
 export interface DryRunInput {

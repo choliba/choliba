@@ -1,10 +1,18 @@
-import { NO_PERMISSIONS, type AgentPermissions } from '../../common/agent-permissions';
 import {
   containerMounts,
   type ContainerMount,
   type DiskFacts,
+  type SandboxPermissions,
   type SandboxReach,
-} from '../../common/sandbox/container-mounts';
+} from '../../../index';
+
+const NO_PERMISSIONS: SandboxPermissions = {
+  allowRead: [],
+  allowWrite: [],
+  allowExecute: [],
+  denyRead: [],
+  denyWrite: [],
+};
 
 /** Only what the container mounts. */
 function mountsFor(reach: SandboxReach, facts: DiskFacts): readonly ContainerMount[] {
@@ -44,7 +52,7 @@ const DISK = disk([
   '/app/',
 ]);
 
-function reach(permissions: Partial<AgentPermissions>, more: Partial<SandboxReach> = {}): SandboxReach {
+function reach(permissions: Partial<SandboxPermissions>, more: Partial<SandboxReach> = {}): SandboxReach {
   return {
     permissions: { ...NO_PERMISSIONS, ...permissions },
     policy: 'edits',
@@ -67,7 +75,7 @@ describe('containerMounts', () => {
         {
           allowRead: ['/w/docs/', '/w/src/**/*.ts'],
           allowWrite: ['/app/'],
-          allowExecute: [{ dir: '/w/', commands: ['bunx choliba tests'] }],
+          allowExecute: [{ dir: '/w/' }],
         },
         {
           addDirs: ['/w/projects'],

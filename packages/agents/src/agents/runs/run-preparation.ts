@@ -14,14 +14,14 @@ import {
   RUNS_DIR,
 } from '@choliba/core';
 import { resolveLocations } from '@choliba/projects';
+import { agentURL, EXCEPTION_PREFIX, type Sandbox } from '@choliba/sandbox';
 
 import { invocationFromAgent, effectivePolicy } from '../invocation';
 import type { AgentDefinition } from '../../common';
 import type { AgentInvocation, CommandPrepareInput } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
 import { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '../agent-dirs';
-import type { McpServer, Sandbox } from '../../common';
-import { agentURL } from '../../common';
+import type { McpServer } from '../../common';
 import { resolveMcps } from '../../common';
 import type { ProviderRequest } from '../../common';
 import type { ResolvedProvider } from '../../common';
@@ -38,7 +38,7 @@ import {
 import type { PreparedRun, RunAgentsCliDeps, RunArgs, RunContext, Stopped } from './run-context';
 import { STOPPED, errorMessage, toAbsolute } from './run-context';
 import { LOCATION_VARS, agentTexts, withExpandedVars } from '../../common';
-import { EXCEPTION_PREFIX, withDefinitionDenies, withProjectDenies } from '../../common';
+import { withDefinitionDenies, withProjectDenies } from '../../common';
 
 /**
  * The skills the agent lists, found in the skills dir. A missing or malformed skill stops the run

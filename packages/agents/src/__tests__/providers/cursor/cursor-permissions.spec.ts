@@ -1,9 +1,9 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { complementOf, type DirEntry, type ReadDir } from '@choliba/sandbox';
+
 import { absolutePermissions, readAgentPermissions } from '../../../common/agent-permissions';
-import type { DirEntry, ReadDir } from '../../../common/resolve-denies';
-import { complementOf } from '../../../common/resolve-denies';
 import {
   cursorPermissions,
   shellToken,

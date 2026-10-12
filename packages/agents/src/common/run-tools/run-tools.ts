@@ -1,11 +1,11 @@
 import { chmodSync, rmSync, writeFileSync } from 'node:fs';
 
 import { CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR } from '@choliba/core';
+import { denyExceptions, isException } from '@choliba/sandbox';
 
 import type { PermissionPolicy } from '../interfaces/execution.interface';
 import type { PlannedFile, ProviderRequest } from '../interfaces/provider.interface';
 import { type AgentPermissions, absolutePermissions, EVERY_COMMAND, type RunPlace } from '../agent-permissions';
-import { denyExceptions, isException } from '../resolve-denies';
 import { deleteScript } from './delete-tool';
 import { DEFAULT_PLAYWRIGHT_OUTPUT_DIR, playwrightScript } from './playwright-tool';
 import { runToolPath } from './run-tool-path';
