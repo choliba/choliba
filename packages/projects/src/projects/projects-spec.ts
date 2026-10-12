@@ -6,7 +6,8 @@ const HELP_FLAG: FlagSpec = { name: '--help', aliases: ['-h'], description: 'Mos
 export function newProjectSpec(): CommandSpec {
   return {
     usage: 'choliba new project [NOME] [OPTIONS]',
-    description: 'Cria um projeto a partir do modelo; o que faltar é perguntado no terminal.',
+    description:
+      'Cria um projeto a partir do modelo; o que faltar é perguntado no terminal.\n\nExemplo:\n  choliba new project loja --app-dir ./app',
     flags: [
       {
         name: '--app-dir',
@@ -24,7 +25,7 @@ export function newProjectSpec(): CommandSpec {
 export function listProjectsSpec(): CommandSpec {
   return {
     usage: 'choliba list projects [OPTIONS]',
-    description: 'Lista os projetos de CHOL_PROJECTS_DIR.',
+    description: 'Lista os projetos de CHOL_PROJECTS_DIR.\n\nExemplo:\n  choliba list projects',
     flags: [{ name: '--tickets', description: 'Mostra também os tickets de cada projeto' }, HELP_FLAG],
   };
 }

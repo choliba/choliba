@@ -15,6 +15,15 @@ function run(platform: FakePlatform): Promise<number> {
 }
 
 describe('choliba terminal run', () => {
+  it('shows its help with an example and exits 0', async () => {
+    const platform = platformFor(['run', '--help']);
+
+    expect(await run(platform)).toBe(0);
+    expect(platform.stdout.text()).toContain('Usage:  choliba terminal run');
+    expect(platform.stdout.text()).toContain('choliba terminal run --label app -- bun run dev');
+    expect(platform.stderr.text()).toBe('');
+  });
+
   it('writes the parse error to stderr and exits 1 on invalid arguments', async () => {
     const platform = platformFor(['run'], { spawn: fakeSpawner().spawner });
 
@@ -28,7 +37,7 @@ describe('choliba terminal run', () => {
     });
 
     expect(await run(platform)).toBe(1);
-    expect(platform.stderr.text()).toContain('Failed to start "does-not-exist": Error: spawn ENOENT');
+    expect(platform.stderr.text()).toContain('não foi possível iniciar "does-not-exist": Error: spawn ENOENT');
   });
 
   it('prints labeled stdout/stderr lines, colored at a terminal, and exits with the exit code', async () => {
@@ -135,7 +144,7 @@ describe('choliba terminal run', () => {
     });
 
     expect(await run(platform)).toBe(1);
-    expect(platform.stderr.text()).toContain('Session for "echo" failed: Error: boom');
+    expect(platform.stderr.text()).toContain('a sessão de "echo" falhou: Error: boom');
   });
 });
 

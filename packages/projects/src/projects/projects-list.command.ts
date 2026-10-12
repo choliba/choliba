@@ -10,7 +10,7 @@ export function runProjectsList(io: ShellIo, projects: ProjectsService): void {
   runSubcommand(io, ['list', 'projects'], listProjectsSpec, (args) => {
     const found = projects.list();
     if (found.length === 0) {
-      io.write(`No project found in ${projects.projectsDir()}.\n`);
+      io.write(`Nenhum projeto encontrado em ${projects.projectsDir()}.\n`);
       return;
     }
     if (args.includes('--tickets')) {

@@ -1,4 +1,5 @@
 import { CHOL_COLORS } from '../config';
+import { ExpectedError } from '../common';
 import { ANSI_COLORS, colorForLabel, isAnsiColor, paintAnsi, type AnsiColor } from './ansi';
 import type { ColorSettings, Theme, ThemeRole, ThemeTable } from './interfaces/theme.interface';
 import { DEFAULT_THEME, THEME_ROLES } from './theme-defaults';
@@ -7,7 +8,7 @@ import { DEFAULT_THEME, THEME_ROLES } from './theme-defaults';
 export type ThemeChoices = Partial<Record<ThemeRole, Readonly<Record<string, AnsiColor>>>>;
 
 /** A `CHOL_COLORS` that is not a list of `papel.nome=cor`; the message says which item and how to write it. */
-export class ColorsConfigError extends Error {}
+export class ColorsConfigError extends ExpectedError {}
 
 function isRole(value: string): value is ThemeRole {
   return THEME_ROLES.some((role) => role === value);

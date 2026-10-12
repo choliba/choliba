@@ -157,7 +157,7 @@ describe('runAgentsCli — help', () => {
     const { deps, stderr } = harness([]);
 
     expect(await runAgentsCli(['developer', '--bogus=1'], deps)).toBe(1);
-    expect(stderr.chunks.join('')).toContain('unknown flag: --bogus=1');
+    expect(stderr.chunks.join('')).toContain('opção desconhecida: --bogus=1');
   });
 
   it('prints per-agent help when --help follows the command name', async () => {
@@ -252,7 +252,7 @@ describe('runAgentsCli — global help and completion', () => {
     await describeWords([], deps);
     await describeWords(['--echo', '--mode', 'plan'], deps);
     expect(lines(stdout)[0]).toMatch(/^Executa um agente da pasta de trabalho/);
-    expect(lines(stdout)[1]).toBe('Repete a tarefa recebida, usado nos testes deste pacote.');
+    expect(lines(stdout)).toContain('Repete a tarefa recebida, usado nos testes deste pacote.');
   });
 
   it('suggests only pending when git fails, and prints nothing for no suggestions', async () => {
@@ -455,7 +455,7 @@ describe('runAgentsCli — tickets', () => {
 
         const shortcut = harness([], { config });
         expect(await runAgentsCli(argv(agentsDir, '--type-task', '--dry-run'), shortcut.deps)).toBe(1);
-        expect(shortcut.stderr.chunks.join('')).toContain('unknown flag: --type-task');
+        expect(shortcut.stderr.chunks.join('')).toContain('opção desconhecida: --type-task');
       }),
     );
   });
@@ -581,7 +581,7 @@ describe('runAgentsCli — tickets', () => {
     const { deps, stderr } = harness([]);
 
     expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--type-bug', '--dry-run', 'x'], deps)).toBe(1);
-    expect(stderr.chunks.join('')).toContain('unknown flag: --type-bug');
+    expect(stderr.chunks.join('')).toContain('opção desconhecida: --type-bug');
   });
 });
 
@@ -591,7 +591,7 @@ describe('runAgentsCli — --project', () => {
 
     expect(await runAgentsCli(['with-project', '--agents-dir', FIXTURES, '--dry-run'], deps)).toBe(1);
     expect(stderr.chunks.join('')).toContain(
-      'Project is required for "with-project" (it uses a project variable or ticket_types): pass --project <name>.',
+      'o projeto é obrigatório para "with-project" (ele usa uma variável de projeto ou ticket_types): passe --project <nome>.',
     );
     expect(stdout.chunks).toEqual([]);
   });
@@ -666,11 +666,11 @@ describe('runAgentsCli — --project', () => {
     expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--project', 'red', '--help'], deps)).toBe(1);
     expect(stderr.chunks.join('')).toBe(
       [
-        'unknown flag: --project',
+        'opção desconhecida: --project.',
         '',
         'Usage:  choliba run agent echo [OPTIONS] [TASK...]',
         '',
-        "Run 'choliba run agent echo --help' for more information",
+        "Run 'choliba run agent echo --help' for usage.",
         '',
       ].join('\n'),
     );
@@ -681,7 +681,7 @@ describe('runAgentsCli — --project', () => {
     const { deps, stderr } = harness([]);
 
     expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--since-pending', '--dry-run', 'x'], deps)).toBe(1);
-    expect(stderr.chunks.join('')).toContain('unknown flag: --since-pending');
+    expect(stderr.chunks.join('')).toContain('opção desconhecida: --since-pending');
   });
 
   it('completes --project with the projects on disk, and with nothing when the locations are not set', async () => {
@@ -878,7 +878,7 @@ describe('runAgentsList', () => {
 
       runAgentsList(['--agents-dir', tmp.path], deps);
 
-      expect(stdout.chunks.join('')).toContain(`No agents found in ${tmp.path}`);
+      expect(stdout.chunks.join('')).toContain(`Nenhum agente encontrado em ${tmp.path}`);
     } finally {
       tmp.cleanup();
     }
@@ -918,7 +918,7 @@ describe('runAgentsCli — run', () => {
     const { deps, stderr } = harness([]);
 
     expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES], deps)).toBe(1);
-    expect(stderr.chunks.join('')).toContain('Task is required');
+    expect(stderr.chunks.join('')).toContain('a tarefa é obrigatória');
   });
 
   it('rejects a model that is not declared in agent.yaml#supported_models', async () => {
@@ -992,7 +992,7 @@ describe('runAgentsCli — run', () => {
     );
 
     expect(exitCode).toBe(1);
-    expect(stderr.chunks.join('')).toContain('--plan-from can only be used with --mode execute');
+    expect(stderr.chunks.join('')).toContain('--plan-from só pode ser usado com --mode execute');
   });
 
   it('reports a missing --plan-from file distinctly from a missing task', async () => {
@@ -1001,7 +1001,7 @@ describe('runAgentsCli — run', () => {
     const exitCode = await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--plan-from', '/nope.md'], deps);
 
     expect(exitCode).toBe(1);
-    expect(stderr.chunks.join('')).toContain('Could not read plan');
+    expect(stderr.chunks.join('')).toContain('não foi possível ler o plano');
   });
 
   it('rejects an invalid --provider value', async () => {
@@ -1422,12 +1422,12 @@ describe('runAgentsCli — modes', () => {
       const byValue = harness([]);
       expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--mode', 'execute', 'x'], byValue.deps)).toBe(1);
       expect(byValue.stderr.chunks.join('')).toContain(
-        'Mode "execute" is not allowed for "custom" (modes.allow: plan, ask).',
+        'o modo "execute" não é permitido para "custom" (modes.allow: plan, ask).',
       );
 
       const byShortcut = harness([]);
       expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--mode-execute', 'x'], byShortcut.deps)).toBe(1);
-      expect(byShortcut.stderr.chunks.join('')).toContain('unknown flag: --mode-execute');
+      expect(byShortcut.stderr.chunks.join('')).toContain('opção desconhecida: --mode-execute');
     });
   });
 

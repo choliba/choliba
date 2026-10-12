@@ -1,4 +1,4 @@
-import { createShell, PLATFORM, token, type CommandEntry, type ShellModule } from '../..';
+import { createShell, ExpectedError, PLATFORM, token, type CommandEntry, type ShellModule } from '../..';
 import { fakePlatform } from '../../testing';
 
 const GREETING = token<string>('greeting');
@@ -67,7 +67,7 @@ describe('createShell', () => {
     await expect(createShell(fakePlatform({ argv: ['exit'] }), [exits]).run()).resolves.toBe(3);
   });
 
-  it('turns what a command throws into its message on stderr and exit code 1', async () => {
+  it('reports an unexpected command error as a bug and exits 1', async () => {
     const platform = fakePlatform({ argv: ['boom'] });
     const throwing: ShellModule = {
       name: 'throwing',
@@ -75,7 +75,29 @@ describe('createShell', () => {
     };
 
     await expect(createShell(platform, [throwing]).run()).resolves.toBe(1);
-    expect(platform.stderr.text()).toBe('estourou\n');
+    expect(platform.stderr.text()).toBe(
+      'erro inesperado: estourou\nisso parece ser um bug; reporte em https://github.com/choliba/choliba/issues\n',
+    );
+  });
+
+  it('prints an expected error as-is and shows an unexpected stack only with CHOL_DEBUG=1', async () => {
+    const expected = fakePlatform({ argv: ['boom'] });
+    const debug = fakePlatform({ argv: ['boom'], env: { CHOL_DEBUG: '1' } });
+    const expectedModule: ShellModule = {
+      name: 'expected',
+      commands: [{ name: 'boom', run: () => Promise.reject(new ExpectedError('corrija isto')) }],
+    };
+    const unexpectedModule: ShellModule = {
+      name: 'unexpected',
+      commands: [{ name: 'boom', run: () => Promise.reject(new Error('quebrou')) }],
+    };
+
+    await createShell(expected, [expectedModule]).run();
+    await createShell(debug, [unexpectedModule]).run();
+
+    expect(expected.stderr.text()).toBe('corrija isto\n');
+    expect(debug.stderr.text()).toContain('Error: quebrou');
+    expect(debug.stderr.text()).toContain('create-shell.spec.ts');
   });
 
   it('refuses to run a command line its table does not have', async () => {

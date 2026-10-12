@@ -187,6 +187,7 @@ describe('choliba new project', () => {
       expect((await projectsNew(root, ['nova', '--app-dir', 'nao-existe'])).err).toContain('não é uma pasta existente');
       expect((await projectsNew(root, ['nova', '--base-url'])).err).toContain('--base-url precisa de um valor');
       expect((await projectsNew(root, ['nova', '--porta', '1'])).err).toContain('opção desconhecida: --porta');
+      expect((await projectsNew(root, ['nova', '--app-dr', './app'])).err).toContain('Você quis dizer "--app-dir"?');
       expect((await projectsNew(root, ['a', 'b'])).err).toContain('um projeto só');
     }));
 });

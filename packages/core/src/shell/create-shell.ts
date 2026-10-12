@@ -1,4 +1,5 @@
 import { messageOf } from '../cli';
+import { ExpectedError } from '../common';
 import { unknownWordMessage, type CommandEntry, type CommandSpec } from '../help';
 import type { Platform } from '../platform';
 import { Container, token } from './container';
@@ -23,6 +24,14 @@ export interface Shell {
 type Action = (container: Container, io: ShellIo) => Promise<void>;
 
 const HELP_WORDS: readonly string[] = ['help', '--help', '-h'];
+const ISSUE_URL = 'https://github.com/choliba/choliba/issues';
+
+function unexpectedErrorMessage(error: unknown, debug: boolean): string {
+  const message = `erro inesperado: ${messageOf(error)}`;
+  const report = `isso parece ser um bug; reporte em ${ISSUE_URL}`;
+  if (!debug || !(error instanceof Error) || error.stack === undefined) return `${message}\n${report}`;
+  return `${message}\n${error.stack}\n${report}`;
+}
 
 /** `read()`, or `fallback` when it throws (a workspace that cannot be read leaves the help and completion quiet). */
 function safely<T>(read: () => T, fallback: T): T {
@@ -149,7 +158,11 @@ export function createShell(platform: Platform, modules: readonly ShellModule[])
     try {
       await action(container, io);
     } catch (error) {
-      io.fail(messageOf(error));
+      io.fail(
+        error instanceof ExpectedError
+          ? messageOf(error)
+          : unexpectedErrorMessage(error, platform.env['CHOL_DEBUG'] === '1'),
+      );
     }
     return io.exitCode();
   }

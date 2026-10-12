@@ -173,7 +173,7 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
       ...(launch.env === undefined ? {} : { env: launch.env }),
     });
   } catch (error) {
-    deps.stderr.write(`Failed to start ${providerId}: ${errorMessage(error)}\n`);
+    deps.stderr.write(`não foi possível iniciar ${providerId}: ${errorMessage(error)}\n`);
     return 1;
   }
 
@@ -307,7 +307,7 @@ async function followSession(
   }
 
   if (exitEvent.error !== null) {
-    screen.err.write(`${providerId} session failed: ${exitEvent.error}\n`);
+    screen.err.write(`a sessão de ${providerId} falhou: ${exitEvent.error}\n`);
   }
 
   // The process's own exit code is the base signal — a crash or a killing signal always wins.
@@ -325,7 +325,7 @@ async function followSession(
         ? defaultResolvePlanContent({ planMarkdown, doneEvent, textParts })
         : adapter.resolvePlanContent({ planMarkdown, doneEvent, textParts });
     if (content === undefined) {
-      screen.err.write('Nothing to save: the provider produced no plan text.\n');
+      screen.err.write('nada para salvar: o provider não produziu texto de plano.\n');
       return 1;
     }
     const path = writePlan({

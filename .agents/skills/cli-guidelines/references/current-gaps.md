@@ -6,11 +6,7 @@ not a gap: it is in `SKILL.md`, "Where choliba departs from clig.dev".
 
 | Rule | Today | Where |
 |---|---|---|
-| 4. Lead help with examples | Only `run tests` shows examples; the other commands list flags only | each command's `CommandSpec` |
 | 7. `--no-input` | Only `new project` takes it; the one other prompt (open the HTML report in `run tests`) is already TTY-only | `packages/runner/src/tests/run-tests.ts` |
-| 9. Errors in pt-BR | The argument errors of `run agent` are in English (`Missing value for --x`, `Conflicting modes`, `Task is required`, `unknown flag`), and so are `No agents found` and `No project found` | `packages/agents/src/agents/runs/agents-flags.ts`, `run-checks.ts`, `agent-detail.ts`; `packages/projects/src/projects/projects-list.command.ts` |
-| 9. Typo suggestions | Commands, verb types and agents suggest the closest name; an unknown flag does not | the per-command parsers |
-| 9. Unexpected errors | An unexpected error is its message on stderr, without saying it is a bug or where to report it | `packages/core/src/shell/create-shell.ts` (`execute`) |
 | Output: `--json`, `--quiet` | No command has them; `list projects --tickets` is a line format the `product-owner` reads | `packages/projects/src/projects/projects-list.command.ts` |
 | Output: pager | Long help and `list agents` are not paged on a TTY | `ShellIo.printHelp`, `runList` |
 

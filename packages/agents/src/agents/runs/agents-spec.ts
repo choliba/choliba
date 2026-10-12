@@ -202,7 +202,7 @@ export function agentsCliSpec(context: AgentsCliSpecContext): CommandSpec {
 
   return {
     usage: `${CLI_PROGRAM_NAME} AGENT [OPTIONS] [TASK...]`,
-    description: `Executa um agente da pasta de trabalho (.choliba/agents/<nome>/) por um provider (${context.providers.choices().join(', ')}).`,
+    description: `Executa um agente da pasta de trabalho (.choliba/agents/<nome>/) por um provider (${context.providers.choices().join(', ')}).\n\nExemplo:\n  choliba run agent implementer "corrija o bug"`,
     commands,
     flags: [helpFlag],
     footer: `Run '${CLI_PROGRAM_NAME} AGENT --help' for more information on an agent.`,
@@ -213,7 +213,7 @@ export function agentsCliSpec(context: AgentsCliSpecContext): CommandSpec {
 export function listAgentsSpec(context: Pick<AgentsCliSpecContext, 'providers'>): CommandSpec {
   return {
     usage: `${LIST_PROGRAM_NAME} [OPTIONS]`,
-    description: 'Lista os agentes da pasta de trabalho com os detalhes de cada um.',
+    description: 'Lista os agentes da pasta de trabalho com os detalhes de cada um.\n\nExemplo:\n  choliba list agents',
     flags: [...agentsDirFlag(context), HELP_FLAG],
   };
 }
