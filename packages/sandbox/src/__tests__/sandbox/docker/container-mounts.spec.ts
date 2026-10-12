@@ -1,10 +1,18 @@
-import { NO_PERMISSIONS, type AgentPermissions } from '../../common/agent-permissions';
 import {
   containerMounts,
   type ContainerMount,
   type DiskFacts,
+  type SandboxPermissions,
   type SandboxReach,
-} from '../../common/sandbox/container-mounts';
+} from '../../../index';
+
+const NO_PERMISSIONS: SandboxPermissions = {
+  allowRead: [],
+  allowWrite: [],
+  allowExecute: [],
+  denyRead: [],
+  denyWrite: [],
+};
 
 /** Only what the container mounts. */
 function mountsFor(reach: SandboxReach, facts: DiskFacts): readonly ContainerMount[] {
@@ -44,7 +52,7 @@ const DISK = disk([
   '/app/',
 ]);
 
-function reach(permissions: Partial<AgentPermissions>, more: Partial<SandboxReach> = {}): SandboxReach {
+function reach(permissions: Partial<SandboxPermissions>, more: Partial<SandboxReach> = {}): SandboxReach {
   return {
     permissions: { ...NO_PERMISSIONS, ...permissions },
     policy: 'edits',
@@ -67,7 +75,7 @@ describe('containerMounts', () => {
         {
           allowRead: ['/w/docs/', '/w/src/**/*.ts'],
           allowWrite: ['/app/'],
-          allowExecute: [{ dir: '/w/', commands: ['bunx choliba tests'] }],
+          allowExecute: [{ dir: '/w/' }],
         },
         {
           addDirs: ['/w/projects'],
@@ -101,6 +109,65 @@ describe('containerMounts', () => {
     expect(mounts).toEqual([
       { path: '/w/.cache/runs/1', access: 'write', directory: true },
       { path: '/w/projects/loja/tests', access: 'write', directory: true },
+    ]);
+  });
+
+  it('opens the folder of a writable file, so a provider can save it by renaming over it, the rest read-only', () => {
+    const tickets = disk([
+      '/w/',
+      '/w/.cache/',
+      '/w/.cache/runs/',
+      '/w/.cache/runs/1/',
+      '/w/projects/',
+      '/w/projects/app/',
+      '/w/projects/app/tickets/',
+      '/w/projects/app/tickets/.gitkeep',
+      '/w/projects/app/tickets/1.json',
+      '/w/projects/app/tickets/2.json',
+      '/w/projects/app/tickets/3.json',
+      '/w/projects/app/tickets/arquivo/',
+      '/w/projects/app/tickets/segredo.json',
+    ]);
+    const mounts = mountsFor(
+      reach({
+        allowRead: ['/w/projects/app/tickets/'],
+        allowWrite: ['/w/projects/app/tickets/1.json', '/w/projects/app/tickets/3.json'],
+        denyRead: ['/w/projects/app/tickets/segredo.json'],
+      }),
+      tickets,
+    );
+    expect(mounts).toEqual([
+      { path: '/w/.cache/runs/1', access: 'write', directory: true },
+      { path: '/w/projects/app/tickets', access: 'write', directory: true },
+      { path: '/w/projects/app/tickets/.gitkeep', access: 'read', directory: false },
+      { path: '/w/projects/app/tickets/2.json', access: 'read', directory: false },
+      { path: '/w/projects/app/tickets/arquivo', access: 'read', directory: true },
+      { path: '/w/projects/app/tickets/segredo.json', access: 'hidden', directory: false },
+    ]);
+  });
+
+  it('mounts nothing more for a writable file inside a writable folder', () => {
+    const mounts = mountsFor(reach({ allowWrite: ['/w/docs/', '/w/docs/publico/'] }, { alsoWrite: ['/w/docs/a.md'] }), {
+      ...DISK,
+      exists: (path) => path === '/w/docs/a.md' || DISK.exists(path),
+    });
+    expect(mounts).toEqual([
+      { path: '/w/.cache/runs/1', access: 'write', directory: true },
+      { path: '/w/docs', access: 'write', directory: true },
+      { path: '/w/docs/publico', access: 'write', directory: true },
+    ]);
+  });
+
+  it('keeps read-only, deep inside an opened folder, all that does not lead to a writable path', () => {
+    const mounts = mountsFor(reach({ allowWrite: ['/w/docs/'] }, { alsoWrite: ['/w/.env'] }), DISK);
+    expect(mounts).toEqual([
+      { path: '/w', access: 'write', directory: true },
+      { path: '/w/.cache/runs/1', access: 'write', directory: true },
+      { path: '/w/.cache/runs/1.delete', access: 'read', directory: false },
+      { path: '/w/docs', access: 'write', directory: true },
+      { path: '/w/node_modules', access: 'read', directory: true },
+      { path: '/w/projects', access: 'read', directory: true },
+      { path: '/w/src', access: 'read', directory: true },
     ]);
   });
 

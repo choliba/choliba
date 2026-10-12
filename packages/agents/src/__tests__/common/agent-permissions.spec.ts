@@ -1,17 +1,17 @@
+import { pathBase, withoutTrailingSlash } from '@choliba/sandbox';
+
 import {
   NO_PERMISSIONS,
   absolutePermissions,
   allowedCommands,
   canRead,
   outsideExecuteDirs,
-  pathBase,
   blocksEveryCommand,
   formatPermissions,
   mapPermissions,
   pathGlobs,
   permissionTexts,
   readAgentPermissions,
-  withoutTrailingSlash,
 } from '../../common/agent-permissions';
 
 const NO_MCPS = 'MCP: you have no MCP servers. Do not list, look for or call any MCP tool.';

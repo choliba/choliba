@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 12/10/2026 05:44:35 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 12/10/2026 10:24:50 — não editar manualmente.
 
 ## Resumo
 
@@ -12,11 +12,12 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 🟢|[packages/core](packages/core)|100.00|100.00|100.00|100.00
 🟢|[packages/projects](packages/projects)|100.00|100.00|100.00|100.00
 🟢|[packages/runner](packages/runner)|100.00|100.00|100.00|100.00
+🟢|[packages/sandbox](packages/sandbox)|100.00|100.00|100.00|100.00
 
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 71 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 65 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -73,17 +74,11 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/common/message-blocks.ts](packages/agents/src/common/message-blocks.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/prompt.ts](packages/agents/src/common/prompt.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/provider-registry.ts](packages/agents/src/common/provider-registry.ts)|100.00|100.00|100.00|100.00
-🟢|[src/common/resolve-denies.ts](packages/agents/src/common/resolve-denies.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-project.ts](packages/agents/src/common/run-project.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-tools/delete-tool.ts](packages/agents/src/common/run-tools/delete-tool.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-tools/playwright-tool.ts](packages/agents/src/common/run-tools/playwright-tool.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-tools/run-tool-path.ts](packages/agents/src/common/run-tools/run-tool-path.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-tools/run-tools.ts](packages/agents/src/common/run-tools/run-tools.ts)|100.00|100.00|100.00|100.00
-🟢|[src/common/sandbox/container-mounts.ts](packages/agents/src/common/sandbox/container-mounts.ts)|100.00|100.00|100.00|100.00
-🟢|[src/common/sandbox/docker-run.ts](packages/agents/src/common/sandbox/docker-run.ts)|100.00|100.00|100.00|100.00
-🟢|[src/common/sandbox/docker-sandbox.ts](packages/agents/src/common/sandbox/docker-sandbox.ts)|100.00|100.00|100.00|100.00
-🟢|[src/common/sandbox/local-sandbox.ts](packages/agents/src/common/sandbox/local-sandbox.ts)|100.00|100.00|100.00|100.00
-🟢|[src/common/sandbox/sandbox.ts](packages/agents/src/common/sandbox/sandbox.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/stream-json.ts](packages/agents/src/common/stream-json.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/claude/claude-agent.provider.ts](packages/agents/src/providers/claude/claude-agent.provider.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/claude/claude-permissions.ts](packages/agents/src/providers/claude/claude-permissions.ts)|100.00|100.00|100.00|100.00
@@ -238,5 +233,20 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/tests/tests.service.ts](packages/runner/src/tests/tests.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/ticket-expand.ts](packages/runner/src/tests/ticket-expand.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/ticket-verdict.ts](packages/runner/src/tests/ticket-verdict.ts)|100.00|100.00|100.00|100.00
+
+</details>
+
+<details>
+<summary>🟢 <b>packages/sandbox</b> — 100.00% das linhas, 7 arquivos</summary>
+
+Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
+--|--|--|--|--|--
+🟢|[src/common/paths.ts](packages/sandbox/src/common/paths.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/resolve-denies.ts](packages/sandbox/src/common/resolve-denies.ts)|100.00|100.00|100.00|100.00
+🟢|[src/sandbox/docker/container-mounts.ts](packages/sandbox/src/sandbox/docker/container-mounts.ts)|100.00|100.00|100.00|100.00
+🟢|[src/sandbox/docker/docker-run.ts](packages/sandbox/src/sandbox/docker/docker-run.ts)|100.00|100.00|100.00|100.00
+🟢|[src/sandbox/docker/docker-sandbox.ts](packages/sandbox/src/sandbox/docker/docker-sandbox.ts)|100.00|100.00|100.00|100.00
+🟢|[src/sandbox/local/local-sandbox.ts](packages/sandbox/src/sandbox/local/local-sandbox.ts)|100.00|100.00|100.00|100.00
+🟢|[src/sandbox/sandbox.ts](packages/sandbox/src/sandbox/sandbox.ts)|100.00|100.00|100.00|100.00
 
 </details>

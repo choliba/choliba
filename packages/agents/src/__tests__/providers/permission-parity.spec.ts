@@ -1,5 +1,6 @@
+import type { DirEntry, ReadDir } from '@choliba/sandbox';
+
 import { absolutePermissions, readAgentPermissions } from '../../common/agent-permissions';
-import type { DirEntry, ReadDir } from '../../common/resolve-denies';
 import { claudePermissionArgs } from '../../providers/claude/claude-permissions';
 import { cursorPermissions } from '../../providers/cursor/cursor-permissions';
 

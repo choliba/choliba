@@ -1,15 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { dockerRunArgs } from '../../common/sandbox/docker-run';
-import { containerName } from '../../common/sandbox/docker-sandbox';
 import {
+  containerName,
+  dockerRunArgs,
   agentURL,
   DEFAULT_SANDBOX_IMAGE,
   presentCredentials,
   readSandbox,
   SandboxConfigError,
-} from '../../common/sandbox/sandbox';
+} from '../../index';
 
 describe('readSandbox', () => {
   it('is local by default, and docker with the default image or CHOL_SANDBOX_IMAGE', () => {

@@ -1,16 +1,9 @@
 import { CHOL_NETWORK, CHOL_SANDBOX, CHOL_SANDBOX_IMAGE, ExpectedError } from '@choliba/core';
 
-import type { DiskFacts } from './container-mounts';
-import { DockerSandbox } from './docker-sandbox';
-import type { ContainerUser } from './docker-run';
-import { LocalSandbox } from './local-sandbox';
-import type { SandboxBackend } from './sandbox-backend';
-
-export type SandboxNetwork = 'isolated' | 'host';
-
-/** Where the provider runs: on this machine, or in a container that sees only what the agent may reach. */
-export type Sandbox =
-  { readonly kind: 'local' } | { readonly kind: 'docker'; readonly image: string; readonly network: SandboxNetwork };
+import { DockerSandbox } from './docker/docker-sandbox';
+import { LocalSandbox } from './local/local-sandbox';
+import type { SandboxBackend } from './interfaces/sandbox-backend.interface';
+import type { Sandbox, SandboxBackendContext, SandboxNetwork } from './interfaces/sandbox.interface';
 
 /** The image `CHOL_SANDBOX=docker` runs without `CHOL_SANDBOX_IMAGE`: the one `docker/agent.Dockerfile` builds. */
 export const DEFAULT_SANDBOX_IMAGE = 'choliba-agent';
@@ -63,12 +56,6 @@ export function agentURL(url: string, sandbox: Sandbox): string {
 /** The credentials set in `config`, by name. */
 export function presentCredentials(config: Readonly<Record<string, string | undefined>>): readonly string[] {
   return SANDBOX_CREDENTIALS.filter((name) => (config[name] ?? '') !== '');
-}
-
-export interface SandboxBackendContext {
-  readonly user: () => ContainerUser;
-  readonly environment: Readonly<Record<string, string>>;
-  readonly disk: DiskFacts;
 }
 
 export function createSandboxBackend(sandbox: Sandbox, context: SandboxBackendContext): SandboxBackend {

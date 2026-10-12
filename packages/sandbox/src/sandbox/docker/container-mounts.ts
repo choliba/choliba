@@ -1,41 +1,9 @@
 import { dirname } from 'node:path';
 
-import { pathBase, withoutTrailingSlash, type AgentPermissions } from '../agent-permissions';
-import type { PermissionPolicy } from '../interfaces/execution.interface';
-import { hasGlob, isWithin, resolveDenies, type ReadDir } from '../resolve-denies';
+import { complementOf, hasGlob, isWithin, pathBase, resolveDenies, withoutTrailingSlash } from '../../common';
+import type { SandboxReach } from '../interfaces/sandbox-backend.interface';
+import type { ContainerMount, ContainerPlan, DiskFacts } from './interfaces/container-mounts.interface';
 import { CONTAINER_HOME } from './docker-run';
-
-/**
- * One path the container sees, at the same absolute path as on this machine: read-only, writable, or hidden (an
- * empty folder or file over a denied path inside a mounted one).
- */
-export interface ContainerMount {
-  readonly path: string;
-  readonly access: 'read' | 'write' | 'hidden';
-  /** Whether the path is a folder; a hidden file is covered by an empty file, a hidden folder by an empty one. */
-  readonly directory: boolean;
-}
-
-/** What a run lets the agent reach, already absolute (`absolutePermissions`). */
-export interface SandboxReach {
-  readonly permissions: AgentPermissions;
-  readonly policy: PermissionPolicy;
-  /** `--add-dir`: read like `allow.read`. */
-  readonly addDirs: readonly string[];
-  /** Where the provider runs, always writable. */
-  readonly runDir: string;
-  /** What the session needs to read beyond the permissions: the run tools' scripts, the installed packages. */
-  readonly alsoRead: readonly string[];
-  /** What the session's commands write beyond the permissions: choliba's own output folders. */
-  readonly alsoWrite: readonly string[];
-}
-
-/** What the container mounts, and the paths the run reaches that it leaves to the image. */
-export interface ContainerPlan {
-  readonly mounts: readonly ContainerMount[];
-  /** Paths the agent may reach that are the image's own folders (`isImagePath`): not mounted, the image's are seen. */
-  readonly skipped: readonly string[];
-}
 
 /**
  * The folders of the image's own system: programs, libraries, configuration, the browsers and the session's home.
@@ -66,13 +34,6 @@ export function isImagePath(path: string): boolean {
   return path === '/' || IMAGE_FOLDERS.some((folder) => isWithin(folder, path));
 }
 
-/** The disk, as the mounts are planned from it; specs pass a table. */
-export interface DiskFacts {
-  readonly exists: (path: string) => boolean;
-  readonly isDirectory: (path: string) => boolean;
-  readonly read: ReadDir;
-}
-
 /** The path a declared one is mounted at: the folder before a glob, or the path without its trailing `/`. */
 function mountPoint(path: string): string {
   return hasGlob(path) ? pathBase(path) : withoutTrailingSlash(path);
@@ -98,6 +59,46 @@ function mountsOf(
     const path = onDisk(mountPoint(declared), access, disk);
     return path === undefined ? [] : [{ path, access, directory: disk.isDirectory(path) }];
   });
+}
+
+/** The folders among `mounts`, and the files. */
+function byKind(mounts: readonly ContainerMount[]): {
+  readonly folders: readonly ContainerMount[];
+  readonly files: readonly ContainerMount[];
+} {
+  return {
+    folders: mounts.filter((mount) => mount.directory),
+    files: mounts.filter((mount) => !mount.directory),
+  };
+}
+
+/** What a writable file opens: its folder, unless a writable folder already holds it. */
+function folderOf(file: ContainerMount, folders: readonly ContainerMount[]): readonly ContainerMount[] {
+  if (folders.some((folder) => isWithin(folder.path, file.path))) return [];
+  return [{ path: dirname(file.path), access: 'write', directory: true }];
+}
+
+/**
+ * The writable mounts as the container takes them, and what goes back to read-only. A file mounted on its own cannot
+ * be replaced (a rename over it fails) nor have a file written beside it (the folder is read-only), and that is how a
+ * provider saves a file: a temporary file next to it, renamed over it. So a writable file opens its folder, and what
+ * in that folder does not lead to a writable path goes back to read-only (`complementOf`).
+ */
+function writableMounts(
+  writes: readonly ContainerMount[],
+  disk: DiskFacts,
+): { readonly mounts: readonly ContainerMount[]; readonly readOnly: readonly string[] } {
+  const { folders, files } = byKind(writes);
+  const opened = merged(files.flatMap((file) => folderOf(file, folders)));
+  const writable = [...folders, ...files].map((mount) => mount.path);
+  const readOnly = opened.flatMap((folder) =>
+    complementOf(
+      writable.filter((path) => isWithin(folder.path, path)),
+      disk.read,
+      folder.path,
+    ).map(withoutTrailingSlash),
+  );
+  return { mounts: [...folders, ...opened], readOnly };
 }
 
 /** One mount per path, writable winning over read-only, sorted so a folder comes before what is inside it. */
@@ -135,7 +136,8 @@ function deniedInside(
 /**
  * What the container mounts for a run, each path at the same absolute path, so the run folder, the run tools and
  * every path in the prompt stay valid. Reads: `allow.read`, `--add-dir`, the folders commands run in and `alsoRead`.
- * Writes: the run folder, `alsoWrite` and, outside `read-only`, `allow.write`. A `deny.read` inside a mount is hidden;
+ * Writes: the run folder, `alsoWrite` and, outside `read-only`, `allow.write`; a writable file opens its folder, the
+ * folder's other entries read-only (`writableMounts`). A `deny.read` inside a mount is hidden;
  * a `deny.write` inside a writable one goes back to read-only. Anything else does not exist in the container, and the
  * image's own folders (`isImagePath`) are never mounted: the agent sees the image's, and they are `skipped`.
  */
@@ -152,6 +154,7 @@ export function containerMounts(reach: SandboxReach, disk: DiskFacts): Container
 function plannedMounts(reach: SandboxReach, disk: DiskFacts): readonly ContainerMount[] {
   const { permissions } = reach;
   const writes = reach.policy === 'read-only' ? [] : permissions.allowWrite;
+  const written = writableMounts(mountsOf([...writes, reach.runDir, ...reach.alsoWrite], 'write', disk), disk);
   const opened = merged([
     ...mountsOf(
       [
@@ -163,7 +166,7 @@ function plannedMounts(reach: SandboxReach, disk: DiskFacts): readonly Container
       'read',
       disk,
     ),
-    ...mountsOf([...writes, reach.runDir, ...reach.alsoWrite], 'write', disk),
+    ...written.mounts,
   ]);
   const writable = opened.filter((mount) => mount.access === 'write');
   const as =
@@ -171,6 +174,7 @@ function plannedMounts(reach: SandboxReach, disk: DiskFacts): readonly Container
     (path: string): ContainerMount => ({ path, access, directory: disk.isDirectory(path) });
   // A deny.read wins over a deny.write at the same path: hidden is more than read-only.
   return overridden(opened, [
+    ...written.readOnly.map(as('read')),
     ...deniedInside(permissions.denyWrite, writable, disk).map(as('read')),
     ...deniedInside(permissions.denyRead, opened, disk).map(as('hidden')),
   ]);

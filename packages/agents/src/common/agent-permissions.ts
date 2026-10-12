@@ -1,9 +1,10 @@
 import { statSync } from 'node:fs';
-import { dirname, isAbsolute, join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
+
+import { EXCEPTION_PREFIX, exceptionPath, hasGlob, isException, withoutTrailingSlash } from '@choliba/sandbox';
 
 import type { PermissionPolicy } from './interfaces/execution.interface';
 import { asStringArray, isRecord } from './json';
-import { EXCEPTION_PREFIX, exceptionPath, hasGlob, isException } from './resolve-denies';
 import type { RunProject } from './run-project';
 
 /** One entry of `permissions.allow.execute`/`.deny.execute`: a directory and the commands that go with it. */
@@ -149,11 +150,6 @@ export function blocksEveryCommand(rule: ExecuteRule): boolean {
   return rule.commands.includes(EVERY_COMMAND);
 }
 
-/** A directory as written in `execute` (`/x/` or `/x`), without the trailing `/`. */
-export function withoutTrailingSlash(dir: string): string {
-  return dir.length > 1 && dir.endsWith('/') ? dir.slice(0, -1) : dir;
-}
-
 /** `path` as an absolute path: a relative one is relative to the workspace root; an exception keeps its `!`. */
 function absolute(path: string, root: string): string {
   if (isException(path)) {
@@ -182,16 +178,6 @@ export function absolutePermissions(permissions: AgentPermissions, root: string)
     denyExecute: rules(permissions.denyExecute),
     denyTools: permissions.denyTools,
   };
-}
-
-/** The directory a declared path lives under: the part before the first glob segment, or its folder. */
-export function pathBase(path: string): string {
-  const segments = path.split('/');
-  const globAt = segments.findIndex((segment) => /[*?[\]]/.test(segment));
-  if (globAt !== -1) {
-    return segments.slice(0, globAt).join('/') || '/';
-  }
-  return path.endsWith('/') ? path.slice(0, -1) || '/' : dirname(path);
 }
 
 /** The directories `execute` names (absolute) other than the workspace root, where commands run anyway. */

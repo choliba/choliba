@@ -27,7 +27,7 @@ written here, with its reason.
   `cholibaShell`, `CHOLIBA_SHELL` and the `Runtime` type) and does nothing on import. Nothing else imports
   `main.ts`. `--version` uses `findManifest` and `versionLine` from `@choliba/core`.
 - **Installed package.** `choliba` republishes each of those entries as a subpath: `choliba`, `choliba/core`,
-  `choliba/core/testing`, `choliba/agents`, `choliba/projects`, `choliba/runner`, `choliba/runner/env`,
+  `choliba/core/testing`, `choliba/agents`, `choliba/projects`, `choliba/runner`, `choliba/sandbox`, `choliba/runner/env`,
   `choliba/runner/pages/base-page` and `choliba/eslint`. Experimental until 1.0. Code in this repository keeps
   importing `@choliba/<pkg>`.
 
@@ -109,5 +109,5 @@ A new package is added to `STRUCTURE` (`common` is implicit) in its first commit
 
 ## Where the packages stand
 
-`core`, `projects`, `runner`, `agents` and the app `choliba` are in `STRUCTURE`, so `bun run lint` holds the
+`core`, `projects`, `runner`, `sandbox`, `agents` and the app `choliba` are in `STRUCTURE`, so `bun run lint` holds the
 codebase to this standard. The process runner lives in `core`'s `terminal/` folder, not in a package of its own.

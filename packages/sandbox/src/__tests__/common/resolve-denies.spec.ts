@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { DirEntry, ReadDir } from '../../common/resolve-denies';
+import type { DirEntry, ReadDir } from '../../index';
 import {
   complementOf,
   denyExceptions,
@@ -11,7 +11,7 @@ import {
   readDir,
   resolveDenies,
   strayExceptions,
-} from '../../common/resolve-denies';
+} from '../../index';
 import { makeTmpDir } from '../helpers/tmp';
 
 const dir = (name: string): DirEntry => ({ name, isDirectory: true });

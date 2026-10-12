@@ -13,13 +13,14 @@ um container e uma tabela de comandos, sem decorator e sem reflection.
 
 ## Os pacotes
 
-| Pacote              | O que tem                                                                                                                                                                   |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/core`     | a plataforma (o processo e o Bun como valores), a configuração da pasta de trabalho, o tema de cores, o help, o autocomplete, a casca e o runner de processos (`terminal/`) |
-| `packages/projects` | projetos e tickets: onde ficam, criar, conferir; `new project` e `list projects`                                                                                            |
-| `packages/runner`   | os testes E2E pelo Playwright, os portões red/green e o reporter; `run tests`                                                                                               |
-| `packages/agents`   | os agentes: o `agent.yaml`, a montagem de uma execução (`runs/`), os steps, os providers; `run agent` e `list agents`                                                       |
-| `packages/choliba`  | o app: `main.ts`, a raiz (os verbos e o help), `check`, `setup`, `lint`, `format`; o pacote publicado                                                                       |
+| Pacote              | O que tem                                                                                                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `packages/core`     | a plataforma (o processo e o Bun como valores), a configuração da pasta de trabalho, o tema de cores, o help, o autocomplete, a casca e o runner de processos (`terminal/`)    |
+| `packages/projects` | projetos e tickets: onde ficam, criar, conferir; `new project` e `list projects`                                                                                               |
+| `packages/runner`   | os testes E2E pelo Playwright, os portões red/green e o reporter; `run tests`                                                                                                  |
+| `packages/sandbox`  | onde o provider roda: `local` ou `docker` (`sandbox/local/`, `sandbox/docker/`), as montagens do container e as regras de caminho (`deny`, exceções `!`); só depende do `core` |
+| `packages/agents`   | os agentes: o `agent.yaml`, a montagem de uma execução (`runs/`), os steps, os providers; `run agent` e `list agents`                                                          |
+| `packages/choliba`  | o app: `main.ts`, a raiz (os verbos e o help), `check`, `setup`, `lint`, `format`; o pacote publicado                                                                          |
 
 ## Invariantes
 
@@ -28,7 +29,8 @@ um container e uma tabela de comandos, sem decorator e sem reflection.
   que não aceita decorator de parâmetro; a entrada não tem decorator, e o tipo do spawn não cita o global `Bun`
   (a função de verdade é lida só no `main.ts`). O pacote instalado republica cada entrada como subcaminho
   (`choliba`, `choliba/core`, `choliba/core/testing`, `choliba/agents`, `choliba/projects`, `choliba/runner`,
-  `choliba/runner/env`, `choliba/runner/pages/base-page`, `choliba/eslint`), experimental até a 1.0.
+  `choliba/sandbox`, `choliba/runner/env`, `choliba/runner/pages/base-page`, `choliba/eslint`), experimental até a
+  1.0.
   `import 'choliba'` é a casca e não roda o `main.ts`. Quem mexe neste repositório continua importando
   `@choliba/<pkg>`.
 - **Só o `main.ts` lê o Bun e o `process`.** Ele monta o `Platform` (stdout, ambiente, spawn, git…) e o `Runtime`
@@ -53,7 +55,7 @@ resultado e o código de saída pelo `ShellIo`. Uma palavra que não é comando,
 
 Um agente roda num só ponto, `runAgent` (`agents/runs/run-agent.ts`), que inicia o processo do provider. Com
 `CHOL_SANDBOX=docker`, o lançador (`agents/runs/sandbox-launch.ts`) troca esse comando por um `docker run` cujas
-montagens saem das permissões do agente (`common/sandbox/`): fora delas, nada da máquina existe para o provider.
+montagens saem das permissões do agente (`@choliba/sandbox`): fora delas, nada da máquina existe para o provider.
 
 Detalhes e as receitas (um comando novo, um provider novo, um spec): skill
 [`cli-shell`](.agents/skills/cli-shell/SKILL.md).
