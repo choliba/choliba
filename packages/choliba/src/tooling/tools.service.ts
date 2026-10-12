@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { locateResource, type ConfigService, type Which } from '@choliba/core';
+import { ExpectedError, locateResource, type ConfigService, type Which } from '@choliba/core';
 
 import type { Runtime } from '../runtime';
 
@@ -53,7 +53,7 @@ export class ToolsService {
     const declared: unknown = JSON.parse(readFileSync(manifest, 'utf8'));
     const bins = isRecord(declared) ? declared['bin'] : undefined;
     const relative = typeof bins === 'string' ? bins : isRecord(bins) ? bins[bin] : undefined;
-    if (typeof relative !== 'string') throw new Error(`${dependency} não declara o executável ${bin}.`);
+    if (typeof relative !== 'string') throw new ExpectedError(`${dependency} não declara o executável ${bin}.`);
     return join(dirname(manifest), relative);
   }
 }
