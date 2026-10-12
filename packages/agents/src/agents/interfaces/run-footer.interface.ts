@@ -1,6 +1,5 @@
 import type { TableColumn, Writable } from '@choliba/core';
-
-import type { SandboxPlace } from '../../common';
+import type { SandboxPlace } from '@choliba/sandbox';
 
 /** The run the footer describes: who runs it, where, and since when. */
 export interface RunFooterInfo {

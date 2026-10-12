@@ -1,6 +1,7 @@
-import { withoutTrailingSlash, type AgentPermissions } from './agent-permissions';
+import { denyExceptions, isWithin, withoutTrailingSlash } from '@choliba/sandbox';
+
+import { type AgentPermissions } from './agent-permissions';
 import type { AgentDefinition } from './interfaces/agent.interface';
-import { denyExceptions, isWithin } from './resolve-denies';
 
 /** A definition folder as a deny entry: the folder and everything under it. */
 function asFolder(dir: string): string {

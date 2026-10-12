@@ -27,7 +27,7 @@ const packageDir = join(import.meta.dir, '..');
 const packagesDir = join(packageDir, '..');
 const repoRoot = join(packagesDir, '..');
 const entriesDir = join(packageDir, 'scripts', 'entries');
-const BUNDLED = ['agents', 'core', 'projects', 'runner'];
+const BUNDLED = ['agents', 'core', 'projects', 'runner', 'sandbox'];
 
 /** Set from the loaded file before its imports, so a lookup during import sees this package, not the build machine. */
 const SHIPPED_DIR = 'globalThis.__CHOLIBA_SHIPPED_DIR__ = decodeURIComponent(new URL(".", import.meta.url).pathname);';
@@ -40,6 +40,7 @@ const ENTRY_FILES = [
   'agents.ts',
   'projects.ts',
   'runner.ts',
+  'sandbox.ts',
   'runner/env.ts',
   'runner/pages/base-page.ts',
   'eslint.ts',
@@ -81,6 +82,13 @@ const SHIPPED: readonly ShippedExport[] = [
     kind: 'star',
   },
   {
+    subpath: './sandbox',
+    js: './sandbox.js',
+    types: 'sandbox.d.ts',
+    declaration: 'types/sandbox/src/index.d.ts',
+    kind: 'star',
+  },
+  {
     subpath: './runner/env',
     js: './runner/env.js',
     types: 'runner/env.d.ts',
@@ -112,6 +120,7 @@ const SPECIFIERS: readonly (readonly [string, string])[] = [
   ['@choliba/agents', 'choliba/agents'],
   ['@choliba/projects', 'choliba/projects'],
   ['@choliba/runner', 'choliba/runner'],
+  ['@choliba/sandbox', 'choliba/sandbox'],
 ];
 
 function manifest(dir: string): Manifest {
@@ -196,6 +205,7 @@ function emitDeclarations(outDir: string): void {
   emitPackage('core', outDir, ['src']);
   emitPackage('agents', outDir, ['src']);
   emitPackage('projects', outDir, ['src']);
+  emitPackage('sandbox', outDir, ['src']);
   emitPackage('runner', outDir, ['src', 'shared', 'reporters', 'playwright.config.ts']);
   emitPackage('choliba', outDir, ['src']);
 }

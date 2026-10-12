@@ -12,6 +12,7 @@ const SUBPATHS = [
   './agents',
   './projects',
   './runner',
+  './sandbox',
   './runner/env',
   './runner/pages/base-page',
   './eslint',
@@ -24,11 +25,21 @@ import { createCholibaShell } from 'choliba';
 import { loadAgent } from 'choliba/agents';
 import { loadProjectSettings } from 'choliba/projects';
 import { runnerShell } from 'choliba/runner';
+import { createSandboxBackend } from 'choliba/sandbox';
 import { loadProjectEnv } from 'choliba/runner/env';
 import { BasePage } from 'choliba/runner/pages/base-page';
 import config from 'choliba/eslint';
 
-const values = [createShell, fakePlatform, createCholibaShell, loadAgent, loadProjectSettings, loadProjectEnv, BasePage];
+const values = [
+  createShell,
+  fakePlatform,
+  createCholibaShell,
+  loadAgent,
+  loadProjectSettings,
+  createSandboxBackend,
+  loadProjectEnv,
+  BasePage,
+];
 if (values.some((value) => typeof value !== 'function')) throw new Error('a subpath did not export its function');
 if (typeof runnerShell !== 'object' || runnerShell === null) throw new Error('choliba/runner');
 if (!Array.isArray(config)) throw new Error('choliba/eslint');
@@ -51,6 +62,7 @@ import { createCholibaShell } from 'choliba';
 import { loadAgent } from 'choliba/agents';
 import { loadProjectSettings } from 'choliba/projects';
 import { runnerShell } from 'choliba/runner';
+import { createSandboxBackend } from 'choliba/sandbox';
 import { loadProjectEnv } from 'choliba/runner/env';
 import { BasePage } from 'choliba/runner/pages/base-page';
 import config from 'choliba/eslint';
@@ -60,6 +72,7 @@ void fakePlatform;
 void createCholibaShell;
 void loadAgent;
 void loadProjectSettings;
+void createSandboxBackend;
 void runnerShell;
 void loadProjectEnv;
 void BasePage;
@@ -92,6 +105,7 @@ const PACKAGE_DIRS = [
   'packages/agents',
   'packages/projects',
   'packages/runner',
+  'packages/sandbox',
 ];
 
 function installedPackage(name: string): string {

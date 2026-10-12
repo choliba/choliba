@@ -1,41 +1,9 @@
 import { dirname } from 'node:path';
 
-import { pathBase, withoutTrailingSlash, type AgentPermissions } from '../agent-permissions';
-import type { PermissionPolicy } from '../interfaces/execution.interface';
-import { complementOf, hasGlob, isWithin, resolveDenies, type ReadDir } from '../resolve-denies';
+import { complementOf, hasGlob, isWithin, pathBase, resolveDenies, withoutTrailingSlash } from '../../common';
+import type { SandboxReach } from '../interfaces/sandbox-backend.interface';
+import type { ContainerMount, ContainerPlan, DiskFacts } from './interfaces/container-mounts.interface';
 import { CONTAINER_HOME } from './docker-run';
-
-/**
- * One path the container sees, at the same absolute path as on this machine: read-only, writable, or hidden (an
- * empty folder or file over a denied path inside a mounted one).
- */
-export interface ContainerMount {
-  readonly path: string;
-  readonly access: 'read' | 'write' | 'hidden';
-  /** Whether the path is a folder; a hidden file is covered by an empty file, a hidden folder by an empty one. */
-  readonly directory: boolean;
-}
-
-/** What a run lets the agent reach, already absolute (`absolutePermissions`). */
-export interface SandboxReach {
-  readonly permissions: AgentPermissions;
-  readonly policy: PermissionPolicy;
-  /** `--add-dir`: read like `allow.read`. */
-  readonly addDirs: readonly string[];
-  /** Where the provider runs, always writable. */
-  readonly runDir: string;
-  /** What the session needs to read beyond the permissions: the run tools' scripts, the installed packages. */
-  readonly alsoRead: readonly string[];
-  /** What the session's commands write beyond the permissions: choliba's own output folders. */
-  readonly alsoWrite: readonly string[];
-}
-
-/** What the container mounts, and the paths the run reaches that it leaves to the image. */
-export interface ContainerPlan {
-  readonly mounts: readonly ContainerMount[];
-  /** Paths the agent may reach that are the image's own folders (`isImagePath`): not mounted, the image's are seen. */
-  readonly skipped: readonly string[];
-}
 
 /**
  * The folders of the image's own system: programs, libraries, configuration, the browsers and the session's home.
@@ -64,13 +32,6 @@ export const IMAGE_FOLDERS: readonly string[] = [
 /** Whether `path` is the root, which holds every image folder, or one of them, or inside one. */
 export function isImagePath(path: string): boolean {
   return path === '/' || IMAGE_FOLDERS.some((folder) => isWithin(folder, path));
-}
-
-/** The disk, as the mounts are planned from it; specs pass a table. */
-export interface DiskFacts {
-  readonly exists: (path: string) => boolean;
-  readonly isDirectory: (path: string) => boolean;
-  readonly read: ReadDir;
 }
 
 /** The path a declared one is mounted at: the folder before a glob, or the path without its trailing `/`. */

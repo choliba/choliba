@@ -11,13 +11,14 @@ import {
   type WritableWithColumns,
 } from '@choliba/core';
 import { resolveLocations, type ProjectSettings, type RunningApp } from '@choliba/projects';
+import type { Sandbox } from '@choliba/sandbox';
 
 import type { ParsedAgentsArgs } from './agents-flags';
 import type { AgentInvocation } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
 import type { ProviderRequest } from '../../common';
 import type { ProviderRegistry, ResolvedProvider } from '../../common';
-import type { RunProject, Sandbox } from '../../common';
+import type { RunProject } from '../../common';
 
 export interface RunAgentsCliDeps {
   /**

@@ -1,18 +1,9 @@
 import { basename } from 'node:path';
 
-import { containerMounts, type DiskFacts } from './container-mounts';
-import { dockerRunArgs, type ContainerUser } from './docker-run';
-import type { SandboxBackend, SandboxPlan, SandboxPlanInput } from './sandbox-backend';
-import type { SandboxNetwork } from './sandbox';
-
-export interface DockerSandboxOptions {
-  readonly image: string;
-  readonly network: SandboxNetwork;
-  readonly user: ContainerUser;
-  readonly credentialNames: readonly string[];
-  readonly environment: Readonly<Record<string, string>>;
-  readonly disk: DiskFacts;
-}
+import type { SandboxBackend, SandboxPlan, SandboxPlanInput } from '../interfaces/sandbox-backend.interface';
+import { containerMounts } from './container-mounts';
+import { dockerRunArgs } from './docker-run';
+import type { DockerSandboxOptions } from './interfaces/docker-sandbox.interface';
 
 /**
  * The container of the run in `runDir`: `choliba-` and the run folder's name (`2026-10-12T05-53-29.739Z-383691`), unique
