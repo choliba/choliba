@@ -287,20 +287,19 @@ Nos dois casos a falha sai tratada no terminal: qual ação, o que ela rodou, o 
 ```
 
 **A mesma lista em vários modos.** O YAML tem âncoras: `&nome` dá um nome à lista que vem logo depois, e `*nome`
-a repete em outro lugar. O `docs-updater` usa isso para que `plan` e `ask` preparem o mesmo contexto de `execute`
-e limpem o diff do mesmo jeito:
+a repete em outro lugar. O `implementer` usa isso para que `plan` e `ask` preparem o mesmo contexto de `execute`:
 
 ```yaml
 steps:
   execute:
     before: &before # a lista do before de execute ganha o nome "before"
-      - git_diff: [develop, .cache/docs-updater/diff.patch, --pending, .cache/docs-updater/last-base]
+      - run: [bunx, choliba, tests, '${PROJECT}:${TICKET}', --expect, red, --failures, '.cache/test-writer/${TICKET}/red.md']
+      - add_files: [falhas_red, '.cache/test-writer/${TICKET}/red.md']
     after:
       success:
-        - record_git_head: [.cache/docs-updater/last-base]
-      always: &cleanup # a lista do always de execute ganha o nome "cleanup"
-        - run: [rm, -f, .cache/docs-updater/diff.patch]
+        - run: [bunx, choliba, tests, '${PROJECT}:${TICKET}', --expect, green]
   plan:
     before: *before # a mesma lista do before de execute
-    after: *cleanup # a mesma lista do always de execute (uma lista simples é always)
+  ask:
+    before: *before
 ```

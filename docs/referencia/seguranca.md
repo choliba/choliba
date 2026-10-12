@@ -54,8 +54,7 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
   o dado não fechar o bloco. É uma camada a mais: o modelo ainda pode ser enganado, e quem limita o agente são as
   permissões e o container.
 - **`steps` não passam pelas permissões.** Os passos são executados pelo choliba, fora da sessão do modelo: um
-  passo pode fazer o que o modelo não pode (o `docs-updater` proíbe o modelo de rodar o Prettier e o roda no
-  `steps.execute.after`). Veja [Steps](agent-yaml.md#steps).
+  passo pode fazer o que o modelo não pode (rodar um comando que as permissões do agente negam, por exemplo). Veja [Steps](agent-yaml.md#steps).
 
 ## O container
 

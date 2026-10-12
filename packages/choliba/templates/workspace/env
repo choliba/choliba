@@ -43,7 +43,6 @@ CHOL_PROJECTS_DIR=
 #   agents.product-owner=blue
 #   agents.test-writer=red
 #   agents.implementer=green
-#   agents.docs-updater=cyan
 #   states.error=bright-red
 #   states.success=green
 #   states.warning=yellow

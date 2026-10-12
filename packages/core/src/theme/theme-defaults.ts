@@ -4,7 +4,7 @@ import type { ThemeTable } from './interfaces/theme.interface';
 export const DEFAULT_THEME: ThemeTable = {
   providers: { claude: 'magenta', cursor: 'cyan' },
   // test-writer and implementer in the colors of their TDD phase (red, then green).
-  agents: { 'product-owner': 'blue', 'test-writer': 'red', implementer: 'green', 'docs-updater': 'cyan' },
+  agents: { 'product-owner': 'blue', 'test-writer': 'red', implementer: 'green' },
   // An error is bright red, so it does not read as the test-writer's label.
   states: { error: 'bright-red', success: 'green', warning: 'yellow', hint: 'gray' },
   gates: { red: 'red', green: 'green' },
