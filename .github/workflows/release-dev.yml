@@ -68,6 +68,11 @@ jobs:
           bun run chol:pack
           cp "packages/choliba/choliba-$CHOL_VERSION.tgz" "$RUNNER_TEMP/choliba-${TAG#v}.tgz"
 
+      - name: Calcular checksum do pacote
+        run: |
+          cd "$RUNNER_TEMP"
+          sha256sum "choliba-${TAG#v}.tgz" > "choliba-${TAG#v}.tgz.sha256"
+
       # Os Destaques de cada release vêm do corpo do PR de release, lido pelo gh.
       - name: Notas da release
         env:
@@ -91,4 +96,5 @@ jobs:
           body_path: ${{ runner.temp }}/notes.md
           files: |
             ${{ runner.temp }}/choliba-0.0.1-dev.tgz
+            ${{ runner.temp }}/choliba-0.0.1-dev.tgz.sha256
           overwrite_files: true
