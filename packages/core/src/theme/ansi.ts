@@ -80,8 +80,3 @@ export function paintAnsi(color: AnsiColor, text: string): string {
 export function boldAnsi(text: string): string {
   return `\x1B[1m${text}\x1B[22m`;
 }
-
-/** `text` dim, the weight turned back right after (the color, if any, stays). */
-export function dimAnsi(text: string): string {
-  return `\x1B[2m${text}\x1B[22m`;
-}

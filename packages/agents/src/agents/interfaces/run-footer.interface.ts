@@ -29,10 +29,6 @@ export interface RunScreen {
   readonly err: Writable;
   /** The model the provider reported, for the footer. */
   model(name: string): void;
-  /** A piece of the provider's reasoning, for the panel above the footer's table. */
-  thinking(piece: string): void;
-  /** The provider did something other than reasoning: its next reasoning is another thought. */
-  thought(): void;
   /** Ends the screen: erases the footer and leaves the summary line in its place. */
   close(exitCode: number): void;
 }

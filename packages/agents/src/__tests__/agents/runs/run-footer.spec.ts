@@ -44,23 +44,6 @@ describe('footerLines', () => {
     expect(footerLines(DOCKER, 102_317, 20, PLAIN)[1]).toBe('00:01:42.317');
   });
 
-  it('puts the panel between the bottom of the frame and the table, and leaves it out when the table does not fit', () => {
-    const panel = ['┌─ pensando ─┐', '│ hmm │', '└───┘'];
-
-    expect(footerLines(LOCAL, 0, 80, PLAIN, panel).slice(0, 5)).toEqual([
-      `└${'─'.repeat(78)}┘`,
-      ...panel,
-      'provider │ modelo │ sandbox │ decorrido',
-    ]);
-    expect(footerLines(DOCKER, 102_317, 50, PLAIN, panel)).toHaveLength(2);
-  });
-
-  it('draws the panel dim when the theme colors', () => {
-    const [, top] = footerLines(LOCAL, 0, 80, buildTheme({}, true), ['┌─ pensando ─┐']);
-
-    expect(top).toBe('\u001b[2m┌─ pensando ─┐\u001b[22m');
-  });
-
   it('draws the titles bold when the theme colors', () => {
     const [, head] = footerLines(LOCAL, 0, 80, buildTheme({}, true));
 

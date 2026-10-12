@@ -42,10 +42,6 @@ describe('renderEvent', () => {
     expect(renderEvent({ type: 'text', text: '' }, OPTS)).toBeUndefined();
   });
 
-  it('renders nothing for the reasoning: it goes in the panel above the footer', () => {
-    expect(renderEvent({ type: 'thinking', text: 'pensando' }, OPTS)).toBeUndefined();
-  });
-
   it('renders a tool-call with its summary', () => {
     expect(renderEvent({ type: 'tool-call', id: 't1', name: 'Bash', summary: 'git status' }, OPTS)).toBe(
       '[echo] → Bash: git status',

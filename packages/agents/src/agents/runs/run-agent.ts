@@ -30,7 +30,6 @@ import {
 import { agentRenderOptions, formatProviderLine, renderEvent } from './event-render';
 import type { RunFooterInfo, RunScreen } from '../interfaces/run-footer.interface';
 import { footerLines, providerContext, summaryLine } from './run-footer';
-import { ThinkingPanel } from './thinking-panel';
 import type { Launch } from './sandbox-launch';
 import { applyRunTools } from '../../common';
 import { delegationMessage, delegationOf } from './delegation-guard';
@@ -68,15 +67,7 @@ export const FOOTER_REFRESH_MS = 50;
 /** The streams of a session as they are, with the `[provider]` line first: where there is no footer. */
 function plainScreen(info: RunFooterInfo, theme: Theme, deps: RunAgentDeps): RunScreen {
   deps.stdout.write(`${formatProviderLine(info.provider, theme)}${providerContext(info)}\n`);
-  return {
-    framed: false,
-    out: deps.stdout,
-    err: deps.stderr,
-    model: noop,
-    thinking: noop,
-    thought: noop,
-    close: noop,
-  };
+  return { framed: false, out: deps.stdout, err: deps.stderr, model: noop, close: noop };
 }
 
 /**
@@ -93,10 +84,7 @@ function runScreen(info: RunFooterInfo, request: RunAgentRequest, deps: RunAgent
   let model: string | undefined;
   const current = (): RunFooterInfo => (model === undefined ? info : { ...info, model });
   deps.stdout.write(`\n${frameTop(name, width(), (text) => theme.paint('agents', name, text, color))}\n`);
-  const panel = new ThinkingPanel();
-  const footer = new StatusFooter(deps.stdout, (columns) =>
-    footerLines(current(), now(), columns, theme, panel.lines(columns)),
-  );
+  const footer = new StatusFooter(deps.stdout, (columns) => footerLines(current(), now(), columns, theme));
   const framed = (stream: Writable): Writable => {
     const above = footer.writer(stream);
     return {
@@ -115,13 +103,6 @@ function runScreen(info: RunFooterInfo, request: RunAgentRequest, deps: RunAgent
     err: framed(deps.stderr),
     model: (reported) => {
       model = reported;
-    },
-    thinking: (piece) => {
-      panel.append(piece);
-      footer.draw();
-    },
-    thought: () => {
-      panel.end();
     },
     close: (exitCode) => {
       stop();
@@ -322,12 +303,6 @@ async function followSession(
         stop(modelReportMissingMessage(supportedModels, modelCtx));
         continue;
       }
-
-      if (agentEvent.type === 'thinking') {
-        screen.thinking(agentEvent.text);
-        continue;
-      }
-      screen.thought();
 
       if (agentEvent.type === 'done') {
         doneEvent = agentEvent;
