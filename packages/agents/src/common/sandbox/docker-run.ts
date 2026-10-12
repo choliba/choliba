@@ -12,6 +12,8 @@ export interface ContainerUser {
 
 export interface DockerRun {
   readonly image: string;
+  /** The container's name (`choliba-<run id>`), so `docker ps` and `docker logs` find the session. */
+  readonly name: string;
   readonly mounts: readonly ContainerMount[];
   /** Where the command starts, a mounted folder (the run folder). */
   readonly cwd: string;
@@ -51,6 +53,8 @@ export function dockerRunArgs(run: DockerRun): readonly string[] {
     'docker',
     'run',
     '--rm',
+    '--name',
+    run.name,
     '-i',
     '--init',
     ...networkArgs(run.network),

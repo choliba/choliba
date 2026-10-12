@@ -2,12 +2,14 @@ import { mkdirSync, rmSync } from 'node:fs';
 
 import {
   exitCodeFor,
+  StatusFooter,
   type ProcessRunnerService,
   type Session,
   type SessionExitEvent,
   type SignalSource,
   type Theme,
   type Writable,
+  type WritableWithColumns,
 } from '@choliba/core';
 
 import type { AgentEvent } from '../../common';
@@ -22,6 +24,8 @@ import {
 } from '../../common';
 
 import { agentRenderOptions, formatProviderLine, renderEvent } from './event-render';
+import type { RunFooterInfo, RunScreen } from '../interfaces/run-footer.interface';
+import { footerLines, providerContext, summaryLine } from './run-footer';
 import type { Launch } from './sandbox-launch';
 import { applyRunTools } from '../../common';
 import { delegationMessage, delegationOf } from './delegation-guard';
@@ -34,10 +38,43 @@ export interface RunAgentDeps {
    * `Bun` global. Every caller passes its own, same as the shell's `terminal run`.
    */
   readonly runner: ProcessRunnerService;
-  readonly stdout: Writable;
+  readonly stdout: WritableWithColumns;
   readonly stderr: Writable;
   readonly signals: SignalSource;
   readonly now: () => Date;
+  /** Draw the footer with the run's provider, sandbox and elapsed time (`wantsFooter`): only on a terminal. */
+  readonly footer?: boolean;
+  /** Calls `tick` every `ms` until the returned function stops it; `everySecond`'s timer when absent. */
+  readonly every?: (ms: number, tick: () => void) => () => void;
+}
+
+/** A timer that calls `tick` every `ms`, not keeping the process alive by itself. */
+export function everySecond(ms: number, tick: () => void): () => void {
+  const timer = setInterval(tick, ms);
+  timer.unref();
+  return () => {
+    clearInterval(timer);
+  };
+}
+
+/** The screen of a session: the streams as they are, or, with `deps.footer`, a footer that stays at the bottom. */
+function runScreen(info: RunFooterInfo, theme: Theme, deps: RunAgentDeps): RunScreen {
+  if (deps.footer !== true) return { out: deps.stdout, err: deps.stderr, close: noop };
+  const now = (): number => deps.now().getTime();
+  const footer = new StatusFooter(deps.stdout, (width) => footerLines(info, now(), width, theme));
+  const stop = (deps.every ?? everySecond)(1000, () => {
+    footer.draw();
+  });
+  footer.draw();
+  return {
+    out: footer.writer(deps.stdout),
+    err: footer.writer(deps.stderr),
+    close: (exitCode) => {
+      stop();
+      footer.close();
+      deps.stdout.write(`${summaryLine(info, now(), exitCode)}\n`);
+    },
+  };
 }
 
 export interface RunAgentRequest {
@@ -122,9 +159,10 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
   }
 
   let session: Session;
+  let launch: Launch;
   try {
     const command = [...request.provider.command, ...args];
-    const launch: Launch = request.launch?.(command) ?? { command, paths: [], skipped: [] };
+    launch = request.launch?.(command) ?? { command, place: { kind: 'local' }, paths: [], skipped: [] };
     if (launch.skipped.length > 0) {
       deps.stderr.write(`${imageFoldersNotice(launch.skipped)}\n`);
     }
@@ -139,8 +177,31 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
     return 1;
   }
 
-  deps.stdout.write(`${formatProviderLine(providerId, request.theme)}\n`);
+  const info: RunFooterInfo = { provider: providerId, place: launch.place, startedAt: deps.now().getTime() };
+  deps.stdout.write(`${formatProviderLine(providerId, request.theme)}${providerContext(info)}\n`);
+  const screen = runScreen(info, request.theme, deps);
+  let exitCode = 1;
+  try {
+    exitCode = await followSession(request, deps, session, screen);
+    return exitCode;
+  } finally {
+    screen.close(exitCode);
+  }
+}
 
+/**
+ * The session from its first line to its exit: each line parsed and shown (guards stopping it when they must), the
+ * signals passed on, then the exit code and, in `plan` mode, the saved plan.
+ */
+async function followSession(
+  request: RunAgentRequest,
+  deps: RunAgentDeps,
+  session: Session,
+  screen: RunScreen,
+): Promise<number> {
+  const adapter = request.provider.adapter;
+  const providerId = adapter.id;
+  const label = request.providerRequest.agent.name;
   const parser = adapter.createParser();
   const renderOptions = agentRenderOptions(label, request.providerRequest.agent.color, request.theme);
   let doneEvent: Extract<AgentEvent, { type: 'done' }> | undefined;
@@ -155,13 +216,13 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
 
   const stop = (message: string): void => {
     stopGuard.triggered = true;
-    deps.stderr.write(`${message}\n`);
+    screen.err.write(`${message}\n`);
     session.kill('SIGTERM');
   };
 
   session.subscribe((event) => {
     if (event.stream === 'stderr') {
-      deps.stderr.write(`${event.raw}\n`);
+      screen.err.write(`${event.raw}\n`);
       return;
     }
     for (const agentEvent of parser.parseLine(event.raw)) {
@@ -217,7 +278,7 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
 
       const rendered = renderEvent(agentEvent, renderOptions);
       if (rendered !== undefined) {
-        deps.stdout.write(`${rendered}\n`);
+        screen.out.write(`${rendered}\n`);
       }
     }
   });
@@ -246,7 +307,7 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
   }
 
   if (exitEvent.error !== null) {
-    deps.stderr.write(`${providerId} session failed: ${exitEvent.error}\n`);
+    screen.err.write(`${providerId} session failed: ${exitEvent.error}\n`);
   }
 
   // The process's own exit code is the base signal — a crash or a killing signal always wins.
@@ -264,7 +325,7 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
         ? defaultResolvePlanContent({ planMarkdown, doneEvent, textParts })
         : adapter.resolvePlanContent({ planMarkdown, doneEvent, textParts });
     if (content === undefined) {
-      deps.stderr.write('Nothing to save: the provider produced no plan text.\n');
+      screen.err.write('Nothing to save: the provider produced no plan text.\n');
       return 1;
     }
     const path = writePlan({
@@ -276,7 +337,7 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
       content,
       now: deps.now(),
     });
-    deps.stdout.write(`Plan saved: ${path}\n`);
+    screen.out.write(`Plan saved: ${path}\n`);
   }
 
   return exitCode;

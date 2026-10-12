@@ -36,6 +36,20 @@ permissões do `agent.yaml`.
     qualquer provider: `✗ Shell bun install: negado (comando fora de allow.execute)` diz qual chave do
     `agent.yaml` liberaria a chamada; `✗ Read src/x.ts: erro: File not found` é o erro da própria ferramenta.
 
+    Num terminal, enquanto o provider roda, um painel fica fixo no rodapé e a saída do agente entra acima dele:
+
+    ```
+    [product-owner] → Read: …/projects/app/.env.json
+    ────────────────────────────────────────────────────────────────────────────
+    provider  sandbox  imagem                container                       decorrido
+    cursor    docker   choliba-agent:latest  choliba-2026-10-12T05-53-29.…  00:01:42
+    ```
+
+    `imagem` e `container` mostram `—` sem container. Num terminal estreito, as colunas longas são cortadas com `…`
+    e, se a tabela não couber, o painel vira uma linha só (`cursor · docker · 00:01:42`). Quando a sessão termina,
+    o painel dá lugar a uma linha de resumo: `cursor · docker · decorrido 00:03:10 · código 0`. Os passos das fases
+    1 e 3 rodam sem o painel.
+
 **Fase 3: o choliba, depois do agente**
 
 12. Apaga a pasta da execução e as ferramentas da run e desfaz o que o provider preparou (os arquivos `.cursor/` do

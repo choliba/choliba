@@ -2,7 +2,14 @@
 
 import { isAbsolute, join } from 'node:path';
 
-import { type GitRunner, type ProcessRunnerService, type SignalSource, type Theme, type Writable } from '@choliba/core';
+import {
+  type GitRunner,
+  type ProcessRunnerService,
+  type SignalSource,
+  type Theme,
+  type Writable,
+  type WritableWithColumns,
+} from '@choliba/core';
 import { resolveLocations, type ProjectSettings, type RunningApp } from '@choliba/projects';
 
 import type { ParsedAgentsArgs } from './agents-flags';
@@ -28,7 +35,7 @@ export interface RunAgentsCliDeps {
   readonly commands: readonly AgentInvocation[];
   readonly config: Readonly<Record<string, string | undefined>>;
   readonly now: () => Date;
-  readonly stdout: Writable;
+  readonly stdout: WritableWithColumns;
   readonly stderr: Writable;
   readonly signals: SignalSource;
   /** Reads branches and tags for `--since` completion; defaults to spawning the real `git`. */
