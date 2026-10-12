@@ -759,11 +759,14 @@ describe('runAgentsCli — skills', () => {
     }
   });
 
-  it('does not grant the skills dir to an agent without skills', async () => {
+  it('does not grant the skills dir to an agent without skills, and denies writing it', async () => {
     const { deps, stdout } = harness([]);
 
     await runAgentsCli(['with-prepare', '--agents-dir', FIXTURES, '--dry-run', '--show-prompt'], deps);
-    expect(dryRunArgv(stdout).join('\n')).not.toContain(SKILLS);
+    const printed = dryRunArgv(stdout).join('\n');
+    expect(printed).not.toContain(`Read(/${SKILLS}`);
+    expect(printed).toContain(`Write(/${SKILLS}/**)`);
+    expect(printed).toContain(`- ${SKILLS}/`);
   });
 });
 
@@ -1541,6 +1544,66 @@ describe('runAgentsCli — folder variables', () => {
         0,
       );
       expect(dryRunArgv(stdout)).toContain('Read(//g/projects/**)');
+    });
+  });
+});
+
+describe('runAgentsCli — definition folders', () => {
+  const permissions = (lines: readonly string[]): string[] => ['permissions:', ...lines];
+
+  it('denies every run writes and deletes there, and the prompt and the provider rules say so', async () => {
+    await withCustomAgent(permissions(['  allow:', "    write: ['${CHOL_ROOT}/']"]), async (agentsDir) => {
+      const skills = join(agentsDir, 'skills');
+      const mcps = join(agentsDir, 'mcps');
+      const { deps, stdout } = harness([], {
+        repoRoot: agentsDir,
+        config: { CHOL_SKILLS_DIR: skills, CHOL_MCPS_DIR: mcps },
+      });
+
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', '--show-prompt', 'x'], deps)).toBe(
+        0,
+      );
+      const text = stdout.chunks.join('');
+      expect(text).toContain('You may not write:');
+      expect(text).toContain('You may not delete:');
+      const rules = dryRunArgv(stdout).join('\n');
+      for (const dir of [agentsDir, skills, mcps]) {
+        expect(text).toContain(`- ${dir}/`);
+        expect(rules).toContain(`Write(/${dir}/**)`);
+      }
+    });
+  });
+
+  it('refuses a ! exception inside a definition folder', async () => {
+    await withCustomAgent(permissions(['  deny:', "    write: ['!${CHOL_AGENTS_DIR}/x/']"]), async (agentsDir) => {
+      const { deps, stderr } = harness([], { config: { CHOL_AGENTS_DIR: agentsDir } });
+
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(1);
+      const text = stderr.chunks.join('');
+      expect(text).toContain('reabre pastas de definição que o choliba protege');
+      expect(text).toContain(`${agentsDir}/x`);
+      expect(text).toContain('Uma exceção ! não pode ficar dentro das pastas de agentes, skills ou MCPs.');
+    });
+  });
+
+  it('mounts the three folders read-only in a docker dry-run, never writable', async () => {
+    await withCustomAgent(permissions(['  allow:', "    write: ['${CHOL_ROOT}/']"]), async (agentsDir) => {
+      const skills = join(agentsDir, '.choliba', 'skills');
+      const mcps = join(agentsDir, '.choliba', 'mcps');
+      mkdirSync(skills, { recursive: true });
+      mkdirSync(mcps, { recursive: true });
+      const { deps, stdout } = harness([], {
+        which: whichOf(['claude', 'docker']),
+        repoRoot: agentsDir,
+        config: { CHOL_SKILLS_DIR: skills, CHOL_MCPS_DIR: mcps, CHOL_SANDBOX: 'docker' },
+      });
+
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(0);
+      const linesOf = stdout.chunks.join('').split('\n');
+      for (const dir of [agentsDir, skills, mcps]) {
+        expect(linesOf.some((line) => line.endsWith(`leitura ${dir}`))).toBe(true);
+        expect(linesOf.some((line) => line.endsWith(`escrita ${dir}`))).toBe(false);
+      }
     });
   });
 });

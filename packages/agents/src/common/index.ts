@@ -3,6 +3,7 @@ export * from './agent-permissions';
 export * from './agent-provider';
 export * from './agent-vars';
 export * from './cursor-tool-calls';
+export * from './definition-denies';
 export * from './interfaces/agent.interface';
 export * from './interfaces/event.interface';
 export * from './interfaces/execution.interface';

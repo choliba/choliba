@@ -28,11 +28,16 @@ import type { SkillSummary } from '../agent-skills';
 import { formatSkillsInstruction, resolveSkills } from '../agent-skills';
 import { StepFailedError, stepExitCode } from '../steps/step-actions';
 import { buildUserPrompt } from '../../common';
-import { checkModelSupported, checkedDenyExceptions, checkedExecuteDirs } from './run-checks';
+import {
+  checkModelSupported,
+  checkedDefinitionExceptions,
+  checkedDenyExceptions,
+  checkedExecuteDirs,
+} from './run-checks';
 import type { PreparedRun, RunAgentsCliDeps, RunArgs, RunContext, Stopped } from './run-context';
 import { STOPPED, errorMessage, toAbsolute } from './run-context';
 import { LOCATION_VARS, agentTexts, withExpandedVars } from '../../common';
-import { EXCEPTION_PREFIX, withProjectDenies } from '../../common';
+import { EXCEPTION_PREFIX, withDefinitionDenies, withProjectDenies } from '../../common';
 
 /**
  * The skills the agent lists, found in the skills dir. A missing or malformed skill stops the run
@@ -246,6 +251,12 @@ function extraReads(skills: readonly SkillSummary[], parsed: RunArgs, deps: RunA
   ];
 }
 
+/** The folders a run loads definitions from: agents (the dir this run uses), skills and MCPs. */
+function definitionDirectories(context: RunContext): readonly string[] {
+  const { deps } = context;
+  return [context.agentsDir, resolveSkillsDir(deps.config, deps.repoRoot), resolveMcpsDir(deps.config, deps.repoRoot)];
+}
+
 /** Everything one run needs before its provider starts; `Stopped` when a check or a step stops it (reason on `stderr`). */
 export function prepareRun(
   context: RunContext,
@@ -257,11 +268,17 @@ export function prepareRun(
   if (expanded === undefined || !checkModelSupported(parsed, expanded, deps)) {
     return STOPPED;
   }
-  const agent = withProjectDenies(expanded, context.project);
+  const directories = definitionDirectories(context);
+  const agent = withDefinitionDenies(withProjectDenies(expanded, context.project), directories);
   const command = commandFor(context, declaredCommand, agent);
   const agentSkills = resolveAgentSkills(agent, deps);
   const mcpServers = agentSkills === undefined ? undefined : resolveAgentMcps(agent, deps);
-  if (agentSkills === undefined || mcpServers === undefined || !checkedDenyExceptions(agent, deps)) {
+  if (
+    agentSkills === undefined ||
+    mcpServers === undefined ||
+    !checkedDenyExceptions(agent, deps) ||
+    !checkedDefinitionExceptions(agent, directories, deps)
+  ) {
     return STOPPED;
   }
   const withSkills = withReads(
