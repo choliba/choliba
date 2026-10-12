@@ -60,5 +60,8 @@
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.70.1",
     "vitepress": "^1.6.4"
+  },
+  "overrides": {
+    "handlebars": "4.7.10"
   }
 }
