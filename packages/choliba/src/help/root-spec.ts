@@ -25,8 +25,31 @@ export const CHOLIBA_ORDER: readonly string[] = ['run', 'add', 'new', 'list', 'c
 export const CHOLIBA_VERBS: readonly ShellVerb[] = [
   {
     name: 'run',
-    description: 'Roda um agente ou os testes\n\nExemplo:\n  choliba run agent implementer "corrija o bug"',
+    description: 'Roda um agente ou os testes',
+    examples: [
+      {
+        description: 'Implementa o ticket loja-1',
+        command: 'choliba run agent implementer --project loja --ticket loja-1',
+      },
+      { description: 'Roda os testes do projeto loja', command: 'choliba run tests loja' },
+    ],
   },
-  { name: 'new', description: 'Cria um projeto a partir do modelo\n\nExemplo:\n  choliba new project loja' },
-  { name: 'list', description: 'Lista os agentes ou os projetos\n\nExemplo:\n  choliba list projects' },
+  {
+    name: 'new',
+    description: 'Cria um projeto a partir do modelo',
+    examples: [
+      {
+        description: 'Cria o projeto loja para a aplicação em ./app',
+        command: 'choliba new project loja --app-dir ./app',
+      },
+    ],
+  },
+  {
+    name: 'list',
+    description: 'Lista os agentes ou os projetos',
+    examples: [
+      { description: 'Lista os agentes instalados', command: 'choliba list agents' },
+      { description: 'Lista os projetos com os tickets de cada um', command: 'choliba list projects --tickets' },
+    ],
+  },
 ];

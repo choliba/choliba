@@ -33,9 +33,10 @@
     "docs:dev": "bun run docs:pages && vitepress dev docs",
     "docs:build": "bun run docs:pages && vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "docs:home": "bun scripts/docs-home.ts",
-    "docs:philosophy": "bun scripts/docs-philosophy.ts",
-    "docs:pages": "bun run docs:home && bun run docs:philosophy"
+    "docs:home": "bun scripts/libs/docs/write-home.ts",
+    "docs:philosophy": "bun scripts/libs/docs/write-philosophy.ts",
+    "docs:pages": "bun run docs:home && bun run docs:philosophy && bun run docs:commands",
+    "docs:commands": "bun scripts/libs/docs/write-commands.ts"
   },
   "devDependencies": {
     "@bun-security-scanner/osv": "^1.0.0",

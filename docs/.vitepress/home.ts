@@ -1,11 +1,11 @@
 /**
  * The site's home (VitePress `layout: home`): its hero and a card per section. It lives here, with the site's
- * config, so that `docs/` keeps only documentation; `scripts/docs-home.ts` writes it to `docs/index.md` (ignored by
+ * config, so that `docs/` keeps only documentation; `scripts/libs/docs/write-home.ts` writes it to `docs/index.md` (ignored by
  * git) before `docs:dev` and `docs:build`.
  */
 /**
  * The site's description: the home's `<meta name="description">` and share card, which has no text of its own to
- * quote. From 100 to 160 characters, like every page's (scripts/libs/docs-share.ts).
+ * quote. From 100 to 160 characters, like every page's (scripts/libs/docs/share.ts).
  */
 export const description =
   'Agentes que transformam um pedido em ticket, testes E2E e código, dentro das permissões e dos portões que o choliba aplica.';
@@ -19,7 +19,7 @@ export const home = {
     image: { src: '/owl-logo-choliba.svg', alt: 'A coruja do choliba' },
     actions: [
       { theme: 'brand', text: 'Começar', link: '/primeiros-passos' },
-      { theme: 'alt', text: 'Referência', link: '/referencia/comandos' },
+      { theme: 'alt', text: 'Referência', link: '/comandos/' },
       { theme: 'alt', text: 'GitHub', link: 'https://github.com/choliba/choliba' },
     ],
   },
@@ -41,7 +41,7 @@ export const home = {
       title: 'Referência',
       details:
         'Cada comando do choliba, a segurança de cada agente, cada chave do <code>agent.yaml</code> e cada variável do <code>.env</code>.',
-      link: '/referencia/comandos',
+      link: '/comandos/',
       linkText: 'Consultar',
     },
   ],

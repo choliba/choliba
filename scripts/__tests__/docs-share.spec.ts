@@ -12,8 +12,8 @@ import {
   publishedTime,
   shareTags,
   SITE_URL,
-} from '../libs/docs-share';
-import { readDocPages } from '../libs/docs-sidebar';
+  readDocPages,
+} from '../libs/docs';
 
 const DOCS = path.join(__dirname, '..', '..', 'docs');
 

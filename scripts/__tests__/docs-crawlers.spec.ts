@@ -1,4 +1,4 @@
-import { robotsTxt } from '../libs/docs-crawlers';
+import { robotsTxt } from '../libs/docs';
 
 describe('robotsTxt', () => {
   it('lets every crawler read everything and announces the sitemap', () => {

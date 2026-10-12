@@ -1,5 +1,5 @@
 import type { CommandEntry, CommandSpec, FlagSpec, Suggestions, TypedFlags, GitRunner } from '@choliba/core';
-import { readTicketTemplate, ticketTemplatesDir } from '@choliba/projects';
+import { listTicketTypes, readTicketTemplate, ticketTemplatesDir } from '@choliba/projects';
 
 import type { AgentDefinition } from '../../common';
 import { SINCE_PENDING } from '../steps/step-constants';
@@ -202,10 +202,102 @@ export function agentsCliSpec(context: AgentsCliSpecContext): CommandSpec {
 
   return {
     usage: `${CLI_PROGRAM_NAME} AGENT [OPTIONS] [TASK...]`,
-    description: `Executa um agente da pasta de trabalho (.choliba/agents/<nome>/) por um provider (${context.providers.choices().join(', ')}).\n\nExemplo:\n  choliba run agent implementer "corrija o bug"`,
+    description: runAgentDescription(context),
+    examples: RUN_AGENT_EXAMPLES,
+    details: RUN_AGENT_DETAILS,
     commands,
     flags: [helpFlag],
     footer: `Run '${CLI_PROGRAM_NAME} AGENT --help' for more information on an agent.`,
+  };
+}
+
+/** What `run agent` does, naming the providers choliba knows. */
+function runAgentDescription(context: Pick<AgentsCliSpecContext, 'providers'>): string {
+  return `Executa um agente da pasta de trabalho (.choliba/agents/<nome>/) por um provider (${context.providers.choices().join(', ')}).`;
+}
+
+const RUN_AGENT_EXAMPLES = [
+  {
+    description: 'Escreve o ticket de uma story nova a partir de um pedido',
+    command: 'choliba run agent product-owner --project loja --type story "a busca aceita filtro por data"',
+  },
+  {
+    description: 'Escreve os testes do ticket loja-1',
+    command: 'choliba run agent test-writer --project loja --ticket loja-1',
+  },
+  {
+    description: 'Mostra o que a implementação faria, sem executar nada',
+    command: 'choliba run agent implementer --project loja --ticket loja-1 --dry-run',
+  },
+] as const;
+
+const RUN_AGENT_DETAILS = `As flags que um agente aceita dependem do \`agent.yaml\` dele: \`--project\` só para quem age num projeto,
+\`--type\` e \`--ticket\` só para quem tem \`ticket_types\`, \`--mode\` só com os modos que ele permite, \`--since\` só para quem tem um
+\`git_diff\`. \`choliba run agent <agente> --help\` mostra as do agente; a tabela abaixo tem todas. Uma execução passa
+pelo [ciclo de execução](../referencia/ciclo-de-execucao-agente.md): o choliba antes, o modelo, o choliba depois. Num
+terminal, a saída do agente vai num quadro, com o provider, o modelo, o sandbox e o tempo decorrido numa tabela no
+rodapé.
+
+### \`--dry-run\`
+
+\`--dry-run\` mostra, na ordem, o que o comando faria sem ele, e **não executa nada**: nenhum step, nenhum ticket,
+nenhuma pasta de execução, nenhum provider. Vale em qualquer modo. Ele só lê o que precisa para montar a lista (o
+\`agent.yaml\`, as skills, os MCPs, o projeto e o ticket), então um problema que faria a execução falhar antes do
+agente aparece do mesmo jeito.
+
+\`\`\`
+$ bunx choliba run agent implementer --mode plan --dry-run --project app --ticket app-1
+Sem --dry-run, faria nesta ordem:
+
+ 1. [CLI]    confere http://localhost:5173/: sem resposta, para aqui (o ambiente não tem envs[].start)
+ 2. [CLI]    plan.before 1/2 — run: bunx choliba run tests app:app-1 --expect red --failures .cache/test-writer/app-1/red.md
+             se falhar: para aqui, o agente não roda
+ 3. [CLI]    plan.before 2/2 — add_files: falhas_red .cache/test-writer/app-1/red.md
+             se falhar: para aqui, o agente não roda
+ 4. [agente] cursor · modelo padrão do provider · modo plan · na pasta .cache/runs/<id>
+             skills: playwright-trace · MCPs: nenhum
+             prompt de sistema: 8053 bytes · prompt do usuário: 218 bytes (--show-prompt mostra os dois)
+             comando: agent -p <prompt> --trust --disable-auto-update --output-format stream-json …
+ 5. [CLI]    plan.after.success (se o agente sair com 0): nada
+             plan.after.failure (se o agente falhar): nada
+             plan.after.always: nada
+ 6. [CLI]    fecha o ticket: apaga um ticket novo que o agente não preencheu; em execute, falha se sobrar CHANGE_ME
+\`\`\`
+
+Com \`--show-prompt\` (só junto de \`--dry-run\`), a saída segue com os dois prompts completos, a linha de comando
+completa (em JSON, um argumento por item) e, no Cursor, o \`.cursor/cli.json\` da pasta da execução e o
+\`.cursor/mcp.json\` da raiz, como seriam gravados.
+
+Antes do agente, com \`--project\`, o choliba deixa a aplicação pronta: veja
+[A aplicação do projeto](../referencia/aplicacao-do-projeto.md).`;
+
+/**
+ * \`run agent\` without a workspace to read the agents from: every flag a run takes, with every mode and every ticket
+ * type of the templates. What the command reference page and \`--help\` outside a workspace show.
+ */
+export function runAgentReferenceSpec(context: Pick<AgentsCliSpecContext, 'providers'>): CommandSpec {
+  const types = listTicketTypes(ticketTemplatesDir());
+  const flags = runFlagDefinitions(context.providers).map(({ valueName, ...rest }): FlagSpec =>
+    valueName === undefined ? rest : { ...rest, value: { name: valueName } },
+  );
+  const withChoices = flags.flatMap((flag): readonly FlagSpec[] => {
+    if (flag.name === '--mode') {
+      return [{ ...flag, choices: EXECUTION_MODES.map((mode) => ({ name: mode, description: MODE_CHOICES[mode] })) }];
+    }
+    if (flag.name !== '--type') return [flag];
+    const choices = types.map((type) => ({ name: type, description: ticketTypeDescription(type) }));
+    const shortcuts = types.map((type) => ({
+      name: `${TYPE_SHORTCUT_PREFIX}${type}`,
+      description: `Atalho para --type ${type}`,
+    }));
+    return [{ ...flag, choices }, ...shortcuts];
+  });
+  return {
+    usage: `${CLI_PROGRAM_NAME} AGENT [OPTIONS] [TASK...]`,
+    description: runAgentDescription(context),
+    examples: RUN_AGENT_EXAMPLES,
+    details: RUN_AGENT_DETAILS,
+    flags: withChoices,
   };
 }
 
@@ -213,7 +305,16 @@ export function agentsCliSpec(context: AgentsCliSpecContext): CommandSpec {
 export function listAgentsSpec(context: Pick<AgentsCliSpecContext, 'providers'>): CommandSpec {
   return {
     usage: `${LIST_PROGRAM_NAME} [OPTIONS]`,
-    description: 'Lista os agentes da pasta de trabalho com os detalhes de cada um.\n\nExemplo:\n  choliba list agents',
+    description:
+      'Lista os agentes da pasta de trabalho, cada um com o id, a versão, os modelos, as skills, os modos e a política.',
+    examples: [
+      { description: 'Lista os agentes da pasta de trabalho', command: 'choliba list agents' },
+      { description: 'Lista os agentes de outra pasta', command: 'choliba list agents --agents-dir ./agentes' },
+    ],
+    details:
+      'Cada agente sai com o bloco que o `--help` dele mostra: id, nome, versão, descrição, modelos, skills, modos e a ' +
+      'política. Os agentes ficam em `.choliba/agents/` (ou em `CHOL_AGENTS_DIR`); veja ' +
+      '[Instalar agentes, skills e MCPs](../guias/instalar-agentes.md).',
     flags: [...agentsDirFlag(context), HELP_FLAG],
   };
 }

@@ -1,4 +1,4 @@
-import { frontmatterPage } from './docs-home';
+import { frontmatterPage } from './home';
 
 /**
  * A link of a file at the repository root as seen from `docs/`: `docs/referencia/x.md` becomes `referencia/x.md`,

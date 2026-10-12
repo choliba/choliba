@@ -4,18 +4,20 @@ import { fileURLToPath } from 'node:url';
 
 import { defineConfig, type MarkdownEnv } from 'vitepress';
 
-import { googleAnalyticsTags } from '../../scripts/libs/docs-analytics';
-import { robotsTxt } from '../../scripts/libs/docs-crawlers';
-import { githubSlug, outsideLink } from '../../scripts/libs/docs-links';
 import {
+  buildSidebar,
   checkDescription,
+  githubSlug,
+  googleAnalyticsTags,
+  outsideLink,
   pageDescription,
   pageUrl,
   publishedTime,
+  readDocPages,
+  robotsTxt,
   shareTags,
   SITE_URL,
-} from '../../scripts/libs/docs-share';
-import { buildSidebar, readDocPages } from '../../scripts/libs/docs-sidebar';
+} from '../../scripts/libs/docs';
 import { description as DESCRIPTION } from './home';
 
 /** The `docs/` folder, this config's parent. */
@@ -42,7 +44,7 @@ export default defineConfig({
   rewrites: { 'README.md': 'indice.md' },
   head: [['link', { rel: 'icon', type: 'image/svg+xml', href: '/owl-logo-choliba.svg' }]],
   sitemap: { hostname: SITE_URL },
-  // Each page's description is the quote under its title (scripts/libs/docs-share.ts), which also becomes its
+  // Each page's description is the quote under its title (scripts/libs/docs/share.ts), which also becomes its
   // `<meta name="description">`; a page without one, or with one too short or too long, stops the build. The home,
   // generated from home.ts, has the site's; a page generated from a file of the root (/filosofia) has the one in its
   // frontmatter.
@@ -97,12 +99,14 @@ export default defineConfig({
         link: '/indice',
         activeMatch: '^/(indice|primeiros-passos|guias)(/|$)',
       },
-      { text: 'Referência', link: '/referencia/comandos', activeMatch: '^/referencia/' },
+      { text: 'Comandos', link: '/comandos/', activeMatch: '^/comandos/' },
+      { text: 'Referência', link: '/referencia/ciclo-de-execucao-agente', activeMatch: '^/referencia/' },
       { text: 'Releases', link: `${REPOSITORY}/releases/tag/v0.0.1-dev` },
     ],
-    // From the index: a new page shows up on its own, where docs/README.md links it (scripts/libs/docs-sidebar.ts).
+    // From the index: a new page shows up on its own, where docs/README.md links it (scripts/libs/docs/sidebar.ts).
     sidebar: buildSidebar(readFileSync(path.join(DOCS, 'README.md'), 'utf8'), readDocPages(DOCS)).map((section) => ({
       text: section.text,
+      ...(section.link === undefined ? {} : { link: section.link }),
       items: [...section.items],
     })),
     socialLinks: [{ icon: 'github', link: REPOSITORY }],

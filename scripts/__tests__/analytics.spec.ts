@@ -1,4 +1,4 @@
-import { googleAnalyticsTags } from '../libs/docs-analytics';
+import { googleAnalyticsTags } from '../libs/docs';
 
 describe('googleAnalyticsTags', () => {
   it('loads gtag.js for the property without blocking the page, then starts measuring it', () => {

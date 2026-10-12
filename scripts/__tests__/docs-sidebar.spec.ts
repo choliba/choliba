@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { buildSidebar, readDocPages } from '../libs/docs-sidebar';
+import { buildSidebar, readDocPages } from '../libs/docs';
 
 const README = [
   '| começar | [Primeiros passos](primeiros-passos.md) |',
@@ -40,18 +40,45 @@ describe('buildSidebar', () => {
   });
 });
 
+describe('buildSidebar commands', () => {
+  it('lists each command by its full name, in order, and the heading opens the index', () => {
+    const pages = [
+      { file: 'comandos/index.md', title: 'Comandos', order: 0 },
+      { file: 'comandos/add.md', title: '`choliba add`', group: 'Agentes, skills e MCPs', order: 5 },
+      { file: 'comandos/run.md', title: '`choliba run`', group: 'Ticket e testes', order: 1 },
+    ];
+
+    expect(buildSidebar('', pages)).toEqual([
+      {
+        text: 'Comandos',
+        link: '/comandos/',
+        items: [
+          { text: 'choliba run', link: '/comandos/run' },
+          { text: 'choliba add', link: '/comandos/add' },
+        ],
+      },
+    ]);
+  });
+});
+
 describe('readDocPages', () => {
   it('reads every Markdown page outside .vitepress, titled by its heading or, without one, its file', () => {
     const docs = mkdtempSync(path.join(tmpdir(), 'docs-pages-'));
     try {
       mkdirSync(path.join(docs, 'guias'));
+      mkdirSync(path.join(docs, 'comandos'));
       mkdirSync(path.join(docs, '.vitepress'));
       writeFileSync(path.join(docs, 'guias', 'a.md'), 'texto\n\n# Guia A\n');
       writeFileSync(path.join(docs, 'sem-titulo.md'), 'só texto\n');
+      writeFileSync(
+        path.join(docs, 'comandos', 'run-agent.md'),
+        '---\ngroup: Ticket e testes\norder: 1\n---\n\n# `choliba run agent`\n',
+      );
       writeFileSync(path.join(docs, '.vitepress', 'x.md'), '# fora\n');
       writeFileSync(path.join(docs, 'logo.svg'), '<svg/>');
 
       expect([...readDocPages(docs)].sort((a, b) => a.file.localeCompare(b.file))).toEqual([
+        { file: 'comandos/run-agent.md', title: '`choliba run agent`', group: 'Ticket e testes', order: 1 },
         { file: 'guias/a.md', title: 'Guia A' },
         { file: 'sem-titulo.md', title: 'sem-titulo.md' },
       ]);

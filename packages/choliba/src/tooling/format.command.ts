@@ -12,8 +12,17 @@ const ENTRY: CommandEntry = {
   group: 'Commands',
   spec: {
     usage: 'choliba format [--write] [PATHS...]',
+    description:
+      'Roda o Prettier na pasta de trabalho: confere a formatação, ou corrige com --write, e devolve o código de saída dele.',
     flags: [{ name: '--write', description: 'Corrige em vez de só conferir' }],
     positionals: FILES,
+    examples: [
+      { description: 'Confere a formatação da pasta de trabalho', command: 'choliba format' },
+      { description: 'Corrige a formatação', command: 'choliba format --write' },
+    ],
+    details:
+      'Roda o Prettier com o `.prettierrc.json` e o `.editorconfig` da pasta de trabalho. Todo argumento, `--help` ' +
+      'inclusive, vai para o Prettier, e o código de saída é o dele.',
   },
 };
 

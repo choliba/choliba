@@ -1,0 +1,84 @@
+# `config.json` do projeto
+
+> O `config.json` de um projeto: o nome, os ambientes com `baseURL` e `appDir`, o `setup` e o `start`, e quais
+> navegadores rodam.
+
+O arquivo fica em `projects/<nome>/config.json` (a pasta é `CHOL_PROJECTS_DIR`). O `new project` o cria a partir do
+modelo. As credenciais de cada ambiente ficam no [`.env.json`](env-json.md), não aqui.
+
+## Formato
+
+Um objeto JSON. `name` e `envs` são obrigatórios. `envs` tem pelo menos um ambiente, e cada ambiente tem `nome`,
+`baseURL` e `appDir` com texto não vazio.
+
+```json
+{
+  "name": "app",
+  "description": "",
+  "environment": "development",
+  "envs": [
+    {
+      "nome": "development",
+      "baseURL": "http://localhost:3000",
+      "appDir": "/home/voce/dev/app",
+      "default": true,
+      "setup": ["bun install"],
+      "start": "bun index.ts",
+      "resultsDir": "/tmp/app-resultados"
+    }
+  ],
+  "devices": {
+    "chromium": true,
+    "firefox": false,
+    "webkit": false,
+    "mobile-chrome": false
+  }
+}
+```
+
+`environment`, `description`, `default`, `setup`, `start`, `resultsDir` e `devices` podem faltar.
+
+## Ambiente ativo
+
+O choliba usa um ambiente, nesta ordem:
+
+1. `environment`, quando o texto é o `nome` de um item de `envs`;
+2. o item com `"default": true`;
+3. o primeiro de `envs`.
+
+Só `true` marca o padrão. Outro valor em `default` é ignorado. Um `environment` que não existe em `envs` é erro, e a
+mensagem lista os nomes disponíveis. Um `nome` não pode ser `_global`.
+
+O `appDir` relativo é resolvido a partir da pasta do projeto. O absoluto é usado como está. A spec recebe esse
+caminho em `APP_DIR`, e o `baseURL` em `BASE_URL`: veja [O que a spec recebe](env-json.md#o-que-a-spec-recebe).
+
+## `setup` e `start`
+
+Os dois são opcionais e valem para o ambiente em que estão.
+
+`setup` é uma lista de comandos. O choliba os roda em `appDir`, em ordem, antes dos testes e antes de um agente com
+`--project`. Um comando que falha interrompe a rodada.
+
+`start` é um comando só. O choliba o roda em `appDir` quando nada responde no `baseURL`, espera a aplicação e a
+derruba no fim. Uma aplicação que já responde é usada como está, e o `start` não roda. O que acontece em cada passo:
+[A aplicação do projeto](aplicacao-do-projeto.md).
+
+## Onde ficam os resultados
+
+`resultsDir` do ambiente ativo é a pasta dos artefatos de uma rodada sem ticket. Texto em branco conta como ausente.
+`_global.resultsDir` no `.env.json` ganha dele. Sem os dois, vale a pasta de runs do projeto.
+
+## Navegadores
+
+`devices` liga ou desliga os quatro que o runner conhece: `chromium` (Desktop Chrome), `firefox` (Desktop Firefox),
+`webkit` (Desktop Safari) e `mobile-chrome` (Pixel 7). Um navegador roda salvo quando o valor é `false`. Sem
+`devices`, os quatro rodam.
+
+Um ticket ainda pode religar um navegador que o projeto desligou, com `devices` no ticket ou num critério.
+
+## O que barra a execução
+
+O projeto não roda, e o [`choliba check`](../comandos/check.md) o marca com `✗`, quando o arquivo não é um objeto, falta
+`name` ou `envs`, um ambiente não tem `nome`, `baseURL` ou `appDir`, ou um valor que a rodada usa, sem espaços nas
+pontas, é `CHANGE_ME`. Isso vale para `name`, e no ambiente ativo para `baseURL`, `appDir`, `start` e cada comando
+de `setup`. Um `CHANGE_ME` num ambiente que não é o ativo não barra.
