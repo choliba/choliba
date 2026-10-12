@@ -260,7 +260,9 @@ steps:
 | `add_files`       | `before` | Põe o conteúdo de arquivos no prompt, dentro de uma tag (`<tag>`). |
 | `record_git_head` | `after`  | Grava o commit atual, base do próximo `--since pending`.           |
 
-O que o `before` produz entra na tarefa que o agente recebe. O `after` é um `try/catch/finally` sobre o agente:
+O que o `before` produz entra na tarefa que o agente recebe; cada arquivo do `add_files` e o índice do `git_diff` vão
+como dado, dentro de `<untrusted_input>` (veja [Segurança](seguranca.md)). O `after` é um `try/catch/finally` sobre
+o agente:
 
 | Bloco           | Roda quando                              |
 | --------------- | ---------------------------------------- |
