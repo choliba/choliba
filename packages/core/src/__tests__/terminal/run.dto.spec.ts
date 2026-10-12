@@ -36,28 +36,28 @@ describe('parseRunArgs', () => {
 
   it('rejects an unknown flag (--no-color is global: it never gets here)', () => {
     expect(() => parseRunArgs(['run', '--no-color', '--label', 'x', '--', 'echo'])).toThrow(
-      'Unknown argument "--no-color"',
+      'opção desconhecida: --no-color',
     );
-    expect(() => parseRunArgs(['run', '--bogus', '--', 'echo'])).toThrow('Unknown argument "--bogus"');
+    expect(() => parseRunArgs(['run', '--bogus', '--', 'echo'])).toThrow('opção desconhecida: --bogus');
   });
 
   it('rejects a missing --label', () => {
-    expect(() => parseRunArgs(['run', '--', 'echo'])).toThrow('Missing required --label <name>');
+    expect(() => parseRunArgs(['run', '--', 'echo'])).toThrow('falta --label <nome>, que é obrigatório');
   });
 
   it('rejects an empty --label', () => {
-    expect(() => parseRunArgs(['run', '--label', '', '--', 'echo'])).toThrow('Missing required --label <name>');
+    expect(() => parseRunArgs(['run', '--label', '', '--', 'echo'])).toThrow('falta --label <nome>, que é obrigatório');
   });
 
   it('rejects a --label with no value before the -- separator', () => {
-    expect(() => parseRunArgs(['run', '--label'])).toThrow('Missing required --label <name>');
+    expect(() => parseRunArgs(['run', '--label'])).toThrow('falta --label <nome>, que é obrigatório');
   });
 
   it('rejects a missing -- separator', () => {
-    expect(() => parseRunArgs(['run', '--label', 'x'])).toThrow('Missing "--" separator');
+    expect(() => parseRunArgs(['run', '--label', 'x'])).toThrow('falta o separador "--"');
   });
 
   it('rejects a missing command after --', () => {
-    expect(() => parseRunArgs(['run', '--label', 'x', '--'])).toThrow('Missing command to run after "--"');
+    expect(() => parseRunArgs(['run', '--label', 'x', '--'])).toThrow('falta o comando a executar depois de "--"');
   });
 });

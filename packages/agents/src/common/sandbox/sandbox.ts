@@ -1,4 +1,4 @@
-import { CHOL_NETWORK, CHOL_SANDBOX, CHOL_SANDBOX_IMAGE } from '@choliba/core';
+import { CHOL_NETWORK, CHOL_SANDBOX, CHOL_SANDBOX_IMAGE, ExpectedError } from '@choliba/core';
 
 import type { DiskFacts } from './container-mounts';
 import { DockerSandbox } from './docker-sandbox';
@@ -26,7 +26,7 @@ export const SANDBOX_CREDENTIALS: readonly string[] = [
   'CURSOR_API_KEY',
 ];
 
-export class SandboxConfigError extends Error {}
+export class SandboxConfigError extends ExpectedError {}
 
 function readNetwork(config: Readonly<Record<string, string | undefined>>): SandboxNetwork {
   const network = config[CHOL_NETWORK] ?? 'isolated';

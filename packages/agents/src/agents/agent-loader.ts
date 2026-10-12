@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
-import { isAnsiColor, AGENT_FILE } from '@choliba/core';
+import { isAnsiColor, AGENT_FILE, ExpectedError } from '@choliba/core';
 
 import type {
   AgentAfterSteps,
@@ -19,7 +19,7 @@ import { type AgentPermissions, readAgentPermissions } from '../common';
 import { checkStep, type StepPhase } from './steps/step-actions';
 import { PROJECT_VARS, TICKET_VARS, varProblems } from '../common';
 
-export class AgentConfigError extends Error {}
+export class AgentConfigError extends ExpectedError {}
 
 /**
  * Blocks path traversal (`..`, `/`) and anything that would not be a plain directory name.

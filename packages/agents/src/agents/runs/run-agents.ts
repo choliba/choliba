@@ -21,6 +21,7 @@ import { runAgent } from './run-agent';
 import { planRunTools, readSandbox, type PlannedFile, type Sandbox, type SandboxConfigError } from '../../common';
 import { launchFor, realDisk, type Launch, type LaunchDisk } from './sandbox-launch';
 import {
+  acceptedFlagNames,
   foreignFlag,
   resolveAgentForCommand,
   resolvePlanContent,
@@ -216,7 +217,7 @@ async function runCommand(parsed: RunArgs, deps: RunAgentsCliDeps): Promise<numb
   // silently ignored.
   const foreign = foreignFlag(parsed, command, agent, deps);
   if (foreign !== undefined) {
-    deps.stderr.write(`${unknownFlagMessage(foreign, agent.name)}\n`);
+    deps.stderr.write(`${unknownFlagMessage(foreign, agent.name, acceptedFlagNames(command, agent, deps))}\n`);
     return 1;
   }
 

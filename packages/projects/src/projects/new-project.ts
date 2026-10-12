@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import type { Ask } from '@choliba/core';
+import { unknownWordMessage, type Ask } from '@choliba/core';
 
 import { UsageError } from '../common';
 
@@ -43,7 +43,7 @@ export function parseNewProjectArgs(args: readonly string[]): NewProjectInput {
     } else if (arg === '--no-input') {
       noInput = true;
     } else if (arg.startsWith('-')) {
-      throw new UsageError(`opção desconhecida: ${arg}. ${USAGE}`);
+      throw new UsageError(`${unknownWordMessage('opção desconhecida', arg, [...VALUE_FLAGS, '--no-input'])} ${USAGE}`);
     } else {
       names.push(arg);
     }

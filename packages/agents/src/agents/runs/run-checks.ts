@@ -66,11 +66,17 @@ export function foreignFlag(
   agent: AgentDefinition,
   deps: RunAgentsCliDeps,
 ): string | undefined {
-  const accepted = new Set([
-    ...agentFlagNames(agent, specContext([], deps)),
-    ...(command.prepare === undefined ? [] : PREPARE_FLAGS),
-  ]);
+  const accepted = new Set(acceptedFlagNames(command, agent, deps));
   return parsed.flags.find((flag) => !accepted.has(flag));
+}
+
+/** Every flag this resolved invocation accepts, for validation and closest-flag suggestions. */
+export function acceptedFlagNames(
+  command: AgentInvocation,
+  agent: AgentDefinition,
+  deps: RunAgentsCliDeps,
+): readonly string[] {
+  return [...agentFlagNames(agent, specContext([], deps)), ...(command.prepare === undefined ? [] : PREPARE_FLAGS)];
 }
 
 /**
@@ -117,7 +123,7 @@ export function resolveProjectVars(
       return { vars: {} };
     }
     deps.stderr.write(
-      `Project is required for "${agent.name}" (it uses a project variable or ticket_types): pass --project <name>. ${USAGE}\n`,
+      `o projeto é obrigatório para "${agent.name}" (ele usa uma variável de projeto ou ticket_types): passe --project <nome>. ${USAGE}\n`,
     );
     return undefined;
   }
@@ -166,18 +172,18 @@ export function resolveTaskAndMode(
   const mode: ExecutionMode = parsed.mode ?? command.defaultMode;
   if (!agent.modes.includes(mode)) {
     deps.stderr.write(
-      `Mode "${mode}" is not allowed for "${agent.name}" (modes.allow: ${agent.modes.join(', ')}). ${USAGE}\n`,
+      `o modo "${mode}" não é permitido para "${agent.name}" (modes.allow: ${agent.modes.join(', ')}). ${USAGE}\n`,
     );
     return undefined;
   }
   if (parsed.planFrom !== undefined && mode !== 'execute') {
     deps.stderr.write(
-      `--plan-from can only be used with --mode execute (or no --mode, on a command whose default is execute). ${USAGE}\n`,
+      `--plan-from só pode ser usado com --mode execute (ou sem --mode, quando execute é o padrão). ${USAGE}\n`,
     );
     return undefined;
   }
   if (parsed.task === '' && parsed.planFrom === undefined && command.taskRequired) {
-    deps.stderr.write(`Task is required for "${command.name}". ${USAGE}\n`);
+    deps.stderr.write(`a tarefa é obrigatória para "${command.name}". ${USAGE}\n`);
     return undefined;
   }
   const task = parsed.task === '' && parsed.planFrom !== undefined ? 'Continue with the plan above.' : parsed.task;
@@ -196,7 +202,7 @@ export function resolvePlanContent(
   try {
     return { planContent: readPlan(planPath) };
   } catch (error) {
-    deps.stderr.write(`Could not read plan "${planPath}": ${errorMessage(error)}\n`);
+    deps.stderr.write(`não foi possível ler o plano "${planPath}": ${errorMessage(error)}\n`);
     return undefined;
   }
 }

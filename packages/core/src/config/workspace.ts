@@ -1,11 +1,12 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { PACKAGE_FILE } from './files';
+import { ExpectedError } from '../common';
 
 /** The package every workspace depends on; its own repository is a workspace too (`workspace:*`). */
 export const PACKAGE_NAME = 'choliba';
 
-export class WorkspaceNotFoundError extends Error {}
+export class WorkspaceNotFoundError extends ExpectedError {}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);

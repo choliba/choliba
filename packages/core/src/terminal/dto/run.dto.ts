@@ -26,22 +26,25 @@ export function parseRunArgs(argv: readonly string[]): RunDto {
     } else if (arg === '--timestamps') {
       withTimestamp = true;
     } else {
-      throw new Error(`Unknown argument "${String(arg)}". ${USAGE}`);
+      throw new Error(
+        `${unknownWordMessage('opção desconhecida', String(arg), ['--label', '--timestamps', '--'])} ${USAGE}`,
+      );
     }
     i += 1;
   }
 
   if (label === undefined || label === '') {
-    throw new Error(`Missing required --label <name>. ${USAGE}`);
+    throw new Error(`falta --label <nome>, que é obrigatório. ${USAGE}`);
   }
   if (rest[i] !== '--') {
-    throw new Error(`Missing "--" separator before the command to run. ${USAGE}`);
+    throw new Error(`falta o separador "--" antes do comando a executar. ${USAGE}`);
   }
 
   const command = rest.slice(i + 1);
   if (command.length === 0) {
-    throw new Error(`Missing command to run after "--". ${USAGE}`);
+    throw new Error(`falta o comando a executar depois de "--". ${USAGE}`);
   }
 
   return new RunDto(label, command, withTimestamp);
 }
+import { unknownWordMessage } from '../../help';

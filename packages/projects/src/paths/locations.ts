@@ -7,7 +7,9 @@ import { CHOL_GLOBAL_DIR, CHOL_PROJECTS_DIR, PROJECTS_SUBDIR, CHOL_TICKET_RUNS, 
  * `CHOL_GLOBAL_DIR`, `CHOL_PROJECTS_DIR` (default `{CHOL_GLOBAL_DIR}/projects`) and the optional `CHOL_TICKET_RUNS`. Every other
  * project path (a project, its tickets, its reports) is derived from these by this package.
  */
-export class LocationsError extends Error {}
+import { ExpectedError } from '@choliba/core';
+
+export class LocationsError extends ExpectedError {}
 
 export interface ProjectLocations {
   CHOL_GLOBAL_DIR: string;

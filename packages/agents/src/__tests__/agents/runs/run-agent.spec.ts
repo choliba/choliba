@@ -488,7 +488,7 @@ describe('runAgent', () => {
     const exitCode = await run(s);
 
     expect(exitCode).toBe(1);
-    expect(s.stderr.chunks.join('')).toContain('session failed');
+    expect(s.stderr.chunks.join('')).toContain('a sessão de claude falhou');
     expect(s.stderr.chunks.join('')).toContain('boom');
   });
 
@@ -592,7 +592,7 @@ describe('runAgent', () => {
         const exitCode = await run(s, undefined, { mode: 'plan' });
 
         expect(exitCode).toBe(1);
-        expect(s.stderr.chunks.join('')).toContain('Nothing to save');
+        expect(s.stderr.chunks.join('')).toContain('nada para salvar');
       } finally {
         tmp.cleanup();
       }
@@ -639,7 +639,7 @@ describe('runAgent', () => {
         const exitCode = await run(s, undefined, { mode: 'plan' });
 
         expect(exitCode).toBe(1);
-        expect(s.stderr.chunks.join('')).toContain('Nothing to save');
+        expect(s.stderr.chunks.join('')).toContain('nada para salvar');
       } finally {
         tmp.cleanup();
       }

@@ -102,7 +102,7 @@ describe('choliba list projects', () => {
 
   it('lists projects and optionally their tickets, and says when there is none', () =>
     withWorkspace(async ({ root, projectsDir }) => {
-      expect((await choliba(['list', 'projects'], root)).out).toContain('No project found');
+      expect((await choliba(['list', 'projects'], root)).out).toContain('Nenhum projeto encontrado');
 
       writeProject(projectsDir, 'zebra', ['02', '01']);
       writeProject(projectsDir, 'alpha');
