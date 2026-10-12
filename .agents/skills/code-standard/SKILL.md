@@ -21,10 +21,15 @@ written here, with its reason.
   runner's tsconfig has `node` and `jest` only). `createBunProcessSpawner` takes a structural function type for
   that reason; `main.ts` is the one place that reads `Bun.spawn`.
 - **Extra entries**, only these: `@choliba/core/testing` (fakes for specs) and the runner's entries that projects'
-  specs import (public surface).
-- **App** (`bin`): `src/main.ts`, wiring only. Nothing imports an app. It builds the `Platform` and the `Runtime`
-  and calls `createCholibaShell(platform, runtime).run()`. `--version` uses `findManifest` and `versionLine` from
-  `@choliba/core`.
+  specs import (`@choliba/runner/shared/env`, `@choliba/runner/shared/pages/base-page`).
+- **App** (`bin`): `src/main.ts`, wiring only. It builds the `Platform` and the `Runtime` and calls
+  `createCholibaShell(platform, runtime).run()`. `src/index.ts` exports that shell (`createCholibaShell`,
+  `cholibaShell`, `CHOLIBA_SHELL` and the `Runtime` type) and does nothing on import. Nothing else imports
+  `main.ts`. `--version` uses `findManifest` and `versionLine` from `@choliba/core`.
+- **Installed package.** `choliba` republishes each of those entries as a subpath: `choliba`, `choliba/core`,
+  `choliba/core/testing`, `choliba/agents`, `choliba/projects`, `choliba/runner`, `choliba/runner/env`,
+  `choliba/runner/pages/base-page` and `choliba/eslint`. Experimental until 1.0. Code in this repository keeps
+  importing `@choliba/<pkg>`.
 
 ## 2. Layers of a package's `src/`
 

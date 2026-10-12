@@ -26,7 +26,11 @@ um container e uma tabela de comandos, sem decorator e sem reflection.
 - **Uma entrada por pacote.** `@choliba/<pkg>` exporta funções, tipos, tokens e o `ShellModule` do pacote. A extra
   é `@choliba/core/testing`, os falsos dos specs. O Playwright carrega o que o runner importa com o próprio Babel,
   que não aceita decorator de parâmetro; a entrada não tem decorator, e o tipo do spawn não cita o global `Bun`
-  (a função de verdade é lida só no `main.ts`).
+  (a função de verdade é lida só no `main.ts`). O pacote instalado republica cada entrada como subcaminho
+  (`choliba`, `choliba/core`, `choliba/core/testing`, `choliba/agents`, `choliba/projects`, `choliba/runner`,
+  `choliba/runner/env`, `choliba/runner/pages/base-page`, `choliba/eslint`), experimental até a 1.0.
+  `import 'choliba'` é a casca e não roda o `main.ts`. Quem mexe neste repositório continua importando
+  `@choliba/<pkg>`. O que cada subcaminho expõe: [Importar o choliba](docs/referencia/importar.md).
 - **Só o `main.ts` lê o Bun e o `process`.** Ele monta o `Platform` (stdout, ambiente, spawn, git…) e o `Runtime`
   (as ferramentas que o choliba roda) e os entrega à casca; todo o resto recebe isso pelo container, e os specs
   passam versões falsas (`@choliba/core/testing`).
