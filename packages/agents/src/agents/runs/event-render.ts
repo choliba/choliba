@@ -56,6 +56,8 @@ export function renderEvent(event: AgentEvent, options: RenderOptions): string |
       return line(`· ready${event.model === undefined ? '' : ` (${event.model})`}`);
     case 'text':
       return event.text === '' ? undefined : line(event.text);
+    case 'thinking':
+      return undefined;
     case 'tool-call':
       return line(`→ ${event.name}${event.summary === '' ? '' : `: ${event.summary}`}`);
     case 'tool-result':
