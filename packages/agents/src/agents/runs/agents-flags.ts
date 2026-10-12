@@ -3,7 +3,10 @@ import { SINCE_PENDING } from '../steps/step-constants';
 import type { ProviderRegistry } from '../../common';
 
 /** Program name in help and error messages. */
-export const CLI_PROGRAM_NAME = 'choliba agents';
+export const CLI_PROGRAM_NAME = 'choliba run agent';
+
+/** The command that lists the agents. */
+export const LIST_PROGRAM_NAME = 'choliba list agents';
 
 /** Appended to every argument error; the full reference is `agents --help`, built from `runFlagDefinitions`. */
 export const USAGE = `Run '${CLI_PROGRAM_NAME} --help' for usage.`;
@@ -155,10 +158,11 @@ export interface ParsedRunArgs {
   readonly flags: readonly string[];
 }
 
-export type ParsedAgentsArgs =
-  | { readonly kind: 'help' }
-  | { readonly kind: 'list'; readonly agentsDir: string | undefined }
-  | ({ readonly kind: 'run' } & ParsedRunArgs);
+export type ParsedAgentsArgs = { readonly kind: 'help' } | ({ readonly kind: 'run' } & ParsedRunArgs);
+
+/** `choliba list agents [--agents-dir DIR]`, or its `--help`. */
+export type ParsedListArgs =
+  { readonly kind: 'help' } | { readonly kind: 'list'; readonly agentsDir: string | undefined };
 
 /**
  * Consumes and returns the next token, or throws naming `flag`. A plain `queue.shift()` inline
@@ -174,16 +178,18 @@ function nextValue(queue: string[], flag: string): string {
   return value;
 }
 
-function parseListArgs(rest: readonly string[]): ParsedAgentsArgs {
-  const queue = [...rest];
+/** The arguments after `choliba list agents`. */
+export function parseListArgs(argv: readonly string[]): ParsedListArgs {
+  const queue = [...argv];
   let agentsDir: string | undefined;
   let arg: string | undefined;
   while ((arg = queue.shift()) !== undefined) {
+    if (arg === '--help' || arg === '-h') return { kind: 'help' };
     if (arg === '--agents-dir') {
       agentsDir = nextValue(queue, '--agents-dir');
       continue;
     }
-    throw new AgentsArgsError(`Unknown argument "${arg}" for "list". ${USAGE}`);
+    throw new AgentsArgsError(`opção desconhecida: ${arg}.\nRun '${LIST_PROGRAM_NAME} --help' for usage.`);
   }
   return { kind: 'list', agentsDir };
 }
@@ -201,10 +207,6 @@ export function parseAgentsArgs(argv: readonly string[], providers: ProviderRegi
   if (first === undefined || first === 'help' || first === '--help' || first === '-h') {
     return { kind: 'help' };
   }
-  if (first === 'list') {
-    return parseListArgs(rest);
-  }
-
   // `--<command>` is accepted as an alternative to the bare positional form, so
   // `agents --<command>` and `agents <command>` resolve to the same command.
   const command = first.startsWith('--') ? first.slice(2) : first;

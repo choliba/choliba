@@ -290,7 +290,7 @@ async function runOnce(
   return status;
 }
 
-/** `choliba tests <target> [options]`: one project, one or several tickets, or a path in a project. */
+/** `choliba run tests <target> [options]`: one project, one or several tickets, or a path in a project. */
 async function runTarget(
   context: RunContext,
   first: string,
@@ -361,7 +361,7 @@ async function runTarget(
 }
 
 /**
- * `choliba tests`: every project, a project, one or several of its tickets, or a path in it, through
+ * `choliba run tests`: every project, a project, one or several of its tickets, or a path in it, through
  * `playwright test`; any flag it does not know goes on to Playwright. Throws `TestsError` for a command line
  * it cannot run.
  */

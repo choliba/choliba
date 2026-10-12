@@ -19,7 +19,7 @@ export interface NewProject {
   readonly baseUrl: string | undefined;
 }
 
-const USAGE = 'Uso: choliba projects new [NOME] [--app-dir <pasta>] [--base-url <url>] [--no-input]';
+const USAGE = 'Uso: choliba new project [NOME] [--app-dir <pasta>] [--base-url <url>] [--no-input]';
 const VALUE_FLAGS = ['--app-dir', '--base-url'] as const;
 type ValueFlag = (typeof VALUE_FLAGS)[number];
 const NAME_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;

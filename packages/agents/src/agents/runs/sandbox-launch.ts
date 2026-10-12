@@ -66,7 +66,7 @@ function fromRoot(path: string, root: string): string {
 
 /**
  * Where the session's own commands write, outside the agent's permissions: the Playwright run tools' output folder,
- * when the agent has one of them, and the project's `ticket-runs/` (`choliba tests` keeps its reports there). Created
+ * when the agent has one of them, and the project's `ticket-runs/` (`choliba run tests` keeps its reports there). Created
  * first, so the container opens these folders and not the ones around them.
  */
 function outputFolders(request: ProviderRequest, config: Config): readonly string[] {

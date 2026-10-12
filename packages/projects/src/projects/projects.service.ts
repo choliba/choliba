@@ -1,12 +1,9 @@
-import type { CommandSpec } from '@choliba/core';
-
 import type { LocationsService } from '../locations';
-import { listProjectNames, projectDir, REPORT_FOLDER } from '../paths';
-import { listTicketKeys, projectTemplatesDir, resolveReportFolder } from '../tickets';
+import { listProjectNames, projectDir } from '../paths';
+import { listTicketKeys, projectTemplatesDir } from '../tickets';
 import type { NewProject } from './new-project';
 import { createProject, readProjectConfig, type CreatedProject } from './project';
 import { loadProjectSettings, type ProjectSettings } from './project-settings';
-import { projectsCliSpec } from './projects-spec';
 
 export interface ProjectSummary {
   readonly name: string;
@@ -50,17 +47,6 @@ export class ProjectsService {
       ...(project.baseUrl === undefined ? {} : { baseUrl: project.baseUrl }),
     });
     return { dir: projectDir(projectsDir, project.name), created };
-  }
-
-  /** The report folder: the default name, or the one of a project (and ticket). */
-  reportFolder(project: string | undefined, ticket: string | undefined): string {
-    if (project === undefined) return REPORT_FOLDER;
-    return resolveReportFolder(this.locations.ticketRunsRoot(), project, ticket);
-  }
-
-  /** `--help` and completion of `choliba projects`, read from disk on every call. */
-  helpSpec(): CommandSpec {
-    return projectsCliSpec(() => this.projectsDir());
   }
 }
 

@@ -3,10 +3,10 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { complete, coreShell, FILES_MARKER, formatSuggestions, type Ask } from '@choliba/core';
-import { fakePlatform, runShell } from '@choliba/core/testing';
+import { fakePlatform, runShell, VERBS_ROOT } from '@choliba/core/testing';
 
 import { projectsShell } from '../../projects/projects-shell';
-import { projectsCliSpec } from '../../projects/projects-spec';
+import { newProjectSpec } from '../../projects/projects-spec';
 
 interface Workspace {
   readonly root: string;
@@ -48,11 +48,11 @@ async function projectsNew(
   ask?: Ask,
 ): Promise<{ code: number; out: string; err: string }> {
   const platform = fakePlatform({
-    argv: ['projects', 'new', ...args],
+    argv: ['new', 'project', ...args],
     cwd: root,
     ...(ask === undefined ? {} : { ask }),
   });
-  const code = await runShell([coreShell, projectsShell], platform);
+  const code = await runShell([coreShell, projectsShell, VERBS_ROOT], platform);
   return { code, out: platform.stdout.text(), err: platform.stderr.text() };
 }
 
@@ -66,12 +66,12 @@ function config(projectsDir: string, project: string): WrittenConfig {
   return JSON.parse(fs.readFileSync(path.join(projectsDir, project, 'config.json'), 'utf8')) as WrittenConfig;
 }
 
-describe('choliba projects new', () => {
+describe('choliba new project', () => {
   it('prints its help', () =>
     withWorkspace(async ({ root }) => {
       const { code, out } = await projectsNew(root, ['--help']);
       expect(code).toBe(0);
-      expect(out).toContain('Usage:  choliba projects new [NOME] [OPTIONS]');
+      expect(out).toContain('Usage:  choliba new project [NOME] [OPTIONS]');
       expect(out).toContain('--app-dir');
       expect(out).toContain('--base-url');
       expect(out).toContain('--no-input');
@@ -97,7 +97,7 @@ describe('choliba projects new', () => {
       expect(fs.existsSync(path.join(projectsDir, 'loja', '.env.json'))).toBe(false);
       expect(out).toContain(`Projeto "loja" criado em ${path.join(projectsDir, 'loja')}.`);
       expect(out).toContain('.env.example.json');
-      expect(out).toContain('bunx choliba projects check loja');
+      expect(out).toContain('bunx choliba check loja');
       expect(out).not.toContain('Falta preencher');
     }));
 
@@ -158,9 +158,8 @@ describe('choliba projects new', () => {
     }));
 
   it('completes the value of --app-dir with file names', () =>
-    withWorkspace(({ projectsDir }) => {
-      const spec = projectsCliSpec(() => projectsDir);
-      expect(formatSuggestions(complete(spec, ['new', '--app-dir', '']))).toContain(FILES_MARKER);
+    withWorkspace(() => {
+      expect(formatSuggestions(complete(newProjectSpec(), ['--app-dir', '']))).toContain(FILES_MARKER);
       return Promise.resolve();
     }));
 

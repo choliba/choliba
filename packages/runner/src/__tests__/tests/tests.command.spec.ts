@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { complete, coreShell, createShell, describe as describeWords, formatSuggestions } from '@choliba/core';
-import { fakePlatform, replace, runShell, type FakePlatform } from '@choliba/core/testing';
+import { fakePlatform, replace, runShell, type FakePlatform, VERBS_ROOT } from '@choliba/core/testing';
 
 import { RUNNER_ROOT, runnerShell, TESTS, TESTS_HOOKS, type TestsHooks, type TestsService } from '../..';
 
@@ -41,15 +41,15 @@ async function tests(
   cwd: string,
   hooks: TestsHooks,
 ): Promise<{ code: number; platform: FakePlatform }> {
-  const platform = fakePlatform({ argv: ['tests', ...args], cwd });
-  const code = await runShell([coreShell, runnerShell], platform, [
+  const platform = fakePlatform({ argv: ['run', 'tests', ...args], cwd });
+  const code = await runShell([coreShell, runnerShell, VERBS_ROOT], platform, [
     replace(TESTS_HOOKS, { stdinIsTTY: false, ...hooks }),
     replace(RUNNER_ROOT, cwd),
   ]);
   return { code, platform };
 }
 
-describe('choliba tests', () => {
+describe('choliba run tests', () => {
   it.each([['--help'], ['-h'], ['demo:T-01', '--help']])(
     'shows its own help for %s instead of Playwright’s',
     (...args) =>
@@ -60,7 +60,7 @@ describe('choliba tests', () => {
         expect(code).toBe(0);
         expect(spawnPlaywright).not.toHaveBeenCalled();
         const help = platform.stdout.text();
-        expect(help).toContain('choliba tests [PROJECT');
+        expect(help).toContain('choliba run tests [PROJECT');
         expect(help).toContain('--expect');
         expect(help).toContain('playwright test --help');
       }),
@@ -93,7 +93,7 @@ describe('choliba tests', () => {
     }));
 });
 
-describe('choliba tests — color', () => {
+describe('choliba run tests — color', () => {
   it('keeps Playwright colored when choliba is, and turns its color off when choliba is not', () =>
     withWorkspace(async ({ root }) => {
       const envs: NodeJS.ProcessEnv[] = [];
@@ -101,10 +101,10 @@ describe('choliba tests — color', () => {
         envs.push(env);
         return 0;
       };
-      const colored = fakePlatform({ argv: ['tests', '--list'], cwd: root, env: { FORCE_COLOR: '1' } });
-      const plain = fakePlatform({ argv: ['tests', '--list'], cwd: root, env: { NO_COLOR: '1' } });
+      const colored = fakePlatform({ argv: ['run', 'tests', '--list'], cwd: root, env: { FORCE_COLOR: '1' } });
+      const plain = fakePlatform({ argv: ['run', 'tests', '--list'], cwd: root, env: { NO_COLOR: '1' } });
       for (const platform of [colored, plain]) {
-        await runShell([coreShell, runnerShell], platform, [
+        await runShell([coreShell, runnerShell, VERBS_ROOT], platform, [
           replace(TESTS_HOOKS, { stdinIsTTY: false, spawnPlaywright }),
           replace(RUNNER_ROOT, root),
         ]);
@@ -120,7 +120,7 @@ describe('choliba tests — color', () => {
 
 describe('runnerShell', () => {
   it("finds the runner's Playwright config on its own", () => {
-    const { container } = createShell(fakePlatform(), [coreShell, runnerShell]);
+    const { container } = createShell(fakePlatform(), [coreShell, runnerShell, VERBS_ROOT]);
 
     expect(fs.existsSync(path.join(container.get(RUNNER_ROOT), 'playwright.config.ts'))).toBe(true);
   });
@@ -128,7 +128,7 @@ describe('runnerShell', () => {
 
 describe('TestsService.helpSpec — completion and description', () => {
   function specIn(cwd: string): ReturnType<TestsService['helpSpec']> {
-    return createShell(fakePlatform({ cwd }), [coreShell, runnerShell]).container.get(TESTS).helpSpec();
+    return createShell(fakePlatform({ cwd }), [coreShell, runnerShell, VERBS_ROOT]).container.get(TESTS).helpSpec();
   }
 
   it('completes its flags, the projects, their tickets and the values of --expect', () =>
