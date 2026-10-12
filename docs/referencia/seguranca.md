@@ -73,9 +73,12 @@ MCP que ele suba.
   Docker. Roda com o seu usuário, numa rede bridge, com a raiz só de leitura e sem capabilities. Navegar não
   escapa: `cd / && ls` mostra a raiz da imagem, e uma pasta acima de uma montagem (`/home/<você>`) só tem o caminho
   até ela.
-- **Como ele acessa o host**: use `host.docker.internal` no lugar de `localhost` nas URLs de aplicações e MCPs que
-  rodam na máquina. O choliba registra esse nome no container. O serviço precisa aceitar conexões pela interface do
-  Docker, não somente por `127.0.0.1`. Se a aplicação não permite essa configuração ou se a sessão precisa da rede
+- **Como ele acessa o host**: dentro do container, `localhost` é o próprio container. Escreva as URLs como a máquina
+  as vê (`localhost`, no `baseURL` do `config.json` e no `url` de um MCP): o choliba confere a aplicação por elas e
+  entrega ao agente o mesmo endereço com `host.docker.internal` no lugar de `localhost`, `127.0.0.1`, `[::1]` e
+  `0.0.0.0`, nome que ele registra no container. O `--dry-run` mostra os dois endereços. Um MCP com `command` que
+  chama um serviço da máquina por variável de ambiente não é traduzido: use `host.docker.internal` nele. O serviço
+  precisa aceitar conexões pela interface do Docker, não somente por `127.0.0.1`. Se a aplicação não permite essa configuração ou se a sessão precisa da rede
   completa da máquina, defina `CHOL_NETWORK=host`; nesse modo, `localhost` volta a apontar para o host.
 - **O que a rede bridge protege**: ela separa o namespace de rede do container e evita o acesso implícito aos
   serviços do host por `localhost`. Ela não é um firewall de saída: internet e rotas alcançáveis pelo Docker podem

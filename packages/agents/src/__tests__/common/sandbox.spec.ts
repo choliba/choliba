@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import { dockerRunArgs } from '../../common/sandbox/docker-run';
 import {
+  agentURL,
   DEFAULT_SANDBOX_IMAGE,
   presentCredentials,
   readSandbox,
@@ -35,6 +36,30 @@ describe('readSandbox', () => {
     expect(() => readSandbox({ CHOL_SANDBOX: 'podman' })).toThrow('use local ou docker');
     expect(() => readSandbox({ CHOL_SANDBOX: 'docker', CHOL_NETWORK: 'lan' })).toThrow(SandboxConfigError);
     expect(() => readSandbox({ CHOL_SANDBOX: 'docker', CHOL_NETWORK: 'lan' })).toThrow('use isolated ou host');
+  });
+});
+
+describe('agentURL', () => {
+  const isolated = { kind: 'docker', image: DEFAULT_SANDBOX_IMAGE, network: 'isolated' } as const;
+
+  it("gives a container on the isolated network the machine's name for a local host, keeping the rest", () => {
+    expect(agentURL('http://localhost:3000/a?b=1', isolated)).toBe('http://host.docker.internal:3000/a?b=1');
+    expect(agentURL('http://127.0.0.1:3000', isolated)).toBe('http://host.docker.internal:3000');
+    expect(agentURL('http://[::1]:3000/', isolated)).toBe('http://host.docker.internal:3000/');
+    expect(agentURL('https://0.0.0.0', isolated)).toBe('https://host.docker.internal');
+    expect(agentURL('http://user:pw@LOCALHOST:8931/mcp', isolated)).toBe(
+      'http://user:pw@host.docker.internal:8931/mcp',
+    );
+  });
+
+  it('leaves any other host, and every URL on this machine or on the host network, as it is', () => {
+    expect(agentURL('https://exemplo.com', isolated)).toBe('https://exemplo.com');
+    expect(agentURL('http://localhost.exemplo.com', isolated)).toBe('http://localhost.exemplo.com');
+    expect(agentURL('http://exemplo.com/?next=http://localhost', isolated)).toBe(
+      'http://exemplo.com/?next=http://localhost',
+    );
+    expect(agentURL('http://localhost:3000', { kind: 'local' })).toBe('http://localhost:3000');
+    expect(agentURL('http://localhost:3000', { ...isolated, network: 'host' })).toBe('http://localhost:3000');
   });
 });
 

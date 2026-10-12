@@ -120,7 +120,12 @@ describe('wrapInstructions', () => {
 
   it('names the project after the permissions, only when the run has one', () => {
     const place = { runDir: '/w/.cache/runs/x', root: '/w' };
-    const project = { name: 'site', baseURL: 'http://localhost:3000', appDir: '/code/site' };
+    const project = {
+      name: 'site',
+      baseURL: 'http://localhost:3000',
+      agentBaseURL: 'http://localhost:3000',
+      appDir: '/code/site',
+    };
     const wrapped = wrapInstructions(fakeAgent(), '', { ...place, project });
 
     expect(wrapped.indexOf('</permissions>')).toBeLessThan(wrapped.indexOf('<project name="site"'));

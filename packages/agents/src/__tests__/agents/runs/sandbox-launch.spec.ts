@@ -99,7 +99,14 @@ describe('launchFor', () => {
         command: ['claude'],
         request: request(
           { allowTools: [{ tool: 'playwright-cli', subcommands: ['*'] }] },
-          { project: { name: 'loja', baseURL: 'http://localhost:3000', appDir: '/app' } },
+          {
+            project: {
+              name: 'loja',
+              baseURL: 'http://localhost:3000',
+              agentBaseURL: 'http://host.docker.internal:3000',
+              appDir: '/app',
+            },
+          },
         ),
         files: [],
         config: CONFIG,

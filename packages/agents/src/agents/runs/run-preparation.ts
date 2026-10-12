@@ -20,7 +20,8 @@ import type { AgentDefinition } from '../../common';
 import type { AgentInvocation, CommandPrepareInput } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
 import { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '../agent-dirs';
-import type { McpServer } from '../../common';
+import type { McpServer, Sandbox } from '../../common';
+import { agentURL } from '../../common';
 import { resolveMcps } from '../../common';
 import type { ProviderRequest } from '../../common';
 import type { ResolvedProvider } from '../../common';
@@ -209,6 +210,13 @@ function buildProviderRequest(
   return { effectiveTask, providerRequest };
 }
 
+/** The server with its `url`, if it has one, as the agent reaches it (`agentURL`); a `command` server is unchanged. */
+function reachableMcp(server: McpServer, sandbox: Sandbox): McpServer {
+  const url = server.config['url'];
+  if (typeof url !== 'string') return server;
+  return { ...server, config: { ...server.config, url: agentURL(url, sandbox) } };
+}
+
 /**
  * The command a run uses once its agent's `${…}` are filled in: one defined in code stays as is; one
  * derived from `agent.yaml` is derived again, so its steps get the filled-in arguments.
@@ -285,7 +293,7 @@ export function prepareRun(
     context.planContent,
     addDirs,
     formatSkillsInstruction(agentSkills.skills, deps.repoRoot),
-    mcpServers,
+    mcpServers.map((server) => reachableMcp(server, context.sandbox)),
     parsed,
     deps,
   );

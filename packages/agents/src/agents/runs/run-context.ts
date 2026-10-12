@@ -10,7 +10,7 @@ import type { AgentInvocation } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
 import type { ProviderRequest } from '../../common';
 import type { ProviderRegistry, ResolvedProvider } from '../../common';
-import type { RunProject } from '../../common';
+import type { RunProject, Sandbox } from '../../common';
 
 export interface RunAgentsCliDeps {
   /**
@@ -74,6 +74,8 @@ export interface RunContext {
   readonly parsed: RunArgs;
   readonly deps: RunAgentsCliDeps;
   readonly agentsDir: string;
+  /** Where the provider runs (`CHOL_SANDBOX`), which decides the addresses the agent is given (`agentURL`). */
+  readonly sandbox: Sandbox;
   readonly vars: Readonly<Record<string, string>>;
   /** The project of `--project`; absent without one. */
   readonly project?: RunProject;
