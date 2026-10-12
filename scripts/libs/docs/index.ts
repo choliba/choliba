@@ -28,5 +28,6 @@ export {
   shareTags,
 } from './share';
 export type { SharePage } from './share';
+export { faviconLink, websiteJsonLd, FAVICON } from './search';
 export { buildSidebar, readDocPages } from './sidebar';
 export type { DocPage, SidebarLink, SidebarSection } from './sidebar';
