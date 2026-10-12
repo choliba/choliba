@@ -16,6 +16,7 @@ import {
   type ProviderRequest,
   type Sandbox,
   type SandboxPath,
+  type SandboxPlace,
 } from '../../common';
 import { definedConfig } from '../agent-dirs';
 
@@ -25,6 +26,8 @@ type Config = Readonly<Record<string, string | undefined>>;
 export interface Launch {
   readonly command: readonly string[];
   readonly env?: Readonly<Record<string, string>>;
+  /** Where the provider runs: this machine, or a named container of an image. */
+  readonly place: SandboxPlace;
   /** What the container mounts; empty on this machine. */
   readonly paths: readonly SandboxPath[];
   /** Paths the agent may reach that are the image's own folders, so not mounted; empty on this machine. */

@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 12/10/2026 02:53:00 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 12/10/2026 03:43:44 — não editar manualmente.
 
 ## Resumo
 
@@ -16,7 +16,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 70 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 71 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -47,6 +47,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/runs/run-agents.ts](packages/agents/src/agents/runs/run-agents.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-checks.ts](packages/agents/src/agents/runs/run-checks.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-context.ts](packages/agents/src/agents/runs/run-context.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/run-footer.ts](packages/agents/src/agents/runs/run-footer.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-preparation.ts](packages/agents/src/agents/runs/run-preparation.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/sandbox-launch.ts](packages/agents/src/agents/runs/sandbox-launch.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/spec-context.ts](packages/agents/src/agents/runs/spec-context.ts)|100.00|100.00|100.00|100.00
@@ -116,7 +117,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 51 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 55 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -160,7 +161,11 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/terminal/process-runner.service.ts](packages/core/src/terminal/process-runner.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/session.ts](packages/core/src/terminal/session.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/spawn.ts](packages/core/src/terminal/spawn.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/status-footer.ts](packages/core/src/terminal/status-footer.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/stream-lines.ts](packages/core/src/terminal/stream-lines.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/table/table-cell.ts](packages/core/src/terminal/table/table-cell.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/table/table-layout.ts](packages/core/src/terminal/table/table-layout.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/table/table.ts](packages/core/src/terminal/table/table.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/terminal.service.ts](packages/core/src/terminal/terminal.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/writable.ts](packages/core/src/terminal/writable.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/buffer-writable.ts](packages/core/src/testing/buffer-writable.ts)|100.00|100.00|100.00|100.00

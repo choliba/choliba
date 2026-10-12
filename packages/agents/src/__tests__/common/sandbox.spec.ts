@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { dockerRunArgs } from '../../common/sandbox/docker-run';
+import { containerName } from '../../common/sandbox/docker-sandbox';
 import {
   agentURL,
   DEFAULT_SANDBOX_IMAGE,
@@ -74,6 +75,7 @@ describe('presentCredentials', () => {
 describe('dockerRunArgs', () => {
   const args = dockerRunArgs({
     image: 'choliba-agent',
+    name: 'choliba-1',
     mounts: [
       { path: '/w', access: 'read', directory: true },
       { path: '/w/a,b', access: 'write', directory: true },
@@ -90,6 +92,7 @@ describe('dockerRunArgs', () => {
   it('runs as the owner, on a bridge with a host alias, read-only, without capabilities, with the command last', () => {
     expect(args.slice(0, 2)).toEqual(['docker', 'run']);
     expect(args).toEqual(expect.arrayContaining(['--rm', '-i', '--init', '--read-only']));
+    expect(args.slice(2, 5)).toEqual(['--rm', '--name', 'choliba-1']);
     expect(args.join(' ')).toContain('--user 1000:1001');
     expect(args.join(' ')).toContain('--network bridge');
     expect(args.join(' ')).toContain('--add-host host.docker.internal:host-gateway');
@@ -105,6 +108,7 @@ describe('dockerRunArgs', () => {
   it('keeps the host network only when explicitly requested', () => {
     const hostArgs = dockerRunArgs({
       image: 'choliba-agent',
+      name: 'choliba-1',
       mounts: [],
       cwd: '/w',
       user: { uid: 1000, gid: 1000 },
@@ -150,5 +154,14 @@ describe('the agent image', () => {
     expect(commands).toMatch(/^ARG CURSOR_SHA256_X64=[0-9a-f]{64}$/m);
     expect(commands).toMatch(/^ARG CURSOR_SHA256_ARM64=[0-9a-f]{64}$/m);
     expect(commands).toContain('sha256sum -c -');
+  });
+});
+
+describe('containerName', () => {
+  it('is choliba- and the run folder, with only the characters Docker takes', () => {
+    expect(containerName('/w/.cache/runs/2026-10-12T05-53-29.739Z-383691')).toBe(
+      'choliba-2026-10-12T05-53-29.739Z-383691',
+    );
+    expect(containerName('/w/runs/a b:c')).toBe('choliba-a-b-c');
   });
 });

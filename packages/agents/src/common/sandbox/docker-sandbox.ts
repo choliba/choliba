@@ -1,3 +1,5 @@
+import { basename } from 'node:path';
+
 import { containerMounts, type DiskFacts } from './container-mounts';
 import { dockerRunArgs, type ContainerUser } from './docker-run';
 import type { SandboxBackend, SandboxPlan, SandboxPlanInput } from './sandbox-backend';
@@ -12,6 +14,14 @@ export interface DockerSandboxOptions {
   readonly disk: DiskFacts;
 }
 
+/**
+ * The container of the run in `runDir`: `choliba-` and the run folder's name (`2026-10-12T05-53-29.739Z-383691`), unique
+ * per run and made only of the characters Docker takes in a name.
+ */
+export function containerName(runDir: string): string {
+  return `choliba-${basename(runDir).replaceAll(/[^\w.-]/g, '-')}`;
+}
+
 export class DockerSandbox implements SandboxBackend {
   readonly kind = 'docker';
 
@@ -19,9 +29,11 @@ export class DockerSandbox implements SandboxBackend {
 
   plan(input: SandboxPlanInput): SandboxPlan {
     const { mounts, skipped } = containerMounts(input.reach, this.options.disk);
+    const container = containerName(input.reach.runDir);
     return {
       command: dockerRunArgs({
         image: this.options.image,
+        name: container,
         mounts,
         cwd: input.reach.runDir,
         user: this.options.user,
@@ -30,6 +42,7 @@ export class DockerSandbox implements SandboxBackend {
         command: input.command,
       }),
       env: this.options.environment,
+      place: { kind: 'docker', image: this.options.image, container },
       paths: mounts,
       skipped,
     };

@@ -76,6 +76,8 @@ MCP que ele suba.
   saída das ferramentas do Playwright e o `ticket-runs/` do projeto. Um `deny.read` dentro disso aparece vazio; um
   `deny.write` dentro de algo com escrita volta a ser só leitura. Um arquivo que o agente pode criar e ainda não
   existe abre a pasta dele; as regras do provider, que continuam valendo lá dentro, limitam ao arquivo.
+- **O nome dele** é `choliba-<id>`, o mesmo id da pasta `.cache/runs/<id>` da execução: `docker ps` e `docker logs`
+  acham a sessão enquanto ela roda, e o painel do rodapé mostra esse nome. O `--rm` o remove no fim.
 - **O que ele não vê**: o resto do disco, a sua pasta pessoal (a do container é vazia e some no fim) e o socket do
   Docker. Roda com o seu usuário, numa rede bridge, com a raiz só de leitura e sem capabilities. Navegar não
   escapa: `cd / && ls` mostra a raiz da imagem, e uma pasta acima de uma montagem (`/home/<você>`) só tem o caminho
