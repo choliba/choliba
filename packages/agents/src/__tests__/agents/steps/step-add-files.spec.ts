@@ -23,9 +23,9 @@ describe('readGlobs', () => {
 });
 
 describe('formatFilesSection', () => {
-  it('wraps the files in the tag, each under its path', () => {
+  it('wraps the files in the tag, each as untrusted data from its path', () => {
     expect(formatFilesSection('docs', ['*.md'], [{ path: 'a.md', content: 'A' }])).toBe(
-      '<docs>\n\n### a.md\n\nA\n\n</docs>',
+      '<docs>\n\n<untrusted_input source="file:a.md">\nA\n</untrusted_input>\n\n</docs>',
     );
   });
 
@@ -43,7 +43,7 @@ describe('addFiles', () => {
       writeFileSync(join(tmp.path, 'README.md'), '# Hi');
 
       expect(addFiles(tmp.path, 'readme_atual', ['README.md'])).toBe(
-        '<readme_atual>\n\n### README.md\n\n# Hi\n\n</readme_atual>',
+        '<readme_atual>\n\n<untrusted_input source="file:README.md">\n# Hi\n</untrusted_input>\n\n</readme_atual>',
       );
     } finally {
       tmp.cleanup();

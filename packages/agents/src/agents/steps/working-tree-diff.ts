@@ -3,6 +3,8 @@ import { dirname, join } from 'node:path';
 
 import type { GitRunner } from '@choliba/core';
 
+import { untrustedBlock } from '../../common';
+
 import { getWorkingTreeDiff } from './git-working-tree-diff';
 import { indexDiff } from './index-diff';
 
@@ -57,7 +59,7 @@ export function buildWorkingTreeDiffPrompt(input: BuildWorkingTreeDiffPromptInpu
 
   return [
     `O diff calculado por quem chamou este comando está em \`${input.diffFilePath}\` (${size}; base \`${input.base}\`, working tree, com arquivos novos, sem trash/plans/.cache). É a ÚNICA fonte de verdade sobre o que mudou: leia-o com Read, em partes (offset/limit), indo direto ao que interessa pelo índice abaixo — não rode git log/git diff/git show por conta própria.`,
-    `Índice do diff (A novo, D removido, R renomeado, M modificado):\n${index}`,
+    `Índice do diff (A novo, D removido, R renomeado, M modificado):\n${untrustedBlock(`git_diff:${input.base}`, index)}`,
   ].join('\n\n');
 }
 

@@ -48,6 +48,11 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
   confere cada chamada: um servidor ou uma tool fora do declarado (ou procurar tools de MCP num agente sem `mcps`)
   interrompe a execução com código 1, em qualquer provider. No Claude, a sessão só tem os servidores declarados. No
   Cursor, que soma os MCPs do `~/.cursor/mcp.json` do usuário, o choliba também nega os que o agente não declara.
+- **Dado não é ordem.** O que um passo põe no prompt vindo de arquivos (`add_files`) ou do repositório (o índice do
+  `git_diff`) vai dentro de `<untrusted_input source="…">`, e o prompt de todo agente diz que aquilo é dado, nunca
+  instrução, mesmo que diga vir do sistema ou do usuário. Uma tag `untrusted_input` dentro do texto é escapada, para
+  o dado não fechar o bloco. É uma camada a mais: o modelo ainda pode ser enganado, e quem limita o agente são as
+  permissões e o container.
 - **`steps` não passam pelas permissões.** Os passos são executados pelo choliba, fora da sessão do modelo: um
   passo pode fazer o que o modelo não pode (o `docs-updater` proíbe o modelo de rodar o Prettier e o roda no
   `steps.execute.after`). Veja [Steps](agent-yaml.md#steps).

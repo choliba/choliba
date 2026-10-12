@@ -1,6 +1,8 @@
 import { globSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { untrustedBlock } from '../../common';
+
 export const ADD_FILES_USAGE = 'add_files <tag> <glob...>';
 
 export interface PromptFile {
@@ -22,11 +24,11 @@ export function formatFilesSection(tag: string, globs: readonly string[], files:
   if (files.length === 0) {
     return `<${tag}>\n(nenhum arquivo encontrado: ${globs.join(' ')})\n</${tag}>`;
   }
-  const parts = files.map((file) => `### ${file.path}\n\n${file.content}`);
+  const parts = files.map((file) => untrustedBlock(`file:${file.path}`, file.content));
   return [`<${tag}>`, ...parts, `</${tag}>`].join('\n\n');
 }
 
-/** The `add_files` action: the matched files, in the prompt between `<tag>` and `</tag>`. */
+/** The `add_files` action: the matched files, in the prompt between `<tag>` and `</tag>`, each as untrusted data. */
 export function addFiles(repoRoot: string, tag: string, globs: readonly string[]): string {
   return formatFilesSection(tag, globs, readGlobs(repoRoot, globs));
 }
