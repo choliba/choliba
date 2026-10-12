@@ -12,7 +12,7 @@ import { PROJECTS, projectCompletions } from '@choliba/projects';
 import { allFine, checkWorkspace, formatCheck } from './check';
 
 const DESCRIPTION =
-  'Confere a pasta de trabalho: agentes (schemas, skills, MCPs) e projetos; com PROJETO, só esse projeto';
+  'Confere a pasta de trabalho: agentes (schemas, skills, MCPs) e projetos; com PROJETO, só esse projeto\n\nExemplo:\n  choliba check loja';
 
 /** `check`'s spec: PROJETO completes to the projects on disk, read on every call. */
 function checkSpec(container: Container): CommandSpec {

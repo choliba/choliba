@@ -6,7 +6,7 @@ import { setup, setupWorkspace, updatePackageWhenListed } from './setup';
 /** How `choliba --help` lists `setup`, and its own `--help`. */
 const ENTRY: CommandEntry = {
   name: 'setup',
-  description: 'Liga o autocomplete no bash (roda sozinho ao instalar com --trust)',
+  description: 'Liga o autocomplete no bash (roda sozinho ao instalar com --trust)\n\nExemplo:\n  choliba setup',
   group: 'Commands',
   spec: { usage: 'choliba setup' },
 };

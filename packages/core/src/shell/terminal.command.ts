@@ -2,15 +2,30 @@ import { parseRunArgs, ProcessRunnerService, TerminalService } from '../terminal
 import { token, type Container } from './container';
 import { PLATFORM } from './create-shell';
 import type { ShellCommand } from './interfaces/shell.interface';
+import type { CommandSpec } from '../help';
 import { THEME } from './shell.constants';
 
 const RUNNER = token<ProcessRunnerService>('ProcessRunnerService');
 const TERMINAL = token<TerminalService>('TerminalService');
 
+const TERMINAL_RUN_SPEC: CommandSpec = {
+  usage: 'choliba terminal run --label <nome> [--timestamps] -- <comando...>',
+  description: 'Exemplo:\n  choliba terminal run --label app -- bun run dev',
+  flags: [
+    { name: '--label', description: 'Rótulo que identifica cada linha', value: { name: 'nome' } },
+    { name: '--timestamps', description: 'Inclui o horário em cada linha' },
+    { name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true },
+  ],
+};
+
 /** `choliba terminal run --label <name> -- <command…>`: hidden, for scripts that label a process's output. */
 export const terminalCommand: ShellCommand = {
   name: 'terminal',
   async run(container, io) {
+    if (io.wantsHelp(io.args('terminal', 'run'))) {
+      io.printHelp(TERMINAL_RUN_SPEC);
+      return;
+    }
     try {
       const dto = parseRunArgs(io.args('terminal'));
       io.exit(await container.get(TERMINAL).run(dto));

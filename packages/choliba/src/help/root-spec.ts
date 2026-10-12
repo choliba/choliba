@@ -23,7 +23,10 @@ export const CHOLIBA_ORDER: readonly string[] = ['run', 'add', 'new', 'list', 'c
 
 /** The verbs of the root: each package registers its types under them (`run agent`, `run tests`, `new project`…). */
 export const CHOLIBA_VERBS: readonly ShellVerb[] = [
-  { name: 'run', description: 'Roda um agente ou os testes' },
-  { name: 'new', description: 'Cria um projeto a partir do modelo' },
-  { name: 'list', description: 'Lista os agentes ou os projetos' },
+  {
+    name: 'run',
+    description: 'Roda um agente ou os testes\n\nExemplo:\n  choliba run agent implementer "corrija o bug"',
+  },
+  { name: 'new', description: 'Cria um projeto a partir do modelo\n\nExemplo:\n  choliba new project loja' },
+  { name: 'list', description: 'Lista os agentes ou os projetos\n\nExemplo:\n  choliba list projects' },
 ];
