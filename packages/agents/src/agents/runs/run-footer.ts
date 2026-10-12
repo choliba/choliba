@@ -1,45 +1,77 @@
 // What the footer of a running agent shows, and the lines that stand for it where there is no footer.
 
-import { boldAnsi, formatElapsed, Table, td, textWidth, th, type Theme, type WritableWithColumns } from '@choliba/core';
+import {
+  boldAnsi,
+  formatElapsed,
+  frameBottom,
+  Table,
+  td,
+  textWidth,
+  th,
+  type Theme,
+  type WritableWithColumns,
+} from '@choliba/core';
 
-import type { RunContextWords, RunFooterInfo } from '../interfaces/run-footer.interface';
+import type { FooterColumn, RunContextWords, RunFooterInfo } from '../interfaces/run-footer.interface';
 
 const NONE = '—';
 
-/** The context of a run in words: provider, sandbox, image and container (`—` for the last two on this machine). */
+/** The context of a run in words: provider, model, sandbox, image and container (`—` for what it does not have). */
 function contextWords(info: RunFooterInfo): RunContextWords {
   const { place, provider } = info;
-  if (place.kind === 'local') return { provider, sandbox: 'local', image: NONE, container: NONE };
-  return { provider, sandbox: 'docker', image: place.image, container: place.container };
+  const model = info.model ?? NONE;
+  if (place.kind === 'local') return { provider, model, sandbox: 'local', image: NONE, container: NONE };
+  return { provider, model, sandbox: 'docker', image: place.image, container: place.container };
 }
 
-/** The footer's table: the titles, then the run's values and how long it has been going. */
+/**
+ * The footer's columns: provider, model, sandbox and the time, with the image and the container between them only in
+ * a container (on this machine they would only say `—`).
+ */
+function footerColumns(info: RunFooterInfo, now: number): readonly FooterColumn[] {
+  const { provider, model, sandbox, image, container } = contextWords(info);
+  const inContainer: readonly FooterColumn[] =
+    info.place.kind === 'docker'
+      ? [
+          { title: 'imagem', col: { shrink: true, minWidth: 8 }, value: image },
+          { title: 'container', col: { shrink: true, minWidth: 8 }, value: container },
+        ]
+      : [];
+  return [
+    { title: 'provider', col: {}, value: provider },
+    { title: 'modelo', col: { shrink: true, minWidth: 6 }, value: model },
+    { title: 'sandbox', col: {}, value: sandbox },
+    ...inContainer,
+    { title: 'decorrido', abbr: 'tempo', col: { minWidth: 12 }, value: formatElapsed(now - info.startedAt) },
+  ];
+}
+
+/** The footer's table: the titles, then the run's values and how long it has been going, with column rules. */
 export function footerTable(info: RunFooterInfo, now: number): Table {
+  const columns = footerColumns(info, now);
   return new Table({
-    rules: 'none',
-    cols: [{}, {}, { shrink: true, minWidth: 8 }, { shrink: true, minWidth: 8 }, { minWidth: 8 }],
-    head: [[th('provider'), th('sandbox'), th('imagem'), th('container'), th('decorrido', { abbr: 'tempo' })]],
-    bodies: [
-      [[...Object.values(contextWords(info)).map((text: string) => td(text)), td(formatElapsed(now - info.startedAt))]],
-    ],
+    rules: 'all',
+    cols: columns.map((column) => column.col),
+    head: [columns.map((column) => th(column.title, column.abbr === undefined ? {} : { abbr: column.abbr }))],
+    bodies: [[columns.map((column) => td(column.value))]],
   });
 }
 
 /** The context and the time on one line, for a terminal too narrow for the table. */
 function oneLine(info: RunFooterInfo, now: number, width: number): string {
-  const { provider, sandbox } = contextWords(info);
-  const line = `${provider} · ${sandbox} · ${formatElapsed(now - info.startedAt)}`;
+  const { provider, model, sandbox } = contextWords(info);
+  const line = `${provider} · ${model} · ${sandbox} · ${formatElapsed(now - info.startedAt)}`;
   return textWidth(line) <= width ? line : formatElapsed(now - info.startedAt);
 }
 
 /**
- * The footer's lines in `width` columns: a rule and the table, its titles bold when the theme colors; one line when
- * the table does not fit.
+ * The footer's lines in `width` columns: the bottom of the frame the session's lines go in, then the table, its titles
+ * bold when the theme colors; one line under the frame when the table does not fit.
  */
 export function footerLines(info: RunFooterInfo, now: number, width: number, theme: Theme): readonly string[] {
   const table = footerTable(info, now);
-  if (!table.fits(width)) return [oneLine(info, now, width)];
-  return ['─'.repeat(width), ...table.render(width, theme.enabled ? { strong: boldAnsi } : {})];
+  if (!table.fits(width)) return [frameBottom(width), oneLine(info, now, width)];
+  return [frameBottom(width), ...table.render(width, theme.enabled ? { strong: boldAnsi } : {})];
 }
 
 /** What follows the `[provider]` label: the provider, and, in a container, the sandbox, the image and the container. */
@@ -48,10 +80,11 @@ export function providerContext(info: Omit<RunFooterInfo, 'startedAt'>): string 
   return place.kind === 'local' ? '' : ` · docker · ${place.image} · ${place.container}`;
 }
 
-/** The line the footer leaves when the session ends: where it ran, how long it took and its exit code. */
+/** The line the footer leaves when the session ends: where it ran, with which model, how long and its exit code. */
 export function summaryLine(info: RunFooterInfo, now: number, exitCode: number): string {
-  const { provider, sandbox } = contextWords(info);
-  return `${provider} · ${sandbox} · decorrido ${formatElapsed(now - info.startedAt)} · código ${String(exitCode)}`;
+  const { provider, model, sandbox } = contextWords(info);
+  const elapsed = formatElapsed(now - info.startedAt);
+  return `${provider} · ${model} · ${sandbox} · decorrido ${elapsed} · código ${String(exitCode)}`;
 }
 
 /**

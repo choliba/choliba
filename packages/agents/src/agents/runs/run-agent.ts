@@ -1,7 +1,11 @@
 import { mkdirSync, rmSync } from 'node:fs';
 
 import {
+  DEFAULT_COLUMNS,
   exitCodeFor,
+  frameBottom,
+  frameLines,
+  frameTop,
   StatusFooter,
   type ProcessRunnerService,
   type Session,
@@ -57,22 +61,53 @@ export function everySecond(ms: number, tick: () => void): () => void {
   };
 }
 
-/** The screen of a session: the streams as they are, or, with `deps.footer`, a footer that stays at the bottom. */
-function runScreen(info: RunFooterInfo, theme: Theme, deps: RunAgentDeps): RunScreen {
-  if (deps.footer !== true) return { out: deps.stdout, err: deps.stderr, close: noop };
+/** How often the footer is drawn again: often enough for the milliseconds to roll, cheap for the terminal. */
+export const FOOTER_REFRESH_MS = 50;
+
+/** The streams of a session as they are, with the `[provider]` line first: where there is no footer. */
+function plainScreen(info: RunFooterInfo, theme: Theme, deps: RunAgentDeps): RunScreen {
+  deps.stdout.write(`${formatProviderLine(info.provider, theme)}${providerContext(info)}\n`);
+  return { framed: false, out: deps.stdout, err: deps.stderr, model: noop, close: noop };
+}
+
+/**
+ * The screen of a session on a terminal: a blank line after the command, a frame titled with the agent that the
+ * session's lines go in, and a footer under it with the run's context and time, drawn every `FOOTER_REFRESH_MS`.
+ * Closing it leaves the bottom of the frame and the summary line.
+ */
+function runScreen(info: RunFooterInfo, request: RunAgentRequest, deps: RunAgentDeps): RunScreen {
+  const { theme } = request;
+  if (deps.footer !== true) return plainScreen(info, theme, deps);
+  const { name, color } = request.providerRequest.agent;
   const now = (): number => deps.now().getTime();
-  const footer = new StatusFooter(deps.stdout, (width) => footerLines(info, now(), width, theme));
-  const stop = (deps.every ?? everySecond)(1000, () => {
+  const width = (): number => deps.stdout.columns ?? DEFAULT_COLUMNS;
+  let model: string | undefined;
+  const current = (): RunFooterInfo => (model === undefined ? info : { ...info, model });
+  deps.stdout.write(`\n${frameTop(name, width(), (text) => theme.paint('agents', name, text, color))}\n`);
+  const footer = new StatusFooter(deps.stdout, (columns) => footerLines(current(), now(), columns, theme));
+  const framed = (stream: Writable): Writable => {
+    const above = footer.writer(stream);
+    return {
+      write: (text) => {
+        above.write(`${frameLines(text, width()).join('\n')}\n`);
+      },
+    };
+  };
+  const stop = (deps.every ?? everySecond)(FOOTER_REFRESH_MS, () => {
     footer.draw();
   });
   footer.draw();
   return {
-    out: footer.writer(deps.stdout),
-    err: footer.writer(deps.stderr),
+    framed: true,
+    out: framed(deps.stdout),
+    err: framed(deps.stderr),
+    model: (reported) => {
+      model = reported;
+    },
     close: (exitCode) => {
       stop();
       footer.close();
-      deps.stdout.write(`${summaryLine(info, now(), exitCode)}\n`);
+      deps.stdout.write(`${frameBottom(width())}\n${summaryLine(current(), now(), exitCode)}\n`);
     },
   };
 }
@@ -178,8 +213,7 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
   }
 
   const info: RunFooterInfo = { provider: providerId, place: launch.place, startedAt: deps.now().getTime() };
-  deps.stdout.write(`${formatProviderLine(providerId, request.theme)}${providerContext(info)}\n`);
-  const screen = runScreen(info, request.theme, deps);
+  const screen = runScreen(info, request, deps);
   let exitCode = 1;
   try {
     exitCode = await followSession(request, deps, session, screen);
@@ -203,7 +237,10 @@ async function followSession(
   const providerId = adapter.id;
   const label = request.providerRequest.agent.name;
   const parser = adapter.createParser();
-  const renderOptions = agentRenderOptions(label, request.providerRequest.agent.color, request.theme);
+  const renderOptions = {
+    ...agentRenderOptions(label, request.providerRequest.agent.color, request.theme),
+    labeled: !screen.framed,
+  };
   let doneEvent: Extract<AgentEvent, { type: 'done' }> | undefined;
   let planMarkdown: string | undefined;
   const textParts: string[] = [];
@@ -222,7 +259,8 @@ async function followSession(
 
   session.subscribe((event) => {
     if (event.stream === 'stderr') {
-      screen.err.write(`${event.raw}\n`);
+      // In the frame, a blank line from the provider (around its own messages) would only be an empty row.
+      if (!screen.framed || event.raw.trim() !== '') screen.err.write(`${event.raw}\n`);
       return;
     }
     for (const agentEvent of parser.parseLine(event.raw)) {
@@ -276,7 +314,11 @@ async function followSession(
         textParts.push(agentEvent.text);
       }
 
-      const rendered = renderEvent(agentEvent, renderOptions);
+      if (agentEvent.type === 'init' && agentEvent.model !== undefined) {
+        screen.model(agentEvent.model);
+      }
+      // In the frame, the model goes in the footer's table: the `· ready (model)` line would only repeat it.
+      const rendered = screen.framed && agentEvent.type === 'init' ? undefined : renderEvent(agentEvent, renderOptions);
       if (rendered !== undefined) {
         screen.out.write(`${rendered}\n`);
       }

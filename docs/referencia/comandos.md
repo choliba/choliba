@@ -50,10 +50,11 @@ Cores: a saída só tem cor num terminal. `--no-color` (em qualquer comando), `N
 ou um pipe tiram a cor; `FORCE_COLOR=1` força. Quais cores usar vem de `CHOL_COLORS` no `.env` (veja
 [`.env` da pasta de trabalho](env.md)) e, para o rótulo de um agente, do `agent.color` dele.
 
-Painel do agente: num terminal, `run agent` mantém no rodapé uma tabela com o provider, o sandbox, a imagem, o
-container e o tempo decorrido (veja o [ciclo de execução](ciclo-de-execucao-agente.md)). Num pipe, num arquivo ou com
-`TERM=dumb`, não há painel: o contexto vai na linha `[provider]` (`[provider] cursor · docker · choliba-agent ·
-choliba-<id>`). `NO_COLOR` só tira a cor dele.
+Painel do agente: num terminal, `run agent` mostra a saída do agente num quadro e mantém no rodapé uma tabela com o
+provider, o modelo, o sandbox, a imagem e o container (só com container) e o tempo decorrido, em milésimos (veja o
+[ciclo de execução](ciclo-de-execucao-agente.md)). Num pipe, num arquivo ou com `TERM=dumb`, não há quadro nem
+painel: o contexto vai na linha `[provider]` (`[provider] cursor · docker · choliba-agent · choliba-<id>`).
+`NO_COLOR` só tira a cor dele.
 
 Um comando de agente passa pelo [ciclo de execução](ciclo-de-execucao-agente.md): o choliba antes, o modelo, o choliba
 depois.
