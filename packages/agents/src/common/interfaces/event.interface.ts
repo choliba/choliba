@@ -14,6 +14,8 @@ export type McpUse =
 export type AgentEvent =
   | { readonly type: 'init'; readonly model: string | undefined; readonly sessionId: string | undefined }
   | { readonly type: 'text'; readonly text: string }
+  /** A piece of the provider's reasoning: a Cursor delta, or a whole Claude `thinking` block. Never printed. */
+  | { readonly type: 'thinking'; readonly text: string }
   | {
       readonly type: 'tool-call';
       readonly id: string;

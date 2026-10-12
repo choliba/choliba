@@ -2,6 +2,7 @@
 
 import {
   boldAnsi,
+  dimAnsi,
   formatElapsed,
   frameBottom,
   Table,
@@ -65,13 +66,21 @@ function oneLine(info: RunFooterInfo, now: number, width: number): string {
 }
 
 /**
- * The footer's lines in `width` columns: the bottom of the frame the session's lines go in, then the table, its titles
- * bold when the theme colors; one line under the frame when the table does not fit.
+ * The footer's lines in `width` columns: the bottom of the frame the session's lines go in, the `panel` (the
+ * reasoning, when there is some, dim when the theme colors), then the table, its titles bold when the theme colors;
+ * one line under the frame, without the panel, when the table does not fit.
  */
-export function footerLines(info: RunFooterInfo, now: number, width: number, theme: Theme): readonly string[] {
+export function footerLines(
+  info: RunFooterInfo,
+  now: number,
+  width: number,
+  theme: Theme,
+  panel: readonly string[] = [],
+): readonly string[] {
   const table = footerTable(info, now);
   if (!table.fits(width)) return [frameBottom(width), oneLine(info, now, width)];
-  return [frameBottom(width), ...table.render(width, theme.enabled ? { strong: boldAnsi } : {})];
+  const shownPanel = theme.enabled ? panel.map(dimAnsi) : panel;
+  return [frameBottom(width), ...shownPanel, ...table.render(width, theme.enabled ? { strong: boldAnsi } : {})];
 }
 
 /** What follows the `[provider]` label: the provider, and, in a container, the sandbox, the image and the container. */

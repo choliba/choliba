@@ -10,6 +10,8 @@ export interface ContentBlock {
   readonly id?: string;
   readonly name?: string;
   readonly text?: string;
+  /** A `thinking` block's reasoning (Claude). */
+  readonly thinking?: string;
   readonly input?: {
     readonly plan?: string;
     readonly command?: string;
