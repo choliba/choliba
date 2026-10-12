@@ -30,7 +30,7 @@ um container e uma tabela de comandos, sem decorator e sem reflection.
   (`choliba`, `choliba/core`, `choliba/core/testing`, `choliba/agents`, `choliba/projects`, `choliba/runner`,
   `choliba/runner/env`, `choliba/runner/pages/base-page`, `choliba/eslint`), experimental até a 1.0.
   `import 'choliba'` é a casca e não roda o `main.ts`. Quem mexe neste repositório continua importando
-  `@choliba/<pkg>`. O que cada subcaminho expõe: [Importar o choliba](docs/referencia/importar.md).
+  `@choliba/<pkg>`.
 - **Só o `main.ts` lê o Bun e o `process`.** Ele monta o `Platform` (stdout, ambiente, spawn, git…) e o `Runtime`
   (as ferramentas que o choliba roda) e os entrega à casca; todo o resto recebe isso pelo container, e os specs
   passam versões falsas (`@choliba/core/testing`).
