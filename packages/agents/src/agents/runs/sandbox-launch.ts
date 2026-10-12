@@ -112,6 +112,7 @@ export function launchFor(input: LaunchInput, disk: LaunchDisk = realDisk): Laun
       cwd: request.runDir,
       user: disk.owner(root),
       env: presentCredentials(config),
+      network: input.sandbox.network,
       command: input.command,
     }),
     env: definedConfig(config),

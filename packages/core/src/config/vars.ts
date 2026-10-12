@@ -39,3 +39,6 @@ export const CHOL_SANDBOX = 'CHOL_SANDBOX';
 
 /** The image the `docker` sandbox runs the provider in. */
 export const CHOL_SANDBOX_IMAGE = 'CHOL_SANDBOX_IMAGE';
+
+/** The Docker sandbox network: `isolated` (the default bridge) or the host network. */
+export const CHOL_NETWORK = 'CHOL_NETWORK';
