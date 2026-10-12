@@ -27,21 +27,12 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
           fetch-tags: true
 
-      - name: Ler a versão do Bun em package.json
-        id: bun
-        run: echo "version=$(jq -r '.packageManager | sub("^bun@"; "")' package.json)" >> "$GITHUB_OUTPUT"
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ steps.bun.outputs.version }}
-
-      - name: Instalar dependências
-        run: bun install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       # A tag e o .tgz têm o mesmo nome de versão: uma versão diferente no pacote publicaria um arquivo que
       # o endereço de instalação não acha.
@@ -68,6 +59,11 @@ jobs:
           bun run chol:pack
           cp "packages/choliba/choliba-$CHOL_VERSION.tgz" "$RUNNER_TEMP/choliba-${TAG#v}.tgz"
 
+      - name: Calcular checksum do pacote
+        run: |
+          cd "$RUNNER_TEMP"
+          sha256sum "choliba-${TAG#v}.tgz" > "choliba-${TAG#v}.tgz.sha256"
+
       # Os Destaques de cada release vêm do corpo do PR de release, lido pelo gh.
       - name: Notas da release
         env:
@@ -82,7 +78,7 @@ jobs:
           git push origin "refs/tags/$TAG" --force
 
       - name: Atualizar a release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           tag_name: ${{ env.TAG }}
           # O título diz de qual versão são as notas abertas e o .tgz em Assets; a tag é o canal, que não muda.
@@ -91,4 +87,5 @@ jobs:
           body_path: ${{ runner.temp }}/notes.md
           files: |
             ${{ runner.temp }}/choliba-0.0.1-dev.tgz
+            ${{ runner.temp }}/choliba-0.0.1-dev.tgz.sha256
           overwrite_files: true

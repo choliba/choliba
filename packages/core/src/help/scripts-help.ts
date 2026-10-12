@@ -44,7 +44,7 @@ export const OTHER_GROUP = 'Outros';
 export interface ScriptFile {
   /** The file a script runs, relative to the repo root. */
   readonly file: string;
-  /** Arguments the script chain fixes before the user's own (e.g. `--docs-updater`). */
+  /** Arguments the script chain fixes before the user's own (e.g. `--product-owner`). */
   readonly args: readonly string[];
 }
 
@@ -54,8 +54,8 @@ export interface ScriptCli extends ScriptFile {
 }
 
 /**
- * Follows a script through the package.json chain to the repo file it runs, e.g. `chol:docs` →
- * `bun chol:agents --docs-updater` → `bun packages/agents/src/cli/main.ts --docs-updater`. Anything that
+ * Follows a script through the package.json chain to the repo file it runs, e.g. `chol:po` →
+ * `bun chol:agents --product-owner` → `bun packages/choliba/src/main.ts agents --product-owner`. Anything that
  * does not end in an existing .js/.ts file of the repo (prettier, jest, eslint) gives `undefined`.
  */
 export function resolveScriptFile(

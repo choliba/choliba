@@ -11,9 +11,16 @@ import type { AgentInvocation } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
 import { readPlan } from './plan-store';
 import { validateExplicitModel } from '../../common';
-import { absolutePermissions, canRead, outsideExecuteDirs, strayExceptions } from '../../common';
+import {
+  absolutePermissions,
+  canRead,
+  definitionExceptionProblems,
+  outsideExecuteDirs,
+  strayExceptions,
+} from '../../common';
 import type { RunAgentsCliDeps, RunArgs } from './run-context';
-import type { RunProject } from '../../common';
+import type { RunProject, Sandbox } from '../../common';
+import { agentURL } from '../../common';
 import { errorMessage, projectsDir, toAbsolute } from './run-context';
 import { specContext } from './spec-context';
 import type { TicketTarget } from './ticket-run';
@@ -95,6 +102,7 @@ export function resolveProjectVars(
   parsed: RunArgs,
   agent: AgentDefinition,
   deps: RunAgentsCliDeps,
+  sandbox: Sandbox,
 ):
   | {
       readonly vars: Readonly<Record<string, string>>;
@@ -115,7 +123,12 @@ export function resolveProjectVars(
     const settings = loadProjectSettings(projectsDir(deps), parsed.project);
     return {
       vars: { PROJECT: settings.project, PROJECT_DIR: settings.projectPath, APP_DIR: settings.appDir },
-      project: { name: settings.project, baseURL: settings.environment.baseURL, appDir: settings.appDir },
+      project: {
+        name: settings.project,
+        baseURL: settings.environment.baseURL,
+        agentBaseURL: agentURL(settings.environment.baseURL, sandbox),
+        appDir: settings.appDir,
+      },
       settings,
     };
   } catch (error) {
@@ -228,6 +241,27 @@ export function checkedDenyExceptions(agent: AgentDefinition, deps: RunAgentsCli
   deps.stderr.write(
     `"${agent.name}" tem exceções que não tiram nada de um deny:\n${problems.join('\n')}\n` +
       'Corrija o caminho da exceção ou remova a linha do agent.yaml.\n',
+  );
+  return false;
+}
+
+/**
+ * A `!` in `deny.write` or `deny.delete` must not sit on the agent, skill or MCP folders, nor inside them:
+ * those denies are imposed on every run, and an exception there would reopen a definition. `false` when one
+ * does; the reason is already on `stderr`. `deny.read` is not checked: a declared skill stays readable.
+ */
+export function checkedDefinitionExceptions(
+  agent: AgentDefinition,
+  directories: readonly string[],
+  deps: RunAgentsCliDeps,
+): boolean {
+  const problems = definitionExceptionProblems(absolutePermissions(agent.permissions, deps.repoRoot), directories);
+  if (problems.length === 0) {
+    return true;
+  }
+  deps.stderr.write(
+    `"${agent.name}" reabre pastas de definição que o choliba protege:\n${problems.join('\n')}\n` +
+      'Uma exceção ! não pode ficar dentro das pastas de agentes, skills ou MCPs.\n',
   );
   return false;
 }

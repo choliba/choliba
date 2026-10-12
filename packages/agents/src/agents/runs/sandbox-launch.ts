@@ -6,18 +6,16 @@ import { resolveLocations, resolveTicketRunsFolder, resolveTicketRunsRoot } from
 
 import {
   absolutePermissions,
-  containerMounts,
+  createSandboxBackend,
   DEFAULT_PLAYWRIGHT_OUTPUT_DIR,
-  dockerRunArgs,
-  presentCredentials,
   readDir,
   runToolsOf,
-  type ContainerMount,
   type ContainerUser,
   type DiskFacts,
   type PlannedFile,
   type ProviderRequest,
   type Sandbox,
+  type SandboxPath,
 } from '../../common';
 import { definedConfig } from '../agent-dirs';
 
@@ -28,7 +26,7 @@ export interface Launch {
   readonly command: readonly string[];
   readonly env?: Readonly<Record<string, string>>;
   /** What the container mounts; empty on this machine. */
-  readonly mounts: readonly ContainerMount[];
+  readonly paths: readonly SandboxPath[];
   /** Paths the agent may reach that are the image's own folders, so not mounted; empty on this machine. */
   readonly skipped: readonly string[];
 }
@@ -89,33 +87,22 @@ function outputFolders(request: ProviderRequest, config: Config): readonly strin
  * credentials by name.
  */
 export function launchFor(input: LaunchInput, disk: LaunchDisk = realDisk): Launch {
-  if (input.sandbox.kind === 'local') return { command: input.command, mounts: [], skipped: [] };
   const { request, config } = input;
   const root = request.workspaceRoot;
   const outputs = outputFolders(request, config);
   outputs.forEach(disk.ensureDir);
-  const { mounts, skipped } = containerMounts(
-    {
-      permissions: absolutePermissions(request.agent.permissions, root),
-      policy: request.policy,
-      addDirs: request.addDirs,
-      runDir: request.runDir,
-      alsoRead: [...input.files.map((file) => file.path), join(root, 'node_modules')],
-      alsoWrite: outputs,
-    },
-    disk,
-  );
-  return {
-    command: dockerRunArgs({
-      image: input.sandbox.image,
-      mounts,
-      cwd: request.runDir,
-      user: disk.owner(root),
-      env: presentCredentials(config),
-      command: input.command,
-    }),
-    env: definedConfig(config),
-    mounts,
-    skipped,
+  const reach = {
+    permissions: absolutePermissions(request.agent.permissions, root),
+    policy: request.policy,
+    addDirs: request.addDirs,
+    runDir: request.runDir,
+    alsoRead: [...input.files.map((file) => file.path), join(root, 'node_modules')],
+    alsoWrite: outputs,
   };
+  const backend = createSandboxBackend(input.sandbox, {
+    user: () => disk.owner(root),
+    environment: definedConfig(config),
+    disk,
+  });
+  return backend.plan({ command: input.command, reach });
 }

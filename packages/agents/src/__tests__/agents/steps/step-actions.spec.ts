@@ -88,7 +88,9 @@ describe('runBeforeSteps', () => {
 
       expect(sections).toHaveLength(2);
       expect(sections[0]).toContain('.cache/x/diff.patch');
-      expect(sections[1]).toBe('<readme_atual>\n\n### README.md\n\n# Hi\n\n\n</readme_atual>');
+      expect(sections[1]).toBe(
+        '<readme_atual>\n\n<untrusted_input source="file:README.md">\n# Hi\n</untrusted_input>\n\n</readme_atual>',
+      );
       expect(spawn.calls).toEqual([['bun', ['x', 'check'], { cwd: tmp.path, encoding: 'utf8', shell: false }]]);
     } finally {
       getDiff.mockRestore();

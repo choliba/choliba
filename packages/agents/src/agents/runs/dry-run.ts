@@ -3,7 +3,7 @@ import type { ProjectEnvironment } from '@choliba/projects';
 import type { AgentStep, McpDeclaration } from '../../common';
 import { describeStep } from '../steps/step-actions';
 import { runPlaceOf, wrapInstructions } from '../../common';
-import type { ContainerMount, PlannedFile, ProviderRequest } from '../../common';
+import type { PlannedFile, ProviderRequest, SandboxPath } from '../../common';
 
 /** What `--dry-run` shows: everything a real run of this command line would do, in order. */
 export interface DryRunInput {
@@ -24,7 +24,7 @@ export interface DryRunInput {
   /** `CHOL_SANDBOX=docker`: the image the provider runs in and what the container mounts. */
   readonly container?: {
     readonly image: string;
-    readonly mounts: readonly ContainerMount[];
+    readonly mounts: readonly SandboxPath[];
     /** What the agent may reach that the image keeps as its own (`isImagePath`). */
     readonly skipped: readonly string[];
   };
@@ -114,7 +114,7 @@ function agentEntry(input: DryRunInput, systemPrompt: string): Entry {
   };
 }
 
-const ACCESS_LABEL: Readonly<Record<ContainerMount['access'], string>> = {
+const ACCESS_LABEL: Readonly<Record<SandboxPath['access'], string>> = {
   read: 'leitura',
   write: 'escrita',
   hidden: 'oculto ',
@@ -151,14 +151,20 @@ function section(title: string, body: string): string {
  * the prompts and the command line in full, and the files the provider would write, follow.
  */
 /** What the CLI does with the project's application before the run: its setup, then making sure it is up. */
-function appEntries(app: DryRunInput['app']): readonly Entry[] {
+function appEntries(app: DryRunInput['app'], agentBaseURL: string | undefined): readonly Entry[] {
   if (app === undefined) return [];
   const up =
     app.start === undefined
       ? `confere ${app.baseURL}: sem resposta, para aqui (o ambiente não tem envs[].start)`
       : `sobe a aplicação com "${app.start}" se ${app.baseURL} não responder, e a derruba no fim`;
+  const reach =
+    agentBaseURL === undefined || agentBaseURL === app.baseURL
+      ? []
+      : [`o agente, no container, a acessa em ${agentBaseURL}`];
   const setup = app.setup ?? [];
-  return [{ who: 'CLI', lines: setup.length === 0 ? [up] : [`roda o setup: ${setup.join(', ')}`, up] }];
+  const lines: Entry['lines'] =
+    setup.length === 0 ? [up, ...reach] : [`roda o setup: ${setup.join(', ')}`, up, ...reach];
+  return [{ who: 'CLI', lines }];
 }
 
 export function formatDryRun(input: DryRunInput): string {
@@ -187,7 +193,7 @@ export function formatDryRun(input: DryRunInput): string {
     ],
   };
   const entries: readonly Entry[] = [
-    ...appEntries(input.app),
+    ...appEntries(input.app, request.project?.agentBaseURL),
     ...beforeEntries(steps.before, `${mode}.before`),
     ...ticketCreated,
     agentEntry(input, systemPrompt),

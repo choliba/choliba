@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 10/10/2026 08:24:56 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 12/10/2026 00:19:34 — não editar manualmente.
 
 ## Resumo
 
@@ -16,7 +16,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 65 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 69 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -36,6 +36,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/runs/agent-detail.ts](packages/agents/src/agents/runs/agent-detail.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/agents-flags.ts](packages/agents/src/agents/runs/agents-flags.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/agents-spec.ts](packages/agents/src/agents/runs/agents-spec.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/definition-snapshot.ts](packages/agents/src/agents/runs/definition-snapshot.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/delegation-guard.ts](packages/agents/src/agents/runs/delegation-guard.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/dry-run.ts](packages/agents/src/agents/runs/dry-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/event-render.ts](packages/agents/src/agents/runs/event-render.ts)|100.00|100.00|100.00|100.00
@@ -64,6 +65,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/common/agent-provider.ts](packages/agents/src/common/agent-provider.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/agent-vars.ts](packages/agents/src/common/agent-vars.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/cursor-tool-calls.ts](packages/agents/src/common/cursor-tool-calls.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/definition-denies.ts](packages/agents/src/common/definition-denies.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/json.ts](packages/agents/src/common/json.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/mcp-use.ts](packages/agents/src/common/mcp-use.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/message-blocks.ts](packages/agents/src/common/message-blocks.ts)|100.00|100.00|100.00|100.00
@@ -77,6 +79,8 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/common/run-tools/run-tools.ts](packages/agents/src/common/run-tools/run-tools.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/sandbox/container-mounts.ts](packages/agents/src/common/sandbox/container-mounts.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/sandbox/docker-run.ts](packages/agents/src/common/sandbox/docker-run.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/sandbox/docker-sandbox.ts](packages/agents/src/common/sandbox/docker-sandbox.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/sandbox/local-sandbox.ts](packages/agents/src/common/sandbox/local-sandbox.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/sandbox/sandbox.ts](packages/agents/src/common/sandbox/sandbox.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/stream-json.ts](packages/agents/src/common/stream-json.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/claude/claude-agent.provider.ts](packages/agents/src/providers/claude/claude-agent.provider.ts)|100.00|100.00|100.00|100.00

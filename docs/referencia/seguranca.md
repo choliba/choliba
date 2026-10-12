@@ -30,6 +30,13 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
   o libera).
 - **Skills.** A pasta de cada skill declarada fica liberada para leitura e é uma exceção dos `deny.read` do agente:
   declarar a skill é pedir para lê-la. Vale só para essa pasta, não para `.choliba/skills/` inteira.
+- **As definições não mudam numa run.** Toda execução ganha `deny.write` e `deny.delete` das pastas de agentes,
+  skills e MCPs (`--agents-dir` ou `CHOL_AGENTS_DIR`, `CHOL_SKILLS_DIR`, `CHOL_MCPS_DIR`), além do que o agente
+  declara. O prompt, as regras do provider e o container herdam essa negação. Uma exceção `!` de escrita ou
+  exclusão dentro delas para a execução: nenhuma run reabre essas pastas. A leitura de cada skill declarada
+  continua liberada. Depois do provider, o choliba compara o sha256 de cada arquivo dessas pastas com o de
+  antes: arquivo criado, alterado ou apagado encerra a execução com código 1 e a lista dos caminhos, e nada
+  é desfeito.
 - **`--add-dir <pasta>`** libera a leitura de uma pasta a mais só naquela execução (pode repetir), como se ela
   estivesse em `allow.read`; o `deny` do agente continua valendo por cima dela.
 - **Execução por diretório.** Os comandos rodam a partir da pasta da execução, dentro do workspace (por isso
@@ -48,9 +55,13 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
   confere cada chamada: um servidor ou uma tool fora do declarado (ou procurar tools de MCP num agente sem `mcps`)
   interrompe a execução com código 1, em qualquer provider. No Claude, a sessão só tem os servidores declarados. No
   Cursor, que soma os MCPs do `~/.cursor/mcp.json` do usuário, o choliba também nega os que o agente não declara.
+- **Dado não é ordem.** O que um passo põe no prompt vindo de arquivos (`add_files`) ou do repositório (o índice do
+  `git_diff`) vai dentro de `<untrusted_input source="…">`, e o prompt de todo agente diz que aquilo é dado, nunca
+  instrução, mesmo que diga vir do sistema ou do usuário. Uma tag `untrusted_input` dentro do texto é escapada, para
+  o dado não fechar o bloco. É uma camada a mais: o modelo ainda pode ser enganado, e quem limita o agente são as
+  permissões e o container.
 - **`steps` não passam pelas permissões.** Os passos são executados pelo choliba, fora da sessão do modelo: um
-  passo pode fazer o que o modelo não pode (o `docs-updater` proíbe o modelo de rodar o Prettier e o roda no
-  `steps.execute.after`). Veja [Steps](agent-yaml.md#steps).
+  passo pode fazer o que o modelo não pode (rodar um comando que as permissões do agente negam, por exemplo). Veja [Steps](agent-yaml.md#steps).
 
 ## O container
 
@@ -66,9 +77,19 @@ MCP que ele suba.
   `deny.write` dentro de algo com escrita volta a ser só leitura. Um arquivo que o agente pode criar e ainda não
   existe abre a pasta dele; as regras do provider, que continuam valendo lá dentro, limitam ao arquivo.
 - **O que ele não vê**: o resto do disco, a sua pasta pessoal (a do container é vazia e some no fim) e o socket do
-  Docker. Roda com o seu usuário, na rede da máquina (a aplicação e os MCPs em `localhost` respondem), com a raiz
-  só de leitura e sem capabilities. Navegar não escapa: `cd / && ls` mostra a raiz da imagem, e uma pasta acima
-  de uma montagem (`/home/<você>`) só tem o caminho até ela.
+  Docker. Roda com o seu usuário, numa rede bridge, com a raiz só de leitura e sem capabilities. Navegar não
+  escapa: `cd / && ls` mostra a raiz da imagem, e uma pasta acima de uma montagem (`/home/<você>`) só tem o caminho
+  até ela.
+- **Como ele acessa o host**: dentro do container, `localhost` é o próprio container. Escreva as URLs como a máquina
+  as vê (`localhost`, no `baseURL` do `config.json` e no `url` de um MCP): o choliba confere a aplicação por elas e
+  entrega ao agente o mesmo endereço com `host.docker.internal` no lugar de `localhost`, `127.0.0.1`, `[::1]` e
+  `0.0.0.0`, nome que ele registra no container. O `--dry-run` mostra os dois endereços. Um MCP com `command` que
+  chama um serviço da máquina por variável de ambiente não é traduzido: use `host.docker.internal` nele. O serviço
+  precisa aceitar conexões pela interface do Docker, não somente por `127.0.0.1`. Se a aplicação não permite essa configuração ou se a sessão precisa da rede
+  completa da máquina, defina `CHOL_NETWORK=host`; nesse modo, `localhost` volta a apontar para o host.
+- **O que a rede bridge protege**: ela separa o namespace de rede do container e evita o acesso implícito aos
+  serviços do host por `localhost`. Ela não é um firewall de saída: internet e rotas alcançáveis pelo Docker podem
+  continuar disponíveis. Um bloqueio de egress exige uma política de rede externa ao choliba.
 - **As pastas do sistema são da imagem**: `/` inteira, `/usr`, `/bin`, `/sbin`, `/lib*`, `/etc`, `/opt`,
   `/ms-playwright`, `/root`, `/boot`, `/dev`, `/proc`, `/sys`, `/run` e a home do container nunca vêm desta
   máquina. Um `allow` com uma delas, ou com algo dentro (`/etc/passwd`), não é montado: o agente vê a versão da
@@ -78,9 +99,11 @@ MCP que ele suba.
 - **A credencial do provider** entra por variável de ambiente: `CLAUDE_CODE_OAUTH_TOKEN` (gerado por
   `claude setup-token`, usa a assinatura e só chama o modelo) ou `ANTHROPIC_API_KEY`, e `CURSOR_API_KEY`. O agente
   consegue lê-la, como consegue fora do container: prefira o token, que não serve para mais nada.
-- **A imagem** traz o Node e os navegadores do Playwright da versão do choliba, o Bun, o Claude Code e o Cursor CLI.
-  Construa-a uma vez na raiz do repositório do choliba: `docker build -f docker/agent.Dockerfile -t choliba-agent .`
+- **A imagem** traz o Node e os navegadores do Playwright da versão do choliba, o Bun, o Claude Code e o Cursor CLI,
+  este numa versão fixa e baixado como pacote conferido pelo sha256, sem rodar script de instalação, e que não se
+  atualiza durante a run (o choliba passa `--disable-auto-update` ao Cursor, também fora do container). Construa-a uma vez na raiz do repositório do choliba: `docker build -f docker/agent.Dockerfile -t choliba-agent .`
   (outra imagem: `CHOL_SANDBOX_IMAGE`).
 - O [`--dry-run`](comandos.md#--dry-run) mostra o container e cada caminho que ele vê.
 
-Testado no Linux. No macOS e no Windows, a rede da máquina (`--network host`) ainda não é tratada.
+Testado no Linux. `host.docker.internal` também existe no Docker Desktop. O opt-in `CHOL_NETWORK=host` depende do
+suporte do Docker à rede do host em cada sistema.

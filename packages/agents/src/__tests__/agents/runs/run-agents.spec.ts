@@ -759,11 +759,14 @@ describe('runAgentsCli — skills', () => {
     }
   });
 
-  it('does not grant the skills dir to an agent without skills', async () => {
+  it('does not grant the skills dir to an agent without skills, and denies writing it', async () => {
     const { deps, stdout } = harness([]);
 
     await runAgentsCli(['with-prepare', '--agents-dir', FIXTURES, '--dry-run', '--show-prompt'], deps);
-    expect(dryRunArgv(stdout).join('\n')).not.toContain(SKILLS);
+    const printed = dryRunArgv(stdout).join('\n');
+    expect(printed).not.toContain(`Read(/${SKILLS}`);
+    expect(printed).toContain(`Write(/${SKILLS}/**)`);
+    expect(printed).toContain(`- ${SKILLS}/`);
   });
 });
 
@@ -1545,6 +1548,93 @@ describe('runAgentsCli — folder variables', () => {
   });
 });
 
+describe('runAgentsCli — definition folders', () => {
+  const permissions = (lines: readonly string[]): string[] => ['permissions:', ...lines];
+
+  it('denies every run writes and deletes there, and the prompt and the provider rules say so', async () => {
+    await withCustomAgent(permissions(['  allow:', "    write: ['${CHOL_ROOT}/']"]), async (agentsDir) => {
+      const skills = join(agentsDir, 'skills');
+      const mcps = join(agentsDir, 'mcps');
+      const { deps, stdout } = harness([], {
+        repoRoot: agentsDir,
+        config: { CHOL_SKILLS_DIR: skills, CHOL_MCPS_DIR: mcps },
+      });
+
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', '--show-prompt', 'x'], deps)).toBe(
+        0,
+      );
+      const text = stdout.chunks.join('');
+      expect(text).toContain('You may not write:');
+      expect(text).toContain('You may not delete:');
+      const rules = dryRunArgv(stdout).join('\n');
+      for (const dir of [agentsDir, skills, mcps]) {
+        expect(text).toContain(`- ${dir}/`);
+        expect(rules).toContain(`Write(/${dir}/**)`);
+      }
+    });
+  });
+
+  it('refuses a ! exception inside a definition folder', async () => {
+    await withCustomAgent(permissions(['  deny:', "    write: ['!${CHOL_AGENTS_DIR}/x/']"]), async (agentsDir) => {
+      const { deps, stderr } = harness([], { config: { CHOL_AGENTS_DIR: agentsDir } });
+
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(1);
+      const text = stderr.chunks.join('');
+      expect(text).toContain('reabre pastas de definição que o choliba protege');
+      expect(text).toContain(`${agentsDir}/x`);
+      expect(text).toContain('Uma exceção ! não pode ficar dentro das pastas de agentes, skills ou MCPs.');
+    });
+  });
+
+  it('exits 1 and lists a file the provider wrote under the skills dir, leaving it there', async () => {
+    const tmp = makeTmpDir('def-snapshot');
+    try {
+      const skills = join(tmp.path, 'skills');
+      cpSync(SKILLS, skills, { recursive: true });
+      const planted = join(skills, 'planted.md');
+      const inner = fakeSpawner({ stdout: streamFromChunks(claudeStdout(claudeSuccessLine())) });
+      const runner = new ProcessRunnerService({
+        spawner: {
+          spawn(options) {
+            writeFileSync(planted, 'planted\n');
+            return inner.spawner.spawn(options);
+          },
+        },
+      });
+      const { deps, stderr } = harness([], { runner, config: { CHOL_SKILLS_DIR: skills } });
+
+      expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, 'do the task'], deps)).toBe(1);
+      const text = stderr.chunks.join('');
+      expect(text).toContain(`criado ${planted}`);
+      expect(text).toContain('Nada foi desfeito.');
+      expect(existsSync(planted)).toBe(true);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('mounts the three folders read-only in a docker dry-run, never writable', async () => {
+    await withCustomAgent(permissions(['  allow:', "    write: ['${CHOL_ROOT}/']"]), async (agentsDir) => {
+      const skills = join(agentsDir, '.choliba', 'skills');
+      const mcps = join(agentsDir, '.choliba', 'mcps');
+      mkdirSync(skills, { recursive: true });
+      mkdirSync(mcps, { recursive: true });
+      const { deps, stdout } = harness([], {
+        which: whichOf(['claude', 'docker']),
+        repoRoot: agentsDir,
+        config: { CHOL_SKILLS_DIR: skills, CHOL_MCPS_DIR: mcps, CHOL_SANDBOX: 'docker' },
+      });
+
+      expect(await runAgentsCli(['custom', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(0);
+      const linesOf = stdout.chunks.join('').split('\n');
+      for (const dir of [agentsDir, skills, mcps]) {
+        expect(linesOf.some((line) => line.endsWith(`leitura ${dir}`))).toBe(true);
+        expect(linesOf.some((line) => line.endsWith(`escrita ${dir}`))).toBe(false);
+      }
+    });
+  });
+});
+
 describe('runAgentsCli — CHOL_SANDBOX', () => {
   it('stops before anything runs on a value it does not take, or docker without Docker', async () => {
     const wrong = harness([], { config: { CHOL_SANDBOX: 'podman' } });
@@ -1579,6 +1669,53 @@ describe('runAgentsCli — CHOL_SANDBOX', () => {
       ).toBe(0);
       expect(stdout.chunks.join('')).toContain(`escrita ${projectsDir}`);
       expect(existsSync(join(projectsDir, 'ready', 'ticket-runs'))).toBe(false);
+    });
+  });
+
+  it('gives the agent in the container the address of a local application and of a local MCP server', async () => {
+    await withProjects(async (projectsDir) => {
+      const local = join(projectsDir, 'local');
+      mkdirSync(local);
+      writeFileSync(
+        join(local, 'config.json'),
+        JSON.stringify({ name: 'Local', envs: [{ nome: 'qa', baseURL: 'http://localhost:3000', appDir: 'app' }] }),
+      );
+      writeFileSync(join(local, '.env.json'), JSON.stringify({ qa: {} }));
+      const mcps = join(projectsDir, 'mcps');
+      mkdirSync(mcps);
+      writeFileSync(join(mcps, 'web.json'), JSON.stringify({ url: 'http://localhost:8931/mcp' }));
+      const agents = makeTmpDir('run-mcp-url');
+      cpSync(join(FIXTURES, 'with-project'), join(agents.path, 'with-project'), { recursive: true });
+      const yamlPath = join(agents.path, 'with-project', 'agent.yaml');
+      writeFileSync(yamlPath, `${readFileSync(yamlPath, 'utf8')}mcps:\n  - web\n`);
+      try {
+        const { deps, stdout } = harness([], {
+          which: whichOf(['claude', 'docker']),
+          config: {
+            CHOL_GLOBAL_DIR: '/g',
+            CHOL_PROJECTS_DIR: projectsDir,
+            CHOL_MCPS_DIR: mcps,
+            CHOL_SANDBOX: 'docker',
+          },
+        });
+
+        expect(
+          await runAgentsCli(
+            ['with-project', '--agents-dir', agents.path, '--project', 'local', '--dry-run', '--show-prompt', 'x'],
+            deps,
+          ),
+        ).toBe(0);
+        const text = stdout.chunks.join('');
+        expect(text).toContain('confere http://localhost:3000');
+        expect(text).toContain('o agente, no container, a acessa em http://host.docker.internal:3000');
+        expect(text).toContain('baseURL="http://host.docker.internal:3000"');
+        const printed = dryRunArgv(stdout);
+        expect(printed.at(printed.indexOf('--mcp-config') + 1)).toBe(
+          JSON.stringify({ mcpServers: { web: { url: 'http://host.docker.internal:8931/mcp' } } }),
+        );
+      } finally {
+        agents.cleanup();
+      }
     });
   });
 

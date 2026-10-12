@@ -20,7 +20,8 @@ import type { AgentDefinition } from '../../common';
 import type { AgentInvocation, CommandPrepareInput } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
 import { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '../agent-dirs';
-import type { McpServer } from '../../common';
+import type { McpServer, Sandbox } from '../../common';
+import { agentURL } from '../../common';
 import { resolveMcps } from '../../common';
 import type { ProviderRequest } from '../../common';
 import type { ResolvedProvider } from '../../common';
@@ -28,11 +29,16 @@ import type { SkillSummary } from '../agent-skills';
 import { formatSkillsInstruction, resolveSkills } from '../agent-skills';
 import { StepFailedError, stepExitCode } from '../steps/step-actions';
 import { buildUserPrompt } from '../../common';
-import { checkModelSupported, checkedDenyExceptions, checkedExecuteDirs } from './run-checks';
+import {
+  checkModelSupported,
+  checkedDefinitionExceptions,
+  checkedDenyExceptions,
+  checkedExecuteDirs,
+} from './run-checks';
 import type { PreparedRun, RunAgentsCliDeps, RunArgs, RunContext, Stopped } from './run-context';
 import { STOPPED, errorMessage, toAbsolute } from './run-context';
 import { LOCATION_VARS, agentTexts, withExpandedVars } from '../../common';
-import { EXCEPTION_PREFIX, withProjectDenies } from '../../common';
+import { EXCEPTION_PREFIX, withDefinitionDenies, withProjectDenies } from '../../common';
 
 /**
  * The skills the agent lists, found in the skills dir. A missing or malformed skill stops the run
@@ -209,6 +215,13 @@ function buildProviderRequest(
   return { effectiveTask, providerRequest };
 }
 
+/** The server with its `url`, if it has one, as the agent reaches it (`agentURL`); a `command` server is unchanged. */
+function reachableMcp(server: McpServer, sandbox: Sandbox): McpServer {
+  const url = server.config['url'];
+  if (typeof url !== 'string') return server;
+  return { ...server, config: { ...server.config, url: agentURL(url, sandbox) } };
+}
+
 /**
  * The command a run uses once its agent's `${…}` are filled in: one defined in code stays as is; one
  * derived from `agent.yaml` is derived again, so its steps get the filled-in arguments.
@@ -246,6 +259,12 @@ function extraReads(skills: readonly SkillSummary[], parsed: RunArgs, deps: RunA
   ];
 }
 
+/** The folders a run loads definitions from: agents (the dir this run uses), skills and MCPs. */
+export function definitionDirectories(context: RunContext): readonly string[] {
+  const { deps } = context;
+  return [context.agentsDir, resolveSkillsDir(deps.config, deps.repoRoot), resolveMcpsDir(deps.config, deps.repoRoot)];
+}
+
 /** Everything one run needs before its provider starts; `Stopped` when a check or a step stops it (reason on `stderr`). */
 export function prepareRun(
   context: RunContext,
@@ -257,11 +276,17 @@ export function prepareRun(
   if (expanded === undefined || !checkModelSupported(parsed, expanded, deps)) {
     return STOPPED;
   }
-  const agent = withProjectDenies(expanded, context.project);
+  const directories = definitionDirectories(context);
+  const agent = withDefinitionDenies(withProjectDenies(expanded, context.project), directories);
   const command = commandFor(context, declaredCommand, agent);
   const agentSkills = resolveAgentSkills(agent, deps);
   const mcpServers = agentSkills === undefined ? undefined : resolveAgentMcps(agent, deps);
-  if (agentSkills === undefined || mcpServers === undefined || !checkedDenyExceptions(agent, deps)) {
+  if (
+    agentSkills === undefined ||
+    mcpServers === undefined ||
+    !checkedDenyExceptions(agent, deps) ||
+    !checkedDefinitionExceptions(agent, directories, deps)
+  ) {
     return STOPPED;
   }
   const withSkills = withReads(
@@ -285,7 +310,7 @@ export function prepareRun(
     context.planContent,
     addDirs,
     formatSkillsInstruction(agentSkills.skills, deps.repoRoot),
-    mcpServers,
+    mcpServers.map((server) => reachableMcp(server, context.sandbox)),
     parsed,
     deps,
   );

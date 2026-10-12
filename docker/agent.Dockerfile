@@ -21,9 +21,25 @@ RUN npx -y "playwright@${PLAYWRIGHT_VERSION}" install --with-deps chrome && npm 
 # Claude Code (`claude`).
 RUN npm install -g @anthropic-ai/claude-code && npm cache clean --force
 
-# The Cursor CLI (`agent`, also `cursor-agent`), installed outside any home: the container runs as the workspace's
+# The Cursor CLI (`agent`, also `cursor-agent`), pinned by version and checksum: the package of that version, checked
+# against its sha256 before it is unpacked, never the install script. Cursor publishes no checksum, so each one is the
+# `sha256sum` of that architecture's package; to update, take the version from the download URL in
+# https://cursor.com/install and hash both packages. Installed outside any home: the container runs as the workspace's
 # owner, with an empty home.
-RUN curl -fsSL https://cursor.com/install | HOME=/opt/cursor bash \
-  && ln -s "$(readlink -f /opt/cursor/.local/bin/agent)" /usr/local/bin/agent \
-  && ln -s /usr/local/bin/agent /usr/local/bin/cursor-agent \
+ARG CURSOR_VERSION=2026.10.01-e373342
+ARG CURSOR_SHA256_X64=a79726c6e644520e993970be4c45775a6889802b67abe461a677a53219ae28e8
+ARG CURSOR_SHA256_ARM64=785c5f6bf2a60eb1121e27ed8c14f5ee07ed1b5b6692324f2d9a997238245eb5
+RUN case "$(dpkg --print-architecture)" in \
+      amd64) arch=x64 sha256="${CURSOR_SHA256_X64}" ;; \
+      arm64) arch=arm64 sha256="${CURSOR_SHA256_ARM64}" ;; \
+      *) echo "no Cursor CLI package for $(dpkg --print-architecture)" >&2; exit 1 ;; \
+    esac \
+  && curl -fsSL -o /tmp/cursor.tar.gz \
+    "https://downloads.cursor.com/lab/${CURSOR_VERSION}/linux/${arch}/agent-cli-package.tar.gz" \
+  && echo "${sha256}  /tmp/cursor.tar.gz" | sha256sum -c - \
+  && mkdir -p /opt/cursor \
+  && tar --strip-components=1 -xzf /tmp/cursor.tar.gz -C /opt/cursor \
+  && rm /tmp/cursor.tar.gz \
+  && ln -s /opt/cursor/cursor-agent /usr/local/bin/agent \
+  && ln -s /opt/cursor/cursor-agent /usr/local/bin/cursor-agent \
   && chmod -R a+rX /opt/cursor

@@ -96,7 +96,7 @@ describe('validateAgentFiles integration', () => {
 describe('the agents of this repository', () => {
   const REPO_AGENTS = join(__dirname, '..', '..', '..', '..', '..', '.choliba', 'agents');
 
-  it.each(['product-owner', 'test-writer', 'implementer', 'docs-updater'])('%s is a valid agent.yaml', (name) => {
+  it.each(['product-owner', 'test-writer', 'implementer'])('%s is a valid agent.yaml', (name) => {
     expect(validateAgentFiles(REPO_AGENTS, name)).toEqual({ valid: true, errors: [] });
   });
 
@@ -104,7 +104,6 @@ describe('the agents of this repository', () => {
     ['product-owner', 'blue'],
     ['test-writer', 'red'],
     ['implementer', 'green'],
-    ['docs-updater', 'cyan'],
   ])('%s declares its color (%s)', (name, color) => {
     expect(loadAgent(REPO_AGENTS, name).color).toBe(color);
   });

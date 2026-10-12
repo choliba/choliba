@@ -33,11 +33,14 @@ A versão de desenvolvimento é [v0.0.1-dev](https://github.com/choliba/choliba/
 ```bash
 mkdir dev-tools && cd dev-tools
 echo '{ "name": "dev-tools", "private": true }' > package.json
-bun add --trust \
-  https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
+curl -LO https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
+curl -LO https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz.sha256
+sha256sum -c choliba-0.0.1-dev.tgz.sha256
+bun add --trust ./choliba-0.0.1-dev.tgz
 ```
 
-- O `--trust` deixa o Bun rodar o `postinstall` do pacote, que já executa `choliba setup`
+- Não instale se `sha256sum -c` não terminar em `OK`.
+- O `--trust` deixa o Bun rodar o `postinstall` do pacote, que já executa `choliba setup`.
 
 - Se você rodou sem `--trust`:
 
@@ -82,8 +85,11 @@ Para o Bun baixar o pacote novo (e não reaproveitar o do cache), remova e insta
 
 ```
 bun remove choliba
-bun add --trust \
-  https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
+rm -f choliba-0.0.1-dev.tgz choliba-0.0.1-dev.tgz.sha256
+curl -LO https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
+curl -LO https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz.sha256
+sha256sum -c choliba-0.0.1-dev.tgz.sha256
+bun add --trust ./choliba-0.0.1-dev.tgz
 ```
 
 Para conferir qual versão ficou instalada, rode

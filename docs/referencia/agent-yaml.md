@@ -23,7 +23,10 @@ completo e o passo a passo estão em [Escrevendo um agente](../guias/escrever-um
 | `allow_without_ticket`            | não         | `false`             | `true` deixa a execução seguir sem `--type`/`--ticket`: com `ticket_types`, o ticket fica opcional; sem, deixa explícito que o agente não usa ticket.                                                                                                                                           |
 | `steps.<modo>.before` / `.after`  | não         | nenhum              | Ações do choliba antes e depois do agente, em cada modo (veja [Steps](#steps)).                                                                                                                                                                                                                 |
 
-Regras de permissão: veja [Segurança](seguranca.md). Delegar a um subagente não é uma permissão: é
+Regras de permissão: veja [Segurança](seguranca.md). Em toda execução o choliba acrescenta `deny.write` e
+`deny.delete` das pastas de agentes, skills e MCPs; uma exceção `!` dentro delas é recusada. No fim,
+compara o sha256 de cada arquivo dessas pastas: se algum foi criado, alterado ou apagado, a execução
+termina com código 1 e lista os caminhos, sem desfazer. Delegar a um subagente não é uma permissão: é
 negado a todo agente, sem chave no `agent.yaml`.
 
 ### Exceções no deny
@@ -41,7 +44,9 @@ permissions:
 
 O agente lê o app em `/home/jackson/dev/teste/` e, da pasta de trabalho, só `docs/publico/`. A pasta de cada skill
 que o agente declara já é uma exceção sozinha: ela não precisa de `!`. Uma exceção que não está dentro de nenhum
-deny da lista (ou que fica dentro de um glob) para a execução antes do provider, porque não tira nada.
+deny da lista (ou que fica dentro de um glob) para a execução antes do provider, porque não tira nada. Uma
+exceção `!` de `deny.write` ou `deny.delete` dentro das pastas de agentes, skills ou MCPs também para: o choliba
+nega escrita e exclusão nelas em toda execução, e nenhuma exceção reabre.
 
 ## Ferramentas da run
 
@@ -260,7 +265,9 @@ steps:
 | `add_files`       | `before` | Põe o conteúdo de arquivos no prompt, dentro de uma tag (`<tag>`). |
 | `record_git_head` | `after`  | Grava o commit atual, base do próximo `--since pending`.           |
 
-O que o `before` produz entra na tarefa que o agente recebe. O `after` é um `try/catch/finally` sobre o agente:
+O que o `before` produz entra na tarefa que o agente recebe; cada arquivo do `add_files` e o índice do `git_diff` vão
+como dado, dentro de `<untrusted_input>` (veja [Segurança](seguranca.md)). O `after` é um `try/catch/finally` sobre
+o agente:
 
 | Bloco           | Roda quando                              |
 | --------------- | ---------------------------------------- |
@@ -285,20 +292,19 @@ Nos dois casos a falha sai tratada no terminal: qual ação, o que ela rodou, o 
 ```
 
 **A mesma lista em vários modos.** O YAML tem âncoras: `&nome` dá um nome à lista que vem logo depois, e `*nome`
-a repete em outro lugar. O `docs-updater` usa isso para que `plan` e `ask` preparem o mesmo contexto de `execute`
-e limpem o diff do mesmo jeito:
+a repete em outro lugar. O `implementer` usa isso para que `plan` e `ask` preparem o mesmo contexto de `execute`:
 
 ```yaml
 steps:
   execute:
     before: &before # a lista do before de execute ganha o nome "before"
-      - git_diff: [develop, .cache/docs-updater/diff.patch, --pending, .cache/docs-updater/last-base]
+      - run: [bunx, choliba, tests, '${PROJECT}:${TICKET}', --expect, red, --failures, '.cache/test-writer/${TICKET}/red.md']
+      - add_files: [falhas_red, '.cache/test-writer/${TICKET}/red.md']
     after:
       success:
-        - record_git_head: [.cache/docs-updater/last-base]
-      always: &cleanup # a lista do always de execute ganha o nome "cleanup"
-        - run: [rm, -f, .cache/docs-updater/diff.patch]
+        - run: [bunx, choliba, tests, '${PROJECT}:${TICKET}', --expect, green]
   plan:
     before: *before # a mesma lista do before de execute
-    after: *cleanup # a mesma lista do always de execute (uma lista simples é always)
+  ask:
+    before: *before
 ```

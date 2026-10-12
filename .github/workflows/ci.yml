@@ -16,24 +16,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # O nome do job ("check") é o status check exigido pela proteção das branches.
-  check:
+  pr-text:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
-
-      - name: Ler a versão do Bun em package.json
-        id: bun
-        run: echo "version=$(jq -r '.packageManager | sub("^bun@"; "")' package.json)" >> "$GITHUB_OUTPUT"
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ steps.bun.outputs.version }}
-
-      - name: Instalar dependências
-        run: bun install --frozen-lockfile
 
       # Título e corpo de PR são texto não confiável: entram só por variável de ambiente.
       - name: Título, corpo, mensagens e autoria dos commits sem rastro de agente/LLM
@@ -52,16 +40,56 @@ jobs:
             echo "commit $sha: $(head -n1 "$RUNNER_TEMP/commit-msg.txt")"
             .githooks/commit-msg "$RUNNER_TEMP/commit-msg.txt"
           done
-          # A mensagem não basta: um commit assinado por "Claude <noreply@anthropic.com>"
-          # tem mensagem limpa, mas vira um rodapé "Co-authored-by:" no squash do GitHub.
+          # A mensagem não basta: uma identidade proibida no commit pode virar um rodapé no squash do GitHub.
           .githooks/commit-identity "$BASE_SHA..$HEAD_SHA"
 
-      - name: Typecheck, lint, formatação e testes com cobertura
-        run: bun run check
+  cve:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: ./.github/actions/setup
 
-      # O site da documentação (choliba.github.io publica a partir da master): um link quebrado ou uma config errada barra o PR.
-      - name: Gerar o site da documentação
-        run: bun run docs:build
+      # O bloco do scanner entra só aqui: no bunfig.toml ele abortaria este install.
+      - name: CVEs altas ou críticas no lockfile
+        run: |
+          printf '\n[install.security]\nscanner = "@bun-security-scanner/osv"\n' >> bunfig.toml
+          scan="$RUNNER_TEMP/osv-scan.txt"
+          set +e
+          bun pm scan >"$scan" 2>&1
+          status=$?
+          set -e
+          cat "$scan"
+          bun scripts/cve-gate.ts "$scan" "$status"
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: ./.github/actions/setup
+      - run: bun run typecheck
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: ./.github/actions/setup
+      - run: bun run lint
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: ./.github/actions/setup
+      - run: bun run format
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - run: bun run test:cov
 
       # A cobertura só pode subir. O limite anterior é o threshold commitado na branch
       # de destino (o ratchet mantém esse valor igual à última cobertura aprovada).
@@ -93,8 +121,33 @@ jobs:
 
       - name: Publicar relatório de cobertura (diagnóstico em caso de falha)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: coverage-report
           path: coverage/
           retention-days: 5
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: ./.github/actions/setup
+      # O site publicado a partir da master precisa continuar válido em cada PR.
+      - run: bun run docs:build
+
+  # O nome deste job é o status check exigido pela proteção das branches.
+  check:
+    if: always()
+    needs: [pr-text, cve, typecheck, lint, format, test, docs]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conferir todos os gates
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          if jq -e 'all(.[]; .result == "success")' <<< "$RESULTS" > /dev/null; then
+            echo "Todos os gates passaram."
+            exit 0
+          fi
+          jq -r 'to_entries[] | select(.value.result != "success") | "::error::\(.key): \(.value.result)"' <<< "$RESULTS"
+          exit 1

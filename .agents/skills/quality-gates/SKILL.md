@@ -8,8 +8,9 @@ disable-model-invocation: false
 
 # Quality gates
 
-One command runs everything, in this order: `bun run check` = typecheck, lint, format check, Jest with
-coverage. CI and local runs use the same command, so "it passes here" means the same thing everywhere.
+One command runs everything locally, in this order: `bun run check` = typecheck, lint, format check, Jest with
+coverage. CI runs the same four gates in parallel jobs and gathers their results, together with its other gates,
+in the required `check` job.
 
 | Command                | What it does                                                  |
 | ---------------------- | ------------------------------------------------------------- |

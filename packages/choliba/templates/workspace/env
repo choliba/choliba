@@ -24,6 +24,7 @@ CHOL_PROJECTS_DIR=
 # claude setup-token) ou ANTHROPIC_API_KEY, e CURSOR_API_KEY.
 # CHOL_SANDBOX=local
 # CHOL_SANDBOX_IMAGE=choliba-agent
+# CHOL_NETWORK=isolated
 
 # Opcional: onde a ferramenta playwright-cli dos agentes grava snapshots e screenshots que eles leem, e onde a
 # playwright-trace roda (padrão: .cache/playwright-cli).
@@ -42,7 +43,6 @@ CHOL_PROJECTS_DIR=
 #   agents.product-owner=blue
 #   agents.test-writer=red
 #   agents.implementer=green
-#   agents.docs-updater=cyan
 #   states.error=bright-red
 #   states.success=green
 #   states.warning=yellow

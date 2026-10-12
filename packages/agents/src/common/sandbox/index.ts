@@ -1,3 +1,4 @@
-export * from './container-mounts';
-export * from './docker-run';
+export type { DiskFacts, SandboxReach } from './container-mounts';
+export type { ContainerUser } from './docker-run';
+export type { SandboxBackend, SandboxPath, SandboxPlan, SandboxPlanInput } from './sandbox-backend';
 export * from './sandbox';

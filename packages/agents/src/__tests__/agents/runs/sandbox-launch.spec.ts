@@ -62,14 +62,14 @@ describe('launchFor', () => {
   it('starts the command as it is on this machine', () => {
     expect(
       launchFor({ sandbox: { kind: 'local' }, command: ['claude', '-p'], request: request(), files: [], config: {} }),
-    ).toEqual({ command: ['claude', '-p'], mounts: [], skipped: [] });
+    ).toEqual({ command: ['claude', '-p'], paths: [], skipped: [] });
   });
 
   it('in a container, mounts the run, the packages and the run files, and passes the credentials by name', () => {
     const fake = disk();
     const launch = launchFor(
       {
-        sandbox: { kind: 'docker', image: 'choliba-agent' },
+        sandbox: { kind: 'docker', image: 'choliba-agent', network: 'isolated' },
         command: ['claude', '-p'],
         request: request({ allowRead: ['docs/'] }),
         files: [{ path: '/w/.cache/runs/1.delete', content: '' }],
@@ -77,7 +77,7 @@ describe('launchFor', () => {
       },
       fake,
     );
-    expect(launch.mounts.map((mount) => `${mount.access} ${mount.path}`)).toEqual([
+    expect(launch.paths.map((path) => `${path.access} ${path.path}`)).toEqual([
       'write /w/.cache/runs/1',
       'read /w/.cache/runs/1.delete',
       'read /w/docs',
@@ -95,11 +95,18 @@ describe('launchFor', () => {
     const fake = disk();
     const launch = launchFor(
       {
-        sandbox: { kind: 'docker', image: 'choliba-agent' },
+        sandbox: { kind: 'docker', image: 'choliba-agent', network: 'isolated' },
         command: ['claude'],
         request: request(
           { allowTools: [{ tool: 'playwright-cli', subcommands: ['*'] }] },
-          { project: { name: 'loja', baseURL: 'http://localhost:3000', appDir: '/app' } },
+          {
+            project: {
+              name: 'loja',
+              baseURL: 'http://localhost:3000',
+              agentBaseURL: 'http://host.docker.internal:3000',
+              appDir: '/app',
+            },
+          },
         ),
         files: [],
         config: CONFIG,
@@ -107,7 +114,7 @@ describe('launchFor', () => {
       fake,
     );
     expect(fake.made).toEqual(['/w/.cache/playwright-cli', '/g/projects/loja/ticket-runs']);
-    expect(launch.mounts).toEqual(
+    expect(launch.paths).toEqual(
       expect.arrayContaining([
         { path: '/w/.cache/playwright-cli', access: 'write', directory: true },
         { path: '/g/projects/loja/ticket-runs', access: 'write', directory: true },
@@ -121,7 +128,7 @@ describe('launchFor — CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR', () => {
     const fake = disk();
     launchFor(
       {
-        sandbox: { kind: 'docker', image: 'choliba-agent' },
+        sandbox: { kind: 'docker', image: 'choliba-agent', network: 'isolated' },
         command: ['claude'],
         request: request({ allowTools: [{ tool: 'playwright-trace', subcommands: ['*'] }] }),
         files: [],
