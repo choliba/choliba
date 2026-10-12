@@ -76,9 +76,9 @@ describe('dockerRunArgs', () => {
 
 describe('the agent image', () => {
   const ROOT = join(__dirname, '..', '..', '..', '..', '..');
+  const dockerfile = readFileSync(join(ROOT, 'docker', 'agent.Dockerfile'), 'utf8');
 
   it('is built on the Playwright version every package pins, so its browsers are the ones that version expects', () => {
-    const dockerfile = readFileSync(join(ROOT, 'docker', 'agent.Dockerfile'), 'utf8');
     const image = /^ARG PLAYWRIGHT_VERSION=(.+)$/m.exec(dockerfile)?.[1];
     const pinned = ['agents', 'choliba', 'runner'].map((pkg) => {
       const manifest = JSON.parse(readFileSync(join(ROOT, 'packages', pkg, 'package.json'), 'utf8')) as Readonly<
@@ -87,5 +87,14 @@ describe('the agent image', () => {
       return { ...manifest.devDependencies, ...manifest.dependencies }['@playwright/test'];
     });
     expect(pinned).toEqual([image, image, image]);
+  });
+
+  it('runs no downloaded script, and installs the Cursor CLI of a pinned version checked against its sha256', () => {
+    const commands = dockerfile.replace(/\\\n/g, ' ');
+    expect(commands).not.toMatch(/\bcurl\b[^\n]*\|[^\n]*\b(ba|z)?sh\b/);
+    expect(commands).toMatch(/^ARG CURSOR_VERSION=\d{4}\.\d{2}\.\d{2}-[0-9a-f]+$/m);
+    expect(commands).toMatch(/^ARG CURSOR_SHA256_X64=[0-9a-f]{64}$/m);
+    expect(commands).toMatch(/^ARG CURSOR_SHA256_ARM64=[0-9a-f]{64}$/m);
+    expect(commands).toContain('sha256sum -c -');
   });
 });
