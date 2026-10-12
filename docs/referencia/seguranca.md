@@ -66,9 +66,16 @@ MCP que ele suba.
   `deny.write` dentro de algo com escrita volta a ser só leitura. Um arquivo que o agente pode criar e ainda não
   existe abre a pasta dele; as regras do provider, que continuam valendo lá dentro, limitam ao arquivo.
 - **O que ele não vê**: o resto do disco, a sua pasta pessoal (a do container é vazia e some no fim) e o socket do
-  Docker. Roda com o seu usuário, na rede da máquina (a aplicação e os MCPs em `localhost` respondem), com a raiz
-  só de leitura e sem capabilities. Navegar não escapa: `cd / && ls` mostra a raiz da imagem, e uma pasta acima
-  de uma montagem (`/home/<você>`) só tem o caminho até ela.
+  Docker. Roda com o seu usuário, numa rede bridge, com a raiz só de leitura e sem capabilities. Navegar não
+  escapa: `cd / && ls` mostra a raiz da imagem, e uma pasta acima de uma montagem (`/home/<você>`) só tem o caminho
+  até ela.
+- **Como ele acessa o host**: use `host.docker.internal` no lugar de `localhost` nas URLs de aplicações e MCPs que
+  rodam na máquina. O choliba registra esse nome no container. O serviço precisa aceitar conexões pela interface do
+  Docker, não somente por `127.0.0.1`. Se a aplicação não permite essa configuração ou se a sessão precisa da rede
+  completa da máquina, defina `CHOL_NETWORK=host`; nesse modo, `localhost` volta a apontar para o host.
+- **O que a rede bridge protege**: ela separa o namespace de rede do container e evita o acesso implícito aos
+  serviços do host por `localhost`. Ela não é um firewall de saída: internet e rotas alcançáveis pelo Docker podem
+  continuar disponíveis. Um bloqueio de egress exige uma política de rede externa ao choliba.
 - **As pastas do sistema são da imagem**: `/` inteira, `/usr`, `/bin`, `/sbin`, `/lib*`, `/etc`, `/opt`,
   `/ms-playwright`, `/root`, `/boot`, `/dev`, `/proc`, `/sys`, `/run` e a home do container nunca vêm desta
   máquina. Um `allow` com uma delas, ou com algo dentro (`/etc/passwd`), não é montado: o agente vê a versão da
@@ -83,4 +90,5 @@ MCP que ele suba.
   (outra imagem: `CHOL_SANDBOX_IMAGE`).
 - O [`--dry-run`](comandos.md#--dry-run) mostra o container e cada caminho que ele vê.
 
-Testado no Linux. No macOS e no Windows, a rede da máquina (`--network host`) ainda não é tratada.
+Testado no Linux. `host.docker.internal` também existe no Docker Desktop. O opt-in `CHOL_NETWORK=host` depende do
+suporte do Docker à rede do host em cada sistema.
