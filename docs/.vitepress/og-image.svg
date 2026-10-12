@@ -1,5 +1,5 @@
 <!--
-  Source of docs/public/og-choliba.png, the image of every page's share card (scripts/libs/docs-share.ts):
+  Source of docs/public/og-choliba.png, the image of every page's share card (scripts/libs/docs/share.ts):
   1200×630 (1.91:1), under 600 KB. After changing it, make the PNG again with
   inkscape docs/.vitepress/og-image.svg -o docs/public/og-choliba.png -w 1200 -h 630
   The owl is the one of docs/public/owl-logo-choliba.svg.

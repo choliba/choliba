@@ -132,6 +132,8 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: ./.github/actions/setup
+      # docs/comandos/ sai do spec. O build reescreve as páginas, então a comparação tem de vir antes: uma página velha falha aqui.
+      - run: bun run docs:commands --check
       # O site publicado a partir da master precisa continuar válido em cada PR.
       - run: bun run docs:build
 

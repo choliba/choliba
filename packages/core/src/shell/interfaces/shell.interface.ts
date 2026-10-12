@@ -1,4 +1,4 @@
-import type { CommandEntry, RootSpec } from '../../help';
+import type { CommandEntry, CommandExample, RootSpec } from '../../help';
 import type { Container } from '../container';
 import type { ShellIo } from '../shell-io';
 
@@ -25,10 +25,11 @@ export interface ShellRoot {
   readonly delegateComplete?: (words: readonly string[]) => string | undefined;
 }
 
-/** A verb of the root and what it says in `--help`. */
+/** A verb of the root, what it says in `--help` and its examples. */
 export interface ShellVerb {
   readonly name: string;
   readonly description: string;
+  readonly examples?: readonly CommandExample[];
 }
 
 /** A command of the shell: the word that runs it, its help entries, and what it does. */

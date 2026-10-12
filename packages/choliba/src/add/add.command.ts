@@ -10,10 +10,24 @@ const FILES = (): Suggestions => ({ kind: 'files' });
 const ENTRY: CommandEntry = {
   name: 'add',
   description:
-    'Instala um agente (com suas skills e MCPs), uma skill ou um MCP de uma pasta, repositório git ou pacote npm\n\nExemplo:\n  choliba add ./meus-agentes --path agents/reviewer',
+    'Instala um agente (com suas skills e MCPs), uma skill ou um MCP de uma pasta, repositório git ou pacote npm',
   group: 'Commands',
   spec: {
     usage: 'choliba add <origem> [OPTIONS]',
+    examples: [
+      {
+        description: 'Instala o implementer do repositório do choliba, com as skills e os MCPs dele',
+        command: 'choliba add github:choliba/choliba --path .choliba/agents/implementer',
+      },
+      {
+        description: 'Mostra o que instalaria de uma pasta, sem gravar',
+        command: 'choliba add ./meus-agentes --path agents/reviewer --dry-run',
+      },
+    ],
+    details:
+      'Grava em `.choliba/agents/`, `.choliba/skills/` e `.choliba/mcps/` (ou nas pastas de `CHOL_AGENTS_DIR`, ' +
+      '`CHOL_SKILLS_DIR` e `CHOL_MCPS_DIR`). As origens, os exemplos e o que o choliba oferece estão em ' +
+      '[Instalar agentes, skills e MCPs](../guias/instalar-agentes.md).',
     positionals: FILES,
     flags: [
       {

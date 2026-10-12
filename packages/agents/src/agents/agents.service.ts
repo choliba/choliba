@@ -1,7 +1,8 @@
 import type { CommandSpec, ConfigService, Platform, ProcessRunnerService, ThemeService } from '@choliba/core';
 
 import type { ProviderRegistry } from '../common';
-import { agentsHelpSpec, listAgentsHelpSpec, runAgentsCli, runAgentsList } from './runs/run-agents';
+import { listAgentsSpec } from './runs/agents-spec';
+import { agentsHelpSpec, runAgentsCli, runAgentsList } from './runs/run-agents';
 import type { RunAgentsCliDeps } from './runs/run-context';
 
 /** What a run reads from the process: where it writes, the clock, the signals, git and the executables on PATH. */
@@ -29,7 +30,8 @@ export class AgentsService {
 
   /** `--help` and completion of `choliba list agents`. */
   listHelpSpec(): CommandSpec {
-    return listAgentsHelpSpec(this.deps());
+    // Only the providers: no workspace needed, so it also shows outside one.
+    return listAgentsSpec({ providers: this.providers });
   }
 
   /** `--help` and completion: the agents on disk now, their flags and what their values complete to. */

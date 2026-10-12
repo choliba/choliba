@@ -1,4 +1,4 @@
-import { frontmatterPage } from '../libs/docs-home';
+import { frontmatterPage } from '../libs/docs';
 
 describe('frontmatterPage', () => {
   it('writes the data as the frontmatter of an empty page, quoting what YAML would misread', () => {

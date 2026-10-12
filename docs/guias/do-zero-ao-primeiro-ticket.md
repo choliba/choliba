@@ -39,8 +39,9 @@ cp projects/minha-app/.env.example.json projects/minha-app/.env.json
 Tudo é opcional: num terminal, o comando pergunta o que faltar, e uma resposta vazia deixa o campo como `CHANGE_ME`
 para você preencher depois. Sem terminal, ou com `--no-input`, ele não pergunta nada.
 
-O `config.json` criado fica assim. O `baseURL` leva `http://`, e o `appDir` é a pasta da aplicação. Deixe ligado só o
-Chromium, o navegador de [Dependências](../primeiros-passos.md#dependências):
+O `config.json` criado fica assim. Cada campo está em [`config.json` do projeto](../referencia/config-json.md). O
+`baseURL` leva `http://`, e o `appDir` é a pasta da aplicação. Deixe ligado só o Chromium, o navegador de
+[Dependências](../primeiros-passos.md#dependências):
 
 ```json
 {
@@ -63,8 +64,9 @@ Chromium, o navegador de [Dependências](../primeiros-passos.md#dependências):
 }
 ```
 
-O `.env.json` guarda os dados que os testes usam em cada ambiente, como um usuário de teste. O `.gitignore` da pasta
-de trabalho o deixa fora do git. Troque os `CHANGE_ME`. Se a aplicação ainda não tem login, qualquer valor serve:
+O `.env.json` guarda os dados que os testes usam em cada ambiente, como um usuário de teste. O formato está em
+[`.env.json` do projeto](../referencia/env-json.md). O `.gitignore` da pasta de trabalho o deixa fora do git. Troque
+os `CHANGE_ME`. Se a aplicação ainda não tem login, qualquer valor serve:
 
 ```json
 {
@@ -76,7 +78,7 @@ de trabalho o deixa fora do git. Troque os `CHANGE_ME`. Se a aplicação ainda n
 ```
 
 Enquanto o `.env.json` não existir, o `check` marca o projeto com `✗`, e os agentes não rodam nele, nem com
-[`--dry-run`](../referencia/comandos.md#--dry-run).
+[`--dry-run`](../comandos/run.md#--dry-run).
 
 Se a aplicação precisa de preparo ou de alguém que a suba para os testes, diga como no ambiente do
 `config.json`. Os dois campos são opcionais:
@@ -87,7 +89,7 @@ Se a aplicação precisa de preparo ou de alguém que a suba para os testes, dig
   responder e a derruba no fim. Uma aplicação que você já subiu é usada como está.
 
 Os agentes nunca sobem a aplicação. Sem `start`, quem sobe é você, e um agente com a aplicação fora do ar não roda
-(veja [A aplicação do projeto](../referencia/comandos.md#a-aplicação-do-projeto)).
+(veja [A aplicação do projeto](../referencia/aplicacao-do-projeto.md)).
 
 4. Instale os agentes que escrevem o ticket, os testes e o código
 

@@ -1,4 +1,5 @@
-import type { CommandEntry, CommandSpec, FlagChoice, FlagSpec } from './interfaces/help.interface';
+import { commandPage, DOCS_URL } from './command-page';
+import type { CommandEntry, CommandExample, CommandSpec, FlagChoice, FlagSpec } from './interfaces/help.interface';
 
 /** Every line of `--help` fits in this many columns (a word longer than that stays whole). */
 export const HELP_WIDTH = 80;
@@ -113,11 +114,28 @@ function flagLabel(flag: FlagSpec): string {
   return `${prefix}${flag.name}${value}`;
 }
 
-/** `--help` text in the layout of `docker --help`: usage, description, command groups, options, footer. */
+/** The examples as `--help` lists them: what each does, then its command line under it. */
+function examplesBlock(examples: readonly CommandExample[]): string {
+  const blocks = examples.map(({ description, command }) =>
+    [...wrap(`${description}:`, HELP_WIDTH - 2).map((line) => `  ${line}`), ...wrapIndented(`    ${command}`)].join(
+      '\n',
+    ),
+  );
+  return `Exemplos:\n${blocks.join('\n\n')}`;
+}
+
+/**
+ * `--help` text in the layout of `docker --help`: usage, description, examples, command groups, options, footer and,
+ * for a `choliba` command, the address of its page in the command reference.
+ */
 export function formatHelp(spec: CommandSpec): string {
   const sections = [`Usage:  ${spec.usage}`];
   if (spec.description !== undefined) {
     sections.push(paragraph(spec.description));
+  }
+  const examples = spec.examples ?? [];
+  if (examples.length > 0) {
+    sections.push(examplesBlock(examples));
   }
   const entries = (spec.commands?.() ?? []).filter((entry) => entry.listed !== false);
   if (entries.length > 0) {
@@ -135,6 +153,10 @@ export function formatHelp(spec: CommandSpec): string {
   }
   if (spec.footer !== undefined) {
     sections.push(paragraph(spec.footer));
+  }
+  const page = commandPage(spec.usage);
+  if (page !== undefined) {
+    sections.push(`Mais em ${DOCS_URL}/${page}`);
   }
   return sections.join('\n\n');
 }

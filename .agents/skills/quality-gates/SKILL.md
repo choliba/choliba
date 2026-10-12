@@ -41,7 +41,8 @@ this setup, with the fix for each.
   `strictTypeChecked` rules (`no-unsafe-*`, `ban-ts-comment`, `no-non-null-assertion`) catch them. Parse
   untrusted data as `unknown` and narrow. A `@ts-expect-error` needs a written reason and a test.
 - **Repository scripts are tested too.** `scripts/*.ts` is typechecked and linted; logic worth testing goes in
-  `scripts/libs/` with specs in `scripts/__tests__/`, which Jest also runs. Coverage is measured only in the
+  `scripts/libs/` with specs in `scripts/__tests__/`, which Jest also runs. The documentation scripts live in
+  `scripts/libs/docs/` and are imported through its `index.ts`. Coverage is measured only in the
   packages, so a script without specs does not break the ratchet.
 - **Jest runs the tests; `bun test` does not count.** `bun test` is Bun's own runner. It executes the same
   spec files, so it looks fine, but it skips ts-jest, coverage thresholds and the ratchet. Use `bun run test`.

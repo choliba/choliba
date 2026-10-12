@@ -105,13 +105,15 @@ describe('choliba run agent and list agents', () => {
 });
 
 describe('runAgentEntry', () => {
-  it('lists `agent` with the spec read now, or with its usage alone when the workspace cannot be read', () => {
-    expect(runAgentEntry(() => ({ usage: 'lido' })).spec).toEqual({ usage: 'lido' });
+  it('lists `agent` with the spec read now, or with the reference spec when the workspace cannot be read', () => {
+    const reference = (): { usage: string } => ({ usage: 'referência' });
+
+    expect(runAgentEntry(() => ({ usage: 'lido' }), reference).spec).toEqual({ usage: 'lido' });
     expect(
       runAgentEntry(() => {
         throw new Error('sem pasta de trabalho');
-      }).spec,
-    ).toEqual({ usage: 'choliba run agent AGENT [OPTIONS] [TASK...]' });
+      }, reference).spec,
+    ).toEqual({ usage: 'referência' });
   });
 });
 

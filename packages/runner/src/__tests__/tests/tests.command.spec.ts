@@ -156,7 +156,7 @@ describe('TestsService.helpSpec — completion and description', () => {
   it('describes itself, examples after the first line', () =>
     withWorkspace(({ root }) => {
       expect(describeWords(specIn(root), []).split('\n')[0]).toBe(
-        'Roda os testes E2E dos projetos com o Playwright. Sem PROJECT, roda todos os projetos.',
+        'Roda os testes E2E dos projetos com o Playwright. Sem projeto, roda todos; com projeto:ticket, só os daquele ticket.',
       );
       return Promise.resolve();
     }));

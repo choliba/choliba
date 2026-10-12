@@ -6,9 +6,25 @@ import { setup, setupWorkspace, updatePackageWhenListed } from './setup';
 /** How `choliba --help` lists `setup`, and its own `--help`. */
 const ENTRY: CommandEntry = {
   name: 'setup',
-  description: 'Liga o autocomplete no bash (roda sozinho ao instalar com --trust)\n\nExemplo:\n  choliba setup',
+  description: 'Liga o autocomplete no bash (roda sozinho ao instalar com --trust)',
   group: 'Commands',
-  spec: { usage: 'choliba setup' },
+  spec: {
+    usage: 'choliba setup',
+    description:
+      'Prepara a pasta de trabalho na instalação e liga o autocomplete do bash para comandos, opções, agentes e projetos.',
+    examples: [{ description: 'Prepara a pasta de trabalho e liga o autocomplete', command: 'choliba setup' }],
+    details: [
+      'Roda sozinho na instalação (`bun add --trust`): prepara a pasta de trabalho (o que ele cria está em',
+      '[Primeiros passos](../primeiros-passos.md#choliba-setup)) e liga o autocomplete.',
+      '',
+      '### Autocomplete',
+      '',
+      'O Tab completa comandos, opções e nomes (agentes, projetos, tickets) em `bunx choliba`, `bun choliba` e',
+      '`bun chol:*`, no bash. Se o Tab não completar no terminal que já estava aberto, abra outro ou rode',
+      '`source ~/.bashrc`. O script fica em `~/.local/share/choliba/completion.bash`, carregado por um bloco do',
+      '`~/.bashrc` que começa com `# Autocomplete do choliba`; apague esse bloco para desligar.',
+    ].join('\n'),
+  },
 };
 
 /**
