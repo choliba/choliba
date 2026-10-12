@@ -42,7 +42,9 @@ codes, pt-BR): `cli-guidelines`.
   (`fail`, `usageError`) and the exit code (`exit`). A command reads its own words; it does not reparse the
   global flags, which `main.ts` already removed.
 - **`ShellCommand`**: `name` (the first word), optional `aliases`, `help(container)` (the root entries, omitted
-  when the command stays out of `--help`) and `run(container, io)`.
+  when the command stays out of `--help`) and `run(container, io)`. With `verb` (`run`, `new`, `list`), `name` is
+  the type after the verb (`{ verb: 'run', name: 'agent' }` is `choliba run agent`), and `help` gives its entry in
+  the verb's help.
 
 ## Steps for a new command
 
@@ -54,8 +56,9 @@ codes, pt-BR): `cli-guidelines`.
    Its own `--help` prints `entryHelp(entry)`.
 4. Register the service with `container.provide(TOKEN, (container) => new Service(...))` in the package's
    `ShellModule`, and add the command to that module's `commands`. The root lists it from `help` with no change
-   to the app, in the order of `CHOLIBA_ORDER` when the name is there. Check the first word does not shadow an
-   agent name (`cli-guidelines`). A command with no `help` does not appear in `--help` (`terminal`).
+   to the app, in the order of `CHOLIBA_ORDER` when the name is there. A command that is one more type of a verb
+   (something to run, create or list) takes that `verb` instead of a new first word (`cli-guidelines`, rule 16).
+   A command with no `help` does not appear in `--help` (`terminal`).
 5. `bun run check`. After a tool config change, `bash .agents/skills/quality-gates/scripts/verify.sh`.
 
 ## Adding an agent provider
@@ -67,15 +70,21 @@ codes, pt-BR): `cli-guidelines`.
    `--provider <id>`, `--<id>`, `auto`'s order and completion follow with no other change.
 3. Specs: its args and parser, and the registry spec, which the new provider must not break.
 
-## The root and the fallback
+## The root and the verbs
 
 At most one module has `root` (the app's `cholibaShell`): empty line and `help` print the sorted help,
-`version` prints `version()`, and `__complete`, `__describe` and `__entries` answer before any command lookup.
-`shell.has('__complete')` stays false: those words are not `ShellCommand`s.
+`help <words…>` the help of the command they name, `version` prints `version()`, and `__complete`, `__describe` and
+`__entries` answer before any command lookup. `shell.has('__complete')` stays false: those words are not
+`ShellCommand`s.
 
-At most one module has `fallback` (`agentsShell`). A first word that is no command runs it, with the whole
-command line. Without a fallback, that word is a usage error. Two roots, two fallbacks, or two commands claiming
-one word throw when the shell is built.
+The root declares its `verbs` (`CHOLIBA_VERBS`: `run`, `new`, `list`, each with its line in `--help`). The shell
+builds each verb from the commands that name it: `choliba run --help` lists their entries, `choliba run agent …`
+runs the `agent` type with `io.args('run', 'agent')`, and a missing or unknown type is a usage error that suggests
+the closest one. A first word that is neither a command nor a verb is a usage error with a suggestion too; there
+is no fallback. Two roots, a verb that is also a command, a command under a verb the root does not declare, or two
+commands claiming one word (or one type of a verb) throw when the shell is built.
+
+A spec that runs a package's verb commands without the app adds `VERBS_ROOT` from `@choliba/core/testing`.
 
 ## Tests
 
