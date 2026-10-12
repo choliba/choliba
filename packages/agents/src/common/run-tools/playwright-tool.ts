@@ -1,4 +1,4 @@
-import { resourceStarts } from '@choliba/core';
+import { existingResourceStarts } from '@choliba/core';
 
 /**
  * Where `playwright cli` writes the files it names itself and where `playwright trace` runs, unless
@@ -18,10 +18,22 @@ export interface PlaywrightScriptOptions {
    */
   readonly outputDir?: string;
   /**
-   * Where the script looks for `@playwright/test` from, in order: by default the running choliba (the installed
-   * `bin/choliba.js`, whose package has it), then this code's folder, as `resourceStarts` gives them.
+   * Where the script looks for `@playwright/test` from, in order. Absent, the starts that exist on this machine
+   * (`existingResourceStarts` of `sourceDir` and `argv`): the running choliba, then this code's folder.
    */
   readonly resolveFrom?: readonly string[];
+  /** The folder `__dirname` would be. This file's folder when absent. */
+  readonly sourceDir?: string;
+  /** The process argv the default starts are read from. `process.argv` when absent. */
+  readonly argv?: readonly string[];
+}
+
+/** The folders the script searches, in order: `resolveFrom`, or the starts that exist on this machine. */
+function scriptStarts(options: PlaywrightScriptOptions): readonly string[] {
+  if (options.resolveFrom !== undefined) {
+    return options.resolveFrom;
+  }
+  return existingResourceStarts(options.sourceDir ?? __dirname, options.argv);
 }
 
 /**
@@ -39,7 +51,7 @@ import { isAbsolute, join, resolve } from 'node:path';
 const command = ${JSON.stringify(options.command)};
 const workspaceRoot = ${JSON.stringify(options.workspaceRoot)};
 const outputDir = ${JSON.stringify(options.outputDir ?? null)};
-const starts = ${JSON.stringify(options.resolveFrom ?? resourceStarts(__dirname))};
+const starts = ${JSON.stringify(scriptStarts(options))};
 const node = Bun.which('node') ?? process.execPath;
 
 function playwrightCli() {

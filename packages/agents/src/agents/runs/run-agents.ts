@@ -18,6 +18,7 @@ import { formatStepFailure, stepExitCode } from '../steps/step-actions';
 import { formatAgentDetail, runList } from './agent-detail';
 import { formatDryRun, type DryRunInput } from './dry-run';
 import { runAgent } from './run-agent';
+import { wantsFooter } from './run-footer';
 import { planRunTools, readSandbox, type PlannedFile, type Sandbox, type SandboxConfigError } from '../../common';
 import { launchFor, realDisk, type Launch, type LaunchDisk } from './sandbox-launch';
 import {
@@ -190,7 +191,14 @@ async function runAndRecord(
       launch: (providerCommand) =>
         launchFor({ sandbox, command: providerCommand, request: providerRequest, files, config: deps.config }),
     },
-    { runner: deps.runner, stdout: deps.stdout, stderr: deps.stderr, signals: deps.signals, now: deps.now },
+    {
+      runner: deps.runner,
+      stdout: deps.stdout,
+      stderr: deps.stderr,
+      signals: deps.signals,
+      now: deps.now,
+      footer: wantsFooter(deps.stdout, deps.config),
+    },
   );
 
   return runAfter(command, mode, exitCode, deps);

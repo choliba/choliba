@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { findResource, locateResource, resourceStarts } from '../../config/index';
+import { existingResourceStarts, findResource, locateResource, resourceStarts } from '../../config/index';
 
 function withTree(run: (root: string) => void): void {
   const root = mkdtempSync(join(tmpdir(), 'resources-'));
@@ -22,6 +22,23 @@ describe('resourceStarts', () => {
 
       expect(resourceStarts('/src', ['bun', join(root, 'choliba')])).toEqual([join(root, 'bin'), '/src']);
       expect(resourceStarts('/src', ['bun'])).toEqual(['/src']);
+      expect(resourceStarts(root).at(-1)).toBe(root);
+    });
+  });
+});
+
+describe('existingResourceStarts', () => {
+  it('drops a source dir that is not on this machine and keeps both when they are, in order', () => {
+    withTree((root) => {
+      const bin = join(root, 'bin');
+      mkdirSync(bin);
+      writeFileSync(join(bin, 'choliba.js'), '');
+      const argv = ['bun', join(bin, 'choliba.js')];
+      const missing = join(root, 'built-on-ci');
+
+      expect(existingResourceStarts(missing, argv)).toEqual([bin]);
+      mkdirSync(missing);
+      expect(existingResourceStarts(missing, argv)).toEqual([bin, missing]);
     });
   });
 });

@@ -34,6 +34,14 @@ export function resourceStarts(sourceDir: string, argv: readonly string[] = proc
 }
 
 /**
+ * `resourceStarts` without the folders that are not on this machine. A bundle freezes `sourceDir` to where
+ * the code was built, and that path is written into a script the user runs: only a folder that exists belongs there.
+ */
+export function existingResourceStarts(sourceDir: string, argv: readonly string[] = process.argv): readonly string[] {
+  return resourceStarts(sourceDir, argv).filter((start) => existsSync(start));
+}
+
+/**
  * A file or folder the code ships with (`schemes`, `templates/ticket`…), looked up from the script
  * that is actually running, then from `sourceDir` (the caller's own `__dirname`); `undefined` when
  * neither finds it. Bundled, the script is the installed `bin/choliba.js` and its package holds the

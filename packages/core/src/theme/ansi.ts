@@ -75,3 +75,8 @@ export function colorForLabel(label: string): AnsiColor {
 export function paintAnsi(color: AnsiColor, text: string): string {
   return `${CODES[color]}${text}${RESET}`;
 }
+
+/** `text` in bold, the weight turned back right after (the color, if any, stays). */
+export function boldAnsi(text: string): string {
+  return `\x1B[1m${text}\x1B[22m`;
+}

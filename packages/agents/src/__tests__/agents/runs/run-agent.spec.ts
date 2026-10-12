@@ -11,7 +11,7 @@ import type { AgentProvider } from '../../../common/agent-provider';
 import type { PlanContentContext, ProviderRequest } from '../../../common/interfaces/provider.interface';
 import type { ResolvedProvider } from '../../../common/provider-registry';
 import type { RunAgentRequest } from '../../../agents/runs/run-agent';
-import { runAgent } from '../../../agents/runs/run-agent';
+import { everySecond, runAgent } from '../../../agents/runs/run-agent';
 import { erroringStream, fakeSpawner, streamFromChunks, throwingSpawner } from '../../helpers/fake-spawner';
 import { makeTmpDir } from '../../helpers/tmp';
 import { NO_PERMISSIONS } from '../../../common/agent-permissions';
@@ -672,6 +672,7 @@ describe('runAgent — launch', () => {
       launch: (command) => ({
         command: ['docker', 'run', 'img', ...command],
         env: { TOKEN: 't' },
+        place: { kind: 'docker', image: 'img', container: 'choliba-1' },
         paths: [],
         skipped: ['/etc/passwd', '/usr'],
       }),
@@ -683,5 +684,85 @@ describe('runAgent — launch', () => {
     expect(s.stderr.chunks.join('')).toContain(
       'No container, estes caminhos são da imagem e não vêm desta máquina: /etc/passwd, /usr.',
     );
+  });
+});
+
+describe('runAgent — footer', () => {
+  /** A run with the footer on, a clock that moves 1 s each time it is read, and the timer under the spec's control. */
+  async function withFooter(
+    lines: string,
+    launch?: RunAgentRequest['launch'],
+  ): Promise<{ code: number; out: string; err: string; ticks: (() => void)[]; stopped: number }> {
+    const s = setup(fakeSpawner({ stdout: streamFromChunks([lines]) }).spawner);
+    let seconds = 0;
+    const ticks: (() => void)[] = [];
+    let stopped = 0;
+    const code = await runAgent(s.request(launch === undefined ? {} : { launch }), {
+      runner: s.runner,
+      stdout: s.stdout,
+      stderr: s.stderr,
+      signals: s.signals,
+      now: () => new Date(Date.UTC(2026, 0, 1, 0, 0, seconds++)),
+      footer: true,
+      every: (_ms, tick) => {
+        ticks.push(tick);
+        return () => {
+          stopped += 1;
+        };
+      },
+    });
+    return { code, out: s.stdout.chunks.join(''), err: s.stderr.chunks.join(''), ticks, stopped };
+  }
+
+  it('keeps a table at the bottom while the session prints, then leaves the summary in its place', async () => {
+    const run = await withFooter(
+      eventLines([
+        { type: 'text', text: 'olá' },
+        { type: 'done', isError: false, text: 'ok' },
+      ]),
+      (command) => ({
+        command,
+        place: { kind: 'docker', image: 'choliba-agent', container: 'choliba-1' },
+        paths: [],
+        skipped: [],
+      }),
+    );
+
+    expect(run.code).toBe(0);
+    expect(run.out).toContain('[provider] claude · docker · choliba-agent · choliba-1\n');
+    expect(run.out).toMatch(/provider\s+sandbox\s+imagem\s+container\s+decorrido\n/);
+    expect(run.out).toMatch(/claude\s+docker\s+choliba-agent\s+choliba-1\s+00:00:0\d\n/);
+    expect(run.out).toContain('\x1B[3A\x1B[0J');
+    expect(run.out.indexOf('olá')).toBeGreaterThan(run.out.indexOf('decorrido'));
+    expect(run.out).toMatch(/claude · docker · decorrido 00:00:0\d · código 0\n$/);
+    expect(run.ticks).toHaveLength(1);
+    expect(run.stopped).toBe(1);
+  });
+
+  it('draws again on every tick, and still closes with the exit code when the session fails', async () => {
+    const run = await withFooter(eventLines([{ type: 'done', isError: true, text: 'falhou' }]));
+    const before = run.out.length;
+
+    run.ticks[0]?.();
+
+    expect(run.code).toBe(1);
+    expect(run.out).toMatch(/claude · local · decorrido 00:00:0\d · código 1\n$/);
+    expect(before).toBeGreaterThan(0);
+  });
+});
+
+describe('everySecond', () => {
+  it('calls the tick on its interval until stopped', () => {
+    jest.useFakeTimers();
+    try {
+      const tick = jest.fn();
+      const stop = everySecond(1000, tick);
+      jest.advanceTimersByTime(2500);
+      stop();
+      jest.advanceTimersByTime(2000);
+      expect(tick).toHaveBeenCalledTimes(2);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });

@@ -370,7 +370,43 @@ function runPlaywrightScript(
   }
 }
 
+/** The `starts` array a generated script records. */
+function embeddedStarts(content: string): readonly string[] {
+  const line = content.split('\n').find((candidate) => candidate.startsWith('const starts = '));
+  if (line === undefined) {
+    throw new Error('the script records no starts');
+  }
+  return JSON.parse(line.slice('const starts = '.length, -1)) as string[];
+}
+
 describe('the playwright scripts', () => {
+  it('records only the resource starts that exist, the running script first', () => {
+    const tmp = makeTmpDir('playwright-starts');
+    try {
+      const bin = join(tmp.path, 'bin');
+      mkdirSync(bin);
+      writeFileSync(join(bin, 'choliba.js'), '');
+      const argv = ['bun', join(bin, 'choliba.js')];
+      const missing = join(tmp.path, 'built-on-ci');
+
+      const onlyScript = playwrightScript({ command: 'cli', workspaceRoot: tmp.path, sourceDir: missing, argv });
+      expect(embeddedStarts(onlyScript)).toEqual([bin]);
+
+      mkdirSync(missing);
+      const both = playwrightScript({ command: 'cli', workspaceRoot: tmp.path, sourceDir: missing, argv });
+      expect(embeddedStarts(both)).toEqual([bin, missing]);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('records the starts of this process when none are given, and only folders that exist', () => {
+    const starts = embeddedStarts(playwrightScript({ command: 'cli', workspaceRoot: '/w' }));
+
+    expect(starts.length).toBeGreaterThan(0);
+    expect(starts.every((start) => existsSync(start))).toBe(true);
+  });
+
   it('cli runs the Playwright found next to choliba in the workspace root, with every file it names under the output folder', () => {
     const { status, call, workspace } = runPlaywrightScript(
       'cli',
