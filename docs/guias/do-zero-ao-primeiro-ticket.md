@@ -16,11 +16,14 @@ mkdir -p ~/dev/{minha-app,dev-tools}
 ```bash
 cd ~/dev/dev-tools
 echo '{ "name": "dev-tools", "private": true }' > package.json
-bun add --trust \
-  https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
+curl -LO https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
+curl -LO https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz.sha256
+sha256sum -c choliba-0.0.1-dev.tgz.sha256
+bun add --trust ./choliba-0.0.1-dev.tgz
 ```
 
-O `setup` roda sozinho com `--trust` e cria o projeto de exemplo `projects/exemplo`. O que mais ele cria está em
+Não instale se `sha256sum -c` não terminar em `OK`. O `--trust` autoriza o `postinstall`; o `setup` roda sozinho e
+cria o projeto de exemplo `projects/exemplo`. O que mais ele cria está em
 [Primeiros passos](../primeiros-passos.md#para-instalar). Os comandos abaixo rodam nessa pasta.
 
 3. Crie o projeto de teste da aplicação
