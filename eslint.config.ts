@@ -3,7 +3,7 @@ import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import eslintConfigPrettier from 'eslint-config-prettier';
 
-import { structureConfig } from './eslint.structure';
+import { sandboxBackendConfig, structureConfig } from './eslint.structure';
 
 export default defineConfig(
   {
@@ -46,6 +46,7 @@ export default defineConfig(
   },
   // O padrão do código (plano 035), só nos pacotes já migrados.
   ...structureConfig(),
+  ...sandboxBackendConfig(),
   // Sempre por último: desliga regras de estilo do ESLint que colidiriam
   // com a formatação do Prettier.
   eslintConfigPrettier,

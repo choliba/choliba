@@ -1,5 +1,11 @@
 import { CHOL_NETWORK, CHOL_SANDBOX, CHOL_SANDBOX_IMAGE } from '@choliba/core';
 
+import type { DiskFacts } from './container-mounts';
+import { DockerSandbox } from './docker-sandbox';
+import type { ContainerUser } from './docker-run';
+import { LocalSandbox } from './local-sandbox';
+import type { SandboxBackend } from './sandbox-backend';
+
 export type SandboxNetwork = 'isolated' | 'host';
 
 /** Where the provider runs: on this machine, or in a container that sees only what the agent may reach. */
@@ -41,4 +47,22 @@ export function readSandbox(config: Readonly<Record<string, string | undefined>>
 /** The credentials set in `config`, by name. */
 export function presentCredentials(config: Readonly<Record<string, string | undefined>>): readonly string[] {
   return SANDBOX_CREDENTIALS.filter((name) => (config[name] ?? '') !== '');
+}
+
+export interface SandboxBackendContext {
+  readonly user: () => ContainerUser;
+  readonly environment: Readonly<Record<string, string>>;
+  readonly disk: DiskFacts;
+}
+
+export function createSandboxBackend(sandbox: Sandbox, context: SandboxBackendContext): SandboxBackend {
+  if (sandbox.kind === 'local') return new LocalSandbox();
+  return new DockerSandbox({
+    image: sandbox.image,
+    network: sandbox.network,
+    user: context.user(),
+    credentialNames: presentCredentials(context.environment),
+    environment: context.environment,
+    disk: context.disk,
+  });
 }

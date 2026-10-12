@@ -110,7 +110,7 @@ function runDryRun(
 
 /** What `--dry-run` says about the container: the image, the mounts and the paths left to the image. */
 function containerOf(image: string, launch: Launch): NonNullable<DryRunInput['container']> {
-  return { image, mounts: launch.mounts, skipped: launch.skipped };
+  return { image, mounts: launch.paths, skipped: launch.skipped };
 }
 
 /**

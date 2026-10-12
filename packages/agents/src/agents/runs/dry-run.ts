@@ -3,7 +3,7 @@ import type { ProjectEnvironment } from '@choliba/projects';
 import type { AgentStep, McpDeclaration } from '../../common';
 import { describeStep } from '../steps/step-actions';
 import { runPlaceOf, wrapInstructions } from '../../common';
-import type { ContainerMount, PlannedFile, ProviderRequest } from '../../common';
+import type { PlannedFile, ProviderRequest, SandboxPath } from '../../common';
 
 /** What `--dry-run` shows: everything a real run of this command line would do, in order. */
 export interface DryRunInput {
@@ -24,7 +24,7 @@ export interface DryRunInput {
   /** `CHOL_SANDBOX=docker`: the image the provider runs in and what the container mounts. */
   readonly container?: {
     readonly image: string;
-    readonly mounts: readonly ContainerMount[];
+    readonly mounts: readonly SandboxPath[];
     /** What the agent may reach that the image keeps as its own (`isImagePath`). */
     readonly skipped: readonly string[];
   };
@@ -114,7 +114,7 @@ function agentEntry(input: DryRunInput, systemPrompt: string): Entry {
   };
 }
 
-const ACCESS_LABEL: Readonly<Record<ContainerMount['access'], string>> = {
+const ACCESS_LABEL: Readonly<Record<SandboxPath['access'], string>> = {
   read: 'leitura',
   write: 'escrita',
   hidden: 'oculto ',
