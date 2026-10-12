@@ -41,13 +41,4 @@ export {
   retiredTestPatterns,
   type RetiredCriterion,
 } from './ticket-superseded';
-export {
-  projectCompletions,
-  ticketSpecsEntry,
-  ticketsCliSpec,
-  ticketsFolderEntry,
-  type ProjectCompletions,
-} from './tickets-spec';
-export { runTicketSpecs } from './ticket-specs.command';
-export { TicketsService } from './tickets.service';
-export { runTicketsFolder } from './tickets-folder.command';
+export { projectCompletions, type ProjectCompletions } from './tickets-spec';

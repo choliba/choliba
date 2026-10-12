@@ -86,12 +86,12 @@ uma pasta vazia ao `check` verde, está em
 bunx choliba check
 
 # o ticket, os testes e a implementação
-bunx choliba product-owner --project minha-app --type story "a busca aceita filtro por data"
-bunx choliba test-writer --project minha-app --ticket minha-app-1
-bunx choliba implementer --project minha-app --ticket minha-app-1
+bunx choliba run agent product-owner --project minha-app --type story "a busca aceita filtro por data"
+bunx choliba run agent test-writer --project minha-app --ticket minha-app-1
+bunx choliba run agent implementer --project minha-app --ticket minha-app-1
 
 # os testes do ticket, a qualquer momento
-bunx choliba tests minha-app:1
+bunx choliba run tests minha-app:1
 ```
 
 Qualquer comando de agente aceita [`--dry-run`](docs/referencia/comandos.md#--dry-run), que mostra o que ele faria, na

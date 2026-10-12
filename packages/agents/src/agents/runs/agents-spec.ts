@@ -7,6 +7,7 @@ import { diffBaseOf } from '../steps/step-registry';
 import type { ProviderRegistry } from '../../common';
 import {
   CLI_PROGRAM_NAME,
+  LIST_PROGRAM_NAME,
   MODE_CHOICES,
   PREPARE_FLAGS,
   PROJECT_FLAGS,
@@ -173,15 +174,21 @@ export function agentCommandSpec(
   };
 }
 
+const HELP_FLAG: FlagSpec = { name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true };
+
+/** `--agents-dir`, completing folders. */
+function agentsDirFlag(context: Pick<AgentsCliSpecContext, 'providers'>): readonly FlagSpec[] {
+  return runFlagDefinitions(context.providers)
+    .filter((flag) => flag.name === '--agents-dir')
+    .map(({ valueName: _valueName, ...rest }): FlagSpec => ({ ...rest, value: { name: 'dir', suggest: () => FILES } }));
+}
+
 /**
- * The whole `agents` CLI as one spec, rebuilt on every run from the agents found on disk — so
+ * The whole `run agent` CLI as one spec, rebuilt on every run from the agents found on disk — so
  * `--help` and shell completion always list the agents, models and refs that exist right now.
  */
 export function agentsCliSpec(context: AgentsCliSpecContext): CommandSpec {
-  const agentsDirFlag = runFlagDefinitions(context.providers)
-    .filter((flag) => flag.name === '--agents-dir')
-    .map(({ valueName: _valueName, ...rest }): FlagSpec => ({ ...rest, value: { name: 'dir', suggest: () => FILES } }));
-  const helpFlag: FlagSpec = { name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true };
+  const helpFlag = HELP_FLAG;
 
   const commands = (): readonly CommandEntry[] => [
     ...context.agents.map((agent) => ({
@@ -191,20 +198,22 @@ export function agentsCliSpec(context: AgentsCliSpecContext): CommandSpec {
       spec: agentCommandSpec(agent, context),
       asFlag: true,
     })),
-    {
-      name: 'list',
-      description: 'Lista os agentes com os detalhes de cada um',
-      group: 'Commands',
-      spec: { usage: `${CLI_PROGRAM_NAME} list [OPTIONS]`, flags: agentsDirFlag },
-    },
-    { name: 'help', description: 'Mostra esta ajuda', group: 'Commands', spec: { usage: `${CLI_PROGRAM_NAME} help` } },
   ];
 
   return {
-    usage: `${CLI_PROGRAM_NAME} [OPTIONS] COMMAND [TASK...]`,
-    description: `Executa os agentes da pasta de trabalho (.choliba/agents/<nome>/) por um provider (${context.providers.choices().join(', ')}).`,
+    usage: `${CLI_PROGRAM_NAME} AGENT [OPTIONS] [TASK...]`,
+    description: `Executa um agente da pasta de trabalho (.choliba/agents/<nome>/) por um provider (${context.providers.choices().join(', ')}).`,
     commands,
     flags: [helpFlag],
-    footer: `Run '${CLI_PROGRAM_NAME} COMMAND --help' for more information on a command.`,
+    footer: `Run '${CLI_PROGRAM_NAME} AGENT --help' for more information on an agent.`,
+  };
+}
+
+/** `choliba list agents`: the agents with their details. */
+export function listAgentsSpec(context: Pick<AgentsCliSpecContext, 'providers'>): CommandSpec {
+  return {
+    usage: `${LIST_PROGRAM_NAME} [OPTIONS]`,
+    description: 'Lista os agentes da pasta de trabalho com os detalhes de cada um.',
+    flags: [...agentsDirFlag(context), HELP_FLAG],
   };
 }

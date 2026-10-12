@@ -26,3 +26,21 @@ export function runShell(
   }
   return shell.run();
 }
+
+/**
+ * A root with the verbs the app's packages register their commands under (`run`, `new`, `list`), for a spec that runs
+ * a package's commands without the app: `runShell([coreShell, projectsShell, VERBS_ROOT], platform)`.
+ */
+export const VERBS_ROOT: ShellModule = {
+  name: 'verbs-root',
+  root: {
+    spec: { usage: 'choliba COMMAND [ARGS]' },
+    version: () => 'choliba 0.0.0',
+    verbs: [
+      { name: 'run', description: 'Roda' },
+      { name: 'new', description: 'Cria' },
+      { name: 'list', description: 'Lista' },
+    ],
+  },
+  commands: [],
+};

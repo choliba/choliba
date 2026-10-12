@@ -31,4 +31,5 @@ export {
   scriptsHelpSpec,
   scriptSummary,
 } from './scripts-help';
+export { closest, unknownWordMessage } from './suggest';
 export { wantsHelp } from './wants-help';

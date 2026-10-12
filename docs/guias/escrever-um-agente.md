@@ -55,7 +55,7 @@ permissions:
     read: ['${PROJECT_DIR}/', '${APP_DIR}/']
     write: ['${PROJECT_DIR}/tests/']
     execute:
-      '${CHOL_ROOT}/': [bunx choliba tests]
+      '${CHOL_ROOT}/': [bunx choliba run tests]
       '${APP_DIR}/': [git log, git diff]
     tools:
       playwright-cli: ['*']

@@ -2,6 +2,7 @@ import type { ParsedRunArgs } from '../../../agents/runs/agents-flags';
 import {
   AgentsArgsError,
   parseAgentsArgs as parseWith,
+  parseListArgs,
   runFlagDefinitions,
   USAGE,
 } from '../../../agents/runs/agents-flags';
@@ -25,21 +26,26 @@ describe('parseAgentsArgs — help', () => {
   });
 });
 
-describe('parseAgentsArgs — list', () => {
-  it('parses list with no flags', () => {
-    expect(parseAgentsArgs(['list'])).toEqual({ kind: 'list', agentsDir: undefined });
-  });
-
-  it('parses list --agents-dir', () => {
-    expect(parseAgentsArgs(['list', '--agents-dir', '/somewhere'])).toEqual({ kind: 'list', agentsDir: '/somewhere' });
+describe('parseListArgs', () => {
+  it('parses list agents with no flags, with --agents-dir and with --help', () => {
+    expect(parseListArgs([])).toEqual({ kind: 'list', agentsDir: undefined });
+    expect(parseListArgs(['--agents-dir', '/somewhere'])).toEqual({ kind: 'list', agentsDir: '/somewhere' });
+    expect(parseListArgs(['-h'])).toEqual({ kind: 'help' });
+    expect(parseListArgs(['--agents-dir', '/x', '--help'])).toEqual({ kind: 'help' });
   });
 
   it('rejects a missing value for --agents-dir', () => {
-    expect(() => parseAgentsArgs(['list', '--agents-dir'])).toThrow(/Missing value for --agents-dir/);
+    expect(() => parseListArgs(['--agents-dir'])).toThrow(/Missing value for --agents-dir/);
   });
 
-  it('rejects any other flag for list', () => {
-    expect(() => parseAgentsArgs(['list', '--bogus'])).toThrow(/Unknown argument "--bogus" for "list"/);
+  it('rejects any other flag', () => {
+    expect(() => parseListArgs(['--bogus'])).toThrow(
+      "opção desconhecida: --bogus.\nRun 'choliba list agents --help' for usage.",
+    );
+  });
+
+  it('takes list as an agent name under run agent', () => {
+    expect(parseAgentsArgs(['list'])).toMatchObject({ kind: 'run', command: 'list' });
   });
 });
 
@@ -212,7 +218,7 @@ describe('parseAgentsArgs — run', () => {
 
   it('rejects an unrecognized flag', () => {
     expect(() => parseAgentsArgs(['developer', '--bogus=1'])).toThrow(
-      "unknown flag: --bogus=1\n\nUsage:  choliba agents developer [OPTIONS] [TASK...]\n\nRun 'choliba agents developer --help' for more information",
+      "unknown flag: --bogus=1\n\nUsage:  choliba run agent developer [OPTIONS] [TASK...]\n\nRun 'choliba run agent developer --help' for more information",
     );
   });
 
@@ -270,6 +276,6 @@ describe('RUN_FLAGS', () => {
   });
 
   it('points argument errors at --help', () => {
-    expect(USAGE).toBe("Run 'choliba agents --help' for usage.");
+    expect(USAGE).toBe("Run 'choliba run agent --help' for usage.");
   });
 });

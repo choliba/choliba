@@ -1,6 +1,6 @@
 import { fail } from './tests-error';
 
-/** What `choliba tests` was asked to run: `project[:ticket][/path]`, as typed. */
+/** What `choliba run tests` was asked to run: `project[:ticket][/path]`, as typed. */
 export interface TestsTarget {
   readonly project: string;
   /** The ticket selector as typed: one ticket, a list, a glob or a range; empty for the whole project. */

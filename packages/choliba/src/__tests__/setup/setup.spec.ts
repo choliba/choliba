@@ -279,7 +279,7 @@ describe('addScripts', () => {
       const scripts = (JSON.parse(fs.readFileSync(file, 'utf8')) as { scripts: Record<string, string> }).scripts;
       expect(scripts['chol:tests']).toBe('meu');
       expect(scripts['build']).toBe('x');
-      expect(scripts['chol:project:list']).toBe('choliba projects list');
+      expect(scripts['chol:project:list']).toBe('choliba list projects');
       expect(scripts['chol:project:create']).toBeUndefined();
       expect(scripts['chol:install']).toBeUndefined();
       expect(addScripts(root)).toEqual([]);
@@ -313,6 +313,9 @@ describe('removeRetiredScripts', () => {
             'chol:ticket:create': 'choliba projects create-ticket',
             'chol:install': 'choliba install',
             'chol:project:list': 'choliba projects list-projects',
+            'chol:agents': 'choliba agents',
+            'chol:projects': 'choliba projects',
+            'chol:tests': 'choliba tests --list',
             build: 'x',
           },
         }),
@@ -324,9 +327,15 @@ describe('removeRetiredScripts', () => {
         'chol:ticket:create',
         'chol:install',
         'chol:project:list',
+        'chol:agents',
+        'chol:projects',
       ]);
       const scripts = (JSON.parse(fs.readFileSync(file, 'utf8')) as { scripts: Record<string, string> }).scripts;
-      expect(scripts).toEqual({ 'chol:playwright-trace': 'meu trace', build: 'x' });
+      expect(scripts).toEqual({
+        'chol:playwright-trace': 'meu trace',
+        'chol:tests': 'choliba tests --list',
+        build: 'x',
+      });
       expect(removeRetiredScripts(root)).toEqual([]);
     });
   });
@@ -407,7 +416,7 @@ describe('packageListsCholiba / updatePackage / updatePackageWhenListed', () => 
       );
       updatePackage(root);
       const renamed = JSON.parse(fs.readFileSync(file, 'utf8')) as { scripts: Record<string, string> };
-      expect(renamed.scripts['chol:project:list']).toBe('choliba projects list');
+      expect(renamed.scripts['chol:project:list']).toBe('choliba list projects');
       expect(await updatePackageWhenListed(root, () => Promise.resolve())).toBe(true);
 
       fs.writeFileSync(file, JSON.stringify({ name: 'g' }));

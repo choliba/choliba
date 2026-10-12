@@ -1,5 +1,5 @@
 import { coreShell, createShell } from '@choliba/core';
-import { fakePlatform } from '@choliba/core/testing';
+import { fakePlatform, VERBS_ROOT } from '@choliba/core/testing';
 
 import { AGENT_PROVIDERS, agentsShell } from '../..';
 import {
@@ -79,7 +79,7 @@ describe('ProviderRegistry — the names and descriptions --provider shows', () 
 
 describe('AGENT_PROVIDERS', () => {
   it('gives claude and cursor, in that order, once', () => {
-    const { container } = createShell(fakePlatform(), [coreShell, agentsShell]);
+    const { container } = createShell(fakePlatform(), [coreShell, agentsShell, VERBS_ROOT]);
 
     expect(container.get(AGENT_PROVIDERS).choices()).toEqual(['auto', 'claude', 'cursor']);
     expect(container.get(AGENT_PROVIDERS)).toBe(container.get(AGENT_PROVIDERS));

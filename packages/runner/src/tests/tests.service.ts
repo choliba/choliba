@@ -10,10 +10,10 @@ export type TestsHooks = Pick<
   'spawnPlaywright' | 'promptOpenReport' | 'openHtmlReport' | 'stdinIsTTY'
 >;
 
-/** What `choliba tests` reads from the process: the environment and where it writes. */
+/** What `choliba run tests` reads from the process: the environment and where it writes. */
 export type TestsPlatform = Pick<Platform, 'env' | 'stdout' | 'stderr'>;
 
-/** `choliba tests`: the workspace's E2E tests through the runner's Playwright. */
+/** `choliba run tests`: the workspace's E2E tests through the runner's Playwright. */
 export class TestsService {
   constructor(
     private readonly config: ConfigService,
@@ -24,7 +24,7 @@ export class TestsService {
     private readonly theme: ThemeService,
   ) {}
 
-  /** Runs the command line after `choliba tests`; resolves with the exit code. */
+  /** Runs the command line after `choliba run tests`; resolves with the exit code. */
   async run(argv: readonly string[]): Promise<number> {
     const { env, stdout, stderr } = this.platform;
     const result = await runTests({

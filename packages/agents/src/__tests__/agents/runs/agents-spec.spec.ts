@@ -3,7 +3,12 @@ import { join } from 'node:path';
 import { complete, formatHelp, type GitRunner } from '@choliba/core';
 
 import { loadAgent } from '../../../agents/agent-loader';
-import { agentCommandSpec, agentsCliSpec, flagValueSuggestions } from '../../../agents/runs/agents-spec';
+import {
+  agentCommandSpec,
+  agentsCliSpec,
+  flagValueSuggestions,
+  listAgentsSpec,
+} from '../../../agents/runs/agents-spec';
 import { PROVIDERS } from '../../helpers/providers';
 
 const FIXTURES = join(__dirname, '..', '..', 'fixtures', 'agents');
@@ -46,7 +51,6 @@ describe('agentsCliSpec', () => {
     });
     expect(complete(spec, ['echo', '--agents-dir', ''])).toEqual({ kind: 'files' });
     expect(complete(spec, ['echo', '--add-dir', ''])).toEqual({ kind: 'files' });
-    expect(complete(spec, ['list', '--agents-dir', ''])).toEqual({ kind: 'files' });
     expect(complete(spec, ['echo', '--model', 'g'])).toEqual({ kind: 'values', values: ['gpt-4o'] });
     expect(complete(spec, ['echo', '--help', '--'])).toEqual({ kind: 'values', values: [] });
     expect(complete(spec, ['-h', ''])).toEqual({ kind: 'values', values: [] });
@@ -140,5 +144,15 @@ describe('agentsCliSpec', () => {
 
     const unknown = formatHelp(agentCommandSpec({ ...withTickets, ticketTypes: ['nope'] }, context));
     expect(unknown.replace(/\s+/g, ' ')).toContain('nope Tipo sem template em packages/projects/templates/ticket/.');
+  });
+});
+
+describe('listAgentsSpec', () => {
+  it('takes --agents-dir, completing folders, and --help', () => {
+    const spec = listAgentsSpec({ providers: PROVIDERS });
+
+    expect(spec.usage).toBe('choliba list agents [OPTIONS]');
+    expect(complete(spec, ['--agents-dir', ''])).toEqual({ kind: 'files' });
+    expect(complete(spec, ['--'])).toEqual({ kind: 'values', values: ['--agents-dir', '--help'] });
   });
 });

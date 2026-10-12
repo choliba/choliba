@@ -90,7 +90,7 @@ defini-la no `.env` ou no ambiente é erro.
 permissions:
   allow:
     execute:
-      '${CHOL_ROOT}/': [bunx choliba tests] # os comandos rodam a partir da raiz
+      '${CHOL_ROOT}/': [bunx choliba run tests] # os comandos rodam a partir da raiz
 ```
 
 ### `${CHOL_AGENTS_DIR}`
@@ -286,7 +286,7 @@ Quando uma ação falha:
 Nos dois casos a falha sai tratada no terminal: qual ação, o que ela rodou, o código e o fim da saída do comando.
 
 ```
-✗ execute.before 1/2 falhou — run: bunx choliba tests tt:TT-1 --expect red (código 2)
+✗ execute.before 1/2 falhou — run: bunx choliba run tests tt:TT-1 --expect red (código 2)
   <as últimas linhas da saída do comando>
   O agente não foi executado.
 ```

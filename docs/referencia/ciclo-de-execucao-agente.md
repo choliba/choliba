@@ -2,7 +2,7 @@
 
 > O ciclo de um comando de agente: as três fases, o que o choliba faz sem modelo e o que fica com o provider.
 
-Um comando (`bunx choliba <agente> …`) passa por três fases. Nas fases 1 e 3 quem executa é o **choliba**, sem
+Um comando (`bunx choliba run agent <agente> …`) passa por três fases. Nas fases 1 e 3 quem executa é o **choliba**, sem
 modelo. Na fase 2 executa o **agente**: o provider (Claude Code ou Cursor) rodando o modelo, só dentro das
 permissões do `agent.yaml`.
 

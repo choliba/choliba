@@ -1,11 +1,12 @@
 // The checks a run passes before anything is prepared; each writes why it failed on stderr.
 
+import { unknownWordMessage } from '@choliba/core';
 import { loadProjectSettings, type ProjectSettings } from '@choliba/projects';
 
-import { loadAgent } from '../agent-loader';
+import { listAgents, loadAgent } from '../agent-loader';
 import { agentFlagNames } from './agents-spec';
 import { resolveInvocation } from '../invocation-registry';
-import { CLI_PROGRAM_NAME, PREPARE_FLAGS, USAGE } from './agents-flags';
+import { LIST_PROGRAM_NAME, PREPARE_FLAGS, USAGE } from './agents-flags';
 import type { AgentDefinition } from '../../common';
 import type { AgentInvocation } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
@@ -40,8 +41,9 @@ export function resolveAgentForCommand(
     return undefined;
   }
   if (command === undefined) {
+    const names = listAgents(agentsDir).map((agent) => agent.name);
     deps.stderr.write(
-      `Unknown command "${parsed.command}". Run "${CLI_PROGRAM_NAME} list" to see available agents.\n${USAGE}\n`,
+      `${unknownWordMessage('agente desconhecido', parsed.command, names)}\nVeja os agentes com '${LIST_PROGRAM_NAME}'.\n`,
     );
     return undefined;
   }

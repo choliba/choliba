@@ -16,10 +16,10 @@ um container e uma tabela de comandos, sem decorator e sem reflection.
 | Pacote              | O que tem                                                                                                                                                                   |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/core`     | a plataforma (o processo e o Bun como valores), a configuração da pasta de trabalho, o tema de cores, o help, o autocomplete, a casca e o runner de processos (`terminal/`) |
-| `packages/projects` | projetos e tickets: onde ficam, criar, conferir; o comando `projects`                                                                                                       |
-| `packages/runner`   | os testes E2E pelo Playwright, os portões red/green e o reporter; o comando `tests`                                                                                         |
-| `packages/agents`   | os agentes: o `agent.yaml`, a montagem de uma execução (`runs/`), os steps, os providers; o comando `agents` e `choliba <agente>`                                           |
-| `packages/choliba`  | o app: `main.ts`, a raiz do help, `check`, `setup`, `lint`, `format`; o pacote publicado                                                                                    |
+| `packages/projects` | projetos e tickets: onde ficam, criar, conferir; `new project` e `list projects`                                                                                            |
+| `packages/runner`   | os testes E2E pelo Playwright, os portões red/green e o reporter; `run tests`                                                                                               |
+| `packages/agents`   | os agentes: o `agent.yaml`, a montagem de uma execução (`runs/`), os steps, os providers; `run agent` e `list agents`                                                       |
+| `packages/choliba`  | o app: `main.ts`, a raiz (os verbos e o help), `check`, `setup`, `lint`, `format`; o pacote publicado                                                                       |
 
 ## Invariantes
 
@@ -39,12 +39,13 @@ um container e uma tabela de comandos, sem decorator e sem reflection.
 
 ## O caminho de um comando
 
-`choliba projects list`: o `main.ts` tira as flags globais (`--no-color`), monta a plataforma e o runtime e chama
+`choliba list projects`: o `main.ts` tira as flags globais (`--no-color`), monta a plataforma e o runtime e chama
 `run()`. A raiz trata linha vazia, `help`/`--help`/`-h`, `version`/`--version`, `__complete`, `__describe` e
-`__entries`. A primeira palavra `projects` cai no `projectsCommand`, que pede o `ProjectsService` ao container; o
-service chama as funções de `projects/project.ts` com a pasta de `LocationsService`; o comando escreve o resultado
-e o código de saída pelo `ShellIo`. Uma primeira palavra que não é comando (`choliba product-owner …`) cai no
-fallback do `agentsShell`, que a roda como `choliba agents product-owner …`. Sem fallback, a palavra é erro de uso.
+`__entries`. A primeira palavra `list` é um verbo da raiz, e a segunda, `projects`, é o tipo que o pacote
+`projects` registrou nele (`listProjectsCommand`, com `verb: 'list'`). O comando pede o `ProjectsService` ao
+container; o service chama as funções de `projects/project.ts` com a pasta de `LocationsService`; o comando escreve o
+resultado e o código de saída pelo `ShellIo`. Uma palavra que não é comando, verbo ou tipo (`choliba product-owner`)
+é erro de uso, com a sugestão do nome mais parecido; não há fallback.
 
 Um agente roda num só ponto, `runAgent` (`agents/runs/run-agent.ts`), que inicia o processo do provider. Com
 `CHOL_SANDBOX=docker`, o lançador (`agents/runs/sandbox-launch.ts`) troca esse comando por um `docker run` cujas
@@ -70,15 +71,18 @@ Detalhes e as receitas (um comando novo, um provider novo, um spec): skill
   `ThemeService`) a partir de `PLATFORM`, que o `createShell` registra com a plataforma que o `main.ts` montou. A
   fábrica de outro pacote pede o que precisa, como `container.get(CONFIG)`. O `Runtime` do app entra pelo token
   `RUNTIME`, e só o `cholibaShell` o registra.
-- **Uma raiz por app.** O `cholibaShell` tem `root`: o texto do `--help`, a linha do `--version`, a ordem das
-  seções (`Commands`, `Agents`) e a ordem dos comandos (`CHOLIBA_ORDER`). Dois módulos com `root`, dois com
-  `fallback`, ou dois comandos com a mesma primeira palavra, é erro na hora de montar a casca.
-- **Já na casca, todos.** `agents` (os providers são a lista de classes em `agentsShell`; o fallback é
-  `choliba <agente>`), `projects`, `tests` (o `runner` só procura a configuração do Playwright quando os testes
+- **Uma raiz por app.** O `cholibaShell` tem `root`: o texto do `--help`, a linha do `--version`, a ordem dos
+  comandos (`CHOLIBA_ORDER`) e os verbos (`CHOLIBA_VERBS`: `run`, `new`, `list`). Cada pacote registra os seus tipos
+  sob um verbo (`run agent`, `run tests`, `new project`, `list agents`, `list projects`), e a casca monta o verbo com
+  eles. Dois módulos com `root`, um verbo que também é comando, um comando sob um verbo que a raiz não tem, ou dois
+  comandos com a mesma palavra, é erro na hora de montar a casca.
+- **Já na casca, todos.** `run agent` e `list agents` (os providers são a lista de classes em `agentsShell`),
+  `new project` e `list projects`, `run tests` (o `runner` só procura a configuração do Playwright quando os testes
   rodam), os comandos do app e o `terminal run`.
 
 Nos specs, `runShell(modules, platform, [replace(TOKEN, fake)])` monta a casca desses módulos, aplica os falsos e
-devolve o código de saída.
+devolve o código de saída. O spec de um pacote cujos comandos ficam sob um verbo acrescenta `VERBS_ROOT`, uma raiz
+com os verbos do app.
 
 ## `.choliba/` e `.agents/`
 
