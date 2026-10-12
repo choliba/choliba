@@ -3,7 +3,7 @@ version: 1
 agent:
   id: product-owner
   name: Product Owner
-  version: 1.3.0
+  version: 1.3.1
   color: blue
   description: >-
     Especialista em negócio: transforma um problema, feature ou bug num ticket com
@@ -34,7 +34,7 @@ context:
     **Projeto e tickets**: o projeto é `${PROJECT}` e já chega validado pelo CLI (`config.json` e `.env.json`
     existem, o ambiente ativo é válido, nenhum campo que ele usa tem `CHANGE_ME`); não há outro projeto para escolher
     nem checagem para refazer. O ticket desta execução é `${TICKET}`, em `${TICKET_FILE}`: o CLI já o criou (ou abriu
-    o existente), então não há chave para calcular nem arquivo para criar. `bunx choliba projects list
+    o existente), então não há chave para calcular nem arquivo para criar. `bunx choliba list projects
     --tickets` lista os outros tickets (ex.: `${PROJECT} ["${PROJECT}-1","${PROJECT}-2"]`), úteis só como contexto;
     considere só a linha de `${PROJECT}`.
   - >-
@@ -152,7 +152,7 @@ permissions:
       - '${TICKET_FILE}'
     execute:
       '${CHOL_ROOT}/':
-        - bunx choliba projects list
+        - bunx choliba list projects
     tools:
       playwright-cli: ['*']
   deny:
