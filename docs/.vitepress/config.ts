@@ -7,6 +7,7 @@ import { defineConfig, type MarkdownEnv } from 'vitepress';
 import {
   buildSidebar,
   checkDescription,
+  faviconLink,
   githubSlug,
   googleAnalyticsTags,
   outsideLink,
@@ -17,6 +18,7 @@ import {
   robotsTxt,
   shareTags,
   SITE_URL,
+  websiteJsonLd,
 } from '../../scripts/libs/docs';
 import { description as DESCRIPTION } from './home';
 
@@ -42,7 +44,7 @@ export default defineConfig({
   // The index of `docs/` is its README, which GitHub shows. On the site it is the first page of the
   // documentation (`/indice`); the home is index.md.
   rewrites: { 'README.md': 'indice.md' },
-  head: [['link', { rel: 'icon', type: 'image/svg+xml', href: '/owl-logo-choliba.svg' }]],
+  head: [faviconLink()],
   sitemap: { hostname: SITE_URL },
   // Each page's description is the quote under its title (scripts/libs/docs/share.ts), which also becomes its
   // `<meta name="description">`; a page without one, or with one too short or too long, stops the build. The home,
@@ -69,6 +71,7 @@ export default defineConfig({
         url: pageUrl(pageData.relativePath),
         published: PUBLISHED,
       }),
+      ...(page === 'index.md' ? [websiteJsonLd(TITLE, pageUrl('index.md'))] : []),
     ];
   },
   buildEnd(siteConfig) {
