@@ -1,2 +1,10 @@
 [run]
 silent = true
+
+# O scanner (@bun-security-scanner/osv) não fica ativo aqui. Com ele ligado, o
+# bun install aborta enquanto vite 5 (CVE-2026-53571) e braces 3.0.3
+# (CVE-2026-93687) não tiverem release corrigida. O CI grava o bloco abaixo
+# só depois do install e roda `bun pm scan`.
+#
+# [install.security]
+# scanner = "@bun-security-scanner/osv"

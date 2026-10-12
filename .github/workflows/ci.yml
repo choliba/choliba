@@ -35,6 +35,18 @@ jobs:
       - name: Instalar dependências
         run: bun install --frozen-lockfile
 
+      # O bloco do scanner entra só aqui: no bunfig.toml ele abortaria este install.
+      - name: CVEs altas ou críticas no lockfile
+        run: |
+          printf '\n[install.security]\nscanner = "@bun-security-scanner/osv"\n' >> bunfig.toml
+          scan="$RUNNER_TEMP/osv-scan.txt"
+          set +e
+          bun pm scan >"$scan" 2>&1
+          status=$?
+          set -e
+          cat "$scan"
+          bun scripts/cve-gate.ts "$scan" "$status"
+
       # Título e corpo de PR são texto não confiável: entram só por variável de ambiente.
       - name: Título, corpo, mensagens e autoria dos commits sem rastro de agente/LLM
         env:
