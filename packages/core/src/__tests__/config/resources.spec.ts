@@ -65,6 +65,30 @@ describe('locateResource / findResource', () => {
     });
   });
 
+  it('looks in the directory the bundle loaded when the script and the source do not have it', () => {
+    withTree((root) => {
+      const shipped = join(root, 'dist');
+      const source = join(root, 'frozen-source');
+      mkdirSync(join(shipped, 'schemes'), { recursive: true });
+      mkdirSync(source);
+      const holder = globalThis as { __CHOLIBA_SHIPPED_DIR__?: string };
+      try {
+        holder.__CHOLIBA_SHIPPED_DIR__ = '';
+        expect(locateResource('schemes', source, ['bun'])).toBeUndefined();
+        holder.__CHOLIBA_SHIPPED_DIR__ = source;
+        expect(locateResource('schemes', source, ['bun'])).toBeUndefined();
+        expect(resourceStarts(source, ['bun'])).toEqual([source]);
+        expect(existingResourceStarts(source, ['bun'])).toEqual([source]);
+        holder.__CHOLIBA_SHIPPED_DIR__ = shipped;
+        expect(locateResource('schemes', source, ['bun'])).toBe(join(shipped, 'schemes'));
+        expect(findResource('schemes', source, ['bun'])).toBe(join(shipped, 'schemes'));
+        expect(resourceStarts(source, ['bun'])).toEqual([source]);
+      } finally {
+        delete holder.__CHOLIBA_SHIPPED_DIR__;
+      }
+    });
+  });
+
   it('gives undefined when found nowhere, and findResource the path next to the source dir', () => {
     withTree((root) => {
       expect(locateResource('nope/here', root, ['bun'])).toBeUndefined();

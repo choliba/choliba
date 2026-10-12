@@ -1,10 +1,11 @@
-// Builds the installable `choliba` package into `dist/`: one bundle for the CLI (every @choliba/*
-// package inside it), the runner files Playwright loads by path (its config, reporter and global
-// hooks, which Playwright runs under Node), the resources the code finds next to itself (agent
-// schemes, project and ticket templates) and a package.json listing only the external dependencies.
-// Nothing is published: `bun pm pack` inside `dist/` gives a tarball to install locally.
-import { chmodSync, cpSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+// Builds the installable `choliba` package into `dist/`: one bundle for the bin and every public subpath
+// (`choliba`, `choliba/core`, …), shared code emitted once, the declaration files next to each entry, the
+// resources the code finds from the loaded file (agent schemes, project and ticket templates) and a
+// package.json listing only the external dependencies. Nothing is published: `bun pm pack` inside `dist/`
+// gives a tarball to install locally. `CHOLIBA_BUILD_OUT` redirects the output (the build spec uses it).
+import { execFileSync } from 'node:child_process';
+import { chmodSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, join, relative } from 'node:path';
 
 interface Manifest {
   readonly name: string;
@@ -14,10 +15,104 @@ interface Manifest {
   readonly dependencies?: Readonly<Record<string, string>>;
 }
 
+interface ShippedExport {
+  readonly subpath: string;
+  readonly js: string;
+  readonly types: string;
+  readonly declaration: string;
+  readonly kind: 'star' | 'default';
+}
+
 const packageDir = join(import.meta.dir, '..');
 const packagesDir = join(packageDir, '..');
-const out = join(packageDir, 'dist');
+const repoRoot = join(packagesDir, '..');
+const entriesDir = join(packageDir, 'scripts', 'entries');
 const BUNDLED = ['agents', 'core', 'projects', 'runner'];
+
+/** Set from the loaded file before its imports, so a lookup during import sees this package, not the build machine. */
+const SHIPPED_DIR = 'globalThis.__CHOLIBA_SHIPPED_DIR__ = decodeURIComponent(new URL(".", import.meta.url).pathname);';
+
+const ENTRY_FILES = [
+  'bin/choliba.ts',
+  'index.ts',
+  'core.ts',
+  'core/testing.ts',
+  'agents.ts',
+  'projects.ts',
+  'runner.ts',
+  'runner/env.ts',
+  'runner/pages/base-page.ts',
+  'eslint.ts',
+  'playwright.config.ts',
+  'reporters/detailed-ticket-reporter.ts',
+  'shared/global-setup.ts',
+  'shared/global-teardown.ts',
+];
+
+const SHIPPED: readonly ShippedExport[] = [
+  { subpath: '.', js: './index.js', types: 'index.d.ts', declaration: 'types/choliba/src/index.d.ts', kind: 'star' },
+  { subpath: './core', js: './core.js', types: 'core.d.ts', declaration: 'types/core/src/index.d.ts', kind: 'star' },
+  {
+    subpath: './core/testing',
+    js: './core/testing.js',
+    types: 'core/testing.d.ts',
+    declaration: 'types/core/src/testing/index.d.ts',
+    kind: 'star',
+  },
+  {
+    subpath: './agents',
+    js: './agents.js',
+    types: 'agents.d.ts',
+    declaration: 'types/agents/src/index.d.ts',
+    kind: 'star',
+  },
+  {
+    subpath: './projects',
+    js: './projects.js',
+    types: 'projects.d.ts',
+    declaration: 'types/projects/src/index.d.ts',
+    kind: 'star',
+  },
+  {
+    subpath: './runner',
+    js: './runner.js',
+    types: 'runner.d.ts',
+    declaration: 'types/runner/src/index.d.ts',
+    kind: 'star',
+  },
+  {
+    subpath: './runner/env',
+    js: './runner/env.js',
+    types: 'runner/env.d.ts',
+    declaration: 'types/runner/shared/env.d.ts',
+    kind: 'star',
+  },
+  {
+    subpath: './runner/pages/base-page',
+    js: './runner/pages/base-page.js',
+    types: 'runner/pages/base-page.d.ts',
+    declaration: 'types/runner/shared/pages/base-page.d.ts',
+    kind: 'star',
+  },
+  {
+    subpath: './eslint',
+    js: './eslint.js',
+    types: 'eslint.d.ts',
+    declaration: 'types/choliba/src/tooling/eslint-config.d.ts',
+    kind: 'default',
+  },
+];
+
+/** Longer prefixes first, so `@choliba/core/testing` is not rewritten as the `core` prefix plus a suffix. */
+const SPECIFIERS: readonly (readonly [string, string])[] = [
+  ['@choliba/core/testing', 'choliba/core/testing'],
+  ['@choliba/runner/shared/pages/base-page', 'choliba/runner/pages/base-page'],
+  ['@choliba/runner/shared/env', 'choliba/runner/env'],
+  ['@choliba/core', 'choliba/core'],
+  ['@choliba/agents', 'choliba/agents'],
+  ['@choliba/projects', 'choliba/projects'],
+  ['@choliba/runner', 'choliba/runner'],
+];
 
 function manifest(dir: string): Manifest {
   return JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')) as Manifest;
@@ -31,72 +126,139 @@ function externalDependencies(): Record<string, string> {
       if (!version.startsWith('workspace:')) dependencies[name] = version;
     }
   }
-  return Object.fromEntries(Object.entries(dependencies).sort(([a], [b]) => a.localeCompare(b)));
+  return Object.fromEntries(Object.entries(dependencies).sort(([left], [right]) => left.localeCompare(right)));
 }
 
-async function bundle(config: Parameters<typeof Bun.build>[0], what: string): Promise<void> {
-  const result = await Bun.build(config);
-  if (!result.success) {
-    for (const log of result.logs) console.error(log);
-    throw new Error(`build de ${what} falhou`);
+async function bundle(outDir: string, external: readonly string[]): Promise<void> {
+  const result = await Bun.build({
+    entrypoints: ENTRY_FILES.map((file) => join(entriesDir, file)),
+    root: entriesDir,
+    outdir: outDir,
+    target: 'node',
+    format: 'esm',
+    splitting: true,
+    external: [...external],
+    banner: SHIPPED_DIR,
+  });
+  if (result.success) return;
+  for (const log of result.logs) console.error(log);
+  throw new Error('build do pacote falhou');
+}
+
+function ensureBunShebang(file: string): void {
+  const text = readFileSync(file, 'utf8');
+  const withShebang = text.startsWith('#!') ? text : `#!/usr/bin/env bun\n${text}`;
+  writeFileSync(file, withShebang);
+  chmodSync(file, 0o755);
+}
+
+function copyResources(outDir: string): void {
+  cpSync(join(packagesDir, 'agents', 'schemes'), join(outDir, 'schemes'), { recursive: true });
+  cpSync(join(packagesDir, 'projects', 'templates'), join(outDir, 'templates'), { recursive: true });
+  cpSync(join(packageDir, 'templates', 'workspace'), join(outDir, 'templates', 'workspace'), { recursive: true });
+  cpSync(join(packageDir, 'templates', 'example'), join(outDir, 'templates', 'example'), { recursive: true });
+}
+
+function runTsc(config: string, what: string): void {
+  try {
+    execFileSync('bun', ['x', 'tsc', '-p', config, '--pretty', 'false'], { cwd: repoRoot, stdio: 'pipe' });
+  } catch (error) {
+    const failed = error as { stdout?: Buffer; stderr?: Buffer };
+    const detail = `${failed.stdout?.toString() ?? ''}${failed.stderr?.toString() ?? ''}`;
+    throw new Error(`declarações de ${what} falharam\n${detail}`, { cause: error });
   }
 }
 
-const dependencies = externalDependencies();
-const external = Object.keys(dependencies);
-rmSync(out, { recursive: true, force: true });
+function emitPackage(name: string, outDir: string, include: readonly string[]): void {
+  const dir = join(packagesDir, name);
+  const config = join(dir, 'tsconfig.emit.json');
+  const source = {
+    extends: './tsconfig.json',
+    compilerOptions: {
+      noEmit: false,
+      declaration: true,
+      emitDeclarationOnly: true,
+      outDir: join(outDir, 'types', name),
+      rootDir: '.',
+    },
+    include,
+    exclude: ['src/__tests__'],
+  };
+  try {
+    writeFileSync(config, `${JSON.stringify(source, null, 2)}\n`);
+    runTsc(config, name);
+  } finally {
+    rmSync(config, { force: true });
+  }
+}
 
-await bundle(
-  {
-    entrypoints: [join(packageDir, 'src', 'main.ts')],
-    outdir: join(out, 'bin'),
-    naming: 'choliba.js',
-    target: 'bun',
-    format: 'esm',
-    external,
-  },
-  'bin/choliba.js',
-);
-chmodSync(join(out, 'bin', 'choliba.js'), 0o755);
+function emitDeclarations(outDir: string): void {
+  emitPackage('core', outDir, ['src']);
+  emitPackage('agents', outDir, ['src']);
+  emitPackage('projects', outDir, ['src']);
+  emitPackage('runner', outDir, ['src', 'shared', 'reporters', 'playwright.config.ts']);
+  emitPackage('choliba', outDir, ['src']);
+}
 
-const runnerDir = join(packagesDir, 'runner');
-await bundle(
-  {
-    entrypoints: [
-      'playwright.config.ts',
-      'reporters/detailed-ticket-reporter.ts',
-      'shared/global-setup.ts',
-      'shared/global-teardown.ts',
-    ].map((file) => join(runnerDir, file)),
-    root: runnerDir,
-    outdir: out,
-    target: 'node',
-    format: 'esm',
-    external,
-  },
-  'runner',
-);
+function declarationFiles(dir: string): string[] {
+  const found: string[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      found.push(...declarationFiles(path));
+      continue;
+    }
+    if (entry.name.endsWith('.d.ts')) found.push(path);
+  }
+  return found;
+}
 
-// `choliba/eslint`: the config a workspace's eslint.config.js imports, loaded by ESLint under Node.
-await bundle(
-  {
-    entrypoints: [join(packageDir, 'src', 'tooling', 'eslint-config.ts')],
-    outdir: out,
-    naming: 'eslint.js',
-    target: 'node',
-    format: 'esm',
-    external,
-  },
-  'eslint.js',
-);
+function rewriteSpecifiers(source: string): string {
+  return SPECIFIERS.reduce((text, [from, to]) => {
+    return text.replaceAll(`'${from}'`, `'${to}'`).replaceAll(`"${from}"`, `"${to}"`);
+  }, source);
+}
 
-cpSync(join(packagesDir, 'agents', 'schemes'), join(out, 'schemes'), { recursive: true });
-cpSync(join(packagesDir, 'projects', 'templates'), join(out, 'templates'), { recursive: true });
-cpSync(join(packageDir, 'templates', 'workspace'), join(out, 'templates', 'workspace'), { recursive: true });
-cpSync(join(packageDir, 'templates', 'example'), join(out, 'templates', 'example'), { recursive: true });
+/** `nodenext` resolves a relative type import only when it names the `.js` it stands in for, and a folder only through its `index.js`. */
+function jsSpecifier(file: string, specifier: string): string {
+  if (specifier.endsWith('.js') || specifier.endsWith('.json')) return specifier;
+  const target = join(dirname(file), specifier);
+  if (existsSync(`${target}.d.ts`)) return `${specifier}.js`;
+  if (existsSync(join(target, 'index.d.ts'))) return `${specifier}/index.js`;
+  return `${specifier}.js`;
+}
 
-const own = manifest(packageDir);
-const root = manifest(join(packagesDir, '..'));
+function rewriteRelative(source: string, file: string): string {
+  return source.replaceAll(/from (['"])(\.\.?\/[^'"]+)\1/g, (_match, quote: string, specifier: string) => {
+    return `from ${quote}${jsSpecifier(file, specifier)}${quote}`;
+  });
+}
+
+function rewriteDeclarations(outDir: string): void {
+  for (const file of declarationFiles(join(outDir, 'types'))) {
+    const rewritten = rewriteRelative(rewriteSpecifiers(readFileSync(file, 'utf8')), file);
+    writeFileSync(file, rewritten);
+  }
+}
+
+function declarationSpecifier(wrapper: string, declaration: string): string {
+  const specifier = relative(dirname(wrapper), declaration)
+    .replaceAll('\\', '/')
+    .replace(/\.d\.ts$/, '');
+  const rooted = specifier.startsWith('.') ? specifier : `./${specifier}`;
+  return `${rooted}.js`;
+}
+
+function writeWrappers(outDir: string): void {
+  for (const item of SHIPPED) {
+    const wrapper = join(outDir, item.types);
+    const specifier = declarationSpecifier(wrapper, join(outDir, item.declaration));
+    const line =
+      item.kind === 'default' ? `export { default } from '${specifier}';\n` : `export * from '${specifier}';\n`;
+    mkdirSync(dirname(wrapper), { recursive: true });
+    writeFileSync(wrapper, line);
+  }
+}
 
 /**
  * The version of this build: the package.json one (the base, `0.0.1-dev`), or `CHOL_VERSION` from the release
@@ -111,28 +273,53 @@ function buildVersion(base: string): string {
   return version;
 }
 
-const version = buildVersion(own.version ?? '0.0.0');
-const gitHead = process.env['CHOL_GIT_HEAD'];
-writeFileSync(
-  join(out, 'package.json'),
-  `${JSON.stringify(
-    {
-      name: own.name,
-      version,
-      ...(gitHead === undefined || gitHead === '' ? {} : { gitHead }),
-      description: own.description,
-      license: root.license,
-      type: 'module',
-      bin: { choliba: 'bin/choliba.js' },
-      exports: { './eslint': './eslint.js', './package.json': './package.json' },
-      // Builds the workspace (folders, .env, .gitignore) and turns bash completion on. Bun runs it only
-      // for trusted packages: `bun add --trust choliba`, or `bunx choliba setup` afterwards.
-      scripts: { postinstall: 'bun bin/choliba.js setup' },
-      engines: { bun: '>=1.2' },
-      dependencies,
-    },
-    null,
-    2,
-  )}\n`,
-);
-console.log(`choliba ${version} em ${out}`);
+function exportMap(): Record<string, { readonly types: string; readonly import: string } | string> {
+  const exports: Record<string, { readonly types: string; readonly import: string } | string> = {};
+  for (const item of SHIPPED) {
+    exports[item.subpath] = { types: `./${item.types}`, import: item.js };
+  }
+  exports['./package.json'] = './package.json';
+  return exports;
+}
+
+function writeManifest(outDir: string, dependencies: Record<string, string>): string {
+  const own = manifest(packageDir);
+  const root = manifest(repoRoot);
+  const version = buildVersion(own.version ?? '0.0.0');
+  const gitHead = process.env['CHOL_GIT_HEAD'];
+  writeFileSync(
+    join(outDir, 'package.json'),
+    `${JSON.stringify(
+      {
+        name: own.name,
+        version,
+        ...(gitHead === undefined || gitHead === '' ? {} : { gitHead }),
+        description: own.description,
+        license: root.license,
+        type: 'module',
+        bin: { choliba: 'bin/choliba.js' },
+        exports: exportMap(),
+        // Builds the workspace (folders, .env, .gitignore) and turns bash completion on. Bun runs it only
+        // for trusted packages: `bun add --trust choliba`, or `bunx choliba setup` afterwards.
+        scripts: { postinstall: 'bun bin/choliba.js setup' },
+        engines: { bun: '>=1.2' },
+        dependencies,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  return version;
+}
+
+const outDir = process.env['CHOLIBA_BUILD_OUT'] ?? join(packageDir, 'dist');
+const dependencies = externalDependencies();
+rmSync(outDir, { recursive: true, force: true });
+await bundle(outDir, Object.keys(dependencies));
+ensureBunShebang(join(outDir, 'bin', 'choliba.js'));
+copyResources(outDir);
+emitDeclarations(outDir);
+rewriteDeclarations(outDir);
+writeWrappers(outDir);
+const version = writeManifest(outDir, dependencies);
+console.log(`choliba ${version} em ${outDir}`);
