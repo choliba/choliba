@@ -30,7 +30,8 @@ import {
 } from './run-checks';
 import type { PreparedRun, RunAgentsCliDeps, RunArgs, RunContext } from './run-context';
 import { errorMessage, projectsDir } from './run-context';
-import { prepareRun } from './run-preparation';
+import { definitionChangeReport, definitionChanges, definitionSnapshot } from './definition-snapshot';
+import { definitionDirectories, prepareRun } from './run-preparation';
 import { specContext } from './spec-context';
 import type { TicketTarget } from './ticket-run';
 import { createPlannedTicket, finishTicket, ticketVars } from './ticket-run';
@@ -306,6 +307,12 @@ async function appFor(settings: ProjectSettings | undefined, deps: RunAgentsCliD
   }
 }
 
+/** Definitions changed during the provider: say which files, exit 1, and leave them as they are. */
+function definitionChangeExit(changes: readonly string[], deps: RunAgentsCliDeps): number {
+  deps.stderr.write(definitionChangeReport(changes));
+  return 1;
+}
+
 /** From the steps before the agent to the ticket's check after it, with the application already up. */
 async function runPrepared(
   context: RunContext,
@@ -330,6 +337,8 @@ async function runPrepared(
     deps.stderr.write(`${errorMessage(error)}\n`);
     return 1;
   }
+  const directories = definitionDirectories(context);
+  const before = definitionSnapshot(directories);
   const exitCode = await runAndRecord(
     prepared.command,
     context.mode,
@@ -339,7 +348,9 @@ async function runPrepared(
     deps,
     sandbox,
   );
-  return finishTicket(ticketTarget, createdContent, context.mode, exitCode, deps.stderr);
+  const changes = definitionChanges(before, definitionSnapshot(directories));
+  const guarded = changes.length === 0 ? exitCode : definitionChangeExit(changes, deps);
+  return finishTicket(ticketTarget, createdContent, context.mode, guarded, deps.stderr);
 }
 
 export async function runAgentsCli(argv: readonly string[], deps: RunAgentsCliDeps): Promise<number> {

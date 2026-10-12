@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 12/10/2026 00:12:59 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 12/10/2026 00:19:34 — não editar manualmente.
 
 ## Resumo
 
@@ -16,7 +16,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 68 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 69 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -36,6 +36,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/runs/agent-detail.ts](packages/agents/src/agents/runs/agent-detail.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/agents-flags.ts](packages/agents/src/agents/runs/agents-flags.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/agents-spec.ts](packages/agents/src/agents/runs/agents-spec.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/definition-snapshot.ts](packages/agents/src/agents/runs/definition-snapshot.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/delegation-guard.ts](packages/agents/src/agents/runs/delegation-guard.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/dry-run.ts](packages/agents/src/agents/runs/dry-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/event-render.ts](packages/agents/src/agents/runs/event-render.ts)|100.00|100.00|100.00|100.00

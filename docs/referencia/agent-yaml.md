@@ -24,8 +24,10 @@ completo e o passo a passo estão em [Escrevendo um agente](../guias/escrever-um
 | `steps.<modo>.before` / `.after`  | não         | nenhum              | Ações do choliba antes e depois do agente, em cada modo (veja [Steps](#steps)).                                                                                                                                                                                                                 |
 
 Regras de permissão: veja [Segurança](seguranca.md). Em toda execução o choliba acrescenta `deny.write` e
-`deny.delete` das pastas de agentes, skills e MCPs; uma exceção `!` dentro delas é recusada. Delegar a um
-subagente não é uma permissão: é negado a todo agente, sem chave no `agent.yaml`.
+`deny.delete` das pastas de agentes, skills e MCPs; uma exceção `!` dentro delas é recusada. No fim,
+compara o sha256 de cada arquivo dessas pastas: se algum foi criado, alterado ou apagado, a execução
+termina com código 1 e lista os caminhos, sem desfazer. Delegar a um subagente não é uma permissão: é
+negado a todo agente, sem chave no `agent.yaml`.
 
 ### Exceções no deny
 

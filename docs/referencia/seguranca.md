@@ -34,7 +34,9 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
   skills e MCPs (`--agents-dir` ou `CHOL_AGENTS_DIR`, `CHOL_SKILLS_DIR`, `CHOL_MCPS_DIR`), além do que o agente
   declara. O prompt, as regras do provider e o container herdam essa negação. Uma exceção `!` de escrita ou
   exclusão dentro delas para a execução: nenhuma run reabre essas pastas. A leitura de cada skill declarada
-  continua liberada.
+  continua liberada. Depois do provider, o choliba compara o sha256 de cada arquivo dessas pastas com o de
+  antes: arquivo criado, alterado ou apagado encerra a execução com código 1 e a lista dos caminhos, e nada
+  é desfeito.
 - **`--add-dir <pasta>`** libera a leitura de uma pasta a mais só naquela execução (pode repetir), como se ela
   estivesse em `allow.read`; o `deny` do agente continua valendo por cima dela.
 - **Execução por diretório.** Os comandos rodam a partir da pasta da execução, dentro do workspace (por isso

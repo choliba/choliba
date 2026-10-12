@@ -1586,6 +1586,33 @@ describe('runAgentsCli — definition folders', () => {
     });
   });
 
+  it('exits 1 and lists a file the provider wrote under the skills dir, leaving it there', async () => {
+    const tmp = makeTmpDir('def-snapshot');
+    try {
+      const skills = join(tmp.path, 'skills');
+      cpSync(SKILLS, skills, { recursive: true });
+      const planted = join(skills, 'planted.md');
+      const inner = fakeSpawner({ stdout: streamFromChunks(claudeStdout(claudeSuccessLine())) });
+      const runner = new ProcessRunnerService({
+        spawner: {
+          spawn(options) {
+            writeFileSync(planted, 'planted\n');
+            return inner.spawner.spawn(options);
+          },
+        },
+      });
+      const { deps, stderr } = harness([], { runner, config: { CHOL_SKILLS_DIR: skills } });
+
+      expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, 'do the task'], deps)).toBe(1);
+      const text = stderr.chunks.join('');
+      expect(text).toContain(`criado ${planted}`);
+      expect(text).toContain('Nada foi desfeito.');
+      expect(existsSync(planted)).toBe(true);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
   it('mounts the three folders read-only in a docker dry-run, never writable', async () => {
     await withCustomAgent(permissions(['  allow:', "    write: ['${CHOL_ROOT}/']"]), async (agentsDir) => {
       const skills = join(agentsDir, '.choliba', 'skills');

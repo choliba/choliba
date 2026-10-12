@@ -252,7 +252,7 @@ function extraReads(skills: readonly SkillSummary[], parsed: RunArgs, deps: RunA
 }
 
 /** The folders a run loads definitions from: agents (the dir this run uses), skills and MCPs. */
-function definitionDirectories(context: RunContext): readonly string[] {
+export function definitionDirectories(context: RunContext): readonly string[] {
   const { deps } = context;
   return [context.agentsDir, resolveSkillsDir(deps.config, deps.repoRoot), resolveMcpsDir(deps.config, deps.repoRoot)];
 }
