@@ -26,8 +26,7 @@ pacote é uma biblioteca com uma entrada (`@choliba/<pkg>`, o `ShellModule` incl
 cujo `main.ts` só monta a plataforma e o runtime e chama a casca (skill `cli-shell`).
 
 Skills de desenvolvimento do projeto em `.agents/skills/`: `plans`, `add-workspace-package`, `quality-gates`, `coverage-ratchet`,
-`git-workflow`, `object-calisthenics`, `cli-shell`, `code-standard`, `cli-guidelines`; e `documentation`, que também é do agente
-`docs-updater` e por isso fica em `.choliba/skills/`. Quando usar cada uma: a `description` do `SKILL.md` dela; o padrão de cada uma e o que o confere: tabela "Padrões do
+`git-workflow`, `object-calisthenics`, `cli-shell`, `code-standard`, `cli-guidelines`, `documentation`. Quando usar cada uma: a `description` do `SKILL.md` dela; o padrão de cada uma e o que o confere: tabela "Padrões do
 projeto" do [`CONTRIBUTING.md`](CONTRIBUTING.md). Como o código é organizado: [`ARCHITECTURE.md`](ARCHITECTURE.md). `.agents/` é só o
 ferramental de quem desenvolve o choliba. `.choliba/` é o que vai para o usuário, no layout de uma pasta de trabalho:
 os agentes oficiais em `.choliba/agents/` e as skills deles em `.choliba/skills/`, que o choliba também roda daqui.

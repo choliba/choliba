@@ -57,10 +57,12 @@ function buildArgs(request: ProviderRequest): readonly string[] {
   // from there: it walks from the git root down to the process cwd (the run dir) and, with no git
   // repo, only that cwd, otherwise falling back to `~/.cursor/cli-config.json`. The run's cli.json
   // is written into the run dir so its allow/deny lists replace the home ones.
+  // `--disable-auto-update`: the CLI runs at the version the user (or the image) installed; a run never swaps it.
   const args: string[] = [
     '-p',
     prompt,
     '--trust',
+    '--disable-auto-update',
     '--output-format',
     'stream-json',
     '--workspace',

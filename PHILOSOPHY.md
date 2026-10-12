@@ -53,8 +53,6 @@ Um agente deve ter uma responsabilidade clara. No fluxo de um ticket:
 - o `test-writer` transforma os critérios de aceite em testes;
 - o `implementer` altera a aplicação para satisfazer esses testes.
 
-Fora desse fluxo, o `docs-updater` mantém a documentação do próprio choliba coerente com o código.
-
 Essas separações são intencionais.
 
 Um agente que define o requisito, escreve sua própria verificação e modifica a implementação tem liberdade demais

@@ -54,8 +54,7 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
   o dado não fechar o bloco. É uma camada a mais: o modelo ainda pode ser enganado, e quem limita o agente são as
   permissões e o container.
 - **`steps` não passam pelas permissões.** Os passos são executados pelo choliba, fora da sessão do modelo: um
-  passo pode fazer o que o modelo não pode (o `docs-updater` proíbe o modelo de rodar o Prettier e o roda no
-  `steps.execute.after`). Veja [Steps](agent-yaml.md#steps).
+  passo pode fazer o que o modelo não pode (rodar um comando que as permissões do agente negam, por exemplo). Veja [Steps](agent-yaml.md#steps).
 
 ## O container
 
@@ -91,7 +90,8 @@ MCP que ele suba.
   `claude setup-token`, usa a assinatura e só chama o modelo) ou `ANTHROPIC_API_KEY`, e `CURSOR_API_KEY`. O agente
   consegue lê-la, como consegue fora do container: prefira o token, que não serve para mais nada.
 - **A imagem** traz o Node e os navegadores do Playwright da versão do choliba, o Bun, o Claude Code e o Cursor CLI,
-  este numa versão fixa e baixado como pacote conferido pelo sha256, sem rodar script de instalação. Construa-a uma vez na raiz do repositório do choliba: `docker build -f docker/agent.Dockerfile -t choliba-agent .`
+  este numa versão fixa e baixado como pacote conferido pelo sha256, sem rodar script de instalação, e que não se
+  atualiza durante a run (o choliba passa `--disable-auto-update` ao Cursor, também fora do container). Construa-a uma vez na raiz do repositório do choliba: `docker build -f docker/agent.Dockerfile -t choliba-agent .`
   (outra imagem: `CHOL_SANDBOX_IMAGE`).
 - O [`--dry-run`](comandos.md#--dry-run) mostra o container e cada caminho que ele vê.
 
