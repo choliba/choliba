@@ -39,6 +39,28 @@ describe('Table', () => {
     ]);
   });
 
+  it('draws column rules, crossing the horizontal ones, and counts them in the width', () => {
+    const head = [[th('provider'), th('modelo')]];
+    const bodies = [[[td('cursor'), td('Auto')]], [[td('claude'), td('sonnet')]]];
+
+    expect(new Table({ rules: 'all', head, bodies }).render(80)).toEqual([
+      'provider │ modelo',
+      '─────────┼───────',
+      'cursor   │ Auto',
+      '─────────┼───────',
+      'claude   │ sonnet',
+    ]);
+    expect(new Table({ rules: 'cols', head, bodies }).render(80)).toEqual([
+      'provider │ modelo',
+      'cursor   │ Auto',
+      'claude   │ sonnet',
+    ]);
+    const narrow = new Table({ rules: 'cols', cols: [{}, { shrink: true, minWidth: 3 }], head, bodies });
+    expect(narrow.fits(14)).toBe(true);
+    expect(narrow.render(14)).toEqual(['provider │ mo…', 'cursor   │ Au…', 'claude   │ so…']);
+    expect(narrow.fits(13)).toBe(false);
+  });
+
   it('fits a width only cutting the columns marked to shrink', () => {
     const table = new Table({
       cols: [{}, { shrink: true, minWidth: 3 }],
