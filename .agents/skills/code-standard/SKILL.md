@@ -21,10 +21,15 @@ written here, with its reason.
   runner's tsconfig has `node` and `jest` only). `createBunProcessSpawner` takes a structural function type for
   that reason; `main.ts` is the one place that reads `Bun.spawn`.
 - **Extra entries**, only these: `@choliba/core/testing` (fakes for specs) and the runner's entries that projects'
-  specs import (public surface).
-- **App** (`bin`): `src/main.ts`, wiring only. Nothing imports an app. It builds the `Platform` and the `Runtime`
-  and calls `createCholibaShell(platform, runtime).run()`. `--version` uses `findManifest` and `versionLine` from
-  `@choliba/core`.
+  specs import (`@choliba/runner/shared/env`, `@choliba/runner/shared/pages/base-page`).
+- **App** (`bin`): `src/main.ts`, wiring only. It builds the `Platform` and the `Runtime` and calls
+  `createCholibaShell(platform, runtime).run()`. `src/index.ts` exports that shell (`createCholibaShell`,
+  `cholibaShell`, `CHOLIBA_SHELL` and the `Runtime` type) and does nothing on import. Nothing else imports
+  `main.ts`. `--version` uses `findManifest` and `versionLine` from `@choliba/core`.
+- **Installed package.** `choliba` republishes each of those entries as a subpath: `choliba`, `choliba/core`,
+  `choliba/core/testing`, `choliba/agents`, `choliba/projects`, `choliba/runner`, `choliba/runner/env`,
+  `choliba/runner/pages/base-page` and `choliba/eslint`. Experimental until 1.0. Code in this repository keeps
+  importing `@choliba/<pkg>`.
 
 ## 2. Layers of a package's `src/`
 
@@ -63,14 +68,14 @@ rejected):
   `<id>-agent.provider.ts`. A file of functions has no type suffix (`ticket-superseded.ts`).
 - **Functions**: `domain-action.ts`, the domain first (`ticket-superseded.ts`, `project-settings.ts`,
   `delete-tool.ts`, `theme-defaults.ts`).
-- **One word, one meaning**: `command` is only a CLI command; an agent turned into what `choliba <agent>` runs
+- **One word, one meaning**: `command` is only a CLI command; an agent turned into what `choliba run agent` runs
   is an **invocation** (`AgentInvocation`). The same holds for `provider`, `help`, `tool` and `registry`.
 
 ## 4. CLI commands
 
-- **One command per file**: `<action>.command.ts` exports a `ShellCommand` (`name`, `help`, `run`) for
-  `choliba <subject> <action>`. A command that only groups others takes the subject's name
-  (`projects.command.ts` → `choliba projects`).
+- **One command per file**: `<subject>-<action>.command.ts` exports a `ShellCommand` (`name`, `help`, `run`), for
+  `choliba <verb> <type>` or for a command of its own word: `agents-run.command.ts` → `choliba run agent`,
+  `projects-list.command.ts` → `choliba list projects`, `check.command.ts` → `choliba check`.
 - **Its CLI spec** lives in the command file as a `CommandEntry`; when it is long, in a function file next to it,
   `<action>-spec.ts`. There is no `*.help.ts`. `help(container)` returns the entries the root lists.
 
@@ -78,13 +83,12 @@ rejected):
 
 - `core/src/help/`: formatting (`formatHelp`, `entryHelp`, `formatRows`) and completion (`complete`, `describe`,
   `formatSuggestions`). A command's `help` returns `CommandEntry`s; the root sorts them.
-- The app's root is the `root` of `cholibaShell`: `spec`, `version()`, `groups` and `order`. It handles an empty
-  line, `help`/`--help`/`-h`, `version`/`--version`, `__complete`, `__describe` and `__entries` before the command
-  table. A first word that is not a command goes to the one module with `fallback` (`choliba <agent>`), or is a
-  usage error when there is none.
-- An entry with `listed: false` is completed and described but not listed by `--help` (the `choliba <agent>`
-  shortcuts). A command with no `help` is absent from both (`terminal`). Nothing outside `core` lists commands or
-  prints help.
+- The app's root is the `root` of `cholibaShell`: `spec`, `version()`, `groups`, `order` and `verbs`. It handles an
+  empty line, `help [words…]`/`--help`/`-h`, `version`/`--version`, `__complete`, `__describe` and `__entries`
+  before the command table. A first word that is neither a command nor a verb is a usage error that suggests the
+  closest one.
+- An entry with `listed: false` is completed and described but not listed by `--help`. A command with no `help` is
+  absent from both (`terminal`). Nothing outside `core` lists commands or prints help.
 
 ## 6. Language
 

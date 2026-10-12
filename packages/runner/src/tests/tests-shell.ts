@@ -5,7 +5,7 @@ import { testsCommand } from './tests.command';
 import { RUNNER_ROOT, TESTS, TESTS_HOOKS } from './tests.constants';
 import { TestsService } from './tests.service';
 
-/** @choliba/runner in the shell: `choliba tests`. The runner's folder is looked for only when the tests run. */
+/** @choliba/runner in the shell: `choliba run tests`. The runner's folder is looked for only when the tests run. */
 export const runnerShell: ShellModule = {
   name: '@choliba/runner',
   provide: (container) => {

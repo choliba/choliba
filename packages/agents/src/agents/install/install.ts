@@ -6,7 +6,16 @@ import { isValidAgentName, loadAgent } from '../agent-loader';
 import { skillDescription } from '../agent-skills';
 
 import { fetchSource, type FetchedSource, type SourceDeps } from './install-source';
-import { AGENTS_SUBDIR, AGENT_FILE, CHOLIBA_DIR, MCPS_SUBDIR, SKILLS_SUBDIR, SKILL_FILE } from '@choliba/core';
+import {
+  AGENTS_SUBDIR,
+  AGENT_FILE,
+  CHOLIBA_DIR,
+  ExpectedError,
+  MCPS_SUBDIR,
+  SKILLS_SUBDIR,
+  SKILL_FILE,
+} from '@choliba/core';
+import { unknownWordMessage } from '@choliba/core';
 
 /** What `choliba add` installs, named as the report shows it. */
 export type ItemKind = 'agente' | 'skill' | 'MCP';
@@ -44,7 +53,7 @@ export interface InstallDeps {
   readonly fetch?: (spec: string, deps: SourceDeps) => FetchedSource;
 }
 
-export class InstallError extends Error {}
+export class InstallError extends ExpectedError {}
 
 const USAGE = 'Uso: choliba add <origem> [--path <caminho na origem>] [--dry-run]';
 
@@ -68,7 +77,7 @@ export function parseInstallArgs(argv: readonly string[]): InstallArgs {
     } else if (arg === '--dry-run') {
       dryRun = true;
     } else if (arg.startsWith('-')) {
-      throw new InstallError(`opção desconhecida: ${arg}. ${USAGE}`);
+      throw new InstallError(`${unknownWordMessage('opção desconhecida', arg, ['--path', '--dry-run'])} ${USAGE}`);
     } else {
       specs.push(arg);
     }

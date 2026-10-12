@@ -38,6 +38,14 @@ export {
   type InstallDeps,
   type InstallTargets,
 } from './agents';
-export { AGENT_PROVIDERS, AGENTS, agentsCommand, agentsEntries, AgentsService, agentsShell } from './agents';
+export {
+  AGENT_PROVIDERS,
+  AGENTS,
+  AgentsService,
+  agentsShell,
+  listAgentsCommand,
+  runAgentCommand,
+  runAgentEntry,
+} from './agents';
 export type { AgentsPlatform } from './agents';
 export { ClaudeAgentProvider, CursorAgentProvider } from './providers';

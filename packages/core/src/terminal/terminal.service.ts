@@ -36,7 +36,7 @@ export class TerminalService {
         colorize: this.theme.enabled(),
       });
     } catch (error) {
-      this.stderr.write(`Failed to start "${dto.command.join(' ')}": ${errorMessage(error)}\n`);
+      this.stderr.write(`não foi possível iniciar "${dto.command.join(' ')}": ${errorMessage(error)}\n`);
       return 1;
     }
 
@@ -47,7 +47,7 @@ export class TerminalService {
 
     const exitEvent = await this.untilExit(session);
     if (exitEvent.error !== null) {
-      this.stderr.write(`Session for "${dto.command.join(' ')}" failed: ${exitEvent.error}\n`);
+      this.stderr.write(`a sessão de "${dto.command.join(' ')}" falhou: ${exitEvent.error}\n`);
     }
     return exitCodeFor(exitEvent);
   }

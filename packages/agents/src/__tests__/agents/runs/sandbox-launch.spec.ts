@@ -62,7 +62,7 @@ describe('launchFor', () => {
   it('starts the command as it is on this machine', () => {
     expect(
       launchFor({ sandbox: { kind: 'local' }, command: ['claude', '-p'], request: request(), files: [], config: {} }),
-    ).toEqual({ command: ['claude', '-p'], paths: [], skipped: [] });
+    ).toEqual({ command: ['claude', '-p'], place: { kind: 'local' }, paths: [], skipped: [] });
   });
 
   it('in a container, mounts the run, the packages and the run files, and passes the credentials by name', () => {
@@ -88,6 +88,8 @@ describe('launchFor', () => {
     expect(launch.command.join(' ')).toContain('--env CLAUDE_CODE_OAUTH_TOKEN');
     expect(launch.command.join(' ')).not.toContain('segredo');
     expect(launch.env).toMatchObject({ CLAUDE_CODE_OAUTH_TOKEN: 'segredo' });
+    expect(launch.place).toEqual({ kind: 'docker', image: 'choliba-agent', container: 'choliba-1' });
+    expect(launch.command.slice(2, 5)).toEqual(['--rm', '--name', 'choliba-1']);
     expect(fake.made).toEqual([]);
   });
 

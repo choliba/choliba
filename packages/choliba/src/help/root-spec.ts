@@ -1,4 +1,4 @@
-import type { RootSpec } from '@choliba/core';
+import type { RootSpec, ShellVerb } from '@choliba/core';
 
 /** The flag every command takes, removed from the command line before any of them sees it. */
 const GLOBAL_FLAGS = [
@@ -19,13 +19,14 @@ export const CHOLIBA_ROOT: RootSpec = {
 };
 
 /** The order of `choliba --help`'s commands, by name. Names missing here come after, as they were registered. */
-export const CHOLIBA_ORDER: readonly string[] = [
-  'agents',
-  'add',
-  'projects',
-  'tests',
-  'check',
-  'lint',
-  'format',
-  'setup',
+export const CHOLIBA_ORDER: readonly string[] = ['run', 'add', 'new', 'list', 'check', 'setup', 'lint', 'format'];
+
+/** The verbs of the root: each package registers its types under them (`run agent`, `run tests`, `new project`…). */
+export const CHOLIBA_VERBS: readonly ShellVerb[] = [
+  {
+    name: 'run',
+    description: 'Roda um agente ou os testes\n\nExemplo:\n  choliba run agent implementer "corrija o bug"',
+  },
+  { name: 'new', description: 'Cria um projeto a partir do modelo\n\nExemplo:\n  choliba new project loja' },
+  { name: 'list', description: 'Lista os agentes ou os projetos\n\nExemplo:\n  choliba list projects' },
 ];

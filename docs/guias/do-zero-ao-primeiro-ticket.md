@@ -28,11 +28,11 @@ cria o projeto de exemplo `projects/exemplo`. O que mais ele cria está em
 
 3. Crie o projeto de teste da aplicação
 
-O `projects new` cria `projects/<nome>/` a partir do modelo, com `config.json`, `.env.example.json`, `tests/` e
+O `new project` cria `projects/<nome>/` a partir do modelo, com `config.json`, `.env.example.json`, `tests/` e
 `tickets/`. O nome sai da pasta da aplicação quando você não o dá, e o `description` vem do README dela:
 
 ```bash
-bunx choliba projects new minha-app --app-dir /home/voce/dev/minha-app --base-url http://localhost:3000
+bunx choliba new project minha-app --app-dir /home/voce/dev/minha-app --base-url http://localhost:3000
 cp projects/minha-app/.env.example.json projects/minha-app/.env.json
 ```
 
@@ -121,13 +121,13 @@ Projetos (/home/voce/dev/dev-tools/projects)
 A aplicação precisa responder no `baseURL`. O ticket novo fica `minha-app-1`:
 
 ```bash
-bunx choliba product-owner --project minha-app --type story "a página inicial mostra o nome do site"
-bunx choliba test-writer --project minha-app --ticket minha-app-1
-bunx choliba implementer --project minha-app --ticket minha-app-1
+bunx choliba run agent product-owner --project minha-app --type story "a página inicial mostra o nome do site"
+bunx choliba run agent test-writer --project minha-app --ticket minha-app-1
+bunx choliba run agent implementer --project minha-app --ticket minha-app-1
 ```
 
 Os testes desse ticket, a qualquer momento:
 
 ```bash
-bunx choliba tests minha-app:1
+bunx choliba run tests minha-app:1
 ```

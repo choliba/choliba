@@ -3,9 +3,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { complete, coreShell, createShell, formatSuggestions } from '@choliba/core';
-import { BufferWritable, fakePlatform, runShell, type FakePlatform } from '@choliba/core/testing';
+import { BufferWritable, fakePlatform, runShell, VERBS_ROOT, type FakePlatform } from '@choliba/core/testing';
 
-import { AGENTS, agentsShell } from '../..';
+import { AGENTS, agentsShell, runAgentEntry } from '../..';
 import { fakeSpawner, streamFromChunks } from '../helpers/fake-spawner';
 
 const FIXTURES = join(__dirname, '..', 'fixtures');
@@ -34,31 +34,52 @@ function claudeStdout(text: string): readonly string[] {
   ];
 }
 
-async function agents(
+async function choliba(
   args: readonly string[],
   platform: Partial<FakePlatform>,
 ): Promise<{ code: number; platform: FakePlatform }> {
-  const run = fakePlatform({ argv: ['agents', ...args], ...platform });
-  return { code: await runShell([coreShell, agentsShell], run), platform: run };
+  const run = fakePlatform({ argv: [...args], ...platform });
+  return { code: await runShell([coreShell, agentsShell, VERBS_ROOT], run), platform: run };
 }
 
-describe('choliba agents', () => {
-  it('lists the agents of the workspace, and prints its help', () =>
+describe('choliba run agent and list agents', () => {
+  it('lists the agents of the workspace, and prints the help of both', () =>
     withWorkspace(async (cwd) => {
-      const list = await agents(['list'], { cwd });
+      const list = await choliba(['list', 'agents'], { cwd });
       expect(list.code).toBe(0);
       expect(list.platform.stdout.text()).toContain('id: echo');
 
-      const help = await agents(['--help'], { cwd });
-      expect(help.platform.stdout.text()).toContain('Usage:  choliba agents [OPTIONS] COMMAND [TASK...]');
-      expect(help.platform.stdout.text()).toContain('provider (auto, claude, cursor)');
+      const listHelp = await choliba(['list', 'agents', '--help'], { cwd });
+      expect(listHelp.code).toBe(0);
+      expect(listHelp.platform.stdout.text()).toContain('Usage:  choliba list agents [OPTIONS]');
+
+      const help = await choliba(['run', 'agent', '--help'], { cwd });
+      expect(help.platform.stdout.text()).toContain('Usage:  choliba run agent AGENT [OPTIONS] [TASK...]');
+      expect(help.platform.stdout.text()).toContain('(auto, claude, cursor)');
+      expect(help.platform.stdout.text()).not.toContain('list');
+    }));
+
+  it('refuses an argument list agents does not take', () =>
+    withWorkspace(async (cwd) => {
+      const { code, platform } = await choliba(['list', 'agents', '--nope'], { cwd });
+      expect(code).toBe(1);
+      expect(platform.stderr.text()).toBe("opção desconhecida: --nope.\nRun 'choliba list agents --help' for usage.\n");
+    }));
+
+  it('says an agent is unknown, suggesting the closest one', () =>
+    withWorkspace(async (cwd) => {
+      const { code, platform } = await choliba(['run', 'agent', 'ecoh', 'x'], { cwd });
+      expect(code).toBe(1);
+      expect(platform.stderr.text()).toBe(
+        'agente desconhecido: ecoh. Você quis dizer "echo"?\nVeja os agentes com \'choliba list agents\'.\n',
+      );
     }));
 
   it('runs an agent through the provider found on PATH, in the colors of the theme', () =>
     withWorkspace(async (cwd) => {
-      const { code, platform } = await agents(['echo', 'repita isto'], {
+      const { code, platform } = await choliba(['run', 'agent', 'echo', 'repita isto'], {
         cwd,
-        env: { FORCE_COLOR: '1', CHOL_COLORS: 'agents.echo=gray' },
+        env: { FORCE_COLOR: '1', CHOL_COLORS: 'agents.echo=gray', TERM: 'dumb' },
         which: (bin) => (bin === 'claude' ? '/usr/bin/claude' : null),
         spawn: fakeSpawner({ stdout: streamFromChunks(claudeStdout('repetido')) }).spawner,
         stdout: new BufferWritable(true),
@@ -74,7 +95,7 @@ describe('choliba agents', () => {
   it('says what is wrong, with exit code 1, outside a workspace', async () => {
     const outside = mkdtempSync(join(tmpdir(), 'agents-outside-'));
     try {
-      const { code, platform } = await agents(['list'], { cwd: outside });
+      const { code, platform } = await choliba(['list', 'agents'], { cwd: outside });
       expect(code).toBe(1);
       expect(platform.stderr.text()).toContain('Nenhuma pasta de trabalho do choliba');
     } finally {
@@ -83,23 +104,26 @@ describe('choliba agents', () => {
   });
 });
 
-describe('choliba <agent>', () => {
-  it('runs a first word that is no command as `choliba agents <word> …`', () =>
-    withWorkspace(async (cwd) => {
-      const platform = fakePlatform({ cwd });
-      const code = await createShell(platform, [coreShell, agentsShell]).fallback?.runUnknown(['list']);
-
-      expect(code).toBe(0);
-      expect(platform.stdout.text()).toContain('id: echo');
-    }));
+describe('runAgentEntry', () => {
+  it('lists `agent` with the spec read now, or with its usage alone when the workspace cannot be read', () => {
+    expect(runAgentEntry(() => ({ usage: 'lido' })).spec).toEqual({ usage: 'lido' });
+    expect(
+      runAgentEntry(() => {
+        throw new Error('sem pasta de trabalho');
+      }).spec,
+    ).toEqual({ usage: 'choliba run agent AGENT [OPTIONS] [TASK...]' });
+  });
 });
 
 describe('AgentsService.helpSpec', () => {
-  it('completes the agents on disk, the commands and the providers', () =>
+  it('completes the agents on disk and the providers', () =>
     withWorkspace((cwd) => {
-      const spec = createShell(fakePlatform({ cwd }), [coreShell, agentsShell]).container.get(AGENTS).helpSpec();
+      const spec = createShell(fakePlatform({ cwd }), [coreShell, agentsShell, VERBS_ROOT])
+        .container.get(AGENTS)
+        .helpSpec();
 
       expect(formatSuggestions(complete(spec, ['ec']))).toBe('echo');
+      expect(formatSuggestions(complete(spec, ['l']))).toBe('');
       expect(formatSuggestions(complete(spec, ['echo', '--provider', '']))).toBe('auto\nclaude\ncursor');
       return Promise.resolve();
     }));

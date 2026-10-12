@@ -66,7 +66,7 @@ if (targetProject) {
 const ticket = targetProject ? process.env['QA_TICKET'] : undefined;
 
 // The tests of criteria a later ticket replaces (`substitui`) stay out of the run, except when that very ticket
-// runs on its own (`choliba tests <projeto>:<ticket>` warns about it). Playwright matches `<device> <file> <title>`.
+// runs on its own (`choliba run tests <projeto>:<ticket>` warns about it). Playwright matches `<device> <file> <title>`.
 const retiredPatterns = targetProject
   ? projects.retiredTestPatterns(
       targetProject,

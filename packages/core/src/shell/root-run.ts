@@ -1,4 +1,11 @@
-import { complete, describe, formatSuggestions, type CommandEntry, type CommandSpec } from '../help';
+import {
+  complete,
+  describe,
+  formatSuggestions,
+  unknownWordMessage,
+  type CommandEntry,
+  type CommandSpec,
+} from '../help';
 import type { ShellModule, ShellRoot } from './interfaces/shell.interface';
 import type { ShellIo } from './shell-io';
 
@@ -14,7 +21,7 @@ export function rootOf(modules: readonly ShellModule[]): ShellRoot | undefined {
   return owners[0]?.root;
 }
 
-function programOf(root: ShellRoot): string {
+export function programOf(root: ShellRoot): string {
   return root.spec.usage.split(' ', 1).join('');
 }
 
@@ -47,10 +54,10 @@ export function rootAction(
   argv: readonly string[],
   entries: () => readonly CommandEntry[],
 ): ((io: ShellIo) => void) | undefined {
-  const [first] = argv;
+  const [first, ...rest] = argv;
   if (first === undefined || HELP_WORDS.includes(first)) {
     return (io) => {
-      io.printHelp(specOf(root, entries()));
+      printHelpOf(root, specOf(root, entries()), first === 'help' ? rest : [], io);
     };
   }
   if (VERSION_WORDS.includes(first)) {
@@ -100,9 +107,35 @@ function printEntries(root: ShellRoot, entries: () => readonly CommandEntry[], i
   io.write(`${JSON.stringify(listed)}\n`);
 }
 
-/** A first word that is no command and that no fallback takes. */
-export function unknownCommand(root: ShellRoot, word: string): (io: ShellIo) => void {
+/** The spec of the command `path` names inside `spec` (`help run agent`), or `undefined` when one word is no command. */
+function specAt(spec: CommandSpec, path: readonly string[]): CommandSpec | undefined {
+  let current = spec;
+  for (const word of path) {
+    const entry = current.commands?.().find((candidate) => candidate.name === word);
+    if (entry === undefined) return undefined;
+    current = { ...entry.spec, description: entry.spec.description ?? entry.description };
+  }
+  return current;
+}
+
+/** `help [COMMAND...]`: the root's help, or the help of the command the words name. */
+function printHelpOf(root: ShellRoot, spec: CommandSpec, path: readonly string[], io: ShellIo): void {
+  const target = specAt(spec, path);
+  if (target === undefined) {
+    io.usageError(`comando desconhecido: ${path.join(' ')}.`, programOf(root));
+    return;
+  }
+  io.printHelp(target);
+}
+
+/** The words the root takes first: its listed commands, `help` and `version`. */
+export function rootWords(entries: readonly CommandEntry[]): readonly string[] {
+  return [...entries.filter((entry) => entry.listed !== false).map((entry) => entry.name), 'help', 'version'];
+}
+
+/** A first word that is no command: a usage error that suggests the closest one. */
+export function unknownCommand(root: ShellRoot, word: string, entries: readonly CommandEntry[]): (io: ShellIo) => void {
   return (io) => {
-    io.usageError(`comando desconhecido: ${word}.`, programOf(root));
+    io.usageError(unknownWordMessage('comando desconhecido', word, rootWords(entries)), programOf(root));
   };
 }

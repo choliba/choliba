@@ -21,24 +21,22 @@ describe('the choliba shell', () => {
     expect(createCholibaShell(fakePlatform(), runtime).container.get(RUNTIME)).toBe(runtime);
   });
 
-  it('runs every command, and has the fallback for `choliba <agent>`', () => {
+  it('runs every command and verb, and nothing of the old root', () => {
     const shell = createCholibaShell(fakePlatform(), fakeRuntime());
 
-    expect(shell.has('agents')).toBe(true);
-    expect(shell.has('tests')).toBe(true);
-    expect(shell.has('terminal')).toBe(true);
-    expect(shell.has('projects')).toBe(true);
-    expect(shell.has('check')).toBe(true);
-    expect(shell.has('setup')).toBe(true);
-    expect(shell.has('lint')).toBe(true);
-    expect(shell.has('format')).toBe(true);
-    expect(shell.fallback).toBeDefined();
-    expect(shell.has('__complete')).toBe(false);
+    for (const word of ['run', 'add', 'new', 'list', 'check', 'setup', 'lint', 'format', 'terminal']) {
+      expect(shell.has(word)).toBe(true);
+    }
+    for (const word of ['agents', 'projects', 'tests', '__complete']) {
+      expect(shell.has(word)).toBe(false);
+    }
   });
 
   it.each([
-    [['tests', '--help'], 'Usage:  choliba tests'],
-    [['projects', '--help'], 'Usage:  choliba projects'],
+    [['run', 'tests', '--help'], 'Usage:  choliba run tests'],
+    [['new', 'project', '--help'], 'Usage:  choliba new project'],
+    [['list', 'projects', '--help'], 'Usage:  choliba list projects'],
+    [['run', '--help'], 'Usage:  choliba run TYPE [ARGS]'],
   ])('runs a command through the shell: %j', async (argv, help) => {
     const platform = fakePlatform({ argv });
 

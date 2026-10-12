@@ -1,13 +1,13 @@
 import type { CommandSpec, ConfigService, Platform, ProcessRunnerService, ThemeService } from '@choliba/core';
 
 import type { ProviderRegistry } from '../common';
-import { agentsHelpSpec, runAgentsCli } from './runs/run-agents';
+import { agentsHelpSpec, listAgentsHelpSpec, runAgentsCli, runAgentsList } from './runs/run-agents';
 import type { RunAgentsCliDeps } from './runs/run-context';
 
 /** What a run reads from the process: where it writes, the clock, the signals, git and the executables on PATH. */
 export type AgentsPlatform = Pick<Platform, 'which' | 'clock' | 'stdout' | 'stderr' | 'signals' | 'git'>;
 
-/** `choliba agents` (and `choliba <agent>`): the workspace's agents, run through a provider. */
+/** `choliba run agent` and `choliba list agents`: the workspace's agents, run through a provider. */
 export class AgentsService {
   constructor(
     private readonly config: ConfigService,
@@ -17,9 +17,19 @@ export class AgentsService {
     private readonly platform: AgentsPlatform,
   ) {}
 
-  /** Runs the command line after `choliba agents` (or the whole `choliba <agent> …`); resolves with the exit code. */
+  /** Runs the command line after `choliba run agent`; resolves with the exit code. */
   run(argv: readonly string[]): Promise<number> {
     return runAgentsCli(argv, this.deps());
+  }
+
+  /** Lists the agents, from the command line after `choliba list agents`; returns the exit code. */
+  list(argv: readonly string[]): number {
+    return runAgentsList(argv, this.deps());
+  }
+
+  /** `--help` and completion of `choliba list agents`. */
+  listHelpSpec(): CommandSpec {
+    return listAgentsHelpSpec(this.deps());
   }
 
   /** `--help` and completion: the agents on disk now, their flags and what their values complete to. */

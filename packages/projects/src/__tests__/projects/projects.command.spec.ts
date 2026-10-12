@@ -2,13 +2,11 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { complete, ConfigService, coreShell, describe as describeWords, formatSuggestions } from '@choliba/core';
-import { fakePlatform, runShell } from '@choliba/core/testing';
+import { coreShell, formatSuggestions } from '@choliba/core';
+import { fakePlatform, runShell, VERBS_ROOT } from '@choliba/core/testing';
 
-import { LocationsService } from '../../locations/locations.service';
 import { projectsShell } from '../../projects/projects-shell';
-import { ProjectsService } from '../../projects/projects.service';
-import { TicketsService } from '../../tickets/tickets.service';
+import { projectCompletions } from '../../tickets';
 
 interface Workspace {
   readonly root: string;
@@ -65,95 +63,14 @@ interface Run {
   readonly err: string;
 }
 
-/** `choliba projects <args…>` from `cwd`. */
-async function projects(args: readonly string[], cwd: string): Promise<Run> {
-  const platform = fakePlatform({ argv: ['projects', ...args], cwd });
-  const exitCode = await runShell([coreShell, projectsShell], platform);
+/** `choliba <args…>` from `cwd`. */
+async function choliba(args: readonly string[], cwd: string): Promise<Run> {
+  const platform = fakePlatform({ argv: [...args], cwd });
+  const exitCode = await runShell([coreShell, projectsShell, VERBS_ROOT], platform);
   return { exitCode, out: platform.stdout.text(), err: platform.stderr.text() };
 }
 
-describe('choliba projects', () => {
-  it('checks that a project is ready, naming what is still CHANGE_ME', () =>
-    withWorkspace(async ({ root, projectsDir }) => {
-      const projectPath = path.join(projectsDir, 'demo');
-      fs.mkdirSync(projectPath, { recursive: true });
-      fs.writeFileSync(
-        path.join(projectPath, 'config.json'),
-        JSON.stringify({
-          name: 'Demo',
-          envs: [{ nome: 'development', baseURL: 'http://localhost:5173/', appDir: '/app' }],
-        }),
-      );
-      fs.writeFileSync(
-        path.join(projectPath, '.env.json'),
-        JSON.stringify({ development: { TEST_USERNAME: 'CHANGE_ME' } }),
-      );
-
-      const pending = await projects(['check', 'demo'], root);
-      expect(pending.exitCode).toBe(1);
-      expect(pending.err).toContain('troque CHANGE_ME em:');
-
-      fs.writeFileSync(path.join(projectPath, '.env.json'), JSON.stringify({ development: { TEST_USERNAME: 'ana' } }));
-      const ready = await projects(['check', 'demo'], root);
-      expect(ready.exitCode).toBe(0);
-      expect(ready.out).toBe('Projeto "demo" (Demo) pronto: ambiente development, http://localhost:5173/\n');
-
-      const missing = await projects(['check'], root);
-      expect(missing.exitCode).toBe(1);
-      expect(missing.err).toContain('Missing project for check.');
-    }));
-
-  it('prints the tickets folder for a project, and usage without one', () =>
-    withWorkspace(async ({ root, projectsDir }) => {
-      writeProject(projectsDir, 'demo');
-
-      expect(await projects(['tickets-folder', 'demo'], root)).toEqual({
-        exitCode: 0,
-        out: `${path.join(projectsDir, 'demo', 'tickets')}\n`,
-        err: '',
-      });
-      const missing = await projects(['tickets-folder'], root);
-      expect(missing.exitCode).toBe(1);
-      expect(missing.err).toBe("Missing project for tickets-folder.\nRun 'choliba projects --help' for usage.\n");
-    }));
-
-  it('prints the report folder: the default name, of a project, of a ticket', () =>
-    withWorkspace(async ({ root, projectsDir }) => {
-      writeProject(projectsDir, 'demo');
-
-      expect((await projects(['report-folder'], root)).out).toBe('playwright-report\n');
-      expect((await projects(['report-folder', 'demo'], root)).out).toBe(
-        `${path.join(projectsDir, 'demo', 'ticket-runs', 'playwright-report')}\n`,
-      );
-      expect((await projects(['report-folder', 'demo', 'demo-T-01'], root)).out).toBe(
-        `${path.join(projectsDir, 'demo', 'ticket-runs', 'demo-T-01', 'playwright-report')}\n`,
-      );
-    }));
-
-  it('prints the report folder under CHOL_TICKET_RUNS when set', () =>
-    withWorkspace(
-      async ({ root }) => {
-        expect((await projects(['report-folder', 'demo', 'demo-01'], root)).out).toBe(
-          `${path.join('/runs', 'demo', 'ticket-runs', 'demo-01', 'playwright-report')}\n`,
-        );
-      },
-      { CHOL_TICKET_RUNS: '/runs' },
-    ));
-
-  it('lists ticket spec files one per line, and usage without project and ticket', () =>
-    withWorkspace(async ({ root, projectsDir }) => {
-      writeProject(projectsDir, 'demo', ['T-01']);
-      fs.writeFileSync(
-        path.join(projectsDir, 'demo', 'tickets', 'T-01.json'),
-        JSON.stringify({ criterios: [{ id: 'CA-01', testes: ['alpha.spec.ts › d › CA-01: x'] }] }),
-      );
-
-      expect((await projects(['ticket-specs', 'demo', 'demo-T-01'], root)).out).toBe('alpha.spec.ts\n');
-      const missing = await projects(['ticket-specs', 'demo'], root);
-      expect(missing.exitCode).toBe(1);
-      expect(missing.err).toContain('Missing project or ticket');
-    }));
-
+describe('choliba list projects', () => {
   it('lists each project with its description, laid out like --help', () =>
     withWorkspace(async ({ root, projectsDir }) => {
       writeProject(projectsDir, 'curto');
@@ -168,7 +85,7 @@ describe('choliba projects', () => {
       writeProject(projectsDir, 'sem-texto');
       fs.writeFileSync(path.join(projectsDir, 'sem-texto', 'config.json'), JSON.stringify({ description: 3 }));
 
-      expect((await projects(['list'], root)).out).toBe(
+      expect((await choliba(['list', 'projects'], root)).out).toBe(
         [
           'curto       Curto.',
           '',
@@ -185,116 +102,68 @@ describe('choliba projects', () => {
 
   it('lists projects and optionally their tickets, and says when there is none', () =>
     withWorkspace(async ({ root, projectsDir }) => {
-      expect((await projects(['list'], root)).out).toContain('No project found');
+      expect((await choliba(['list', 'projects'], root)).out).toContain('Nenhum projeto encontrado');
 
       writeProject(projectsDir, 'zebra', ['02', '01']);
       writeProject(projectsDir, 'alpha');
 
-      expect((await projects(['list'], root)).out).toBe('alpha\nzebra\n');
-      expect((await projects(['list', '--tickets'], root)).out).toContain('zebra ["zebra-01","zebra-02"]');
+      expect((await choliba(['list', 'projects'], root)).out).toBe('alpha\nzebra\n');
+      expect((await choliba(['list', 'projects', '--tickets'], root)).out).toContain('zebra ["zebra-01","zebra-02"]');
     }));
 
-  it('reports a missing or unknown command as a usage error', () =>
-    withWorkspace(async ({ root }) => {
-      const missing = await projects([], root);
-      expect(missing.exitCode).toBe(1);
-      expect(missing.err).toContain('Missing command');
-
-      const unknown = await projects(['unknown-command'], root);
-      expect(unknown.exitCode).toBe(1);
-      expect(unknown.err).toContain('Unknown command "unknown-command".');
+  it('prints its help, even without locations', () =>
+    withBrokenWorkspace(async (root) => {
+      for (const flag of ['--help', '-h']) {
+        const { exitCode, out } = await choliba(['list', 'projects', flag], root);
+        expect(exitCode).toBe(0);
+        expect(out).toContain('Usage:  choliba list projects [OPTIONS]');
+        expect(out).toContain('--tickets');
+      }
     }));
 
   it('exits 1 with the message when the locations cannot be read', () =>
     withBrokenWorkspace(async (root) => {
-      const { exitCode, err } = await projects(['tickets-folder', 'demo'], root);
+      const { exitCode, err } = await choliba(['list', 'projects'], root);
       expect(exitCode).toBe(1);
       expect(err).toContain('CHOL_GLOBAL_DIR não definida');
     }));
 });
 
-describe('choliba projects — help', () => {
-  it('prints the full help for --help, -h and help, even without locations', () =>
+describe('the types of new and list', () => {
+  it('lists project under new and projects under list, each with its own help', () =>
     withBrokenWorkspace(async (root) => {
-      for (const flag of ['--help', '-h', 'help']) {
-        const { exitCode, out } = await projects([flag], root);
-        expect(exitCode).toBe(0);
-        expect(out).toContain('Usage:  choliba projects COMMAND [ARGS]');
-        expect(out).toContain('Commands:\n  tickets-folder');
-        expect(out).toContain("Run 'choliba projects COMMAND --help'");
-      }
-    }));
-
-  it("prints a command's own help", () =>
-    withBrokenWorkspace(async (root) => {
-      for (const command of ['list', 'check', 'report-folder']) {
-        expect((await projects([command, '-h'], root)).out).toContain(`Usage:  choliba projects ${command}`);
-      }
-      for (const command of ['tickets-folder', 'ticket-specs']) {
-        expect((await projects([command, '--help'], root)).out).toContain(`Usage:  choliba projects ${command}`);
-      }
-    }));
-
-  it('keeps reporting an unknown command even with --help', () =>
-    withBrokenWorkspace(async (root) => {
-      const { exitCode, err } = await projects(['bogus', '--help'], root);
-      expect(exitCode).toBe(1);
-      expect(err).toContain('Unknown command "bogus".');
-      expect(err).toContain("Run 'choliba projects --help' for usage.");
+      expect((await choliba(['new', '--help'], root)).out).toContain('project   Cria um projeto a partir do modelo');
+      expect((await choliba(['list', '--help'], root)).out).toContain('projects   Lista os projetos');
+      expect((await choliba(['new', 'project', '--help'], root)).out).toContain(
+        'Usage:  choliba new project [NOME] [OPTIONS]',
+      );
     }));
 });
 
-describe('ProjectsService.helpSpec — completion and description', () => {
-  function serviceIn(cwd: string): { projects: ProjectsService; tickets: TicketsService } {
-    const platform = fakePlatform({ cwd });
-    const locations = new LocationsService(new ConfigService(platform.cwd, platform.env), platform.env);
-    return { projects: new ProjectsService(locations), tickets: new TicketsService(locations) };
-  }
-
-  const completions = (service: ProjectsService, words: readonly string[]): string =>
-    formatSuggestions(complete(service.helpSpec(), words));
-
-  it('completes commands, projects, tickets, ticket types and flags from disk', () =>
-    withWorkspace(({ root, projectsDir }) => {
+describe('projectCompletions', () => {
+  it('completes the projects, then the tickets of the one typed, from disk', () =>
+    withWorkspace(({ projectsDir }) => {
       writeProject(projectsDir, 'demo', ['demo-01', 'demo-02']);
       writeProject(projectsDir, 'other');
-      const { projects: service } = serviceIn(root);
+      const { projectOnly, projectThenTicket } = projectCompletions(() => projectsDir);
 
-      expect(completions(service, ['ti'])).toBe('tickets-folder\nticket-specs');
-      expect(completions(service, ['tickets-folder', ''])).toBe('demo\nother');
-      expect(completions(service, ['tickets-folder', 'demo', ''])).toBe('');
-      expect(completions(service, ['report-folder', 'd'])).toBe('demo');
-      expect(completions(service, ['ticket-specs', 'demo', ''])).toBe('demo-01\ndemo-02');
-      expect(completions(service, ['ticket-specs', 'demo', 'demo-01', ''])).toBe('');
-      expect(completions(service, ['list', '--'])).toBe('--tickets');
-    }));
-
-  it('completes the ticket commands too, as they belong to the same CLI', () =>
-    withWorkspace(({ root, projectsDir }) => {
-      writeProject(projectsDir, 'demo');
-      const { projects, tickets } = serviceIn(root);
-
-      expect(formatSuggestions(complete(projects.helpSpec(), ['tickets-folder', '']))).toBe('demo');
-      expect(formatSuggestions(complete(tickets.helpSpec(), ['ticket-specs', '']))).toBe('demo');
-    }));
-
-  it('describes the CLI or the command the words select', () =>
-    withBrokenWorkspace((root) => {
-      const spec = serviceIn(root).projects.helpSpec();
-      expect(describeWords(spec, [])).toBe('Resolve pastas e arquivos dos projetos Playwright em CHOL_PROJECTS_DIR.');
-      expect(describeWords(spec, ['list'])).toBe('Lista os projetos');
+      expect(formatSuggestions(projectOnly([]))).toBe('demo\nother');
+      expect(formatSuggestions(projectOnly(['demo']))).toBe('');
+      expect(formatSuggestions(projectThenTicket([]))).toBe('demo\nother');
+      expect(formatSuggestions(projectThenTicket(['demo']))).toBe('demo-01\ndemo-02');
+      expect(formatSuggestions(projectThenTicket(['demo', 'demo-01']))).toBe('');
     }));
 
   it('suggests nothing when the projects or tickets cannot be read', () =>
-    withWorkspace(async ({ root, projectsDir }) => {
+    withWorkspace(({ projectsDir }) => {
       writeProject(projectsDir, 'demo');
       fs.writeFileSync(path.join(projectsDir, 'demo', 'tickets'), 'not a directory');
-      expect(completions(serviceIn(root).projects, ['ticket-specs', 'demo', ''])).toBe('');
+      expect(formatSuggestions(projectCompletions(() => projectsDir).projectThenTicket(['demo']))).toBe('');
 
-      await withBrokenWorkspace((broken) => {
-        const service = serviceIn(broken).projects;
-        expect(completions(service, ['tickets-folder', ''])).toBe('');
-        expect(completions(service, ['ticket-specs', 'demo', ''])).toBe('');
+      const broken = projectCompletions(() => {
+        throw new Error('sem pasta');
       });
+      expect(formatSuggestions(broken.projectOnly([]))).toBe('');
+      expect(formatSuggestions(broken.projectThenTicket(['demo']))).toBe('');
     }));
 });

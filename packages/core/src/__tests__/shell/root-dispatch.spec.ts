@@ -1,5 +1,5 @@
 import { createShell, type CommandEntry, type ShellModule, type ShellRoot } from '../..';
-import { fakePlatform } from '../../testing';
+import { fakePlatform, VERBS_ROOT } from '../../testing';
 
 const ROOT: ShellRoot = {
   spec: { usage: 'demo COMMAND [ARGS]', description: 'Uma CLI de exemplo.' },
@@ -52,40 +52,82 @@ describe('the shell root', () => {
     expect(await demo(['version'])).toEqual({ code: 0, out: 'demo 1.2.3\n', err: '' });
   });
 
-  it('hands a word that is not a command to the fallback, with the whole command line', async () => {
-    const seen: (readonly string[])[] = [];
-    const withFallback: ShellModule = {
-      ...commands,
-      fallback: (_container, io) => {
-        seen.push(io.args());
-        io.exit(3);
-        return Promise.resolve();
-      },
-    };
-
-    const { code } = await demo(['revisor', 'faça', 'isto'], [withFallback]);
-
-    expect(code).toBe(3);
-    expect(seen).toEqual([['revisor', 'faça', 'isto']]);
+  it('is a usage error that suggests the closest command', async () => {
+    expect(await demo(['revisor'])).toEqual({
+      code: 1,
+      out: '',
+      err: "comando desconhecido: revisor.\nRun 'demo --help' for usage.\n",
+    });
+    expect((await demo(['biuld'])).err).toBe(
+      'comando desconhecido: biuld. Você quis dizer "build"?\nRun \'demo --help\' for usage.\n',
+    );
   });
 
-  it('reports what the fallback threw, with exit code 1', async () => {
-    const withFallback: ShellModule = {
-      ...commands,
-      fallback: () => Promise.reject(new Error('agente quebrado')),
-    };
+  it('prints the help of the command help names, and refuses one it does not have', async () => {
+    const { code, out } = await demo(['help', 'build']);
 
-    const { code, err } = await demo(['revisor'], [withFallback]);
-
-    expect(code).toBe(1);
-    expect(err).toBe('agente quebrado\n');
+    expect(code).toBe(0);
+    expect(out).toContain('Usage:  demo build');
+    expect(out).toContain('--fast');
+    const unknown = await demo(['help', 'nada']);
+    expect(unknown.code).toBe(1);
+    expect(unknown.err).toContain('comando desconhecido: nada.');
   });
 
-  it('is a usage error when there is no fallback', async () => {
-    const { code, err } = await demo(['revisor']);
+  describe('verbs', () => {
+    const ran: string[][] = [];
+    const verbs: ShellModule = {
+      name: 'verbs',
+      root: { ...ROOT, verbs: [{ name: 'run', description: 'Roda um alvo' }] },
+      commands: [
+        command('build', 'Monta o projeto'),
+        {
+          verb: 'run',
+          name: 'agent',
+          help: () => [entry('agent', 'Um agente')],
+          run: (_container, io) => {
+            ran.push([...io.args('run', 'agent')]);
+            io.exit(5);
+            return Promise.resolve();
+          },
+        },
+        { verb: 'run', name: 'tests', help: () => [entry('tests', 'Os testes')], run: () => Promise.resolve() },
+      ],
+    };
 
-    expect(code).toBe(1);
-    expect(err).toBe("comando desconhecido: revisor.\nRun 'demo --help' for usage.\n");
+    it('runs the type the second word names, with its arguments', async () => {
+      expect((await demo(['run', 'agent', 'revisor', 'x'], [verbs])).code).toBe(5);
+      expect(ran.at(-1)).toEqual(['revisor', 'x']);
+    });
+
+    it('lists the verb with the commands, and its types in its own help', async () => {
+      const root = await demo(['--help'], [verbs]);
+      const help = await demo(['run', '--help'], [verbs]);
+
+      expect(root.out).toContain('Roda um alvo');
+      expect(help).toMatchObject({ code: 0, err: '' });
+      expect(help.out).toContain('Usage:  demo run TYPE [ARGS]');
+      expect(help.out).toContain('Um agente');
+      expect(help.out).toContain('Os testes');
+      expect((await demo(['help', 'run', 'agent'], [verbs])).out).toContain('Usage:  demo agent');
+    });
+
+    it('is a usage error without a type or with an unknown one, suggesting the closest', async () => {
+      expect(await demo(['run'], [verbs])).toEqual({
+        code: 1,
+        out: '',
+        err: "falta o tipo: agent ou tests.\nRun 'demo run --help' for usage.\n",
+      });
+      expect((await demo(['run', 'test'], [verbs])).err).toBe(
+        'tipo desconhecido: test. Você quis dizer "tests"?\nRun \'demo run --help\' for usage.\n',
+      );
+    });
+
+    it('completes the verb, then its types, then what each type takes', async () => {
+      expect((await demo(['__complete', ''], [verbs])).out).toBe('build\nrun\nhelp\nversion\n');
+      expect((await demo(['__complete', 'run', ''], [verbs])).out).toBe('agent\ntests\n');
+      expect((await demo(['__complete', 'run', 'agent', '--f'], [verbs])).out).toBe('--fast\n');
+    });
   });
 
   it('lists nothing when the root has no commands', async () => {
@@ -179,6 +221,11 @@ describe('the shell root', () => {
     expect(code).toBe(0);
     expect(out).toContain('Monta o projeto');
     expect(out).not.toContain('gone');
+  });
+
+  it('gives specs a root with the verbs of the app', async () => {
+    expect(await demo(['version'], [VERBS_ROOT])).toEqual({ code: 0, out: 'choliba 0.0.0\n', err: '' });
+    expect((await demo(['__complete', ''], [VERBS_ROOT])).out).toBe('run\nnew\nlist\nhelp\nversion\n');
   });
 
   it('refuses two modules defining the root', () => {

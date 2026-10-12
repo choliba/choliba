@@ -1,4 +1,4 @@
-import { createShell, PLATFORM, token, type CommandEntry, type ShellModule } from '../..';
+import { createShell, ExpectedError, PLATFORM, token, type CommandEntry, type ShellModule } from '../..';
 import { fakePlatform } from '../../testing';
 
 const GREETING = token<string>('greeting');
@@ -67,7 +67,7 @@ describe('createShell', () => {
     await expect(createShell(fakePlatform({ argv: ['exit'] }), [exits]).run()).resolves.toBe(3);
   });
 
-  it('turns what a command throws into its message on stderr and exit code 1', async () => {
+  it('reports an unexpected command error as a bug and exits 1', async () => {
     const platform = fakePlatform({ argv: ['boom'] });
     const throwing: ShellModule = {
       name: 'throwing',
@@ -75,7 +75,29 @@ describe('createShell', () => {
     };
 
     await expect(createShell(platform, [throwing]).run()).resolves.toBe(1);
-    expect(platform.stderr.text()).toBe('estourou\n');
+    expect(platform.stderr.text()).toBe(
+      'erro inesperado: estourou\nisso parece ser um bug; reporte em https://github.com/choliba/choliba/issues\n',
+    );
+  });
+
+  it('prints an expected error as-is and shows an unexpected stack only with CHOL_DEBUG=1', async () => {
+    const expected = fakePlatform({ argv: ['boom'] });
+    const debug = fakePlatform({ argv: ['boom'], env: { CHOL_DEBUG: '1' } });
+    const expectedModule: ShellModule = {
+      name: 'expected',
+      commands: [{ name: 'boom', run: () => Promise.reject(new ExpectedError('corrija isto')) }],
+    };
+    const unexpectedModule: ShellModule = {
+      name: 'unexpected',
+      commands: [{ name: 'boom', run: () => Promise.reject(new Error('quebrou')) }],
+    };
+
+    await createShell(expected, [expectedModule]).run();
+    await createShell(debug, [unexpectedModule]).run();
+
+    expect(expected.stderr.text()).toBe('corrija isto\n');
+    expect(debug.stderr.text()).toContain('Error: quebrou');
+    expect(debug.stderr.text()).toContain('create-shell.spec.ts');
   });
 
   it('refuses to run a command line its table does not have', async () => {
@@ -122,41 +144,38 @@ describe('createShell', () => {
     expect(createShell(platform, []).container.get(PLATFORM)).toBe(platform);
   });
 
-  describe('fallback', () => {
-    const agents: ShellModule = {
-      name: 'agents',
-      commands: [],
-      fallback: (container, io) => {
-        if (io.args()[0] === 'quebrado') return Promise.reject(new Error('agente quebrado'));
-        io.write(`${container.get(GREETING)}: ${io.args().join(' ')}\n`);
-        io.exit(4);
-        return Promise.resolve();
-      },
+  describe('verbs', () => {
+    const root = {
+      spec: { usage: 'demo COMMAND' },
+      version: () => 'demo 1',
+      verbs: [{ name: 'run', description: 'Roda' }],
     };
 
-    it('runs a word that is no command with the whole command line, on the services of the shell', async () => {
-      const platform = fakePlatform({ argv: ['--help'] });
-      const shell = createShell(platform, [greeter, agents]);
+    it('refuses a command under a verb the root does not have', () => {
+      const stray: ShellModule = {
+        name: 'stray',
+        commands: [{ verb: 'make', name: 'x', run: () => Promise.resolve() }],
+      };
 
-      await expect(shell.fallback?.runUnknown(['revisor', 'faça', 'isto'])).resolves.toBe(4);
-      expect(platform.stdout.text()).toBe('olá de /nowhere: revisor faça isto\n');
-    });
-
-    it('turns what the fallback throws into its message on stderr and exit code 1', async () => {
-      const platform = fakePlatform();
-
-      await expect(createShell(platform, [greeter, agents]).fallback?.runUnknown(['quebrado'])).resolves.toBe(1);
-      expect(platform.stderr.text()).toBe('agente quebrado\n');
-    });
-
-    it('has none when no module has one', () => {
-      expect(createShell(fakePlatform(), [greeter]).fallback).toBeUndefined();
-    });
-
-    it('refuses two modules claiming the words that are no command', () => {
-      expect(() => createShell(fakePlatform(), [agents, { ...agents, name: 'outro' }])).toThrow(
-        'mais de um módulo trata a palavra que não é comando: agents, outro.',
+      expect(() => createShell(fakePlatform(), [{ name: 'app', root, commands: [] }, stray])).toThrow(
+        'o comando make x de stray usa um verbo que a raiz não tem.',
       );
+    });
+
+    it('refuses a verb that is also a command, and two types with one name', () => {
+      const clash: ShellModule = { name: 'clash', commands: [{ name: 'run', run: () => Promise.resolve() }] };
+      const one: ShellModule = { name: 'one', commands: [{ verb: 'run', name: 'x', run: () => Promise.resolve() }] };
+
+      expect(() => createShell(fakePlatform(), [{ name: 'app', root, commands: [] }, clash])).toThrow(
+        'o verbo run também é um comando.',
+      );
+      expect(() =>
+        createShell(fakePlatform(), [{ name: 'app', root, commands: [] }, one, { ...one, name: 'two' }]),
+      ).toThrow('o comando x está em one e em two.');
+    });
+
+    it('knows a verb as a first word', () => {
+      expect(createShell(fakePlatform(), [{ name: 'app', root, commands: [] }]).has('run')).toBe(true);
     });
   });
 });

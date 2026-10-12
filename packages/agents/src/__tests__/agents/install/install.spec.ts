@@ -65,6 +65,9 @@ describe('parseInstallArgs', () => {
     expect(() => parseInstallArgs(['a', 'b'])).toThrow('uma origem só');
     expect(() => parseInstallArgs(['a', '--path'])).toThrow('--path precisa de um valor');
     expect(() => parseInstallArgs(['a', '--force'])).toThrow('--force');
+    expect(() => parseInstallArgs(['a', '--dry-rn'])).toThrow(
+      'opção desconhecida: --dry-rn. Você quis dizer "--dry-run"?',
+    );
   });
 });
 

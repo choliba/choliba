@@ -14,7 +14,7 @@ import { runnerShell } from '@choliba/runner';
 
 import { addCommand } from './add';
 import { checkCommand } from './check';
-import { CHOLIBA_ORDER, CHOLIBA_ROOT, cholibaManifest, PACKAGE_NAME } from './help';
+import { CHOLIBA_ORDER, CHOLIBA_ROOT, CHOLIBA_VERBS, cholibaManifest, PACKAGE_NAME } from './help';
 import { RUNTIME, type Runtime } from './runtime';
 import { setupCommand } from './setup';
 import { formatCommand, lintCommand, TOOLS, ToolsService } from './tooling';
@@ -29,8 +29,9 @@ export function cholibaShell(runtime: Runtime): ShellModule {
     root: {
       spec: CHOLIBA_ROOT,
       version: () => versionLine(PACKAGE_NAME, cholibaManifest()),
-      groups: ['Commands', 'Agents'],
+      groups: ['Commands'],
       order: CHOLIBA_ORDER,
+      verbs: CHOLIBA_VERBS,
     },
     provide: (container) => {
       container.provide(RUNTIME, () => runtime);

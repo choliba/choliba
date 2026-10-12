@@ -217,26 +217,28 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export const WORKSPACE_SCRIPTS: Readonly<Record<string, string>> = {
   'chol:help': 'choliba --help',
   'chol:check': 'choliba check',
-  'chol:agents': 'choliba agents',
-  'chol:projects': 'choliba projects',
-  'chol:project:list': 'choliba projects list',
-  'chol:tests': 'choliba tests',
+  'chol:agents': 'choliba run agent',
+  'chol:project:list': 'choliba list projects',
+  'chol:tests': 'choliba run tests',
   'chol:lint': 'choliba lint',
   'chol:format': 'choliba format',
   'chol:format:fix': 'choliba format --write',
 };
 
 /**
- * Scripts an earlier `setup` added for commands that no longer exist, with the command they ran. A script whose
- * command was renamed is here too, with its old command: removed, then added again with the new one.
+ * Scripts an earlier `setup` added for commands that no longer exist, with the commands they ran. A script whose
+ * command was renamed is here too, with its old commands: removed, then added again with the new one.
  */
-const RETIRED_SCRIPTS: Readonly<Record<string, string>> = {
-  'chol:playwright-cli': 'choliba playwright-cli',
-  'chol:playwright-trace': 'choliba playwright-trace',
-  'chol:project:create': 'choliba projects create-project',
-  'chol:ticket:create': 'choliba projects create-ticket',
-  'chol:install': 'choliba install',
-  'chol:project:list': 'choliba projects list-projects',
+const RETIRED_SCRIPTS: Readonly<Record<string, readonly string[]>> = {
+  'chol:playwright-cli': ['choliba playwright-cli'],
+  'chol:playwright-trace': ['choliba playwright-trace'],
+  'chol:project:create': ['choliba projects create-project'],
+  'chol:ticket:create': ['choliba projects create-ticket'],
+  'chol:install': ['choliba install'],
+  'chol:project:list': ['choliba projects list-projects', 'choliba projects list'],
+  'chol:agents': ['choliba agents'],
+  'chol:projects': ['choliba projects'],
+  'chol:tests': ['choliba tests'],
 };
 
 /** The workspace package.json as an object; undefined when missing, unreadable or not an object. */
@@ -281,7 +283,12 @@ export function removeRetiredScripts(root: string): readonly string[] {
   const pkg = readPackage(root);
   if (pkg === undefined || !isRecord(pkg['scripts'])) return [];
   const scripts = pkg['scripts'];
-  const removed = Object.keys(RETIRED_SCRIPTS).filter((name) => scripts[name] === RETIRED_SCRIPTS[name]);
+  const removed = Object.entries(RETIRED_SCRIPTS)
+    .filter(([name, commands]) => {
+      const command = scripts[name];
+      return typeof command === 'string' && commands.includes(command);
+    })
+    .map(([name]) => name);
   if (removed.length > 0) {
     writePackage(root, {
       ...pkg,

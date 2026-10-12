@@ -1,8 +1,8 @@
-// `choliba agents list` and the block that describes one agent in its `--help`.
+// `choliba list agents` and the block that describes one agent in its `--help`.
 
 import { listAgents } from '../agent-loader';
 import { invocationFromAgent } from '../invocation';
-import type { ParsedAgentsArgs } from './agents-flags';
+import type { ParsedListArgs } from './agents-flags';
 import type { AgentDefinition } from '../../common';
 import type { AgentInvocation } from '../interfaces/invocation.interface';
 import { resolveAgentsDir } from '../agent-dirs';
@@ -64,11 +64,11 @@ export function formatAgentDetail(command: AgentInvocation, agent: AgentDefiniti
   ].join('\n');
 }
 
-export function runList(kind: Extract<ParsedAgentsArgs, { kind: 'list' }>, deps: RunAgentsCliDeps): number {
+export function runList(kind: Extract<ParsedListArgs, { kind: 'list' }>, deps: RunAgentsCliDeps): number {
   const agentsDir = resolveAgentsDir(kind.agentsDir, deps.config, deps.repoRoot);
   const agents = listAgents(agentsDir);
   if (agents.length === 0) {
-    deps.stdout.write(`No agents found in ${agentsDir}\n`);
+    deps.stdout.write(`Nenhum agente encontrado em ${agentsDir}\n`);
     return 0;
   }
   const blocks = agents.map((agent) => formatAgentDetail(invocationFromAgent(agent), agent));

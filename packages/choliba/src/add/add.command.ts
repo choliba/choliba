@@ -10,7 +10,7 @@ const FILES = (): Suggestions => ({ kind: 'files' });
 const ENTRY: CommandEntry = {
   name: 'add',
   description:
-    'Instala um agente (com suas skills e MCPs), uma skill ou um MCP de uma pasta, repositório git ou pacote npm',
+    'Instala um agente (com suas skills e MCPs), uma skill ou um MCP de uma pasta, repositório git ou pacote npm\n\nExemplo:\n  choliba add ./meus-agentes --path agents/reviewer',
   group: 'Commands',
   spec: {
     usage: 'choliba add <origem> [OPTIONS]',

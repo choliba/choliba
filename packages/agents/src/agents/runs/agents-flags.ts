@@ -1,9 +1,13 @@
 import { EXECUTION_MODES, type ExecutionMode } from '../../common';
 import { SINCE_PENDING } from '../steps/step-constants';
 import type { ProviderRegistry } from '../../common';
+import { ExpectedError, unknownWordMessage } from '@choliba/core';
 
 /** Program name in help and error messages. */
-export const CLI_PROGRAM_NAME = 'choliba agents';
+export const CLI_PROGRAM_NAME = 'choliba run agent';
+
+/** The command that lists the agents. */
+export const LIST_PROGRAM_NAME = 'choliba list agents';
 
 /** Appended to every argument error; the full reference is `agents --help`, built from `runFlagDefinitions`. */
 export const USAGE = `Run '${CLI_PROGRAM_NAME} --help' for usage.`;
@@ -105,20 +109,20 @@ export function runFlagDefinitions(providers: ProviderRegistry): readonly RunFla
   ];
 }
 
-export class AgentsArgsError extends Error {}
+export class AgentsArgsError extends ExpectedError {}
 
 /**
  * A flag the command does not take, in the layout of `docker --goiaba`: the flag, the command's usage
  * and where its help is. Used for a flag no agent knows (here) and for one this agent does not take
  * (`cli/run.ts`, once the agent is loaded).
  */
-export function unknownFlagMessage(flag: string, command: string): string {
+export function unknownFlagMessage(flag: string, command: string, candidates: readonly string[]): string {
   return [
-    `unknown flag: ${flag}`,
+    unknownWordMessage('opção desconhecida', flag, candidates),
     '',
     `Usage:  ${CLI_PROGRAM_NAME} ${command} [OPTIONS] [TASK...]`,
     '',
-    `Run '${CLI_PROGRAM_NAME} ${command} --help' for more information`,
+    `Run '${CLI_PROGRAM_NAME} ${command} --help' for usage.`,
   ].join('\n');
 }
 
@@ -155,10 +159,11 @@ export interface ParsedRunArgs {
   readonly flags: readonly string[];
 }
 
-export type ParsedAgentsArgs =
-  | { readonly kind: 'help' }
-  | { readonly kind: 'list'; readonly agentsDir: string | undefined }
-  | ({ readonly kind: 'run' } & ParsedRunArgs);
+export type ParsedAgentsArgs = { readonly kind: 'help' } | ({ readonly kind: 'run' } & ParsedRunArgs);
+
+/** `choliba list agents [--agents-dir DIR]`, or its `--help`. */
+export type ParsedListArgs =
+  { readonly kind: 'help' } | { readonly kind: 'list'; readonly agentsDir: string | undefined };
 
 /**
  * Consumes and returns the next token, or throws naming `flag`. A plain `queue.shift()` inline
@@ -169,21 +174,26 @@ export type ParsedAgentsArgs =
 function nextValue(queue: string[], flag: string): string {
   const value = queue.shift();
   if (value === undefined) {
-    throw new AgentsArgsError(`Missing value for ${flag}. ${USAGE}`);
+    throw new AgentsArgsError(`falta um valor para ${flag}. ${USAGE}`);
   }
   return value;
 }
 
-function parseListArgs(rest: readonly string[]): ParsedAgentsArgs {
-  const queue = [...rest];
+/** The arguments after `choliba list agents`. */
+export function parseListArgs(argv: readonly string[]): ParsedListArgs {
+  const queue = [...argv];
   let agentsDir: string | undefined;
   let arg: string | undefined;
   while ((arg = queue.shift()) !== undefined) {
+    if (arg === '--help' || arg === '-h') return { kind: 'help' };
     if (arg === '--agents-dir') {
       agentsDir = nextValue(queue, '--agents-dir');
       continue;
     }
-    throw new AgentsArgsError(`Unknown argument "${arg}" for "list". ${USAGE}`);
+    throw new AgentsArgsError(
+      `${unknownWordMessage('opção desconhecida', arg, ['--agents-dir', '--help', '-h'])}\n` +
+        `Run '${LIST_PROGRAM_NAME} --help' for usage.`,
+    );
   }
   return { kind: 'list', agentsDir };
 }
@@ -201,15 +211,11 @@ export function parseAgentsArgs(argv: readonly string[], providers: ProviderRegi
   if (first === undefined || first === 'help' || first === '--help' || first === '-h') {
     return { kind: 'help' };
   }
-  if (first === 'list') {
-    return parseListArgs(rest);
-  }
-
   // `--<command>` is accepted as an alternative to the bare positional form, so
   // `agents --<command>` and `agents <command>` resolve to the same command.
   const command = first.startsWith('--') ? first.slice(2) : first;
   if (command === '') {
-    throw new AgentsArgsError(`Missing command. ${USAGE}`);
+    throw new AgentsArgsError(`falta o agente. ${USAGE}`);
   }
   const taskWords: string[] = [];
   let mode: ExecutionMode | undefined;
@@ -230,22 +236,22 @@ export function parseAgentsArgs(argv: readonly string[], providers: ProviderRegi
   // things in the same command line is an error rather than a silent "last one wins".
   const setMode = (value: ExecutionMode): void => {
     if (mode !== undefined && mode !== value) {
-      throw new AgentsArgsError(`Conflicting modes: ${mode} and ${value}. ${USAGE}`);
+      throw new AgentsArgsError(`modos conflitantes: ${mode} e ${value}. ${USAGE}`);
     }
     mode = value;
   };
   const setTicketType = (value: string): void => {
     if (value === '') {
-      throw new AgentsArgsError(`Missing ticket type in ${TYPE_SHORTCUT_PREFIX}<type>. ${USAGE}`);
+      throw new AgentsArgsError(`falta o tipo de ticket em ${TYPE_SHORTCUT_PREFIX}<tipo>. ${USAGE}`);
     }
     if (ticketType !== undefined && ticketType !== value) {
-      throw new AgentsArgsError(`Conflicting ticket types: ${ticketType} and ${value}. ${USAGE}`);
+      throw new AgentsArgsError(`tipos de ticket conflitantes: ${ticketType} e ${value}. ${USAGE}`);
     }
     ticketType = value;
   };
   const setSince = (value: string): void => {
     if (since !== undefined && since !== value) {
-      throw new AgentsArgsError(`Conflicting --since values: ${since} and ${value}. ${USAGE}`);
+      throw new AgentsArgsError(`valores de --since conflitantes: ${since} e ${value}. ${USAGE}`);
     }
     since = value;
   };
@@ -265,7 +271,7 @@ export function parseAgentsArgs(argv: readonly string[], providers: ProviderRegi
       const value = nextValue(queue, '--mode');
       const known = EXECUTION_MODES.find((candidate) => candidate === value);
       if (known === undefined) {
-        throw new AgentsArgsError(`--mode must be execute, plan or ask, got "${value}". ${USAGE}`);
+        throw new AgentsArgsError(`--mode precisa ser execute, plan ou ask, não "${value}". ${USAGE}`);
       }
       setMode(known);
       continue;
@@ -334,16 +340,17 @@ export function parseAgentsArgs(argv: readonly string[], providers: ProviderRegi
       continue;
     }
     if (arg.startsWith('--')) {
-      throw new AgentsArgsError(unknownFlagMessage(arg, command));
+      const candidates = runFlagDefinitions(providers).flatMap(({ name, aliases = [] }) => [name, ...aliases]);
+      throw new AgentsArgsError(unknownFlagMessage(arg, command, candidates));
     }
     taskWords.push(arg);
   }
 
   if (ticketType !== undefined && ticket !== undefined) {
-    throw new AgentsArgsError(`--type creates a new ticket and --ticket opens an existing one: use only one. ${USAGE}`);
+    throw new AgentsArgsError(`--type cria um ticket novo e --ticket abre um existente: use apenas um. ${USAGE}`);
   }
   if (showPrompt && !dryRun) {
-    throw new AgentsArgsError(`--show-prompt only works with --dry-run. ${USAGE}`);
+    throw new AgentsArgsError(`--show-prompt só funciona com --dry-run. ${USAGE}`);
   }
 
   return {

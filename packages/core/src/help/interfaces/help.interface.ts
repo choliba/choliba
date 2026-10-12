@@ -41,11 +41,11 @@ export interface CommandEntry {
   /** `--help` section title, e.g. `Commands` or `Agents`; entries keep their order inside it. */
   readonly group: string;
   readonly spec: CommandSpec;
-  /** Also accepted as `--<name>`, e.g. `agents --product-owner`. */
+  /** Also accepted as `--<name>`, e.g. `run agent --product-owner`. */
   readonly asFlag?: boolean;
   /** Also accepted as the command (`g` for `generate`): walked like the name, not offered in the list. */
   readonly aliases?: readonly string[];
-  /** `false`: completed and described, but not listed by `--help` (`choliba <agent>` shortcuts). */
+  /** `false`: completed and described, but not listed by `--help` nor offered first by the root. */
   readonly listed?: boolean;
 }
 

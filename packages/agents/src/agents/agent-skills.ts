@@ -5,7 +5,7 @@ import { parse as parseYaml } from 'yaml';
 
 import type { SkillDeclaration } from '../common';
 import { asString, isRecord } from '../common';
-import { SKILL_FILE } from '@choliba/core';
+import { ExpectedError, SKILL_FILE } from '@choliba/core';
 
 /** One skill an agent declares; the agent reads the skill itself from `path`. */
 export interface SkillSummary {
@@ -17,7 +17,7 @@ export interface SkillSummary {
   readonly instructions?: string;
 }
 
-export class SkillError extends Error {}
+export class SkillError extends ExpectedError {}
 
 /** The `description` from a `SKILL.md`'s YAML frontmatter (`---` ... `---` at the top). */
 export function skillDescription(text: string, source: string): string {

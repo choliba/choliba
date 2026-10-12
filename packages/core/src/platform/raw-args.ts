@@ -1,8 +1,7 @@
 /**
- * The arguments after the command `path` (`['projects', 'create-project']`), exactly as typed: commands read
- * their own flags from here, since the command-line parser reorders unknown options and drops `--`. Only the
- * leading words that match the path, in order, are dropped, so the default command (`choliba <agent>`, whose
- * name is not on the line) gets everything.
+ * The arguments after the command `path` (`['list', 'projects']`), exactly as typed: commands read their own
+ * flags from here, since the command-line parser reorders unknown options and drops `--`. Only the leading words
+ * that match the path, in order, are dropped.
  */
 export function rawArgsAfter(argv: readonly string[], ...path: readonly string[]): readonly string[] {
   let at = 0;

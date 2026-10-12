@@ -5,9 +5,9 @@ import { formatHelp, type CommandSpec, CHOL_ROOT } from '@choliba/core';
 import { AppError, ensureApp, type ProjectSettings, type RunningApp } from '@choliba/projects';
 
 import { listAgents } from '../agent-loader';
-import { agentCommandSpec, agentsCliSpec } from './agents-spec';
-import type { AgentsArgsError, ParsedAgentsArgs } from './agents-flags';
-import { parseAgentsArgs, unknownFlagMessage } from './agents-flags';
+import { agentCommandSpec, agentsCliSpec, listAgentsSpec } from './agents-spec';
+import type { AgentsArgsError, ParsedAgentsArgs, ParsedListArgs } from './agents-flags';
+import { parseAgentsArgs, parseListArgs, unknownFlagMessage } from './agents-flags';
 import type { AgentDefinition } from '../../common';
 import type { AgentInvocation } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
@@ -18,9 +18,11 @@ import { formatStepFailure, stepExitCode } from '../steps/step-actions';
 import { formatAgentDetail, runList } from './agent-detail';
 import { formatDryRun, type DryRunInput } from './dry-run';
 import { runAgent } from './run-agent';
+import { wantsFooter } from './run-footer';
 import { planRunTools, readSandbox, type PlannedFile, type Sandbox, type SandboxConfigError } from '../../common';
 import { launchFor, realDisk, type Launch, type LaunchDisk } from './sandbox-launch';
 import {
+  acceptedFlagNames,
   foreignFlag,
   resolveAgentForCommand,
   resolvePlanContent,
@@ -50,7 +52,7 @@ function runHelp(deps: RunAgentsCliDeps): number {
 }
 
 /**
- * `--help` and completion of `choliba agents`: its commands, the agents found on disk right now and their
+ * `--help` and completion of `choliba run agent`: its commands, the agents found on disk right now and their
  * flags, with the projects, tickets and git refs their values complete to.
  */
 export function agentsHelpSpec(deps: RunAgentsCliDeps): CommandSpec {
@@ -189,7 +191,14 @@ async function runAndRecord(
       launch: (providerCommand) =>
         launchFor({ sandbox, command: providerCommand, request: providerRequest, files, config: deps.config }),
     },
-    { runner: deps.runner, stdout: deps.stdout, stderr: deps.stderr, signals: deps.signals, now: deps.now },
+    {
+      runner: deps.runner,
+      stdout: deps.stdout,
+      stderr: deps.stderr,
+      signals: deps.signals,
+      now: deps.now,
+      footer: wantsFooter(deps.stdout, deps.config),
+    },
   );
 
   return runAfter(command, mode, exitCode, deps);
@@ -216,7 +225,7 @@ async function runCommand(parsed: RunArgs, deps: RunAgentsCliDeps): Promise<numb
   // silently ignored.
   const foreign = foreignFlag(parsed, command, agent, deps);
   if (foreign !== undefined) {
-    deps.stderr.write(`${unknownFlagMessage(foreign, agent.name)}\n`);
+    deps.stderr.write(`${unknownFlagMessage(foreign, agent.name, acceptedFlagNames(command, agent, deps))}\n`);
     return 1;
   }
 
@@ -368,8 +377,26 @@ export async function runAgentsCli(argv: readonly string[], deps: RunAgentsCliDe
   if (parsed.kind === 'help') {
     return runHelp(deps);
   }
-  if (parsed.kind === 'list') {
-    return runList(parsed, deps);
-  }
   return runCommand(parsed, deps);
+}
+
+/** `choliba list agents [--agents-dir DIR]`: the agents with their details, or its `--help`. */
+export function runAgentsList(argv: readonly string[], deps: RunAgentsCliDeps): number {
+  let parsed: ParsedListArgs;
+  try {
+    parsed = parseListArgs(argv);
+  } catch (error) {
+    deps.stderr.write(`${(error as AgentsArgsError).message}\n`);
+    return 1;
+  }
+  if (parsed.kind === 'help') {
+    deps.stdout.write(`${formatHelp(listAgentsHelpSpec(deps))}\n`);
+    return 0;
+  }
+  return runList(parsed, deps);
+}
+
+/** `--help` of `choliba list agents`. */
+export function listAgentsHelpSpec(deps: RunAgentsCliDeps): CommandSpec {
+  return listAgentsSpec({ providers: deps.providers });
 }

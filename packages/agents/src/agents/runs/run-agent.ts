@@ -1,13 +1,19 @@
 import { mkdirSync, rmSync } from 'node:fs';
 
 import {
+  DEFAULT_COLUMNS,
   exitCodeFor,
+  frameBottom,
+  frameLines,
+  frameTop,
+  StatusFooter,
   type ProcessRunnerService,
   type Session,
   type SessionExitEvent,
   type SignalSource,
   type Theme,
   type Writable,
+  type WritableWithColumns,
 } from '@choliba/core';
 
 import type { AgentEvent } from '../../common';
@@ -22,6 +28,8 @@ import {
 } from '../../common';
 
 import { agentRenderOptions, formatProviderLine, renderEvent } from './event-render';
+import type { RunFooterInfo, RunScreen } from '../interfaces/run-footer.interface';
+import { footerLines, providerContext, summaryLine } from './run-footer';
 import type { Launch } from './sandbox-launch';
 import { applyRunTools } from '../../common';
 import { delegationMessage, delegationOf } from './delegation-guard';
@@ -34,10 +42,74 @@ export interface RunAgentDeps {
    * `Bun` global. Every caller passes its own, same as the shell's `terminal run`.
    */
   readonly runner: ProcessRunnerService;
-  readonly stdout: Writable;
+  readonly stdout: WritableWithColumns;
   readonly stderr: Writable;
   readonly signals: SignalSource;
   readonly now: () => Date;
+  /** Draw the footer with the run's provider, sandbox and elapsed time (`wantsFooter`): only on a terminal. */
+  readonly footer?: boolean;
+  /** Calls `tick` every `ms` until the returned function stops it; `everySecond`'s timer when absent. */
+  readonly every?: (ms: number, tick: () => void) => () => void;
+}
+
+/** A timer that calls `tick` every `ms`, not keeping the process alive by itself. */
+export function everySecond(ms: number, tick: () => void): () => void {
+  const timer = setInterval(tick, ms);
+  timer.unref();
+  return () => {
+    clearInterval(timer);
+  };
+}
+
+/** How often the footer is drawn again: often enough for the milliseconds to roll, cheap for the terminal. */
+export const FOOTER_REFRESH_MS = 50;
+
+/** The streams of a session as they are, with the `[provider]` line first: where there is no footer. */
+function plainScreen(info: RunFooterInfo, theme: Theme, deps: RunAgentDeps): RunScreen {
+  deps.stdout.write(`${formatProviderLine(info.provider, theme)}${providerContext(info)}\n`);
+  return { framed: false, out: deps.stdout, err: deps.stderr, model: noop, close: noop };
+}
+
+/**
+ * The screen of a session on a terminal: a blank line after the command, a frame titled with the agent that the
+ * session's lines go in, and a footer under it with the run's context and time, drawn every `FOOTER_REFRESH_MS`.
+ * Closing it leaves the bottom of the frame and the summary line.
+ */
+function runScreen(info: RunFooterInfo, request: RunAgentRequest, deps: RunAgentDeps): RunScreen {
+  const { theme } = request;
+  if (deps.footer !== true) return plainScreen(info, theme, deps);
+  const { name, color } = request.providerRequest.agent;
+  const now = (): number => deps.now().getTime();
+  const width = (): number => deps.stdout.columns ?? DEFAULT_COLUMNS;
+  let model: string | undefined;
+  const current = (): RunFooterInfo => (model === undefined ? info : { ...info, model });
+  deps.stdout.write(`\n${frameTop(name, width(), (text) => theme.paint('agents', name, text, color))}\n`);
+  const footer = new StatusFooter(deps.stdout, (columns) => footerLines(current(), now(), columns, theme));
+  const framed = (stream: Writable): Writable => {
+    const above = footer.writer(stream);
+    return {
+      write: (text) => {
+        above.write(`${frameLines(text, width()).join('\n')}\n`);
+      },
+    };
+  };
+  const stop = (deps.every ?? everySecond)(FOOTER_REFRESH_MS, () => {
+    footer.draw();
+  });
+  footer.draw();
+  return {
+    framed: true,
+    out: framed(deps.stdout),
+    err: framed(deps.stderr),
+    model: (reported) => {
+      model = reported;
+    },
+    close: (exitCode) => {
+      stop();
+      footer.close();
+      deps.stdout.write(`${frameBottom(width())}\n${summaryLine(current(), now(), exitCode)}\n`);
+    },
+  };
 }
 
 export interface RunAgentRequest {
@@ -122,9 +194,10 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
   }
 
   let session: Session;
+  let launch: Launch;
   try {
     const command = [...request.provider.command, ...args];
-    const launch: Launch = request.launch?.(command) ?? { command, paths: [], skipped: [] };
+    launch = request.launch?.(command) ?? { command, place: { kind: 'local' }, paths: [], skipped: [] };
     if (launch.skipped.length > 0) {
       deps.stderr.write(`${imageFoldersNotice(launch.skipped)}\n`);
     }
@@ -135,14 +208,39 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
       ...(launch.env === undefined ? {} : { env: launch.env }),
     });
   } catch (error) {
-    deps.stderr.write(`Failed to start ${providerId}: ${errorMessage(error)}\n`);
+    deps.stderr.write(`não foi possível iniciar ${providerId}: ${errorMessage(error)}\n`);
     return 1;
   }
 
-  deps.stdout.write(`${formatProviderLine(providerId, request.theme)}\n`);
+  const info: RunFooterInfo = { provider: providerId, place: launch.place, startedAt: deps.now().getTime() };
+  const screen = runScreen(info, request, deps);
+  let exitCode = 1;
+  try {
+    exitCode = await followSession(request, deps, session, screen);
+    return exitCode;
+  } finally {
+    screen.close(exitCode);
+  }
+}
 
+/**
+ * The session from its first line to its exit: each line parsed and shown (guards stopping it when they must), the
+ * signals passed on, then the exit code and, in `plan` mode, the saved plan.
+ */
+async function followSession(
+  request: RunAgentRequest,
+  deps: RunAgentDeps,
+  session: Session,
+  screen: RunScreen,
+): Promise<number> {
+  const adapter = request.provider.adapter;
+  const providerId = adapter.id;
+  const label = request.providerRequest.agent.name;
   const parser = adapter.createParser();
-  const renderOptions = agentRenderOptions(label, request.providerRequest.agent.color, request.theme);
+  const renderOptions = {
+    ...agentRenderOptions(label, request.providerRequest.agent.color, request.theme),
+    labeled: !screen.framed,
+  };
   let doneEvent: Extract<AgentEvent, { type: 'done' }> | undefined;
   let planMarkdown: string | undefined;
   const textParts: string[] = [];
@@ -155,13 +253,14 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
 
   const stop = (message: string): void => {
     stopGuard.triggered = true;
-    deps.stderr.write(`${message}\n`);
+    screen.err.write(`${message}\n`);
     session.kill('SIGTERM');
   };
 
   session.subscribe((event) => {
     if (event.stream === 'stderr') {
-      deps.stderr.write(`${event.raw}\n`);
+      // In the frame, a blank line from the provider (around its own messages) would only be an empty row.
+      if (!screen.framed || event.raw.trim() !== '') screen.err.write(`${event.raw}\n`);
       return;
     }
     for (const agentEvent of parser.parseLine(event.raw)) {
@@ -215,9 +314,13 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
         textParts.push(agentEvent.text);
       }
 
-      const rendered = renderEvent(agentEvent, renderOptions);
+      if (agentEvent.type === 'init' && agentEvent.model !== undefined) {
+        screen.model(agentEvent.model);
+      }
+      // In the frame, the model goes in the footer's table: the `· ready (model)` line would only repeat it.
+      const rendered = screen.framed && agentEvent.type === 'init' ? undefined : renderEvent(agentEvent, renderOptions);
       if (rendered !== undefined) {
-        deps.stdout.write(`${rendered}\n`);
+        screen.out.write(`${rendered}\n`);
       }
     }
   });
@@ -246,7 +349,7 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
   }
 
   if (exitEvent.error !== null) {
-    deps.stderr.write(`${providerId} session failed: ${exitEvent.error}\n`);
+    screen.err.write(`a sessão de ${providerId} falhou: ${exitEvent.error}\n`);
   }
 
   // The process's own exit code is the base signal — a crash or a killing signal always wins.
@@ -264,7 +367,7 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
         ? defaultResolvePlanContent({ planMarkdown, doneEvent, textParts })
         : adapter.resolvePlanContent({ planMarkdown, doneEvent, textParts });
     if (content === undefined) {
-      deps.stderr.write('Nothing to save: the provider produced no plan text.\n');
+      screen.err.write('nada para salvar: o provider não produziu texto de plano.\n');
       return 1;
     }
     const path = writePlan({
@@ -276,7 +379,7 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
       content,
       now: deps.now(),
     });
-    deps.stdout.write(`Plan saved: ${path}\n`);
+    screen.out.write(`Plan saved: ${path}\n`);
   }
 
   return exitCode;

@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { findResource, locateResource, resourceStarts } from '../../config/index';
+import { existingResourceStarts, findResource, locateResource, resourceStarts } from '../../config/index';
 
 function withTree(run: (root: string) => void): void {
   const root = mkdtempSync(join(tmpdir(), 'resources-'));
@@ -22,6 +22,23 @@ describe('resourceStarts', () => {
 
       expect(resourceStarts('/src', ['bun', join(root, 'choliba')])).toEqual([join(root, 'bin'), '/src']);
       expect(resourceStarts('/src', ['bun'])).toEqual(['/src']);
+      expect(resourceStarts(root).at(-1)).toBe(root);
+    });
+  });
+});
+
+describe('existingResourceStarts', () => {
+  it('drops a source dir that is not on this machine and keeps both when they are, in order', () => {
+    withTree((root) => {
+      const bin = join(root, 'bin');
+      mkdirSync(bin);
+      writeFileSync(join(bin, 'choliba.js'), '');
+      const argv = ['bun', join(bin, 'choliba.js')];
+      const missing = join(root, 'built-on-ci');
+
+      expect(existingResourceStarts(missing, argv)).toEqual([bin]);
+      mkdirSync(missing);
+      expect(existingResourceStarts(missing, argv)).toEqual([bin, missing]);
     });
   });
 });
@@ -45,6 +62,30 @@ describe('locateResource / findResource', () => {
       expect(locateResource('templates/ticket', source, ['bun', join(root, 'missing.js')])).toBe(
         join(root, 'src', 'pkg', 'templates', 'ticket'),
       );
+    });
+  });
+
+  it('looks in the directory the bundle loaded when the script and the source do not have it', () => {
+    withTree((root) => {
+      const shipped = join(root, 'dist');
+      const source = join(root, 'frozen-source');
+      mkdirSync(join(shipped, 'schemes'), { recursive: true });
+      mkdirSync(source);
+      const holder = globalThis as { __CHOLIBA_SHIPPED_DIR__?: string };
+      try {
+        holder.__CHOLIBA_SHIPPED_DIR__ = '';
+        expect(locateResource('schemes', source, ['bun'])).toBeUndefined();
+        holder.__CHOLIBA_SHIPPED_DIR__ = source;
+        expect(locateResource('schemes', source, ['bun'])).toBeUndefined();
+        expect(resourceStarts(source, ['bun'])).toEqual([source]);
+        expect(existingResourceStarts(source, ['bun'])).toEqual([source]);
+        holder.__CHOLIBA_SHIPPED_DIR__ = shipped;
+        expect(locateResource('schemes', source, ['bun'])).toBe(join(shipped, 'schemes'));
+        expect(findResource('schemes', source, ['bun'])).toBe(join(shipped, 'schemes'));
+        expect(resourceStarts(source, ['bun'])).toEqual([source]);
+      } finally {
+        delete holder.__CHOLIBA_SHIPPED_DIR__;
+      }
     });
   });
 

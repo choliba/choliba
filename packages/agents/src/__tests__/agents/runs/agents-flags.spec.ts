@@ -2,6 +2,7 @@ import type { ParsedRunArgs } from '../../../agents/runs/agents-flags';
 import {
   AgentsArgsError,
   parseAgentsArgs as parseWith,
+  parseListArgs,
   runFlagDefinitions,
   USAGE,
 } from '../../../agents/runs/agents-flags';
@@ -25,21 +26,27 @@ describe('parseAgentsArgs — help', () => {
   });
 });
 
-describe('parseAgentsArgs — list', () => {
-  it('parses list with no flags', () => {
-    expect(parseAgentsArgs(['list'])).toEqual({ kind: 'list', agentsDir: undefined });
-  });
-
-  it('parses list --agents-dir', () => {
-    expect(parseAgentsArgs(['list', '--agents-dir', '/somewhere'])).toEqual({ kind: 'list', agentsDir: '/somewhere' });
+describe('parseListArgs', () => {
+  it('parses list agents with no flags, with --agents-dir and with --help', () => {
+    expect(parseListArgs([])).toEqual({ kind: 'list', agentsDir: undefined });
+    expect(parseListArgs(['--agents-dir', '/somewhere'])).toEqual({ kind: 'list', agentsDir: '/somewhere' });
+    expect(parseListArgs(['-h'])).toEqual({ kind: 'help' });
+    expect(parseListArgs(['--agents-dir', '/x', '--help'])).toEqual({ kind: 'help' });
   });
 
   it('rejects a missing value for --agents-dir', () => {
-    expect(() => parseAgentsArgs(['list', '--agents-dir'])).toThrow(/Missing value for --agents-dir/);
+    expect(() => parseListArgs(['--agents-dir'])).toThrow(/falta um valor para --agents-dir/);
   });
 
-  it('rejects any other flag for list', () => {
-    expect(() => parseAgentsArgs(['list', '--bogus'])).toThrow(/Unknown argument "--bogus" for "list"/);
+  it('rejects any other flag', () => {
+    expect(() => parseListArgs(['--bogus'])).toThrow(
+      "opção desconhecida: --bogus.\nRun 'choliba list agents --help' for usage.",
+    );
+    expect(() => parseListArgs(['--agent-dir'])).toThrow('Você quis dizer "--agents-dir"?');
+  });
+
+  it('takes list as an agent name under run agent', () => {
+    expect(parseAgentsArgs(['list'])).toMatchObject({ kind: 'run', command: 'list' });
   });
 });
 
@@ -80,11 +87,11 @@ describe('parseAgentsArgs — run', () => {
   });
 
   it('rejects an invalid --mode value', () => {
-    expect(() => parseAgentsArgs(['developer', '--mode', 'bogus'])).toThrow(/--mode must be execute, plan or ask/);
+    expect(() => parseAgentsArgs(['developer', '--mode', 'bogus'])).toThrow(/--mode precisa ser execute, plan ou ask/);
   });
 
   it('rejects a missing value for --mode', () => {
-    expect(() => parseAgentsArgs(['developer', '--mode'])).toThrow(/Missing value for --mode/);
+    expect(() => parseAgentsArgs(['developer', '--mode'])).toThrow(/falta um valor para --mode/);
   });
 
   it('--mode-<mode> sets the mode', () => {
@@ -99,24 +106,22 @@ describe('parseAgentsArgs — run', () => {
 
   it('rejects two different modes', () => {
     expect(() => parseAgentsArgs(['developer', '--mode', 'execute', '--mode-plan'])).toThrow(
-      /Conflicting modes: execute and plan/,
+      /modos conflitantes: execute e plan/,
     );
-    expect(() => parseAgentsArgs(['developer', '--mode-ask', '--mode-plan'])).toThrow(
-      /Conflicting modes: ask and plan/,
-    );
+    expect(() => parseAgentsArgs(['developer', '--mode-ask', '--mode-plan'])).toThrow(/modos conflitantes: ask e plan/);
   });
 
   it('refuses a flag no agent takes, --plan included (the mode is --mode plan or --mode-plan)', () => {
-    expect(() => parseAgentsArgs(['developer', '--plan'])).toThrow(/unknown flag: --plan/);
-    expect(() => parseAgentsArgs(['developer', '--red'])).toThrow(/unknown flag: --red/);
-    expect(() => parseAgentsArgs(['developer', '--Plan'])).toThrow(/unknown flag: --Plan/);
+    expect(() => parseAgentsArgs(['developer', '--plan'])).toThrow(/opção desconhecida: --plan/);
+    expect(() => parseAgentsArgs(['developer', '--red'])).toThrow(/opção desconhecida: --red/);
+    expect(() => parseAgentsArgs(['developer', '--Plan'])).toThrow(/opção desconhecida: --Plan/);
   });
 
   it('--since-pending is --since pending, and conflicts with another --since', () => {
     expect(parseRun(['developer', '--since-pending']).since).toBe('pending');
     expect(parseRun(['developer', '--since', 'pending', '--since-pending']).since).toBe('pending');
     expect(() => parseAgentsArgs(['developer', '--since', 'HEAD~1', '--since-pending'])).toThrow(
-      /Conflicting --since values: HEAD~1 and pending/,
+      /valores de --since conflitantes: HEAD~1 e pending/,
     );
   });
 
@@ -141,19 +146,19 @@ describe('parseAgentsArgs — run', () => {
 
   it('rejects two ticket types, an empty shortcut, and --type together with --ticket', () => {
     expect(() => parseAgentsArgs(['po', '--type-bug', '--type', 'story'])).toThrow(
-      /Conflicting ticket types: bug and story/,
+      /tipos de ticket conflitantes: bug e story/,
     );
-    expect(() => parseAgentsArgs(['po', '--type-'])).toThrow(/Missing ticket type in --type-<type>/);
-    expect(() => parseAgentsArgs(['po', '--type'])).toThrow(/Missing value for --type/);
-    expect(() => parseAgentsArgs(['po', '--type-bug', '--ticket', 'red-3'])).toThrow(/use only one/);
+    expect(() => parseAgentsArgs(['po', '--type-'])).toThrow(/falta o tipo de ticket em --type-<tipo>/);
+    expect(() => parseAgentsArgs(['po', '--type'])).toThrow(/falta um valor para --type/);
+    expect(() => parseAgentsArgs(['po', '--type-bug', '--ticket', 'red-3'])).toThrow(/use apenas um/);
   });
 
   it('rejects a missing value for --project', () => {
-    expect(() => parseAgentsArgs(['developer', '--project'])).toThrow(/Missing value for --project/);
+    expect(() => parseAgentsArgs(['developer', '--project'])).toThrow(/falta um valor para --project/);
   });
 
   it('rejects a missing value for --plan-from', () => {
-    expect(() => parseAgentsArgs(['developer', '--plan-from'])).toThrow(/Missing value for --plan-from/);
+    expect(() => parseAgentsArgs(['developer', '--plan-from'])).toThrow(/falta um valor para --plan-from/);
   });
 
   it('parses --provider and --model', () => {
@@ -163,7 +168,7 @@ describe('parseAgentsArgs — run', () => {
   });
 
   it('rejects a missing value for --provider', () => {
-    expect(() => parseAgentsArgs(['developer', '--provider'])).toThrow(/Missing value for --provider/);
+    expect(() => parseAgentsArgs(['developer', '--provider'])).toThrow(/falta um valor para --provider/);
   });
 
   it.each(['auto', 'claude', 'cursor'] as const)('accepts --%s as shorthand for --provider %s', (name) => {
@@ -175,7 +180,7 @@ describe('parseAgentsArgs — run', () => {
   });
 
   it('rejects a missing value for --model', () => {
-    expect(() => parseAgentsArgs(['developer', '--model'])).toThrow(/Missing value for --model/);
+    expect(() => parseAgentsArgs(['developer', '--model'])).toThrow(/falta um valor para --model/);
   });
 
   it('parses --agents-dir for run, same as for list', () => {
@@ -183,7 +188,7 @@ describe('parseAgentsArgs — run', () => {
   });
 
   it('rejects a missing value for --agents-dir', () => {
-    expect(() => parseAgentsArgs(['developer', '--agents-dir'])).toThrow(/Missing value for --agents-dir/);
+    expect(() => parseAgentsArgs(['developer', '--agents-dir'])).toThrow(/falta um valor para --agents-dir/);
   });
 
   it('collects every --add-dir, in order', () => {
@@ -191,7 +196,7 @@ describe('parseAgentsArgs — run', () => {
   });
 
   it('rejects a missing value for --add-dir', () => {
-    expect(() => parseAgentsArgs(['developer', '--add-dir'])).toThrow(/Missing value for --add-dir/);
+    expect(() => parseAgentsArgs(['developer', '--add-dir'])).toThrow(/falta um valor para --add-dir/);
   });
 
   it('parses --dry-run, and leaves --no-color to choliba (a global flag, removed before any command)', () => {
@@ -207,12 +212,18 @@ describe('parseAgentsArgs — run', () => {
   });
 
   it('rejects a missing value for --since', () => {
-    expect(() => parseAgentsArgs(['sync-docs', '--since'])).toThrow(/Missing value for --since/);
+    expect(() => parseAgentsArgs(['sync-docs', '--since'])).toThrow(/falta um valor para --since/);
   });
 
   it('rejects an unrecognized flag', () => {
     expect(() => parseAgentsArgs(['developer', '--bogus=1'])).toThrow(
-      "unknown flag: --bogus=1\n\nUsage:  choliba agents developer [OPTIONS] [TASK...]\n\nRun 'choliba agents developer --help' for more information",
+      "opção desconhecida: --bogus=1.\n\nUsage:  choliba run agent developer [OPTIONS] [TASK...]\n\nRun 'choliba run agent developer --help' for usage.",
+    );
+  });
+
+  it('suggests the closest flag', () => {
+    expect(() => parseAgentsArgs(['developer', '--dry-rn'])).toThrow(
+      'opção desconhecida: --dry-rn. Você quis dizer "--dry-run"?',
     );
   });
 
@@ -245,7 +256,7 @@ describe('parseAgentsArgs — run', () => {
   });
 
   it('rejects a bare "--" with no command name after it', () => {
-    expect(() => parseAgentsArgs(['--'])).toThrow(/Missing command/);
+    expect(() => parseAgentsArgs(['--'])).toThrow(/falta o agente/);
   });
 });
 
@@ -265,11 +276,11 @@ describe('RUN_FLAGS', () => {
     expect(parseRun(['echo', '--dry-run', '--show-prompt'])).toMatchObject({ dryRun: true, showPrompt: true });
     expect(parseRun(['echo', '--dry-run'])).toMatchObject({ dryRun: true, showPrompt: false });
     expect(() => parseAgentsArgs(['echo', '--show-prompt'])).toThrow(
-      new AgentsArgsError(`--show-prompt only works with --dry-run. ${USAGE}`),
+      new AgentsArgsError(`--show-prompt só funciona com --dry-run. ${USAGE}`),
     );
   });
 
   it('points argument errors at --help', () => {
-    expect(USAGE).toBe("Run 'choliba agents --help' for usage.");
+    expect(USAGE).toBe("Run 'choliba run agent --help' for usage.");
   });
 });

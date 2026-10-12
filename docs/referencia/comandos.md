@@ -1,22 +1,37 @@
 # Comandos
 
-> Cada comando do choliba, instalado na pasta de trabalho: agentes, add, testes, projetos, check, lint, format e setup.
+> Cada comando do choliba, instalado na pasta de trabalho: run, add, new, list, check, setup, lint e format.
 
 O comando é `choliba`, instalado na pasta de trabalho, em `node_modules/.bin/`, que não está no `PATH`. Rode-o com o
 Bun na frente: `bunx choliba <comando>` (ou `bun choliba <comando>`). As tabelas abaixo omitem o `bunx`.
 
-| Comando                                      | O que faz                                                                                                                             |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `choliba agents COMMAND [OPTIONS] [TASK...]` | Roda um agente da pasta de trabalho (`.choliba/agents/<nome>/`); `choliba <agente>` é atalho                                          |
-| `choliba add <origem> [OPTIONS]`             | Instala um agente (com suas skills e MCPs), uma skill ou um MCP; veja [Instalar agentes, skills e MCPs](../guias/instalar-agentes.md) |
-| `choliba projects COMMAND [ARGS]`            | Cria, lista e confere projetos e tickets em `CHOL_PROJECTS_DIR`                                                                       |
-| `choliba tests [PROJECT[:TICKET]] [OPTIONS]` | Roda os testes E2E dos projetos com o Playwright                                                                                      |
-| `choliba check`                              | Confere a pasta de trabalho: agentes (schemas, skills, MCPs) e projetos                                                               |
-| `choliba lint`                               | ESLint na pasta de trabalho, com a configuração que vem no choliba                                                                    |
-| `choliba format`                             | Prettier na pasta de trabalho: confere, ou corrige com `--write`                                                                      |
-| `choliba setup`                              | Liga o autocomplete no bash (roda sozinho ao instalar com `--trust`)                                                                  |
+A raiz tem poucos verbos e comandos. O que se roda, cria ou lista é um tipo depois do verbo: `run agent`,
+`run tests`, `new project`, `list agents`, `list projects`.
 
-`choliba --help` (ou `choliba COMMAND --help`) lista os comandos. `choliba setup` também prepara a pasta de
+| Comando                                                    | O que faz                                                                                                                             |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `choliba run agent <agente> [OPTIONS] [TAREFA...]`         | Roda um agente da pasta de trabalho (`.choliba/agents/<nome>/`)                                                                       |
+| `choliba run tests [PROJETO[:TICKET][/CAMINHO]] [OPTIONS]` | Roda os testes E2E dos projetos com o Playwright                                                                                      |
+| `choliba add <origem> [OPTIONS]`                           | Instala um agente (com suas skills e MCPs), uma skill ou um MCP; veja [Instalar agentes, skills e MCPs](../guias/instalar-agentes.md) |
+| `choliba new project [NOME] [OPTIONS]`                     | Cria um projeto a partir do modelo; o que faltar é perguntado no terminal                                                             |
+| `choliba list agents`                                      | Lista os agentes da pasta de trabalho com os detalhes de cada um                                                                      |
+| `choliba list projects [--tickets]`                        | Lista os projetos de `CHOL_PROJECTS_DIR` e, com `--tickets`, os tickets de cada um                                                    |
+| `choliba check [PROJETO]`                                  | Confere a pasta de trabalho: agentes (schemas, skills, MCPs) e projetos; com PROJETO, só esse projeto                                 |
+| `choliba setup`                                            | Liga o autocomplete no bash (roda sozinho ao instalar com `--trust`)                                                                  |
+| `choliba lint`                                             | ESLint na pasta de trabalho, com a configuração que vem no choliba                                                                    |
+| `choliba format`                                           | Prettier na pasta de trabalho: confere, ou corrige com `--write`                                                                      |
+| `choliba help [COMANDO...]`                                | A ajuda da raiz ou de um comando (`choliba help run tests`)                                                                           |
+| `choliba version`                                          | A versão instalada                                                                                                                    |
+
+Uma palavra que o choliba não conhece é erro, com a sugestão do nome mais parecido:
+
+```
+$ bunx choliba chek
+comando desconhecido: chek. Você quis dizer "check"?
+Run 'choliba --help' for usage.
+```
+
+`choliba --help` (ou `choliba COMMAND --help`, ou `choliba help COMMAND`) lista os comandos. `choliba setup` também prepara a pasta de
 trabalho na instalação; o que ele cria está em [Primeiros passos](../primeiros-passos.md#choliba-setup).
 
 `choliba terminal run` não aparece nessa lista. Ele roda um processo e rotula cada linha da saída, para um script:
@@ -35,6 +50,12 @@ Cores: a saída só tem cor num terminal. `--no-color` (em qualquer comando), `N
 ou um pipe tiram a cor; `FORCE_COLOR=1` força. Quais cores usar vem de `CHOL_COLORS` no `.env` (veja
 [`.env` da pasta de trabalho](env.md)) e, para o rótulo de um agente, do `agent.color` dele.
 
+Painel do agente: num terminal, `run agent` mostra a saída do agente num quadro e mantém no rodapé uma tabela com o
+provider, o modelo, o sandbox, a imagem e o container (só com container) e o tempo decorrido, em milésimos (veja o
+[ciclo de execução](ciclo-de-execucao-agente.md)). Num pipe, num arquivo ou com `TERM=dumb`, não há quadro nem
+painel: o contexto vai na linha `[provider]` (`[provider] cursor · docker · choliba-agent · choliba-<id>`).
+`NO_COLOR` só tira a cor dele.
+
 Um comando de agente passa pelo [ciclo de execução](ciclo-de-execucao-agente.md): o choliba antes, o modelo, o choliba
 depois.
 
@@ -46,17 +67,17 @@ nenhuma pasta de execução, nenhum provider. Vale em qualquer modo. Ele só lê
 agente aparece do mesmo jeito.
 
 ```
-$ bunx choliba implementer --mode plan --dry-run --project app --ticket app-1
+$ bunx choliba run agent implementer --mode plan --dry-run --project app --ticket app-1
 Sem --dry-run, faria nesta ordem:
 
  1. [CLI]    confere http://localhost:5173/: sem resposta, para aqui (o ambiente não tem envs[].start)
- 2. [CLI]    plan.before 1/2 — run: bunx choliba tests app:app-1 --expect red --failures .cache/test-writer/app-1/red.md
+ 2. [CLI]    plan.before 1/2 — run: bunx choliba run tests app:app-1 --expect red --failures .cache/test-writer/app-1/red.md
              se falhar: para aqui, o agente não roda
  3. [CLI]    plan.before 2/2 — add_files: falhas_red .cache/test-writer/app-1/red.md
              se falhar: para aqui, o agente não roda
  4. [agente] claude · modelo padrão do provider · modo plan · na pasta .cache/runs/<id>
              skills: playwright-trace · MCPs: nenhum
-             prompt de sistema: 7763 bytes · prompt do usuário: 218 bytes (--show-prompt mostra os dois)
+             prompt de sistema: 8053 bytes · prompt do usuário: 218 bytes (--show-prompt mostra os dois)
              comando: claude -p <prompt do usuário> --output-format stream-json --verbose …
  5. [CLI]    plan.after.success (se o agente sair com 0): nada
              plan.after.failure (se o agente falhar): nada
@@ -71,7 +92,7 @@ completa (em JSON, um argumento por item) e, no Cursor, o `.cursor/cli.json` da 
 ## A aplicação do projeto
 
 O choliba deixa a aplicação do projeto pronta, pelo ambiente ativo do `config.json`, em dois momentos: antes de
-rodar o Playwright no `choliba tests`, e antes de qualquer agente rodado com `--project` (antes até dos `before` dele):
+rodar o Playwright no `choliba run tests`, e antes de qualquer agente rodado com `--project` (antes até dos `before` dele):
 
 1. Roda cada comando de `envs[].setup` em `appDir`, em ordem (por exemplo, `["bun install"]`). Um que falha para
    tudo: `a aplicação não ficou pronta: "<comando>" saiu com código N`. Numa rodada de vários tickets, o setup roda
@@ -79,11 +100,11 @@ rodar o Playwright no `choliba tests`, e antes de qualquer agente rodado com `--
 2. Confere o `baseURL`. Uma aplicação que já está no ar, como a que você subiu, é usada como está, e continua no ar
    depois.
 3. Fora do ar, com `envs[].start`, sobe a aplicação em `appDir`, espera ela responder (até 3 minutos) e a derruba
-   no fim, também quando a execução é interrompida. No `choliba tests`, o log do servidor sai junto com o dos
+   no fim, também quando a execução é interrompida. No `choliba run tests`, o log do servidor sai junto com o dos
    testes. Numa execução de agente, ele vai para `.cache/app/<projeto>.log`. Se ela não sobe:
    `a aplicação não subiu (envs[].start): …`, com o fim do log.
 4. Fora do ar e sem `envs[].start`, a execução de um agente para antes dele (`a aplicação não responde em … e o
-ambiente … não tem envs[].start`). No `choliba tests`, `--expect` falha com
+ambiente … não tem envs[].start`). No `choliba run tests`, `--expect` falha com
    `a aplicação não respondeu no baseURL: …`.
 
 Os dois campos são opcionais. Um projeto com `global-setup.ts`, como o `exemplo`, continua subindo a aplicação por
@@ -113,7 +134,7 @@ critério fora desse formato (ou com `CHANGE_ME`) falha, dizendo qual frase corr
 
 ### Portões dos testes de um ticket
 
-`choliba tests PROJECT:TICKET --expect red|green [--failures ARQUIVO]` roda os testes de um ticket e confere o que
+`choliba run tests PROJECT:TICKET --expect red|green [--failures ARQUIVO]` roda os testes de um ticket e confere o que
 eles mostram. É assim que os agentes `test-writer` e `implementer` garantem o TDD:
 
 - **`--expect red`**: todo critério do ticket tem teste, nenhum quebra no próprio código nem é pulado, e **pelo
@@ -139,11 +160,11 @@ do antigo continuam valendo como regressão, então quebrariam assim que o novo 
 Cada item é `<ticket>:<critério>`, ou só `<ticket>` para todos os critérios dele. O ticket antigo não muda: fica como
 histórico.
 
-- **Os testes aposentados saem das rodadas do projeto** (`choliba tests minha-app`, `choliba tests minha-app/tests` e
+- **Os testes aposentados saem das rodadas do projeto** (`choliba run tests minha-app`, `choliba run tests minha-app/tests` e
   as rodadas dos agentes). Cada rodada começa dizendo o que ficou de fora:
   `aposentados: minha-app-1 CA-03, CA-04 (substituídos por minha-app-2)`. Um ticket com todos os critérios
   aposentados não roda no lote.
-- **Rodar o ticket antigo sozinho** (`choliba tests minha-app:1`) ainda roda os testes dele, com um aviso. Com
+- **Rodar o ticket antigo sozinho** (`choliba run tests minha-app:1`) ainda roda os testes dele, com um aviso. Com
   `--expect`, falha: não há o que conferir num critério substituído.
 - **Uma referência inválida** (ticket ou critério que não existe, ou o próprio ticket) faz as rodadas do projeto
   falharem e o `choliba check` marcar o projeto com `✗`.

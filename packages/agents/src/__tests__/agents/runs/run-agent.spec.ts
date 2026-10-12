@@ -11,7 +11,7 @@ import type { AgentProvider } from '../../../common/agent-provider';
 import type { PlanContentContext, ProviderRequest } from '../../../common/interfaces/provider.interface';
 import type { ResolvedProvider } from '../../../common/provider-registry';
 import type { RunAgentRequest } from '../../../agents/runs/run-agent';
-import { runAgent } from '../../../agents/runs/run-agent';
+import { everySecond, FOOTER_REFRESH_MS, runAgent } from '../../../agents/runs/run-agent';
 import { erroringStream, fakeSpawner, streamFromChunks, throwingSpawner } from '../../helpers/fake-spawner';
 import { makeTmpDir } from '../../helpers/tmp';
 import { NO_PERMISSIONS } from '../../../common/agent-permissions';
@@ -488,7 +488,7 @@ describe('runAgent', () => {
     const exitCode = await run(s);
 
     expect(exitCode).toBe(1);
-    expect(s.stderr.chunks.join('')).toContain('session failed');
+    expect(s.stderr.chunks.join('')).toContain('a sessão de claude falhou');
     expect(s.stderr.chunks.join('')).toContain('boom');
   });
 
@@ -592,7 +592,7 @@ describe('runAgent', () => {
         const exitCode = await run(s, undefined, { mode: 'plan' });
 
         expect(exitCode).toBe(1);
-        expect(s.stderr.chunks.join('')).toContain('Nothing to save');
+        expect(s.stderr.chunks.join('')).toContain('nada para salvar');
       } finally {
         tmp.cleanup();
       }
@@ -639,7 +639,7 @@ describe('runAgent', () => {
         const exitCode = await run(s, undefined, { mode: 'plan' });
 
         expect(exitCode).toBe(1);
-        expect(s.stderr.chunks.join('')).toContain('Nothing to save');
+        expect(s.stderr.chunks.join('')).toContain('nada para salvar');
       } finally {
         tmp.cleanup();
       }
@@ -672,6 +672,7 @@ describe('runAgent — launch', () => {
       launch: (command) => ({
         command: ['docker', 'run', 'img', ...command],
         env: { TOKEN: 't' },
+        place: { kind: 'docker', image: 'img', container: 'choliba-1' },
         paths: [],
         skipped: ['/etc/passwd', '/usr'],
       }),
@@ -683,5 +684,98 @@ describe('runAgent — launch', () => {
     expect(s.stderr.chunks.join('')).toContain(
       'No container, estes caminhos são da imagem e não vêm desta máquina: /etc/passwd, /usr.',
     );
+  });
+});
+
+describe('runAgent — footer', () => {
+  /** A run with the footer on, a clock that moves 1 s each time it is read, and the timer under the spec's control. */
+  async function withFooter(
+    lines: string,
+    launch?: RunAgentRequest['launch'],
+    stderr: readonly string[] = [],
+    fakeTimer = true,
+  ): Promise<{ code: number; out: string; err: string; intervals: number[]; stopped: number }> {
+    const s = setup(fakeSpawner({ stdout: streamFromChunks([lines]), stderr: streamFromChunks([...stderr]) }).spawner);
+    let seconds = 0;
+    const intervals: number[] = [];
+    let stopped = 0;
+    const code = await runAgent(s.request(launch === undefined ? {} : { launch }), {
+      runner: s.runner,
+      stdout: s.stdout,
+      stderr: s.stderr,
+      signals: s.signals,
+      now: () => new Date(Date.UTC(2026, 0, 1, 0, 0, seconds++)),
+      footer: true,
+      ...(fakeTimer
+        ? {
+            every: (ms: number, tick: () => void) => {
+              intervals.push(ms);
+              tick();
+              return () => {
+                stopped += 1;
+              };
+            },
+          }
+        : {}),
+    });
+    return { code, out: s.stdout.chunks.join(''), err: s.stderr.chunks.join(''), intervals, stopped };
+  }
+
+  it('frames the session under the command and keeps the table at the bottom, without repeating them', async () => {
+    const run = await withFooter(
+      eventLines([
+        { type: 'init', model: 'sonnet-5', sessionId: 's1' },
+        { type: 'text', text: 'olá' },
+        { type: 'done', isError: false, text: 'ok' },
+      ]),
+      (command) => ({
+        command,
+        place: { kind: 'docker', image: 'choliba-agent', container: 'choliba-1' },
+        paths: [],
+        skipped: [],
+      }),
+    );
+
+    expect(run.code).toBe(0);
+    expect(run.out.startsWith('\n┌─ echo ─')).toBe(true);
+    expect(run.out).toMatch(/│ olá +│\n/);
+    expect(run.out).toMatch(/provider │ modelo +│ sandbox │ imagem +│ container │ decorrido\n/);
+    expect(run.out).toMatch(/claude +│ sonnet-5 │ docker +│ choliba-agent │ choliba-1 +│ 00:00:0\d\.000\n/);
+    expect(run.out).not.toContain('[provider]');
+    expect(run.out).not.toContain('[echo]');
+    expect(run.out).not.toContain('ready');
+    expect(run.out).toMatch(/└─+┘\nclaude · sonnet-5 · docker · decorrido 00:00:0\d\.000 · código 0\n$/);
+    expect(run.intervals).toEqual([FOOTER_REFRESH_MS]);
+    expect(run.stopped).toBe(1);
+  });
+
+  it('frames what the session says on stderr too, and still closes with the exit code when it fails', async () => {
+    // The real timer (no fake one): it is stopped when the session closes.
+    const run = await withFooter(
+      eventLines([{ type: 'done', isError: true, text: 'falhou' }]),
+      undefined,
+      ['\n', 'aviso do provider\n', '\n'],
+      false,
+    );
+
+    expect(run.code).toBe(1);
+    expect(run.err).toMatch(/^│ aviso do provider +│\n$/);
+    expect(run.out).toMatch(/claude · — · local · decorrido 00:00:0\d\.000 · código 1\n$/);
+  });
+});
+
+describe('everySecond', () => {
+  it('calls the tick on its interval until stopped', () => {
+    jest.useFakeTimers();
+    try {
+      const tick = jest.fn();
+      const stop = everySecond(1000, tick);
+      jest.advanceTimersByTime(2500);
+      stop();
+      jest.advanceTimersByTime(2000);
+      expect(tick).toHaveBeenCalledTimes(2);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });

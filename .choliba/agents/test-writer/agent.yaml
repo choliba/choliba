@@ -3,7 +3,7 @@ version: 1
 agent:
   id: test-writer
   name: Test Writer
-  version: 1.1.0
+  version: 1.1.1
   color: red
   description: >-
     Escreve os testes antes da implementação: um teste Playwright por critério de
@@ -48,7 +48,7 @@ context:
     para saber os nomes das chaves e use no spec `process.env['NOME_DA_CHAVE']`; nunca escreva o valor no spec. Não
     procure como isso é feito no código do choliba: é assim.
   - >-
-    **Testes**: `bunx choliba tests ${PROJECT}:${TICKET}` roda o spec do ticket. Rode para conferir que cada teste
+    **Testes**: `bunx choliba run tests ${PROJECT}:${TICKET}` roda o spec do ticket. Rode para conferir que cada teste
     falha pelo motivo certo antes de terminar.
 
 input: |
@@ -66,7 +66,7 @@ flow: |
   3. **Escrever** `${PROJECT_DIR}/tests/${TICKET}.spec.ts`: um `test` por critério, com o título começando pelo id do
      critério (`test('CA-01: …', …)`). Cada frase da `descricao` vira um passo: `Dado` e os `E` que o seguem são a
      preparação, `Quando` e os seus `E` são a ação, `Então` e os `E`/`Mas` depois dele são as asserções.
-  4. **Rodar** `bunx choliba tests ${PROJECT}:${TICKET}` e ler cada falha: ela precisa ser do comportamento (asserção
+  4. **Rodar** `bunx choliba run tests ${PROJECT}:${TICKET}` e ler cada falha: ela precisa ser do comportamento (asserção
      ou elemento que não aparece), nunca do próprio teste. Corrija o spec até ser assim. Um teste que passa porque a
      aplicação já faz o que o critério pede está certo; confira só que ele verifica o critério de verdade.
   5. **Reportar**.
@@ -131,7 +131,7 @@ permissions:
       - '${PROJECT_DIR}/tests/${TICKET}.spec.ts'
     execute:
       '${CHOL_ROOT}/':
-        - bunx choliba tests ${PROJECT}:${TICKET}
+        - bunx choliba run tests ${PROJECT}:${TICKET}
     tools:
       playwright-cli: ['*']
       playwright-trace: ['*']

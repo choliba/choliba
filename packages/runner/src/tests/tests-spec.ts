@@ -3,7 +3,7 @@ import type { CommandSpec } from '@choliba/core';
 import { EXPECTATIONS } from './ticket-verdict';
 
 /**
- * `choliba tests`, as `--help` shows it and completion walks: this CLI's own arguments (the projects
+ * `choliba run tests`, as `--help` shows it and completion walks: this CLI's own arguments (the projects
  * come from `projectNames`, and after `project:` its tickets from `ticketsOf`); any other flag goes on
  * to `playwright test`.
  */
@@ -18,7 +18,7 @@ export function testsCliSpec(
     return ticketsOf(project).map((ticket) => `${project}:${ticket}`);
   };
   return {
-    usage: 'choliba tests [PROJECT[:TICKET][/PATH]] [OPTIONS] [PLAYWRIGHT OPTIONS]',
+    usage: 'choliba run tests [PROJECT[:TICKET][/PATH]] [OPTIONS] [PLAYWRIGHT OPTIONS]',
     description: [
       'Roda os testes E2E dos projetos com o Playwright. Sem PROJECT, roda todos os projetos.',
       '',

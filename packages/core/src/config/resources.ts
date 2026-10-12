@@ -34,18 +34,49 @@ export function resourceStarts(sourceDir: string, argv: readonly string[] = proc
 }
 
 /**
+ * `resourceStarts` without the folders that are not on this machine. A bundle freezes `sourceDir` to where
+ * the code was built, and that path is written into a script the user runs: only a folder that exists belongs there.
+ */
+export function existingResourceStarts(sourceDir: string, argv: readonly string[] = process.argv): readonly string[] {
+  return resourceStarts(sourceDir, argv).filter((start) => existsSync(start));
+}
+
+/**
+ * The directory of the file the bundle actually loaded. The build writes it on `globalThis` from that file's
+ * `import.meta.url`, because this module is also loaded by Jest, which cannot parse `import.meta`. Absent from
+ * the sources and from the `bin`, where the running script is enough.
+ */
+function shippedDir(): string | undefined {
+  const value = (globalThis as { readonly __CHOLIBA_SHIPPED_DIR__?: unknown }).__CHOLIBA_SHIPPED_DIR__;
+  if (typeof value !== 'string' || value === '') {
+    return undefined;
+  }
+  return value;
+}
+
+/** `resourceStarts`, plus the shipped directory when the bundle set one and it is not already there. */
+function locateStarts(sourceDir: string, argv: readonly string[]): readonly string[] {
+  const starts = resourceStarts(sourceDir, argv);
+  const shipped = shippedDir();
+  if (shipped === undefined || starts.includes(shipped)) {
+    return starts;
+  }
+  return [...starts, shipped];
+}
+
+/**
  * A file or folder the code ships with (`schemes`, `templates/ticket`…), looked up from the script
- * that is actually running, then from `sourceDir` (the caller's own `__dirname`); `undefined` when
- * neither finds it. Bundled, the script is the installed `bin/choliba.js` and its package holds the
- * resources, while `__dirname` is frozen to where the source was built; from the sources, both lead
- * to the same package.
+ * that is actually running, then from `sourceDir` (the caller's own `__dirname`), then from the directory
+ * the bundle loaded; `undefined` when none finds it. Bundled, the script of an import is the user's file and
+ * `__dirname` is frozen to where the source was built, so the shipped directory is what still holds the
+ * resources. The `bin` finds them from its own script, and from the sources both lead to the same package.
  */
 export function locateResource(
   relative: string,
   sourceDir: string,
   argv: readonly string[] = process.argv,
 ): string | undefined {
-  for (const start of resourceStarts(sourceDir, argv)) {
+  for (const start of locateStarts(sourceDir, argv)) {
     const found = findUp(start, relative);
     if (found !== undefined) {
       return found;
