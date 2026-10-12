@@ -74,8 +74,10 @@ MCP que ele suba.
   `--add-dir`, os diretórios de `execute` (um comando precisa enxergar onde roda), as ferramentas da run e o
   `node_modules` da pasta de trabalho; com escrita, a pasta da execução, `allow.write` (fora de `plan` e `ask`), a
   saída das ferramentas do Playwright e o `ticket-runs/` do projeto. Um `deny.read` dentro disso aparece vazio; um
-  `deny.write` dentro de algo com escrita volta a ser só leitura. Um arquivo que o agente pode criar e ainda não
-  existe abre a pasta dele; as regras do provider, que continuam valendo lá dentro, limitam ao arquivo.
+  `deny.write` dentro de algo com escrita volta a ser só leitura. Um arquivo com escrita, exista ou não, abre a pasta
+  dele: o provider grava um arquivo temporário ao lado e o renomeia por cima, o que um arquivo montado sozinho não
+  aceita. O resto dessa pasta que não leva a um caminho com escrita (os outros tickets, por exemplo) fica só
+  leitura, e as regras do provider, que continuam valendo lá dentro, limitam a escrita ao arquivo.
 - **O nome dele** é `choliba-<id>`, o mesmo id da pasta `.cache/runs/<id>` da execução: `docker ps` e `docker logs`
   acham a sessão enquanto ela roda, e o painel do rodapé mostra esse nome. O `--rm` o remove no fim.
 - **O que ele não vê**: o resto do disco, a sua pasta pessoal (a do container é vazia e some no fim) e o socket do
