@@ -752,7 +752,9 @@ describe('runAgentsCli — skills', () => {
       const { deps, stdout, stderr } = harness([]);
 
       expect(await runAgentsCli(['echo', '--agents-dir', agents.agentsDir, '--dry-run', 'x'], deps)).toBe(1);
-      expect(stderr.chunks.join('')).toContain('deny.read: !/repo/docs não está dentro de nenhum caminho de deny.read');
+      expect(stderr.chunks.join('')).toContain(
+        'exception.read: /repo/docs não está dentro de nenhum caminho de deny.read',
+      );
       expect(stdout.chunks).toEqual([]);
     } finally {
       agents.cleanup();
@@ -1592,7 +1594,7 @@ describe('runAgentsCli — definition folders', () => {
       const text = stderr.chunks.join('');
       expect(text).toContain('reabre pastas de definição que o choliba protege');
       expect(text).toContain(`${agentsDir}/x`);
-      expect(text).toContain('Uma exceção ! não pode ficar dentro das pastas de agentes, skills ou MCPs.');
+      expect(text).toContain('Uma exception não pode ficar dentro das pastas de agentes, skills ou MCPs.');
     });
   });
 

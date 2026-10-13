@@ -15,8 +15,8 @@ modelo ABAC do NIST (SP 800-162), na forma que o [Cedar](https://docs.cedarpolic
 - **Negado por padrão.** Só é permitido o que uma regra `allow` libera.
 - **`deny` vence `allow`.**
 - **Uma exceção tira um caminho de um `deny`** da mesma ação e não libera nada sozinha: o caminho ainda precisa de um
-  `allow`. A exceção é declarada num campo próprio, `exception`. O prefixo `!` no caminho, aceito hoje, é a forma
-  antiga do mesmo campo.
+  `allow`. A exceção é declarada num campo próprio, `permissions.exception`. O prefixo `!` no caminho continua
+  aceito como a forma antiga do mesmo campo.
 
 ## Sujeitos
 
@@ -124,7 +124,8 @@ temporário, e o resto da pasta fica só leitura. O provider limita a escrita ao
 | `permissions.allow.write`               | `allow` de `create` e `edit`                          |
 | `permissions.allow.delete`              | `allow` de `delete`                                   |
 | `permissions.deny.<ação>`               | `deny` das mesmas ações                               |
-| `!caminho` num `deny`                   | `exception` daquela ação                              |
+| `permissions.exception.<ação>`          | `exception` das mesmas ações                          |
+| `!caminho` num `deny` (forma antiga)    | `exception` daquela ação                              |
 | `permissions.allow.execute`             | `invocar` comando: pasta e prefixo do argv            |
 | `permissions.allow.tools`/`.deny.tools` | `invocar` ferramenta, com os subcomandos              |
 | `mcps`                                  | `invocar` ferramenta: servidor e tool                 |

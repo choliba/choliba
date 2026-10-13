@@ -234,7 +234,7 @@ export function checkedDenyExceptions(agent: AgentDefinition, deps: RunAgentsCli
   ];
   const problems = lists.flatMap(([key, entries]) =>
     strayExceptions(entries).map(
-      (path) => `  deny.${key}: !${path} não está dentro de nenhum caminho de deny.${key} (uma pasta, sem glob)`,
+      (path) => `  exception.${key}: ${path} não está dentro de nenhum caminho de deny.${key} (uma pasta, sem glob)`,
     ),
   );
   if (problems.length === 0) {
@@ -263,7 +263,7 @@ export function checkedDefinitionExceptions(
   }
   deps.stderr.write(
     `"${agent.name}" reabre pastas de definição que o choliba protege:\n${problems.join('\n')}\n` +
-      'Uma exceção ! não pode ficar dentro das pastas de agentes, skills ou MCPs.\n',
+      'Uma exception não pode ficar dentro das pastas de agentes, skills ou MCPs.\n',
   );
   return false;
 }

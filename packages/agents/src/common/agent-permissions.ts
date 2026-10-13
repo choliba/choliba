@@ -79,6 +79,18 @@ function toolRules(from: Record<string, unknown>): readonly ToolRule[] {
   return Object.entries(value).map(([tool, subcommands]) => ({ tool, subcommands: asStringArray(subcommands) ?? [] }));
 }
 
+/**
+ * A `deny` list with the paths of `permissions.exception` for the same key, each as the `!` entry the rest of the
+ * code reads: the old way of writing an exception, kept as the one form inside.
+ */
+function denyWithExceptions(
+  deny: Record<string, unknown>,
+  exception: Record<string, unknown>,
+  key: string,
+): readonly string[] {
+  return [...paths(deny, key), ...paths(exception, key).map((path) => `${EXCEPTION_PREFIX}${path}`)];
+}
+
 /** Reads `agent.yaml#permissions` (already checked against the schema); none declared is `NO_PERMISSIONS`. */
 export function readAgentPermissions(value: unknown): AgentPermissions {
   if (!isRecord(value)) {
@@ -86,15 +98,16 @@ export function readAgentPermissions(value: unknown): AgentPermissions {
   }
   const allow = group(value, 'allow');
   const deny = group(value, 'deny');
+  const exception = group(value, 'exception');
   return {
     allowRead: paths(allow, 'read'),
     allowWrite: paths(allow, 'write'),
     allowDelete: paths(allow, 'delete'),
     allowExecute: rules(allow, 'execute'),
     allowTools: toolRules(allow),
-    denyRead: paths(deny, 'read'),
-    denyWrite: paths(deny, 'write'),
-    denyDelete: paths(deny, 'delete'),
+    denyRead: denyWithExceptions(deny, exception, 'read'),
+    denyWrite: denyWithExceptions(deny, exception, 'write'),
+    denyDelete: denyWithExceptions(deny, exception, 'delete'),
     denyExecute: rules(deny, 'execute'),
     denyTools: toolRules(deny),
   };

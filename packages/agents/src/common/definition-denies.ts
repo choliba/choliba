@@ -29,7 +29,7 @@ export function withDefinitionDenies(agent: AgentDefinition, directories: readon
 function reopened(key: string, entries: readonly string[], roots: readonly string[]): readonly string[] {
   return denyExceptions(entries)
     .filter((exception) => roots.some((root) => isWithin(root, exception)))
-    .map((exception) => `  deny.${key}: !${exception} reabre uma definição do choliba, que nenhuma run altera`);
+    .map((exception) => `  exception.${key}: ${exception} reabre uma definição do choliba, que nenhuma run altera`);
 }
 
 /**

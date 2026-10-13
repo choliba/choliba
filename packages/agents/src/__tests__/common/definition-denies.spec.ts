@@ -52,8 +52,8 @@ describe('definitionExceptionProblems', () => {
     };
 
     expect(definitionExceptionProblems(permissions, DIRS)).toEqual([
-      '  deny.write: !/w/.choliba/agents/x reabre uma definição do choliba, que nenhuma run altera',
-      '  deny.delete: !/w/.choliba/skills reabre uma definição do choliba, que nenhuma run altera',
+      '  exception.write: /w/.choliba/agents/x reabre uma definição do choliba, que nenhuma run altera',
+      '  exception.delete: /w/.choliba/skills reabre uma definição do choliba, que nenhuma run altera',
     ]);
   });
 

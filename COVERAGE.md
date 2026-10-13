@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 12/10/2026 10:24:50 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 13/10/2026 20:08:35 — não editar manualmente.
 
 ## Resumo
 
@@ -17,7 +17,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 65 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 66 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -72,6 +72,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/common/json.ts](packages/agents/src/common/json.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/mcp-use.ts](packages/agents/src/common/mcp-use.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/message-blocks.ts](packages/agents/src/common/message-blocks.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/path-policy.ts](packages/agents/src/common/path-policy.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/prompt.ts](packages/agents/src/common/prompt.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/provider-registry.ts](packages/agents/src/common/provider-registry.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-project.ts](packages/agents/src/common/run-project.ts)|100.00|100.00|100.00|100.00
@@ -237,10 +238,11 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/sandbox</b> — 100.00% das linhas, 7 arquivos</summary>
+<summary>🟢 <b>packages/sandbox</b> — 100.00% das linhas, 8 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
+🟢|[src/common/decide.ts](packages/sandbox/src/common/decide.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/paths.ts](packages/sandbox/src/common/paths.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/resolve-denies.ts](packages/sandbox/src/common/resolve-denies.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/docker/container-mounts.ts](packages/sandbox/src/sandbox/docker/container-mounts.ts)|100.00|100.00|100.00|100.00
