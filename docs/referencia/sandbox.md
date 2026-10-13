@@ -10,7 +10,7 @@
 | `local` (padrão) | na sua máquina | as regras que o choliba aplica no provider, com os limites de cada um     |
 | `docker`         | num container  | o container, que só monta o que o `agent.yaml` libera, e as mesmas regras |
 
-As permissões são as mesmas nos dois: as do [`agent.yaml`](agent-yaml.md), descritas em [Segurança](seguranca.md).
+As permissões são as mesmas nos dois: as do [`agent.yaml`](agent-yaml.md), descritas em [Segurança](seguranca.md). O modelo, com o nível em que cada sandbox impõe cada regra, está em [Modelo de permissões](permissoes.md).
 
 ## Local
 
