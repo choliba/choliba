@@ -78,6 +78,28 @@ describe('formatDryRun', () => {
     );
   });
 
+  it('says, under the agent, what bwrap mounts on this machine', () => {
+    const output = formatDryRun(
+      input({
+        local: {
+          mounts: [
+            { path: '/repo', access: 'read', directory: true },
+            { path: '/repo/.cache/runs/1', access: 'write', directory: true },
+          ],
+          skipped: ['/etc/passwd'],
+        },
+      }),
+    );
+    expect(output).toContain(
+      [
+        '             no bwrap, que só vê:',
+        '               leitura /repo',
+        '               escrita /repo/.cache/runs/1',
+        '               ignorado /etc/passwd (do sistema)',
+      ].join('\n'),
+    );
+  });
+
   it('lists, in order, what the CLI and the agent would do, without the prompts', () => {
     expect(formatDryRun(input()).split('\n')).toEqual([
       'Sem --dry-run, faria nesta ordem:',

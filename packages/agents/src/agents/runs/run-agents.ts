@@ -86,6 +86,19 @@ function runDryRun(
     ...(resolved.adapter.previewWorkspace?.(providerRequest) ?? []),
   ];
   const workspaceFiles = parsed.showPrompt ? runFiles : [];
+  let described: Pick<DryRunInput, 'container' | 'local'>;
+  try {
+    described = sandboxView(
+      sandbox,
+      launchFor(
+        { sandbox, command: resolved.command, request: providerRequest, files: runFiles, config: deps.config },
+        plannedDisk(providerRequest, runFiles),
+      ),
+    );
+  } catch (error) {
+    deps.stderr.write(`${errorMessage(error)}\n`);
+    return 1;
+  }
   const output = formatDryRun({
     providerId: resolved.adapter.id,
     command: resolved.command,
@@ -96,20 +109,16 @@ function runDryRun(
     showPrompt: parsed.showPrompt,
     workspaceFiles,
     ...(settings === undefined ? {} : { app: settings.environment }),
-    ...(sandbox.kind === 'docker'
-      ? {
-          container: containerOf(
-            sandbox.image,
-            launchFor(
-              { sandbox, command: resolved.command, request: providerRequest, files: runFiles, config: deps.config },
-              plannedDisk(providerRequest, runFiles),
-            ),
-          ),
-        }
-      : {}),
+    ...described,
   });
   deps.stdout.write(`${output}\n`);
   return 0;
+}
+
+/** What `--dry-run` says about where the provider runs: the container, or `bwrap` on this machine. */
+function sandboxView(sandbox: Sandbox, launch: Launch): Pick<DryRunInput, 'container' | 'local'> {
+  if (sandbox.kind === 'docker') return { container: containerOf(sandbox.image, launch) };
+  return { local: { mounts: launch.paths, skipped: launch.skipped } };
 }
 
 /** What `--dry-run` says about the container: the image, the mounts and the paths left to the image. */

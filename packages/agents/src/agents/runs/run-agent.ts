@@ -130,8 +130,12 @@ export interface RunAgentRequest {
 }
 
 /** The paths the agent may reach that the container leaves to the image, said before the session starts. */
-export function imageFoldersNotice(skipped: readonly string[]): string {
-  return `No container, estes caminhos são da imagem e não vêm desta máquina: ${skipped.join(', ')}.`;
+export function imageFoldersNotice(skipped: readonly string[], kind: 'local' | 'docker'): string {
+  const where =
+    kind === 'local'
+      ? 'No sandbox local, estes caminhos são do sistema e não são montados à parte'
+      : 'No container, estes caminhos são da imagem e não vêm desta máquina';
+  return `${where}: ${skipped.join(', ')}.`;
 }
 
 function errorMessage(error: unknown): string {
@@ -199,7 +203,7 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
     const command = [...request.provider.command, ...args];
     launch = request.launch?.(command) ?? { command, place: { kind: 'local' }, paths: [], skipped: [] };
     if (launch.skipped.length > 0) {
-      deps.stderr.write(`${imageFoldersNotice(launch.skipped)}\n`);
+      deps.stderr.write(`${imageFoldersNotice(launch.skipped, launch.place.kind)}\n`);
     }
     session = deps.runner.start({
       label,

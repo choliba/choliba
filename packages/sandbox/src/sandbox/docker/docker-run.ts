@@ -1,9 +1,7 @@
 import type { SandboxNetwork } from '../interfaces/sandbox.interface';
-import type { ContainerMount } from './interfaces/container-mounts.interface';
+import { CONTAINER_HOME } from '../mounts/container-mounts';
+import type { ContainerMount } from '../mounts/interfaces/container-mounts.interface';
 import type { DockerRun } from './interfaces/docker-run.interface';
-
-/** Where the session's home is inside the container: an empty folder in memory, nothing of this machine's. */
-export const CONTAINER_HOME = '/home/choliba';
 
 function networkArgs(network: SandboxNetwork): readonly string[] {
   if (network === 'host') return ['--network', 'host'];

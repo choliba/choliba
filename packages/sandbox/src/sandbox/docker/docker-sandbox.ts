@@ -1,7 +1,7 @@
 import { basename } from 'node:path';
 
 import type { SandboxBackend, SandboxPlan, SandboxPlanInput } from '../interfaces/sandbox-backend.interface';
-import { containerMounts } from './container-mounts';
+import { containerMounts } from '../mounts/container-mounts';
 import { dockerRunArgs } from './docker-run';
 import type { DockerSandboxOptions } from './interfaces/docker-sandbox.interface';
 
