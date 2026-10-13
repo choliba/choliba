@@ -685,6 +685,27 @@ describe('runAgent — launch', () => {
       'No container, estes caminhos são da imagem e não vêm desta máquina: /etc/passwd, /usr.',
     );
   });
+
+  it('names the paths the local sandbox leaves to the system', async () => {
+    const handle = fakeSpawner({
+      stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'ok' }])]),
+    });
+    const s = setup(handle.spawner);
+
+    const exitCode = await run(s, {
+      launch: (command) => ({
+        command,
+        place: { kind: 'local' },
+        paths: [],
+        skipped: ['/etc/passwd'],
+      }),
+    });
+
+    expect(exitCode).toBe(0);
+    expect(s.stderr.chunks.join('')).toContain(
+      'No sandbox local, estes caminhos são do sistema e não são montados à parte: /etc/passwd.',
+    );
+  });
 });
 
 describe('runAgent — footer', () => {

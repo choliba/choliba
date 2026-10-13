@@ -1669,6 +1669,22 @@ describe('runAgentsCli — CHOL_SANDBOX', () => {
     expect(text).toMatch(/escrita .*cli-run-spec-\d+\//);
   });
 
+  it('says in --dry-run what bwrap would mount, and refuses the command when bwrap is missing', async () => {
+    const present = harness([], { which: whichOf(['claude']) });
+    expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'x'], present.deps)).toBe(0);
+    expect(present.stdout.chunks.join('')).toContain('no bwrap, que só vê:');
+
+    const saved = process.env['PATH'];
+    process.env['PATH'] = '';
+    try {
+      const missing = harness([], { which: whichOf(['claude']) });
+      expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'x'], missing.deps)).toBe(1);
+      expect(missing.stderr.chunks.join('')).toContain('sudo apt install bubblewrap');
+    } finally {
+      process.env['PATH'] = saved;
+    }
+  });
+
   it("opens the project's ticket-runs in --dry-run without creating it", async () => {
     await withProjects(async (projectsDir) => {
       const { deps, stdout } = harness([], {

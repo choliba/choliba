@@ -30,9 +30,9 @@ export interface Launch {
   readonly env?: Readonly<Record<string, string>>;
   /** Where the provider runs: this machine, or a named container of an image. */
   readonly place: SandboxPlace;
-  /** What the container mounts; empty on this machine. */
+  /** What the sandbox mounts; empty when nothing on disk was reachable. */
   readonly paths: readonly SandboxPath[];
-  /** Paths the agent may reach that are the image's own folders, so not mounted; empty on this machine. */
+  /** Paths the agent may reach that stay the system's or the image's, so not mounted on their own. */
   readonly skipped: readonly string[];
 }
 
@@ -86,8 +86,8 @@ function outputFolders(request: ProviderRequest, config: Config): readonly strin
 }
 
 /**
- * How to start the provider for `input.request`. On this machine, the command as it is. In a container
- * (`CHOL_SANDBOX=docker`), `docker run` with the paths the run reaches, the installed packages (`node_modules`, which
+ * How to start the provider for `input.request`. On this machine, `bwrap` with the same mounts as the container.
+ * In a container (`CHOL_SANDBOX=docker`), `docker run` with those mounts, the installed packages (`node_modules`, which
  * the run tools and `bunx choliba` load) and the output folders, as the workspace's owner, and the provider's
  * credentials by name.
  */

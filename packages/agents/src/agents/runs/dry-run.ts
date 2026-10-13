@@ -29,6 +29,12 @@ export interface DryRunInput {
     /** What the agent may reach that the image keeps as its own (`isImagePath`). */
     readonly skipped: readonly string[];
   };
+  /** `CHOL_SANDBOX=local`: what `bwrap` mounts. */
+  readonly local?: {
+    readonly mounts: readonly SandboxPath[];
+    /** What the agent may reach that stays the system's, so not mounted on its own. */
+    readonly skipped: readonly string[];
+  };
 }
 
 /** One numbered entry: who does it (the CLI or the agent) and what, one line each. */
@@ -111,6 +117,7 @@ function agentEntry(input: DryRunInput, systemPrompt: string): Entry {
       `prompt de sistema: ${String(bytes(systemPrompt))} bytes · prompt do usuário: ${String(bytes(user))} bytes${hint}`,
       `comando: ${commandLine}`,
       ...containerLines(input.container),
+      ...localLines(input.local),
     ],
   };
 }
@@ -126,9 +133,23 @@ function containerLines(container: DryRunInput['container']): readonly string[] 
   if (container === undefined) return [];
   return [
     `num container (docker, imagem ${container.image}), que só vê:`,
-    ...container.mounts.map((mount) => `  ${ACCESS_LABEL[mount.access]} ${mount.path}`),
+    ...mountLines(container.mounts),
     ...container.skipped.map((path) => `  ignorado ${path} (da imagem)`),
   ];
+}
+
+/** What `bwrap` mounts on this machine; nothing when the run is in a container. */
+function localLines(local: DryRunInput['local']): readonly string[] {
+  if (local === undefined) return [];
+  return [
+    'no bwrap, que só vê:',
+    ...mountLines(local.mounts),
+    ...local.skipped.map((path) => `  ignorado ${path} (do sistema)`),
+  ];
+}
+
+function mountLines(mounts: readonly SandboxPath[]): readonly string[] {
+  return mounts.map((mount) => `  ${ACCESS_LABEL[mount.access]} ${mount.path}`);
 }
 
 function formatEntry(entry: Entry, index: number): string {

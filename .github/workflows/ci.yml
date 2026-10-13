@@ -89,6 +89,8 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup
+      - name: Instalar o bubblewrap
+        run: sudo apt-get update && sudo apt-get install -y bubblewrap
       - run: bun run test:cov
 
       # A cobertura só pode subir. O limite anterior é o threshold commitado na branch
