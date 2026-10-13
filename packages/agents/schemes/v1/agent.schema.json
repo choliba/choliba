@@ -122,7 +122,7 @@
       ]
     },
     "permissions": {
-      "description": "O que o agente pode fazer e onde. O que não está em allow é negado; deny prevalece sobre allow, menos no que uma exceção ! do deny tira dele.",
+      "description": "O que o agente pode fazer e onde. O que não está em allow é negado; deny prevalece sobre allow, menos no que exception tira dele.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -168,6 +168,16 @@
               "description": "Ferramentas da run -> subcomandos bloqueados; ['*'] = a ferramenta inteira.",
               "$ref": "#/definitions/runTools"
             }
+          }
+        },
+        "exception": {
+          "description": "Caminhos que saem de um deny da mesma ação, como no .gitignore. Não liberam nada sozinhos: o caminho ainda precisa de allow.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "read": { "$ref": "#/definitions/allowPaths" },
+            "write": { "$ref": "#/definitions/allowPaths" },
+            "delete": { "$ref": "#/definitions/allowPaths" }
           }
         }
       }
@@ -224,13 +234,13 @@
     "name": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$" },
     "mode": { "enum": ["execute", "plan", "ask"] },
     "paths": {
-      "description": "Caminhos: absolutos, relativos a ${CHOL_ROOT} ou com ${VAR}; sem glob = o item e tudo abaixo dele. Começando com ! = exceção: tira o caminho de um deny da mesma lista, como no .gitignore.",
+      "description": "Caminhos: absolutos, relativos a ${CHOL_ROOT} ou com ${VAR}; sem glob = o item e tudo abaixo dele. Começando com ! = forma antiga de exception: tira o caminho de um deny da mesma lista.",
       "type": "array",
       "uniqueItems": true,
       "items": { "$ref": "#/definitions/text" }
     },
     "allowPaths": {
-      "description": "Caminhos: absolutos, relativos a ${CHOL_ROOT} ou com ${VAR}; sem glob = o item e tudo abaixo dele. A exceção ! só existe em deny.",
+      "description": "Caminhos: absolutos, relativos a ${CHOL_ROOT} ou com ${VAR}; sem glob = o item e tudo abaixo dele. Sem ! no começo.",
       "type": "array",
       "uniqueItems": true,
       "items": { "type": "string", "$ref": "#/definitions/text", "pattern": "^[^!]" }

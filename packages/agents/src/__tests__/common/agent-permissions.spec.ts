@@ -61,6 +61,19 @@ describe('readAgentPermissions', () => {
     });
   });
 
+  it('reads permissions.exception into the deny of the same key, as the old ! would', () => {
+    const current = readAgentPermissions({
+      deny: { read: ['/w/'], write: ['/w/'] },
+      exception: { read: ['/w/docs/publico/'], write: ['/w/tickets/1.json'] },
+    });
+    const old = readAgentPermissions({
+      deny: { read: ['/w/', '!/w/docs/publico/'], write: ['/w/', '!/w/tickets/1.json'] },
+    });
+
+    expect(current).toEqual(old);
+    expect(current.denyRead).toEqual(['/w/', '!/w/docs/publico/']);
+  });
+
   it('allows nothing when permissions are absent, empty or partial', () => {
     expect(readAgentPermissions(undefined)).toEqual(NO_PERMISSIONS);
     expect(readAgentPermissions({})).toEqual(NO_PERMISSIONS);

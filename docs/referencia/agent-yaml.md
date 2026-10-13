@@ -7,46 +7,52 @@ Todas as chaves do `agent.yaml` (padrão 1), as variáveis `${NOME}` que ele ace
 completo e o passo a passo estão em [Escrevendo um agente](../guias/escrever-um-agente.md); o schema é
 `packages/agents/schemes/v1/agent.schema.json`.
 
-| Chave                             | Obrigatória | Padrão              | O que é                                                                                                                                                                                                                                                                                         |
-| --------------------------------- | ----------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `version`                         | sim         | —                   | Versão do padrão: `1`.                                                                                                                                                                                                                                                                          |
-| `agent`                           | sim         | —                   | `id` (igual à pasta, é o nome do comando), `name`, `version` (semver do agente), `description` e, opcional, `color` (cor do rótulo `[agente]`; `CHOL_COLORS` ganha dela).                                                                                                                       |
-| `models`                          | sim         | —                   | Modelos com que o agente pode rodar, pelo id que o provider informa.                                                                                                                                                                                                                            |
-| `role`, `input`, `flow`, `output` | sim         | —                   | O texto do agente (veja [O texto do agente](../guias/escrever-um-agente.md#o-texto-do-agente)).                                                                                                                                                                                                 |
-| `context`, `notes`                | não         | nenhum              | Listas de textos que completam o texto do agente.                                                                                                                                                                                                                                               |
-| `skills`                          | não         | `[]`                | Pastas em `.choliba/skills/`, com a instrução de uso de cada uma (veja [Skills e MCPs](../guias/escrever-um-agente.md#skills-e-mcps)).                                                                                                                                                          |
-| `mcps`                            | não         | nenhum              | Servidores em `.choliba/mcps/<nome>.json`, com as tools liberadas e a instrução de uso de cada um. Usar outro MCP interrompe a execução.                                                                                                                                                        |
-| `permissions.allow`/`.deny`       | não         | nada liberado       | `read`, `write` e `delete`: caminhos (sem glob = o item e tudo abaixo; em `deny`, `!caminho` é uma exceção). `execute`: diretório → comandos. `tools`: ferramenta da run → subcomandos (`['*']` = todos; em `deny`, `['*']` tira a ferramenta). Veja [Ferramentas da run](#ferramentas-da-run). |
-| `modes.allow` / `.default`        | não         | os três / `execute` | Modos aceitos (`execute`, `plan`, `ask`) e o usado quando a linha de comando não diz.                                                                                                                                                                                                           |
-| `task.required` / `.default`      | não         | `true` / —          | Se a tarefa é obrigatória e, quando não é, qual usar (`default` passa a ser obrigatório).                                                                                                                                                                                                       |
-| `ticket_types`                    | não         | agente sem ticket   | Tipos de ticket aceitos (`story`, `bug`, `improvement`, `task`); a execução pede `--type` ou `--ticket`, a não ser com `allow_without_ticket`.                                                                                                                                                  |
-| `allow_without_ticket`            | não         | `false`             | `true` deixa a execução seguir sem `--type`/`--ticket`: com `ticket_types`, o ticket fica opcional; sem, deixa explícito que o agente não usa ticket.                                                                                                                                           |
-| `steps.<modo>.before` / `.after`  | não         | nenhum              | Ações do choliba antes e depois do agente, em cada modo (veja [Steps](#steps)).                                                                                                                                                                                                                 |
+| Chave                             | Obrigatória | Padrão              | O que é                                                                                                                                                                                                                                                                                                                                                     |
+| --------------------------------- | ----------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version`                         | sim         | —                   | Versão do padrão: `1`.                                                                                                                                                                                                                                                                                                                                      |
+| `agent`                           | sim         | —                   | `id` (igual à pasta, é o nome do comando), `name`, `version` (semver do agente), `description` e, opcional, `color` (cor do rótulo `[agente]`; `CHOL_COLORS` ganha dela).                                                                                                                                                                                   |
+| `models`                          | sim         | —                   | Modelos com que o agente pode rodar, pelo id que o provider informa.                                                                                                                                                                                                                                                                                        |
+| `role`, `input`, `flow`, `output` | sim         | —                   | O texto do agente (veja [O texto do agente](../guias/escrever-um-agente.md#o-texto-do-agente)).                                                                                                                                                                                                                                                             |
+| `context`, `notes`                | não         | nenhum              | Listas de textos que completam o texto do agente.                                                                                                                                                                                                                                                                                                           |
+| `skills`                          | não         | `[]`                | Pastas em `.choliba/skills/`, com a instrução de uso de cada uma (veja [Skills e MCPs](../guias/escrever-um-agente.md#skills-e-mcps)).                                                                                                                                                                                                                      |
+| `mcps`                            | não         | nenhum              | Servidores em `.choliba/mcps/<nome>.json`, com as tools liberadas e a instrução de uso de cada um. Usar outro MCP interrompe a execução.                                                                                                                                                                                                                    |
+| `permissions.allow`/`.deny`       | não         | nada liberado       | `read`, `write` e `delete`: caminhos (sem glob = o item e tudo abaixo). `permissions.exception` tira caminhos de um `deny` (veja [Exceções no deny](#exceções-no-deny)). `execute`: diretório → comandos. `tools`: ferramenta da run → subcomandos (`['*']` = todos; em `deny`, `['*']` tira a ferramenta). Veja [Ferramentas da run](#ferramentas-da-run). |
+| `modes.allow` / `.default`        | não         | os três / `execute` | Modos aceitos (`execute`, `plan`, `ask`) e o usado quando a linha de comando não diz.                                                                                                                                                                                                                                                                       |
+| `task.required` / `.default`      | não         | `true` / —          | Se a tarefa é obrigatória e, quando não é, qual usar (`default` passa a ser obrigatório).                                                                                                                                                                                                                                                                   |
+| `ticket_types`                    | não         | agente sem ticket   | Tipos de ticket aceitos (`story`, `bug`, `improvement`, `task`); a execução pede `--type` ou `--ticket`, a não ser com `allow_without_ticket`.                                                                                                                                                                                                              |
+| `allow_without_ticket`            | não         | `false`             | `true` deixa a execução seguir sem `--type`/`--ticket`: com `ticket_types`, o ticket fica opcional; sem, deixa explícito que o agente não usa ticket.                                                                                                                                                                                                       |
+| `steps.<modo>.before` / `.after`  | não         | nenhum              | Ações do choliba antes e depois do agente, em cada modo (veja [Steps](#steps)).                                                                                                                                                                                                                                                                             |
 
 Regras de permissão: veja [Segurança](seguranca.md). Em toda execução o choliba acrescenta `deny.write` e
-`deny.delete` das pastas de agentes, skills e MCPs; uma exceção `!` dentro delas é recusada. No fim,
+`deny.delete` das pastas de agentes, skills e MCPs; uma exceção dentro delas é recusada. No fim,
 compara o sha256 de cada arquivo dessas pastas: se algum foi criado, alterado ou apagado, a execução
 termina com código 1 e lista os caminhos, sem desfazer. Delegar a um subagente não é uma permissão: é
 negado a todo agente, sem chave no `agent.yaml`.
 
 ### Exceções no deny
 
-Em `deny.read`, `deny.write` e `deny.delete`, um caminho que começa com `!` tira esse caminho de um deny da mesma
-lista, como no `.gitignore`. A exceção não libera nada sozinha: o que está nela ainda precisa estar em `allow`.
+`permissions.exception`, ao lado de `allow` e `deny`, tem `read`, `write` e `delete`. Cada caminho ali sai de um deny
+da mesma ação, como no `.gitignore`. A exceção não libera nada sozinha: o que está nela ainda precisa estar em
+`allow`.
 
 ```yaml
 permissions:
   allow:
     read: ['/home/jackson/dev/teste/', '${CHOL_ROOT}/docs/publico/']
   deny:
-    read: ['${CHOL_ROOT}/', '!${CHOL_ROOT}/docs/publico/']
+    read: ['${CHOL_ROOT}/']
+  exception:
+    read: ['${CHOL_ROOT}/docs/publico/']
 ```
 
 O agente lê o app em `/home/jackson/dev/teste/` e, da pasta de trabalho, só `docs/publico/`. A pasta de cada skill
-que o agente declara já é uma exceção sozinha: ela não precisa de `!`. Uma exceção que não está dentro de nenhum
-deny da lista (ou que fica dentro de um glob) para a execução antes do provider, porque não tira nada. Uma
-exceção `!` de `deny.write` ou `deny.delete` dentro das pastas de agentes, skills ou MCPs também para: o choliba
-nega escrita e exclusão nelas em toda execução, e nenhuma exceção reabre.
+que o agente declara já é uma exceção sozinha: ela não precisa estar em `exception`. Uma exceção que não está dentro
+de nenhum deny da mesma ação (ou que fica dentro de um glob) para a execução antes do provider, porque não tira
+nada. Uma exceção de `write` ou `delete` dentro das pastas de agentes, skills ou MCPs também para: o choliba nega
+escrita e exclusão nelas em toda execução, e nenhuma exceção reabre.
+
+A forma antiga continua aceita: um caminho que começa com `!` dentro de `deny.read`, `deny.write` ou `deny.delete` é
+o mesmo que pô-lo em `exception` da mesma ação (`deny: { read: ['${CHOL_ROOT}/', '!${CHOL_ROOT}/docs/publico/'] }`).
 
 ## Ferramentas da run
 
