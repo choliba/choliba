@@ -3,6 +3,9 @@
 > Como o choliba restringe o que cada agente alcança: as permissões do `agent.yaml`, os MCPs declarados e as regras
 > que valem em qualquer provider.
 
+O modelo por trás dessas regras (sujeito, ação, objeto e contexto, e onde cada regra é imposta) está em
+[Modelo de permissões](permissoes.md).
+
 Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que cada um alcança, a partir do
 `permissions` do [`agent.yaml`](../guias/escrever-um-agente.md):
 
