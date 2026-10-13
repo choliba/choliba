@@ -177,10 +177,11 @@ describe('LocalSandbox with bwrap', () => {
         reach: reach({ allowRead: [`${allow}/`], denyRead: [`${secret}/`] }, { policy: 'read-only', runDir }),
       });
       const result = spawnSync(plan.command[0] ?? '', plan.command.slice(1), { encoding: 'utf8' });
-      expect({ status: result.status, stdout: result.stdout, stderr: result.stderr }).toMatchObject({
-        status: 0,
-        stdout: `PWD=${runDir}\nALLOW=visible\nSECRET=\nOUT=missing\nRO=denied\nWROTE\n`,
-      });
+      expect([result.status, result.stdout, result.stderr]).toEqual([
+        0,
+        `PWD=${runDir}\nALLOW=visible\nSECRET=\nOUT=missing\nRO=denied\nWROTE\n`,
+        '',
+      ]);
       expect(result.stdout).not.toContain('hidden');
       expect(result.stdout).not.toContain('outside');
     } finally {

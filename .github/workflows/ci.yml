@@ -90,7 +90,13 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup
       - name: Instalar o bubblewrap
-        run: sudo apt-get update && sudo apt-get install -y bubblewrap
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bubblewrap
+          # Ubuntu 24.04 bloqueia o user namespace que o bwrap precisa. O runner é descartável.
+          if [ "$(sysctl -n kernel.apparmor_restrict_unprivileged_userns 2>/dev/null || echo 0)" = "1" ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
       - run: bun run test:cov
 
       # A cobertura só pode subir. O limite anterior é o threshold commitado na branch
