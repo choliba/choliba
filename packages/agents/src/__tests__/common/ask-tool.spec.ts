@@ -77,6 +77,29 @@ describe('the ask script', () => {
     expect(late.stderr).toContain('Sem resposta em 0 minutos.');
   });
 
+  it('takes the choices as a JSON list, as a list the shell split, or one per --option', async () => {
+    const answer = { status: 'answered', answer: 'a' } as const;
+
+    const json = await ask(['Qual?', '--options', '["React", "Vue 3"]'], answer);
+    expect(json.question).toMatchObject({ question: 'Qual?', options: ['React', 'Vue 3'] });
+
+    const split = await ask(['Qual?', '--options', '[Descreva o fluxo,', 'Quais casos]', '--multi'], answer);
+    expect(split.question).toMatchObject({ options: ['Descreva o fluxo', 'Quais casos'], multi: true });
+
+    const quoted = await ask(['Qual?', '--options', '["a",', "'b']"], answer);
+    expect(quoted.question).toMatchObject({ options: ['a', 'b'] });
+
+    const repeated = await ask(['Qual?', '--option', 'React', '--option', 'Vue', '3'], answer);
+    expect(repeated.question).toMatchObject({ options: ['React', 'Vue 3'] });
+  });
+
+  it('refuses the usage copied as the question', async () => {
+    const run = await ask(['<question>', '--options', 'a']);
+
+    expect(run.code).toBe(64);
+    expect(run.stderr).toContain('Escreva a pergunta de verdade no lugar de <question>.');
+  });
+
   it('refuses no question, and --multi without choices', async () => {
     expect((await ask([])).code).toBe(64);
     expect((await ask(['Quais?', '--multi'])).stderr).toContain('Uso: ask');

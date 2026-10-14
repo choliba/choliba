@@ -34,6 +34,8 @@ export function askExchangeDir(runDir: string): string {
  * it states.
  */
 export function askScript(exchangeDir: string, timeoutMs: number = ASK_TIMEOUT_MS): string {
+  // The choices are taken as a model writes them, not only as the usage says: a weaker model sends a JSON list, or one
+  // option per flag, and a question it could not ask is lost.
   return `#!/usr/bin/env bun
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -42,24 +44,60 @@ const dir = ${JSON.stringify(exchangeDir)};
 const timeoutMs = ${JSON.stringify(timeoutMs)};
 const usage = 'Uso: ask "<pergunta>" [--options a,b,c] [--multi]';
 
+// The choices as a model may write them: a,b,c; a JSON list; or that list split by the shell where it had no quotes.
+function choices(text) {
+  const trimmed = text.trim();
+  if (trimmed.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) return parsed.map((choice) => String(choice).trim()).filter((choice) => choice !== '');
+    } catch {
+      // Not JSON: the brackets and quotes around choices split by commas.
+    }
+    return trimmed
+      .replace(/^\\[|\\]$/g, '')
+      .split(',')
+      .map((choice) => choice.trim().replace(/^["']|["']$/g, '').trim())
+      .filter((choice) => choice !== '');
+  }
+  return trimmed.split(',').map((choice) => choice.trim()).filter((choice) => choice !== '');
+}
+
 function parse(argv) {
   const words = [];
-  let options = [];
+  const options = [];
   let multi = false;
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
-    if (arg === '--multi') multi = true;
-    else if (arg === '--options') {
-      options = (argv[index + 1] ?? '').split(',').map((option) => option.trim()).filter((option) => option !== '');
+    if (arg === '--multi') {
+      multi = true;
+      continue;
+    }
+    if (arg !== '--options' && arg !== '--option') {
+      words.push(arg);
+      continue;
+    }
+    // What follows, up to the next flag: one value, or a list the shell split.
+    const taken = [];
+    while (index + 1 < argv.length && !argv[index + 1].startsWith('--')) {
       index += 1;
-    } else words.push(arg);
+      taken.push(argv[index]);
+    }
+    const value = taken.join(' ');
+    if (arg === '--option') options.push(value.trim());
+    else options.push(...choices(value));
   }
   const question = words.join(' ').trim();
-  if (question === '' || (multi && options.length === 0)) {
+  if (/^<(question|pergunta)>$/.test(question)) {
+    console.error('Escreva a pergunta de verdade no lugar de ' + question + '. ' + usage);
+    process.exit(64);
+  }
+  const chosen = options.filter((option) => option !== '');
+  if (question === '' || (multi && chosen.length === 0)) {
     console.error(usage);
     process.exit(64);
   }
-  return { question, options, multi };
+  return { question, options: chosen, multi };
 }
 
 function leave(message) {
