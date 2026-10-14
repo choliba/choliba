@@ -53,8 +53,9 @@ permissões do `agent.yaml`.
     - **Rolar.** O quadro acompanha as linhas novas até você rolar para cima, com a roda do mouse, PgUp/PgDn ou Home;
       End volta ao fim. Uma linha comprida quebra dentro do quadro. O modelo aparece quando o provider o informa.
     - **Responder.** Quando o agente pergunta (a ferramenta da run `ask`), a pergunta ocupa o campo: escreva e tecle
-      Enter; com opções, escolha com as setas e Enter, e marque várias com Espaço. Esc pula a pergunta, e o agente
-      segue com uma premissa. A pergunta e a resposta ficam no quadro (`? …` e `→ …`).
+      Enter. Com opções, escolha com as setas e Enter, e marque várias com Espaço; Tab passa para o campo, onde o que
+      você escrever responde quando nenhuma opção serve. Esc pula a pergunta, e o agente segue com uma premissa. A
+      pergunta e a resposta ficam no quadro (`? …` e `→ …`).
     - **Escrever.** Sem pergunta pendente, o que você envia vai para a sessão, e o agente lê quando termina o passo em
       que está; fica no quadro como `› …`. O Claude (e o `claude-ollama`) recebe a tarefa e as mensagens pelo stdin, e
       a sessão termina quando o agente responde à última. O Cursor não recebe mensagens durante a execução: o campo

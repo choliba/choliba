@@ -212,8 +212,6 @@ describe('openPanel', () => {
     expect(select.visible).toBe(true);
     expect(select.options.map((option) => option.name)).toEqual(['React', 'Vue']);
     expect(select.height).toBe(2);
-    input.value = 'Angular';
-    input.emit('enter');
     select.selectedIndex = 1;
     select.emit('itemSelected');
     expect(await first).toEqual({ status: 'answered', answer: 'Vue' });
@@ -225,6 +223,28 @@ describe('openPanel', () => {
     input.value = 'Ana';
     input.emit('enter');
     expect(await second).toEqual({ status: 'answered', answer: 'Ana' });
+  });
+
+  it('takes words in the field for a question with choices too, Tab moving between the list and the field', async () => {
+    const { kit, renderer, press } = fakeToolkit();
+    const panel = await openPanel(kit, OPTIONS);
+    const { select, input } = layoutOf(renderer);
+
+    const reply = panel.ask({ question: 'Framework?', options: ['React', 'Vue'], multi: false });
+    expect(select.focused).toBe(1);
+    press({ name: 'tab', ctrl: false });
+    expect(select.focused).toBe(0);
+    expect(input.focused).toBe(2);
+    press({ name: 'tab', ctrl: false });
+    expect(select.focused).toBe(1);
+    input.value = 'Svelte, do zero';
+    input.emit('enter');
+    expect(await reply).toEqual({ status: 'answered', answer: 'Svelte, do zero' });
+
+    // The list hides and lets go of the keys; Tab with no question is the field's own.
+    expect(select.focused).toBe(0);
+    press({ name: 'tab', ctrl: false });
+    expect(select.focused).toBe(0);
   });
 
   it('marks several choices with Space, and takes the highlighted one when none is marked', async () => {

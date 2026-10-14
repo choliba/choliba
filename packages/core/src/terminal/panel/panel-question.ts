@@ -33,22 +33,26 @@ function choiceName(option: string, multi: boolean, marked: boolean): string {
 
 /**
  * The questions asked in `input`, with `select` for the choices: the field shows the question and takes the answer in
- * words; the list, shown only while a question has choices, takes one with Enter, or several marked with Space. Esc
- * skips the question. With none pending, Enter sends what was typed, and the field shows `hint`.
+ * words, for any question; the list, shown only while a question has choices, takes one with Enter, or several marked
+ * with Space, and Tab moves between the list and the field. Esc skips the question. With none pending, Enter sends what was typed, and the field shows `hint`.
  */
 export function questionDesk(input: PanelInput, select: PanelSelect, hint: string): QuestionDesk {
   const queue: Pending[] = [];
   const messages: ((text: string) => void)[] = [];
   let marked = new Set<number>();
+  /** Whether the list has the keys (a question with choices), or the field. */
+  let onList = false;
 
   const current = (): Pending | undefined => queue[0];
 
   const show = (pending: Pending | undefined): void => {
     marked = new Set();
+    onList = false;
     input.value = '';
     if (pending === undefined) {
       input.placeholder = hint;
       select.visible = false;
+      select.blur();
       input.focus();
       return;
     }
@@ -56,12 +60,14 @@ export function questionDesk(input: PanelInput, select: PanelSelect, hint: strin
     input.placeholder = question;
     if (options.length === 0) {
       select.visible = false;
+      select.blur();
       input.focus();
       return;
     }
     select.options = options.map((option) => ({ name: choiceName(option, multi, false), description: '' }));
     select.height = options.length;
     select.visible = true;
+    onList = true;
     select.focus();
   };
 
@@ -90,7 +96,8 @@ export function questionDesk(input: PanelInput, select: PanelSelect, hint: strin
       });
       return;
     }
-    if (pending.question.options.length === 0) finish(pending, { status: 'answered', answer: text });
+    // Words answer any question: with choices too, for the one none of them fits.
+    finish(pending, { status: 'answered', answer: text });
   });
 
   select.on('itemSelected', () => {
@@ -118,6 +125,15 @@ export function questionDesk(input: PanelInput, select: PanelSelect, hint: strin
       if (pending === undefined) return false;
       if (key.name === 'escape') {
         finish(pending, { status: 'skipped' });
+        return true;
+      }
+      if (key.name === 'tab' && pending.question.options.length > 0) {
+        onList = !onList;
+        if (onList) select.focus();
+        else {
+          select.blur();
+          input.focus();
+        }
         return true;
       }
       if (key.name !== 'space' || !pending.question.multi) return false;
