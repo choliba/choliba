@@ -1,5 +1,5 @@
 import { coreShell } from '../../shell';
-import { BufferWritable, fakePlatform, FakeSignals, runShell, type FakePlatform } from '../../testing';
+import { BufferWritable, fakePlatform, FakeSignals, runShell, VERBS_ROOT, type FakePlatform } from '../../testing';
 
 import { formatLine } from '../../terminal/formatter';
 import type { ProcessSpawner } from '../../platform';
@@ -11,7 +11,7 @@ function platformFor(args: readonly string[], overrides: Partial<FakePlatform> =
 }
 
 function run(platform: FakePlatform): Promise<number> {
-  return runShell([coreShell], platform);
+  return runShell([coreShell, VERBS_ROOT], platform);
 }
 
 describe('choliba terminal run', () => {

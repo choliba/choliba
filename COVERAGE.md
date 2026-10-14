@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 14/10/2026 02:04:25 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 14/10/2026 05:18:07 — não editar manualmente.
 
 ## Resumo
 
@@ -121,12 +121,13 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 63 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 65 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
 🟢|[src/cli/message-of.ts](packages/core/src/cli/message-of.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/expected-error.ts](packages/core/src/common/expected-error.ts)|100.00|100.00|100.00|100.00
+🟢|[src/config/config-keys.ts](packages/core/src/config/config-keys.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/config.service.ts](packages/core/src/config/config.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/files.ts](packages/core/src/config/files.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/layout.ts](packages/core/src/config/layout.ts)|100.00|100.00|100.00|100.00
@@ -149,6 +150,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/platform/platform.constants.ts](packages/core/src/platform/platform.constants.ts)|100.00|100.00|100.00|100.00
 🟢|[src/platform/raw-args.ts](packages/core/src/platform/raw-args.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runtime/runtime.constants.ts](packages/core/src/runtime/runtime.constants.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/config-list.command.ts](packages/core/src/shell/config-list.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/container.ts](packages/core/src/shell/container.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/core-shell.ts](packages/core/src/shell/core-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/create-shell.ts](packages/core/src/shell/create-shell.ts)|100.00|100.00|100.00|100.00

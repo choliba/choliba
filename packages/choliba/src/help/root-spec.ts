@@ -46,9 +46,10 @@ export const CHOLIBA_VERBS: readonly ShellVerb[] = [
   },
   {
     name: 'list',
-    description: 'Lista os agentes ou os projetos',
+    description: 'Lista os agentes, os projetos ou a configuração',
     examples: [
       { description: 'Lista os agentes instalados', command: 'choliba list agents' },
+      { description: 'Mostra a configuração em vigor e de onde vem cada valor', command: 'choliba list config' },
       { description: 'Lista os projetos com os tickets de cada um', command: 'choliba list projects --tickets' },
     ],
   },

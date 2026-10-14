@@ -36,6 +36,15 @@ export function mergeConfig(
   return { ...fileConfig, ...processConfig };
 }
 
+/** The workspace's own `.env`, parsed; `undefined` when it has none. */
+export function loadConfigFile(
+  repoRoot: string,
+  readFile: (path: string) => string | undefined = readConfigFile,
+): Readonly<Record<string, string>> | undefined {
+  const content = readFile(join(repoRoot, ENV_FILE));
+  return content === undefined ? undefined : parseConfigFile(content);
+}
+
 export function loadRepoConfig(
   repoRoot: string,
   processConfig: Readonly<Record<string, string | undefined>> = process.env,
