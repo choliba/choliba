@@ -1,4 +1,8 @@
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { CONFIG_KEYS, type ConfigKey } from './config-keys';
+import { ENV_FILE } from './files';
 
 /**
  * A value as the `.env` keeps it: in quotes when a space, a `#` or a quote would otherwise change it, the ones it does
@@ -42,4 +46,11 @@ export function configValueError(name: string, value: string): string | undefine
     return `Valor inválido para ${name}: ${value}. Use ${key.values.join(', ')}.`;
   }
   return undefined;
+}
+
+/** Writes `key` with `value` into the `.env` of the workspace at `root`, making the file when there is none. */
+export function writeConfigValue(root: string, key: string, value: string): void {
+  const file = join(root, ENV_FILE);
+  const content = existsSync(file) ? readFileSync(file, 'utf8') : '';
+  writeFileSync(file, withEnvValue(content, key, value));
 }

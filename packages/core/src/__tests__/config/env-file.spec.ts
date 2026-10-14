@@ -1,4 +1,8 @@
-import { configValueError, findConfigKey, parseConfigFile, withEnvValue } from '../../config/index';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+import { configValueError, findConfigKey, parseConfigFile, withEnvValue, writeConfigValue } from '../../config/index';
+import { makeTmpDir } from '../helpers/tmp';
 
 const ENV = ['# Onde roda o provider.', '# CHOL_SANDBOX=local', 'CHOL_GLOBAL_DIR=/w/global', '', '# fim', ''].join(
   '\n',
@@ -47,5 +51,21 @@ describe('configValueError', () => {
     expect(configValueError('CHOL_SANDBOX', 'vm')).toBe('Valor inválido para CHOL_SANDBOX: vm. Use local, docker.');
     expect(configValueError('CHOL_COLORS', 'a\nb')).toMatch(/quebra de linha/);
     expect(configValueError('CHOL_COLORS', `"a" 'b'`)).toMatch(/dois tipos de aspas/);
+  });
+});
+
+describe('writeConfigValue', () => {
+  it('writes the key into the .env of the root, creating it when there is none', () => {
+    const tmp = makeTmpDir('env-file');
+    try {
+      writeConfigValue(tmp.path, 'CHOL_SANDBOX', 'docker');
+      expect(readFileSync(join(tmp.path, '.env'), 'utf8')).toBe('CHOL_SANDBOX=docker\n');
+
+      writeFileSync(join(tmp.path, '.env'), ENV);
+      writeConfigValue(tmp.path, 'CHOL_SANDBOX', 'docker');
+      expect(readFileSync(join(tmp.path, '.env'), 'utf8')).toBe(withEnvValue(ENV, 'CHOL_SANDBOX', 'docker'));
+    } finally {
+      tmp.cleanup();
+    }
   });
 });

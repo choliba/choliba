@@ -17,7 +17,7 @@ export {
 } from './vars';
 export { loadConfigFile, loadRepoConfig, mergeConfig, parseConfigFile } from './repo-config';
 export { CONFIG_KEYS, configSettings, type ConfigKey, type ConfigOrigin, type ConfigSetting } from './config-keys';
-export { configValueError, findConfigKey, withEnvValue } from './env-file';
+export { configValueError, findConfigKey, withEnvValue, writeConfigValue } from './env-file';
 export { findWorkspaceRoot, PACKAGE_NAME, WorkspaceNotFoundError } from './workspace';
 export { existingResourceStarts, findResource, locateResource, resourceStarts } from './resources';
 export {
