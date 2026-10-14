@@ -9,7 +9,7 @@ export interface PanelToolkit<Context, Node, Styled extends { readonly chunks: C
   readonly BoxRenderable: new (context: Context, options: PanelBoxOptions) => Node & PanelBox<Node>;
   readonly ScrollBoxRenderable: new (context: Context, options: PanelScrollOptions) => Node & PanelScroll<Node>;
   readonly TextRenderable: new (context: Context, options: PanelTextOptions<Styled>) => Node & PanelText<Styled>;
-  readonly InputRenderable: new (context: Context, options: PanelInputOptions) => Node & PanelInput;
+  readonly TextareaRenderable: new (context: Context, options: PanelTextareaOptions) => Node & PanelInput<Styled>;
   readonly SelectRenderable: new (context: Context, options: PanelSelectOptions) => Node & PanelSelect;
   readonly StyledText: new (chunks: Chunk[]) => Styled;
   /** Plain text, in the renderable's own color: its chunks are what a run with no style of choliba's is. */
@@ -35,6 +35,12 @@ export interface PanelRenderer<Node> {
 export interface PanelKey {
   readonly name: string;
   readonly ctrl: boolean;
+  readonly shift?: boolean;
+}
+
+/** The toolkit's content and submit events carry no data in the installed API. */
+export interface PanelFieldEvent {
+  readonly unused?: never;
 }
 
 export interface PanelNode<Node> {
@@ -45,12 +51,16 @@ export interface PanelBox<Node> extends PanelNode<Node> {
   height: number | 'auto' | `${number}%`;
 }
 
-/** The one-line field of the footer (`InputRenderable`); `enter` is emitted when the person presses Enter in it. */
-export interface PanelInput {
-  value: string;
-  placeholder: string;
+/** The multiline field of the footer (`TextareaRenderable`): Enter submits and Shift+Enter adds a line. */
+export interface PanelInput<Styled> {
+  readonly plainText: string;
+  readonly virtualLineCount: number;
+  height: number | 'auto' | `${number}%`;
+  placeholder: Styled | string | null;
+  onSubmit: ((event: PanelFieldEvent) => void) | undefined;
+  onContentChange: ((event: PanelFieldEvent) => void) | undefined;
   focus(): void;
-  on(event: 'enter', listener: () => void): unknown;
+  setText(text: string): void;
 }
 
 export interface PanelSelectOption {
@@ -88,14 +98,25 @@ export interface PanelBoxOptions {
   readonly border?: ('top' | 'bottom')[];
 }
 
-export interface PanelInputOptions {
+export interface PanelTextareaOptions {
   readonly placeholder: string;
   readonly flexGrow: number;
+  readonly height: number;
+  readonly maxHeight: number;
+  readonly wrapMode: 'word';
+  readonly keyBindings: PanelTextareaKeyBinding[];
+}
+
+export interface PanelTextareaKeyBinding {
+  readonly name: 'return' | 'kpenter' | 'linefeed';
+  readonly shift?: boolean;
+  readonly action: 'submit' | 'newline';
 }
 
 export interface PanelSelectOptions {
   readonly options: PanelSelectOption[];
   readonly showDescription: false;
+  readonly showScrollIndicator: true;
   readonly visible: false;
 }
 

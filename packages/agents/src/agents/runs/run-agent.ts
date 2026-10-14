@@ -224,7 +224,7 @@ async function panelOrFooter(
     hint:
       request.provider.adapter.inputMessage === undefined
         ? 'Aqui você responde quando o agente perguntar'
-        : 'Escreva para o agente e tecle Enter',
+        : 'Enter envia · Ctrl+J cria uma linha',
   });
   return panel === undefined ? footerScreen(info, request, deps) : panelScreen(panel, current, request, deps);
 }

@@ -1,7 +1,7 @@
 import type { AnsiColor } from '../../theme';
 import { ansiChunks, type StyledChunk } from '../frame';
 
-import type { PanelKey, PanelToolkit } from './interfaces/panel.interface';
+import type { PanelKey, PanelTextareaKeyBinding, PanelToolkit } from './interfaces/panel.interface';
 import { questionDesk, type PanelQuestion, type PanelReply } from './panel-question';
 
 /**
@@ -33,6 +33,19 @@ const INTERRUPT_NOTICE = 'Tecle Ctrl+C de novo para interromper';
 
 /** How often the footer is drawn again; also the panel's frame rate. */
 const FRAMES_PER_SECOND = 30;
+
+/** The input grows with its wrapped content up to this many terminal rows. */
+const MAX_INPUT_LINES = 5;
+
+const TEXTAREA_KEYS: PanelTextareaKeyBinding[] = [
+  { name: 'return', action: 'submit' },
+  { name: 'return', shift: true, action: 'newline' },
+  { name: 'kpenter', action: 'submit' },
+  { name: 'kpenter', shift: true, action: 'newline' },
+  // Ctrl+J is LF in every terminal; some terminals also encode Shift+Enter as LF without its modifier.
+  { name: 'linefeed', action: 'newline' },
+  { name: 'linefeed', shift: true, action: 'newline' },
+];
 
 export interface PanelOptions {
   /** The title of the panel: for a run, the agent. */
@@ -111,10 +124,22 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     stickyStart: 'bottom',
     scrollX: false,
   });
-  const select = new kit.SelectRenderable(renderer, { options: [], showDescription: false, visible: false });
+  const select = new kit.SelectRenderable(renderer, {
+    options: [],
+    showDescription: false,
+    showScrollIndicator: true,
+    visible: false,
+  });
   const bottom = new kit.BoxRenderable(renderer, { flexDirection: 'row', border: ['top', 'bottom'] });
   const prompt = new kit.TextRenderable(renderer, { content: '❯ ', wrapMode: 'word' });
-  const input = new kit.InputRenderable(renderer, { placeholder: options.hint, flexGrow: 1 });
+  const input = new kit.TextareaRenderable(renderer, {
+    placeholder: options.hint,
+    flexGrow: 1,
+    height: 1,
+    maxHeight: MAX_INPUT_LINES,
+    wrapMode: 'word',
+    keyBindings: TEXTAREA_KEYS,
+  });
   const footer = new kit.TextRenderable(renderer, { content: '', wrapMode: 'word' });
   bottom.add(prompt);
   bottom.add(input);
@@ -123,6 +148,14 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
   layout.add(select);
   layout.add(bottom);
   renderer.root.add(layout);
+  let footerLineCount = 0;
+  const resizeInput = (): void => {
+    // OpenTUI emits the content event before its wrapped-line view always reflects a newly inserted newline.
+    const logicalLineCount = input.plainText.split('\n').length;
+    input.height = Math.min(MAX_INPUT_LINES, Math.max(1, logicalLineCount, input.virtualLineCount));
+    bottom.height = Math.max(input.height, footerLineCount) + 2;
+  };
+  input.onContentChange = resizeInput;
   const desk = questionDesk(input, select, options.hint);
   input.focus();
 
@@ -168,10 +201,11 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
 
   const refresh = (): void => {
     const lines = options.footer(renderer.width);
+    footerLineCount = lines.length;
     footer.content = styled(lines);
     footer.height = lines.length;
-    // The row's own line plus the line above and the one below.
-    bottom.height = lines.length + 2;
+    // The tallest content, plus the line above and the one below.
+    resizeInput();
   };
   refresh();
 

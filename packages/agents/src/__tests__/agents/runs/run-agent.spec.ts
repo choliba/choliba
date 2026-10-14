@@ -956,7 +956,7 @@ describe('runAgent — panel', () => {
     expect(handle.stdin.written).toEqual(['>do it\n', '>use React\n']);
     expect(handle.stdin.ended).toBe(true);
     expect(record.written.join('')).toContain('› use React\n');
-    expect(record.options[0]?.hint).toBe('Escreva para o agente e tecle Enter');
+    expect(record.options[0]?.hint).toBe('Enter envia · Ctrl+J cria uma linha');
   });
 
   it('closes stdin when a guard stops the session', async () => {
