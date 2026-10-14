@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 14/10/2026 05:18:07 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 14/10/2026 06:09:15 — não editar manualmente.
 
 ## Resumo
 
@@ -121,7 +121,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 65 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 66 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -129,6 +129,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/common/expected-error.ts](packages/core/src/common/expected-error.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/config-keys.ts](packages/core/src/config/config-keys.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/config.service.ts](packages/core/src/config/config.service.ts)|100.00|100.00|100.00|100.00
+🟢|[src/config/env-file.ts](packages/core/src/config/env-file.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/files.ts](packages/core/src/config/files.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/layout.ts](packages/core/src/config/layout.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/package-version.ts](packages/core/src/config/package-version.ts)|100.00|100.00|100.00|100.00
