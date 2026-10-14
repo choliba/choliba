@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync, writeSync } from 'node:fs';
 import { join } from 'node:path';
 
 import * as gitDiff from '../../../agents/steps/git-working-tree-diff';
@@ -20,14 +20,19 @@ import { readGitState } from '../../../agents/steps/git-state';
 import { makeTmpGitRepo } from '../../helpers/git-repo';
 import { makeTmpDir } from '../../helpers/tmp';
 
-function recordingSpawn(status: number | null = 0, stderr = '', stdout = ''): StepSpawn & { calls: unknown[][] } {
+/** A command that writes `chunks`, in order, to the one file its stdout and stderr go to, and exits with `status`. */
+function recordingSpawn(status: number | null = 0, ...chunks: readonly string[]): StepSpawn & { calls: unknown[][] } {
   const calls: unknown[][] = [];
-  const spawn = (command: string, args: readonly string[], options: object) => {
-    calls.push([command, args, options]);
-    return { status, stdout, stderr };
+  const spawn: StepSpawn = (command, args, options) => {
+    calls.push([command, args, { cwd: options.cwd, shell: options.shell }]);
+    for (const chunk of chunks) writeSync(options.stdio[1], chunk);
+    return { status };
   };
   return Object.assign(spawn, { calls });
 }
+
+/** Where the specs keep the steps' logs. */
+const LOGS = makeTmpDir('step-logs').path;
 
 /** The failure `action` throws, as `StepFailedError` carries it. */
 function failureOf(action: () => unknown): StepFailure {
@@ -77,7 +82,7 @@ describe('runBeforeSteps', () => {
       writeFileSync(join(tmp.path, 'README.md'), '# Hi\n');
       const spawn = recordingSpawn();
       const sections = runBeforeSteps(
-        { repoRoot: tmp.path, since: undefined, spawn },
+        { repoRoot: tmp.path, since: undefined, spawn, logDir: LOGS },
         [
           { action: 'git_diff', args: ['develop', '.cache/x/diff.patch'] },
           { action: 'run', args: ['bun', 'x', 'check'] },
@@ -91,7 +96,7 @@ describe('runBeforeSteps', () => {
       expect(sections[1]).toBe(
         '<readme_atual>\n\n<untrusted_input source="file:README.md">\n# Hi\n</untrusted_input>\n\n</readme_atual>',
       );
-      expect(spawn.calls).toEqual([['bun', ['x', 'check'], { cwd: tmp.path, encoding: 'utf8', shell: false }]]);
+      expect(spawn.calls).toEqual([['bun', ['x', 'check'], { cwd: tmp.path, shell: false }]]);
     } finally {
       getDiff.mockRestore();
       tmp.cleanup();
@@ -99,42 +104,72 @@ describe('runBeforeSteps', () => {
   });
 
   it('stops at the first failing command, with its position, status and the end of its output', () => {
-    const spawn = recordingSpawn(2, '[error] bad\n', 'checking\n');
+    const spawn = recordingSpawn(2, 'checking\n', '[error] bad\n');
     const steps = [
       { action: 'run', args: ['bun', 'x', 'prettier'] },
       { action: 'run', args: ['never', 'runs'] },
     ];
 
-    expect(
-      failureOf(() => runBeforeSteps({ repoRoot: '/repo', since: undefined, spawn }, steps, 'plan.before')),
-    ).toEqual({
-      label: 'plan.before 1/2',
-      step: steps[0],
-      status: 2,
-      output: 'checking\n[error] bad',
-    });
+    const failure = failureOf(() =>
+      runBeforeSteps({ repoRoot: '/repo', since: undefined, spawn, logDir: LOGS }, steps, 'plan.before'),
+    );
+    expect(failure).toMatchObject({ label: 'plan.before 1/2', step: steps[0], status: 2 });
+    const { output } = failure;
+    // stdout and stderr in the order the command wrote them, then where the whole of it is.
+    expect(output).toMatch(/^checking\n\[error\] bad\nsaída completa: .+\.log$/);
+    const log = output.split('saída completa: ')[1] ?? '';
+    expect(readFileSync(join('/repo', log), 'utf8')).toBe('checking\n[error] bad\n');
     expect(spawn.calls).toHaveLength(1);
   });
 
-  it('keeps only the last lines of a long output, saying how many it left out', () => {
+  it('keeps only the last lines of a long output, and the log the whole of it', () => {
     const spawn = recordingSpawn(1, Array.from({ length: 30 }, (_, index) => `line ${String(index)}`).join('\n'));
     const { output } = failureOf(() =>
       runBeforeSteps(
-        { repoRoot: '/repo', since: undefined, spawn },
+        { repoRoot: '/repo', since: undefined, spawn, logDir: LOGS },
         [{ action: 'run', args: ['x'] }],
         'execute.before',
       ),
     );
 
-    expect(output.split('\n')).toHaveLength(21);
-    expect(output.startsWith('… (10 linhas antes)\nline 10\n')).toBe(true);
+    expect(output.split('\n')).toHaveLength(13);
+    expect(output.startsWith('line 18\n')).toBe(true);
+    expect(output.split('\n').at(-1)).toMatch(/^saída completa: /);
+  });
+
+  it('leaves no log when the command succeeds, and keeps the logs in .cache/steps of the workspace by default', () => {
+    const tmp = makeTmpDir('steps-workspace');
+    try {
+      runBeforeSteps(
+        { repoRoot: tmp.path, since: undefined, spawn: recordingSpawn(0, 'ok') },
+        [{ action: 'run', args: ['x'] }],
+        'execute.before',
+      );
+      expect(readdirSync(join(tmp.path, '.cache', 'steps'))).toEqual([]);
+
+      const { output } = failureOf(() =>
+        runBeforeSteps(
+          { repoRoot: tmp.path, since: undefined, spawn: recordingSpawn(1) },
+          [{ action: 'run', args: ['x'] }],
+          'execute.before',
+        ),
+      );
+      expect(output).toMatch(/^saída completa: \.cache\/steps\/.+\.log$/);
+      expect(existsSync(join(tmp.path, output.replace('saída completa: ', '')))).toBe(true);
+    } finally {
+      tmp.cleanup();
+    }
   });
 
   it('has no status for a command a signal ended, nor for an action that is not a command', () => {
     const killed = recordingSpawn(null);
     expect(
       failureOf(() =>
-        runBeforeSteps({ repoRoot: '/r', since: undefined, spawn: killed }, [{ action: 'run', args: ['x'] }], 'b'),
+        runBeforeSteps(
+          { repoRoot: '/r', since: undefined, spawn: killed, logDir: LOGS },
+          [{ action: 'run', args: ['x'] }],
+          'b',
+        ),
       ).status,
     ).toBeUndefined();
     expect(
@@ -191,7 +226,7 @@ describe('runAfterSteps', () => {
     try {
       const spawn = recordingSpawn(3, 'boom');
       const failures = runAfterSteps(
-        { repoRoot: repo.path, since: undefined, spawn },
+        { repoRoot: repo.path, since: undefined, spawn, logDir: LOGS },
         [
           { action: 'run', args: ['bun', 'x', 'prettier'] },
           { action: 'record_git_head', args: ['.cache/x/last-base'] },
@@ -205,7 +240,7 @@ describe('runAfterSteps', () => {
           label: 'execute.after.success 1/3',
           step: { action: 'run', args: ['bun', 'x', 'prettier'] },
           status: 3,
-          output: 'boom',
+          output: expect.stringMatching(/^boom\nsaída completa: .+\.log$/) as unknown as string,
         },
         {
           label: 'execute.after.success 3/3',
