@@ -8,7 +8,7 @@ const MCP_NAME = /mcp/i;
  * How `event` uses MCP: what its provider's parser said, or, for any other tool named after MCP (a new
  * provider, a new discovery tool), a discovery of no particular server. `undefined` when it uses none.
  */
-function mcpUseOf(event: AgentEvent): McpUse | undefined {
+export function mcpUseOf(event: AgentEvent): McpUse | undefined {
   if (event.type !== 'tool-call') {
     return undefined;
   }
