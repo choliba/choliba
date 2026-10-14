@@ -15,6 +15,8 @@ export interface LocalSandboxOptions {
   readonly disk: DiskFacts;
   readonly bwrap: string | undefined;
   readonly environment: Readonly<Record<string, string>>;
+  /** The folder of the resolver configuration under `/run` (`resolverFolder`); absent when there is none. */
+  readonly resolver?: string | undefined;
 }
 
 /**
@@ -73,6 +75,7 @@ export class LocalSandbox implements SandboxBackend {
       command: bwrapCommand({
         bwrap,
         home,
+        resolver: this.options.resolver,
         programReadOnly: program.readOnly,
         mounts,
         cwd: input.reach.runDir,

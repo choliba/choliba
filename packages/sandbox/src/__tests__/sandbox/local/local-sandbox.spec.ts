@@ -4,6 +4,7 @@ import { delimiter, join } from 'node:path';
 
 import {
   bwrapOnPath,
+  resolverFolder,
   LocalSandbox,
   readDir,
   SandboxEnforcementError,
@@ -120,7 +121,8 @@ describe('LocalSandbox', () => {
       'hidden /w/docs/segredo',
     ]);
     expect(plan.skipped).toEqual([]);
-    expect(plan.command.slice(0, 2)).toEqual(['/usr/bin/bwrap', '--die-with-parent']);
+    expect(plan.command.slice(0, 3)).toEqual(['/usr/bin/bwrap', '--die-with-parent', '--unshare-pid']);
+    expect(plan.command).not.toContain('/run/systemd/resolve');
     expect(plan.command).toEqual(
       expect.arrayContaining([
         '--ro-bind-try',
@@ -158,6 +160,28 @@ describe('LocalSandbox', () => {
     });
     const hidden = plan.command.indexOf('/w/docs/nota.txt');
     expect(plan.command.slice(hidden - 2, hidden + 1)).toEqual(['--dev-bind', '/dev/null', '/w/docs/nota.txt']);
+  });
+
+  it('mounts the resolver folder back over the empty /run, so names resolve', () => {
+    const withResolver = new LocalSandbox({
+      disk: DISK,
+      bwrap: '/usr/bin/bwrap',
+      environment: ENVIRONMENT,
+      resolver: '/run/systemd/resolve',
+    });
+    const plan = withResolver.plan({
+      command: ['claude'],
+      program: PROGRAM,
+      reach: reach({ allowRead: ['/w/docs/'] }),
+    });
+    const run = plan.command.indexOf('/run');
+    expect(plan.command.slice(run - 1, run + 4)).toEqual([
+      '--tmpfs',
+      '/run',
+      '--ro-bind-try',
+      '/run/systemd/resolve',
+      '/run/systemd/resolve',
+    ]);
   });
 
   it('refuses an absent program closure and accepts any declared credential', () => {
@@ -278,5 +302,18 @@ describe('LocalSandbox with bwrap', () => {
     } finally {
       tmp.cleanup();
     }
+  });
+});
+
+describe('resolverFolder', () => {
+  it('gives the folder of the resolver configuration under /run, and nothing elsewhere or when it cannot be read', () => {
+    expect(resolverFolder(() => '/run/systemd/resolve/stub-resolv.conf')).toBe('/run/systemd/resolve');
+    expect(resolverFolder(() => '/etc/resolv.conf')).toBeUndefined();
+    expect(
+      resolverFolder(() => {
+        throw new Error('ENOENT');
+      }),
+    ).toBeUndefined();
+    expect(['string', 'undefined']).toContain(typeof resolverFolder());
   });
 });
