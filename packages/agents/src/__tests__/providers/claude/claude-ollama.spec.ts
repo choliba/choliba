@@ -72,6 +72,11 @@ describe('ClaudeOllamaAgentProvider', () => {
     });
   });
 
+  it("leaves out of the screen only Claude Code's notice about a model it does not know", () => {
+    expect(claudeOllamaProvider.quietStderr('[claude-code:unrecognized_model] {"model":"qwen3.5:4b"}')).toBe(true);
+    expect(claudeOllamaProvider.quietStderr('erro de rede')).toBe(false);
+  });
+
   it('leaves the models empty when the run names none', () => {
     const variables = claudeOllamaProvider.variables({
       request: request(undefined),
