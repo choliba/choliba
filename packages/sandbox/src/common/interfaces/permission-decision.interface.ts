@@ -40,15 +40,34 @@ export const PERMISSION_FLOOR: Readonly<Record<PermissionAction, PermissionFloor
   bind: 'enforced',
 };
 
-/** One path action: `exception` only takes a path out of a `deny` of this same action. It never grants. */
-export interface PathRule {
-  readonly allow: readonly string[];
-  readonly deny: readonly string[];
-  readonly exception: readonly string[];
+/** One rule: `exception` only takes an entry out of a `deny` of this same rule. It never grants. */
+export interface PermissionRule<Entry> {
+  readonly allow: readonly Entry[];
+  readonly deny: readonly Entry[];
+  readonly exception: readonly Entry[];
 }
+
+/** One path action. */
+export type PathRule = PermissionRule<string>;
 
 /** The path policy `decide` reads. `--add-dir` is already part of `read.allow`. */
 export type PathPolicy = Readonly<Record<PathAction, PathRule>>;
+
+/**
+ * A tool of a server, or the whole server when there is no `name`. A built-in tool has no server, so it is not an MCP
+ * tool that only shares its name.
+ */
+export type ToolEntry =
+  { readonly server: string; readonly name?: string } | { readonly server?: string; readonly name: string };
+
+/** The tool policy `decide` reads: one rule, because `invoke` is one action. */
+export type ToolPolicy = PermissionRule<ToolEntry>;
+
+/** Everything `decide` reads. */
+export interface PermissionPolicy {
+  readonly path: PathPolicy;
+  readonly tool: ToolPolicy;
+}
 
 export type PermissionMode = 'execute' | 'plan' | 'ask';
 
@@ -61,7 +80,7 @@ export interface PermissionContext {
 export type PermissionObject =
   | { readonly kind: 'path'; readonly path: string }
   | { readonly kind: 'command'; readonly dir: string; readonly argv: readonly string[] }
-  | { readonly kind: 'tool'; readonly server: string; readonly name: string }
+  | { readonly kind: 'tool'; readonly server?: string; readonly name: string }
   | { readonly kind: 'network'; readonly host: string }
   | { readonly kind: 'env'; readonly name: string };
 

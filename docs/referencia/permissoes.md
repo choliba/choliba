@@ -42,6 +42,9 @@ trabalho inteira, com leitura e escrita. Hoje os steps rodam fora das permissõe
 
 Um caminho sem glob vale para ele e tudo abaixo.
 
+Um MCP sem tool vale para todas as tools dele. Uma ferramenta sem servidor é do próprio provider (`Read`, `Task`) e
+não se confunde com a tool de um MCP que tenha o mesmo nome.
+
 ## Ações
 
 | Ação      | Objeto              | Equivale a                                                |
@@ -62,7 +65,8 @@ provider, pede `create`, `edit` e `delete` na pasta dele.
 
 O contexto muda a decisão sem mudar a regra:
 
-- **Modo.** Em `plan` e `ask`, `create`, `edit` e `delete` são negados, mesmo com `allow`.
+- **Modo.** Em `plan` e `ask`, `create`, `edit` e `delete` são negados, mesmo com `allow`. `invocar` uma ferramenta
+  não é bloqueado pelo modo: o que ela fizer num caminho é decidido à parte.
 - **Projeto e ticket** da execução.
 
 Duas concessões valem só para uma execução:

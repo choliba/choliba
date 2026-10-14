@@ -29,8 +29,9 @@ permissões do `agent.yaml`.
 
 11. O choliba cria as ferramentas da run ao lado de `.cache/runs/<id>/`, e o provider roda nessa pasta vazia, com os
     dois prompts. O agente lê, grava, roda os comandos de `allow.execute` e as ferramentas da run e chama as tools
-    dos MCPs; em `plan` e `ask`, não grava nada. Se ele chama um subagente, o choliba interrompe a execução (veja
-    [Segurança](seguranca.md)).
+    dos MCPs; em `plan` e `ask`, não grava nada. Cada chamada de ferramenta é decidida pelo sandbox: se ele chama um
+    subagente, um MCP que não declara ou uma ferramenta que o provider não consegue limitar, o choliba interrompe a
+    execução (veja [Segurança](seguranca.md) e [Permissões](permissoes.md)).
 
     O terminal mostra cada ferramenta que o agente chama (`→`) e, quando uma falha, onde e por quê, igual em
     qualquer provider: `✗ Shell bun install: negado (comando fora de allow.execute)` diz qual chave do

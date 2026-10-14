@@ -30,7 +30,7 @@ describe('pathPolicy', () => {
   });
 
   it('reaches what the agent reached: the sandbox decides as the permissions say', () => {
-    const policy = pathPolicy(PERMISSIONS);
+    const policy = { path: pathPolicy(PERMISSIONS), tool: { allow: [], deny: [], exception: [] } };
 
     expect(decide(asked('read', '/w/src/a.ts'), policy)).toBe('allow');
     expect(decide(asked('list', '/w/segredo/x'), policy)).toBe('deny');
