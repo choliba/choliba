@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 14/10/2026 06:27:03 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 14/10/2026 07:21:27 — não editar manualmente.
 
 ## Resumo
 
@@ -17,7 +17,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 74 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 75 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -61,6 +61,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/runs/tool-policy.ts](packages/agents/src/agents/runs/tool-policy.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/tool-request.ts](packages/agents/src/agents/runs/tool-request.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/unenforced-tool-guard.ts](packages/agents/src/agents/runs/unenforced-tool-guard.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/written-tool-call.ts](packages/agents/src/agents/runs/written-tool-call.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/git-state.ts](packages/agents/src/agents/steps/git-state.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/git-working-tree-diff.ts](packages/agents/src/agents/steps/git-working-tree-diff.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/index-diff.ts](packages/agents/src/agents/steps/index-diff.ts)|100.00|100.00|100.00|100.00
