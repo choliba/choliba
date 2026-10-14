@@ -55,7 +55,7 @@ describe('choliba run agent and list agents', () => {
 
       const help = await choliba(['run', 'agent', '--help'], { cwd });
       expect(help.platform.stdout.text()).toContain('Usage:  choliba run agent AGENT [OPTIONS] [TASK...]');
-      expect(help.platform.stdout.text()).toContain('(auto, claude, cursor)');
+      expect(help.platform.stdout.text()).toContain('(auto, claude, claude-ollama, cursor)');
       expect(help.platform.stdout.text()).not.toContain('list');
     }));
 
@@ -79,8 +79,14 @@ describe('choliba run agent and list agents', () => {
     withWorkspace(async (cwd) => {
       const { code, platform } = await choliba(['run', 'agent', 'echo', 'repita isto'], {
         cwd,
-        env: { FORCE_COLOR: '1', CHOL_COLORS: 'agents.echo=gray', TERM: 'dumb' },
-        which: (bin) => (bin === 'claude' ? '/usr/bin/claude' : null),
+        env: {
+          HOME: tmpdir(),
+          CLAUDE_CODE_OAUTH_TOKEN: 'test-token',
+          FORCE_COLOR: '1',
+          CHOL_COLORS: 'agents.echo=gray',
+          TERM: 'dumb',
+        },
+        which: (bin) => (bin === 'claude' ? '/usr/bin/true' : null),
         spawn: fakeSpawner({ stdout: streamFromChunks(claudeStdout('repetido')) }).spawner,
         stdout: new BufferWritable(true),
       });
@@ -126,7 +132,7 @@ describe('AgentsService.helpSpec', () => {
 
       expect(formatSuggestions(complete(spec, ['ec']))).toBe('echo');
       expect(formatSuggestions(complete(spec, ['l']))).toBe('');
-      expect(formatSuggestions(complete(spec, ['echo', '--provider', '']))).toBe('auto\nclaude\ncursor');
+      expect(formatSuggestions(complete(spec, ['echo', '--provider', '']))).toBe('auto\nclaude\nclaude-ollama\ncursor');
       return Promise.resolve();
     }));
 });

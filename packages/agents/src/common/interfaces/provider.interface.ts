@@ -29,6 +29,14 @@ export interface ProviderRequest {
   readonly project?: RunProject;
 }
 
+/** What a provider's own variables are made from: the run, the workspace's configuration, and how the agent reaches a URL. */
+export interface ProviderVariablesInput {
+  readonly request: ProviderRequest;
+  readonly config: Readonly<Record<string, string | undefined>>;
+  /** A URL of this machine as the provider reaches it from where it runs (`agentURL`). */
+  readonly reachable: (url: string) => string;
+}
+
 /**
  * Stateful by design: a provider's tool-result events reference a tool-call by id
  * (`tool_use_id`), so a parser instance tracks id → name across the lines of one run.

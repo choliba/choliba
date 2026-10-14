@@ -42,3 +42,6 @@ export const CHOL_SANDBOX_IMAGE = 'CHOL_SANDBOX_IMAGE';
 
 /** The Docker sandbox network: `isolated` (the default bridge) or the host network. */
 export const CHOL_NETWORK = 'CHOL_NETWORK';
+
+/** Where the `claude-ollama` provider finds Ollama (default `http://localhost:11434`). */
+export const CHOL_OLLAMA_URL = 'CHOL_OLLAMA_URL';

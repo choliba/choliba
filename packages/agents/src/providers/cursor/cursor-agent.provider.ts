@@ -1,3 +1,5 @@
+import { dirname } from 'node:path';
+
 import { readDir } from '@choliba/sandbox';
 
 import { mcpServersMap } from '../../common';
@@ -149,9 +151,15 @@ function previewWorkspace(request: ProviderRequest): readonly PlannedFile[] {
 export class CursorAgentProvider extends AgentProvider {
   readonly id = 'cursor';
   override readonly unenforcedTools = UNENFORCED_TOOLS;
-  readonly binaries = [['agent'], ['cursor-agent'], ['cursor', 'agent']];
+  readonly binaries: readonly (readonly [string, ...string[]])[] = [['agent'], ['cursor-agent'], ['cursor', 'agent']];
   /** First in `auto`. */
   readonly autoPriority = 1;
+  readonly credentials = ['CURSOR_API_KEY'];
+  readonly credentialHelp = 'O provider cursor precisa de CURSOR_API_KEY no .env.';
+
+  override localReadOnly(executable: string): readonly string[] {
+    return [dirname(executable)];
+  }
 
   buildArgs(request: ProviderRequest): readonly string[] {
     return buildArgs(request);

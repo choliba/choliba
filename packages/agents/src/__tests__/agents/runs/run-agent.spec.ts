@@ -98,7 +98,11 @@ function fakeAdapter(overrides: Partial<AgentProvider> = {}): AgentProvider {
     id: 'claude',
     binaries: [['fake']],
     autoPriority: 1,
+    credentials: ['FAKE_TOKEN'],
+    credentialHelp: 'set FAKE_TOKEN',
     unenforcedTools: [],
+    inAuto: true,
+    declaredModel: (model) => model,
     buildArgs: () => ['--arg'],
     createParser: () => {
       let sawInitWithModel = false;
@@ -120,6 +124,7 @@ function fakeAdapter(overrides: Partial<AgentProvider> = {}): AgentProvider {
       };
     },
     ...overrides,
+    localReadOnly: overrides.localReadOnly ?? ((executable) => [executable]),
   };
 }
 
@@ -151,7 +156,7 @@ function setup(spawner: ProcessSpawner, adapterOverrides: Partial<AgentProvider>
     stderr,
     signals,
     request: (overrides = {}, providerOverrides = {}) => ({
-      provider: { adapter, command: ['fake-bin'] } satisfies ResolvedProvider,
+      provider: { adapter, command: ['fake-bin'], executable: '/bin/fake-bin' } satisfies ResolvedProvider,
       providerRequest: {
         agent: fakeAgent(),
         mode: 'execute',
@@ -502,7 +507,7 @@ describe('runAgent', () => {
 
     const pending = runAgent(
       {
-        provider: { adapter, command: ['fake-bin'] },
+        provider: { adapter, command: ['fake-bin'], executable: '/bin/fake-bin' },
         providerRequest: {
           agent: fakeAgent(),
           mode: 'execute',

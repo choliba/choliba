@@ -1,4 +1,10 @@
-import type { PlanContentContext, PlannedFile, ProviderRequest, StreamParser } from './interfaces/provider.interface';
+import type {
+  PlanContentContext,
+  PlannedFile,
+  ProviderRequest,
+  ProviderVariablesInput,
+  StreamParser,
+} from './interfaces/provider.interface';
 
 /**
  * The contract every agent provider (claude, cursor…) meets. Adding a provider is adding its subclass to the list
@@ -11,15 +17,44 @@ export abstract class AgentProvider {
    * Candidate binaries to try, in order, most specific first — e.g. cursor's own CLI is reachable as
    * `agent`, `cursor-agent` or `cursor agent` depending on install. The first one that resolves is used.
    */
-  abstract readonly binaries: readonly (readonly string[])[];
+  abstract readonly binaries: readonly (readonly [string, ...string[]])[];
   /** Where it comes in `auto`'s search: the lowest installed one wins. */
   abstract readonly autoPriority: number;
+  /** Environment variables that can authenticate this provider; a local run needs at least one. */
+  abstract readonly credentials: readonly string[];
+  /** Actionable error shown when a local run has none of `credentials`. */
+  abstract readonly credentialHelp: string;
 
   /**
    * Built-in tools of the provider that its permissions cannot limit (Cursor's `Grep` and `Glob` read files that a
    * `Read` deny covers). A call to one stops the run (`unenforced-tool-guard.ts`); none by default.
    */
   readonly unenforcedTools: readonly string[] = [];
+
+  /** Whether `auto` may pick it. A provider that runs only a model of its own (`claude-ollama`) runs only when named. */
+  readonly inAuto: boolean = true;
+
+  /**
+   * The prefix of the `agent.yaml#models` ids only this provider runs (`ollama:`). A provider without one runs the ids
+   * no provider prefixes.
+   */
+  readonly modelPrefix?: string;
+
+  /** What `--help` says it is, when the command it runs does not say enough. */
+  readonly summary?: string;
+
+  /** The declared id of the model its stream reports, to check against `agent.yaml#models`. */
+  declaredModel(reported: string): string {
+    return reported;
+  }
+
+  /** Variables it sets for itself, over what the session inherits: where its API is, which token it sends. */
+  variables?(input: ProviderVariablesInput): Readonly<Record<string, string>>;
+
+  /** The resolved executable's runtime closure that a local sandbox mounts read-only. */
+  localReadOnly(executable: string): readonly string[] {
+    return [executable];
+  }
 
   /** The args *after* the binary. Calls `assertArgvFits` before returning. */
   abstract buildArgs(request: ProviderRequest): readonly string[];

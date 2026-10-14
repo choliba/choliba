@@ -57,10 +57,13 @@ function buildArgs(request: ProviderRequest): readonly string[] {
 
 /** Claude Code (`claude -p … --output-format stream-json`). */
 export class ClaudeAgentProvider extends AgentProvider {
-  readonly id = 'claude';
-  readonly binaries = [['claude']];
+  readonly id: string = 'claude';
+  readonly binaries: readonly (readonly [string, ...string[]])[] = [['claude']];
   /** After cursor in `auto`. */
-  readonly autoPriority = 2;
+  readonly autoPriority: number = 2;
+  readonly credentials = ['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN'];
+  readonly credentialHelp =
+    'O provider claude precisa de CLAUDE_CODE_OAUTH_TOKEN (rode `claude setup-token`), ANTHROPIC_API_KEY ou ANTHROPIC_AUTH_TOKEN no .env.';
 
   buildArgs(request: ProviderRequest): readonly string[] {
     return buildArgs(request);

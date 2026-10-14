@@ -279,7 +279,7 @@ async function followSession(
       }
 
       if (agentEvent.type === 'init' && agentEvent.model !== undefined) {
-        const error = validateReportedModel(agentEvent.model, supportedModels, modelCtx);
+        const error = validateReportedModel(adapter.declaredModel(agentEvent.model), supportedModels, modelCtx);
         if (error !== undefined) {
           stop(error);
           continue;

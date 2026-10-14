@@ -15,8 +15,8 @@ CHOL_PROJECTS_DIR=
 # CHOL_SKILLS_DIR=.choliba/skills
 # CHOL_MCPS_DIR=.choliba/mcps
 
-# Opcional: provider padrão dos agentes, auto, claude ou cursor (padrão: auto; --provider na linha de comando
-# ganha deste).
+# Opcional: provider padrão dos agentes, auto, claude, claude-ollama ou cursor (padrão: auto; --provider na linha
+# de comando ganha deste).
 # CHOL_AGENTS_PROVIDER=auto
 
 # Opcional: onde o provider roda, local (padrão) ou docker, num container que só enxerga o que o agent.yaml libera
@@ -25,6 +25,10 @@ CHOL_PROJECTS_DIR=
 # CHOL_SANDBOX=local
 # CHOL_SANDBOX_IMAGE=choliba-agent
 # CHOL_NETWORK=isolated
+
+# Opcional: onde o provider claude-ollama encontra o Ollama, para agentes que declaram um ollama:<modelo> em models
+# (veja docs/referencia/agent-yaml.md).
+# CHOL_OLLAMA_URL=http://localhost:11434
 
 # Opcional: onde a ferramenta playwright-cli dos agentes grava snapshots e screenshots que eles leem, e onde a
 # playwright-trace roda (padrão: .cache/playwright-cli).

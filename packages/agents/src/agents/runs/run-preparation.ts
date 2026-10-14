@@ -37,6 +37,7 @@ import {
 } from './run-checks';
 import type { PreparedRun, RunAgentsCliDeps, RunArgs, RunContext, Stopped } from './run-context';
 import { STOPPED, errorMessage, toAbsolute } from './run-context';
+import { providerModel } from './provider-model';
 import { LOCATION_VARS, agentTexts, withExpandedVars } from '../../common';
 import { withDefinitionDenies, withProjectDenies } from '../../common';
 
@@ -302,6 +303,11 @@ export function prepareRun(
   if (resolved === undefined) {
     return STOPPED;
   }
+  const chosen = providerModel(resolved.adapter, parsed.model, agent.supportedModels, deps.providers);
+  if ('error' in chosen) {
+    deps.stderr.write(`${chosen.error}\n`);
+    return STOPPED;
+  }
   const built = buildProviderRequest(
     command,
     withSkills,
@@ -318,6 +324,7 @@ export function prepareRun(
     return built;
   }
   const { project } = context;
-  const providerRequest = project === undefined ? built.providerRequest : { ...built.providerRequest, project };
+  const withModel = { ...built.providerRequest, model: chosen.model };
+  const providerRequest = project === undefined ? withModel : { ...withModel, project };
   return { ...built, providerRequest, resolved, command };
 }
