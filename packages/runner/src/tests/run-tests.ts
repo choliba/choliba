@@ -383,9 +383,15 @@ export async function runTests(options: RunTestsOptions): Promise<RunTestsResult
   }
 }
 
-/** The default report and results folders left in `cwd`, after a run whose report went to a folder of its own. */
+/**
+ * The default report and results folders left in `cwd`, after a run whose report went to a folder of its own. Only the
+ * ones that exist: in a sandbox `cwd` is the installed package, mounted read-only, where removing even a missing path
+ * fails with EROFS.
+ */
 function cleanup(context: RunContext): void {
   if (!context.cleanup.needed) return;
-  fs.rmSync(path.join(context.cwd, TEST_RESULTS_FOLDER), { recursive: true, force: true });
-  fs.rmSync(path.join(context.cwd, REPORT_FOLDER), { recursive: true, force: true });
+  for (const folder of [TEST_RESULTS_FOLDER, REPORT_FOLDER]) {
+    const leftover = path.join(context.cwd, folder);
+    if (fs.existsSync(leftover)) fs.rmSync(leftover, { recursive: true, force: true });
+  }
 }

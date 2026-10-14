@@ -698,6 +698,33 @@ describe('runTests', () => {
     });
   });
 
+  it('leaves a read-only cwd alone when there are no playwright folders to clean up', async () => {
+    await withProject(async (projectsDir, cwd) => {
+      writeProject(projectsDir, 'demo', [{ suffix: 'T-01', specs: ['a.spec.ts'] }]);
+      const readOnly = Object.assign(new Error('EROFS: read-only file system'), { code: 'EROFS' });
+      const rm = jest.spyOn(fs, 'rmSync').mockImplementation(() => {
+        throw readOnly;
+      });
+      try {
+        const result = await runTests({
+          ...TEST_ROOTS,
+          argv: ['demo:T-01'],
+          cwd,
+          stdinIsTTY: false,
+          env: { CHOL_TICKET_RUNS: projectsDir },
+          loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: projectsDir }),
+          spawnPlaywright: () => 0,
+        });
+
+        expect(result.exitCode).toBe(0);
+        expect(rm).not.toHaveBeenCalledWith(path.join(cwd, 'test-results'), expect.anything());
+        expect(rm).not.toHaveBeenCalledWith(path.join(cwd, 'playwright-report'), expect.anything());
+      } finally {
+        rm.mockRestore();
+      }
+    });
+  });
+
   it('uses resolveLocations when loadConfig is omitted', async () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'run-tests-env-'));
     try {
