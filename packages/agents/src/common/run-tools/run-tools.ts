@@ -6,6 +6,7 @@ import { denyExceptions, isException } from '@choliba/sandbox';
 import type { PermissionPolicy } from '../interfaces/execution.interface';
 import type { PlannedFile, ProviderRequest } from '../interfaces/provider.interface';
 import { type AgentPermissions, absolutePermissions, EVERY_COMMAND, type RunPlace } from '../agent-permissions';
+import { askExchangeDir, askScript } from './ask-tool';
 import { deleteScript } from './delete-tool';
 import { DEFAULT_PLAYWRIGHT_OUTPUT_DIR, playwrightScript } from './playwright-tool';
 import { runToolPath } from './run-tool-path';
@@ -15,6 +16,8 @@ interface ScriptContext {
   /** Already absolute (`absolutePermissions`). */
   readonly permissions: AgentPermissions;
   readonly workspaceRoot: string;
+  /** The run folder, which holds the `ask` exchange folder. */
+  readonly runDir: string;
   readonly config: Readonly<Record<string, string | undefined>>;
 }
 
@@ -34,7 +37,7 @@ function playwrightOutputDir(config: ScriptContext['config']): string {
 }
 
 /** The run tools there are: `delete`, and the ones `permissions.allow.tools` may name. */
-type RunToolName = typeof DELETE | 'playwright-cli' | 'playwright-trace';
+type RunToolName = typeof DELETE | 'playwright-cli' | 'playwright-trace' | 'ask';
 
 /**
  * Every run tool: the scripts choliba writes next to a run folder for the agent, and the only way the
@@ -63,6 +66,15 @@ const RUN_TOOLS: Readonly<Record<RunToolName, RunToolSpec>> = {
     usage: '<command> [args]',
     script: ({ workspaceRoot, config }) =>
       playwrightScript({ command: 'trace', workspaceRoot, outputDir: playwrightOutputDir(config) }),
+  },
+  ask: {
+    purpose:
+      'asks the person running you a question and prints the answer; only for a decision you cannot find out yourself, ' +
+      'with the choices in --options when there are some (--multi when more than one may be chosen). The person may ' +
+      'take minutes: run it with the longest timeout your shell allows. Exit 2 means no answer: go on with an ' +
+      'assumption you state',
+    usage: '"<question>" [--options a,b,c] [--multi]',
+    script: ({ runDir }) => askScript(askExchangeDir(runDir)),
   },
 };
 
@@ -145,6 +157,7 @@ export function planRunTools(
   const context: ScriptContext = {
     permissions: absolutePermissions(request.agent.permissions, request.workspaceRoot),
     workspaceRoot: request.workspaceRoot,
+    runDir: request.runDir,
     config,
   };
   return runToolsOf(request).map((tool) => ({ path: tool.path, content: RUN_TOOLS[tool.name].script(context) }));

@@ -5,7 +5,7 @@ import { runToolCommands, runToolsOf } from '../../common';
 import { createStreamJsonParser } from '../../common';
 
 import { AgentProvider } from '../../common';
-import type { ProviderRequest, StreamParser } from '../../common';
+import type { ProviderRequest, ProviderVariablesInput, StreamParser } from '../../common';
 import { claudePermissionArgs } from './claude-permissions';
 
 function buildArgs(request: ProviderRequest): readonly string[] {
@@ -55,6 +55,12 @@ function buildArgs(request: ProviderRequest): readonly string[] {
   return args;
 }
 
+/**
+ * How long Claude Code lets a command run when the agent may ask (`ask` run tool): 30 minutes, past the script's own
+ * wait, so the person has time to answer. Its default is 2 minutes.
+ */
+const ASK_COMMAND_TIMEOUT_MS = String(30 * 60 * 1000);
+
 /** Claude Code (`claude -p … --output-format stream-json`). */
 export class ClaudeAgentProvider extends AgentProvider {
   readonly id: string = 'claude';
@@ -67,6 +73,12 @@ export class ClaudeAgentProvider extends AgentProvider {
 
   buildArgs(request: ProviderRequest): readonly string[] {
     return buildArgs(request);
+  }
+
+  /** With the `ask` run tool, a command may run as long as the person takes to answer. */
+  override variables({ request }: ProviderVariablesInput): Readonly<Record<string, string>> {
+    if (!runToolsOf(request).some((tool) => tool.name === 'ask')) return {};
+    return { BASH_DEFAULT_TIMEOUT_MS: ASK_COMMAND_TIMEOUT_MS, BASH_MAX_TIMEOUT_MS: ASK_COMMAND_TIMEOUT_MS };
   }
 
   createParser(): StreamParser {

@@ -15,6 +15,7 @@ export * from './path-policy';
 export * from './prompt';
 export * from './provider-registry';
 export * from './run-project';
+export * from './run-tools/ask-tool';
 export * from './run-tools/delete-tool';
 export * from './run-tools/playwright-tool';
 export * from './run-tools/run-tool-path';

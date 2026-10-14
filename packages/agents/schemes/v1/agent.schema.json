@@ -247,7 +247,7 @@
     },
     "runTools": {
       "type": "object",
-      "propertyNames": { "enum": ["playwright-cli", "playwright-trace"] },
+      "propertyNames": { "enum": ["playwright-cli", "playwright-trace", "ask"] },
       "additionalProperties": {
         "oneOf": [
           { "const": ["*"] },

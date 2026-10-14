@@ -58,9 +58,11 @@ export class ClaudeOllamaAgentProvider extends ClaudeAgentProvider {
     return super.buildArgs({ ...request, model: this.apiModel(request.model) });
   }
 
-  override variables({ request, config, reachable }: ProviderVariablesInput): Readonly<Record<string, string>> {
+  override variables(input: ProviderVariablesInput): Readonly<Record<string, string>> {
+    const { request, config, reachable } = input;
     const model = this.apiModel(request.model ?? '');
     return {
+      ...super.variables(input),
       ANTHROPIC_BASE_URL: reachable(config[CHOL_OLLAMA_URL] ?? DEFAULT_OLLAMA_URL),
       ANTHROPIC_AUTH_TOKEN: 'ollama',
       ANTHROPIC_API_KEY: '',
