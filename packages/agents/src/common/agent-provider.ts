@@ -43,11 +43,6 @@ export abstract class AgentProvider {
   /** What `--help` says it is, when the command it runs does not say enough. */
   readonly summary?: string;
 
-  /** The model its API takes for a declared one (`ollama:qwen3.5:4b` → `qwen3.5:4b`). */
-  apiModel(declared: string): string {
-    return declared;
-  }
-
   /** The declared id of the model its stream reports, to check against `agent.yaml#models`. */
   declaredModel(reported: string): string {
     return reported;

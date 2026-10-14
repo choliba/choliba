@@ -34,7 +34,8 @@ export class ClaudeOllamaAgentProvider extends ClaudeAgentProvider {
   override readonly summary =
     'Comando `claude`, com um modelo do Ollama (`ollama:<modelo>` em agent.yaml#models) servido em CHOL_OLLAMA_URL.';
 
-  override apiModel(declared: string): string {
+  /** The model Ollama takes for a declared one (`ollama:qwen3.5:4b` → `qwen3.5:4b`). */
+  apiModel(declared: string): string {
     return declared.startsWith(OLLAMA_PREFIX) ? declared.slice(OLLAMA_PREFIX.length) : declared;
   }
 

@@ -72,6 +72,15 @@ describe('ClaudeOllamaAgentProvider', () => {
     });
   });
 
+  it('leaves the models empty when the run names none', () => {
+    const variables = claudeOllamaProvider.variables({
+      request: request(undefined),
+      config: {},
+      reachable: (url) => url,
+    });
+    expect(variables['ANTHROPIC_DEFAULT_HAIKU_MODEL']).toBe('');
+  });
+
   it('takes the address from CHOL_OLLAMA_URL, as the provider reaches it', () => {
     const variables = claudeOllamaProvider.variables({
       request: request('ollama:qwen3.5:4b'),
