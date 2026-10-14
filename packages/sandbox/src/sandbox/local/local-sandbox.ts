@@ -2,13 +2,19 @@ import { ExpectedError } from '@choliba/core';
 
 import type { DiskFacts } from '../mounts/interfaces/container-mounts.interface';
 import { containerMounts } from '../mounts/container-mounts';
-import type { SandboxBackend, SandboxPlan, SandboxPlanInput } from '../interfaces/sandbox-backend.interface';
+import type {
+  SandboxBackend,
+  SandboxPlan,
+  SandboxPlanInput,
+  SandboxProgram,
+} from '../interfaces/sandbox-backend.interface';
 import { bwrapCommand } from './bwrap-command';
 
 /** What a local run is planned from: the disk the mounts are read off, and the `bwrap` binary when one was found. */
 export interface LocalSandboxOptions {
   readonly disk: DiskFacts;
   readonly bwrap: string | undefined;
+  readonly environment: Readonly<Record<string, string>>;
 }
 
 /**
@@ -25,6 +31,27 @@ function requireBwrap(bwrap: string | undefined): string {
   throw new SandboxEnforcementError(BWRAP_INSTALL);
 }
 
+function requiredValue(value: string | undefined, message: string): string {
+  if (value) return value;
+  throw new SandboxEnforcementError(message);
+}
+
+function requireProgram(input: SandboxPlanInput, disk: DiskFacts): SandboxProgram {
+  const program = input.program;
+  if (program === undefined) {
+    throw new SandboxEnforcementError(`O provider local não foi encontrado: ${input.command[0] ?? 'comando vazio'}.`);
+  }
+  const missing = program.readOnly.find((path) => !disk.exists(path));
+  if (missing === undefined && disk.exists(program.executable)) return program;
+  throw new SandboxEnforcementError(`O provider local não foi encontrado: ${input.command[0] ?? 'comando vazio'}.`);
+}
+
+function requireCredential(program: SandboxProgram, environment: Readonly<Record<string, string>>): void {
+  const present = program.credentials.some((name) => (environment[name] ?? '') !== '');
+  if (present) return;
+  throw new SandboxEnforcementError(program.credentialHelp);
+}
+
 /**
  * The provider on this machine, inside `bwrap`, seeing the same coarse paths the container mounts: nothing,
  * read-only, writable or hidden. Without `bwrap`, the command is refused.
@@ -36,9 +63,21 @@ export class LocalSandbox implements SandboxBackend {
 
   plan(input: SandboxPlanInput): SandboxPlan {
     const bwrap = requireBwrap(this.options.bwrap);
+    const home = requiredValue(this.options.environment['HOME'], 'O sandbox local precisa da variável HOME definida.');
+    const program = requireProgram(input, this.options.disk);
+    requireCredential(program, this.options.environment);
     const { mounts, skipped } = containerMounts(input.reach, this.options.disk);
+    const [, ...args] = input.command;
     return {
-      command: bwrapCommand({ bwrap, mounts, cwd: input.reach.runDir, command: input.command }),
+      command: bwrapCommand({
+        bwrap,
+        home,
+        programReadOnly: program.readOnly,
+        mounts,
+        cwd: input.reach.runDir,
+        command: [program.executable, ...args],
+      }),
+      env: this.options.environment,
       place: { kind: 'local' },
       paths: mounts,
       skipped,

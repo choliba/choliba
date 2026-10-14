@@ -31,9 +31,15 @@ function mountArgs(mount: ContainerMount): readonly string[] {
 
 export interface BwrapCommand {
   readonly bwrap: string;
+  readonly home: string;
+  readonly programReadOnly: readonly string[];
   readonly mounts: readonly ContainerMount[];
   readonly cwd: string;
   readonly command: readonly string[];
+}
+
+function programMounts(paths: readonly string[]): readonly string[] {
+  return paths.flatMap((path) => ['--ro-bind', path, path]);
 }
 
 /**
@@ -53,6 +59,12 @@ export function bwrapCommand(input: BwrapCommand): readonly string[] {
     '/tmp',
     '--tmpfs',
     '/run',
+    '--tmpfs',
+    input.home,
+    '--setenv',
+    'HOME',
+    input.home,
+    ...programMounts(input.programReadOnly),
     ...input.mounts.flatMap(mountArgs),
     '--chdir',
     input.cwd,

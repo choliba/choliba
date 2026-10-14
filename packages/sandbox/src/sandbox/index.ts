@@ -7,6 +7,7 @@ export type {
   SandboxPlace,
   SandboxPlan,
   SandboxPlanInput,
+  SandboxProgram,
   SandboxReach,
 } from './interfaces/sandbox-backend.interface';
 export type { Sandbox, SandboxBackendContext, SandboxNetwork } from './interfaces/sandbox.interface';

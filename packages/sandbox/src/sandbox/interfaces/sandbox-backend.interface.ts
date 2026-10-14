@@ -32,8 +32,21 @@ export interface SandboxPlan {
   readonly skipped: readonly string[];
 }
 
+/** The host program a local sandbox needs, without teaching the sandbox which provider owns it. */
+export interface SandboxProgram {
+  /** The resolved executable; it replaces `command[0]` inside `bwrap`. */
+  readonly executable: string;
+  /** The executable's runtime closure, mounted read-only. */
+  readonly readOnly: readonly string[];
+  /** At least one of these variables must have a value. */
+  readonly credentials: readonly string[];
+  /** What the user should do when none of the credential variables has a value. */
+  readonly credentialHelp: string;
+}
+
 export interface SandboxPlanInput {
   readonly command: readonly string[];
+  readonly program?: SandboxProgram;
   readonly reach: SandboxReach;
 }
 

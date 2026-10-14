@@ -60,7 +60,9 @@ export function presentCredentials(config: Readonly<Record<string, string | unde
 }
 
 export function createSandboxBackend(sandbox: Sandbox, context: SandboxBackendContext): SandboxBackend {
-  if (sandbox.kind === 'local') return new LocalSandbox({ disk: context.disk, bwrap: bwrapOnPath() });
+  if (sandbox.kind === 'local') {
+    return new LocalSandbox({ disk: context.disk, bwrap: bwrapOnPath(), environment: context.environment });
+  }
   return new DockerSandbox({
     image: sandbox.image,
     network: sandbox.network,

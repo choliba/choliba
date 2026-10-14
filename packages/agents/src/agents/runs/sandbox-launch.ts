@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, realpathSync, statSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 
 import { CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR } from '@choliba/core';
@@ -11,6 +11,8 @@ import {
   type Sandbox,
   type SandboxPath,
   type SandboxPlace,
+  SandboxEnforcementError,
+  type SandboxProgram,
 } from '@choliba/sandbox';
 
 import {
@@ -19,6 +21,7 @@ import {
   runToolsOf,
   type PlannedFile,
   type ProviderRequest,
+  type ResolvedProvider,
 } from '../../common';
 import { definedConfig } from '../agent-dirs';
 
@@ -40,6 +43,7 @@ export interface Launch {
 export interface LaunchInput {
   readonly sandbox: Sandbox;
   readonly command: readonly string[];
+  readonly provider: ResolvedProvider;
   readonly request: ProviderRequest;
   /** The run tools' scripts and what the provider writes for the run (cursor's `mcp.json`): read in the container. */
   readonly files: readonly PlannedFile[];
@@ -50,6 +54,7 @@ export interface LaunchInput {
 export interface LaunchDisk extends DiskFacts {
   readonly owner: (path: string) => ContainerUser;
   readonly ensureDir: (path: string) => void;
+  readonly realpath: (path: string) => string;
 }
 
 export const realDisk: LaunchDisk = {
@@ -63,7 +68,25 @@ export const realDisk: LaunchDisk = {
   ensureDir: (path) => {
     mkdirSync(path, { recursive: true });
   },
+  realpath: realpathSync,
 };
+
+function localProgram(provider: ResolvedProvider, disk: LaunchDisk): SandboxProgram {
+  let executable: string;
+  try {
+    executable = disk.realpath(provider.executable);
+  } catch {
+    throw new SandboxEnforcementError(
+      `O provider local não foi encontrado: ${provider.command[0] ?? 'comando vazio'}.`,
+    );
+  }
+  return {
+    executable,
+    readOnly: provider.adapter.localReadOnly(executable),
+    credentials: provider.adapter.credentials,
+    credentialHelp: provider.adapter.credentialHelp,
+  };
+}
 
 function fromRoot(path: string, root: string): string {
   return isAbsolute(path) ? path : join(root, path);
@@ -109,5 +132,6 @@ export function launchFor(input: LaunchInput, disk: LaunchDisk = realDisk): Laun
     environment: definedConfig(config),
     disk,
   });
-  return backend.plan({ command: input.command, reach });
+  const program = input.sandbox.kind === 'local' ? localProgram(input.provider, disk) : undefined;
+  return backend.plan({ command: input.command, ...(program === undefined ? {} : { program }), reach });
 }

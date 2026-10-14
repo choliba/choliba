@@ -59,7 +59,7 @@ function fakeSignalSource(): SignalSource {
 }
 
 function whichOf(available: readonly string[]): (bin: string) => string | null {
-  return (bin) => (available.includes(bin) ? `/usr/bin/${bin}` : null);
+  return (bin) => (available.includes(bin) ? '/usr/bin/true' : null);
 }
 
 /** One successful claude stream-json line, so `runAgent` sees a clean exit. */
@@ -140,7 +140,13 @@ function harness(stdoutLines: readonly string[], overrides: Partial<RunAgentsCli
     ensureApp: () => Promise.resolve({ started: false, stop: () => undefined }),
     ...overrides,
     // The fixture agents' skills live next to them; a test may still point elsewhere.
-    config: { CHOL_SKILLS_DIR: SKILLS, ...overrides.config },
+    config: {
+      HOME: tmpdir(),
+      CLAUDE_CODE_OAUTH_TOKEN: 'test-token',
+      CURSOR_API_KEY: 'test-token',
+      CHOL_SKILLS_DIR: SKILLS,
+      ...overrides.config,
+    },
   };
   return { deps, stdout, stderr };
 }
