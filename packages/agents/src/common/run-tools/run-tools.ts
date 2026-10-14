@@ -69,7 +69,8 @@ const RUN_TOOLS: Readonly<Record<RunToolName, RunToolSpec>> = {
   },
   ask: {
     purpose:
-      'asks the person running you a question and prints the answer; only for a decision you cannot find out yourself, ' +
+      'asks the person running you a question and prints the answer; the only way to ask: a question written in your ' +
+      'answer reaches nobody, the run ends with it. Only for a decision you cannot find out yourself, ' +
       'with the choices in --options when there are some (--multi when more than one may be chosen). The person may ' +
       'take minutes: run it with the longest timeout your shell allows. Exit 2 means no answer: go on with an ' +
       'assumption you state',
