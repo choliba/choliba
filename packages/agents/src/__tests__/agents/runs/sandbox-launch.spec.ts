@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import { launchFor, realDisk, type LaunchDisk } from '../../../agents/runs/sandbox-launch';
 import { ClaudeAgentProvider } from '../../../providers/claude/claude-agent.provider';
+import { ClaudeOllamaAgentProvider } from '../../../providers/claude/claude-ollama-agent.provider';
 import { CursorAgentProvider } from '../../../providers/cursor/cursor-agent.provider';
 import { NO_PERMISSIONS, type AgentPermissions } from '../../../common/agent-permissions';
 import type { ProviderRequest } from '../../../common/interfaces/provider.interface';
@@ -172,6 +173,26 @@ describe('launchFor', () => {
     expect(launch.place).toEqual({ kind: 'docker', image: 'choliba-agent', container: 'choliba-1' });
     expect(launch.command.slice(2, 5)).toEqual(['--rm', '--name', 'choliba-1']);
     expect(fake.made).toEqual([]);
+  });
+
+  it("passes the provider's own variables, its Ollama address as the container reaches this machine", () => {
+    const launch = launchFor(
+      {
+        sandbox: { kind: 'docker', image: 'choliba-agent', network: 'isolated' },
+        command: ['claude', '-p'],
+        provider: { ...PROVIDER, adapter: new ClaudeOllamaAgentProvider() },
+        request: request({}, { model: 'ollama:qwen3.5:4b' }),
+        files: [],
+        config: CONFIG,
+      },
+      disk(),
+    );
+    expect(launch.command.join(' ')).toContain('--env ANTHROPIC_BASE_URL');
+    expect(launch.env).toMatchObject({
+      ANTHROPIC_BASE_URL: 'http://host.docker.internal:11434',
+      ANTHROPIC_AUTH_TOKEN: 'ollama',
+      CLAUDE_CODE_OAUTH_TOKEN: '',
+    });
   });
 
   it("opens the browser tools' output and the project's ticket-runs for writing, creating them first", () => {

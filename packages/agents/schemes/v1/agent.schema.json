@@ -41,7 +41,7 @@
       }
     },
     "models": {
-      "description": "Modelos com que o agente pode rodar, pelo id que o provider informa.",
+      "description": "Modelos com que o agente pode rodar, pelo id que o provider informa; um modelo do Ollama é ollama:<modelo> e roda com o provider claude-ollama.",
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,

@@ -13,6 +13,7 @@ export {
   CHOL_SANDBOX,
   CHOL_SANDBOX_IMAGE,
   CHOL_NETWORK,
+  CHOL_OLLAMA_URL,
 } from './vars';
 export { loadRepoConfig, mergeConfig, parseConfigFile } from './repo-config';
 export { findWorkspaceRoot, PACKAGE_NAME, WorkspaceNotFoundError } from './workspace';

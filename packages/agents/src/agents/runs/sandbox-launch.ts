@@ -4,6 +4,7 @@ import { isAbsolute, join } from 'node:path';
 import { CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR } from '@choliba/core';
 import { resolveLocations, resolveTicketRunsFolder, resolveTicketRunsRoot } from '@choliba/projects';
 import {
+  agentURL,
   type ContainerUser,
   createSandboxBackend,
   type DiskFacts,
@@ -133,5 +134,15 @@ export function launchFor(input: LaunchInput, disk: LaunchDisk = realDisk): Laun
     disk,
   });
   const program = input.sandbox.kind === 'local' ? localProgram(input.provider, disk) : undefined;
-  return backend.plan({ command: input.command, ...(program === undefined ? {} : { program }), reach });
+  const variables = input.provider.adapter.variables?.({
+    request,
+    config,
+    reachable: (url) => agentURL(url, input.sandbox),
+  });
+  return backend.plan({
+    command: input.command,
+    ...(program === undefined ? {} : { program }),
+    ...(variables === undefined ? {} : { variables }),
+    reach,
+  });
 }

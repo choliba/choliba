@@ -55,7 +55,7 @@ describe('choliba run agent and list agents', () => {
 
       const help = await choliba(['run', 'agent', '--help'], { cwd });
       expect(help.platform.stdout.text()).toContain('Usage:  choliba run agent AGENT [OPTIONS] [TASK...]');
-      expect(help.platform.stdout.text()).toContain('(auto, claude, cursor)');
+      expect(help.platform.stdout.text()).toContain('(auto, claude, claude-ollama, cursor)');
       expect(help.platform.stdout.text()).not.toContain('list');
     }));
 
@@ -132,7 +132,7 @@ describe('AgentsService.helpSpec', () => {
 
       expect(formatSuggestions(complete(spec, ['ec']))).toBe('echo');
       expect(formatSuggestions(complete(spec, ['l']))).toBe('');
-      expect(formatSuggestions(complete(spec, ['echo', '--provider', '']))).toBe('auto\nclaude\ncursor');
+      expect(formatSuggestions(complete(spec, ['echo', '--provider', '']))).toBe('auto\nclaude\nclaude-ollama\ncursor');
       return Promise.resolve();
     }));
 });
