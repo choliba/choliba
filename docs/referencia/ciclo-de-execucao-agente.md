@@ -37,27 +37,35 @@ permissões do `agent.yaml`.
     qualquer provider: `✗ Shell bun install: negado (comando fora de allow.execute)` diz qual chave do
     `agent.yaml` liberaria a chamada; `✗ Read src/x.ts: erro: File not found` é o erro da própria ferramenta.
 
-    Num terminal, a saída do agente vai num quadro com o nome dele, uma linha abaixo do comando, e um painel fica
-    fixo no rodapé com o contexto da execução:
+    Num terminal, o agente roda numa tela própria: o quadro com o nome dele em cima e, embaixo, uma linha entre dois
+    traços com um campo à esquerda e o contexto da execução à direita:
 
     ```
-    $ bunx choliba run agent product-owner --project app --ticket app-1 "liste o conteúdo do ticket"
-
     ┌─ product-owner ─────────────────────────────────────────────────────────────────┐
     │ Vou ler o ticket app-1.                                                         │
     │ → Read: …/projects/app/tickets/1.json                                           │
     └─────────────────────────────────────────────────────────────────────────────────┘
-    provider │ modelo │ sandbox │ imagem        │ container          │ decorrido
-    ─────────┼────────┼─────────┼───────────────┼────────────────────┼─────────────
-    cursor   │ Auto   │ docker  │ choliba-agent │ choliba-2026-10-1… │ 00:00:17.312
+    ───────────────────────────────────────────────────────────────────────────────────
+    ❯ Escreva para o agente e tecle Enter              cursor · Auto · docker · 00:00:17.312
+    ───────────────────────────────────────────────────────────────────────────────────
     ```
 
-    As linhas novas entram no quadro, acima do painel; uma linha comprida quebra dentro dele (uma palavra maior que
-    a linha, como um caminho, quebra no meio). O modelo aparece quando o provider o informa. Sem container, a tabela
-    não tem `imagem` nem `container`. Num terminal estreito, as colunas longas são cortadas com `…` e, se a tabela não
-    couber, o painel vira uma linha só (`cursor · Auto · docker · 00:00:17.312`). Quando a sessão termina, o quadro
-    se fecha e fica uma linha de resumo: `cursor · Auto · docker · decorrido 00:03:10.482 · código 0`. Os passos das
-    fases 1 e 3 rodam fora do quadro.
+    - **Rolar.** O quadro acompanha as linhas novas até você rolar para cima, com a roda do mouse, PgUp/PgDn ou Home;
+      End volta ao fim. Uma linha comprida quebra dentro do quadro. O modelo aparece quando o provider o informa.
+    - **Responder.** Quando o agente pergunta (a ferramenta da run `ask`), a pergunta ocupa o campo: escreva e tecle
+      Enter. Com opções, escolha com as setas e Enter, e marque várias com Espaço; Tab passa para o campo, onde o que
+      você escrever responde quando nenhuma opção serve. Esc pula a pergunta, e o agente segue com uma premissa. A
+      pergunta e a resposta ficam no quadro (`? …` e `→ …`).
+    - **Escrever.** Sem pergunta pendente, o que você envia vai para a sessão, e o agente lê quando termina o passo em
+      que está; fica no quadro como `› …`. O Claude (e o `claude-ollama`) recebe a tarefa e as mensagens pelo stdin, e
+      a sessão termina quando o agente responde à última. O Cursor não recebe mensagens durante a execução: o campo
+      diz isso, e uma mensagem enviada aparece como `› … (não entregue: …)`.
+    - **Interromper.** O primeiro Ctrl+C só avisa no campo; o segundo, em até 2 segundos, interrompe a execução.
+
+    Quando a sessão termina, a tela se fecha e o terminal recebe o quadro inteiro e uma linha de resumo:
+    `cursor · Auto · docker · decorrido 00:03:10.482 · código 0`. Os passos das fases 1 e 3 rodam fora do quadro.
+    Onde a tela não abre, o quadro vai direto no terminal, com o contexto fixo no rodapé, e uma pergunta do agente
+    fica sem resposta na hora.
 
     Num pipe, num arquivo ou com `TERM=dumb`, não há quadro nem painel: cada linha leva o rótulo do agente
     (`[product-owner] → Read: …`), e a primeira diz o provider e onde ele roda (`[provider] cursor · docker · …`).

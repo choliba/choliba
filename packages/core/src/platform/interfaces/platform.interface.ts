@@ -19,12 +19,22 @@ export interface SpawnCommandOptions {
   readonly command: readonly string[];
   readonly cwd?: string;
   readonly env?: Readonly<Record<string, string>>;
+  /** Keeps the process's stdin open for `SpawnedProcess.stdin`; without it, the process reads nothing. */
+  readonly input?: boolean;
+}
+
+/** What is written to a process's stdin, and how it is closed. */
+export interface ProcessInput {
+  write(text: string): void;
+  end(): void;
 }
 
 export interface SpawnedProcess {
   readonly pid: number;
   readonly stdout: ReadableStream<Uint8Array> | null;
   readonly stderr: ReadableStream<Uint8Array> | null;
+  /** Its stdin, when spawned with `input`. */
+  readonly stdin?: ProcessInput | null;
   readonly exited: Promise<number>;
   readonly signalCode: NodeJS.Signals | null;
   kill(signal?: NodeJS.Signals): void;

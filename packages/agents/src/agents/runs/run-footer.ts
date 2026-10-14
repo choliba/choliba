@@ -57,8 +57,8 @@ export function footerTable(info: RunFooterInfo, now: number): Table {
   });
 }
 
-/** The context and the time on one line, for a terminal too narrow for the table. */
-function oneLine(info: RunFooterInfo, now: number, width: number): string {
+/** The context and the time on one line: for a terminal too narrow for the table, and beside the panel's field. */
+export function oneLine(info: RunFooterInfo, now: number, width: number): string {
   const { provider, model, sandbox } = contextWords(info);
   const line = `${provider} · ${model} · ${sandbox} · ${formatElapsed(now - info.startedAt)}`;
   return textWidth(line) <= width ? line : formatElapsed(now - info.startedAt);

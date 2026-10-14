@@ -93,9 +93,21 @@ describe('runToolCommands', () => {
     });
 
     expect(runToolCommands(activeRunTools(permissions, RUN_DIR, 'edits'))).toEqual({
-      allow: [`${RUN_DIR}.delete`, `${RUN_DIR}.playwright-trace open`, `${RUN_DIR}.playwright-trace close`],
-      deny: [`${RUN_DIR}.playwright-trace snapshot`],
-      scripts: [`${RUN_DIR}.delete`, `${RUN_DIR}.playwright-trace`],
+      allow: [
+        `${RUN_DIR}.delete`,
+        'delete',
+        `${RUN_DIR}.playwright-trace open`,
+        `${RUN_DIR}.playwright-trace close`,
+        'playwright-trace open',
+        'playwright-trace close',
+      ],
+      deny: [`${RUN_DIR}.playwright-trace snapshot`, 'playwright-trace snapshot'],
+      scripts: [
+        `${RUN_DIR}.delete`,
+        `${RUN_DIR}.bin/delete`,
+        `${RUN_DIR}.playwright-trace`,
+        `${RUN_DIR}.bin/playwright-trace`,
+      ],
     });
   });
 });
@@ -114,21 +126,25 @@ describe('planRunTools and applyRunTools', () => {
 
     expect(files.map((file) => file.path)).toEqual([
       `${RUN_DIR}.delete`,
+      `${RUN_DIR}.bin/delete`,
       `${RUN_DIR}.playwright-cli`,
+      `${RUN_DIR}.bin/playwright-cli`,
       `${RUN_DIR}.playwright-trace`,
+      `${RUN_DIR}.bin/playwright-trace`,
     ]);
     expect(files[0]?.content).toContain('["/w/app/"]');
     expect(files[0]?.content).toContain('const denyRoots = ["/w/app/secrets/"]');
     expect(files[0]?.content).toContain('const exceptRoots = ["/w/app/secrets/tmp"]');
-    expect(files[1]?.content).toContain('const command = "cli"');
-    expect(files[1]?.content).toContain('const outputDir = "saidas"');
-    expect(files[2]?.content).toContain('const command = "trace"');
+    expect(files[1]?.content).toContain(`exec "${RUN_DIR}.delete" "$@"`);
+    expect(files[2]?.content).toContain('const command = "cli"');
     expect(files[2]?.content).toContain('const outputDir = "saidas"');
+    expect(files[4]?.content).toContain('const command = "trace"');
+    expect(files[4]?.content).toContain('const outputDir = "saidas"');
     const defaults = planRunTools(
       fakeRequest({ allow: { tools: { 'playwright-cli': ['*'], 'playwright-trace': ['*'] } } }, 'edits'),
       {},
     );
-    expect(defaults.map((file) => file.content)).toEqual([
+    expect(defaults.filter((file) => !file.path.includes('.bin/')).map((file) => file.content)).toEqual([
       expect.stringContaining(`const outputDir = "${DEFAULT_PLAYWRIGHT_OUTPUT_DIR}"`),
       expect.stringContaining(`const outputDir = "${DEFAULT_PLAYWRIGHT_OUTPUT_DIR}"`),
     ]);
@@ -145,6 +161,25 @@ describe('planRunTools and applyRunTools', () => {
       restore();
       expect(existsSync(path)).toBe(false);
       applyRunTools([])();
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('creates and removes the shortcuts folder, and a shortcut runs its tool', () => {
+    const tmp = makeTmpDir('run-tools-shortcut');
+    try {
+      const runDir = join(tmp.path, 'run');
+      const tool = `${runDir}.tool`;
+      const shortcut = `${runDir}.bin/tool`;
+      const restore = applyRunTools([
+        { path: tool, content: '#!/bin/sh\nprintf "%s" "$1"\n' },
+        { path: shortcut, content: `#!/bin/sh\nexec "${tool}" "$@"\n` },
+      ]);
+
+      expect(spawnSync('tool', ['hello'], { env: { PATH: `${runDir}.bin` }, encoding: 'utf8' }).stdout).toBe('hello');
+      restore();
+      expect(existsSync(`${runDir}.bin`)).toBe(false);
     } finally {
       tmp.cleanup();
     }

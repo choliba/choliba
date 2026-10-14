@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, realpathSync, statSync } from 'node:fs';
-import { isAbsolute, join } from 'node:path';
+import { delimiter, isAbsolute, join } from 'node:path';
 
 import { CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR } from '@choliba/core';
 import { resolveLocations, resolveTicketRunsFolder, resolveTicketRunsRoot } from '@choliba/projects';
@@ -19,6 +19,7 @@ import {
 import {
   absolutePermissions,
   DEFAULT_PLAYWRIGHT_OUTPUT_DIR,
+  runToolShortcuts,
   runToolsOf,
   type PlannedFile,
   type ProviderRequest,
@@ -27,6 +28,14 @@ import {
 import { definedConfig } from '../agent-dirs';
 
 type Config = Readonly<Record<string, string | undefined>>;
+
+const DEFAULT_PATH = '/usr/local/bin:/usr/bin:/bin';
+
+/** The session's PATH with its run-tool shortcuts first; containers keep their own conventional executable paths. */
+function sessionPath(input: LaunchInput): string {
+  const inherited = input.sandbox.kind === 'local' ? input.config['PATH'] : undefined;
+  return `${runToolShortcuts(input.request.runDir)}${delimiter}${inherited ?? DEFAULT_PATH}`;
+}
 
 /** How the provider's process starts: its command line and, in a container, the environment `docker` reads. */
 export interface Launch {
@@ -137,15 +146,17 @@ export function launchFor(input: LaunchInput, disk: LaunchDisk = realDisk): Laun
     disk,
   });
   const program = input.sandbox.kind === 'local' ? localProgram(input.provider, disk) : undefined;
-  const variables = input.provider.adapter.variables?.({
+  const providerVariables = input.provider.adapter.variables?.({
     request,
     config,
     reachable: (url) => agentURL(url, input.sandbox),
   });
+  const toolVariables = runToolsOf(request).length > 0 ? { PATH: sessionPath(input) } : {};
+  const variables = { ...providerVariables, ...toolVariables };
   return backend.plan({
     command: input.command,
     ...(program === undefined ? {} : { program }),
-    ...(variables === undefined ? {} : { variables }),
+    ...(Object.keys(variables).length === 0 ? {} : { variables }),
     reach,
   });
 }

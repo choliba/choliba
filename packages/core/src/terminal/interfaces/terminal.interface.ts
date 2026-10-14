@@ -46,6 +46,8 @@ export interface RunOptions {
   readonly colorize?: boolean;
   /** Prefixes each line with an ISO timestamp. Defaults to `false`. */
   readonly withTimestamp?: boolean;
+  /** Keeps the process's stdin open, for `Session.write`. Defaults to `false`: the process reads nothing. */
+  readonly input?: boolean;
 }
 
 // Extension point (b): a future WebSocket transport subscribes to the same

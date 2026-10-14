@@ -1,6 +1,8 @@
 import type { TableColumn, Writable } from '@choliba/core';
 import type { SandboxPlace } from '@choliba/sandbox';
 
+import type { AskAnswer, AskQuestion } from '../../common';
+
 /** The run the footer describes: who runs it, where, and since when. */
 export interface RunFooterInfo {
   readonly provider: string;
@@ -28,6 +30,12 @@ export interface RunScreen {
   readonly err: Writable;
   /** The model the provider reported, for the footer. */
   model(name: string): void;
+  /** Called when the person interrupts the run from the screen itself (Ctrl+C in the panel, which takes the keyboard). */
+  onInterrupt(listener: () => void): void;
+  /** Called with what the person typed and sent in the screen's field (the panel's); never, on a screen with none. */
+  onMessage(listener: (text: string) => void): void;
+  /** Answers a question of the `ask` run tool: the panel asks the person; a screen that cannot, says so at once. */
+  answer(question: AskQuestion): Promise<AskAnswer>;
   /** Ends the screen: erases the footer and leaves the summary line in its place. */
   close(exitCode: number): void;
 }

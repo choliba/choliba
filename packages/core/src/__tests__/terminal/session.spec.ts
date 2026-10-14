@@ -149,3 +149,53 @@ describe('Session', () => {
     expect(kill).toHaveBeenCalledWith(undefined);
   });
 });
+
+describe('Session — stdin', () => {
+  function withInput(input: { write: jest.Mock; end: jest.Mock } | null): Session {
+    return new Session({
+      id: 's',
+      label: 'agent',
+      command: ['claude'],
+      pid: 1,
+      startedAt: AT,
+      bufferSize: 1,
+      kill: jest.fn(),
+      input,
+    });
+  }
+
+  it('writes to stdin until it is closed, and closes it once', () => {
+    const input = { write: jest.fn(), end: jest.fn() };
+    const session = withInput(input);
+
+    expect(session.write('um')).toBe(true);
+    session.endInput();
+    session.endInput();
+    expect(session.write('dois')).toBe(false);
+    expect(input.write.mock.calls).toEqual([['um']]);
+    expect(input.end).toHaveBeenCalledTimes(1);
+  });
+
+  it('writes nothing without stdin, and stops writing once the process no longer reads it', () => {
+    expect(withInput(null).write('x')).toBe(false);
+    withInput(null).endInput();
+    expect(makeSession().session.write('x')).toBe(false);
+
+    const broken = {
+      write: jest.fn(() => {
+        throw new Error('EPIPE');
+      }),
+      end: jest.fn(() => {
+        throw new Error('EPIPE');
+      }),
+    };
+    const session = withInput(broken);
+    expect(session.write('x')).toBe(false);
+    expect(session.write('y')).toBe(false);
+    expect(broken.write).toHaveBeenCalledTimes(1);
+
+    const closing = withInput({ write: jest.fn(), end: broken.end });
+    closing.endInput();
+    expect(closing.write('z')).toBe(false);
+  });
+});

@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 14/10/2026 00:46:07 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 14/10/2026 02:04:25 — não editar manualmente.
 
 ## Resumo
 
@@ -17,7 +17,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 71 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 74 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -38,6 +38,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/runs/agent-detail.ts](packages/agents/src/agents/runs/agent-detail.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/agents-flags.ts](packages/agents/src/agents/runs/agents-flags.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/agents-spec.ts](packages/agents/src/agents/runs/agents-spec.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/ask-watcher.ts](packages/agents/src/agents/runs/ask-watcher.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/definition-snapshot.ts](packages/agents/src/agents/runs/definition-snapshot.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/delegation-guard.ts](packages/agents/src/agents/runs/delegation-guard.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/dry-run.ts](packages/agents/src/agents/runs/dry-run.ts)|100.00|100.00|100.00|100.00
@@ -52,6 +53,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/runs/run-footer.ts](packages/agents/src/agents/runs/run-footer.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-preparation.ts](packages/agents/src/agents/runs/run-preparation.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/sandbox-launch.ts](packages/agents/src/agents/runs/sandbox-launch.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/session-input.ts](packages/agents/src/agents/runs/session-input.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/spec-context.ts](packages/agents/src/agents/runs/spec-context.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/ticket-run.ts](packages/agents/src/agents/runs/ticket-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/tool-failure.ts](packages/agents/src/agents/runs/tool-failure.ts)|100.00|100.00|100.00|100.00
@@ -80,6 +82,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/common/prompt.ts](packages/agents/src/common/prompt.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/provider-registry.ts](packages/agents/src/common/provider-registry.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-project.ts](packages/agents/src/common/run-project.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/run-tools/ask-tool.ts](packages/agents/src/common/run-tools/ask-tool.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-tools/delete-tool.ts](packages/agents/src/common/run-tools/delete-tool.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-tools/playwright-tool.ts](packages/agents/src/common/run-tools/playwright-tool.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-tools/run-tool-path.ts](packages/agents/src/common/run-tools/run-tool-path.ts)|100.00|100.00|100.00|100.00
@@ -118,7 +121,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 59 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 63 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -160,9 +163,13 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/terminal/exit-code.ts](packages/core/src/terminal/exit-code.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/format-duration.ts](packages/core/src/terminal/format-duration.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/formatter.ts](packages/core/src/terminal/formatter.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/frame/ansi-chunks.ts](packages/core/src/terminal/frame/ansi-chunks.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/frame/ansi-text.ts](packages/core/src/terminal/frame/ansi-text.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/frame/frame.ts](packages/core/src/terminal/frame/frame.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/live-region.ts](packages/core/src/terminal/live-region.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/panel/panel-question.ts](packages/core/src/terminal/panel/panel-question.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/panel/panel-toolkit.ts](packages/core/src/terminal/panel/panel-toolkit.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/panel/panel.ts](packages/core/src/terminal/panel/panel.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/process-runner.service.ts](packages/core/src/terminal/process-runner.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/session.ts](packages/core/src/terminal/session.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/spawn.ts](packages/core/src/terminal/spawn.ts)|100.00|100.00|100.00|100.00

@@ -48,6 +48,12 @@ export abstract class AgentProvider {
     return reported;
   }
 
+  /**
+   * The line its stdin takes for a message of the person (the task included), for a provider that reads messages while
+   * it runs; absent for one that does not (its session gets no stdin, and the task goes in its arguments).
+   */
+  inputMessage?(text: string): string;
+
   /** Whether a line of its stderr says nothing to whoever runs it, and is left out of the screen. */
   quietStderr?(line: string): boolean;
 

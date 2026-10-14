@@ -144,14 +144,19 @@ describe('cursorPermissions', () => {
 
     expect(permissions.allow).toEqual([
       `Shell(${RUN_DIR}.delete)`,
+      'Shell(delete)',
       `Shell(${RUN_DIR}.playwright-trace:open*)`,
+      'Shell(playwright-trace:open*)',
       `Shell(cd:${RUN_DIR})`,
     ]);
     expect(permissions.deny).toEqual(
       expect.arrayContaining([
         `Write(${RUN_DIR}.delete)`,
+        `Write(${RUN_DIR}.bin/delete)`,
         `Write(${RUN_DIR}.playwright-trace)`,
+        `Write(${RUN_DIR}.bin/playwright-trace)`,
         `Shell(${RUN_DIR}.playwright-trace:snapshot*)`,
+        'Shell(playwright-trace:snapshot*)',
       ]),
     );
   });

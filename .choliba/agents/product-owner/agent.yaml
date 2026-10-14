@@ -14,7 +14,9 @@ models:
   - claude-sonnet-5
   - Composer 2.5 Fast
   - claude-opus-5-5
+  - claude-sonnet-5-5
   - Auto
+  - 'ollama:qwen3.5:4b'
 
 role: |
   Você é o Product Owner dos projetos testados por este repositório: um especialista em negócio. Seu trabalho é
@@ -53,7 +55,8 @@ input: |
   - A tarefa é um pedido em texto livre: um problema, uma feature, um bug, uma regra de negócio. Pode citar um
     ambiente (`qa`).
   - Se o pedido depender de uma decisão de produto que a aplicação não mostra (uma regra nova, um limite, uma
-    prioridade), registre como pergunta em aberto em vez de supor.
+    prioridade), pergunte a quem roda o agente com a ferramenta da run `ask`, dando as opções quando houver; sem
+    resposta, registre como pergunta em aberto em vez de supor.
 
 flow: |
   1. **Ambiente**: leia `${PROJECT_DIR}/config.json` (URL do ambiente ativo) e `${PROJECT_DIR}/.env.json` (credenciais).
@@ -155,6 +158,7 @@ permissions:
         - bunx choliba list projects
     tools:
       playwright-cli: ['*']
+      ask: ['*']
   deny:
     read: [packages/, '${CHOL_AGENTS_DIR}/', apps/, scripts/, jest/]
     write:
