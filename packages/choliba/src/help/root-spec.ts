@@ -53,4 +53,9 @@ export const CHOLIBA_VERBS: readonly ShellVerb[] = [
       { description: 'Lista os projetos com os tickets de cada um', command: 'choliba list projects --tickets' },
     ],
   },
+  {
+    name: 'set',
+    description: 'Grava uma chave da configuração no .env',
+    examples: [{ description: 'Roda o provider num container', command: 'choliba set config CHOL_SANDBOX docker' }],
+  },
 ];

@@ -4,11 +4,12 @@ import { PLATFORM } from './create-shell';
 import type { ShellModule } from './interfaces/shell.interface';
 import { CONFIG, THEME } from './shell.constants';
 import { listConfigCommand } from './config-list.command';
+import { setConfigCommand } from './config-set.command';
 import { provideTerminal, terminalCommand } from './terminal.command';
 
 /**
- * What @choliba/core gives the shell: the configuration, the theme, `terminal run` and `list config`, built from the
- * platform.
+ * What @choliba/core gives the shell: the configuration, the theme, `terminal run`, `list config` and `set config`, built
+ * from the platform.
  */
 export const coreShell: ShellModule = {
   name: '@choliba/core',
@@ -23,5 +24,5 @@ export const coreShell: ShellModule = {
     });
     provideTerminal(container);
   },
-  commands: [terminalCommand, listConfigCommand],
+  commands: [terminalCommand, listConfigCommand, setConfigCommand],
 };

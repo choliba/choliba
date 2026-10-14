@@ -6,6 +6,13 @@
 Para ver o valor em vigor de cada uma e de onde ele vem (o ambiente, o `.env` ou o padrão), rode
 `choliba list config`; as credenciais aparecem só como `definida` ou `não definida`.
 
+Para gravar uma delas no `.env`, rode `choliba set config CHAVE valor`, por exemplo
+`choliba set config CHOL_SANDBOX docker`. O comando grava uma chave por vez e diz o valor anterior. Uma chave com uma
+lista de valores só aceita um deles. Se o ambiente do processo define a chave, ele vence o `.env`, e o comando avisa.
+Uma credencial (`CLAUDE_CODE_OAUTH_TOKEN`, `CURSOR_API_KEY`) não vai na linha de comando, porque ficaria no histórico
+do shell. Rode `choliba set config CURSOR_API_KEY` sem o valor: num terminal, o choliba pede o valor sem mostrar o
+que é digitado; fora de um terminal, lê do stdin (`echo "$TOKEN" | choliba set config CURSOR_API_KEY`).
+
 Quais destes valores o `agent.yaml` pode usar, e como: veja [Variáveis](agent-yaml.md#variáveis). As credenciais de um
 projeto ficam no `.env.json` dele, não aqui: [`.env.json` do projeto](env-json.md).
 

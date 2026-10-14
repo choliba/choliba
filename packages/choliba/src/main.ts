@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { createInterface, type Interface } from 'node:readline';
+import { Writable } from 'node:stream';
 
 import {
   createBunProcessSpawner,
@@ -57,6 +58,28 @@ function terminalAsk(): Ask {
   };
 }
 
+/**
+ * Asks on the terminal (the question on stderr) without showing what is typed: the line editor writes to a stream that
+ * keeps nothing. For a credential, which must not stay on the screen nor in the shell's history.
+ */
+function terminalSecret(): Ask {
+  return (question) =>
+    new Promise((resolve) => {
+      process.stderr.write(question);
+      const silent = new Writable({
+        write: (_chunk, _encoding, done) => {
+          done();
+        },
+      });
+      const lines = createInterface({ input: process.stdin, output: silent, terminal: true });
+      lines.question('', (answer) => {
+        lines.close();
+        process.stderr.write('\n');
+        resolve(answer.trim());
+      });
+    });
+}
+
 const platform: Platform = {
   argv,
   cwd: process.cwd(),
@@ -69,7 +92,9 @@ const platform: Platform = {
   which: (bin) => Bun.which(bin),
   git: createSpawnGitRunner(),
   // Questions go to stderr, so stdout keeps only what the command prints.
-  ...(process.stdin.isTTY ? { ask: terminalAsk() } : {}),
+  ...(process.stdin.isTTY
+    ? { ask: terminalAsk(), askSecret: terminalSecret() }
+    : { readStdin: () => Bun.stdin.text() }),
   noColorFlag,
 };
 
