@@ -1,3 +1,7 @@
+import { realpathSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
+
 import { existingResourceStarts } from '@choliba/core';
 
 /**
@@ -28,12 +32,32 @@ export interface PlaywrightScriptOptions {
   readonly argv?: readonly string[];
 }
 
-/** The folders the script searches, in order: `resolveFrom`, or the starts that exist on this machine. */
+/**
+ * The real folder of the `@playwright/test` found from `starts`, as a first start of its own: a sandbox mounts where
+ * the package really is (the store under `node_modules`), not always the folder it is linked from (a workspace
+ * package's own `node_modules`, when choliba runs from its sources). Empty when it is not found here.
+ */
+function playwrightHome(starts: readonly string[]): readonly string[] {
+  for (const start of starts) {
+    try {
+      return [dirname(realpathSync(createRequire(join(start, 'index.js')).resolve('@playwright/test/cli')))];
+    } catch {
+      // Not from here: the next start.
+    }
+  }
+  return [];
+}
+
+/**
+ * The folders the script searches, in order: `resolveFrom`, or the real folder of the Playwright found from this
+ * machine's starts, then those starts.
+ */
 function scriptStarts(options: PlaywrightScriptOptions): readonly string[] {
   if (options.resolveFrom !== undefined) {
     return options.resolveFrom;
   }
-  return existingResourceStarts(options.sourceDir ?? __dirname, options.argv);
+  const starts = existingResourceStarts(options.sourceDir ?? __dirname, options.argv);
+  return [...playwrightHome(starts), ...starts];
 }
 
 /**
