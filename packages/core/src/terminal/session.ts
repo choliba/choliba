@@ -1,6 +1,7 @@
 import { CircularBuffer } from './circular-buffer';
 import type { Listener } from './event-emitter';
 import { TypedEventEmitter } from './event-emitter';
+import type { ProcessInput } from '../platform';
 import type {
   SessionEvents,
   SessionExitEvent,
@@ -18,6 +19,8 @@ export interface SessionParams {
   readonly startedAt: Date;
   readonly bufferSize: number;
   readonly kill: (signal?: NodeJS.Signals) => void;
+  /** The process's stdin, when it was started with `input`. */
+  readonly input?: ProcessInput | null;
 }
 
 /**
@@ -31,6 +34,7 @@ export class Session {
   private exitCode: number | null = null;
   private readonly buffer: CircularBuffer<SessionLineEvent>;
   private readonly emitter = new TypedEventEmitter<SessionEvents>();
+  private inputOpen = true;
 
   constructor(private readonly params: SessionParams) {
     this.buffer = new CircularBuffer<SessionLineEvent>(params.bufferSize);
@@ -62,6 +66,34 @@ export class Session {
     };
     this.buffer.push(event);
     this.emitter.emit('line', event);
+  }
+
+  /**
+   * Writes `text` to the process's stdin. `false` when it has none, it was closed, or the process no longer reads it
+   * (it exited): what was written did not reach it.
+   */
+  write(text: string): boolean {
+    const input = this.params.input;
+    if (input === undefined || input === null || !this.inputOpen) return false;
+    try {
+      input.write(text);
+      return true;
+    } catch {
+      this.inputOpen = false;
+      return false;
+    }
+  }
+
+  /** Closes the process's stdin, once: a process that reads until the end of it then finishes. */
+  endInput(): void {
+    const input = this.params.input;
+    if (input === undefined || input === null || !this.inputOpen) return;
+    this.inputOpen = false;
+    try {
+      input.end();
+    } catch {
+      // The process already left: there is nothing to close.
+    }
   }
 
   markExited(exitCode: number | null, signalCode: NodeJS.Signals | null): void {

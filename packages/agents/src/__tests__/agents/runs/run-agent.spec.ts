@@ -1,8 +1,17 @@
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { constants, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { buildTheme, ProcessRunnerService, type ProcessSpawner, type SignalSource, type Writable } from '@choliba/core';
+import {
+  buildTheme,
+  ProcessRunnerService,
+  type Panel,
+  type PanelOptions,
+  type PanelReply,
+  type ProcessSpawner,
+  type SignalSource,
+  type Writable,
+} from '@choliba/core';
 
 import type { AgentDefinition } from '../../../common/interfaces/agent.interface';
 import type { AgentEvent } from '../../../common/interfaces/event.interface';
@@ -10,11 +19,11 @@ import { readPlan } from '../../../agents/runs/plan-store';
 import type { AgentProvider } from '../../../common/agent-provider';
 import type { PlanContentContext, ProviderRequest } from '../../../common/interfaces/provider.interface';
 import type { ResolvedProvider } from '../../../common/provider-registry';
-import type { RunAgentRequest } from '../../../agents/runs/run-agent';
-import { everySecond, FOOTER_REFRESH_MS, runAgent } from '../../../agents/runs/run-agent';
+import type { RunAgentDeps, RunAgentRequest } from '../../../agents/runs/run-agent';
+import { everySecond, FOOTER_REFRESH_MS, runAgent, screenWidth } from '../../../agents/runs/run-agent';
 import { erroringStream, fakeSpawner, streamFromChunks, throwingSpawner } from '../../helpers/fake-spawner';
 import { makeTmpDir } from '../../helpers/tmp';
-import { NO_PERMISSIONS } from '../../../common/agent-permissions';
+import { NO_PERMISSIONS, readAgentPermissions } from '../../../common/agent-permissions';
 import { NO_MODE_STEPS, fakeSections } from '../../helpers/agent';
 
 /** A run dir of its own per request: `runAgent` creates it and removes it. */
@@ -487,6 +496,18 @@ describe('runAgent', () => {
     expect(s.stderr.chunks.join('')).toContain('a raw error line');
   });
 
+  it('leaves out the stderr lines the provider says are quiet, and keeps the others', async () => {
+    const lines = ['[aviso] modelo desconhecido\n', 'a raw error line\n'];
+    const s = setup(fakeSpawner({ stderr: streamFromChunks(lines) }).spawner, {
+      quietStderr: (line) => line.startsWith('[aviso]'),
+    });
+
+    await run(s);
+
+    expect(s.stderr.chunks.join('')).toContain('a raw error line');
+    expect(s.stderr.chunks.join('')).not.toContain('modelo desconhecido');
+  });
+
   it('reports a stream failure and still resolves, instead of hanging', async () => {
     const s = setup(fakeSpawner({ stdout: erroringStream(new Error('boom')) }).spawner);
 
@@ -787,6 +808,257 @@ describe('runAgent — footer', () => {
     expect(run.code).toBe(1);
     expect(run.err).toMatch(/^│ aviso do provider +│\n$/);
     expect(run.out).toMatch(/claude · — · local · decorrido 00:00:0\d\.000 · código 1\n$/);
+  });
+});
+
+describe('runAgent — panel', () => {
+  /** A panel that records what the run did with it, and calls the interrupt listener as soon as it is set when asked. */
+  function fakePanel(interruptAtOnce = false, reply: PanelReply = { status: 'skipped' }, message?: string) {
+    const written: string[] = [];
+    const record = { written, refreshes: 0, closed: 0, options: [] as PanelOptions[], asked: [] as string[] };
+    const open = (options: PanelOptions): Promise<Panel> => {
+      record.options.push(options);
+      return Promise.resolve({
+        write: (text) => {
+          written.push(text);
+        },
+        refresh: () => {
+          record.refreshes += 1;
+        },
+        onInterrupt: (listener) => {
+          if (interruptAtOnce) listener();
+        },
+        ask: (question) => {
+          record.asked.push(question.question);
+          return Promise.resolve(reply);
+        },
+        onMessage: (listener) => {
+          if (message !== undefined) listener(message);
+        },
+        close: () => {
+          record.closed += 1;
+        },
+      });
+    };
+    return { open, record };
+  }
+
+  /** The run's dependencies with `panel`; the spec's own timer, unless `realTimer` keeps `everySecond`'s. */
+  function deps(s: Setup, panel: RunAgentDeps['panel'], realTimer = false): RunAgentDeps {
+    const timer = {
+      every: (_ms: number, tick: () => void) => {
+        tick();
+        return () => undefined;
+      },
+    };
+    return {
+      runner: s.runner,
+      stdout: s.stdout,
+      stderr: s.stderr,
+      signals: s.signals,
+      now: () => new Date(Date.UTC(2026, 0, 1)),
+      footer: true,
+      ...(realTimer ? {} : timer),
+      ...(panel === undefined ? {} : { panel }),
+    };
+  }
+
+  it('draws the session in the panel, and prints the whole frame and the summary once it closes', async () => {
+    const s = setup(
+      fakeSpawner({
+        stdout: streamFromChunks([
+          eventLines([
+            { type: 'init', model: 'sonnet-5', sessionId: 's1' },
+            { type: 'text', text: 'olá' },
+            { type: 'done', isError: false, text: 'ok' },
+          ]),
+        ]),
+      }).spawner,
+    );
+    const { open, record } = fakePanel();
+
+    expect(await runAgent(s.request(), deps(s, open))).toBe(0);
+
+    expect(record.written.join('')).toContain('olá');
+    expect(record.refreshes).toBe(1);
+    expect(record.closed).toBe(1);
+    expect(record.options[0]?.title).toBe('echo');
+    expect(record.options[0]?.footer(80).some((line) => line.startsWith('└'))).toBe(false);
+    // The footer shows the model the provider reported, as the frame and footer do.
+    expect(record.options[0]?.footer(80).join('\n')).toContain('sonnet-5');
+    const out = s.stdout.chunks.join('');
+    expect(out).toMatch(
+      /^\n┌─ echo ─+┐\n│ olá +│\n└─+┘\nclaude · sonnet-5 · local · decorrido 00:00:00\.000 · código 0\n$/,
+    );
+  });
+
+  it('asks the panel the questions of the ask run tool, and keeps question and answer in the frame', async () => {
+    const s = setup(
+      fakeSpawner({
+        stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'ok' }])]),
+      }).spawner,
+    );
+    const request = s.request(
+      {},
+      { agent: fakeAgent({ permissions: readAgentPermissions({ allow: { tools: { ask: ['*'] } } }) }) },
+    );
+    const exchange = join(request.providerRequest.runDir, '.choliba-ask');
+    mkdirSync(exchange, { recursive: true });
+    writeFileSync(
+      join(exchange, '1.question.json'),
+      JSON.stringify({ id: '1', question: 'Nome?', options: [], multi: false }),
+    );
+    const { open, record } = fakePanel(false, { status: 'answered', answer: ['Ana', 'Bia'] });
+
+    expect(await runAgent(request, deps(s, open))).toBe(0);
+
+    expect(record.asked).toEqual(['Nome?']);
+    expect(record.written.join('')).toContain('? Nome?\n→ Ana, Bia\n');
+  });
+
+  it('keeps in the frame what the person sends, and a question they skip, with the real timer', async () => {
+    const s = setup(
+      fakeSpawner({
+        stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'ok' }])]),
+      }).spawner,
+    );
+    const request = s.request(
+      {},
+      { agent: fakeAgent({ permissions: readAgentPermissions({ allow: { tools: { ask: ['*'] } } }) }) },
+    );
+    const { open, record } = fakePanel(false, { status: 'skipped' }, 'use React');
+
+    expect(await runAgent(request, deps(s, open, true))).toBe(0);
+    expect(record.written.join('')).toContain(
+      '› use React (não entregue: este provider não recebe mensagens durante a execução)\n',
+    );
+
+    const skipping = fakePanel(false, { status: 'skipped' });
+    const panel = await skipping.open({ title: 'x', titleColor: 'cyan', footer: () => [], hint: '' });
+    expect(await panel.ask({ question: 'Nome?', options: [], multi: false })).toEqual({ status: 'skipped' });
+  });
+
+  it('sends the task, then what the person sends, on stdin, and closes it when the last turn ends', async () => {
+    const handle = fakeSpawner({
+      stdout: streamFromChunks([
+        eventLines([
+          { type: 'done', isError: false, text: 'um' },
+          { type: 'done', isError: false, text: 'dois' },
+        ]),
+      ]),
+    });
+    const s = setup(handle.spawner, { inputMessage: (text) => `>${text}\n` });
+    const { open, record } = fakePanel(false, { status: 'skipped' }, 'use React');
+
+    expect(await runAgent(s.request(), deps(s, open))).toBe(0);
+
+    expect(handle.spawnCalls[0]).toMatchObject({ input: true });
+    expect(handle.stdin.written).toEqual(['>do it\n', '>use React\n']);
+    expect(handle.stdin.ended).toBe(true);
+    expect(record.written.join('')).toContain('› use React\n');
+    expect(record.options[0]?.hint).toBe('Enter envia · Ctrl+J cria uma linha');
+  });
+
+  it('closes stdin when a guard stops the session', async () => {
+    const handle = fakeSpawner({
+      stdout: streamFromChunks([eventLines([{ type: 'tool-call', id: 't', name: 'Agent', summary: '' }])]),
+    });
+    const s = setup(handle.spawner, { inputMessage: (text) => `>${text}\n` });
+
+    await run(s);
+
+    expect(handle.stdin.ended).toBe(true);
+  });
+
+  it('writes a skipped question as having no answer', async () => {
+    const s = setup(
+      fakeSpawner({
+        stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'ok' }])]),
+      }).spawner,
+    );
+    const request = s.request(
+      {},
+      { agent: fakeAgent({ permissions: readAgentPermissions({ allow: { tools: { ask: ['*'] } } }) }) },
+    );
+    const exchange = join(request.providerRequest.runDir, '.choliba-ask');
+    mkdirSync(exchange, { recursive: true });
+    writeFileSync(
+      join(exchange, '1.question.json'),
+      JSON.stringify({ id: '1', question: 'Nome?', options: [], multi: false }),
+    );
+    const { open, record } = fakePanel();
+
+    await runAgent(request, deps(s, open));
+
+    expect(record.written.join('')).toContain('? Nome?\n→ (sem resposta)\n');
+  });
+
+  it('answers that nobody can when the screen has no field', async () => {
+    const s = setup(
+      fakeSpawner({
+        stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'ok' }])]),
+      }).spawner,
+    );
+    const request = s.request(
+      {},
+      { agent: fakeAgent({ permissions: readAgentPermissions({ allow: { tools: { ask: ['*'] } } }) }) },
+    );
+    const exchange = join(request.providerRequest.runDir, '.choliba-ask');
+    mkdirSync(exchange, { recursive: true });
+    writeFileSync(
+      join(exchange, '1.question.json'),
+      JSON.stringify({ id: '1', question: 'Nome?', options: [], multi: false }),
+    );
+    let answered = '';
+    const every = (_ms: number, tick: () => void): (() => void) => {
+      tick();
+      // Stopped when the session ends, before the run folder goes: the answer is there by then.
+      return () => {
+        answered = readFileSync(join(exchange, '1.answer.json'), 'utf8');
+      };
+    };
+
+    await runAgent(request, { ...deps(s, undefined), footer: false, every });
+
+    expect(JSON.parse(answered)).toEqual({ status: 'unavailable' });
+  });
+
+  it('keeps the frame and footer when the panel does not open', async () => {
+    const s = setup(
+      fakeSpawner({
+        stdout: streamFromChunks([
+          eventLines([
+            { type: 'text', text: 'olá' },
+            { type: 'done', isError: false, text: 'ok' },
+          ]),
+        ]),
+      }).spawner,
+    );
+
+    expect(
+      await runAgent(
+        s.request(),
+        deps(s, () => Promise.resolve(undefined)),
+      ),
+    ).toBe(0);
+    expect(s.stdout.chunks.join('')).toMatch(/^\n┌─ echo ─/);
+  });
+
+  it('passes Ctrl+C in the panel on to the provider as SIGINT', async () => {
+    const spawnerHandle = fakeSpawner();
+    const s = setup(spawnerHandle.spawner);
+    await runAgent(s.request(), deps(s, fakePanel(true).open, true));
+
+    expect(spawnerHandle.kill).toHaveBeenCalledWith('SIGINT');
+  });
+});
+
+describe('screenWidth', () => {
+  it("takes the terminal's width, and the default one when it says none or 0", () => {
+    const write = (): void => undefined;
+    expect(screenWidth({ write, columns: 120 })).toBe(120);
+    expect(screenWidth({ write, columns: 0 })).toBe(80);
+    expect(screenWidth({ write })).toBe(80);
   });
 });
 

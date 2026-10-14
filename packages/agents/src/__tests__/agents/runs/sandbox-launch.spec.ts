@@ -57,6 +57,7 @@ function disk(): LaunchDisk & { readonly made: string[] } {
       made.push(path);
     },
     realpath: (path) => path,
+    runtime: '/home/test/.bun/bin/bun',
   };
 }
 
@@ -122,6 +123,26 @@ describe('launchFor', () => {
     );
     expect(launch.command).toEqual(expect.arrayContaining(['--ro-bind', '/versions/1', '/versions/1']));
     expect(launch.command.slice(-2)).toEqual(['/versions/1/agent', '-p']);
+    // The run tools' scripts run on choliba's own bun, which lives under the home the sandbox empties.
+    expect(launch.command).toEqual(
+      expect.arrayContaining(['--ro-bind', '/home/test/.bun/bin/bun', '/home/test/.bun/bin/bun']),
+    );
+  });
+
+  it("puts a run's tool shortcuts first on the local PATH", () => {
+    const launch = launchFor(
+      {
+        sandbox: { kind: 'local' },
+        command: ['claude'],
+        provider: PROVIDER,
+        request: request({ allowTools: [{ tool: 'ask', subcommands: ['*'] }] }),
+        files: [],
+        config: { ...CONFIG, PATH: '/usr/bin:/bin' },
+      },
+      disk(),
+    );
+
+    expect(launch.env?.['PATH']).toBe('/w/.cache/runs/1.bin:/usr/bin:/bin');
   });
 
   it('refuses a broken provider link and a missing credential with actionable messages', () => {
@@ -153,14 +174,18 @@ describe('launchFor', () => {
         sandbox: { kind: 'docker', image: 'choliba-agent', network: 'isolated' },
         command: ['claude', '-p'],
         provider: PROVIDER,
-        request: request({ allowRead: ['docs/'] }),
-        files: [{ path: '/w/.cache/runs/1.delete', content: '' }],
+        request: request({ allowRead: ['docs/'], allowDelete: ['/w/app/'] }),
+        files: [
+          { path: '/w/.cache/runs/1.delete', content: '' },
+          { path: '/w/.cache/runs/1.bin/delete', content: '' },
+        ],
         config: CONFIG,
       },
       fake,
     );
     expect(launch.paths.map((path) => `${path.access} ${path.path}`)).toEqual([
       'write /w/.cache/runs/1',
+      'read /w/.cache/runs/1.bin/delete',
       'read /w/.cache/runs/1.delete',
       'read /w/docs',
       'read /w/node_modules',
@@ -168,8 +193,12 @@ describe('launchFor', () => {
     expect(launch.command.slice(0, 2)).toEqual(['docker', 'run']);
     expect(launch.command.slice(-3)).toEqual(['choliba-agent', 'claude', '-p']);
     expect(launch.command.join(' ')).toContain('--env CLAUDE_CODE_OAUTH_TOKEN');
+    expect(launch.command.join(' ')).toContain('--env PATH');
     expect(launch.command.join(' ')).not.toContain('segredo');
-    expect(launch.env).toMatchObject({ CLAUDE_CODE_OAUTH_TOKEN: 'segredo' });
+    expect(launch.env).toMatchObject({
+      CLAUDE_CODE_OAUTH_TOKEN: 'segredo',
+      PATH: '/w/.cache/runs/1.bin:/usr/local/bin:/usr/bin:/bin',
+    });
     expect(launch.place).toEqual({ kind: 'docker', image: 'choliba-agent', container: 'choliba-1' });
     expect(launch.command.slice(2, 5)).toEqual(['--rm', '--name', 'choliba-1']);
     expect(fake.made).toEqual([]);

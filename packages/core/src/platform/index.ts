@@ -6,6 +6,7 @@ export type {
   ProcessSpawner,
   SignalSource,
   SpawnCommandOptions,
+  ProcessInput,
   SpawnedProcess,
   Which,
   Writable,

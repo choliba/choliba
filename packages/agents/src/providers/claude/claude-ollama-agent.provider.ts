@@ -13,6 +13,12 @@ const OLLAMA_PREFIX = 'ollama:';
  * The models Claude Code picks for itself (a small one for its own short tasks, and the defaults behind its aliases):
  * all set to the run's, so no call asks Ollama for a model of Claude.
  */
+/**
+ * What Claude Code prints on stderr for every call to a model outside its own list (every model of Ollama): a notice
+ * that it uses default limits, which says nothing to whoever runs the agent.
+ */
+const UNRECOGNIZED_MODEL = '[claude-code:unrecognized_model]';
+
 const CLAUDE_MODEL_VARIABLES: readonly string[] = [
   'ANTHROPIC_DEFAULT_HAIKU_MODEL',
   'ANTHROPIC_DEFAULT_SONNET_MODEL',
@@ -43,14 +49,20 @@ export class ClaudeOllamaAgentProvider extends ClaudeAgentProvider {
     return `${OLLAMA_PREFIX}${reported}`;
   }
 
+  override quietStderr(line: string): boolean {
+    return line.startsWith(UNRECOGNIZED_MODEL);
+  }
+
   override buildArgs(request: ProviderRequest): readonly string[] {
     if (request.model === undefined) return super.buildArgs(request);
     return super.buildArgs({ ...request, model: this.apiModel(request.model) });
   }
 
-  override variables({ request, config, reachable }: ProviderVariablesInput): Readonly<Record<string, string>> {
+  override variables(input: ProviderVariablesInput): Readonly<Record<string, string>> {
+    const { request, config, reachable } = input;
     const model = this.apiModel(request.model ?? '');
     return {
+      ...super.variables(input),
       ANTHROPIC_BASE_URL: reachable(config[CHOL_OLLAMA_URL] ?? DEFAULT_OLLAMA_URL),
       ANTHROPIC_AUTH_TOKEN: 'ollama',
       ANTHROPIC_API_KEY: '',

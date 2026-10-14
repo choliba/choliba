@@ -4,7 +4,30 @@ export { exitCodeFor } from './exit-code';
 export { formatDuration } from './format-duration';
 export { DEFAULT_SPINNER_FRAMES, LiveRegion, type LiveRow } from './live-region';
 export { DEFAULT_COLUMNS, formatElapsed, StatusFooter } from './status-footer';
-export { frameBottom, frameLines, frameTop, textPieces, visibleWidth, wrapVisible, type TextPiece } from './frame';
+export {
+  loadPanelToolkit,
+  openOpenTuiPanel,
+  openPanel,
+  openPanelWith,
+  type OpenTuiToolkit,
+  type Panel,
+  type PanelKey,
+  type PanelOptions,
+  type PanelQuestion,
+  type PanelReply,
+  type PanelToolkit,
+} from './panel';
+export {
+  ansiChunks,
+  frameBottom,
+  frameLines,
+  frameTop,
+  textPieces,
+  visibleWidth,
+  wrapVisible,
+  type StyledChunk,
+  type TextPiece,
+} from './frame';
 export {
   Table,
   TableError,

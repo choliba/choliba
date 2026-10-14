@@ -711,7 +711,8 @@ describe('runAgentsCli — skills', () => {
 
     expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', '--show-prompt', 'x'], deps)).toBe(0);
     const printed = dryRunArgv(stdout);
-    expect(printed.at(printed.indexOf('-p') + 1)).toContain('Task:');
+    // The task goes on stdin, not in the command line: --show-prompt still prints it.
+    expect(stdout.chunks.join('')).toContain('Task:');
     expect(printed).toContain(`Read(/${SKILLS}/dummy-skill/**)`);
     expect(printed).not.toContain('--add-dir');
   });
@@ -1133,7 +1134,7 @@ describe('runAgentsCli — run', () => {
       const text = stdout.chunks.join('');
       expect(text.startsWith('Sem --dry-run, faria nesta ordem:\n')).toBe(true);
       expect(text).toContain(' 2. [agente] claude · modelo padrão do provider · modo execute');
-      expect(text).toContain('comando: claude -p <prompt do usuário>');
+      expect(text).toContain('comando: claude -p --input-format stream-json');
       expect(text).not.toContain(COMMAND_LINE_TITLE);
       expect(spawnerHandle.spawnCalls).toEqual([]);
     });
@@ -1145,7 +1146,9 @@ describe('runAgentsCli — run', () => {
 
       const printed = dryRunArgv(stdout);
       expect(printed[0]).toBe('claude');
-      expect(printed.at(printed.indexOf('-p') + 1)).toBe('Task:\na task');
+      expect(printed.slice(1, 4)).toEqual(['-p', '--input-format', 'stream-json']);
+      // The task goes on stdin; the prompt sections still show it.
+      expect(stdout.chunks.join('')).toContain('Task:\na task');
     });
 
     it("resolves a command's own addDirs relative to repoRoot, alongside --add-dir", async () => {
@@ -1223,10 +1226,11 @@ describe('runAgentsCli — run', () => {
       expect(dryRunArgv(stdout)).not.toContain('--add-dir');
     });
 
-    it('reports an oversized prompt cleanly instead of crashing', async () => {
-      const { deps, stderr } = harness([]);
+    it('reports an oversized prompt cleanly instead of crashing, for a provider that takes it as an argument', async () => {
+      const { deps, stderr } = harness([], { which: whichOf(['claude', 'agent']) });
 
-      const exitCode = await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'x'.repeat(200_000)], deps);
+      const argv = ['echo', '--agents-dir', FIXTURES, '--cursor', '--dry-run', 'x'.repeat(200_000)];
+      const exitCode = await runAgentsCli(argv, deps);
 
       expect(exitCode).toBe(1);
       expect(stderr.chunks.join('')).toMatch(/argument \d+ is \d+ bytes/);

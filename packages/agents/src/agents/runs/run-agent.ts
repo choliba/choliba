@@ -7,6 +7,8 @@ import {
   frameLines,
   frameTop,
   StatusFooter,
+  type Panel,
+  type PanelOptions,
   type ProcessRunnerService,
   type Session,
   type SessionExitEvent,
@@ -29,9 +31,11 @@ import {
 
 import { agentRenderOptions, formatProviderLine, renderEvent } from './event-render';
 import type { RunFooterInfo, RunScreen } from '../interfaces/run-footer.interface';
-import { footerLines, providerContext, summaryLine } from './run-footer';
+import { footerLines, oneLine, providerContext, summaryLine } from './run-footer';
 import type { Launch } from './sandbox-launch';
-import { applyRunTools } from '../../common';
+import { applyRunTools, askExchangeDir, runToolsOf, type AskAnswer } from '../../common';
+import { watchQuestions } from './ask-watcher';
+import { sessionInput } from './session-input';
 import { toolGuard, toolViolation } from './tool-guard';
 
 export interface RunAgentDeps {
@@ -48,6 +52,11 @@ export interface RunAgentDeps {
   readonly footer?: boolean;
   /** Calls `tick` every `ms` until the returned function stops it; `everySecond`'s timer when absent. */
   readonly every?: (ms: number, tick: () => void) => () => void;
+  /**
+   * Opens the panel a run on a terminal is drawn in (`openOpenTuiPanel`), or gives `undefined` when it cannot; the run
+   * then draws the frame and footer. Absent, never a panel.
+   */
+  readonly panel?: (options: PanelOptions) => Promise<Panel | undefined>;
 }
 
 /** A timer that calls `tick` every `ms`, not keeping the process alive by itself. */
@@ -59,13 +68,28 @@ export function everySecond(ms: number, tick: () => void): () => void {
   };
 }
 
+/** The width a screen draws in: the terminal's, or `DEFAULT_COLUMNS` when it says none (absent, or 0 in a pseudo-terminal). */
+export function screenWidth(stdout: WritableWithColumns): number {
+  const columns = stdout.columns ?? 0;
+  return columns > 0 ? columns : DEFAULT_COLUMNS;
+}
+
 /** How often the footer is drawn again: often enough for the milliseconds to roll, cheap for the terminal. */
 export const FOOTER_REFRESH_MS = 50;
 
 /** The streams of a session as they are, with the `[provider]` line first: where there is no footer. */
 function plainScreen(info: RunFooterInfo, theme: Theme, deps: RunAgentDeps): RunScreen {
   deps.stdout.write(`${formatProviderLine(info.provider, theme)}${providerContext(info)}\n`);
-  return { framed: false, out: deps.stdout, err: deps.stderr, model: noop, close: noop };
+  return {
+    framed: false,
+    out: deps.stdout,
+    err: deps.stderr,
+    model: noop,
+    onInterrupt: noop,
+    onMessage: noop,
+    answer: unanswered,
+    close: noop,
+  };
 }
 
 /**
@@ -73,12 +97,11 @@ function plainScreen(info: RunFooterInfo, theme: Theme, deps: RunAgentDeps): Run
  * session's lines go in, and a footer under it with the run's context and time, drawn every `FOOTER_REFRESH_MS`.
  * Closing it leaves the bottom of the frame and the summary line.
  */
-function runScreen(info: RunFooterInfo, request: RunAgentRequest, deps: RunAgentDeps): RunScreen {
+function footerScreen(info: RunFooterInfo, request: RunAgentRequest, deps: RunAgentDeps): RunScreen {
   const { theme } = request;
-  if (deps.footer !== true) return plainScreen(info, theme, deps);
   const { name, color } = request.providerRequest.agent;
   const now = (): number => deps.now().getTime();
-  const width = (): number => deps.stdout.columns ?? DEFAULT_COLUMNS;
+  const width = (): number => screenWidth(deps.stdout);
   let model: string | undefined;
   const current = (): RunFooterInfo => (model === undefined ? info : { ...info, model });
   deps.stdout.write(`\n${frameTop(name, width(), (text) => theme.paint('agents', name, text, color))}\n`);
@@ -102,12 +125,108 @@ function runScreen(info: RunFooterInfo, request: RunAgentRequest, deps: RunAgent
     model: (reported) => {
       model = reported;
     },
+    onInterrupt: noop,
+    onMessage: noop,
+    answer: unanswered,
     close: (exitCode) => {
       stop();
       footer.close();
       deps.stdout.write(`${frameBottom(width())}\n${summaryLine(current(), now(), exitCode)}\n`);
     },
   };
+}
+
+/** The run's footer information, with the model once the provider reports it. */
+interface ReportedInfo {
+  info(): RunFooterInfo;
+  report(model: string): void;
+}
+
+function reportedInfo(info: RunFooterInfo): ReportedInfo {
+  let model: string | undefined;
+  return {
+    info: () => (model === undefined ? info : { ...info, model }),
+    report: (reported) => {
+      model = reported;
+    },
+  };
+}
+
+/**
+ * The screen of a session in the run panel: the session's lines scroll in it with the footer under it, and, once it
+ * closes, the whole frame and the summary line are printed on the terminal, as the frame and footer leave them.
+ */
+function panelScreen(panel: Panel, current: ReportedInfo, request: RunAgentRequest, deps: RunAgentDeps): RunScreen {
+  const { theme } = request;
+  const { name, color } = request.providerRequest.agent;
+  const now = (): number => deps.now().getTime();
+  const width = (): number => screenWidth(deps.stdout);
+  const transcript: string[] = [];
+  const shown: Writable = {
+    write: (text) => {
+      transcript.push(text);
+      panel.write(text);
+    },
+  };
+  const stop = (deps.every ?? everySecond)(FOOTER_REFRESH_MS, () => {
+    panel.refresh();
+  });
+  return {
+    framed: true,
+    out: shown,
+    err: shown,
+    model: (reported) => {
+      current.report(reported);
+    },
+    onInterrupt: (listener) => {
+      panel.onInterrupt(listener);
+    },
+    onMessage: (listener) => {
+      panel.onMessage(listener);
+    },
+    answer: async (question) => {
+      shown.write(`? ${question.question}\n`);
+      const reply = await panel.ask(question);
+      shown.write(`→ ${reply.status === 'skipped' ? '(sem resposta)' : [reply.answer].flat().join(', ')}\n`);
+      return reply;
+    },
+    close: (exitCode) => {
+      stop();
+      panel.close();
+      const top = frameTop(name, width(), (text) => theme.paint('agents', name, text, color));
+      const lines = frameLines(transcript.join(''), width());
+      deps.stdout.write(
+        `\n${[top, ...lines, frameBottom(width())].join('\n')}\n${summaryLine(current.info(), now(), exitCode)}\n`,
+      );
+    },
+  };
+}
+
+/** Where a session writes when no panel is to be opened: as it is off a terminal, the frame and footer on one. */
+function runScreen(info: RunFooterInfo, request: RunAgentRequest, deps: RunAgentDeps): RunScreen {
+  return deps.footer === true ? footerScreen(info, request, deps) : plainScreen(info, request.theme, deps);
+}
+
+/** On a terminal that may draw one, the run panel when it opens; the frame and footer otherwise. */
+async function panelOrFooter(
+  open: NonNullable<RunAgentDeps['panel']>,
+  info: RunFooterInfo,
+  request: RunAgentRequest,
+  deps: RunAgentDeps,
+): Promise<RunScreen> {
+  const { name, color } = request.providerRequest.agent;
+  const now = (): number => deps.now().getTime();
+  const current = reportedInfo(info);
+  const panel = await open({
+    title: name,
+    titleColor: request.theme.colorOf('agents', name, color),
+    footer: (columns) => [oneLine(current.info(), now(), Math.floor(columns / 2))],
+    hint:
+      request.provider.adapter.inputMessage === undefined
+        ? 'Aqui você responde quando o agente perguntar'
+        : 'Enter envia · Ctrl+J cria uma linha',
+  });
+  return panel === undefined ? footerScreen(info, request, deps) : panelScreen(panel, current, request, deps);
 }
 
 export interface RunAgentRequest {
@@ -178,6 +297,11 @@ export async function runAgent(request: RunAgentRequest, deps: RunAgentDeps): Pr
   }
 }
 
+/** What a screen with no field answers: nobody can, so the agent goes on with an assumption at once. */
+function unanswered(): Promise<AskAnswer> {
+  return Promise.resolve({ status: 'unavailable' });
+}
+
 function noop(): void {
   // Nothing to restore.
 }
@@ -208,6 +332,7 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
       command: launch.command,
       cwd: request.providerRequest.runDir,
       ...(launch.env === undefined ? {} : { env: launch.env }),
+      ...(adapter.inputMessage === undefined ? {} : { input: true }),
     });
   } catch (error) {
     deps.stderr.write(`não foi possível iniciar ${providerId}: ${errorMessage(error)}\n`);
@@ -215,7 +340,10 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
   }
 
   const info: RunFooterInfo = { provider: providerId, place: launch.place, startedAt: deps.now().getTime() };
-  const screen = runScreen(info, request, deps);
+  const screen =
+    deps.footer === true && deps.panel !== undefined
+      ? await panelOrFooter(deps.panel, info, request, deps)
+      : runScreen(info, request, deps);
   let exitCode = 1;
   try {
     exitCode = await followSession(request, deps, session, screen);
@@ -255,14 +383,17 @@ async function followSession(
   // The sandbox decides each tool call on the policy written from the agent (its MCPs) and the provider's limits.
   const guard = toolGuard(request.providerRequest, adapter.unenforcedTools);
 
+  const input = sessionInput(session, adapter.inputMessage?.bind(adapter), request.providerRequest.userPrompt);
   const stop = (message: string): void => {
     stopGuard.triggered = true;
     screen.err.write(`${message}\n`);
+    input.close();
     session.kill('SIGTERM');
   };
 
   session.subscribe((event) => {
     if (event.stream === 'stderr') {
+      if (adapter.quietStderr?.(event.raw) === true) return;
       // In the frame, a blank line from the provider (around its own messages) would only be an empty row.
       if (!screen.framed || event.raw.trim() !== '') screen.err.write(`${event.raw}\n`);
       return;
@@ -271,6 +402,7 @@ async function followSession(
       if (stopGuard.triggered) {
         return;
       }
+      if (agentEvent.type === 'done') input.turnEnded();
 
       const violation = toolViolation(agentEvent, guard);
       if (violation !== undefined) {
@@ -328,6 +460,20 @@ async function followSession(
   };
   deps.signals.on('SIGINT', onSigint);
   deps.signals.on('SIGTERM', onSigterm);
+  screen.onInterrupt(onSigint);
+  input.begin();
+  // What the person sends goes to the session and stays in the frame, saying why when it could not reach the agent.
+  screen.onMessage((text) => {
+    const refused = input.send(text);
+    screen.out.write(`› ${text}${refused === undefined ? '' : ` (não entregue: ${refused})`}\n`);
+  });
+  const stopAsking = runToolsOf(request.providerRequest).some((tool) => tool.name === 'ask')
+    ? watchQuestions(
+        askExchangeDir(request.providerRequest.runDir),
+        (question) => screen.answer(question),
+        deps.every ?? everySecond,
+      )
+    : noop;
 
   const exitEvent = await new Promise<SessionExitEvent>((resolve) => {
     session.onExit(resolve);
@@ -335,6 +481,7 @@ async function followSession(
 
   deps.signals.off('SIGINT', onSigint);
   deps.signals.off('SIGTERM', onSigterm);
+  stopAsking();
 
   if (stopGuard.triggered) {
     return 1;

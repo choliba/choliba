@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, realpathSync, statSync } from 'node:fs';
-import { isAbsolute, join } from 'node:path';
+import { delimiter, isAbsolute, join } from 'node:path';
 
 import { CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR } from '@choliba/core';
 import { resolveLocations, resolveTicketRunsFolder, resolveTicketRunsRoot } from '@choliba/projects';
@@ -19,6 +19,7 @@ import {
 import {
   absolutePermissions,
   DEFAULT_PLAYWRIGHT_OUTPUT_DIR,
+  runToolShortcuts,
   runToolsOf,
   type PlannedFile,
   type ProviderRequest,
@@ -27,6 +28,14 @@ import {
 import { definedConfig } from '../agent-dirs';
 
 type Config = Readonly<Record<string, string | undefined>>;
+
+const DEFAULT_PATH = '/usr/local/bin:/usr/bin:/bin';
+
+/** The session's PATH with its run-tool shortcuts first; containers keep their own conventional executable paths. */
+function sessionPath(input: LaunchInput): string {
+  const inherited = input.sandbox.kind === 'local' ? input.config['PATH'] : undefined;
+  return `${runToolShortcuts(input.request.runDir)}${delimiter}${inherited ?? DEFAULT_PATH}`;
+}
 
 /** How the provider's process starts: its command line and, in a container, the environment `docker` reads. */
 export interface Launch {
@@ -56,6 +65,8 @@ export interface LaunchDisk extends DiskFacts {
   readonly owner: (path: string) => ContainerUser;
   readonly ensureDir: (path: string) => void;
   readonly realpath: (path: string) => string;
+  /** The `bun` running choliba: the run tools' scripts start with `#!/usr/bin/env bun`. */
+  readonly runtime: string;
 }
 
 export const realDisk: LaunchDisk = {
@@ -70,6 +81,7 @@ export const realDisk: LaunchDisk = {
     mkdirSync(path, { recursive: true });
   },
   realpath: realpathSync,
+  runtime: process.execPath,
 };
 
 function localProgram(provider: ResolvedProvider, disk: LaunchDisk): SandboxProgram {
@@ -83,7 +95,7 @@ function localProgram(provider: ResolvedProvider, disk: LaunchDisk): SandboxProg
   }
   return {
     executable,
-    readOnly: provider.adapter.localReadOnly(executable),
+    readOnly: [...provider.adapter.localReadOnly(executable), disk.runtime],
     credentials: provider.adapter.credentials,
     credentialHelp: provider.adapter.credentialHelp,
   };
@@ -134,15 +146,17 @@ export function launchFor(input: LaunchInput, disk: LaunchDisk = realDisk): Laun
     disk,
   });
   const program = input.sandbox.kind === 'local' ? localProgram(input.provider, disk) : undefined;
-  const variables = input.provider.adapter.variables?.({
+  const providerVariables = input.provider.adapter.variables?.({
     request,
     config,
     reachable: (url) => agentURL(url, input.sandbox),
   });
+  const toolVariables = runToolsOf(request).length > 0 ? { PATH: sessionPath(input) } : {};
+  const variables = { ...providerVariables, ...toolVariables };
   return backend.plan({
     command: input.command,
     ...(program === undefined ? {} : { program }),
-    ...(variables === undefined ? {} : { variables }),
+    ...(Object.keys(variables).length === 0 ? {} : { variables }),
     reach,
   });
 }

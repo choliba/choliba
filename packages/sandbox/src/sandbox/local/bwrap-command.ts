@@ -32,6 +32,8 @@ function mountArgs(mount: ContainerMount): readonly string[] {
 export interface BwrapCommand {
   readonly bwrap: string;
   readonly home: string;
+  /** The folder of the resolver configuration under `/run` (`resolverFolder`), mounted back read-only. */
+  readonly resolver?: string | undefined;
   readonly programReadOnly: readonly string[];
   readonly mounts: readonly ContainerMount[];
   readonly cwd: string;
@@ -44,12 +46,14 @@ function programMounts(paths: readonly string[]): readonly string[] {
 
 /**
  * `bwrap` for one session: the system read-only, then only the mounts, with `cwd` as the working directory.
- * The host network stays: this command isolates paths.
+ * The host network stays, with the resolver configuration `/run` would hide: this command isolates paths. The session
+ * has its own process ids, so nothing it starts outlives `bwrap`: when a signal ends `bwrap`, the kernel ends the rest.
  */
 export function bwrapCommand(input: BwrapCommand): readonly string[] {
   return [
     input.bwrap,
     '--die-with-parent',
+    '--unshare-pid',
     ...readOnlySystem(),
     '--proc',
     '/proc',
@@ -59,11 +63,17 @@ export function bwrapCommand(input: BwrapCommand): readonly string[] {
     '/tmp',
     '--tmpfs',
     '/run',
+    ...(input.resolver === undefined ? [] : ['--ro-bind-try', input.resolver, input.resolver]),
     '--tmpfs',
     input.home,
     '--setenv',
     'HOME',
     input.home,
+    // Chrome's own sandbox needs privileges bwrap takes away (it runs with no new privileges); bwrap is the sandbox here,
+    // as the container is in docker.
+    '--setenv',
+    'PLAYWRIGHT_MCP_SANDBOX',
+    'false',
     ...programMounts(input.programReadOnly),
     ...input.mounts.flatMap(mountArgs),
     '--chdir',

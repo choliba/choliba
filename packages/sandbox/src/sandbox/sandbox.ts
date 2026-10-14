@@ -2,6 +2,7 @@ import { CHOL_NETWORK, CHOL_SANDBOX, CHOL_SANDBOX_IMAGE, ExpectedError } from '@
 
 import { DockerSandbox } from './docker/docker-sandbox';
 import { bwrapOnPath } from './local/bwrap-on-path';
+import { resolverFolder } from './local/resolver-folder';
 import { LocalSandbox } from './local/local-sandbox';
 import type { SandboxBackend } from './interfaces/sandbox-backend.interface';
 import type { Sandbox, SandboxBackendContext, SandboxNetwork } from './interfaces/sandbox.interface';
@@ -61,7 +62,12 @@ export function presentCredentials(config: Readonly<Record<string, string | unde
 
 export function createSandboxBackend(sandbox: Sandbox, context: SandboxBackendContext): SandboxBackend {
   if (sandbox.kind === 'local') {
-    return new LocalSandbox({ disk: context.disk, bwrap: bwrapOnPath(), environment: context.environment });
+    return new LocalSandbox({
+      disk: context.disk,
+      bwrap: bwrapOnPath(),
+      environment: context.environment,
+      resolver: resolverFolder(),
+    });
   }
   return new DockerSandbox({
     image: sandbox.image,

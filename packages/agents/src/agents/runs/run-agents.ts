@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 
-import { formatHelp, type CommandSpec, CHOL_ROOT } from '@choliba/core';
+import { formatHelp, openOpenTuiPanel, type CommandSpec, CHOL_ROOT } from '@choliba/core';
 import { AppError, ensureApp, type ProjectSettings, type RunningApp } from '@choliba/projects';
 import { readSandbox, type Sandbox, type SandboxConfigError } from '@choliba/sandbox';
 
@@ -222,6 +222,7 @@ async function runAndRecord(
       signals: deps.signals,
       now: deps.now,
       footer: wantsFooter(deps.stdout, deps.config),
+      panel: openOpenTuiPanel,
     },
   );
 

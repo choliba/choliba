@@ -72,6 +72,7 @@ export class ProcessRunnerService {
       command: options.command,
       ...(options.cwd !== undefined ? { cwd: options.cwd } : {}),
       ...(options.env !== undefined ? { env: options.env } : {}),
+      ...(options.input === true ? { input: true } : {}),
     });
 
     const id = randomUUID();
@@ -85,6 +86,7 @@ export class ProcessRunnerService {
       kill: (signal) => {
         spawned.kill(signal);
       },
+      input: spawned.stdin ?? null,
     });
     this.sessions.set(id, session);
 

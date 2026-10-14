@@ -1,4 +1,5 @@
-import { chmodSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 
 import { CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR } from '@choliba/core';
 import { denyExceptions, isException } from '@choliba/sandbox';
@@ -6,15 +7,18 @@ import { denyExceptions, isException } from '@choliba/sandbox';
 import type { PermissionPolicy } from '../interfaces/execution.interface';
 import type { PlannedFile, ProviderRequest } from '../interfaces/provider.interface';
 import { type AgentPermissions, absolutePermissions, EVERY_COMMAND, type RunPlace } from '../agent-permissions';
+import { askExchangeDir, askScript } from './ask-tool';
 import { deleteScript } from './delete-tool';
 import { DEFAULT_PLAYWRIGHT_OUTPUT_DIR, playwrightScript } from './playwright-tool';
-import { runToolPath } from './run-tool-path';
+import { runToolPath, runToolShortcuts } from './run-tool-path';
 
 /** What a run tool's script is written from. */
 interface ScriptContext {
   /** Already absolute (`absolutePermissions`). */
   readonly permissions: AgentPermissions;
   readonly workspaceRoot: string;
+  /** The run folder, which holds the `ask` exchange folder. */
+  readonly runDir: string;
   readonly config: Readonly<Record<string, string | undefined>>;
 }
 
@@ -34,7 +38,7 @@ function playwrightOutputDir(config: ScriptContext['config']): string {
 }
 
 /** The run tools there are: `delete`, and the ones `permissions.allow.tools` may name. */
-type RunToolName = typeof DELETE | 'playwright-cli' | 'playwright-trace';
+type RunToolName = typeof DELETE | 'playwright-cli' | 'playwright-trace' | 'ask';
 
 /**
  * Every run tool: the scripts choliba writes next to a run folder for the agent, and the only way the
@@ -63,6 +67,16 @@ const RUN_TOOLS: Readonly<Record<RunToolName, RunToolSpec>> = {
     usage: '<command> [args]',
     script: ({ workspaceRoot, config }) =>
       playwrightScript({ command: 'trace', workspaceRoot, outputDir: playwrightOutputDir(config) }),
+  },
+  ask: {
+    purpose:
+      'asks the person running you a question and prints the answer; the only way to ask: a question written in your ' +
+      'answer reaches nobody, the run ends with it. Only for a decision you cannot find out yourself, ' +
+      'with the choices in --options when there are some (--multi when more than one may be chosen). The person may ' +
+      'take minutes: run it with the longest timeout your shell allows. Exit 2 means no answer: go on with an ' +
+      'assumption you state',
+    usage: '"<question>" [--options a,b,c] [--multi]',
+    script: ({ runDir }) => askScript(askExchangeDir(runDir)),
   },
 };
 
@@ -129,11 +143,24 @@ export interface RunToolCommands {
   readonly scripts: readonly string[];
 }
 
+/** The shortcut of `tool`: the file named after it in the shortcuts folder of its run (`<run>.bin/ask`). */
+function shortcutPath(tool: ActiveRunTool): string {
+  const runDir = tool.path.slice(0, -(tool.name.length + 1));
+  return join(runToolShortcuts(runDir), tool.name);
+}
+
+/** The commands `tool` is run with: its full path and, through its shortcut, its name alone. */
+function commandsOf(tool: ActiveRunTool): readonly string[] {
+  return [tool.path, tool.name];
+}
+
 export function runToolCommands(tools: readonly ActiveRunTool[]): RunToolCommands {
   return {
-    allow: tools.flatMap((tool) => tool.allowed?.map((sub) => `${tool.path} ${sub}`) ?? [tool.path]),
-    deny: tools.flatMap((tool) => tool.denied.map((sub) => `${tool.path} ${sub}`)),
-    scripts: tools.map((tool) => tool.path),
+    allow: tools.flatMap((tool) =>
+      commandsOf(tool).flatMap((command) => tool.allowed?.map((sub) => `${command} ${sub}`) ?? [command]),
+    ),
+    deny: tools.flatMap((tool) => commandsOf(tool).flatMap((command) => tool.denied.map((sub) => `${command} ${sub}`))),
+    scripts: tools.flatMap((tool) => [tool.path, shortcutPath(tool)]),
   };
 }
 
@@ -145,13 +172,25 @@ export function planRunTools(
   const context: ScriptContext = {
     permissions: absolutePermissions(request.agent.permissions, request.workspaceRoot),
     workspaceRoot: request.workspaceRoot,
+    runDir: request.runDir,
     config,
   };
-  return runToolsOf(request).map((tool) => ({ path: tool.path, content: RUN_TOOLS[tool.name].script(context) }));
+  return runToolsOf(request).flatMap((tool) => [
+    { path: tool.path, content: RUN_TOOLS[tool.name].script(context) },
+    { path: shortcutPath(tool), content: shortcutScript(tool.path) },
+  ]);
+}
+
+/** A shortcut's script: it runs the tool's own script, with what it was given. */
+function shortcutScript(script: string): string {
+  return `#!/bin/sh\nexec ${JSON.stringify(script)} "$@"\n`;
 }
 
 /** Writes `files` as executables and returns the restore that removes them, safe to call more than once. */
 export function applyRunTools(files: readonly PlannedFile[]): () => void {
+  // The folders it makes (the shortcuts'), removed with the files.
+  const made = [...new Set(files.map((file) => dirname(file.path)))].filter((folder) => !existsSync(folder));
+  for (const folder of made) mkdirSync(folder, { recursive: true });
   for (const file of files) {
     writeFileSync(file.path, file.content, 'utf8');
     chmodSync(file.path, 0o755);
@@ -165,6 +204,7 @@ export function applyRunTools(files: readonly PlannedFile[]): () => void {
     for (const file of files) {
       rmSync(file.path, { force: true });
     }
+    for (const folder of made) rmSync(folder, { recursive: true, force: true });
   };
 }
 
