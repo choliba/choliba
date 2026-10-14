@@ -10,11 +10,12 @@ function runningScriptDir(argv: readonly string[]): string | undefined {
   return dirname(realpathSync(script));
 }
 
-function findUp(start: string, relative: string): string | undefined {
+/** The first of `names` in `start` or the nearest folder above it that has one, every name tried at each level. */
+function findUp(start: string, names: readonly string[]): string | undefined {
   let dir = resolve(start);
   for (;;) {
-    const candidate = join(dir, relative);
-    if (existsSync(candidate)) {
+    const candidate = names.map((name) => join(dir, name)).find((path) => existsSync(path));
+    if (candidate !== undefined) {
       return candidate;
     }
     const parent = dirname(dir);
@@ -72,12 +73,15 @@ function locateStarts(sourceDir: string, argv: readonly string[]): readonly stri
  * resources. The `bin` finds them from its own script, and from the sources both lead to the same package.
  */
 export function locateResource(
-  relative: string,
+  relative: string | readonly string[],
   sourceDir: string,
   argv: readonly string[] = process.argv,
 ): string | undefined {
+  // Several names (a file built under another extension) are tried together from each start: the first start holds the
+  // package that runs, and a name only another start has (the sources a bundle remembers) must not win over it.
+  const names = typeof relative === 'string' ? [relative] : relative;
   for (const start of locateStarts(sourceDir, argv)) {
-    const found = findUp(start, relative);
+    const found = findUp(start, names);
     if (found !== undefined) {
       return found;
     }
