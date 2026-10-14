@@ -10,9 +10,13 @@ export type {
   PermissionFloor,
   PermissionMode,
   PermissionObject,
+  PermissionPolicy,
   PermissionRequest,
+  PermissionRule,
   PermissionSubject,
   PermissionSubjectKind,
+  ToolEntry,
+  ToolPolicy,
   WriteAction,
 } from './interfaces/permission-decision.interface';
 export { PATH_ACTIONS, PERMISSION_FLOOR, WRITE_ACTIONS } from './interfaces/permission-decision.interface';

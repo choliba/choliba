@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 13/10/2026 20:08:35 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 13/10/2026 21:02:40 — não editar manualmente.
 
 ## Resumo
 
@@ -238,17 +238,20 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/sandbox</b> — 100.00% das linhas, 8 arquivos</summary>
+<summary>🟢 <b>packages/sandbox</b> — 100.00% das linhas, 11 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
 🟢|[src/common/decide.ts](packages/sandbox/src/common/decide.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/paths.ts](packages/sandbox/src/common/paths.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/resolve-denies.ts](packages/sandbox/src/common/resolve-denies.ts)|100.00|100.00|100.00|100.00
-🟢|[src/sandbox/docker/container-mounts.ts](packages/sandbox/src/sandbox/docker/container-mounts.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/rule-effect.ts](packages/sandbox/src/common/rule-effect.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/docker/docker-run.ts](packages/sandbox/src/sandbox/docker/docker-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/docker/docker-sandbox.ts](packages/sandbox/src/sandbox/docker/docker-sandbox.ts)|100.00|100.00|100.00|100.00
+🟢|[src/sandbox/local/bwrap-command.ts](packages/sandbox/src/sandbox/local/bwrap-command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/sandbox/local/bwrap-on-path.ts](packages/sandbox/src/sandbox/local/bwrap-on-path.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/local/local-sandbox.ts](packages/sandbox/src/sandbox/local/local-sandbox.ts)|100.00|100.00|100.00|100.00
+🟢|[src/sandbox/mounts/container-mounts.ts](packages/sandbox/src/sandbox/mounts/container-mounts.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/sandbox.ts](packages/sandbox/src/sandbox/sandbox.ts)|100.00|100.00|100.00|100.00
 
 </details>
