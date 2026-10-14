@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { CONFIG_KEYS } from '@choliba/core';
+
 import {
   containerName,
   dockerRunArgs,
@@ -203,5 +205,16 @@ describe('DockerSandbox', () => {
       PATH: '/usr/bin',
       ANTHROPIC_BASE_URL: 'http://host.docker.internal:11434',
     });
+  });
+});
+
+describe('the configuration registry', () => {
+  it("names the sandbox's own defaults", () => {
+    const fallback = (name: string): string | undefined => CONFIG_KEYS.find((key) => key.name === name)?.fallback;
+    const docker = readSandbox({ CHOL_SANDBOX: 'docker' });
+
+    expect(fallback('CHOL_SANDBOX')).toBe(readSandbox({}).kind);
+    expect(fallback('CHOL_SANDBOX_IMAGE')).toBe(DEFAULT_SANDBOX_IMAGE);
+    expect(docker.kind === 'docker' ? docker.network : undefined).toBe(fallback('CHOL_NETWORK'));
   });
 });
