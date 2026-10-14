@@ -65,6 +65,23 @@ describe('locateResource / findResource', () => {
     });
   });
 
+  it('tries every name in each start before the next: the running package wins over sources with another name', () => {
+    withTree((root) => {
+      const installed = join(root, 'node_modules', 'choliba');
+      mkdirSync(join(installed, 'bin'), { recursive: true });
+      writeFileSync(join(installed, 'bin', 'choliba.js'), '');
+      writeFileSync(join(installed, 'playwright.config.js'), '');
+      const sources = join(root, 'repo', 'packages', 'runner');
+      mkdirSync(join(sources, 'src'), { recursive: true });
+      writeFileSync(join(sources, 'playwright.config.ts'), '');
+
+      const argv = ['bun', join(installed, 'bin', 'choliba.js')];
+      const names = ['playwright.config.ts', 'playwright.config.js'];
+      expect(locateResource(names, join(sources, 'src'), argv)).toBe(join(installed, 'playwright.config.js'));
+      expect(locateResource(names, join(sources, 'src'), ['bun'])).toBe(join(sources, 'playwright.config.ts'));
+    });
+  });
+
   it('looks in the directory the bundle loaded when the script and the source do not have it', () => {
     withTree((root) => {
       const shipped = join(root, 'dist');
