@@ -225,7 +225,7 @@ describe('the shell root', () => {
 
   it('gives specs a root with the verbs of the app', async () => {
     expect(await demo(['version'], [VERBS_ROOT])).toEqual({ code: 0, out: 'choliba 0.0.0\n', err: '' });
-    expect((await demo(['__complete', ''], [VERBS_ROOT])).out).toBe('run\nnew\nlist\nhelp\nversion\n');
+    expect((await demo(['__complete', ''], [VERBS_ROOT])).out).toBe('run\nnew\nlist\nset\nhelp\nversion\n');
   });
 
   it('refuses two modules defining the root', () => {

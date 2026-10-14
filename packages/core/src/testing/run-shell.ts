@@ -40,6 +40,7 @@ export const VERBS_ROOT: ShellModule = {
       { name: 'run', description: 'Roda' },
       { name: 'new', description: 'Cria' },
       { name: 'list', description: 'Lista' },
+      { name: 'set', description: 'Define' },
     ],
   },
   commands: [],

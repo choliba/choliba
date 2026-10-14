@@ -73,6 +73,10 @@ export interface Platform {
   readonly git: GitRunner;
   /** Asks at the terminal; absent when stdin is no terminal, so a command takes its defaults or names the flag. */
   readonly ask?: Ask;
+  /** Asks at the terminal without showing what is typed, for a credential; absent when stdin is no terminal. */
+  readonly askSecret?: Ask;
+  /** What was piped into stdin, whole; absent when stdin is a terminal, where `ask` and `askSecret` are. */
+  readonly readStdin?: () => Promise<string>;
   /** `--no-color` was passed: a global flag, removed from the arguments before any command parses them. */
   readonly noColorFlag: boolean;
 }

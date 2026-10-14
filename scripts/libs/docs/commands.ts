@@ -21,7 +21,7 @@ export const COMMAND_GROUPS: readonly CommandGroup[] = [
   { title: 'Ticket e testes', commands: ['run'] },
   { title: 'Projetos', commands: ['new', 'list', 'check'] },
   { title: 'Agentes, skills e MCPs', commands: ['add'] },
-  { title: 'Pasta de trabalho', commands: ['setup', 'lint', 'format'] },
+  { title: 'Pasta de trabalho', commands: ['setup', 'set', 'lint', 'format'] },
   { title: 'Gerais', commands: ['help', 'version', 'terminal run'] },
 ];
 
@@ -32,7 +32,8 @@ export const COMMAND_GROUPS: readonly CommandGroup[] = [
 const VERB_LEAD: Readonly<Record<string, string>> = {
   run: 'Roda um agente da pasta de trabalho ou os testes E2E de um projeto. O tipo vem depois do verbo: agent ou tests.',
   new: 'Cria um projeto de teste a partir do modelo. O tipo é project; o que faltar, como a pasta e a URL, é perguntado no terminal.',
-  list: 'Lista os agentes instalados na pasta de trabalho ou os projetos da pasta configurada, com os tickets quando se pede.',
+  list: 'Lista os agentes da pasta de trabalho, os projetos com os tickets quando se pede, ou a configuração em vigor e de onde vem cada valor.',
+  set: 'Grava uma chave da configuração no .env da pasta de trabalho, uma por vez. Uma credencial é pedida sem aparecer na tela, ou lida do stdin.',
 };
 
 /** `help` and `version` are words of the root, not commands with a spec: their pages are described here. */
