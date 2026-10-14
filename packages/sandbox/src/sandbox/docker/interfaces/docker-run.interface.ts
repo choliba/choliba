@@ -1,5 +1,5 @@
 import type { SandboxNetwork } from '../../interfaces/sandbox.interface';
-import type { ContainerMount } from './container-mounts.interface';
+import type { ContainerMount } from '../../mounts/interfaces/container-mounts.interface';
 
 /** The user the container runs as, so what it writes in a mounted folder belongs to whoever owns the workspace. */
 export interface ContainerUser {

@@ -1,5 +1,5 @@
 import type { SandboxNetwork } from '../../interfaces/sandbox.interface';
-import type { DiskFacts } from './container-mounts.interface';
+import type { DiskFacts } from '../../mounts/interfaces/container-mounts.interface';
 import type { ContainerUser } from './docker-run.interface';
 
 export interface DockerSandboxOptions {

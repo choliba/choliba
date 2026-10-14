@@ -3,7 +3,9 @@ import { dirname } from 'node:path';
 import { complementOf, hasGlob, isWithin, pathBase, resolveDenies, withoutTrailingSlash } from '../../common';
 import type { SandboxReach } from '../interfaces/sandbox-backend.interface';
 import type { ContainerMount, ContainerPlan, DiskFacts } from './interfaces/container-mounts.interface';
-import { CONTAINER_HOME } from './docker-run';
+
+/** Where a container's home is: an empty folder, nothing of this machine's. The image keeps it; it is never mounted. */
+export const CONTAINER_HOME = '/home/choliba';
 
 /**
  * The folders of the image's own system: programs, libraries, configuration, the browsers and the session's home.

@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 12/10/2026 10:24:50 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 13/10/2026 21:08:49 — não editar manualmente.
 
 ## Resumo
 
@@ -17,7 +17,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 65 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 69 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -54,6 +54,9 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/runs/spec-context.ts](packages/agents/src/agents/runs/spec-context.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/ticket-run.ts](packages/agents/src/agents/runs/ticket-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/tool-failure.ts](packages/agents/src/agents/runs/tool-failure.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/tool-guard.ts](packages/agents/src/agents/runs/tool-guard.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/tool-policy.ts](packages/agents/src/agents/runs/tool-policy.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/tool-request.ts](packages/agents/src/agents/runs/tool-request.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/unenforced-tool-guard.ts](packages/agents/src/agents/runs/unenforced-tool-guard.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/git-state.ts](packages/agents/src/agents/steps/git-state.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/git-working-tree-diff.ts](packages/agents/src/agents/steps/git-working-tree-diff.ts)|100.00|100.00|100.00|100.00
@@ -72,6 +75,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/common/json.ts](packages/agents/src/common/json.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/mcp-use.ts](packages/agents/src/common/mcp-use.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/message-blocks.ts](packages/agents/src/common/message-blocks.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/path-policy.ts](packages/agents/src/common/path-policy.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/prompt.ts](packages/agents/src/common/prompt.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/provider-registry.ts](packages/agents/src/common/provider-registry.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-project.ts](packages/agents/src/common/run-project.ts)|100.00|100.00|100.00|100.00
@@ -237,16 +241,20 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/sandbox</b> — 100.00% das linhas, 7 arquivos</summary>
+<summary>🟢 <b>packages/sandbox</b> — 100.00% das linhas, 11 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
+🟢|[src/common/decide.ts](packages/sandbox/src/common/decide.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/paths.ts](packages/sandbox/src/common/paths.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/resolve-denies.ts](packages/sandbox/src/common/resolve-denies.ts)|100.00|100.00|100.00|100.00
-🟢|[src/sandbox/docker/container-mounts.ts](packages/sandbox/src/sandbox/docker/container-mounts.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/rule-effect.ts](packages/sandbox/src/common/rule-effect.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/docker/docker-run.ts](packages/sandbox/src/sandbox/docker/docker-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/docker/docker-sandbox.ts](packages/sandbox/src/sandbox/docker/docker-sandbox.ts)|100.00|100.00|100.00|100.00
+🟢|[src/sandbox/local/bwrap-command.ts](packages/sandbox/src/sandbox/local/bwrap-command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/sandbox/local/bwrap-on-path.ts](packages/sandbox/src/sandbox/local/bwrap-on-path.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/local/local-sandbox.ts](packages/sandbox/src/sandbox/local/local-sandbox.ts)|100.00|100.00|100.00|100.00
+🟢|[src/sandbox/mounts/container-mounts.ts](packages/sandbox/src/sandbox/mounts/container-mounts.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/sandbox.ts](packages/sandbox/src/sandbox/sandbox.ts)|100.00|100.00|100.00|100.00
 
 </details>

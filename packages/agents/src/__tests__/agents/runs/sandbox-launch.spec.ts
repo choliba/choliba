@@ -59,10 +59,17 @@ function disk(): LaunchDisk & { readonly made: string[] } {
 const CONFIG = { CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: '/g/projects', CLAUDE_CODE_OAUTH_TOKEN: 'segredo' };
 
 describe('launchFor', () => {
-  it('starts the command as it is on this machine', () => {
-    expect(
-      launchFor({ sandbox: { kind: 'local' }, command: ['claude', '-p'], request: request(), files: [], config: {} }),
-    ).toEqual({ command: ['claude', '-p'], place: { kind: 'local' }, paths: [], skipped: [] });
+  it('wraps the command in bwrap, with the run folder writable and as its working directory', () => {
+    const launch = launchFor(
+      { sandbox: { kind: 'local' }, command: ['claude', '-p'], request: request(), files: [], config: {} },
+      disk(),
+    );
+    expect(launch.place).toEqual({ kind: 'local' });
+    expect(launch.command[0]).toMatch(/bwrap$/);
+    expect(launch.command.slice(-5)).toEqual(['--chdir', '/w/.cache/runs/1', '--', 'claude', '-p']);
+    expect(launch.paths).toEqual(
+      expect.arrayContaining([{ path: '/w/.cache/runs/1', access: 'write', directory: true }]),
+    );
   });
 
   it('in a container, mounts the run, the packages and the run files, and passes the credentials by name', () => {

@@ -32,9 +32,7 @@ import type { RunFooterInfo, RunScreen } from '../interfaces/run-footer.interfac
 import { footerLines, providerContext, summaryLine } from './run-footer';
 import type { Launch } from './sandbox-launch';
 import { applyRunTools } from '../../common';
-import { delegationMessage, delegationOf } from './delegation-guard';
-import { mcpViolation } from './mcp-guard';
-import { unenforcedToolMessage, unenforcedToolOf } from './unenforced-tool-guard';
+import { toolGuard, toolViolation } from './tool-guard';
 
 export interface RunAgentDeps {
   /**
@@ -130,8 +128,12 @@ export interface RunAgentRequest {
 }
 
 /** The paths the agent may reach that the container leaves to the image, said before the session starts. */
-export function imageFoldersNotice(skipped: readonly string[]): string {
-  return `No container, estes caminhos são da imagem e não vêm desta máquina: ${skipped.join(', ')}.`;
+export function imageFoldersNotice(skipped: readonly string[], kind: 'local' | 'docker'): string {
+  const where =
+    kind === 'local'
+      ? 'No sandbox local, estes caminhos são do sistema e não são montados à parte'
+      : 'No container, estes caminhos são da imagem e não vêm desta máquina';
+  return `${where}: ${skipped.join(', ')}.`;
 }
 
 function errorMessage(error: unknown): string {
@@ -199,7 +201,7 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
     const command = [...request.provider.command, ...args];
     launch = request.launch?.(command) ?? { command, place: { kind: 'local' }, paths: [], skipped: [] };
     if (launch.skipped.length > 0) {
-      deps.stderr.write(`${imageFoldersNotice(launch.skipped)}\n`);
+      deps.stderr.write(`${imageFoldersNotice(launch.skipped, launch.place.kind)}\n`);
     }
     session = deps.runner.start({
       label,
@@ -250,6 +252,8 @@ async function followSession(
   // Set once a guard stopped the session (a model outside agent.yaml, a call to a subagent): what comes after
   // is not shown, and the run fails.
   const stopGuard = { triggered: false };
+  // The sandbox decides each tool call on the policy written from the agent (its MCPs) and the provider's limits.
+  const guard = toolGuard(request.providerRequest, adapter.unenforcedTools);
 
   const stop = (message: string): void => {
     stopGuard.triggered = true;
@@ -268,21 +272,9 @@ async function followSession(
         return;
       }
 
-      const subagent = delegationOf(agentEvent);
-      if (subagent !== undefined) {
-        stop(delegationMessage(subagent));
-        continue;
-      }
-
-      const unenforced = unenforcedToolOf(agentEvent, request.provider.adapter.unenforcedTools);
-      if (unenforced !== undefined) {
-        stop(unenforcedToolMessage(unenforced));
-        continue;
-      }
-
-      const undeclaredMcp = mcpViolation(agentEvent, label, request.providerRequest.agent.mcps);
-      if (undeclaredMcp !== undefined) {
-        stop(undeclaredMcp);
+      const violation = toolViolation(agentEvent, guard);
+      if (violation !== undefined) {
+        stop(violation);
         continue;
       }
 

@@ -84,6 +84,16 @@ describe('parseAgentYaml', () => {
     });
   });
 
+  it('reads permissions.exception, and refuses a ! inside it or a key it does not know', () => {
+    const fields = parse({
+      permissions: { allow: { read: ['r/'] }, deny: { read: ['r/'] }, exception: { read: ['r/pub/'] } },
+    });
+
+    expect(fields.permissions.denyRead).toEqual(['r/', '!r/pub/']);
+    expect(() => parse({ permissions: { exception: { read: ['!r/pub/'] } } })).toThrow(AgentConfigError);
+    expect(() => parse({ permissions: { exception: { execute: { './': ['x'] } } } })).toThrow(AgentConfigError);
+  });
+
   it('reads every key of the standard', () => {
     const fields = parse({
       context: ['Contexto.'],

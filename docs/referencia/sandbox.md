@@ -5,19 +5,23 @@
 
 `CHOL_SANDBOX`, no `.env` da pasta de trabalho, escolhe onde o provider roda:
 
-| Valor            | Onde roda      | Quem limita o agente                                                      |
-| ---------------- | -------------- | ------------------------------------------------------------------------- |
-| `local` (padrão) | na sua máquina | as regras que o choliba aplica no provider, com os limites de cada um     |
-| `docker`         | num container  | o container, que só monta o que o `agent.yaml` libera, e as mesmas regras |
+| Valor            | Onde roda                         | Quem limita o agente                                                      |
+| ---------------- | --------------------------------- | ------------------------------------------------------------------------- |
+| `local` (padrão) | na sua máquina, dentro do `bwrap` | o `bwrap`, com o mesmo recorte do container, e as regras do provider      |
+| `docker`         | num container                     | o container, que só monta o que o `agent.yaml` libera, e as mesmas regras |
 
-As permissões são as mesmas nos dois: as do [`agent.yaml`](agent-yaml.md), descritas em [Segurança](seguranca.md).
+As permissões são as mesmas nos dois: as do [`agent.yaml`](agent-yaml.md), descritas em [Segurança](seguranca.md). O modelo, com o nível em que cada sandbox impõe cada regra, está em [Modelo de permissões](permissoes.md).
 
 ## Local
 
-O provider roda na sua máquina, com o seu usuário, numa pasta vazia (`.cache/runs/<id>/`) criada antes da execução
-e apagada depois. O que o agente alcança é o que as regras do provider deixam, e cada provider tem seus limites: no
-Cursor, por exemplo, um arquivo novo criado direto numa pasta do caminho até um item liberado não é bloqueado. Os
-limites de cada um estão em [Segurança](seguranca.md).
+O provider roda na sua máquina, com o seu usuário, dentro do `bwrap`. O recorte é o mesmo do container: o que não
+está montado não existe, com leitura, escrita ou oculto. A pasta da execução (`.cache/runs/<id>/`) é a pasta de
+trabalho. Sem o `bwrap` no `PATH`, o comando é recusado e a mensagem diz como instalá-lo (no Debian e no Ubuntu:
+`sudo apt install bubblewrap`).
+
+`list`, `create`, `edit` e `delete` dentro de um caminho já montado continuam nas regras do provider. O que cada
+mount mostra — inclusive o arquivo com escrita que abre a pasta — está em [Docker](#docker): os dois usam a mesma
+função.
 
 ## Docker
 

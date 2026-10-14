@@ -34,6 +34,18 @@ const TITLE = 'choliba';
 /** When this build publishes the site: each release builds it again, so every publication has its own date. */
 const PUBLISHED = publishedTime(new Date());
 
+/**
+ * A page's description: the site's for the home, the frontmatter's when it has one, otherwise the quote under its
+ * title (scripts/libs/docs/share.ts). One too short or too long stops the build.
+ */
+function descriptionOf(relativePath: string, filePath: string, frontmatter: Record<string, unknown>): string {
+  if (relativePath === 'index.md') return DESCRIPTION;
+  const { description } = frontmatter;
+  const source = readFileSync(path.join(DOCS, filePath), 'utf8');
+  const own = typeof description === 'string' ? description : pageDescription(source);
+  return checkDescription(filePath, own);
+}
+
 export default defineConfig({
   base: '/',
   lang: 'pt-BR',
@@ -50,29 +62,25 @@ export default defineConfig({
   // `<meta name="description">`; a page without one, or with one too short or too long, stops the build. The home,
   // generated from home.ts, has the site's; a page generated from a file of the root (/filosofia) has the one in its
   // frontmatter.
+  //
+  // Each page's share card (Open Graph, the article's author and date, X's card and the canonical URL) goes in its
+  // frontmatter's `head`: the built page has it, and VitePress swaps it when a link opens another page, which it does
+  // not do for what transformHead adds. No page has a `head` of its own; one would be replaced.
   transformPageData(pageData) {
-    if (pageData.relativePath === 'index.md') return { description: DESCRIPTION };
-    const { description } = pageData.frontmatter;
-    const source = readFileSync(path.join(DOCS, pageData.filePath), 'utf8');
-    const own = typeof description === 'string' ? description : pageDescription(source);
-    return { description: checkDescription(pageData.filePath, own) };
+    const description = descriptionOf(pageData.relativePath, pageData.filePath, pageData.frontmatter);
+    const card = shareTags({
+      siteName: TITLE,
+      title: pageData.title === '' ? TITLE : pageData.title,
+      description,
+      url: pageUrl(pageData.relativePath),
+      published: PUBLISHED,
+    });
+    const site = pageData.relativePath === 'index.md' ? [websiteJsonLd(TITLE, pageUrl('index.md'))] : [];
+    return { description, frontmatter: { ...pageData.frontmatter, head: [...card, ...site] } };
   },
-  // Built pages only, so serving the site locally sends no visits: Google Analytics on every page, the 404 too, and
-  // each page's share card (Open Graph, the article's author and date, X's card and the canonical URL).
-  transformHead({ page, pageData, description }) {
-    const analytics = googleAnalyticsTags(GOOGLE_ANALYTICS);
-    if (page === '404.md') return analytics;
-    return [
-      ...analytics,
-      ...shareTags({
-        siteName: TITLE,
-        title: pageData.title === '' ? TITLE : pageData.title,
-        description,
-        url: pageUrl(pageData.relativePath),
-        published: PUBLISHED,
-      }),
-      ...(page === 'index.md' ? [websiteJsonLd(TITLE, pageUrl('index.md'))] : []),
-    ];
+  // Built pages only, so serving the site locally sends no visits: Google Analytics on every page, the 404 too.
+  transformHead() {
+    return googleAnalyticsTags(GOOGLE_ANALYTICS);
   },
   buildEnd(siteConfig) {
     writeFileSync(path.join(siteConfig.outDir, 'robots.txt'), robotsTxt(SITE_URL));

@@ -11,6 +11,7 @@ export * from './interfaces/provider.interface';
 export * from './json';
 export * from './mcp-use';
 export * from './message-blocks';
+export * from './path-policy';
 export * from './prompt';
 export * from './provider-registry';
 export * from './run-project';

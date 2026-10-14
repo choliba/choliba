@@ -3,11 +3,14 @@
 > Como o choliba restringe o que cada agente alcança: as permissões do `agent.yaml`, os MCPs declarados e as regras
 > que valem em qualquer provider.
 
+O modelo por trás dessas regras (sujeito, ação, objeto e contexto, e onde cada regra é imposta) está em
+[Modelo de permissões](permissoes.md).
+
 Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que cada um alcança, a partir do
 `permissions` do [`agent.yaml`](../guias/escrever-um-agente.md):
 
 - **Negado por padrão, em qualquer lugar.** O agente só lê, escreve e roda o que está em `permissions.allow`, no
-  workspace ou fora dele; `deny` prevalece sobre `allow`, menos no que uma exceção `!` do deny tira dele. O choliba escreve as permissões no prompt e as aplica no
+  workspace ou fora dele; `deny` prevalece sobre `allow`, menos no que uma exceção (`permissions.exception`) tira dele. O choliba escreve as permissões no prompt e as aplica no
   provider. Cada execução roda numa pasta vazia, `.cache/runs/<id>/`, criada antes e apagada depois, porque os dois
   providers liberam tudo na pasta em que rodam. No Claude, as regras dizem exatamente onde ele lê e escreve, e ele
   só tem as ferramentas que as permissões pedem. No Cursor, que não trata `allow` como limite, o choliba gera um
@@ -21,10 +24,9 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
 - **Caminhos.** Caminho relativo é relativo à raiz do workspace. Um caminho sem glob é o item e tudo abaixo dele,
   com ou sem `/` no fim, em qualquer provider: o choliba entrega a cada um o glob explícito. Num glob, o Cursor libera
   a pasta antes dele inteira.
-- **Exceções no deny.** Em `deny.read`, `deny.write` e `deny.delete`, `!caminho` tira esse caminho de um deny da
-  mesma lista, como no `.gitignore` (veja
-  [Exceções no deny](agent-yaml.md#exceções-no-deny)). Nenhum provider entende `!`, então o choliba
-  resolve antes: o deny que contém a exceção vira tudo o que há dentro dele, menos o caminho até ela, lido do disco
+- **Exceções no deny.** `permissions.exception` (ou, na forma antiga, `!caminho` dentro do deny) tira um caminho de
+  um deny da mesma ação, como no `.gitignore` (veja [Exceções no deny](agent-yaml.md#exceções-no-deny)). Nenhum
+  provider entende exceções, então o choliba resolve antes: o deny que contém a exceção vira tudo o que há dentro dele, menos o caminho até ela, lido do disco
   no começo da execução. Assim Claude e Cursor recebem regras que não se contradizem e chegam ao mesmo resultado.
   Limite: o que for criado depois, numa dessas pastas, fica fora do deny (no Claude continua bloqueado, porque nada
   o libera).
@@ -32,7 +34,7 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
   declarar a skill é pedir para lê-la. Vale só para essa pasta, não para `.choliba/skills/` inteira.
 - **As definições não mudam numa run.** Toda execução ganha `deny.write` e `deny.delete` das pastas de agentes,
   skills e MCPs (`--agents-dir` ou `CHOL_AGENTS_DIR`, `CHOL_SKILLS_DIR`, `CHOL_MCPS_DIR`), além do que o agente
-  declara. O prompt, as regras do provider e o container herdam essa negação. Uma exceção `!` de escrita ou
+  declara. O prompt, as regras do provider e o container herdam essa negação. Uma exceção de escrita ou
   exclusão dentro delas para a execução: nenhuma run reabre essas pastas. A leitura de cada skill declarada
   continua liberada. Depois do provider, o choliba compara o sha256 de cada arquivo dessas pastas com o de
   antes: arquivo criado, alterado ou apagado encerra a execução com código 1 e a lista dos caminhos, e nada

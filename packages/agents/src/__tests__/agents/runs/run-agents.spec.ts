@@ -752,7 +752,9 @@ describe('runAgentsCli — skills', () => {
       const { deps, stdout, stderr } = harness([]);
 
       expect(await runAgentsCli(['echo', '--agents-dir', agents.agentsDir, '--dry-run', 'x'], deps)).toBe(1);
-      expect(stderr.chunks.join('')).toContain('deny.read: !/repo/docs não está dentro de nenhum caminho de deny.read');
+      expect(stderr.chunks.join('')).toContain(
+        'exception.read: /repo/docs não está dentro de nenhum caminho de deny.read',
+      );
       expect(stdout.chunks).toEqual([]);
     } finally {
       agents.cleanup();
@@ -1592,7 +1594,7 @@ describe('runAgentsCli — definition folders', () => {
       const text = stderr.chunks.join('');
       expect(text).toContain('reabre pastas de definição que o choliba protege');
       expect(text).toContain(`${agentsDir}/x`);
-      expect(text).toContain('Uma exceção ! não pode ficar dentro das pastas de agentes, skills ou MCPs.');
+      expect(text).toContain('Uma exception não pode ficar dentro das pastas de agentes, skills ou MCPs.');
     });
   });
 
@@ -1665,6 +1667,22 @@ describe('runAgentsCli — CHOL_SANDBOX', () => {
     const text = stdout.chunks.join('');
     expect(text).toContain('num container (docker, imagem choliba-agent), que só vê:');
     expect(text).toMatch(/escrita .*cli-run-spec-\d+\//);
+  });
+
+  it('says in --dry-run what bwrap would mount, and refuses the command when bwrap is missing', async () => {
+    const present = harness([], { which: whichOf(['claude']) });
+    expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'x'], present.deps)).toBe(0);
+    expect(present.stdout.chunks.join('')).toContain('no bwrap, que só vê:');
+
+    const saved = process.env['PATH'];
+    process.env['PATH'] = '';
+    try {
+      const missing = harness([], { which: whichOf(['claude']) });
+      expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'x'], missing.deps)).toBe(1);
+      expect(missing.stderr.chunks.join('')).toContain('sudo apt install bubblewrap');
+    } finally {
+      process.env['PATH'] = saved;
+    }
   });
 
   it("opens the project's ticket-runs in --dry-run without creating it", async () => {

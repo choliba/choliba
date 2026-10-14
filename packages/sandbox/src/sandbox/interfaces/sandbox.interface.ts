@@ -1,4 +1,4 @@
-import type { DiskFacts } from '../docker/interfaces/container-mounts.interface';
+import type { DiskFacts } from '../mounts/interfaces/container-mounts.interface';
 import type { ContainerUser } from '../docker/interfaces/docker-run.interface';
 
 export type SandboxNetwork = 'isolated' | 'host';
