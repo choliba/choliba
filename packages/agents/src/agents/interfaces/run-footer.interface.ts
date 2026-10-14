@@ -28,6 +28,8 @@ export interface RunScreen {
   readonly err: Writable;
   /** The model the provider reported, for the footer. */
   model(name: string): void;
+  /** Called when the person interrupts the run from the screen itself (Ctrl+C in the panel, which takes the keyboard). */
+  onInterrupt(listener: () => void): void;
   /** Ends the screen: erases the footer and leaves the summary line in its place. */
   close(exitCode: number): void;
 }

@@ -2,7 +2,15 @@ import { existsSync } from 'node:fs';
 import { constants, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { buildTheme, ProcessRunnerService, type ProcessSpawner, type SignalSource, type Writable } from '@choliba/core';
+import {
+  buildTheme,
+  ProcessRunnerService,
+  type Panel,
+  type PanelOptions,
+  type ProcessSpawner,
+  type SignalSource,
+  type Writable,
+} from '@choliba/core';
 
 import type { AgentDefinition } from '../../../common/interfaces/agent.interface';
 import type { AgentEvent } from '../../../common/interfaces/event.interface';
@@ -10,8 +18,8 @@ import { readPlan } from '../../../agents/runs/plan-store';
 import type { AgentProvider } from '../../../common/agent-provider';
 import type { PlanContentContext, ProviderRequest } from '../../../common/interfaces/provider.interface';
 import type { ResolvedProvider } from '../../../common/provider-registry';
-import type { RunAgentRequest } from '../../../agents/runs/run-agent';
-import { everySecond, FOOTER_REFRESH_MS, runAgent } from '../../../agents/runs/run-agent';
+import type { RunAgentDeps, RunAgentRequest } from '../../../agents/runs/run-agent';
+import { everySecond, FOOTER_REFRESH_MS, runAgent, screenWidth } from '../../../agents/runs/run-agent';
 import { erroringStream, fakeSpawner, streamFromChunks, throwingSpawner } from '../../helpers/fake-spawner';
 import { makeTmpDir } from '../../helpers/tmp';
 import { NO_PERMISSIONS } from '../../../common/agent-permissions';
@@ -799,6 +807,119 @@ describe('runAgent — footer', () => {
     expect(run.code).toBe(1);
     expect(run.err).toMatch(/^│ aviso do provider +│\n$/);
     expect(run.out).toMatch(/claude · — · local · decorrido 00:00:0\d\.000 · código 1\n$/);
+  });
+});
+
+describe('runAgent — panel', () => {
+  /** A panel that records what the run did with it, and calls the interrupt listener as soon as it is set when asked. */
+  function fakePanel(interruptAtOnce = false) {
+    const written: string[] = [];
+    const record = { written, refreshes: 0, closed: 0, options: [] as PanelOptions[] };
+    const open = (options: PanelOptions): Promise<Panel> => {
+      record.options.push(options);
+      return Promise.resolve({
+        write: (text) => {
+          written.push(text);
+        },
+        refresh: () => {
+          record.refreshes += 1;
+        },
+        onInterrupt: (listener) => {
+          if (interruptAtOnce) listener();
+        },
+        close: () => {
+          record.closed += 1;
+        },
+      });
+    };
+    return { open, record };
+  }
+
+  /** The run's dependencies with `panel`; the spec's own timer, unless `realTimer` keeps `everySecond`'s. */
+  function deps(s: Setup, panel: RunAgentDeps['panel'], realTimer = false): RunAgentDeps {
+    const timer = {
+      every: (_ms: number, tick: () => void) => {
+        tick();
+        return () => undefined;
+      },
+    };
+    return {
+      runner: s.runner,
+      stdout: s.stdout,
+      stderr: s.stderr,
+      signals: s.signals,
+      now: () => new Date(Date.UTC(2026, 0, 1)),
+      footer: true,
+      ...(realTimer ? {} : timer),
+      ...(panel === undefined ? {} : { panel }),
+    };
+  }
+
+  it('draws the session in the panel, and prints the whole frame and the summary once it closes', async () => {
+    const s = setup(
+      fakeSpawner({
+        stdout: streamFromChunks([
+          eventLines([
+            { type: 'init', model: 'sonnet-5', sessionId: 's1' },
+            { type: 'text', text: 'olá' },
+            { type: 'done', isError: false, text: 'ok' },
+          ]),
+        ]),
+      }).spawner,
+    );
+    const { open, record } = fakePanel();
+
+    expect(await runAgent(s.request(), deps(s, open))).toBe(0);
+
+    expect(record.written.join('')).toContain('olá');
+    expect(record.refreshes).toBe(1);
+    expect(record.closed).toBe(1);
+    expect(record.options[0]?.title).toBe('echo');
+    expect(record.options[0]?.footer(80).some((line) => line.startsWith('└'))).toBe(false);
+    // The footer shows the model the provider reported, as the frame and footer do.
+    expect(record.options[0]?.footer(80).join('\n')).toContain('sonnet-5');
+    const out = s.stdout.chunks.join('');
+    expect(out).toMatch(
+      /^\n┌─ echo ─+┐\n│ olá +│\n└─+┘\nclaude · sonnet-5 · local · decorrido 00:00:00\.000 · código 0\n$/,
+    );
+  });
+
+  it('keeps the frame and footer when the panel does not open', async () => {
+    const s = setup(
+      fakeSpawner({
+        stdout: streamFromChunks([
+          eventLines([
+            { type: 'text', text: 'olá' },
+            { type: 'done', isError: false, text: 'ok' },
+          ]),
+        ]),
+      }).spawner,
+    );
+
+    expect(
+      await runAgent(
+        s.request(),
+        deps(s, () => Promise.resolve(undefined)),
+      ),
+    ).toBe(0);
+    expect(s.stdout.chunks.join('')).toMatch(/^\n┌─ echo ─/);
+  });
+
+  it('passes Ctrl+C in the panel on to the provider as SIGINT', async () => {
+    const spawnerHandle = fakeSpawner();
+    const s = setup(spawnerHandle.spawner);
+    await runAgent(s.request(), deps(s, fakePanel(true).open, true));
+
+    expect(spawnerHandle.kill).toHaveBeenCalledWith('SIGINT');
+  });
+});
+
+describe('screenWidth', () => {
+  it("takes the terminal's width, and the default one when it says none or 0", () => {
+    const write = (): void => undefined;
+    expect(screenWidth({ write, columns: 120 })).toBe(120);
+    expect(screenWidth({ write, columns: 0 })).toBe(80);
+    expect(screenWidth({ write })).toBe(80);
   });
 });
 
