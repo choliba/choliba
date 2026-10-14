@@ -37,6 +37,7 @@ import { applyRunTools, askExchangeDir, runToolsOf, type AskAnswer } from '../..
 import { watchQuestions } from './ask-watcher';
 import { sessionInput } from './session-input';
 import { toolGuard, toolViolation } from './tool-guard';
+import { writtenToolCall, writtenToolCallMessage } from './written-tool-call';
 
 export interface RunAgentDeps {
   /**
@@ -373,6 +374,7 @@ async function followSession(
   };
   let doneEvent: Extract<AgentEvent, { type: 'done' }> | undefined;
   let planMarkdown: string | undefined;
+  let reportedModel: string | undefined;
   const textParts: string[] = [];
   const supportedModels = request.providerRequest.agent.supportedModels;
   const explicitModel = request.providerRequest.model;
@@ -439,6 +441,7 @@ async function followSession(
       }
 
       if (agentEvent.type === 'init' && agentEvent.model !== undefined) {
+        reportedModel = agentEvent.model;
         screen.model(agentEvent.model);
       }
       // In the frame, the model goes in the footer's table: the `· ready (model)` line would only repeat it.
@@ -498,6 +501,14 @@ async function followSession(
   let exitCode = exitCodeFor(exitEvent);
   if (exitCode === 0 && (doneEvent === undefined || doneEvent.isError)) {
     exitCode = 1;
+  }
+
+  // A weak model may write its tool call as the answer instead of making it: the session ends clean with nothing run.
+  const answer = doneEvent?.text === '' ? textParts.at(-1) : doneEvent?.text;
+  const written = exitCode === 0 ? writtenToolCall(answer ?? '') : undefined;
+  if (written !== undefined) {
+    screen.err.write(`${writtenToolCallMessage(reportedModel, written)}\n`);
+    return 1;
   }
 
   if (exitCode === 0 && request.providerRequest.mode === 'plan') {
