@@ -37,6 +37,10 @@ permissões do `agent.yaml`.
     qualquer provider: `✗ Shell bun install: negado (comando fora de allow.execute)` diz qual chave do
     `agent.yaml` liberaria a chamada; `✗ Read src/x.ts: erro: File not found` é o erro da própria ferramenta.
 
+    Se a última resposta do agente é só uma chamada de ferramenta escrita como texto, o modelo não chamou a
+    ferramenta e nada rodou: o choliba falha a execução e diz qual modelo e qual ferramenta, mesmo com o provider
+    saindo com 0.
+
     Num terminal, o agente roda numa tela própria: o quadro com o nome dele em cima e, embaixo, uma linha entre dois
     traços com um campo à esquerda e o contexto da execução à direita:
 

@@ -232,6 +232,49 @@ describe('runAgent', () => {
     expect(await run(s)).toBe(1);
   });
 
+  it('returns 1 and says why when the model wrote its tool call as the answer instead of making it', async () => {
+    const written = '```json\n{"name": "Read", "arguments": {"file_path": "config.json"}}\n```';
+    const lines = eventLines([
+      { type: 'init', model: 'qwen2.5-coder:7b', sessionId: 's1' },
+      { type: 'text', text: written },
+      { type: 'done', isError: false, text: written },
+    ]);
+    const s = setup(fakeSpawner({ stdout: streamFromChunks([lines]) }).spawner);
+
+    expect(await run(s)).toBe(1);
+    expect(s.stderr.chunks.join('')).toContain(
+      'O modelo qwen2.5-coder:7b escreveu a chamada da ferramenta Read como texto em vez de chamá-la',
+    );
+  });
+
+  it('reads the last text when the done event carries none, and lets a prose answer pass', async () => {
+    const written = '<tool_call>{"name": "Write", "arguments": {}}</tool_call>';
+    const writtenRun = setup(
+      fakeSpawner({
+        stdout: streamFromChunks([
+          eventLines([
+            { type: 'text', text: written },
+            { type: 'done', isError: false, text: '' },
+          ]),
+        ]),
+      }).spawner,
+    );
+    const proseRun = setup(
+      fakeSpawner({
+        stdout: streamFromChunks([
+          eventLines([
+            { type: 'tool-call', id: 't1', name: 'Read', summary: 'config.json' },
+            { type: 'done', isError: false, text: 'Li o config.json e gravei o ticket.' },
+          ]),
+        ]),
+      }).spawner,
+    );
+
+    expect(await run(writtenRun)).toBe(1);
+    expect(writtenRun.stderr.chunks.join('')).toContain('O modelo escreveu a chamada da ferramenta Write');
+    expect(await run(proseRun)).toBe(0);
+  });
+
   it('propagates a non-zero process exit code even when the last done event looked successful', async () => {
     const lines = eventLines([{ type: 'done', isError: false, text: 'ok' }]);
     const s = setup(fakeSpawner({ stdout: streamFromChunks([lines]), exitCode: 3 }).spawner);
@@ -570,6 +613,20 @@ describe('runAgent', () => {
         const path = join(tmp.path, 'echo', '2026-01-01T00-00-00Z-claude.do-it.md');
         expect(printed).toContain(path);
         expect(readPlan(path)).toBe('1. step one\n2. step two');
+      } finally {
+        tmp.cleanup();
+      }
+    });
+
+    it('does not save a tool call the model wrote as the plan', async () => {
+      const tmp = makeTmpDir('run-agent-plan-written-call');
+      try {
+        const written = '{"name": "Read", "arguments": {"file_path": "x"}}';
+        const lines = eventLines([{ type: 'done', isError: false, text: written }]);
+        const s = setup(fakeSpawner({ stdout: streamFromChunks([lines]) }).spawner, {}, tmp.path);
+
+        expect(await run(s, undefined, { mode: 'plan' })).toBe(1);
+        expect(s.stdout.chunks.join('')).not.toContain('Plan saved:');
       } finally {
         tmp.cleanup();
       }

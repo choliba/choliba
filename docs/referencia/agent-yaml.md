@@ -82,6 +82,9 @@ choliba run agent test-writer --claude-ollama --project loja --ticket loja-1
 - O modelo precisa saber chamar ferramentas (no `ollama list`, a capacidade `tools`), e o Ollama precisa de contexto
   para o texto do agente: suba o servidor com `OLLAMA_CONTEXT_LENGTH=65536` ou mais. Um modelo pequeno roda, mas segue
   pior o fluxo e as permissões.
+- Um modelo que não chama a ferramenta e escreve a chamada como resposta (um JSON com `name` e `arguments`, ou
+  `<tool_call>…</tool_call>`) termina a sessão sem rodar nada. O choliba falha a execução e diz qual modelo e qual
+  ferramenta: troque por um modelo que faça tool calling.
 
 ## Ferramentas da run
 
