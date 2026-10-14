@@ -319,7 +319,9 @@ Quando uma ação falha:
 - **no `after`**, as ações seguintes rodam do mesmo jeito. O choliba termina com o código do agente, se ele falhou;
   senão, com o da primeira ação que falhou.
 
-Nos dois casos a falha sai tratada no terminal: qual ação, o que ela rodou, o código e o fim da saída do comando.
+Nos dois casos a falha sai tratada no terminal: qual ação, o que ela rodou, o código e as últimas linhas da saída do
+comando. A saída inteira, stdout e stderr na ordem em que o comando escreveu, fica num log em `.cache/steps/`, e a
+falha diz qual (`saída completa: .cache/steps/….log`); um step que dá certo não deixa log.
 
 ```
 ✗ execute.before 1/2 falhou — run: bunx choliba run tests tt:TT-1 --expect red (código 2)

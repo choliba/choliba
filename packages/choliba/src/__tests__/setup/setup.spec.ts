@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { CONFIG_KEYS } from '@choliba/core';
+
 import { loadProjectSettings } from '@choliba/projects';
 
 import {
@@ -148,6 +150,16 @@ describe('the workspace templates', () => {
     const variables = templateVariables(env);
 
     expect(variables.filter((name, index) => variables.indexOf(name) !== index)).toEqual([]);
+  });
+
+  it('keeps the configuration registry in step with the .env reference', () => {
+    const reference = fs.readFileSync(ENV_REFERENCE, 'utf8');
+    const registered = CONFIG_KEYS.map((key) => key.name);
+
+    expect(registered.filter((name) => name.startsWith('CHOL_')).sort()).toEqual(
+      [...documentedVariables(reference)].sort(),
+    );
+    for (const name of registered) expect(reference).toContain(`| \`${name}\``);
   });
 
   it('names exactly the variables the .env reference documents', () => {

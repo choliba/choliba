@@ -1,4 +1,8 @@
 import { spawnSync } from 'node:child_process';
+import { closeSync, mkdirSync, openSync, readFileSync, rmSync } from 'node:fs';
+import { join, relative } from 'node:path';
+
+import { CACHE_DIR } from '@choliba/core';
 
 import type { AgentStep } from '../../common';
 import { ADD_FILES_USAGE, addFiles } from './step-add-files';
@@ -9,14 +13,13 @@ export type StepPhase = 'before_execute' | 'after_execute';
 
 export interface StepSpawnResult {
   readonly status: number | null;
-  readonly stdout: string;
-  readonly stderr: string;
 }
 
+/** `spawnSync` with the command's stdout and stderr both written to one open file (`fd`), in the order it wrote them. */
 export type StepSpawn = (
   command: string,
   args: readonly string[],
-  options: { cwd: string; encoding: 'utf8'; shell: false },
+  options: { cwd: string; stdio: ['ignore', number, number]; shell: false },
 ) => StepSpawnResult;
 
 export interface StepContext {
@@ -24,6 +27,8 @@ export interface StepContext {
   /** `--since` from the command line, for `git_diff`. */
   readonly since: string | undefined;
   readonly spawn?: StepSpawn;
+  /** Where a `run` keeps what its command printed; `.cache/steps/` of the workspace when absent. */
+  readonly logDir?: string;
 }
 
 export interface AgentAction {
@@ -46,19 +51,25 @@ function argAt(args: readonly string[], index: number, usage: string): string {
   return value;
 }
 
-/** The lines of a failed step's output worth showing: the last ones, where the reason usually is. */
-const OUTPUT_TAIL_LINES = 20;
+/** The lines of a failed step's output worth showing: the last ones, where the verdict usually is. */
+const OUTPUT_TAIL_LINES = 12;
 
-/** The end of what a command printed, its stdout then its stderr, without blank ends; says how much it left out. */
-function outputTail(...outputs: readonly string[]): string {
-  const lines = outputs
-    .map((output) => output.trim())
-    .filter((output) => output !== '')
-    .join('\n')
-    .split('\n');
-  const omitted = lines.length - OUTPUT_TAIL_LINES;
-  const tail = lines.slice(-OUTPUT_TAIL_LINES);
-  return (omitted > 0 ? [`… (${String(omitted)} linhas antes)`, ...tail] : tail).join('\n');
+/** The end of what a command printed, without blank ends; the whole of it is in its log. */
+function outputTail(output: string): string {
+  const trimmed = output.trim();
+  return trimmed === '' ? '' : trimmed.split('\n').slice(-OUTPUT_TAIL_LINES).join('\n');
+}
+
+/** How many logs this process has written, so two steps of one second never share a file. */
+let logCount = 0;
+
+/** The file a `run` keeps its command's output in: one per step, under `logDir`. */
+function stepLog(context: StepContext): string {
+  const dir = context.logDir ?? join(context.repoRoot, CACHE_DIR, 'steps');
+  mkdirSync(dir, { recursive: true });
+  logCount += 1;
+  const stamp = new Date().toISOString().replaceAll(':', '-');
+  return join(dir, `${stamp}-${String(process.pid)}-${String(logCount)}.log`);
 }
 
 /** A `run` whose command exited with a status other than 0 (`undefined` when a signal ended it). */
@@ -71,14 +82,28 @@ class StepCommandError extends Error {
   }
 }
 
+/**
+ * Runs the command with its stdout and stderr in one log, so they keep the order it wrote them in. A failure shows the
+ * last lines and where the log is; a success leaves no log.
+ */
 function runCommand(context: StepContext, args: readonly string[]): undefined {
   const command = argAt(args, 0, 'run <comando> [args...]');
   const spawn: StepSpawn = context.spawn ?? spawnSync;
-  const result = spawn(command, args.slice(1), { cwd: context.repoRoot, encoding: 'utf8', shell: false });
-  if (result.status !== 0) {
-    throw new StepCommandError(outputTail(result.stdout, result.stderr), result.status ?? undefined);
+  const log = stepLog(context);
+  const fd = openSync(log, 'w');
+  let result: StepSpawnResult;
+  try {
+    result = spawn(command, args.slice(1), { cwd: context.repoRoot, stdio: ['ignore', fd, fd], shell: false });
+  } finally {
+    closeSync(fd);
   }
-  return undefined;
+  if (result.status === 0) {
+    rmSync(log, { force: true });
+    return undefined;
+  }
+  const tail = outputTail(readFileSync(log, 'utf8'));
+  const where = `saída completa: ${relative(context.repoRoot, log)}`;
+  throw new StepCommandError(tail === '' ? where : `${tail}\n${where}`, result.status ?? undefined);
 }
 
 /**

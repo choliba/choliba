@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, realpathSync, statSync } from 'node:fs';
-import { delimiter, isAbsolute, join } from 'node:path';
+import { delimiter, dirname, isAbsolute, join } from 'node:path';
 
 import { CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR } from '@choliba/core';
 import { resolveLocations, resolveTicketRunsFolder, resolveTicketRunsRoot } from '@choliba/projects';
@@ -84,6 +84,16 @@ export const realDisk: LaunchDisk = {
   runtime: process.execPath,
 };
 
+/**
+ * The `bun` running choliba and, when it sits beside it, its `bunx`: the run tools start with `env bun`, and an agent's
+ * commands (`bunx choliba run tests`) call `bunx`, both from a home the sandbox empties. `bunx` is `bun` under another
+ * name, so mounting its path gives the sandbox the same binary there.
+ */
+function runtimeFiles(disk: LaunchDisk): readonly string[] {
+  const bunx = join(dirname(disk.runtime), 'bunx');
+  return disk.exists(bunx) ? [disk.runtime, bunx] : [disk.runtime];
+}
+
 function localProgram(provider: ResolvedProvider, disk: LaunchDisk): SandboxProgram {
   let executable: string;
   try {
@@ -95,7 +105,7 @@ function localProgram(provider: ResolvedProvider, disk: LaunchDisk): SandboxProg
   }
   return {
     executable,
-    readOnly: [...provider.adapter.localReadOnly(executable), disk.runtime],
+    readOnly: [...provider.adapter.localReadOnly(executable), ...runtimeFiles(disk)],
     credentials: provider.adapter.credentials,
     credentialHelp: provider.adapter.credentialHelp,
   };

@@ -3,6 +3,9 @@
 > Cada variável do `.env` da pasta de trabalho: onde ficam projetos, agentes, skills e MCPs, qual provider roda os
 > agentes e as cores da saída.
 
+Para ver o valor em vigor de cada uma e de onde ele vem (o ambiente, o `.env` ou o padrão), rode
+`choliba list config`; as credenciais aparecem só como `definida` ou `não definida`.
+
 Quais destes valores o `agent.yaml` pode usar, e como: veja [Variáveis](agent-yaml.md#variáveis). As credenciais de um
 projeto ficam no `.env.json` dele, não aqui: [`.env.json` do projeto](env-json.md).
 

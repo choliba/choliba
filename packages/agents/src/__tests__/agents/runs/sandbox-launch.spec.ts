@@ -127,6 +127,22 @@ describe('launchFor', () => {
     expect(launch.command).toEqual(
       expect.arrayContaining(['--ro-bind', '/home/test/.bun/bin/bun', '/home/test/.bun/bin/bun']),
     );
+    // bunx beside it, which the disk of this spec has (every path exists): an agent's command calls it.
+    expect(launch.command).toEqual(
+      expect.arrayContaining(['--ro-bind', '/home/test/.bun/bin/bunx', '/home/test/.bun/bin/bunx']),
+    );
+    const withoutBunx = launchFor(
+      {
+        sandbox: { kind: 'local' },
+        command: ['agent', '-p'],
+        provider: cursor,
+        request: request(),
+        files: [],
+        config: { HOME: '/home/test', CURSOR_API_KEY: 'secret' },
+      },
+      { ...fake, exists: (path: string) => !path.endsWith('/bunx') },
+    );
+    expect(withoutBunx.command).not.toContain('/home/test/.bun/bin/bunx');
   });
 
   it("puts a run's tool shortcuts first on the local PATH", () => {
