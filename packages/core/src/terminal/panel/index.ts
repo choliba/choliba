@@ -1,8 +1,8 @@
 export type {
   PanelBox,
   PanelBoxOptions,
+  PanelFieldEvent,
   PanelInput,
-  PanelInputOptions,
   PanelKey,
   PanelNode,
   PanelRenderer,
@@ -14,6 +14,8 @@ export type {
   PanelScrollOptions,
   PanelText,
   PanelTextOptions,
+  PanelTextareaKeyBinding,
+  PanelTextareaOptions,
   PanelToolkit,
 } from './interfaces/panel.interface';
 export { openPanel, type Panel, type PanelOptions } from './panel';

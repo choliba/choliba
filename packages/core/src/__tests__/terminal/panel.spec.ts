@@ -1,4 +1,9 @@
-import type { PanelKey, PanelRendererConfig, PanelToolkit } from '../../terminal/panel/interfaces/panel.interface';
+import type {
+  PanelFieldEvent,
+  PanelKey,
+  PanelRendererConfig,
+  PanelToolkit,
+} from '../../terminal/panel/interfaces/panel.interface';
 import { loadPanelToolkit, openOpenTuiPanel, openPanelWith } from '../../terminal/panel/panel-toolkit';
 import { openPanel } from '../../terminal/panel/panel';
 
@@ -20,10 +25,13 @@ class FakeNode {
   readonly scrolls: string[] = [];
   scrollHeight = 40;
   value = '';
-  placeholder = '';
+  placeholder: FakeStyled | string | null = '';
+  onSubmit: ((event: PanelFieldEvent) => void) | undefined;
+  onContentChange: ((event: PanelFieldEvent) => void) | undefined;
   visible = true;
   focused = 0;
   selectedIndex = 0;
+  virtualLineCountOverride: number | undefined;
   options: { name: string; description: string }[] = [];
   private readonly listeners = new Map<string, (() => void)[]>();
 
@@ -34,6 +42,10 @@ class FakeNode {
     const placeholder = built['placeholder'];
     if (typeof placeholder === 'string') this.placeholder = placeholder;
     if (built['visible'] === false) this.visible = false;
+    const height = built['height'];
+    if (typeof height === 'number' || height === 'auto' || (typeof height === 'string' && height.endsWith('%'))) {
+      this.height = height as number | 'auto' | `${number}%`;
+    }
     const content = built['content'];
     if (typeof content === 'string' || (typeof content === 'object' && content !== null)) {
       this.content = content as FakeStyled | string;
@@ -65,12 +77,26 @@ class FakeNode {
     return this.selectedIndex;
   }
 
+  get plainText(): string {
+    return this.value;
+  }
+
+  get virtualLineCount(): number {
+    return this.virtualLineCountOverride ?? this.value.split('\n').length;
+  }
+
+  setText(text: string): void {
+    this.value = text;
+    this.onContentChange?.({});
+  }
+
   on(event: string, listener: () => void): this {
     this.listeners.set(event, [...(this.listeners.get(event) ?? []), listener]);
     return this;
   }
 
   emit(event: string): void {
+    if (event === 'submit') this.onSubmit?.({});
     (this.listeners.get(event) ?? []).forEach((listener) => {
       listener();
     });
@@ -114,9 +140,9 @@ function fakeToolkit(failToOpen = false) {
         super('text', options as Record<string, unknown>);
       }
     },
-    InputRenderable: class extends FakeNode {
+    TextareaRenderable: class extends FakeNode {
       constructor(_context: Renderer, options: object) {
-        super('input', options as Record<string, unknown>);
+        super('textarea', options as Record<string, unknown>);
       }
     },
     SelectRenderable: class extends FakeNode {
@@ -143,7 +169,7 @@ const OPTIONS = {
   title: 'test-writer',
   titleColor: 'cyan' as const,
   footer: (width: number) => [`\u001b[1mprovider\u001b[22m largura ${String(width)}`],
-  hint: 'Escreva para o agente e tecle Enter',
+  hint: 'Enter envia · Ctrl+J cria uma linha',
 };
 
 function layoutOf(renderer: ReturnType<typeof fakeToolkit>['renderer']) {
@@ -176,9 +202,42 @@ describe('openPanel', () => {
     expect(bottom.height).toBe(3);
     expect(prompt.content).toBe('❯ ');
     expect(input.built).toMatchObject({ flexGrow: 1 });
-    expect(input.placeholder).toBe('Escreva para o agente e tecle Enter');
+    expect(input.placeholder).toBe('Enter envia · Ctrl+J cria uma linha');
     expect(input.focused).toBe(1);
     expect(select.visible).toBe(false);
+  });
+
+  it('sends with Enter, adds a line with Shift+Enter, and grows up to five lines', async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, OPTIONS);
+    const { input, bottom } = layoutOf(renderer);
+    const sent: string[] = [];
+    panel.onMessage((text) => sent.push(text));
+
+    expect(input.kind).toBe('textarea');
+    expect(input.built['keyBindings']).toEqual([
+      { name: 'return', action: 'submit' },
+      { name: 'return', shift: true, action: 'newline' },
+      { name: 'kpenter', action: 'submit' },
+      { name: 'kpenter', shift: true, action: 'newline' },
+      { name: 'linefeed', action: 'newline' },
+      { name: 'linefeed', shift: true, action: 'newline' },
+    ]);
+
+    input.virtualLineCountOverride = 1;
+    input.setText('uma\nduas');
+    expect(input.height).toBe(2);
+    expect(bottom.height).toBe(4);
+    input.virtualLineCountOverride = undefined;
+    input.setText('uma\nduas\ntrês\nquatro\ncinco\nseis');
+    expect(input.height).toBe(5);
+    expect(bottom.height).toBe(7);
+    input.emit('submit');
+
+    expect(sent).toEqual(['uma\nduas\ntrês\nquatro\ncinco\nseis']);
+    expect(input.plainText).toBe('');
+    expect(input.height).toBe(1);
+    expect(bottom.height).toBe(3);
   });
 
   it('asks in the field and takes the answer in words, then sends what is typed with no question', async () => {
@@ -190,14 +249,14 @@ describe('openPanel', () => {
 
     const reply = panel.ask({ question: 'Qual o nome?', options: [], multi: false });
     expect(input.placeholder).toBe('Qual o nome?');
-    input.emit('enter');
+    input.emit('submit');
     input.value = ' Jackson ';
-    input.emit('enter');
+    input.emit('submit');
     expect(await reply).toEqual({ status: 'answered', answer: 'Jackson' });
 
-    expect(input.placeholder).toBe('Escreva para o agente e tecle Enter');
+    expect(input.placeholder).toBe('Enter envia · Ctrl+J cria uma linha');
     input.value = 'continue com React';
-    input.emit('enter');
+    input.emit('submit');
     expect(sent).toEqual(['continue com React']);
     expect(input.value).toBe('');
   });
@@ -218,11 +277,26 @@ describe('openPanel', () => {
 
     expect(select.visible).toBe(false);
     expect(input.placeholder).toBe('Nome?');
-    input.emit('enter');
+    input.emit('submit');
     select.emit('itemSelected');
     input.value = 'Ana';
-    input.emit('enter');
+    input.emit('submit');
     expect(await second).toEqual({ status: 'answered', answer: 'Ana' });
+  });
+
+  it('keeps a long list of choices inside a bounded scrolling area', async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, OPTIONS);
+    const { select } = layoutOf(renderer);
+    const options = Array.from({ length: 30 }, (_, index) => `Cidade ${String(index + 1)}`);
+
+    const reply = panel.ask({ question: 'Cidade?', options, multi: false });
+
+    expect(select.height).toBe(8);
+    expect(select.options).toHaveLength(30);
+    select.selectedIndex = 24;
+    select.emit('itemSelected');
+    expect(await reply).toEqual({ status: 'answered', answer: 'Cidade 25' });
   });
 
   it('takes words in the field for a question with choices too, Tab moving between the list and the field', async () => {
@@ -238,7 +312,7 @@ describe('openPanel', () => {
     press({ name: 'tab', ctrl: false });
     expect(select.focused).toBe(1);
     input.value = 'Svelte, do zero';
-    input.emit('enter');
+    input.emit('submit');
     expect(await reply).toEqual({ status: 'answered', answer: 'Svelte, do zero' });
 
     // The list hides and lets go of the keys; Tab with no question is the field's own.
@@ -360,7 +434,7 @@ describe('openPanel — Ctrl+C', () => {
 
     press({ name: 'c', ctrl: true });
     jest.advanceTimersByTime(2000);
-    expect(input.placeholder).toBe('Escreva para o agente e tecle Enter');
+    expect(input.placeholder).toBe('Enter envia · Ctrl+J cria uma linha');
     press({ name: 'c', ctrl: true });
     expect(interrupts).toEqual([]);
 

@@ -25,6 +25,9 @@ interface Pending {
   readonly reply: (reply: PanelReply) => void;
 }
 
+/** How many choices can occupy the panel before the list scrolls inside its own area. */
+const MAX_VISIBLE_OPTIONS = 8;
+
 /** A choice as the list shows it: marked `[x]` when chosen, for a question of several. */
 function choiceName(option: string, multi: boolean, marked: boolean): string {
   if (!multi) return option;
@@ -36,7 +39,7 @@ function choiceName(option: string, multi: boolean, marked: boolean): string {
  * words, for any question; the list, shown only while a question has choices, takes one with Enter, or several marked
  * with Space, and Tab moves between the list and the field. Esc skips the question. With none pending, Enter sends what was typed, and the field shows `hint`.
  */
-export function questionDesk(input: PanelInput, select: PanelSelect, hint: string): QuestionDesk {
+export function questionDesk<Styled>(input: PanelInput<Styled>, select: PanelSelect, hint: string): QuestionDesk {
   const queue: Pending[] = [];
   const messages: ((text: string) => void)[] = [];
   let marked = new Set<number>();
@@ -48,7 +51,7 @@ export function questionDesk(input: PanelInput, select: PanelSelect, hint: strin
   const show = (pending: Pending | undefined): void => {
     marked = new Set();
     onList = false;
-    input.value = '';
+    input.setText('');
     if (pending === undefined) {
       input.placeholder = hint;
       select.visible = false;
@@ -65,7 +68,7 @@ export function questionDesk(input: PanelInput, select: PanelSelect, hint: strin
       return;
     }
     select.options = options.map((option) => ({ name: choiceName(option, multi, false), description: '' }));
-    select.height = options.length;
+    select.height = Math.min(options.length, MAX_VISIBLE_OPTIONS);
     select.visible = true;
     onList = true;
     select.focus();
@@ -85,12 +88,12 @@ export function questionDesk(input: PanelInput, select: PanelSelect, hint: strin
     }));
   };
 
-  input.on('enter', () => {
-    const text = input.value.trim();
+  input.onSubmit = () => {
+    const text = input.plainText.trim();
     if (text === '') return;
     const pending = current();
     if (pending === undefined) {
-      input.value = '';
+      input.setText('');
       messages.forEach((listener) => {
         listener(text);
       });
@@ -98,7 +101,7 @@ export function questionDesk(input: PanelInput, select: PanelSelect, hint: strin
     }
     // Words answer any question: with choices too, for the one none of them fits.
     finish(pending, { status: 'answered', answer: text });
-  });
+  };
 
   select.on('itemSelected', () => {
     const pending = current();
