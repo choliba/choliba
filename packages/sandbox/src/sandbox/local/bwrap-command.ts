@@ -69,6 +69,11 @@ export function bwrapCommand(input: BwrapCommand): readonly string[] {
     '--setenv',
     'HOME',
     input.home,
+    // Chrome's own sandbox needs privileges bwrap takes away (it runs with no new privileges); bwrap is the sandbox here,
+    // as the container is in docker.
+    '--setenv',
+    'PLAYWRIGHT_MCP_SANDBOX',
+    'false',
     ...programMounts(input.programReadOnly),
     ...input.mounts.flatMap(mountArgs),
     '--chdir',

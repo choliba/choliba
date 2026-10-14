@@ -32,7 +32,8 @@ monta os arquivos de autenticação da pasta pessoal.
 A rede é a da máquina. O `/run` vira uma pasta vazia, mas a configuração de nomes que mora nele (o
 `/etc/resolv.conf` do systemd-resolved, do NetworkManager ou do resolvconf aponta para lá) volta montada só para
 leitura, e o provider alcança a própria API. A execução tem os próprios números de processo: quando ela termina ou é
-interrompida (`Ctrl+C`), nada que o provider iniciou continua rodando.
+interrompida (`Ctrl+C`), nada que o provider iniciou continua rodando. O navegador das ferramentas da run roda sem o sandbox
+próprio do Chrome, como no Docker: quem isola é o `bwrap`.
 
 `list`, `create`, `edit` e `delete` dentro de um caminho já montado continuam nas regras do provider. O que cada
 mount mostra — inclusive o arquivo com escrita que abre a pasta — está em [Docker](#docker): os dois usam a mesma
