@@ -103,8 +103,12 @@ export function configSettings(
 ): readonly ConfigSetting[] {
   return CONFIG_KEYS.map((key) => {
     const fromEnvironment = environment[key.name];
-    if (fromEnvironment !== undefined) return { key, value: fromEnvironment, origin: 'ambiente' };
     const fromFile = file?.[key.name];
+    // Bun loads the `.env` of the folder it starts in into the process environment: a value equal to the file's is the
+    // file's, and only one the environment sets on its own, or sets differently, is the environment's.
+    if (fromEnvironment !== undefined && fromEnvironment !== fromFile) {
+      return { key, value: fromEnvironment, origin: 'ambiente' };
+    }
     if (fromFile !== undefined) return { key, value: fromFile, origin: '.env' };
     if (key.fallback !== undefined) return { key, value: key.fallback, origin: 'padrão' };
     return { key, value: undefined, origin: 'nenhum' };

@@ -21,6 +21,12 @@ describe('configSettings', () => {
     expect(setting('CURSOR_API_KEY', settings)).toEqual({ value: 'segredo', origin: '.env' });
   });
 
+  it('takes a value the environment repeats from the .env as the .env one, since Bun loads the .env into it', () => {
+    const settings = configSettings({ CHOL_SANDBOX: 'docker' }, { CHOL_SANDBOX: 'docker' });
+
+    expect(setting('CHOL_SANDBOX', settings)).toEqual({ value: 'docker', origin: '.env' });
+  });
+
   it('works outside a workspace, with no .env', () => {
     expect(setting('CHOL_SANDBOX', configSettings(undefined, {}))).toEqual({ value: 'local', origin: 'padrão' });
   });

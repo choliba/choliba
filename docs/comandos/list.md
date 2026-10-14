@@ -24,11 +24,52 @@ Lista os agentes instalados:
 choliba list agents
 ```
 
+Mostra a configuração em vigor e de onde vem cada valor:
+
+```sh
+choliba list config
+```
+
 Lista os projetos com os tickets de cada um:
 
 ```sh
 choliba list projects --tickets
 ```
+
+## `config`
+
+Lista a configuração em vigor na pasta de trabalho: cada chave, o valor e de onde ele vem.
+
+### Uso
+
+```sh
+choliba list config [OPTIONS]
+```
+
+### Exemplos
+
+Mostra cada chave com o valor e a origem:
+
+```sh
+choliba list config
+```
+
+O mesmo em JSON, para um script:
+
+```sh
+choliba list config --json
+```
+
+### Detalhes
+
+A origem é `ambiente` (a variável do processo), `.env` (o da pasta de trabalho) ou `padrão` (o que o choliba usa sem nada definido); `não definida` quando nada vale. O ambiente vence o `.env`, que vence o padrão. Credenciais aparecem só como `definida` ou `não definida`, nunca o valor.
+
+### Opções
+
+| Opção          | Descrição                                   |
+| -------------- | ------------------------------------------- |
+| `--json`       | Saída em JSON: { CHAVE: { valor, origem } } |
+| `-h`, `--help` | Mostra esta ajuda                           |
 
 ## `agents`
 

@@ -38,7 +38,7 @@ A saída só tem cor num terminal. `--no-color`, `NO_COLOR=1`, `FORCE_COLOR=0`, 
 | Comando                       | O que faz                                                                                             |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------- |
 | [`choliba new`](./new.md)     | Cria um projeto a partir do modelo                                                                    |
-| [`choliba list`](./list.md)   | Lista os agentes ou os projetos                                                                       |
+| [`choliba list`](./list.md)   | Lista os agentes, os projetos ou a configuração                                                       |
 | [`choliba check`](./check.md) | Confere a pasta de trabalho: agentes (schemas, skills, MCPs) e projetos; com PROJETO, só esse projeto |
 
 ## Agentes, skills e MCPs

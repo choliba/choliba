@@ -36,6 +36,11 @@ export class ShellIo {
     this.streams.stdout.write(text);
   }
 
+  /** A message beside the result: `message` on stderr, the exit code untouched. */
+  warn(message: string): void {
+    this.streams.stderr.write(`${message}\n`);
+  }
+
   /** The command failed: `message` on stderr, exit code 1. */
   fail(message: string): void {
     this.streams.stderr.write(`${message}\n`);
