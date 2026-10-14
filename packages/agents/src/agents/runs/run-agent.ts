@@ -31,9 +31,10 @@ import {
 
 import { agentRenderOptions, formatProviderLine, renderEvent } from './event-render';
 import type { RunFooterInfo, RunScreen } from '../interfaces/run-footer.interface';
-import { footerLines, providerContext, summaryLine } from './run-footer';
+import { footerLines, oneLine, providerContext, summaryLine } from './run-footer';
 import type { Launch } from './sandbox-launch';
-import { applyRunTools } from '../../common';
+import { applyRunTools, askExchangeDir, runToolsOf, type AskAnswer } from '../../common';
+import { watchQuestions } from './ask-watcher';
 import { toolGuard, toolViolation } from './tool-guard';
 
 export interface RunAgentDeps {
@@ -78,7 +79,15 @@ export const FOOTER_REFRESH_MS = 50;
 /** The streams of a session as they are, with the `[provider]` line first: where there is no footer. */
 function plainScreen(info: RunFooterInfo, theme: Theme, deps: RunAgentDeps): RunScreen {
   deps.stdout.write(`${formatProviderLine(info.provider, theme)}${providerContext(info)}\n`);
-  return { framed: false, out: deps.stdout, err: deps.stderr, model: noop, onInterrupt: noop, close: noop };
+  return {
+    framed: false,
+    out: deps.stdout,
+    err: deps.stderr,
+    model: noop,
+    onInterrupt: noop,
+    answer: unanswered,
+    close: noop,
+  };
 }
 
 /**
@@ -115,6 +124,7 @@ function footerScreen(info: RunFooterInfo, request: RunAgentRequest, deps: RunAg
       model = reported;
     },
     onInterrupt: noop,
+    answer: unanswered,
     close: (exitCode) => {
       stop();
       footer.close();
@@ -158,6 +168,10 @@ function panelScreen(panel: Panel, current: ReportedInfo, request: RunAgentReque
   const stop = (deps.every ?? everySecond)(FOOTER_REFRESH_MS, () => {
     panel.refresh();
   });
+  // What the person sends stays in the frame where it was sent.
+  panel.onMessage((text) => {
+    shown.write(`› ${text}\n`);
+  });
   return {
     framed: true,
     out: shown,
@@ -167,6 +181,12 @@ function panelScreen(panel: Panel, current: ReportedInfo, request: RunAgentReque
     },
     onInterrupt: (listener) => {
       panel.onInterrupt(listener);
+    },
+    answer: async (question) => {
+      shown.write(`? ${question.question}\n`);
+      const reply = await panel.ask(question);
+      shown.write(`→ ${reply.status === 'skipped' ? '(sem resposta)' : [reply.answer].flat().join(', ')}\n`);
+      return reply;
     },
     close: (exitCode) => {
       stop();
@@ -198,7 +218,8 @@ async function panelOrFooter(
   const panel = await open({
     title: name,
     titleColor: request.theme.colorOf('agents', name, color),
-    footer: (columns) => footerLines(current.info(), now(), columns, request.theme).slice(1),
+    footer: (columns) => [oneLine(current.info(), now(), Math.floor(columns / 2))],
+    hint: 'Escreva para o agente e tecle Enter',
   });
   return panel === undefined ? footerScreen(info, request, deps) : panelScreen(panel, current, request, deps);
 }
@@ -269,6 +290,11 @@ export async function runAgent(request: RunAgentRequest, deps: RunAgentDeps): Pr
     restoreTools();
     rmSync(runDir, { recursive: true, force: true });
   }
+}
+
+/** What a screen with no field answers: nobody can, so the agent goes on with an assumption at once. */
+function unanswered(): Promise<AskAnswer> {
+  return Promise.resolve({ status: 'unavailable' });
 }
 
 function noop(): void {
@@ -426,6 +452,13 @@ async function followSession(
   deps.signals.on('SIGINT', onSigint);
   deps.signals.on('SIGTERM', onSigterm);
   screen.onInterrupt(onSigint);
+  const stopAsking = runToolsOf(request.providerRequest).some((tool) => tool.name === 'ask')
+    ? watchQuestions(
+        askExchangeDir(request.providerRequest.runDir),
+        (question) => screen.answer(question),
+        deps.every ?? everySecond,
+      )
+    : noop;
 
   const exitEvent = await new Promise<SessionExitEvent>((resolve) => {
     session.onExit(resolve);
@@ -433,6 +466,7 @@ async function followSession(
 
   deps.signals.off('SIGINT', onSigint);
   deps.signals.off('SIGTERM', onSigterm);
+  stopAsking();
 
   if (stopGuard.triggered) {
     return 1;

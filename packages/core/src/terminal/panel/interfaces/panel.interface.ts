@@ -6,9 +6,11 @@
  */
 export interface PanelToolkit<Context, Node, Styled extends { readonly chunks: Chunk[] }, Chunk> {
   createCliRenderer(config: PanelRendererConfig): Promise<Context & PanelRenderer<Node>>;
-  readonly BoxRenderable: new (context: Context, options: PanelBoxOptions) => Node & PanelNode<Node>;
+  readonly BoxRenderable: new (context: Context, options: PanelBoxOptions) => Node & PanelBox<Node>;
   readonly ScrollBoxRenderable: new (context: Context, options: PanelScrollOptions) => Node & PanelScroll<Node>;
   readonly TextRenderable: new (context: Context, options: PanelTextOptions<Styled>) => Node & PanelText<Styled>;
+  readonly InputRenderable: new (context: Context, options: PanelInputOptions) => Node & PanelInput;
+  readonly SelectRenderable: new (context: Context, options: PanelSelectOptions) => Node & PanelSelect;
   readonly StyledText: new (chunks: Chunk[]) => Styled;
   /** Plain text, in the renderable's own color: its chunks are what a run with no style of choliba's is. */
   stringToStyledText(content: string): Styled;
@@ -39,6 +41,34 @@ export interface PanelNode<Node> {
   add(child: Node): unknown;
 }
 
+export interface PanelBox<Node> extends PanelNode<Node> {
+  height: number | 'auto' | `${number}%`;
+}
+
+/** The one-line field of the footer (`InputRenderable`); `enter` is emitted when the person presses Enter in it. */
+export interface PanelInput {
+  value: string;
+  placeholder: string;
+  focus(): void;
+  on(event: 'enter', listener: () => void): unknown;
+}
+
+export interface PanelSelectOption {
+  readonly name: string;
+  readonly description: string;
+}
+
+/** A list to choose from (`SelectRenderable`); `itemSelected` is emitted on Enter. */
+export interface PanelSelect {
+  options: PanelSelectOption[];
+  visible: boolean;
+  height: number | 'auto' | `${number}%`;
+  focus(): void;
+  blur(): void;
+  getSelectedIndex(): number;
+  on(event: 'itemSelected', listener: () => void): unknown;
+}
+
 export interface PanelScroll<Node> extends PanelNode<Node> {
   readonly scrollHeight: number;
   scrollBy(delta: number, unit?: 'viewport'): void;
@@ -51,9 +81,22 @@ export interface PanelText<Styled> {
 }
 
 export interface PanelBoxOptions {
-  readonly flexDirection: 'column';
-  readonly width: '100%';
-  readonly height: '100%';
+  readonly flexDirection: 'column' | 'row';
+  readonly width?: '100%';
+  readonly height?: '100%' | number;
+  /** A line above and below, as the field's row has. */
+  readonly border?: ('top' | 'bottom')[];
+}
+
+export interface PanelInputOptions {
+  readonly placeholder: string;
+  readonly flexGrow: number;
+}
+
+export interface PanelSelectOptions {
+  readonly options: PanelSelectOption[];
+  readonly showDescription: false;
+  readonly visible: false;
 }
 
 export interface PanelScrollOptions {

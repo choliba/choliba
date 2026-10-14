@@ -13,6 +13,8 @@ export {
   type Panel,
   type PanelKey,
   type PanelOptions,
+  type PanelQuestion,
+  type PanelReply,
   type PanelToolkit,
 } from './panel';
 export {

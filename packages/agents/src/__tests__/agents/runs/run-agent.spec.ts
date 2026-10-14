@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { constants, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -7,6 +7,7 @@ import {
   ProcessRunnerService,
   type Panel,
   type PanelOptions,
+  type PanelReply,
   type ProcessSpawner,
   type SignalSource,
   type Writable,
@@ -22,7 +23,7 @@ import type { RunAgentDeps, RunAgentRequest } from '../../../agents/runs/run-age
 import { everySecond, FOOTER_REFRESH_MS, runAgent, screenWidth } from '../../../agents/runs/run-agent';
 import { erroringStream, fakeSpawner, streamFromChunks, throwingSpawner } from '../../helpers/fake-spawner';
 import { makeTmpDir } from '../../helpers/tmp';
-import { NO_PERMISSIONS } from '../../../common/agent-permissions';
+import { NO_PERMISSIONS, readAgentPermissions } from '../../../common/agent-permissions';
 import { NO_MODE_STEPS, fakeSections } from '../../helpers/agent';
 
 /** A run dir of its own per request: `runAgent` creates it and removes it. */
@@ -812,9 +813,9 @@ describe('runAgent — footer', () => {
 
 describe('runAgent — panel', () => {
   /** A panel that records what the run did with it, and calls the interrupt listener as soon as it is set when asked. */
-  function fakePanel(interruptAtOnce = false) {
+  function fakePanel(interruptAtOnce = false, reply: PanelReply = { status: 'skipped' }, message?: string) {
     const written: string[] = [];
-    const record = { written, refreshes: 0, closed: 0, options: [] as PanelOptions[] };
+    const record = { written, refreshes: 0, closed: 0, options: [] as PanelOptions[], asked: [] as string[] };
     const open = (options: PanelOptions): Promise<Panel> => {
       record.options.push(options);
       return Promise.resolve({
@@ -826,6 +827,13 @@ describe('runAgent — panel', () => {
         },
         onInterrupt: (listener) => {
           if (interruptAtOnce) listener();
+        },
+        ask: (question) => {
+          record.asked.push(question.question);
+          return Promise.resolve(reply);
+        },
+        onMessage: (listener) => {
+          if (message !== undefined) listener(message);
         },
         close: () => {
           record.closed += 1;
@@ -882,6 +890,103 @@ describe('runAgent — panel', () => {
     expect(out).toMatch(
       /^\n┌─ echo ─+┐\n│ olá +│\n└─+┘\nclaude · sonnet-5 · local · decorrido 00:00:00\.000 · código 0\n$/,
     );
+  });
+
+  it('asks the panel the questions of the ask run tool, and keeps question and answer in the frame', async () => {
+    const s = setup(
+      fakeSpawner({
+        stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'ok' }])]),
+      }).spawner,
+    );
+    const request = s.request(
+      {},
+      { agent: fakeAgent({ permissions: readAgentPermissions({ allow: { tools: { ask: ['*'] } } }) }) },
+    );
+    const exchange = join(request.providerRequest.runDir, '.choliba-ask');
+    mkdirSync(exchange, { recursive: true });
+    writeFileSync(
+      join(exchange, '1.question.json'),
+      JSON.stringify({ id: '1', question: 'Nome?', options: [], multi: false }),
+    );
+    const { open, record } = fakePanel(false, { status: 'answered', answer: ['Ana', 'Bia'] });
+
+    expect(await runAgent(request, deps(s, open))).toBe(0);
+
+    expect(record.asked).toEqual(['Nome?']);
+    expect(record.written.join('')).toContain('? Nome?\n→ Ana, Bia\n');
+  });
+
+  it('keeps in the frame what the person sends, and a question they skip, with the real timer', async () => {
+    const s = setup(
+      fakeSpawner({
+        stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'ok' }])]),
+      }).spawner,
+    );
+    const request = s.request(
+      {},
+      { agent: fakeAgent({ permissions: readAgentPermissions({ allow: { tools: { ask: ['*'] } } }) }) },
+    );
+    const { open, record } = fakePanel(false, { status: 'skipped' }, 'use React');
+
+    expect(await runAgent(request, deps(s, open, true))).toBe(0);
+    expect(record.written.join('')).toContain('› use React\n');
+
+    const skipping = fakePanel(false, { status: 'skipped' });
+    const panel = await skipping.open({ title: 'x', titleColor: 'cyan', footer: () => [], hint: '' });
+    expect(await panel.ask({ question: 'Nome?', options: [], multi: false })).toEqual({ status: 'skipped' });
+  });
+
+  it('writes a skipped question as having no answer', async () => {
+    const s = setup(
+      fakeSpawner({
+        stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'ok' }])]),
+      }).spawner,
+    );
+    const request = s.request(
+      {},
+      { agent: fakeAgent({ permissions: readAgentPermissions({ allow: { tools: { ask: ['*'] } } }) }) },
+    );
+    const exchange = join(request.providerRequest.runDir, '.choliba-ask');
+    mkdirSync(exchange, { recursive: true });
+    writeFileSync(
+      join(exchange, '1.question.json'),
+      JSON.stringify({ id: '1', question: 'Nome?', options: [], multi: false }),
+    );
+    const { open, record } = fakePanel();
+
+    await runAgent(request, deps(s, open));
+
+    expect(record.written.join('')).toContain('? Nome?\n→ (sem resposta)\n');
+  });
+
+  it('answers that nobody can when the screen has no field', async () => {
+    const s = setup(
+      fakeSpawner({
+        stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'ok' }])]),
+      }).spawner,
+    );
+    const request = s.request(
+      {},
+      { agent: fakeAgent({ permissions: readAgentPermissions({ allow: { tools: { ask: ['*'] } } }) }) },
+    );
+    const exchange = join(request.providerRequest.runDir, '.choliba-ask');
+    mkdirSync(exchange, { recursive: true });
+    writeFileSync(
+      join(exchange, '1.question.json'),
+      JSON.stringify({ id: '1', question: 'Nome?', options: [], multi: false }),
+    );
+    let answered = '';
+    const every = (_ms: number, tick: () => void): (() => void) => {
+      tick();
+      // Stopped when the session ends, before the run folder goes: the answer is there by then.
+      return () => {
+        answered = readFileSync(join(exchange, '1.answer.json'), 'utf8');
+      };
+    };
+
+    await runAgent(request, { ...deps(s, undefined), footer: false, every });
+
+    expect(JSON.parse(answered)).toEqual({ status: 'unavailable' });
   });
 
   it('keeps the frame and footer when the panel does not open', async () => {

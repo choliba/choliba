@@ -2,6 +2,7 @@ import type { AnsiColor } from '../../theme';
 import { ansiChunks, type StyledChunk } from '../frame';
 
 import type { PanelKey, PanelToolkit } from './interfaces/panel.interface';
+import { questionDesk, type PanelQuestion, type PanelReply } from './panel-question';
 
 /**
  * The 16 colors as the panel paints them. A terminal paints its own palette; the panel draws its cells itself, so it
@@ -24,6 +25,12 @@ const PALETTE: Readonly<Record<AnsiColor, string>> = {
   'bright-cyan': '#29b8db',
 };
 
+/** How long a first Ctrl+C waits for the second, which interrupts the run. */
+const INTERRUPT_WINDOW_MS = 2000;
+
+/** What the field says between the first Ctrl+C and the second. */
+const INTERRUPT_NOTICE = 'Tecle Ctrl+C de novo para interromper';
+
 /** How often the footer is drawn again; also the panel's frame rate. */
 const FRAMES_PER_SECOND = 30;
 
@@ -31,8 +38,10 @@ export interface PanelOptions {
   /** The title of the panel: for a run, the agent. */
   readonly title: string;
   readonly titleColor: AnsiColor;
-  /** The footer's lines in a width, with their escape codes. */
+  /** The footer's line in a width, with its escape codes: it goes on the right of the field. */
   readonly footer: (width: number) => readonly string[];
+  /** What the field says while no question is pending. */
+  readonly hint: string;
 }
 
 /** A run drawn in a panel of its own: the session's lines scroll in it, under them the footer. */
@@ -43,6 +52,10 @@ export interface Panel {
   refresh(): void;
   /** Called when the person presses Ctrl+C, which the panel's keyboard takes before the terminal makes a signal. */
   onInterrupt(listener: () => void): void;
+  /** Asks `question` in the field and gives the answer; questions asked together wait their turn. */
+  ask(question: PanelQuestion): Promise<PanelReply>;
+  /** Called with what the person typed and sent in the field while no question was pending. */
+  onMessage(listener: (text: string) => void): void;
   /** Gives the terminal back as it was; the panel's lines are the caller's to print. */
   close(): void;
 }
@@ -59,7 +72,8 @@ function keyAction(key: PanelKey): 'page-up' | 'page-down' | 'top' | 'bottom' | 
 
 /**
  * The panel on `kit` (OpenTUI): the alternate screen, a scroll box titled with the agent that follows the end until
- * the person scrolls up (mouse wheel, PgUp/PgDn, Home/End), and the footer under it. Escape codes become the toolkit's
+ * the person scrolls up (mouse wheel, PgUp/PgDn, Home/End), and under it one row: the field on the left, where
+ * questions are asked and messages typed, and the footer on the right. Escape codes become the toolkit's
  * own styles (`ansiChunks`).
  */
 export async function openPanel<Context, Node, Styled extends { readonly chunks: Chunk[] }, Chunk>(
@@ -97,12 +111,40 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     stickyStart: 'bottom',
     scrollX: false,
   });
+  const select = new kit.SelectRenderable(renderer, { options: [], showDescription: false, visible: false });
+  const bottom = new kit.BoxRenderable(renderer, { flexDirection: 'row', border: ['top', 'bottom'] });
+  const prompt = new kit.TextRenderable(renderer, { content: '❯ ', wrapMode: 'word' });
+  const input = new kit.InputRenderable(renderer, { placeholder: options.hint, flexGrow: 1 });
   const footer = new kit.TextRenderable(renderer, { content: '', wrapMode: 'word' });
+  bottom.add(prompt);
+  bottom.add(input);
+  bottom.add(footer);
   layout.add(scroll);
-  layout.add(footer);
+  layout.add(select);
+  layout.add(bottom);
   renderer.root.add(layout);
+  const desk = questionDesk(input, select, options.hint);
+  input.focus();
 
   const interrupts: (() => void)[] = [];
+  let armed: ReturnType<typeof setTimeout> | undefined;
+  // The first Ctrl+C only warns in the field; a second one before the window closes interrupts the run.
+  const interrupt = (): void => {
+    if (armed === undefined) {
+      const before = input.placeholder;
+      input.placeholder = INTERRUPT_NOTICE;
+      armed = setTimeout(() => {
+        armed = undefined;
+        if (input.placeholder === INTERRUPT_NOTICE) input.placeholder = before;
+      }, INTERRUPT_WINDOW_MS);
+      return;
+    }
+    clearTimeout(armed);
+    armed = undefined;
+    interrupts.forEach((listener) => {
+      listener();
+    });
+  };
   const scrollActions: Readonly<Record<string, () => void>> = {
     'page-up': () => {
       scroll.scrollBy(-1, 'viewport');
@@ -116,13 +158,10 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     bottom: () => {
       scroll.scrollTo(scroll.scrollHeight);
     },
-    interrupt: () => {
-      interrupts.forEach((listener) => {
-        listener();
-      });
-    },
+    interrupt,
   };
   renderer.keyInput.on('keypress', (key) => {
+    if (desk.key(key)) return;
     const action = keyAction(key);
     if (action !== undefined) scrollActions[action]?.();
   });
@@ -131,6 +170,8 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     const lines = options.footer(renderer.width);
     footer.content = styled(lines);
     footer.height = lines.length;
+    // The row's own line plus the line above and the one below.
+    bottom.height = lines.length + 2;
   };
   refresh();
 
@@ -144,7 +185,12 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     onInterrupt: (listener) => {
       interrupts.push(listener);
     },
+    ask: (question) => desk.ask(question),
+    onMessage: (listener) => {
+      desk.onMessage(listener);
+    },
     close: () => {
+      clearTimeout(armed);
       renderer.destroy();
     },
   };
