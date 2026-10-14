@@ -45,11 +45,11 @@ function fakeRequest(overrides: Partial<ProviderRequest> = {}): ProviderRequest 
 }
 
 describe('claudeProvider.buildArgs', () => {
-  it('puts -p and the prompt first, and includes stream-json + verbose + the system prompt', () => {
+  it('puts -p first, the task out of the arguments, and includes stream-json + verbose + the system prompt', () => {
     const args = claudeProvider.buildArgs(fakeRequest());
 
     expect(args[0]).toBe('-p');
-    expect(args[1]).toBe('do the task');
+    expect(args).not.toContain('do the task');
     expect(args).toContain('--output-format');
     expect(args).toContain('stream-json');
     expect(args).toContain('--verbose');
@@ -62,7 +62,6 @@ describe('claudeProvider.buildArgs', () => {
     const system = String(args.at(args.indexOf('--append-system-prompt') + 1));
 
     expect(system.indexOf('Utilize a skill docs.')).toBeLessThan(system.indexOf('be an echo'));
-    expect(args[1]).toBe('do the task');
   });
 
   const DECLARED = readAgentPermissions({
@@ -241,9 +240,20 @@ describe('claudeProvider.buildArgs', () => {
   });
 
   it('throws PromptTooLargeError instead of returning an oversized argument', () => {
+    const agent = fakeAgent({ sections: fakeSections('x'.repeat(MAX_ARG_BYTES + 1)) });
     expect(() => {
-      claudeProvider.buildArgs(fakeRequest({ userPrompt: 'x'.repeat(MAX_ARG_BYTES + 1) }));
+      claudeProvider.buildArgs(fakeRequest({ agent }));
     }).toThrow(PromptTooLargeError);
+  });
+
+  it('takes the task and the messages on stdin, as stream input: an oversized task is no argument', () => {
+    const args = claudeProvider.buildArgs(fakeRequest({ userPrompt: 'x'.repeat(MAX_ARG_BYTES + 1) }));
+    expect(args.slice(0, 3)).toEqual(['-p', '--input-format', 'stream-json']);
+    expect(JSON.parse(claudeProvider.inputMessage('olá'))).toEqual({
+      type: 'user',
+      message: { role: 'user', content: [{ type: 'text', text: 'olá' }] },
+    });
+    expect(claudeProvider.inputMessage('olá').endsWith('\n')).toBe(true);
   });
 });
 

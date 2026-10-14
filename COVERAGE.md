@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 14/10/2026 01:48:00 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 14/10/2026 02:04:25 — não editar manualmente.
 
 ## Resumo
 
@@ -17,7 +17,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 73 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 74 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -53,6 +53,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/runs/run-footer.ts](packages/agents/src/agents/runs/run-footer.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-preparation.ts](packages/agents/src/agents/runs/run-preparation.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/sandbox-launch.ts](packages/agents/src/agents/runs/sandbox-launch.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/session-input.ts](packages/agents/src/agents/runs/session-input.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/spec-context.ts](packages/agents/src/agents/runs/spec-context.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/ticket-run.ts](packages/agents/src/agents/runs/ticket-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/tool-failure.ts](packages/agents/src/agents/runs/tool-failure.ts)|100.00|100.00|100.00|100.00

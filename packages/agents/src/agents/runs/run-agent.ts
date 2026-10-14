@@ -35,6 +35,7 @@ import { footerLines, oneLine, providerContext, summaryLine } from './run-footer
 import type { Launch } from './sandbox-launch';
 import { applyRunTools, askExchangeDir, runToolsOf, type AskAnswer } from '../../common';
 import { watchQuestions } from './ask-watcher';
+import { sessionInput } from './session-input';
 import { toolGuard, toolViolation } from './tool-guard';
 
 export interface RunAgentDeps {
@@ -85,6 +86,7 @@ function plainScreen(info: RunFooterInfo, theme: Theme, deps: RunAgentDeps): Run
     err: deps.stderr,
     model: noop,
     onInterrupt: noop,
+    onMessage: noop,
     answer: unanswered,
     close: noop,
   };
@@ -124,6 +126,7 @@ function footerScreen(info: RunFooterInfo, request: RunAgentRequest, deps: RunAg
       model = reported;
     },
     onInterrupt: noop,
+    onMessage: noop,
     answer: unanswered,
     close: (exitCode) => {
       stop();
@@ -168,10 +171,6 @@ function panelScreen(panel: Panel, current: ReportedInfo, request: RunAgentReque
   const stop = (deps.every ?? everySecond)(FOOTER_REFRESH_MS, () => {
     panel.refresh();
   });
-  // What the person sends stays in the frame where it was sent.
-  panel.onMessage((text) => {
-    shown.write(`› ${text}\n`);
-  });
   return {
     framed: true,
     out: shown,
@@ -181,6 +180,9 @@ function panelScreen(panel: Panel, current: ReportedInfo, request: RunAgentReque
     },
     onInterrupt: (listener) => {
       panel.onInterrupt(listener);
+    },
+    onMessage: (listener) => {
+      panel.onMessage(listener);
     },
     answer: async (question) => {
       shown.write(`? ${question.question}\n`);
@@ -219,7 +221,10 @@ async function panelOrFooter(
     title: name,
     titleColor: request.theme.colorOf('agents', name, color),
     footer: (columns) => [oneLine(current.info(), now(), Math.floor(columns / 2))],
-    hint: 'Escreva para o agente e tecle Enter',
+    hint:
+      request.provider.adapter.inputMessage === undefined
+        ? 'Aqui você responde quando o agente perguntar'
+        : 'Escreva para o agente e tecle Enter',
   });
   return panel === undefined ? footerScreen(info, request, deps) : panelScreen(panel, current, request, deps);
 }
@@ -327,6 +332,7 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
       command: launch.command,
       cwd: request.providerRequest.runDir,
       ...(launch.env === undefined ? {} : { env: launch.env }),
+      ...(adapter.inputMessage === undefined ? {} : { input: true }),
     });
   } catch (error) {
     deps.stderr.write(`não foi possível iniciar ${providerId}: ${errorMessage(error)}\n`);
@@ -377,9 +383,11 @@ async function followSession(
   // The sandbox decides each tool call on the policy written from the agent (its MCPs) and the provider's limits.
   const guard = toolGuard(request.providerRequest, adapter.unenforcedTools);
 
+  const input = sessionInput(session, adapter.inputMessage?.bind(adapter), request.providerRequest.userPrompt);
   const stop = (message: string): void => {
     stopGuard.triggered = true;
     screen.err.write(`${message}\n`);
+    input.close();
     session.kill('SIGTERM');
   };
 
@@ -394,6 +402,7 @@ async function followSession(
       if (stopGuard.triggered) {
         return;
       }
+      if (agentEvent.type === 'done') input.turnEnded();
 
       const violation = toolViolation(agentEvent, guard);
       if (violation !== undefined) {
@@ -452,6 +461,12 @@ async function followSession(
   deps.signals.on('SIGINT', onSigint);
   deps.signals.on('SIGTERM', onSigterm);
   screen.onInterrupt(onSigint);
+  input.begin();
+  // What the person sends goes to the session and stays in the frame, saying why when it could not reach the agent.
+  screen.onMessage((text) => {
+    const refused = input.send(text);
+    screen.out.write(`› ${text}${refused === undefined ? '' : ` (não entregue: ${refused})`}\n`);
+  });
   const stopAsking = runToolsOf(request.providerRequest).some((tool) => tool.name === 'ask')
     ? watchQuestions(
         askExchangeDir(request.providerRequest.runDir),

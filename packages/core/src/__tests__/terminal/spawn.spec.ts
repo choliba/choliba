@@ -82,3 +82,33 @@ describe('createBunProcessSpawner', () => {
     expect(numbered.signalCode).toBeNull();
   });
 });
+
+describe('createBunProcessSpawner — stdin', () => {
+  it('opens stdin only with input, writing each text and flushing it, then ending it', () => {
+    const calls: unknown[][] = [];
+    const sink = { write: jest.fn(), flush: jest.fn(), end: jest.fn() };
+    const fake = ((...args: unknown[]): unknown => {
+      calls.push(args);
+      return {
+        pid: 1,
+        stdout: null,
+        stderr: null,
+        stdin: sink,
+        exited: Promise.resolve(0),
+        signalCode: null,
+        kill: jest.fn(),
+      };
+    }) as unknown as BunSpawnFn;
+    const spawned = createBunProcessSpawner(fake).spawn({ command: ['claude'], input: true });
+
+    expect(calls[0]?.[1]).toMatchObject({ stdin: 'pipe' });
+    spawned.stdin?.write('olá\n');
+    spawned.stdin?.end();
+    expect(sink.write).toHaveBeenCalledWith('olá\n');
+    expect(sink.flush).toHaveBeenCalledTimes(1);
+    expect(sink.end).toHaveBeenCalledTimes(1);
+
+    const plain = createBunProcessSpawner(fakeBunSpawn([])).spawn({ command: ['echo'] });
+    expect(plain.stdin).toBeNull();
+  });
+});

@@ -20,11 +20,14 @@ export type BunSpawnFn = (
   options: {
     readonly cwd?: string;
     readonly env?: Record<string, string | undefined>;
+    readonly stdin?: 'pipe';
     readonly stdout: 'pipe';
     readonly stderr: 'pipe';
   },
 ) => {
   readonly pid: number;
+  /** Bun's `FileSink` when spawned with `stdin: 'pipe'`. */
+  readonly stdin?: { write(chunk: string): unknown; flush(): unknown; end(): unknown } | null | number;
   readonly stdout: ReadableStream<Uint8Array> | null;
   readonly stderr: ReadableStream<Uint8Array> | null;
   readonly exited: Promise<number>;
@@ -38,13 +41,27 @@ export function createBunProcessSpawner(spawnFn: BunSpawnFn): ProcessSpawner {
       const child = spawnFn([...options.command], {
         ...(options.cwd !== undefined ? { cwd: options.cwd } : {}),
         ...(options.env !== undefined ? { env: options.env } : {}),
+        ...(options.input === true ? { stdin: 'pipe' as const } : {}),
         stdout: 'pipe',
         stderr: 'pipe',
       });
+      const sink = typeof child.stdin === 'object' ? child.stdin : null;
       return {
         pid: child.pid,
         stdout: child.stdout,
         stderr: child.stderr,
+        stdin:
+          sink === null
+            ? null
+            : {
+                write: (text) => {
+                  sink.write(text);
+                  sink.flush();
+                },
+                end: () => {
+                  sink.end();
+                },
+              },
         exited: child.exited,
         get signalCode(): NodeJS.Signals | null {
           return typeof child.signalCode === 'string' ? child.signalCode : null;

@@ -929,11 +929,45 @@ describe('runAgent — panel', () => {
     const { open, record } = fakePanel(false, { status: 'skipped' }, 'use React');
 
     expect(await runAgent(request, deps(s, open, true))).toBe(0);
-    expect(record.written.join('')).toContain('› use React\n');
+    expect(record.written.join('')).toContain(
+      '› use React (não entregue: este provider não recebe mensagens durante a execução)\n',
+    );
 
     const skipping = fakePanel(false, { status: 'skipped' });
     const panel = await skipping.open({ title: 'x', titleColor: 'cyan', footer: () => [], hint: '' });
     expect(await panel.ask({ question: 'Nome?', options: [], multi: false })).toEqual({ status: 'skipped' });
+  });
+
+  it('sends the task, then what the person sends, on stdin, and closes it when the last turn ends', async () => {
+    const handle = fakeSpawner({
+      stdout: streamFromChunks([
+        eventLines([
+          { type: 'done', isError: false, text: 'um' },
+          { type: 'done', isError: false, text: 'dois' },
+        ]),
+      ]),
+    });
+    const s = setup(handle.spawner, { inputMessage: (text) => `>${text}\n` });
+    const { open, record } = fakePanel(false, { status: 'skipped' }, 'use React');
+
+    expect(await runAgent(s.request(), deps(s, open))).toBe(0);
+
+    expect(handle.spawnCalls[0]).toMatchObject({ input: true });
+    expect(handle.stdin.written).toEqual(['>do it\n', '>use React\n']);
+    expect(handle.stdin.ended).toBe(true);
+    expect(record.written.join('')).toContain('› use React\n');
+    expect(record.options[0]?.hint).toBe('Escreva para o agente e tecle Enter');
+  });
+
+  it('closes stdin when a guard stops the session', async () => {
+    const handle = fakeSpawner({
+      stdout: streamFromChunks([eventLines([{ type: 'tool-call', id: 't', name: 'Agent', summary: '' }])]),
+    });
+    const s = setup(handle.spawner, { inputMessage: (text) => `>${text}\n` });
+
+    await run(s);
+
+    expect(handle.stdin.ended).toBe(true);
   });
 
   it('writes a skipped question as having no answer', async () => {

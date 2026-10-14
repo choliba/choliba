@@ -39,11 +39,14 @@ export interface FakeSpawner {
   readonly spawner: ProcessSpawner;
   readonly kill: jest.Mock;
   readonly spawnCalls: SpawnCommandOptions[];
+  /** What was written to the stdin of a process spawned with `input`, and whether it was closed. */
+  readonly stdin: { readonly written: string[]; ended: boolean };
 }
 
 export function fakeSpawner(options: FakeSpawnedProcessOptions = {}): FakeSpawner {
   const kill = jest.fn();
   const spawnCalls: SpawnCommandOptions[] = [];
+  const stdin = { written: [] as string[], ended: false };
   const spawner: ProcessSpawner = {
     spawn(cmdOptions: SpawnCommandOptions): SpawnedProcess {
       spawnCalls.push(cmdOptions);
@@ -54,10 +57,21 @@ export function fakeSpawner(options: FakeSpawnedProcessOptions = {}): FakeSpawne
         exited: Promise.resolve(options.exitCode ?? 0),
         signalCode: options.signalCode ?? null,
         kill,
+        stdin:
+          cmdOptions.input === true
+            ? {
+                write: (text) => {
+                  stdin.written.push(text);
+                },
+                end: () => {
+                  stdin.ended = true;
+                },
+              }
+            : null,
       };
     },
   };
-  return { spawner, kill, spawnCalls };
+  return { spawner, kill, spawnCalls, stdin };
 }
 
 export function throwingSpawner(error: Error): ProcessSpawner {

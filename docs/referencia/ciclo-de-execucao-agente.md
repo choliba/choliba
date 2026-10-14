@@ -55,7 +55,10 @@ permissões do `agent.yaml`.
     - **Responder.** Quando o agente pergunta (a ferramenta da run `ask`), a pergunta ocupa o campo: escreva e tecle
       Enter; com opções, escolha com as setas e Enter, e marque várias com Espaço. Esc pula a pergunta, e o agente
       segue com uma premissa. A pergunta e a resposta ficam no quadro (`? …` e `→ …`).
-    - **Escrever.** O que você escreve e envia sem pergunta pendente fica no quadro como `› …`.
+    - **Escrever.** Sem pergunta pendente, o que você envia vai para a sessão, e o agente lê quando termina o passo em
+      que está; fica no quadro como `› …`. O Claude (e o `claude-ollama`) recebe a tarefa e as mensagens pelo stdin, e
+      a sessão termina quando o agente responde à última. O Cursor não recebe mensagens durante a execução: o campo
+      diz isso, e uma mensagem enviada aparece como `› … (não entregue: …)`.
     - **Interromper.** O primeiro Ctrl+C só avisa no campo; o segundo, em até 2 segundos, interrompe a execução.
 
     Quando a sessão termina, a tela se fecha e o terminal recebe o quadro inteiro e uma linha de resumo:

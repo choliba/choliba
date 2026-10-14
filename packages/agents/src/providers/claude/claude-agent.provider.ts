@@ -9,9 +9,11 @@ import type { ProviderRequest, ProviderVariablesInput, StreamParser } from '../.
 import { claudePermissionArgs } from './claude-permissions';
 
 function buildArgs(request: ProviderRequest): readonly string[] {
+  // The task is not here: it is the first message on stdin (`inputMessage`), where the person's messages follow.
   const args: string[] = [
     '-p',
-    request.userPrompt,
+    '--input-format',
+    'stream-json',
     '--output-format',
     'stream-json',
     '--verbose',
@@ -36,9 +38,9 @@ function buildArgs(request: ProviderRequest): readonly string[] {
   // Auto-memory would let the session read and write ~/.claude/projects/<run>/memory/, outside what the
   // permissions allow, and each run's folder is new, so nothing it saves would ever be read again.
   args.push('--settings', JSON.stringify({ autoMemoryEnabled: false }));
-  // Variadic flags go last: a positional prompt placed after one would be swallowed by it.
-  // There is none here (the prompt is already first, right after -p), but keeping this order
-  // means a future flag inserted above can never accidentally end up after these.
+  // Variadic flags go last: a positional argument placed after one would be swallowed by it.
+  // There is none here (the task goes on stdin), but keeping this order means a future flag
+  // inserted above can never accidentally end up after these.
   if (request.addDirs.length > 0) {
     args.push('--add-dir', ...request.addDirs);
   }
@@ -79,6 +81,11 @@ export class ClaudeAgentProvider extends AgentProvider {
   override variables({ request }: ProviderVariablesInput): Readonly<Record<string, string>> {
     if (!runToolsOf(request).some((tool) => tool.name === 'ask')) return {};
     return { BASH_DEFAULT_TIMEOUT_MS: ASK_COMMAND_TIMEOUT_MS, BASH_MAX_TIMEOUT_MS: ASK_COMMAND_TIMEOUT_MS };
+  }
+
+  /** A message of the person as Claude Code's stream input takes it: one JSON line. */
+  override inputMessage(text: string): string {
+    return `${JSON.stringify({ type: 'user', message: { role: 'user', content: [{ type: 'text', text }] } })}\n`;
   }
 
   createParser(): StreamParser {
