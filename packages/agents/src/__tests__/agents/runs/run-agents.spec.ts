@@ -25,7 +25,7 @@ import type { RunAgentsCliDeps } from '../../../agents/runs/run-context';
 import { agentsHelpSpec, runAgentsCli, runAgentsList } from '../../../agents/runs/run-agents';
 import { COMMAND_LINE_TITLE } from '../../../agents/runs/dry-run';
 
-import { PROVIDERS } from '../../helpers/providers';
+import { PROVIDERS, PROVIDERS_WITH_OLLAMA } from '../../helpers/providers';
 import { fakeSpawner, streamFromChunks } from '../../helpers/fake-spawner';
 import { makeTmpDir } from '../../helpers/tmp';
 
@@ -1774,5 +1774,66 @@ describe('runAgentsCli — CHOL_SANDBOX', () => {
     } finally {
       tmp.cleanup();
     }
+  });
+});
+
+describe('runAgentsCli — claude-ollama', () => {
+  function withOllamaAgent(models: readonly string[], run: (agentsDir: string) => Promise<void>): Promise<void> {
+    const tmp = makeTmpDir('cli-ollama-agent');
+    const dir = join(tmp.path, 'local');
+    mkdirSync(dir, { recursive: true });
+    const yaml = [
+      'version: 1',
+      'agent:',
+      '  id: local',
+      '  name: Local',
+      '  version: 1.0.0',
+      '  description: d',
+      `models: [${models.join(', ')}]`,
+      ...SECTIONS,
+    ];
+    writeFileSync(join(dir, 'agent.yaml'), `${yaml.join('\n')}\n`);
+    return run(tmp.path).finally(tmp.cleanup);
+  }
+
+  const MODELS = ['claude-3-5-sonnet', '"ollama:qwen3.5:4b"'];
+
+  it('asks Claude Code for the first ollama: model the agent declares, by its Ollama name', async () => {
+    await withOllamaAgent(MODELS, async (agentsDir) => {
+      const { deps, stdout } = harness([], { providers: PROVIDERS_WITH_OLLAMA });
+
+      const argv = ['local', '--agents-dir', agentsDir, '--claude-ollama', '--dry-run', '--show-prompt', 'x'];
+      expect(await runAgentsCli(argv, deps)).toBe(0);
+      const args = dryRunArgv(stdout);
+      expect(args.at(args.indexOf('--model') + 1)).toBe('qwen3.5:4b');
+    });
+  });
+
+  it('checks the model the stream reports as the ollama: one the agent declares', async () => {
+    await withOllamaAgent(MODELS, async (agentsDir) => {
+      const { deps } = harness([claudeInitLine('qwen3.5:4b'), claudeSuccessLine()], {
+        providers: PROVIDERS_WITH_OLLAMA,
+      });
+
+      expect(await runAgentsCli(['local', '--agents-dir', agentsDir, '--provider', 'claude-ollama', 'x'], deps)).toBe(
+        0,
+      );
+    });
+  });
+
+  it('refuses an ollama: model on claude, and claude-ollama for an agent that declares none', async () => {
+    await withOllamaAgent(MODELS, async (agentsDir) => {
+      const { deps, stderr } = harness([], { providers: PROVIDERS_WITH_OLLAMA });
+
+      const argv = ['local', '--agents-dir', agentsDir, '--claude', '--model', 'ollama:qwen3.5:4b', 'x'];
+      expect(await runAgentsCli(argv, deps)).toBe(1);
+      expect(stderr.chunks.join('')).toContain('é do provider claude-ollama');
+    });
+    await withOllamaAgent(['claude-3-5-sonnet'], async (agentsDir) => {
+      const { deps, stderr } = harness([], { providers: PROVIDERS_WITH_OLLAMA });
+
+      expect(await runAgentsCli(['local', '--agents-dir', agentsDir, '--claude-ollama', 'x'], deps)).toBe(1);
+      expect(stderr.chunks.join('')).toContain('o agente não declara nenhum');
+    });
   });
 });

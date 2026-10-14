@@ -48,6 +48,11 @@ export interface SandboxPlanInput {
   readonly command: readonly string[];
   readonly program?: SandboxProgram;
   readonly reach: SandboxReach;
+  /**
+   * Variables the provider sets for itself, over what the session inherits: where its API is, which token it sends.
+   * The sandbox passes them in as they are and does not know which provider set them.
+   */
+  readonly variables?: Readonly<Record<string, string>>;
 }
 
 export interface SandboxBackend {

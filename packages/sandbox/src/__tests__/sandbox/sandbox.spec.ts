@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import {
   containerName,
   dockerRunArgs,
+  DockerSandbox,
   agentURL,
   DEFAULT_SANDBOX_IMAGE,
   presentCredentials,
@@ -163,5 +164,44 @@ describe('containerName', () => {
       'choliba-2026-10-12T05-53-29.739Z-383691',
     );
     expect(containerName('/w/runs/a b:c')).toBe('choliba-a-b-c');
+  });
+});
+
+describe('DockerSandbox', () => {
+  it("passes the provider's own variables into the container by name, over the inherited ones", () => {
+    const sandbox = new DockerSandbox({
+      image: 'choliba-agent',
+      network: 'isolated',
+      user: { uid: 1000, gid: 1000 },
+      credentialNames: ['CLAUDE_CODE_OAUTH_TOKEN'],
+      environment: { CLAUDE_CODE_OAUTH_TOKEN: 'segredo', PATH: '/usr/bin' },
+      disk: { exists: () => false, isDirectory: () => false, read: () => [] },
+    });
+    const reach = {
+      permissions: { allowRead: [], allowWrite: [], allowExecute: [], denyRead: [], denyWrite: [] },
+      policy: 'edits',
+      addDirs: [],
+      runDir: '/w/.cache/runs/1',
+      alsoRead: [],
+      alsoWrite: [],
+    } as const;
+
+    const plan = sandbox.plan({
+      command: ['claude'],
+      reach,
+      variables: { CLAUDE_CODE_OAUTH_TOKEN: '', ANTHROPIC_BASE_URL: 'http://host.docker.internal:11434' },
+    });
+    const passed = plan.command.flatMap((arg, index) => (plan.command[index - 1] === '--env' ? [arg] : []));
+    expect(passed).toEqual([
+      'HOME=/home/choliba',
+      'PLAYWRIGHT_MCP_SANDBOX=false',
+      'CLAUDE_CODE_OAUTH_TOKEN',
+      'ANTHROPIC_BASE_URL',
+    ]);
+    expect(plan.env).toEqual({
+      CLAUDE_CODE_OAUTH_TOKEN: '',
+      PATH: '/usr/bin',
+      ANTHROPIC_BASE_URL: 'http://host.docker.internal:11434',
+    });
   });
 });

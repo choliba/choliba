@@ -101,6 +101,8 @@ function fakeAdapter(overrides: Partial<AgentProvider> = {}): AgentProvider {
     credentials: ['FAKE_TOKEN'],
     credentialHelp: 'set FAKE_TOKEN',
     unenforcedTools: [],
+    inAuto: true,
+    declaredModel: (model) => model,
     buildArgs: () => ['--arg'],
     createParser: () => {
       let sawInitWithModel = false;

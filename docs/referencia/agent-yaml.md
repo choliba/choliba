@@ -11,7 +11,7 @@ completo e o passo a passo estão em [Escrevendo um agente](../guias/escrever-um
 | --------------------------------- | ----------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `version`                         | sim         | —                   | Versão do padrão: `1`.                                                                                                                                                                                                                                                                                                                                      |
 | `agent`                           | sim         | —                   | `id` (igual à pasta, é o nome do comando), `name`, `version` (semver do agente), `description` e, opcional, `color` (cor do rótulo `[agente]`; `CHOL_COLORS` ganha dela).                                                                                                                                                                                   |
-| `models`                          | sim         | —                   | Modelos com que o agente pode rodar, pelo id que o provider informa.                                                                                                                                                                                                                                                                                        |
+| `models`                          | sim         | —                   | Modelos com que o agente pode rodar, pelo id que o provider informa. Um modelo do Ollama é `ollama:<modelo>` (veja [Modelos do Ollama](#modelos-do-ollama)).                                                                                                                                                                                                |
 | `role`, `input`, `flow`, `output` | sim         | —                   | O texto do agente (veja [O texto do agente](../guias/escrever-um-agente.md#o-texto-do-agente)).                                                                                                                                                                                                                                                             |
 | `context`, `notes`                | não         | nenhum              | Listas de textos que completam o texto do agente.                                                                                                                                                                                                                                                                                                           |
 | `skills`                          | não         | `[]`                | Pastas em `.choliba/skills/`, com a instrução de uso de cada uma (veja [Skills e MCPs](../guias/escrever-um-agente.md#skills-e-mcps)).                                                                                                                                                                                                                      |
@@ -53,6 +53,35 @@ escrita e exclusão nelas em toda execução, e nenhuma exceção reabre.
 
 A forma antiga continua aceita: um caminho que começa com `!` dentro de `deny.read`, `deny.write` ou `deny.delete` é
 o mesmo que pô-lo em `exception` da mesma ação (`deny: { read: ['${CHOL_ROOT}/', '!${CHOL_ROOT}/docs/publico/'] }`).
+
+## Modelos do Ollama
+
+Um modelo declarado como `ollama:<modelo>` em `models` roda no [Ollama](https://ollama.com), pelo provider
+`claude-ollama`: o Claude Code, com as mesmas permissões e as mesmas paradas, falando com o Ollama em vez da API do
+Claude.
+
+```yaml
+models:
+  - claude-sonnet-5
+  - 'ollama:qwen3.5:4b'
+```
+
+```bash
+choliba run agent test-writer --claude-ollama --project loja --ticket loja-1
+```
+
+- Sem `--model`, o `claude-ollama` usa o primeiro `ollama:` da lista; com `--model`, o modelo tem que ser um `ollama:`.
+  Um agente sem nenhum é recusado antes de rodar.
+- Um modelo `ollama:` só roda no `claude-ollama`: com `--claude` ou `--cursor`, o choliba recusa e diz qual provider
+  usar.
+- O `claude-ollama` não entra no `auto`: roda só quando nomeado (`--provider claude-ollama`, `--claude-ollama` ou
+  `CHOL_AGENTS_PROVIDER`).
+- O endereço é `CHOL_OLLAMA_URL` (padrão `http://localhost:11434`). O choliba põe esse endereço e o token do Ollama na
+  sessão e deixa vazias as credenciais do Claude, para nenhuma delas ir ao Ollama. No docker, veja
+  [Ollama](sandbox.md#ollama).
+- O modelo precisa saber chamar ferramentas (no `ollama list`, a capacidade `tools`), e o Ollama precisa de contexto
+  para o texto do agente: suba o servidor com `OLLAMA_CONTEXT_LENGTH=65536` ou mais. Um modelo pequeno roda, mas segue
+  pior o fluxo e as permissões.
 
 ## Ferramentas da run
 

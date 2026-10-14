@@ -78,6 +78,12 @@ ele suba. As regras do provider continuam valendo dentro do container.
   host por `localhost`. Ela não é um firewall de saída: internet e rotas alcançáveis pelo Docker podem continuar
   disponíveis. Um bloqueio de egress exige uma política de rede externa ao choliba.
 
+### Ollama
+
+Com o provider `claude-ollama`, o endereço do Ollama (`CHOL_OLLAMA_URL`) também passa pela troca de `localhost` por
+`host.docker.internal`. O Ollama, por padrão, só escuta em `127.0.0.1`, que o container não alcança: suba o servidor
+com `OLLAMA_HOST=0.0.0.0`, ou use `CHOL_NETWORK=host`.
+
 ### Credencial
 
 A credencial do provider entra por variável de ambiente, do `.env`: `CLAUDE_CODE_OAUTH_TOKEN` (gerado por

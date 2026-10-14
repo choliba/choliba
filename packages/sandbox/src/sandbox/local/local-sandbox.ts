@@ -65,7 +65,8 @@ export class LocalSandbox implements SandboxBackend {
     const bwrap = requireBwrap(this.options.bwrap);
     const home = requiredValue(this.options.environment['HOME'], 'O sandbox local precisa da variável HOME definida.');
     const program = requireProgram(input, this.options.disk);
-    requireCredential(program, this.options.environment);
+    const environment = { ...this.options.environment, ...input.variables };
+    requireCredential(program, environment);
     const { mounts, skipped } = containerMounts(input.reach, this.options.disk);
     const [, ...args] = input.command;
     return {
@@ -77,7 +78,7 @@ export class LocalSandbox implements SandboxBackend {
         cwd: input.reach.runDir,
         command: [program.executable, ...args],
       }),
-      env: this.options.environment,
+      env: environment,
       place: { kind: 'local' },
       paths: mounts,
       skipped,

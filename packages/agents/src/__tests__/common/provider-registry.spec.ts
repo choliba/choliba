@@ -8,7 +8,13 @@ import {
   ProviderNotFoundError,
   ProviderRegistry,
 } from '../../common/provider-registry';
-import { claudeProvider, cursorProvider, PROVIDERS } from '../helpers/providers';
+import {
+  claudeOllamaProvider,
+  claudeProvider,
+  cursorProvider,
+  PROVIDERS,
+  PROVIDERS_WITH_OLLAMA,
+} from '../helpers/providers';
 
 function whichOf(available: readonly string[]): (bin: string) => string | null {
   return (bin) => (available.includes(bin) ? `/usr/bin/${bin}` : null);
@@ -82,10 +88,26 @@ describe('ProviderRegistry — the names and descriptions --provider shows', () 
 });
 
 describe('AGENT_PROVIDERS', () => {
-  it('gives claude and cursor, in that order, once', () => {
+  it('gives claude, claude-ollama and cursor, in that order, once', () => {
     const { container } = createShell(fakePlatform(), [coreShell, agentsShell, VERBS_ROOT]);
 
-    expect(container.get(AGENT_PROVIDERS).choices()).toEqual(['auto', 'claude', 'cursor']);
+    expect(container.get(AGENT_PROVIDERS).choices()).toEqual(['auto', 'claude', 'claude-ollama', 'cursor']);
     expect(container.get(AGENT_PROVIDERS)).toBe(container.get(AGENT_PROVIDERS));
+  });
+});
+
+describe('ProviderRegistry with a provider of its own models', () => {
+  it('never picks it in auto, but runs it when named', () => {
+    expect(PROVIDERS_WITH_OLLAMA.resolve('auto', whichOf(['claude'])).adapter).toBe(claudeProvider);
+    expect(PROVIDERS_WITH_OLLAMA.resolve('claude-ollama', whichOf(['claude'])).adapter).toBe(claudeOllamaProvider);
+    expect(PROVIDERS_WITH_OLLAMA.parsePreference('claude-ollama')).toBe('claude-ollama');
+  });
+
+  it('says what it is in --help, and owns the models of its prefix', () => {
+    expect(PROVIDERS_WITH_OLLAMA.descriptions().find(({ name }) => name === 'claude-ollama')?.description).toBe(
+      claudeOllamaProvider.summary,
+    );
+    expect(PROVIDERS_WITH_OLLAMA.modelOwner('ollama:qwen3.5:4b')).toBe(claudeOllamaProvider);
+    expect(PROVIDERS_WITH_OLLAMA.modelOwner('claude-sonnet-5')).toBeUndefined();
   });
 });

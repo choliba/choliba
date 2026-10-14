@@ -147,7 +147,7 @@ describe('LocalSandbox', () => {
       ]),
     );
     expect(plan.command.slice(-5)).toEqual(['--chdir', '/w/.cache/runs/1', '--', '/provider/claude', '-p']);
-    expect(plan.env).toBe(ENVIRONMENT);
+    expect(plan.env).toEqual(ENVIRONMENT);
   });
 
   it('covers a denied file with an empty one', () => {
@@ -185,6 +185,25 @@ describe('LocalSandbox', () => {
         reach: reach({ allowRead: ['/w/docs/'] }),
       }),
     ).not.toThrow();
+  });
+
+  it("puts the provider's own variables over the inherited ones, and lets them be its credential", () => {
+    const withoutCredential = new LocalSandbox({
+      disk: DISK,
+      bwrap: '/usr/bin/bwrap',
+      environment: { HOME: '/home/test', CLAUDE_CODE_OAUTH_TOKEN: '', PATH: '/usr/bin' },
+    });
+    const program = { ...PROGRAM, credentials: ['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_AUTH_TOKEN'] };
+    const input = { command: ['claude'], program, reach: reach({ allowRead: ['/w/docs/'] }) };
+    expect(() => withoutCredential.plan(input)).toThrow('defina a credencial');
+
+    const plan = withoutCredential.plan({ ...input, variables: { ANTHROPIC_AUTH_TOKEN: 'ollama', PATH: '/bin' } });
+    expect(plan.env).toEqual({
+      HOME: '/home/test',
+      CLAUDE_CODE_OAUTH_TOKEN: '',
+      PATH: '/bin',
+      ANTHROPIC_AUTH_TOKEN: 'ollama',
+    });
   });
 
   it('refuses a missing home and program with the boundary messages', () => {

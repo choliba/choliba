@@ -1,7 +1,7 @@
 import { CONFIG, PLATFORM, ProcessRunnerService, THEME, type ShellModule } from '@choliba/core';
 
 import { ProviderRegistry } from '../common';
-import { ClaudeAgentProvider, CursorAgentProvider } from '../providers';
+import { ClaudeAgentProvider, ClaudeOllamaAgentProvider, CursorAgentProvider } from '../providers';
 import { listAgentsCommand } from './agents-list.command';
 import { runAgentCommand } from './agents-run.command';
 import { AGENT_PROVIDERS, AGENTS } from './agents.constants';
@@ -16,7 +16,8 @@ export const agentsShell: ShellModule = {
   provide: (container) => {
     container.provide(
       AGENT_PROVIDERS,
-      () => new ProviderRegistry([new ClaudeAgentProvider(), new CursorAgentProvider()]),
+      () =>
+        new ProviderRegistry([new ClaudeAgentProvider(), new ClaudeOllamaAgentProvider(), new CursorAgentProvider()]),
     );
     container.provide(AGENTS, (c) => {
       const platform = c.get(PLATFORM);
