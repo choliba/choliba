@@ -15,6 +15,8 @@ export {
 export type { CommandGroup, DocCommand } from './commands';
 export { robotsTxt } from './crawlers';
 export { frontmatterPage } from './home';
+export { mainLandmarkMessage, pagesWithoutOneMain } from './landmarks';
+export type { BuiltPage } from './landmarks';
 export { githubSlug, outsideLink } from './links';
 export { rootPage } from './root-page';
 export {

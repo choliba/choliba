@@ -1,17 +1,20 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { defineConfig, type MarkdownEnv } from 'vitepress';
 
 import {
+  type BuiltPage,
   buildSidebar,
   checkDescription,
   faviconLink,
   githubSlug,
   googleAnalyticsTags,
+  mainLandmarkMessage,
   outsideLink,
   pageDescription,
+  pagesWithoutOneMain,
   pageUrl,
   publishedTime,
   readDocPages,
@@ -33,6 +36,13 @@ const GOOGLE_ANALYTICS = 'G-TMCFNCED9F';
 const TITLE = 'choliba';
 /** When this build publishes the site: each release builds it again, so every publication has its own date. */
 const PUBLISHED = publishedTime(new Date());
+
+/** Every page the build wrote, by its path in `outDir`. */
+function builtPages(outDir: string): BuiltPage[] {
+  return readdirSync(outDir, { recursive: true, encoding: 'utf8' })
+    .filter((file) => file.endsWith('.html'))
+    .map((file) => ({ path: file, html: readFileSync(path.join(outDir, file), 'utf8') }));
+}
 
 /**
  * A page's description: the site's for the home, the frontmatter's when it has one, otherwise the quote under its
@@ -82,8 +92,24 @@ export default defineConfig({
   transformHead() {
     return googleAnalyticsTags(GOOGLE_ANALYTICS);
   },
+  // Every page has one main landmark, for screen readers: a page without one stops the build.
   buildEnd(siteConfig) {
+    const missing = pagesWithoutOneMain(builtPages(siteConfig.outDir));
+    if (missing.length > 0) throw new Error(mainLandmarkMessage(missing));
     writeFileSync(path.join(siteConfig.outDir, 'robots.txt'), robotsTxt(SITE_URL));
+  },
+  // The default theme's home and 404 have a div as root, so neither had a main landmark: these put each inside one.
+  // The pattern is the exact import VPContent.vue makes, so the original, imported by its full path, is not replaced.
+  vite: {
+    resolve: {
+      alias: [
+        { find: /^\.\/VPHome\.vue$/, replacement: fileURLToPath(new URL('theme/home-main.vue', import.meta.url)) },
+        {
+          find: /^\.\.\/NotFound\.vue$/,
+          replacement: fileURLToPath(new URL('theme/not-found-main.vue', import.meta.url)),
+        },
+      ],
+    },
   },
   markdown: {
     // The anchors GitHub makes, which the pages already link to (`comandos.md#a-aplicação-do-projeto`).
