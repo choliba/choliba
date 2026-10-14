@@ -1,4 +1,5 @@
-import { chmodSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 
 import { CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR } from '@choliba/core';
 import { denyExceptions, isException } from '@choliba/sandbox';
@@ -9,7 +10,7 @@ import { type AgentPermissions, absolutePermissions, EVERY_COMMAND, type RunPlac
 import { askExchangeDir, askScript } from './ask-tool';
 import { deleteScript } from './delete-tool';
 import { DEFAULT_PLAYWRIGHT_OUTPUT_DIR, playwrightScript } from './playwright-tool';
-import { runToolPath } from './run-tool-path';
+import { runToolPath, runToolShortcuts } from './run-tool-path';
 
 /** What a run tool's script is written from. */
 interface ScriptContext {
@@ -142,11 +143,24 @@ export interface RunToolCommands {
   readonly scripts: readonly string[];
 }
 
+/** The shortcut of `tool`: the file named after it in the shortcuts folder of its run (`<run>.bin/ask`). */
+function shortcutPath(tool: ActiveRunTool): string {
+  const runDir = tool.path.slice(0, -(tool.name.length + 1));
+  return join(runToolShortcuts(runDir), tool.name);
+}
+
+/** The commands `tool` is run with: its full path and, through its shortcut, its name alone. */
+function commandsOf(tool: ActiveRunTool): readonly string[] {
+  return [tool.path, tool.name];
+}
+
 export function runToolCommands(tools: readonly ActiveRunTool[]): RunToolCommands {
   return {
-    allow: tools.flatMap((tool) => tool.allowed?.map((sub) => `${tool.path} ${sub}`) ?? [tool.path]),
-    deny: tools.flatMap((tool) => tool.denied.map((sub) => `${tool.path} ${sub}`)),
-    scripts: tools.map((tool) => tool.path),
+    allow: tools.flatMap((tool) =>
+      commandsOf(tool).flatMap((command) => tool.allowed?.map((sub) => `${command} ${sub}`) ?? [command]),
+    ),
+    deny: tools.flatMap((tool) => commandsOf(tool).flatMap((command) => tool.denied.map((sub) => `${command} ${sub}`))),
+    scripts: tools.flatMap((tool) => [tool.path, shortcutPath(tool)]),
   };
 }
 
@@ -161,11 +175,22 @@ export function planRunTools(
     runDir: request.runDir,
     config,
   };
-  return runToolsOf(request).map((tool) => ({ path: tool.path, content: RUN_TOOLS[tool.name].script(context) }));
+  return runToolsOf(request).flatMap((tool) => [
+    { path: tool.path, content: RUN_TOOLS[tool.name].script(context) },
+    { path: shortcutPath(tool), content: shortcutScript(tool.path) },
+  ]);
+}
+
+/** A shortcut's script: it runs the tool's own script, with what it was given. */
+function shortcutScript(script: string): string {
+  return `#!/bin/sh\nexec ${JSON.stringify(script)} "$@"\n`;
 }
 
 /** Writes `files` as executables and returns the restore that removes them, safe to call more than once. */
 export function applyRunTools(files: readonly PlannedFile[]): () => void {
+  // The folders it makes (the shortcuts'), removed with the files.
+  const made = [...new Set(files.map((file) => dirname(file.path)))].filter((folder) => !existsSync(folder));
+  for (const folder of made) mkdirSync(folder, { recursive: true });
   for (const file of files) {
     writeFileSync(file.path, file.content, 'utf8');
     chmodSync(file.path, 0o755);
@@ -179,6 +204,7 @@ export function applyRunTools(files: readonly PlannedFile[]): () => void {
     for (const file of files) {
       rmSync(file.path, { force: true });
     }
+    for (const folder of made) rmSync(folder, { recursive: true, force: true });
   };
 }
 

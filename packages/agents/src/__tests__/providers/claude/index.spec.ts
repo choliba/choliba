@@ -448,18 +448,29 @@ describe('claudeProvider.buildArgs with run tools', () => {
     expect(listAfter(args, '--allowedTools')).toEqual([
       'Bash(git diff:*)',
       `Bash(${runDir}.delete:*)`,
+      'Bash(delete:*)',
       `Bash(${runDir}.playwright-cli:*)`,
+      'Bash(playwright-cli:*)',
       `Bash(${runDir}.playwright-trace open:*)`,
       `Bash(${runDir}.playwright-trace close:*)`,
+      'Bash(playwright-trace open:*)',
+      'Bash(playwright-trace close:*)',
     ]);
     expect(listAfter(args, '--disallowedTools')).toEqual([
       `Edit(/${runDir}.delete)`,
       `Write(/${runDir}.delete)`,
+      `Edit(/${runDir}.bin/delete)`,
+      `Write(/${runDir}.bin/delete)`,
       `Edit(/${runDir}.playwright-cli)`,
       `Write(/${runDir}.playwright-cli)`,
+      `Edit(/${runDir}.bin/playwright-cli)`,
+      `Write(/${runDir}.bin/playwright-cli)`,
       `Edit(/${runDir}.playwright-trace)`,
       `Write(/${runDir}.playwright-trace)`,
+      `Edit(/${runDir}.bin/playwright-trace)`,
+      `Write(/${runDir}.bin/playwright-trace)`,
       `Bash(${runDir}.playwright-cli eval:*)`,
+      'Bash(playwright-cli eval:*)',
     ]);
     expect(args[args.indexOf('--tools') + 1]).toBe('Bash');
   });
@@ -470,6 +481,6 @@ describe('claudeProvider.buildArgs with run tools', () => {
     });
     const args = claudeProvider.buildArgs(fakeRequest({ agent: fakeAgent({ permissions }) }));
 
-    expect(listAfter(args, '--allowedTools')).toEqual([`Bash(${runDir}.playwright-cli:*)`]);
+    expect(listAfter(args, '--allowedTools')).toEqual([`Bash(${runDir}.playwright-cli:*)`, 'Bash(playwright-cli:*)']);
   });
 });
