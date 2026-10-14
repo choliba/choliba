@@ -91,7 +91,14 @@ function runDryRun(
     described = sandboxView(
       sandbox,
       launchFor(
-        { sandbox, command: resolved.command, request: providerRequest, files: runFiles, config: deps.config },
+        {
+          sandbox,
+          command: resolved.command,
+          provider: resolved,
+          request: providerRequest,
+          files: runFiles,
+          config: deps.config,
+        },
         plannedDisk(providerRequest, runFiles),
       ),
     );
@@ -199,7 +206,14 @@ async function runAndRecord(
       theme: deps.theme,
       toolFiles,
       launch: (providerCommand) =>
-        launchFor({ sandbox, command: providerCommand, request: providerRequest, files, config: deps.config }),
+        launchFor({
+          sandbox,
+          command: providerCommand,
+          provider: resolved,
+          request: providerRequest,
+          files,
+          config: deps.config,
+        }),
     },
     {
       runner: deps.runner,

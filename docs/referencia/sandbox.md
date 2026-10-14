@@ -19,6 +19,16 @@ está montado não existe, com leitura, escrita ou oculto. A pasta da execução
 trabalho. Sem o `bwrap` no `PATH`, o comando é recusado e a mensagem diz como instalá-lo (no Debian e no Ubuntu:
 `sudo apt install bubblewrap`).
 
+O choliba resolve o executável instalado antes de entrar no sandbox e monta somente a closure necessária, só para
+leitura: o arquivo executável do Claude Code ou a pasta da versão do Cursor CLI, que também contém o runtime e os
+arquivos JavaScript. A pasta pessoal real fica escondida por uma pasta vazia em memória; ela some no fim da execução.
+Os caminhos liberados pelo agente que ficam abaixo dela são montados depois e continuam acessíveis.
+
+A credencial vem do `.env`: uma execução local com Claude exige `CLAUDE_CODE_OAUTH_TOKEN` (gerado por
+`claude setup-token`), `ANTHROPIC_API_KEY` ou `ANTHROPIC_AUTH_TOKEN`; com Cursor, exige `CURSOR_API_KEY`. O restante
+do ambiente configurado continua herdado, inclusive pelas instâncias de MCP que o provider inicia. O choliba não
+monta os arquivos de autenticação da pasta pessoal.
+
 `list`, `create`, `edit` e `delete` dentro de um caminho já montado continuam nas regras do provider. O que cada
 mount mostra — inclusive o arquivo com escrita que abre a pasta — está em [Docker](#docker): os dois usam a mesma
 função.
@@ -71,8 +81,9 @@ ele suba. As regras do provider continuam valendo dentro do container.
 ### Credencial
 
 A credencial do provider entra por variável de ambiente, do `.env`: `CLAUDE_CODE_OAUTH_TOKEN` (gerado por
-`claude setup-token`, usa a assinatura e só chama o modelo) ou `ANTHROPIC_API_KEY`, e `CURSOR_API_KEY`. O agente
-consegue lê-la, como consegue fora do container: prefira o token, que não serve para mais nada.
+`claude setup-token`, usa a assinatura e só chama o modelo), `ANTHROPIC_API_KEY` ou `ANTHROPIC_AUTH_TOKEN`, e
+`CURSOR_API_KEY`. O agente consegue lê-la, como consegue fora do container: prefira o token, que não serve para mais
+nada.
 
 ### Imagem
 

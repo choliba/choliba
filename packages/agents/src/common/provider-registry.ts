@@ -7,6 +7,8 @@ export interface ResolvedProvider {
   readonly adapter: AgentProvider;
   /** The full binary command, e.g. `['cursor-agent']` or `['cursor', 'agent']`. */
   readonly command: readonly string[];
+  /** Where `command[0]` resolved on this machine, before following links. */
+  readonly executable: string;
 }
 
 export class InvalidProviderPreferenceError extends Error {}
@@ -18,11 +20,16 @@ function listWithOr(items: readonly string[]): string {
 }
 
 /** The first candidate in `provider.binaries` whose first word resolves, in declared order. */
-function findCommand(provider: AgentProvider, which: (bin: string) => string | null): readonly string[] | undefined {
-  return provider.binaries.find((candidate) => {
-    const bin = candidate[0];
-    return bin !== undefined && which(bin) !== null;
-  });
+function findCommand(
+  provider: AgentProvider,
+  which: (bin: string) => string | null,
+): { command: readonly string[]; executable: string } | undefined {
+  for (const candidate of provider.binaries) {
+    const [bin] = candidate;
+    const executable = which(bin);
+    if (executable !== null) return { command: candidate, executable };
+  }
+  return undefined;
 }
 
 /** How a provider is found: its command, or — when installs name it differently — the first of them installed. */
@@ -75,9 +82,9 @@ export class ProviderRegistry {
     const candidates =
       preference === AUTO ? this.autoOrder() : this.providers.filter((provider) => provider.id === preference);
     for (const adapter of candidates) {
-      const command = findCommand(adapter, which);
-      if (command !== undefined) {
-        return { adapter, command };
+      const found = findCommand(adapter, which);
+      if (found !== undefined) {
+        return { adapter, ...found };
       }
     }
     const tried = candidates.map((provider) => provider.id).join(', ');

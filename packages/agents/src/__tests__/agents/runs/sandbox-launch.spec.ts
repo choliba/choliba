@@ -2,6 +2,8 @@ import { statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { launchFor, realDisk, type LaunchDisk } from '../../../agents/runs/sandbox-launch';
+import { ClaudeAgentProvider } from '../../../providers/claude/claude-agent.provider';
+import { CursorAgentProvider } from '../../../providers/cursor/cursor-agent.provider';
 import { NO_PERMISSIONS, type AgentPermissions } from '../../../common/agent-permissions';
 import type { ProviderRequest } from '../../../common/interfaces/provider.interface';
 import { NO_MODE_STEPS, fakeSections } from '../../helpers/agent';
@@ -53,23 +55,94 @@ function disk(): LaunchDisk & { readonly made: string[] } {
     ensureDir: (path) => {
       made.push(path);
     },
+    realpath: (path) => path,
   };
 }
 
-const CONFIG = { CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: '/g/projects', CLAUDE_CODE_OAUTH_TOKEN: 'segredo' };
+const PROVIDER = {
+  adapter: new ClaudeAgentProvider(),
+  command: ['claude'],
+  executable: '/provider/claude',
+};
+
+const CONFIG = {
+  HOME: '/home/test',
+  CHOL_GLOBAL_DIR: '/g',
+  CHOL_PROJECTS_DIR: '/g/projects',
+  CLAUDE_CODE_OAUTH_TOKEN: 'segredo',
+};
 
 describe('launchFor', () => {
   it('wraps the command in bwrap, with the run folder writable and as its working directory', () => {
     const launch = launchFor(
-      { sandbox: { kind: 'local' }, command: ['claude', '-p'], request: request(), files: [], config: {} },
+      {
+        sandbox: { kind: 'local' },
+        command: ['claude', '-p'],
+        provider: PROVIDER,
+        request: request(),
+        files: [],
+        config: CONFIG,
+      },
       disk(),
     );
     expect(launch.place).toEqual({ kind: 'local' });
     expect(launch.command[0]).toMatch(/bwrap$/);
-    expect(launch.command.slice(-5)).toEqual(['--chdir', '/w/.cache/runs/1', '--', 'claude', '-p']);
+    expect(launch.command.slice(-5)).toEqual(['--chdir', '/w/.cache/runs/1', '--', '/provider/claude', '-p']);
+    const home = launch.command.indexOf('/home/test');
+    const provider = launch.command.indexOf('/provider/claude');
+    const run = launch.command.indexOf('/w/.cache/runs/1');
+    expect(home).toBeGreaterThan(0);
+    expect(provider).toBeGreaterThan(home);
+    expect(run).toBeGreaterThan(provider);
+    expect(launch.env).toEqual(CONFIG);
     expect(launch.paths).toEqual(
       expect.arrayContaining([{ path: '/w/.cache/runs/1', access: 'write', directory: true }]),
     );
+  });
+
+  it('mounts the whole cursor version folder but only the claude executable', () => {
+    const base = disk();
+    const fake = { ...base, realpath: (path: string) => `/versions/1/${path.split('/').pop() ?? ''}` };
+    const cursor = {
+      adapter: new CursorAgentProvider(),
+      command: ['agent'],
+      executable: '/home/test/.local/bin/agent',
+    };
+    const launch = launchFor(
+      {
+        sandbox: { kind: 'local' },
+        command: ['agent', '-p'],
+        provider: cursor,
+        request: request(),
+        files: [],
+        config: { HOME: '/home/test', CURSOR_API_KEY: 'secret' },
+      },
+      fake,
+    );
+    expect(launch.command).toEqual(expect.arrayContaining(['--ro-bind', '/versions/1', '/versions/1']));
+    expect(launch.command.slice(-2)).toEqual(['/versions/1/agent', '-p']);
+  });
+
+  it('refuses a broken provider link and a missing credential with actionable messages', () => {
+    const broken = {
+      ...disk(),
+      realpath: () => {
+        throw new Error('broken link');
+      },
+    };
+    const input = {
+      sandbox: { kind: 'local' } as const,
+      command: ['claude'],
+      provider: PROVIDER,
+      request: request(),
+      files: [],
+      config: CONFIG,
+    };
+    expect(() => launchFor(input, broken)).toThrow('O provider local não foi encontrado: claude.');
+    expect(() => launchFor({ ...input, provider: { ...PROVIDER, command: [] } }, broken)).toThrow(
+      'O provider local não foi encontrado: comando vazio.',
+    );
+    expect(() => launchFor({ ...input, config: { HOME: '/home/test' } }, disk())).toThrow('claude setup-token');
   });
 
   it('in a container, mounts the run, the packages and the run files, and passes the credentials by name', () => {
@@ -78,6 +151,7 @@ describe('launchFor', () => {
       {
         sandbox: { kind: 'docker', image: 'choliba-agent', network: 'isolated' },
         command: ['claude', '-p'],
+        provider: PROVIDER,
         request: request({ allowRead: ['docs/'] }),
         files: [{ path: '/w/.cache/runs/1.delete', content: '' }],
         config: CONFIG,
@@ -106,6 +180,7 @@ describe('launchFor', () => {
       {
         sandbox: { kind: 'docker', image: 'choliba-agent', network: 'isolated' },
         command: ['claude'],
+        provider: PROVIDER,
         request: request(
           { allowTools: [{ tool: 'playwright-cli', subcommands: ['*'] }] },
           {
@@ -139,6 +214,7 @@ describe('launchFor — CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR', () => {
       {
         sandbox: { kind: 'docker', image: 'choliba-agent', network: 'isolated' },
         command: ['claude'],
+        provider: PROVIDER,
         request: request({ allowTools: [{ tool: 'playwright-trace', subcommands: ['*'] }] }),
         files: [],
         config: { CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR: '/saida' },

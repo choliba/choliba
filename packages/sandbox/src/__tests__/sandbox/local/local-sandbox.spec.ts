@@ -35,6 +35,7 @@ function disk(entries: readonly string[]): DiskFacts {
 }
 
 const DISK = disk([
+  '/provider/claude',
   '/w/',
   '/w/.cache/',
   '/w/.cache/runs/',
@@ -43,6 +44,15 @@ const DISK = disk([
   '/w/docs/segredo/',
   '/w/docs/nota.txt',
 ]);
+
+const PROGRAM = {
+  executable: '/provider/claude',
+  readOnly: ['/provider/claude'],
+  credentials: ['CLAUDE_CODE_OAUTH_TOKEN'],
+  credentialHelp: 'defina a credencial',
+};
+
+const ENVIRONMENT = { HOME: '/home/test', CLAUDE_CODE_OAUTH_TOKEN: 'secret' };
 
 function reach(permissions: Partial<SandboxPermissions>, more: Partial<SandboxReach> = {}): SandboxReach {
   return {
@@ -81,10 +91,10 @@ describe('bwrapOnPath', () => {
 });
 
 describe('LocalSandbox', () => {
-  const sandbox = new LocalSandbox({ disk: DISK, bwrap: '/usr/bin/bwrap' });
+  const sandbox = new LocalSandbox({ disk: DISK, bwrap: '/usr/bin/bwrap', environment: ENVIRONMENT });
 
   it('refuses the command when bwrap is not installed, and says how to install it', () => {
-    const missing = new LocalSandbox({ disk: DISK, bwrap: undefined });
+    const missing = new LocalSandbox({ disk: DISK, bwrap: undefined, environment: ENVIRONMENT });
     expect(() => missing.plan({ command: ['claude', '-p'], reach: reach({ allowRead: ['/w/docs/'] }) })).toThrow(
       SandboxEnforcementError,
     );
@@ -96,6 +106,7 @@ describe('LocalSandbox', () => {
   it('mounts the same coarse paths as the container and starts in the run folder', () => {
     const plan = sandbox.plan({
       command: ['claude', '-p'],
+      program: PROGRAM,
       reach: reach({
         allowRead: ['/w/docs/'],
         allowWrite: ['/w/docs/nota.txt'],
@@ -120,23 +131,74 @@ describe('LocalSandbox', () => {
         '/w/.cache/runs/1',
         '--tmpfs',
         '/w/docs/segredo',
+        '--tmpfs',
+        '/home/test',
+        '--setenv',
+        'HOME',
+        '/home/test',
+        '--ro-bind',
+        '/provider/claude',
+        '/provider/claude',
         '--chdir',
         '/w/.cache/runs/1',
         '--',
-        'claude',
+        '/provider/claude',
         '-p',
       ]),
     );
-    expect(plan.command.slice(-5)).toEqual(['--chdir', '/w/.cache/runs/1', '--', 'claude', '-p']);
+    expect(plan.command.slice(-5)).toEqual(['--chdir', '/w/.cache/runs/1', '--', '/provider/claude', '-p']);
+    expect(plan.env).toBe(ENVIRONMENT);
   });
 
   it('covers a denied file with an empty one', () => {
     const plan = sandbox.plan({
       command: ['cat'],
+      program: PROGRAM,
       reach: reach({ allowRead: ['/w/docs/'], denyRead: ['/w/docs/nota.txt'] }),
     });
     const hidden = plan.command.indexOf('/w/docs/nota.txt');
     expect(plan.command.slice(hidden - 2, hidden + 1)).toEqual(['--dev-bind', '/dev/null', '/w/docs/nota.txt']);
+  });
+
+  it('refuses an absent program closure and accepts any declared credential', () => {
+    const absent = { ...PROGRAM, readOnly: ['/provider/missing'] };
+    expect(() =>
+      sandbox.plan({ command: ['claude'], program: absent, reach: reach({ allowRead: ['/w/docs/'] }) }),
+    ).toThrow('O provider local não foi encontrado: claude.');
+    expect(() =>
+      sandbox.plan({
+        command: [],
+        program: { ...PROGRAM, executable: '/provider/missing' },
+        reach: reach({ allowRead: ['/w/docs/'] }),
+      }),
+    ).toThrow('O provider local não foi encontrado: comando vazio.');
+
+    const alternative = new LocalSandbox({
+      disk: DISK,
+      bwrap: '/usr/bin/bwrap',
+      environment: { HOME: '/home/test', ANTHROPIC_API_KEY: 'secret' },
+    });
+    expect(() =>
+      alternative.plan({
+        command: ['claude'],
+        program: { ...PROGRAM, credentials: ['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_API_KEY'] },
+        reach: reach({ allowRead: ['/w/docs/'] }),
+      }),
+    ).not.toThrow();
+  });
+
+  it('refuses a missing home and program with the boundary messages', () => {
+    const withoutHome = new LocalSandbox({
+      disk: DISK,
+      bwrap: '/usr/bin/bwrap',
+      environment: { CLAUDE_CODE_OAUTH_TOKEN: 'secret' },
+    });
+    expect(() =>
+      withoutHome.plan({ command: ['claude'], program: PROGRAM, reach: reach({ allowRead: ['/w/docs/'] }) }),
+    ).toThrow('O sandbox local precisa da variável HOME definida.');
+    expect(() => sandbox.plan({ command: [], reach: reach({ allowRead: ['/w/docs/'] }) })).toThrow(
+      'O provider local não foi encontrado: comando vazio.',
+    );
   });
 });
 
@@ -161,7 +223,11 @@ describe('LocalSandbox with bwrap', () => {
         isDirectory: (path) => existsSync(path) && statSync(path).isDirectory(),
         read: readDir,
       };
-      const plan = new LocalSandbox({ disk: facts, bwrap }).plan({
+      const plan = new LocalSandbox({
+        disk: facts,
+        bwrap,
+        environment: { HOME: tmp.path, CLAUDE_CODE_OAUTH_TOKEN: 'secret' },
+      }).plan({
         command: [
           '/usr/bin/bash',
           '-c',
@@ -174,6 +240,12 @@ describe('LocalSandbox with bwrap', () => {
             'touch wrote && echo WROTE',
           ].join('; '),
         ],
+        program: {
+          executable: '/usr/bin/bash',
+          readOnly: ['/usr/bin/bash'],
+          credentials: ['CLAUDE_CODE_OAUTH_TOKEN'],
+          credentialHelp: 'defina a credencial',
+        },
         reach: reach({ allowRead: [`${allow}/`], denyRead: [`${secret}/`] }, { policy: 'read-only', runDir }),
       });
       const result = spawnSync(plan.command[0] ?? '', plan.command.slice(1), { encoding: 'utf8' });

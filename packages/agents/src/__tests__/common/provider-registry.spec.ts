@@ -49,6 +49,10 @@ describe('ProviderRegistry.resolve', () => {
     expect(PROVIDERS.resolve('cursor', whichOf(['cursor'])).command).toEqual(['cursor', 'agent']);
   });
 
+  it('keeps the executable path returned by the PATH lookup', () => {
+    expect(PROVIDERS.resolve('claude', whichOf(['claude'])).executable).toBe('/usr/bin/claude');
+  });
+
   it('honors an explicit preference even when the other provider is also available', () => {
     expect(PROVIDERS.resolve('claude', whichOf(['claude', 'agent'])).adapter).toBe(claudeProvider);
   });

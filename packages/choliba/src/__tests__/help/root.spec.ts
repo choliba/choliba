@@ -9,7 +9,8 @@ import { fakeRuntime, withFolder, withWorkspace } from '../helpers/runtime';
 const FIXTURES = join(__dirname, '..', '..', '..', '..', 'agents', 'src', '__tests__', 'fixtures');
 const ENV = ['agents', 'skills', 'mcps']
   .map((dir) => `CHOL_${dir.toUpperCase()}_DIR=${join(FIXTURES, dir)}\n`)
-  .join('');
+  .join('')
+  .concat(`HOME=/tmp\nCLAUDE_CODE_OAUTH_TOKEN=test-token\n`);
 
 async function choliba(
   argv: readonly string[],
@@ -42,7 +43,7 @@ describe('choliba', () => {
   it('runs an agent with run agent, and takes no agent as the first word', () =>
     withWorkspace(
       async (root) => {
-        const which = (bin: string): string | null => (bin === 'claude' ? '/usr/bin/claude' : null);
+        const which = (bin: string): string | null => (bin === 'claude' ? '/usr/bin/true' : null);
         const dry = await choliba(['run', 'agent', 'echo', '--dry-run', 'repita'], root, { which });
         expect(dry.code).toBe(0);
         expect(dry.out).toContain('Sem --dry-run, faria nesta ordem:');

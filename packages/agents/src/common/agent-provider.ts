@@ -11,15 +11,24 @@ export abstract class AgentProvider {
    * Candidate binaries to try, in order, most specific first — e.g. cursor's own CLI is reachable as
    * `agent`, `cursor-agent` or `cursor agent` depending on install. The first one that resolves is used.
    */
-  abstract readonly binaries: readonly (readonly string[])[];
+  abstract readonly binaries: readonly (readonly [string, ...string[]])[];
   /** Where it comes in `auto`'s search: the lowest installed one wins. */
   abstract readonly autoPriority: number;
+  /** Environment variables that can authenticate this provider; a local run needs at least one. */
+  abstract readonly credentials: readonly string[];
+  /** Actionable error shown when a local run has none of `credentials`. */
+  abstract readonly credentialHelp: string;
 
   /**
    * Built-in tools of the provider that its permissions cannot limit (Cursor's `Grep` and `Glob` read files that a
    * `Read` deny covers). A call to one stops the run (`unenforced-tool-guard.ts`); none by default.
    */
   readonly unenforcedTools: readonly string[] = [];
+
+  /** The resolved executable's runtime closure that a local sandbox mounts read-only. */
+  localReadOnly(executable: string): readonly string[] {
+    return [executable];
+  }
 
   /** The args *after* the binary. Calls `assertArgvFits` before returning. */
   abstract buildArgs(request: ProviderRequest): readonly string[];
