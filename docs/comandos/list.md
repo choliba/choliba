@@ -8,7 +8,7 @@ editLink: false
 
 # `choliba list`
 
-> Lista os agentes instalados na pasta de trabalho ou os projetos da pasta configurada, com os tickets quando se pede.
+> Lista os agentes da pasta de trabalho, os projetos com os tickets quando se pede, ou a configuração em vigor e de onde vem cada valor.
 
 ## Uso
 
