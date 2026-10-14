@@ -263,6 +263,7 @@ async function followSession(
 
   session.subscribe((event) => {
     if (event.stream === 'stderr') {
+      if (adapter.quietStderr?.(event.raw) === true) return;
       // In the frame, a blank line from the provider (around its own messages) would only be an empty row.
       if (!screen.framed || event.raw.trim() !== '') screen.err.write(`${event.raw}\n`);
       return;

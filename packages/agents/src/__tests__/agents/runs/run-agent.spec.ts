@@ -487,6 +487,18 @@ describe('runAgent', () => {
     expect(s.stderr.chunks.join('')).toContain('a raw error line');
   });
 
+  it('leaves out the stderr lines the provider says are quiet, and keeps the others', async () => {
+    const lines = ['[aviso] modelo desconhecido\n', 'a raw error line\n'];
+    const s = setup(fakeSpawner({ stderr: streamFromChunks(lines) }).spawner, {
+      quietStderr: (line) => line.startsWith('[aviso]'),
+    });
+
+    await run(s);
+
+    expect(s.stderr.chunks.join('')).toContain('a raw error line');
+    expect(s.stderr.chunks.join('')).not.toContain('modelo desconhecido');
+  });
+
   it('reports a stream failure and still resolves, instead of hanging', async () => {
     const s = setup(fakeSpawner({ stdout: erroringStream(new Error('boom')) }).spawner);
 
