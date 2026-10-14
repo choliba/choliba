@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 13/10/2026 21:05:11 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 13/10/2026 21:08:49 — não editar manualmente.
 
 ## Resumo
 
@@ -17,7 +17,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 67 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 69 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -54,6 +54,8 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/runs/spec-context.ts](packages/agents/src/agents/runs/spec-context.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/ticket-run.ts](packages/agents/src/agents/runs/ticket-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/tool-failure.ts](packages/agents/src/agents/runs/tool-failure.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/tool-guard.ts](packages/agents/src/agents/runs/tool-guard.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/tool-policy.ts](packages/agents/src/agents/runs/tool-policy.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/tool-request.ts](packages/agents/src/agents/runs/tool-request.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/unenforced-tool-guard.ts](packages/agents/src/agents/runs/unenforced-tool-guard.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/git-state.ts](packages/agents/src/agents/steps/git-state.ts)|100.00|100.00|100.00|100.00

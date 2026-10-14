@@ -5,8 +5,13 @@ import { mcpUseOf } from './mcp-guard';
 
 type ToolCall = Extract<AgentEvent, { type: 'tool-call' }>;
 
+type ToolObject = Extract<PermissionObject, { kind: 'tool' }>;
+
 /** A tool as a request names it: always a name, and a server for an MCP tool. */
-type InvokedTool = Omit<Extract<PermissionObject, { kind: 'tool' }>, 'kind'>;
+type InvokedTool = Omit<ToolObject, 'kind'>;
+
+/** A request to invoke a tool. */
+export type ToolRequest = PermissionRequest & { readonly object: ToolObject };
 
 /** What a run's requests have in common: its mode and, when it has one, its project. */
 export function permissionContext(request: Pick<ProviderRequest, 'mode' | 'project'>): PermissionContext {
@@ -26,11 +31,7 @@ function invokedTool(event: ToolCall): InvokedTool | undefined {
 }
 
 /** The request to the sandbox for a provider's call to a tool, made by `agent`; `undefined` for any other event. */
-export function toolRequest(
-  event: AgentEvent,
-  agent: string,
-  context: PermissionContext,
-): PermissionRequest | undefined {
+export function toolRequest(event: AgentEvent, agent: string, context: PermissionContext): ToolRequest | undefined {
   if (event.type !== 'tool-call') return undefined;
   const tool = invokedTool(event);
   if (tool === undefined) return undefined;
