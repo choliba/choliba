@@ -57,6 +57,7 @@ function disk(): LaunchDisk & { readonly made: string[] } {
       made.push(path);
     },
     realpath: (path) => path,
+    runtime: '/home/test/.bun/bin/bun',
   };
 }
 
@@ -122,6 +123,10 @@ describe('launchFor', () => {
     );
     expect(launch.command).toEqual(expect.arrayContaining(['--ro-bind', '/versions/1', '/versions/1']));
     expect(launch.command.slice(-2)).toEqual(['/versions/1/agent', '-p']);
+    // The run tools' scripts run on choliba's own bun, which lives under the home the sandbox empties.
+    expect(launch.command).toEqual(
+      expect.arrayContaining(['--ro-bind', '/home/test/.bun/bin/bun', '/home/test/.bun/bin/bun']),
+    );
   });
 
   it('refuses a broken provider link and a missing credential with actionable messages', () => {

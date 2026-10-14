@@ -400,11 +400,13 @@ describe('the playwright scripts', () => {
     }
   });
 
-  it('records the starts of this process when none are given, and only folders that exist', () => {
+  it('records the real folder of Playwright, then the starts of this process, when none are given', () => {
     const starts = embeddedStarts(playwrightScript({ command: 'cli', workspaceRoot: '/w' }));
 
     expect(starts.length).toBeGreaterThan(0);
     expect(starts.every((start) => existsSync(start))).toBe(true);
+    // The real folder of the Playwright found from them comes first: a sandbox mounts it, not the links to it.
+    expect(starts[0]).toMatch(/@playwright\/test$/);
   });
 
   it('cli runs the Playwright found next to choliba in the workspace root, with every file it names under the output folder', () => {

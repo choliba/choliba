@@ -15,5 +15,6 @@ export { containerMounts, CONTAINER_HOME, IMAGE_FOLDERS, isImagePath } from './m
 export { dockerRunArgs } from './docker/docker-run';
 export { containerName, DockerSandbox } from './docker/docker-sandbox';
 export { bwrapOnPath } from './local/bwrap-on-path';
+export { resolverFolder } from './local/resolver-folder';
 export { LocalSandbox, SandboxEnforcementError } from './local/local-sandbox';
 export * from './sandbox';

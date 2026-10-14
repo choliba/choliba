@@ -56,6 +56,8 @@ export interface LaunchDisk extends DiskFacts {
   readonly owner: (path: string) => ContainerUser;
   readonly ensureDir: (path: string) => void;
   readonly realpath: (path: string) => string;
+  /** The `bun` running choliba: the run tools' scripts start with `#!/usr/bin/env bun`. */
+  readonly runtime: string;
 }
 
 export const realDisk: LaunchDisk = {
@@ -70,6 +72,7 @@ export const realDisk: LaunchDisk = {
     mkdirSync(path, { recursive: true });
   },
   realpath: realpathSync,
+  runtime: process.execPath,
 };
 
 function localProgram(provider: ResolvedProvider, disk: LaunchDisk): SandboxProgram {
@@ -83,7 +86,7 @@ function localProgram(provider: ResolvedProvider, disk: LaunchDisk): SandboxProg
   }
   return {
     executable,
-    readOnly: provider.adapter.localReadOnly(executable),
+    readOnly: [...provider.adapter.localReadOnly(executable), disk.runtime],
     credentials: provider.adapter.credentials,
     credentialHelp: provider.adapter.credentialHelp,
   };

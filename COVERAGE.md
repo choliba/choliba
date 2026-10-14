@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 13/10/2026 23:08:45 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 14/10/2026 00:46:07 — não editar manualmente.
 
 ## Resumo
 
@@ -243,7 +243,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/sandbox</b> — 100.00% das linhas, 11 arquivos</summary>
+<summary>🟢 <b>packages/sandbox</b> — 100.00% das linhas, 12 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -256,6 +256,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/sandbox/local/bwrap-command.ts](packages/sandbox/src/sandbox/local/bwrap-command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/local/bwrap-on-path.ts](packages/sandbox/src/sandbox/local/bwrap-on-path.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/local/local-sandbox.ts](packages/sandbox/src/sandbox/local/local-sandbox.ts)|100.00|100.00|100.00|100.00
+🟢|[src/sandbox/local/resolver-folder.ts](packages/sandbox/src/sandbox/local/resolver-folder.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/mounts/container-mounts.ts](packages/sandbox/src/sandbox/mounts/container-mounts.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/sandbox.ts](packages/sandbox/src/sandbox/sandbox.ts)|100.00|100.00|100.00|100.00
 
