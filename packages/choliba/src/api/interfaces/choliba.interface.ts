@@ -1,0 +1,48 @@
+import type { AgentDefinition, SkillSummary } from '@choliba/agents';
+import type { ConfigGroup, ConfigSetting } from '@choliba/config';
+
+/** Where `choliba` looks, when not the process's own folder and environment. */
+export interface CholibaOptions {
+  /** The folder the workspace is searched from; `process.cwd()` when absent. */
+  readonly cwd?: string;
+  /** The environment read before the workspace's `.env`; `process.env` when absent. */
+  readonly env?: Readonly<Record<string, string | undefined>>;
+}
+
+/** The workspace's configuration: a group read from the same sources as the CLI, or every key in effect. */
+export interface CholibaConfig {
+  <T>(group: ConfigGroup<T>): T;
+  /** Every key of choliba's groups with the value in effect and where it comes from, as `list config` shows it. */
+  list(): readonly ConfigSetting[];
+}
+
+/** The workspace's agents. */
+export interface CholibaAgents {
+  /** The agents folder, absolute: `CHOL_AGENTS_DIR`, else `.choliba/agents`. */
+  readonly dir: string;
+  /** Every agent that loads, sorted by id. */
+  list(): readonly AgentDefinition[];
+  /** One agent, checked; an unknown one fails naming the file it looked for. */
+  get(id: string): AgentDefinition;
+  /** The skills the agent declares, resolved as a run gives them. */
+  skills(id: string): readonly SkillSummary[];
+}
+
+/** The workspace's skills. */
+export interface CholibaSkills {
+  /** The skills folder, absolute: `CHOL_SKILLS_DIR`, else `.choliba/skills`. */
+  readonly dir: string;
+  /** Every skill in the folder, sorted by name. */
+  list(): readonly SkillSummary[];
+  /** One skill; an unknown one fails naming the file it looked for. */
+  get(name: string): SkillSummary;
+}
+
+/** choliba read from a script: the workspace, its configuration, agents and skills. Nothing is read until asked. */
+export interface Choliba {
+  /** The nearest folder, from `cwd` up, whose `package.json` depends on choliba. */
+  readonly root: string;
+  readonly config: CholibaConfig;
+  readonly agents: CholibaAgents;
+  readonly skills: CholibaSkills;
+}

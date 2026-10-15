@@ -1,1 +1,17 @@
-export { CHOLIBA_SHELL, cholibaShell, createCholibaShell, type Runtime } from '../../src/index';
+export {
+  choliba,
+  CHOLIBA_SHELL,
+  cholibaShell,
+  createCholibaShell,
+  openCholiba,
+  type AgentDefinition,
+  type Choliba,
+  type CholibaAgents,
+  type CholibaConfig,
+  type CholibaOptions,
+  type CholibaSkills,
+  type ConfigGroup,
+  type ConfigSetting,
+  type Runtime,
+  type SkillSummary,
+} from '../../src/index';

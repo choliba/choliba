@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { isAbsolute, join, relative } from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
@@ -39,23 +39,43 @@ export function skillDescription(text: string, source: string): string {
   return description.trim();
 }
 
+/** Finds one skill as `<skillsDir>/<name>/SKILL.md` and reads its description; a missing or malformed one fails. */
+export function resolveSkill(skillsDir: string, { name, instructions }: SkillDeclaration): SkillSummary {
+  const path = join(skillsDir, name, SKILL_FILE);
+  let text: string;
+  try {
+    text = readFileSync(path, 'utf8');
+  } catch {
+    throw new SkillError(`skill "${name}" não encontrada: ${path} não existe.`);
+  }
+  const summary = { name, description: skillDescription(text, path), path };
+  return instructions === undefined ? summary : { ...summary, instructions };
+}
+
 /**
  * Finds each skill an agent lists (`agent.yaml#skills`) as `<skillsDir>/<name>/SKILL.md` and
  * reads its description. A missing or malformed skill fails the run up front, naming the file,
  * instead of the agent silently running without it.
  */
 export function resolveSkills(skillsDir: string, declarations: readonly SkillDeclaration[]): readonly SkillSummary[] {
-  return declarations.map(({ name, instructions }) => {
-    const path = join(skillsDir, name, SKILL_FILE);
-    let text: string;
-    try {
-      text = readFileSync(path, 'utf8');
-    } catch {
-      throw new SkillError(`skill "${name}" não encontrada: ${path} não existe.`);
-    }
-    const summary = { name, description: skillDescription(text, path), path };
-    return instructions === undefined ? summary : { ...summary, instructions };
-  });
+  return declarations.map((declaration) => resolveSkill(skillsDir, declaration));
+}
+
+/**
+ * Every skill in `skillsDir`: each folder that has a `SKILL.md`, sorted by name, with its description. A missing
+ * folder has none; a malformed `SKILL.md` fails naming the file.
+ */
+export function listSkills(skillsDir: string): readonly SkillSummary[] {
+  let entries: readonly string[];
+  try {
+    entries = readdirSync(skillsDir);
+  } catch {
+    return [];
+  }
+  return entries
+    .toSorted()
+    .filter((name) => existsSync(join(skillsDir, name, SKILL_FILE)))
+    .map((name) => resolveSkill(skillsDir, { name }));
 }
 
 /** A skill's path as the agent should see it: from the repo root when inside it, absolute otherwise. */
