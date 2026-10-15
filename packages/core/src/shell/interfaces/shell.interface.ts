@@ -1,3 +1,5 @@
+import type { ConfigGroup } from '@choliba/config';
+
 import type { CommandEntry, CommandExample, RootSpec } from '../../help';
 import type { Container } from '../container';
 import type { ShellIo } from '../shell-io';
@@ -61,6 +63,8 @@ export interface ShellModule {
   readonly name: string;
   /** Registers the package's services. Nothing is built here: the container builds a service when asked for it. */
   readonly provide?: (container: Container) => void;
+  /** Configuration groups this package contributes; their values are built only when their token is requested. */
+  readonly config?: readonly ConfigGroup[];
   readonly commands: readonly ShellCommand[];
   /** The app's root: no command, `--help`, `--version`, `__complete`, `__describe` and `__entries`. */
   readonly root?: ShellRoot;

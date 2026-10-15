@@ -75,6 +75,7 @@
       "name": "@choliba/core",
       "version": "0.0.0",
       "dependencies": {
+        "@choliba/config": "workspace:*",
         "@opentui/core": "0.5.14",
         "yaml": "^2.8.1",
       },

@@ -1,4 +1,15 @@
-import { createShell, ExpectedError, PLATFORM, token, type CommandEntry, type ShellModule } from '../..';
+import { defineConfig, type ConfigSource } from '@choliba/config';
+
+import {
+  CONFIG_CATALOG,
+  createShell,
+  ExpectedError,
+  PLATFORM,
+  token,
+  type CommandEntry,
+  type ShellModule,
+  type Token,
+} from '../..';
 import { fakePlatform } from '../../testing';
 
 const GREETING = token<string>('greeting');
@@ -142,6 +153,47 @@ describe('createShell', () => {
     const platform = fakePlatform();
 
     expect(createShell(platform, []).container.get(PLATFORM)).toBe(platform);
+  });
+
+  describe('configuration groups', () => {
+    const serverConfig = defineConfig('server', {
+      port: { env: 'APP_PORT', type: 'number', description: 'a porta', default: 3000 },
+    });
+    const configured: ShellModule = { name: 'configured', config: [serverConfig], commands: [] };
+
+    it('aggregates the catalog and resolves a structurally compatible token lazily', () => {
+      let reads = 0;
+      const source: ConfigSource = {
+        name: '.env',
+        layout: 'flat',
+        read: () => {
+          reads += 1;
+          return '8080';
+        },
+      };
+      const shell = createShell(fakePlatform(), [configured], [source]);
+      const compatible: Token<{ readonly port: number }> = serverConfig.token;
+
+      expect(reads).toBe(0);
+      expect(shell.container.get(CONFIG_CATALOG)).toMatchObject({ groups: [serverConfig] });
+      expect(reads).toBe(0);
+      expect(shell.container.get(compatible)).toEqual({ port: 8080 });
+      expect(shell.container.get(compatible)).toEqual({ port: 8080 });
+      expect(reads).toBe(1);
+    });
+
+    it('uses no sources by default and refuses colliding groups', () => {
+      expect(createShell(fakePlatform(), [configured]).container.get(serverConfig.token)).toEqual({ port: 3000 });
+
+      const colliding = defineConfig('other', {
+        value: { env: 'APP_PORT', type: 'string', description: 'outro valor' },
+      });
+      const other: ShellModule = { name: 'other', config: [colliding], commands: [] };
+
+      expect(() => createShell(fakePlatform(), [configured, other])).toThrow(
+        'A variável APP_PORT está em server.port e em other.value.',
+      );
+    });
   });
 
   describe('verbs', () => {
