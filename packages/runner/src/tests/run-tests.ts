@@ -12,7 +12,6 @@ import {
   projectDir,
   projectTestsFolder,
   REPORT_FOLDER,
-  resolveLocations,
   resolveReportFolder,
   resolveTicketRunsRoot,
   resolveTicketSpecFiles,
@@ -27,6 +26,8 @@ import {
   fullyRetiredTickets,
   prepareApp,
 } from '@choliba/projects';
+
+import { workspaceLocations } from '../../shared/workspace-config';
 
 import { fillTicketTests } from './fill-ticket-tests';
 import { checkGate, hasGate, takeGateFlags, type TicketGate } from './tests-gate';
@@ -144,7 +145,7 @@ interface RunContext {
 }
 
 function contextFor(options: RunTestsOptions): RunContext {
-  const loadConfig = options.loadConfig ?? ((root, processEnv) => resolveLocations(root, processEnv));
+  const loadConfig = options.loadConfig ?? workspaceLocations;
   // The Playwright config runs in its own process: it finds the workspace (its .env, CHOL_PROJECTS_DIR) here.
   const baseEnv: NodeJS.ProcessEnv = { ...process.env, [WORKSPACE_ENV]: options.monorepoRoot, ...options.env };
   const nodePath = playwrightNodePath(options.packageRoot, baseEnv['NODE_PATH']);

@@ -4,9 +4,10 @@ import {
   formatDuration,
   isStdoutTty,
   LiveRegion,
-  loadRepoConfig,
+  buildTheme,
+  colorEnabled,
+  parseColors,
   printBox,
-  resolveTheme,
   writeStdout,
   type Theme,
 } from '@choliba/core';
@@ -14,6 +15,7 @@ import { readAppliedLocations } from '@choliba/projects';
 import type { FullConfig, Reporter, TestCase, TestResult } from '@playwright/test/reporter';
 
 import { WORKSPACE_ENV } from '../src/tests/playwright-env';
+import { workspaceColors } from '../shared/workspace-config';
 
 const DISPLAY_DELAY_MS = 1_500;
 
@@ -36,8 +38,8 @@ function markerFor(status: TestResult['status'], theme: Theme): string {
  */
 function workspaceTheme(env: NodeJS.ProcessEnv = process.env): Theme {
   const root = env[WORKSPACE_ENV];
-  const config = root === undefined ? env : loadRepoConfig(root, env);
-  return resolveTheme(config, { env, isTTY: isStdoutTty(), noColorFlag: false });
+  const colors = root === undefined ? env['CHOL_COLORS'] : workspaceColors(root, env);
+  return buildTheme(parseColors(colors), colorEnabled({ env, isTTY: isStdoutTty(), noColorFlag: false }));
 }
 
 export default class DetailedTicketReporter implements Reporter {

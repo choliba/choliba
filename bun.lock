@@ -94,6 +94,7 @@
       "name": "@choliba/runner",
       "version": "0.0.0",
       "dependencies": {
+        "@choliba/config": "workspace:*",
         "@choliba/core": "workspace:*",
         "@choliba/projects": "workspace:*",
       },

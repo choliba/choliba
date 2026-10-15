@@ -34,7 +34,7 @@ export class TestsService {
       // Playwright and the reporter run in a process of their own: without color here, none there either. Said
       // with FORCE_COLOR=0, not NO_COLOR: Playwright sets FORCE_COLOR=1 in its workers, and Node warns in each
       // one that has both.
-      env: this.theme.enabled() ? { ...env } : { ...env, FORCE_COLOR: '0', NO_COLOR: undefined },
+      env: this.theme.enabled() ? { ...env, NO_COLOR: undefined } : { ...env, FORCE_COLOR: '0', NO_COLOR: undefined },
       stdout,
       stderr,
       theme: this.theme,
