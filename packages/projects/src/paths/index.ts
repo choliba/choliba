@@ -9,6 +9,15 @@ export {
   resolveProjectsDir,
   type ProjectLocations,
 } from './locations';
+export {
+  PROJECTS_SUBDIR,
+  PROJECT_CONFIG_FILE,
+  PROJECT_ENV_EXAMPLE_FILE,
+  PROJECT_ENV_FILE,
+  TESTS_SUBDIR,
+  TICKETS_SUBDIR,
+  TICKET_RUNS_SUBDIR,
+} from './project-layout';
 export { projectsConfig } from './projects-config';
 export {
   REPORT_FOLDER,

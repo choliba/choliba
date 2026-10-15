@@ -13,16 +13,19 @@ import {
   PACKAGE_FILE,
   PRETTIERIGNORE_FILE,
   PRETTIERRC_FILE,
+  findResource,
+  installShellCompletion,
+} from '@choliba/core';
+import { DEFAULT_AGENTS_DIR, DEFAULT_MCPS_DIR, DEFAULT_SKILLS_DIR } from '@choliba/agents';
+import {
   PROJECTS_SUBDIR,
   PROJECT_CONFIG_FILE,
   PROJECT_ENV_FILE,
   TESTS_SUBDIR,
   TICKETS_SUBDIR,
-  findResource,
-  installShellCompletion,
-} from '@choliba/core';
-import { DEFAULT_AGENTS_DIR, DEFAULT_MCPS_DIR, DEFAULT_SKILLS_DIR } from '@choliba/agents';
-import { createProject, projectTemplatesDir } from '@choliba/projects';
+  createProject,
+  projectTemplatesDir,
+} from '@choliba/projects';
 
 import { findWorkspaceRoot } from '../config';
 

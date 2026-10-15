@@ -3,7 +3,7 @@ import path from 'node:path';
 import { ProjectsError, readJsonFile } from '../common';
 import { type ProjectLocations, REPORT_FOLDER, TEST_RESULTS_FOLDER } from '../paths';
 import { assertProjectExists, projectDir } from '../paths';
-import { TICKETS_SUBDIR, TICKET_RUNS_SUBDIR } from '@choliba/core';
+import { TICKETS_SUBDIR, TICKET_RUNS_SUBDIR } from '../paths';
 
 /** The part of a ticket JSON this package reads: which spec tests cover each acceptance criterion. */
 export interface TicketJson {

@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 15/10/2026 03:28:09 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 15/10/2026 03:31:08 — não editar manualmente.
 
 ## Resumo
 
@@ -218,7 +218,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 27 arquivos</summary>
+<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 28 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -228,6 +228,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/common/projects-cli.ts](packages/projects/src/common/projects-cli.ts)|100.00|100.00|100.00|100.00
 🟢|[src/locations/locations.service.ts](packages/projects/src/locations/locations.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/paths/locations.ts](packages/projects/src/paths/locations.ts)|100.00|100.00|100.00|100.00
+🟢|[src/paths/project-layout.ts](packages/projects/src/paths/project-layout.ts)|100.00|100.00|100.00|100.00
 🟢|[src/paths/project-paths.ts](packages/projects/src/paths/project-paths.ts)|100.00|100.00|100.00|100.00
 🟢|[src/paths/projects-config.ts](packages/projects/src/paths/projects-config.ts)|100.00|100.00|100.00|100.00
 🟢|[src/paths/results.ts](packages/projects/src/paths/results.ts)|100.00|100.00|100.00|100.00
