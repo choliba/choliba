@@ -4,5 +4,9 @@ export type {
   CholibaAgents,
   CholibaConfig,
   CholibaOptions,
+  CholibaProject,
+  CholibaProjects,
   CholibaSkills,
+  CholibaTests,
+  CholibaTickets,
 } from './interfaces/choliba.interface';

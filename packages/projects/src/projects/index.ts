@@ -21,5 +21,6 @@ export { answers, launchApp, type LaunchedApp } from './project-app-launch';
 export { listProjectsCommand } from './projects-list.command';
 export { newProjectCommand } from './projects-new.command';
 export { PROJECTS } from './projects.constants';
+export { ProjectsService, type ProjectSummary, type ProjectTickets } from './projects.service';
 export { listProjectsSpec, newProjectSpec } from './projects-spec';
 export { projectsShell } from './projects-shell';

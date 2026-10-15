@@ -1,14 +1,14 @@
 # Usar o choliba num script
 
-> Como ler, de um script TypeScript, a pasta de trabalho, a configuração, os agentes e as skills, com as mesmas
-> regras da linha de comando.
+> Como ler, de um script TypeScript, a pasta de trabalho, a configuração, os agentes, as skills e os projetos, com
+> as mesmas regras da linha de comando.
 
 `import { choliba } from 'choliba'` dá a pasta de trabalho pronta para ler. Não é preciso descobrir a raiz, ler o
 `.env` nem montar caminhos: cada membro usa as mesmas regras do `choliba` na linha de comando, e um script e a CLI
 sempre dão a mesma resposta.
 
 A API é de leitura e experimental até a versão 1.0. Para criar ou alterar alguma coisa, use os comandos
-(`choliba set config`, `choliba add`).
+(`choliba set config`, `choliba add`, `choliba new project`).
 
 ## Exemplo
 
@@ -147,3 +147,54 @@ choliba.skills.get('playwright-cli').path; // '…/.choliba/skills/playwright-cl
 ```
 
 Cada skill é um `SkillSummary` (`name`, `description`, `path`).
+
+## Projetos
+
+`choliba.projects.dir` é a pasta dos projetos em teste. É `CHOL_PROJECTS_DIR` ou, sem ela,
+`CHOL_GLOBAL_DIR/projects`. Sem `CHOL_GLOBAL_DIR`, os membros de `projects` falham com o mesmo erro da CLI
+(`CHOL_GLOBAL_DIR não definida: …`).
+
+| Método               | Devolve                                                                                              |
+| -------------------- | ---------------------------------------------------------------------------------------------------- |
+| `projects.list()`    | Cada projeto com a `description` do `config.json`, por nome. São os dados de `choliba list projects` |
+| `projects.get(nome)` | Um projeto. Um nome desconhecido falha nomeando o `config.json` procurado                            |
+
+```ts
+choliba.projects.list(); // [{ name: 'app', description: 'Loja de exemplo' }]
+
+const app = choliba.projects.get('app');
+app.dir; // '<CHOL_GLOBAL_DIR>/projects/app'
+```
+
+O que é de um projeto fica dentro dele.
+
+| Membro            | Devolve                                                                                      |
+| ----------------- | -------------------------------------------------------------------------------------------- |
+| `settings`        | O `config.json` e o `.env.json` lidos e conferidos como numa execução. Inclui as credenciais |
+| `tickets.list()`  | Cada ticket tipado (`TicketInfo`), pela chave                                                |
+| `tickets.get(id)` | Um ticket, pela chave (`app-1`) ou pelo sufixo (`1`)                                         |
+| `tests.dir`       | A pasta `tests/` do projeto                                                                  |
+| `tests.list()`    | Os specs de `tests/`, também em subpastas, relativos a ela                                   |
+
+```ts
+app.settings.environment.nome; // 'local', o ambiente ativo
+app.settings.appDir; // o código da aplicação desse ambiente, absoluto
+
+app.tickets.list().map((ticket) => `${ticket.id}: ${ticket.title ?? '-'}`);
+app.tickets.get('app-1').specs; // ['carrinho.spec.ts'], os specs que cobrem os critérios
+app.tickets.list().filter((ticket) => ticket.criteria.some((criterion) => criterion.tests.length === 0));
+
+app.tests.list(); // ['carrinho.spec.ts', 'login.spec.ts']
+app.tests.list().filter((spec) => !app.tickets.list().some((ticket) => ticket.specs.includes(spec))); // sem ticket
+```
+
+`settings` traz `credentials` e `env` com os valores do `.env.json`. Não imprima esses campos.
+
+Um `TicketInfo` tem:
+
+- `id`, `type` (o `tipo`) e `title` (o `titulo`);
+- `criteria`, em que cada critério tem `id`, `description` e `tests`;
+- `specs` e `file`;
+- `fields`, com o JSON inteiro, para os campos que o tipo não nomeia (`contexto`, `substitui`…).
+
+Um ticket com um campo do tipo errado falha nomeando o arquivo e o campo.

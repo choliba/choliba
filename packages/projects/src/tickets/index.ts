@@ -33,6 +33,7 @@ export {
   type NewTicketOptions,
   type TicketTemplate,
 } from './ticket-template';
+export { readTicket, readTickets, type TicketCriterion, type TicketInfo } from './ticket-info';
 export { criteriaProblems, ticketCriteriaProblems } from './ticket-criteria';
 export {
   formatRetired,

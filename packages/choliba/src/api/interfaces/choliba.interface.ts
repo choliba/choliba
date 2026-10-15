@@ -1,5 +1,6 @@
 import type { AgentDefinition, SkillSummary } from '@choliba/agents';
 import type { ConfigGroup, ConfigSetting } from '@choliba/config';
+import type { ProjectSettings, ProjectSummary, TicketInfo } from '@choliba/projects';
 
 /** Where `choliba` looks, when not the process's own folder and environment. */
 export interface CholibaOptions {
@@ -38,11 +39,48 @@ export interface CholibaSkills {
   get(name: string): SkillSummary;
 }
 
-/** choliba read from a script: the workspace, its configuration, agents and skills. Nothing is read until asked. */
+/** A project's tickets. */
+export interface CholibaTickets {
+  /** Every ticket, typed, sorted by key. */
+  list(): readonly TicketInfo[];
+  /** One ticket, by key (`app-1`) or suffix (`1`); an unknown one fails naming the file it looked for. */
+  get(id: string): TicketInfo;
+}
+
+/** A project's specs. */
+export interface CholibaTests {
+  /** The project's `tests/`. */
+  readonly dir: string;
+  /** The spec files of `tests/`, relative to it, sorted. */
+  list(): readonly string[];
+}
+
+/** One project of the workspace, checked to exist when it was got. */
+export interface CholibaProject {
+  readonly name: string;
+  readonly dir: string;
+  /** `config.json` and `.env.json` read and checked as a run reads them: it holds the credentials too. */
+  readonly settings: ProjectSettings;
+  readonly tickets: CholibaTickets;
+  readonly tests: CholibaTests;
+}
+
+/** The workspace's projects under test. */
+export interface CholibaProjects {
+  /** The projects folder: `CHOL_PROJECTS_DIR`, else `CHOL_GLOBAL_DIR/projects`. */
+  readonly dir: string;
+  /** Each project with its `config.json#description`, sorted by name. */
+  list(): readonly ProjectSummary[];
+  /** One project; an unknown one fails naming the `config.json` it looked for. */
+  get(name: string): CholibaProject;
+}
+
+/** choliba read from a script: the workspace, its configuration, agents, skills and projects. Nothing is read until asked. */
 export interface Choliba {
   /** The nearest folder, from `cwd` up, whose `package.json` depends on choliba. */
   readonly root: string;
   readonly config: CholibaConfig;
   readonly agents: CholibaAgents;
   readonly skills: CholibaSkills;
+  readonly projects: CholibaProjects;
 }
