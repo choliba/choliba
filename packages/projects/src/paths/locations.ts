@@ -1,13 +1,21 @@
 import path from 'node:path';
 
-import { CHOL_GLOBAL_DIR, CHOL_PROJECTS_DIR, PROJECTS_SUBDIR, CHOL_TICKET_RUNS, loadRepoConfig } from '@choliba/core';
+import {
+  CHOL_GLOBAL_DIR,
+  CHOL_PROJECTS_DIR,
+  CHOL_TICKET_RUNS,
+  ExpectedError,
+  PROJECTS_SUBDIR,
+  loadRepoConfig,
+} from '@choliba/core';
+
+import type { projectsConfig } from './projects-config';
 
 /**
  * Where the projects under test live, resolved from the monorepo's `.env` (and the shell, which wins):
  * `CHOL_GLOBAL_DIR`, `CHOL_PROJECTS_DIR` (default `{CHOL_GLOBAL_DIR}/projects`) and the optional `CHOL_TICKET_RUNS`. Every other
  * project path (a project, its tickets, its reports) is derived from these by this package.
  */
-import { ExpectedError } from '@choliba/core';
 
 export class LocationsError extends ExpectedError {}
 
@@ -21,6 +29,23 @@ export function resolveProjectsDir(globalDir: string, projectsDirOverride?: stri
   const override = projectsDirOverride?.trim();
   if (override) return override;
   return path.join(globalDir, PROJECTS_SUBDIR);
+}
+
+/** The locations a read of `projectsConfig` names, trimmed the way the workspace has always stored them. */
+export function projectLocations(config: ReturnType<typeof projectsConfig.read>): ProjectLocations {
+  const globalDir = config.globalDir?.trim();
+  if (globalDir === undefined || globalDir === '') {
+    throw new LocationsError(
+      `${CHOL_GLOBAL_DIR} não definida: defina no .env da pasta de trabalho (a que depende de choliba) ou no ambiente.`,
+    );
+  }
+  const projectsDir = resolveProjectsDir(globalDir, config.projectsDir);
+  const ticketRuns = config.ticketRuns?.trim();
+  return {
+    CHOL_GLOBAL_DIR: globalDir,
+    CHOL_PROJECTS_DIR: projectsDir,
+    ...(ticketRuns === undefined || ticketRuns === '' ? {} : { CHOL_TICKET_RUNS: ticketRuns }),
+  };
 }
 
 function pickLocations(config: Readonly<Record<string, string | undefined>>): ProjectLocations {

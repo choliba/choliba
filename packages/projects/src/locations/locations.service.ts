@@ -1,6 +1,9 @@
-import type { ConfigService, Environment } from '@choliba/core';
+import { join } from 'node:path';
 
-import { resolveLocations, type ProjectLocations } from '../paths';
+import { envSource, fileSource } from '@choliba/config';
+import { ENV_FILE, type ConfigService, type Environment } from '@choliba/core';
+
+import { projectLocations, projectsConfig, type ProjectLocations } from '../paths';
 
 /** Where the projects under test live, from the workspace's `.env` and the process environment. */
 export class LocationsService {
@@ -10,7 +13,9 @@ export class LocationsService {
   ) {}
 
   locations(): ProjectLocations {
-    return resolveLocations(this.config.workspaceRoot(), this.env);
+    const root = this.config.workspaceRoot();
+    const read = projectsConfig.read([envSource(this.env), fileSource(join(root, ENV_FILE))]);
+    return projectLocations(read);
   }
 
   projectsDir(): string {

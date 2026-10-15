@@ -85,6 +85,7 @@
       "name": "@choliba/projects",
       "version": "0.0.0",
       "dependencies": {
+        "@choliba/config": "workspace:*",
         "@choliba/core": "workspace:*",
       },
     },
