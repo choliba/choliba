@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { ExpectedError, locateResource, type ConfigService, type Which } from '@choliba/core';
+import { ExpectedError, locateResource, type Which } from '@choliba/core';
 
 import type { Runtime } from '../runtime';
 
@@ -13,13 +13,13 @@ function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
 export class ToolsService {
   constructor(
     private readonly runtime: Runtime,
-    private readonly config: ConfigService,
+    private readonly root: string,
     private readonly which: Which,
   ) {}
 
   /** `choliba lint`: ESLint, with the workspace's own eslint.config.* or, without one, the config shipped here. */
   lint(args: readonly string[]): number {
-    const root = this.config.workspaceRoot();
+    const root = this.root;
     const hasConfig = readdirSync(root).some((file) => /^eslint\.config\.[cm]?[jt]s$/.test(file));
     const shipped = locateResource('eslint.js', this.runtime.entryDir);
     const config = hasConfig || shipped === undefined ? [] : ['--config', shipped];
@@ -31,12 +31,7 @@ export class ToolsService {
     const write = args.includes('--write');
     const paths = args.filter((arg) => arg !== '--write');
     const mode = write ? '--write' : '--check';
-    return this.runBin(
-      'prettier',
-      'prettier',
-      [mode, ...(paths.length === 0 ? ['.'] : paths)],
-      this.config.workspaceRoot(),
-    );
+    return this.runBin('prettier', 'prettier', [mode, ...(paths.length === 0 ? ['.'] : paths)], this.root);
   }
 
   private node(): string {

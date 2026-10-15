@@ -22,10 +22,11 @@ import {
   TESTS_SUBDIR,
   TICKETS_SUBDIR,
   findResource,
-  findWorkspaceRoot,
   installShellCompletion,
 } from '@choliba/core';
 import { createProject, projectTemplatesDir } from '@choliba/projects';
+
+import { findWorkspaceRoot } from '../config';
 
 /** What to do after installing: shown by `setup` (the postinstall), and enough to get going. */
 export const NEXT_STEPS = [

@@ -3,8 +3,6 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { CONFIG_KEYS } from '@choliba/core';
-
 import { loadProjectSettings } from '@choliba/projects';
 
 import {
@@ -14,7 +12,12 @@ import {
   FILES_MARKER,
   DEFAULT_THEME,
   parseColors,
+  CONFIG_CATALOG,
 } from '@choliba/core';
+
+import { createCholibaShell } from '../../app-shell';
+import { fakePlatform } from '@choliba/core/testing';
+import { fakeRuntime } from '../helpers/runtime';
 
 import {
   initialEnv,
@@ -137,10 +140,9 @@ function templateVariables(env: string): readonly string[] {
   return [...env.matchAll(/^(?:# )?(CHOL_[A-Z_]+)=/gm)].map((match) => match[1] ?? '');
 }
 
-/** Every `CHOL_*` named in the first column of the reference table. */
+/** Every `CHOL_*` named in the variable column of the reference table. */
 function documentedVariables(reference: string): readonly string[] {
-  const firstColumns = [...reference.matchAll(/^\| ([^|]+)\|/gm)].map((match) => match[1] ?? '');
-  return firstColumns.flatMap((column) => [...column.matchAll(/`(CHOL_[A-Z_]+)`/g)].map((match) => match[1] ?? ''));
+  return [...reference.matchAll(/^\| `[^`]+` +\| `(CHOL_[A-Z_]+)`/gm)].map((match) => match[1] ?? '');
 }
 
 describe('the workspace templates', () => {
@@ -154,7 +156,9 @@ describe('the workspace templates', () => {
 
   it('keeps the configuration registry in step with the .env reference', () => {
     const reference = fs.readFileSync(ENV_REFERENCE, 'utf8');
-    const registered = CONFIG_KEYS.map((key) => key.name);
+    const registered = createCholibaShell(fakePlatform(), fakeRuntime())
+      .container.get(CONFIG_CATALOG)
+      .keys.map((key) => key.address.env);
 
     expect(registered.filter((name) => name.startsWith('CHOL_')).sort()).toEqual(
       [...documentedVariables(reference)].sort(),

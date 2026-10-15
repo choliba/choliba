@@ -1,13 +1,18 @@
-import { configSettings, configValueError, findConfigKey, loadConfigFile, writeConfigValue } from '../config';
-import type { CommandEntry, CommandSpec } from '../help';
-import type { Platform } from '../platform';
-import { PLATFORM } from './create-shell';
-import type { ShellCommand } from './interfaces/shell.interface';
-import type { ShellIo } from './shell-io';
-import { CONFIG } from './shell.constants';
+import { configSettings, writeConfig, type ConfigKey, type ConfigSetting } from '@choliba/config';
+import {
+  CONFIG_CATALOG,
+  messageOf,
+  PLATFORM,
+  type CommandEntry,
+  type CommandSpec,
+  type Platform,
+  type ShellCommand,
+  type ShellIo,
+} from '@choliba/core';
 
-/** `choliba set config CHAVE [valor]`. */
-export const SET_CONFIG_SPEC: CommandSpec = {
+import { workspaceConfigSources, workspaceRootOrNothing } from './config-sources';
+
+const SPEC: CommandSpec = {
   usage: 'choliba set config CHAVE [VALOR]',
   description: 'Grava uma chave da configuração no .env da pasta de trabalho.',
   examples: [
@@ -29,29 +34,27 @@ export const SET_CONFIG_SPEC: CommandSpec = {
   flags: [{ name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true }],
 };
 
-/** How `choliba set --help` lists `config`. */
-const SET_ENTRY: CommandEntry = {
+const ENTRY: CommandEntry = {
   name: 'config',
   description: 'Grava uma chave da configuração no .env',
   group: 'Commands',
-  spec: SET_CONFIG_SPEC,
+  spec: SPEC,
 };
 
-/** A credential's value: asked without showing it at a terminal, or read from stdin; `undefined` when none came. */
 async function secretValue(name: string, platform: Platform): Promise<string | undefined> {
   const read = platform.askSecret === undefined ? await platform.readStdin?.() : await platform.askSecret(`${name}: `);
   const value = read?.trim();
   return value === undefined || value === '' ? undefined : value;
 }
 
-/** The value to write, or `undefined` after saying on `io` why there is none. */
 async function valueOf(
   io: ShellIo,
   platform: Platform,
-  name: string,
+  key: ConfigKey,
   given: string | undefined,
 ): Promise<string | undefined> {
-  if (findConfigKey(name)?.secret !== true) {
+  const name = key.address.env;
+  if (!key.secret) {
     if (given === undefined) io.usageError(`Falta o valor de ${name}.`, 'choliba set config');
     return given;
   }
@@ -67,18 +70,19 @@ async function valueOf(
   return secret;
 }
 
-/**
- * `choliba set config CHAVE [valor]`: writes one key into the workspace's `.env`, checked against the registry, and
- * says what it was before. A credential comes from a hidden prompt or stdin, never the command line, and is never shown.
- */
+function previous(setting: ConfigSetting | undefined): string {
+  if (setting?.isSet !== true) return 'não definida';
+  return `${setting.key.secret ? 'definida' : String(setting.value)}, ${setting.origin}`;
+}
+
 export const setConfigCommand: ShellCommand = {
   verb: 'set',
   name: 'config',
-  help: () => [SET_ENTRY],
+  help: () => [ENTRY],
   run: async (container, io) => {
     const args = io.args('set', 'config');
     if (io.wantsHelp(args)) {
-      io.printHelp(SET_CONFIG_SPEC);
+      io.printHelp(SPEC);
       return;
     }
     const [name, given, ...rest] = args;
@@ -86,35 +90,36 @@ export const setConfigCommand: ShellCommand = {
       io.usageError('Use uma chave e o valor dela: choliba set config CHAVE VALOR.', 'choliba set config');
       return;
     }
-    const unknown = findConfigKey(name) === undefined ? configValueError(name, '') : undefined;
-    if (unknown !== undefined) {
-      io.fail(unknown);
-      return;
-    }
-    const root = container.get(CONFIG).workspaceRootOrNothing();
-    if (root === undefined) {
-      io.fail('Fora de uma pasta de trabalho: não há .env para gravar. Crie uma com `bun add choliba`.');
+    const catalog = container.get(CONFIG_CATALOG);
+    const key = catalog.keys.find((candidate) => candidate.address.env === name);
+    if (key === undefined) {
+      io.fail(
+        `Chave desconhecida: ${name}. As chaves são ${catalog.keys.map((candidate) => candidate.address.env).join(', ')}.`,
+      );
       return;
     }
     const platform = container.get(PLATFORM);
-    const value = await valueOf(io, platform, name, given);
-    if (value === undefined) return;
-    const invalid = configValueError(name, value);
-    if (invalid !== undefined) {
-      io.fail(invalid);
+    if (workspaceRootOrNothing(platform) === undefined) {
+      io.fail('Fora de uma pasta de trabalho: não há .env para gravar. Crie uma com `bun add choliba`.');
       return;
     }
-    const before = configSettings(loadConfigFile(root), platform.env).find((setting) => setting.key.name === name);
-    writeConfigValue(root, name, value);
-    const secret = before?.key.secret === true;
-    const was =
-      before?.value === undefined ? 'não definida' : `${secret ? 'definida' : before.value}, ${before.origin}`;
-    io.write(
-      secret ? `${name} gravada em .env (antes: ${was}).\n` : `${name}=${value} gravado em .env (antes: ${was}).\n`,
-    );
-    const fromEnvironment = before?.origin === 'ambiente' ? before.value : undefined;
-    if (fromEnvironment !== undefined && fromEnvironment !== value) {
-      io.warn(`O ambiente do processo define ${name}${secret ? '' : `=${fromEnvironment}`} e vence o .env.`);
+    const value = await valueOf(io, platform, key, given);
+    if (value === undefined) return;
+    const sources = workspaceConfigSources(platform);
+    const before = configSettings(catalog, sources).find((setting) => setting.key === key);
+    try {
+      const written = writeConfig(catalog, sources, name, value);
+      io.write(
+        key.secret
+          ? `${name} gravada em ${written.source} (antes: ${previous(before)}).\n`
+          : `${name}=${value} gravado em ${written.source} (antes: ${previous(before)}).\n`,
+      );
+    } catch (error) {
+      io.fail(messageOf(error));
+      return;
+    }
+    if (before?.origin === 'ambiente' && before.value !== value) {
+      io.warn(`O ambiente do processo define ${name}${key.secret ? '' : `=${String(before.value)}`} e vence o .env.`);
     }
   },
 };

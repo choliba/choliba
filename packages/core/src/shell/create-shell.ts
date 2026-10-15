@@ -114,7 +114,8 @@ function typesOfVerbs(
 
 /** Registers the modules' configuration catalog and each group's lazy value. */
 function provideConfig(container: Container, modules: readonly ShellModule[], sources: readonly ConfigSource[]): void {
-  const groups: readonly ConfigGroup[] = modules.flatMap((module) => module.config ?? []);
+  const contributed: readonly ConfigGroup[] = modules.flatMap((module) => module.config ?? []);
+  const groups = contributed.filter((group, index) => contributed.indexOf(group) === index);
   const catalog = configCatalog(groups);
   container.provide(CONFIG_CATALOG, () => catalog);
   for (const group of groups) {

@@ -1,5 +1,5 @@
 import type { Platform } from '../platform';
-import { createShell, type ShellModule, type Token } from '../shell';
+import { createShell, PLATFORM, type ShellModule, type Token, WORKSPACE_ROOT } from '../shell';
 import type { ShellOverride } from './interfaces/shell-override.interface';
 
 /** Makes `key` give `value` in the shell `runShell` builds: the spec's fake in place of a package's service. */
@@ -20,7 +20,7 @@ export function runShell(
   platform: Platform,
   overrides: readonly ShellOverride[] = [],
 ): Promise<number> {
-  const shell = createShell(platform, modules);
+  const shell = createShell(platform, modules, [envSource(platform.env), fileSource(join(platform.cwd, '.env'))]);
   for (const override of overrides) {
     override.apply(shell.container);
   }
@@ -33,6 +33,9 @@ export function runShell(
  */
 export const VERBS_ROOT: ShellModule = {
   name: 'verbs-root',
+  provide: (container) => {
+    container.provide(WORKSPACE_ROOT, (current) => current.get(PLATFORM).cwd);
+  },
   root: {
     spec: { usage: 'choliba COMMAND [ARGS]' },
     version: () => 'choliba 0.0.0',
@@ -45,3 +48,6 @@ export const VERBS_ROOT: ShellModule = {
   },
   commands: [],
 };
+import { join } from 'node:path';
+
+import { envSource, fileSource } from '@choliba/config';

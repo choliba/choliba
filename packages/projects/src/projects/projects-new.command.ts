@@ -1,12 +1,4 @@
-import {
-  CONFIG,
-  messageOf,
-  PLATFORM,
-  type Ask,
-  type CommandEntry,
-  type ShellCommand,
-  type ShellIo,
-} from '@choliba/core';
+import { messageOf, PLATFORM, type Ask, type CommandEntry, type ShellCommand, type ShellIo } from '@choliba/core';
 
 import { programOf, UsageError } from '../common';
 import { parseNewProjectArgs, resolveNewProject, type NewProject } from './new-project';
@@ -83,5 +75,5 @@ export const newProjectCommand: ShellCommand = {
   name: 'project',
   help: () => [NEW_ENTRY],
   run: (container, io) =>
-    runProjectsNew(io, container.get(PROJECTS), container.get(CONFIG).startDir(), container.get(PLATFORM).ask),
+    runProjectsNew(io, container.get(PROJECTS), container.get(PLATFORM).cwd, container.get(PLATFORM).ask),
 };

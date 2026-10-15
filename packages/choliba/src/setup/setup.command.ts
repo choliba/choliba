@@ -1,4 +1,4 @@
-import { CONFIG, entryHelp, PLATFORM, type CommandEntry, type ShellCommand } from '@choliba/core';
+import { entryHelp, PLATFORM, type CommandEntry, type ShellCommand } from '@choliba/core';
 
 import { RUNTIME } from '../runtime';
 import { setup, setupWorkspace, updatePackageWhenListed } from './setup';
@@ -41,7 +41,7 @@ export const setupCommand: ShellCommand = {
       return;
     }
     const runtime = container.get(RUNTIME);
-    const cwd = container.get(CONFIG).startDir();
+    const cwd = container.get(PLATFORM).cwd;
     if (args.includes('--deferred')) {
       await updatePackageWhenListed(cwd, (ms) => runtime.sleep(ms));
       return;

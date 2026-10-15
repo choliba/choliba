@@ -1,5 +1,19 @@
-import { install, parseInstallArgs, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '@choliba/agents';
-import { CONFIG, entryHelp, PLATFORM, type CommandEntry, type ShellCommand, type Suggestions } from '@choliba/core';
+import {
+  agentsConfig,
+  install,
+  parseInstallArgs,
+  resolveAgentsDir,
+  resolveMcpsDir,
+  resolveSkillsDir,
+} from '@choliba/agents';
+import {
+  entryHelp,
+  PLATFORM,
+  WORKSPACE_ROOT,
+  type CommandEntry,
+  type ShellCommand,
+  type Suggestions,
+} from '@choliba/core';
 
 import { RUNTIME } from '../runtime';
 
@@ -55,10 +69,15 @@ export const addCommand: ShellCommand = {
       return Promise.resolve();
     }
     const parsed = parseInstallArgs(args);
-    const config = container.get(CONFIG);
     const runtime = container.get(RUNTIME);
-    const root = config.workspaceRoot();
-    const values = config.load(root);
+    const root = container.get(WORKSPACE_ROOT);
+    const configured = container.get(agentsConfig.token);
+    const values = {
+      ...container.get(PLATFORM).env,
+      CHOL_AGENTS_DIR: configured.agentsDir,
+      CHOL_SKILLS_DIR: configured.skillsDir,
+      CHOL_MCPS_DIR: configured.mcpsDir,
+    };
     const report = install(parsed, {
       workspaceRoot: root,
       config: values,
@@ -68,7 +87,7 @@ export const addCommand: ShellCommand = {
         mcpsDir: resolveMcpsDir(values, root),
       },
       source: {
-        cwd: config.startDir(),
+        cwd: container.get(PLATFORM).cwd,
         git: container.get(PLATFORM).git,
         bunAdd: (project, spec) => runtime.capture('bun', ['add', spec], project),
       },

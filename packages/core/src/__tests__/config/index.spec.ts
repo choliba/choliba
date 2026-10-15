@@ -1,20 +1,8 @@
 import * as config from '../../config/index';
 
 describe('config barrel exports', () => {
-  it('re-exports config var names and repo config helpers', () => {
-    expect(config.CHOL_ROOT).toBe('CHOL_ROOT');
-    expect(config.CHOL_AGENTS_PROVIDER).toBe('CHOL_AGENTS_PROVIDER');
-    expect(config.CHOL_AGENTS_DIR).toBe('CHOL_AGENTS_DIR');
-    expect(config.CHOL_SKILLS_DIR).toBe('CHOL_SKILLS_DIR');
-    expect(config.CHOL_MCPS_DIR).toBe('CHOL_MCPS_DIR');
-    expect(config.PACKAGE_NAME).toBe('choliba');
-    expect(config.CHOL_GLOBAL_DIR).toBe('CHOL_GLOBAL_DIR');
-    expect(config.CHOL_PROJECTS_DIR).toBe('CHOL_PROJECTS_DIR');
+  it('re-exports the shared workspace layout', () => {
     expect(config.PROJECTS_SUBDIR).toBe('projects');
-    expect(config.CHOL_TICKET_RUNS).toBe('CHOL_TICKET_RUNS');
-    expect(config.parseConfigFile('FOO=bar')).toEqual({ FOO: 'bar' });
-    expect(config.mergeConfig({ FOO: 'file' }, { FOO: 'shell' })).toEqual({ FOO: 'shell' });
-    expect(config.loadRepoConfig('/missing', { FOO: 'bar' }, () => undefined)).toEqual({ FOO: 'bar' });
   });
 
   it('re-exports the one source of the workspace layout and of the file names choliba loads', () => {

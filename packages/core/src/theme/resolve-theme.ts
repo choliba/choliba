@@ -1,8 +1,9 @@
-import { CHOL_COLORS } from '../config';
 import { ExpectedError } from '../common';
 import { ANSI_COLORS, colorForLabel, isAnsiColor, paintAnsi, type AnsiColor } from './ansi';
 import type { ColorSettings, Theme, ThemeRole, ThemeTable } from './interfaces/theme.interface';
 import { DEFAULT_THEME, THEME_ROLES } from './theme-defaults';
+
+const CHOL_COLORS = 'CHOL_COLORS';
 
 /** What a workspace chose: only the roles and names `CHOL_COLORS` lists. */
 export type ThemeChoices = Partial<Record<ThemeRole, Readonly<Record<string, AnsiColor>>>>;

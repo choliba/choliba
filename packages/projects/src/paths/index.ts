@@ -1,11 +1,15 @@
 export {
   applyLocations,
+  CHOL_GLOBAL_DIR,
+  CHOL_PROJECTS_DIR,
+  CHOL_TICKET_RUNS,
+  projectLocations,
   readAppliedLocations,
   LocationsError,
-  resolveLocations,
   resolveProjectsDir,
   type ProjectLocations,
 } from './locations';
+export { projectsConfig } from './projects-config';
 export {
   REPORT_FOLDER,
   TEST_RESULTS_FOLDER,

@@ -1,16 +1,11 @@
-import type { ConfigService, Environment } from '@choliba/core';
-
-import { resolveLocations, type ProjectLocations } from '../paths';
+import { projectLocations, type ProjectLocations, type projectsConfig } from '../paths';
 
 /** Where the projects under test live, from the workspace's `.env` and the process environment. */
 export class LocationsService {
-  constructor(
-    private readonly config: ConfigService,
-    private readonly env: Environment,
-  ) {}
+  constructor(private readonly config: ReturnType<typeof projectsConfig.read>) {}
 
   locations(): ProjectLocations {
-    return resolveLocations(this.config.workspaceRoot(), this.env);
+    return projectLocations(this.config);
   }
 
   projectsDir(): string {

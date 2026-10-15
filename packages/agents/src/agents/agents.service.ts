@@ -1,4 +1,4 @@
-import type { CommandSpec, ConfigService, Platform, ProcessRunnerService, ThemeService } from '@choliba/core';
+import type { CommandSpec, Platform, ProcessRunnerService, ThemeService } from '@choliba/core';
 
 import type { ProviderRegistry } from '../common';
 import { listAgentsSpec } from './runs/agents-spec';
@@ -11,7 +11,8 @@ export type AgentsPlatform = Pick<Platform, 'which' | 'clock' | 'stdout' | 'stde
 /** `choliba run agent` and `choliba list agents`: the workspace's agents, run through a provider. */
 export class AgentsService {
   constructor(
-    private readonly config: ConfigService,
+    private readonly workspaceRoot: () => string,
+    private readonly config: Readonly<Record<string, string | undefined>>,
     private readonly providers: ProviderRegistry,
     private readonly runner: ProcessRunnerService,
     private readonly theme: ThemeService,
@@ -40,8 +41,8 @@ export class AgentsService {
   }
 
   private deps(): RunAgentsCliDeps {
-    const repoRoot = this.config.workspaceRoot();
     const { which, clock, stdout, stderr, signals, git } = this.platform;
+    const repoRoot = this.workspaceRoot();
     return {
       runner: this.runner,
       which,
@@ -49,7 +50,7 @@ export class AgentsService {
       theme: this.theme.theme(),
       repoRoot,
       commands: [],
-      config: this.config.load(repoRoot),
+      config: this.config,
       now: clock,
       stdout,
       stderr,

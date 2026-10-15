@@ -2,15 +2,14 @@ import fs, { writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path, { join } from 'node:path';
 
-import { coreShell } from '@choliba/core';
-import { fakePlatform, runShell } from '@choliba/core/testing';
+import { fakePlatform } from '@choliba/core/testing';
 
-import { cholibaShell, createCholibaShell } from '../../app-shell';
+import { createCholibaShell } from '../../app-shell';
 import { fakeRuntime, withFolder, withWorkspace } from '../helpers/runtime';
 
 async function check(args: readonly string[], cwd: string): Promise<{ code: number; out: string; err: string }> {
   const platform = fakePlatform({ argv: ['check', ...args], cwd });
-  const code = await runShell([coreShell, cholibaShell(fakeRuntime())], platform);
+  const code = await createCholibaShell(platform, fakeRuntime()).run();
   return { code, out: platform.stdout.text(), err: platform.stderr.text() };
 }
 

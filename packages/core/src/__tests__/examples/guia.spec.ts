@@ -1,11 +1,10 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { boldAnsi, loadConfigFile, paintAnsi, rawArgsAfter, visibleWidth, wrapVisible } from '../../index';
+import { boldAnsi, paintAnsi, rawArgsAfter, visibleWidth, wrapVisible } from '../../index';
 import { BufferWritable, FakeSignals, fakePlatform, runShell } from '../../testing';
 import { fakeSpawner, streamFromChunks } from '../terminal/helpers/fake-spawner';
 import { ajudaDeServir, sugestoes } from './ajuda';
-import { configuracao } from './configuracao';
 import { lerLinha } from './linha';
 import { olaModule } from './ola';
 import { rodar } from './processo';
@@ -73,7 +72,6 @@ const OUTPUTS: Readonly<Record<string, () => Promise<string>>> = {
   'ajudaDeServir()': () => Promise.resolve(`${ajudaDeServir()}\n`),
   'tabelaDeIdades(40)': () => Promise.resolve(`${tabelaDeIdades(40)}\n`),
   "quadro('build', 'compilando\\npronto', 24)": () => Promise.resolve(`${quadro('build', 'compilando\npronto', 24)}\n`),
-  "configuracao({ PORTA: '8080' })": () => Promise.resolve(`${JSON.stringify(configuracao({ PORTA: '8080' }))}\n`),
 };
 
 describe('o guia do core (README.md)', () => {
@@ -122,7 +120,6 @@ describe('o guia do core (README.md)', () => {
     expect(visibleWidth(paintAnsi('green', 'ok'))).toBe(2);
     expect(wrapVisible('uma linha comprida', 10)).toEqual(['uma linha', 'comprida']);
     expect(boldAnsi('x')).toBe('\u001b[1mx\u001b[22m');
-    expect(loadConfigFile(join(__dirname, 'sem-env'))).toBeUndefined();
   });
 
   it('avisa quem se inscreveu quando o teste dispara um sinal', () => {

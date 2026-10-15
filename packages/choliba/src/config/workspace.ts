@@ -1,10 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { PACKAGE_FILE } from './files';
-import { ExpectedError } from '../common';
 
-/** The package every workspace depends on; its own repository is a workspace too (`workspace:*`). */
-export const PACKAGE_NAME = 'choliba';
+import { ExpectedError } from '@choliba/core';
+
+const PACKAGE_FILE = 'package.json';
+const PACKAGE_NAME = 'choliba';
 
 export class WorkspaceNotFoundError extends ExpectedError {}
 
@@ -12,19 +12,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-/** Whether `dir/package.json` lists choliba in `dependencies` or `devDependencies`; false when unreadable. */
-function dependsOnPackage(dir: string): boolean {
+function dependsOnCholiba(dir: string): boolean {
   const file = join(dir, PACKAGE_FILE);
-  if (!existsSync(file)) {
-    return false;
-  }
+  if (!existsSync(file)) return false;
   try {
     const pkg: unknown = JSON.parse(readFileSync(file, 'utf8'));
     return (
       isRecord(pkg) &&
       ['dependencies', 'devDependencies'].some((key) => {
-        const deps = pkg[key];
-        return isRecord(deps) && PACKAGE_NAME in deps;
+        const dependencies = pkg[key];
+        return isRecord(dependencies) && PACKAGE_NAME in dependencies;
       })
     );
   } catch {
@@ -32,17 +29,11 @@ function dependsOnPackage(dir: string): boolean {
   }
 }
 
-/**
- * The workspace a command runs in: the nearest folder, from `start` up, whose package.json depends on
- * choliba (`bun add choliba` makes one). Its `.env`, `.choliba/agents/`, `.choliba/skills/` and
- * `.choliba/mcps/` are what the CLIs use, so running from any subfolder of it works the same.
- */
+/** The nearest parent whose package.json depends on choliba. */
 export function findWorkspaceRoot(start: string): string {
   let dir = resolve(start);
   for (;;) {
-    if (dependsOnPackage(dir)) {
-      return dir;
-    }
+    if (dependsOnCholiba(dir)) return dir;
     const parent = dirname(dir);
     if (parent === dir) {
       throw new WorkspaceNotFoundError(

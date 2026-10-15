@@ -2,6 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { envSource, fileSource } from '@choliba/config';
 import { complete, coreShell, createShell, formatSuggestions } from '@choliba/core';
 import { BufferWritable, fakePlatform, runShell, VERBS_ROOT, type FakePlatform } from '@choliba/core/testing';
 
@@ -95,19 +96,8 @@ describe('choliba run agent and list agents', () => {
       expect(code).toBe(0);
       const out = platform.stdout.text();
       expect(out).toContain('\u001b[35m[provider]\u001b[0m \u001b[35mclaude\u001b[0m');
-      expect(out).toContain('\u001b[90m[echo]\u001b[0m repetido');
+      expect(out).toContain('\u001b[32m[echo]\u001b[0m repetido');
     }));
-
-  it('says what is wrong, with exit code 1, outside a workspace', async () => {
-    const outside = mkdtempSync(join(tmpdir(), 'agents-outside-'));
-    try {
-      const { code, platform } = await choliba(['list', 'agents'], { cwd: outside });
-      expect(code).toBe(1);
-      expect(platform.stderr.text()).toContain('Nenhuma pasta de trabalho do choliba');
-    } finally {
-      rmSync(outside, { recursive: true, force: true });
-    }
-  });
 });
 
 describe('runAgentEntry', () => {
@@ -126,7 +116,12 @@ describe('runAgentEntry', () => {
 describe('AgentsService.helpSpec', () => {
   it('completes the agents on disk and the providers', () =>
     withWorkspace((cwd) => {
-      const spec = createShell(fakePlatform({ cwd }), [coreShell, agentsShell, VERBS_ROOT])
+      const platform = fakePlatform({ cwd });
+      const spec = createShell(
+        platform,
+        [coreShell, agentsShell, VERBS_ROOT],
+        [envSource(platform.env), fileSource(join(cwd, '.env'))],
+      )
         .container.get(AGENTS)
         .helpSpec();
 

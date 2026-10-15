@@ -1,4 +1,8 @@
-import { CHOL_NETWORK, CHOL_SANDBOX, CHOL_SANDBOX_IMAGE, ExpectedError } from '@choliba/core';
+import { ExpectedError } from '@choliba/core';
+
+const CHOL_NETWORK = 'CHOL_NETWORK';
+const CHOL_SANDBOX = 'CHOL_SANDBOX';
+const CHOL_SANDBOX_IMAGE = 'CHOL_SANDBOX_IMAGE';
 
 import { DockerSandbox } from './docker/docker-sandbox';
 import { bwrapOnPath } from './local/bwrap-on-path';

@@ -725,7 +725,7 @@ describe('runTests', () => {
     });
   });
 
-  it('uses resolveLocations when loadConfig is omitted', async () => {
+  it('reads the projects group when loadConfig is omitted', async () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'run-tests-env-'));
     try {
       fs.writeFileSync(path.join(tmp, '.env'), 'CHOL_GLOBAL_DIR=/tmp/global\n');

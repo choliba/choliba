@@ -39,6 +39,7 @@ export {
   type InstallTargets,
 } from './agents';
 export {
+  agentsConfig,
   AGENT_PROVIDERS,
   AGENTS,
   AgentsService,
