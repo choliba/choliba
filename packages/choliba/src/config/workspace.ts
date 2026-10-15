@@ -3,7 +3,8 @@ import { dirname, join, resolve } from 'node:path';
 
 import { ExpectedError } from '@choliba/core';
 
-const PACKAGE_FILE = 'package.json';
+import { PACKAGE_FILE } from './workspace-layout';
+
 const PACKAGE_NAME = 'choliba';
 
 export class WorkspaceNotFoundError extends ExpectedError {}

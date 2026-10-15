@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 15/10/2026 03:31:08 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 15/10/2026 03:33:18 — não editar manualmente.
 
 ## Resumo
 
@@ -103,7 +103,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 18 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 19 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -114,6 +114,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/config/config-list.command.ts](packages/choliba/src/config/config-list.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/config-set.command.ts](packages/choliba/src/config/config-set.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/config-sources.ts](packages/choliba/src/config/config-sources.ts)|100.00|100.00|100.00|100.00
+🟢|[src/config/workspace-layout.ts](packages/choliba/src/config/workspace-layout.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/workspace.ts](packages/choliba/src/config/workspace.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/root-spec.ts](packages/choliba/src/help/root-spec.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/version.ts](packages/choliba/src/help/version.ts)|100.00|100.00|100.00|100.00

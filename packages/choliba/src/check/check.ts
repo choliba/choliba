@@ -12,7 +12,7 @@ import {
 } from '@choliba/agents';
 import { listProjectNames, loadProjectSettings, projectLocations, retiredCriteria } from '@choliba/projects';
 
-const ENV_FILE = '.env';
+import { ENV_FILE } from '../config';
 
 type Config = Readonly<Record<string, string | undefined>>;
 
