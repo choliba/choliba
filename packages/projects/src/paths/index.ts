@@ -31,6 +31,7 @@ export {
   configJsonPath,
   envJsonPath,
   listProjectNames,
+  listProjectSpecs,
   projectConfigFile,
   projectDir,
   projectEnvExampleFile,

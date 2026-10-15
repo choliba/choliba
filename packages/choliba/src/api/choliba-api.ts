@@ -2,8 +2,10 @@ import { resolve } from 'node:path';
 
 import { agentsConfig, listAgents, listSkills, loadAgent, resolveSkill, resolveSkills } from '@choliba/agents';
 import { configCatalog, configSettings, type ConfigGroup } from '@choliba/config';
+import { LocationsService, ProjectsService, projectsConfig } from '@choliba/projects';
 
 import { configSourcesAt, findWorkspaceRoot } from '../config';
+import { cholibaProjects } from './choliba-projects';
 import type {
   Choliba,
   CholibaAgents,
@@ -23,7 +25,7 @@ function once<T>(make: () => T): () => T {
 
 /**
  * choliba for a script, over the app's configuration `groups`: the same rules as the CLI (`findWorkspaceRoot`, the
- * environment then the `.env`, the agents' loader), nothing new. Nothing is read until a member is used, and `root`
+ * environment then the `.env`, the agents' loader, the projects' service), nothing new. Nothing is read until a member is used, and `root`
  * is found once.
  */
 export function cholibaApi(groups: readonly ConfigGroup[], options: CholibaOptions): Choliba {
@@ -55,5 +57,6 @@ export function cholibaApi(groups: readonly ConfigGroup[], options: CholibaOptio
     config,
     agents,
     skills,
+    projects: cholibaProjects(() => new ProjectsService(new LocationsService(read(projectsConfig)))),
   };
 }

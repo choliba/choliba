@@ -2,5 +2,6 @@
 // as the Playwright runner imports it.
 export * from './common';
 export * from './paths';
+export * from './locations';
 export * from './tickets';
 export * from './projects';
