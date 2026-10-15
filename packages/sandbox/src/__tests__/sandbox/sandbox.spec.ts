@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { CONFIG_KEYS } from '@choliba/core';
+import { envSource } from '@choliba/config';
 
 import {
   containerName,
@@ -11,6 +11,7 @@ import {
   DEFAULT_SANDBOX_IMAGE,
   presentCredentials,
   readSandbox,
+  sandboxConfig,
   SandboxConfigError,
 } from '../../index';
 
@@ -208,13 +209,17 @@ describe('DockerSandbox', () => {
   });
 });
 
-describe('the configuration registry', () => {
-  it("names the sandbox's own defaults", () => {
-    const fallback = (name: string): string | undefined => CONFIG_KEYS.find((key) => key.name === name)?.fallback;
-    const docker = readSandbox({ CHOL_SANDBOX: 'docker' });
+describe('sandboxConfig', () => {
+  it("declares the sandbox's own defaults", () => {
+    expect(sandboxConfig.read([envSource({})])).toEqual({
+      mode: readSandbox({}).kind,
+      image: DEFAULT_SANDBOX_IMAGE,
+      network: 'isolated',
+    });
+  });
 
-    expect(fallback('CHOL_SANDBOX')).toBe(readSandbox({}).kind);
-    expect(fallback('CHOL_SANDBOX_IMAGE')).toBe(DEFAULT_SANDBOX_IMAGE);
-    expect(docker.kind === 'docker' ? docker.network : undefined).toBe(fallback('CHOL_NETWORK'));
+  it('only accepts supported modes and networks', () => {
+    expect(() => sandboxConfig.read([envSource({ CHOL_SANDBOX: 'podman' })])).toThrow('CHOL_SANDBOX');
+    expect(() => sandboxConfig.read([envSource({ CHOL_NETWORK: 'lan' })])).toThrow('CHOL_NETWORK');
   });
 });
