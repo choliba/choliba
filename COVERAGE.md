@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 15/10/2026 14:03:44 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 15/10/2026 16:28:26 — não editar manualmente.
 
 ## Resumo
 
@@ -18,7 +18,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 77 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 78 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -30,6 +30,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/agent-validation.ts](packages/agents/src/agents/agent-validation.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-config.ts](packages/agents/src/agents/agents-config.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-list.command.ts](packages/agents/src/agents/agents-list.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/agents-panel.ts](packages/agents/src/agents/agents-panel.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-run.command.ts](packages/agents/src/agents/agents-run.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-shell.ts](packages/agents/src/agents/agents-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents.constants.ts](packages/agents/src/agents/agents.constants.ts)|100.00|100.00|100.00|100.00

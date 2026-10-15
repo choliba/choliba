@@ -22,8 +22,10 @@ function suggestionLines(
     const name = `/${command.name.padEnd(width)}`;
     const reason = why(command);
     if (reason !== undefined) return `\u001b[90m  ${name}  ${reason}\u001b[39m`;
-    const description = `\u001b[90m${command.description}\u001b[39m`;
-    return index === highlighted ? `\u001b[1m❯ ${name}\u001b[22m  ${description}` : `  ${name}  ${description}`;
+    // The highlighted command's description lights up; the others stay in gray.
+    return index === highlighted
+      ? `\u001b[1m❯ ${name}\u001b[22m  ${command.description}`
+      : `  ${name}  \u001b[90m${command.description}\u001b[39m`;
   });
 }
 
@@ -42,12 +44,17 @@ function sessionContext(onCards: (cards: readonly PanelCard[]) => void): PanelCo
       if (value === undefined) values.delete(key);
       else values.set(key, value);
     },
-    show: (title, lines, summary) => {
-      if (lines === undefined) cards.delete(title);
-      else cards.set(title, { title, lines, ...(summary === undefined ? {} : { summary }) });
+    show: (title, card) => {
+      if (card === undefined) cards.delete(title);
+      else cards.set(title, { ...card, title });
       onCards([...cards.values()]);
     },
   };
+}
+
+/** What a session tells its panel: the keys of the cards shown, as the footer says them (`Ctrl+P projeto`). */
+export interface PanelSession {
+  shortcuts(): readonly string[];
 }
 
 /**
@@ -56,9 +63,14 @@ function sessionContext(onCards: (cards: readonly PanelCard[]) => void): PanelCo
  * them; Enter runs the command named whole, else the highlighted one. A command that cannot run says why. Anything
  * else is said. The cards the commands show go in the header.
  */
-export function panelSession(container: Container, panel: ChatPanel, commands: readonly PanelCommand[]): void {
+export function panelSession(container: Container, panel: ChatPanel, commands: readonly PanelCommand[]): PanelSession {
+  let shortcuts: readonly string[] = [];
   const context = sessionContext((cards) => {
     panel.cards(cards);
+    shortcuts = cards.flatMap((card) =>
+      card.key === undefined ? [] : [`Ctrl+${card.key.toUpperCase()} ${card.title}`],
+    );
+    panel.refresh();
   });
   const matching = (word: string): readonly PanelCommand[] =>
     commands.filter((command) => command.name.startsWith(word));
@@ -134,18 +146,20 @@ export function panelSession(container: Container, panel: ChatPanel, commands: r
   });
   panel.onMessage((text) => {
     show([]);
-    panel.say(text);
     const word = text.startsWith('/') ? text.slice(1).trim() : undefined;
     const choice = highlighted;
     highlighted = 0;
     filter = undefined;
-    if (word === undefined) return;
-    const found = matching(word);
+    const found = word === undefined ? [] : matching(word);
     const command = commands.find((each) => each.name === word) ?? found[Math.min(choice, found.length - 1)];
+    // The band says the command that runs, not the start of it that was typed (`/`, `/p`).
+    panel.say(command === undefined ? text : `/${command.name}`);
+    if (word === undefined) return;
     if (command === undefined) {
       panel.answer(unknownCommand(word));
       return;
     }
     void run(command);
   });
+  return { shortcuts: () => shortcuts };
 }

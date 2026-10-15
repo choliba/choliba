@@ -47,7 +47,8 @@ function optionLines(
   if (choice.detail === undefined || choice.detail === '') return [head];
   // The detail starts after `❯ `, the label, ` ✔` and two spaces; the panel's left margin takes one more column.
   const indent = 2 + label.length + 2 + 2;
-  const gray = (text: string): string => `\u001b[90m${text}\u001b[39m`;
+  // The highlighted option's detail lights up, so it reads as the arrows move; the others stay in gray.
+  const gray = (text: string): string => (highlighted ? text : `\u001b[90m${text}\u001b[39m`);
   return wrapWords(choice.detail, Math.max(10, columns - indent - 1)).map((line, place) =>
     place === 0 ? `${head}  ${gray(line)}` : `${' '.repeat(indent)}${gray(line)}`,
   );

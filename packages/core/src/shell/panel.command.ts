@@ -3,7 +3,7 @@ import { openOpenTuiPanel, type ArtPixels, type ChatPanel, type PanelOptions } f
 import { token, type Container } from './container';
 import { PANEL_COMMANDS, PLATFORM } from './create-shell';
 import type { ShellCommand } from './interfaces/shell.interface';
-import { panelSession } from './panel-session';
+import { panelSession, type PanelSession } from './panel-session';
 
 /** Opens a panel, or gives nothing where it cannot (`openOpenTuiPanel`); a spec puts a fake one in its place. */
 export const PANEL_OPENER = token<(options: PanelOptions) => Promise<ChatPanel | undefined>>('PanelOpener');
@@ -43,7 +43,8 @@ export const PANEL_SPEC: CommandSpec = {
   examples: [{ description: 'Abre o painel', command: 'choliba panel' }],
   details:
     'O painel abre com as boas-vindas: Enter mostra o campo, e Esc sai. No campo, `/` lista os comandos do painel ' +
-    '(`/projects` escolhe o projeto, `/tickets` o ticket), e o que eles escolhem aparece no cabeçalho. Sai com ' +
+    '(`/projects` escolhe o projeto, `/tickets` o ticket, `/agents` o agente), e o que eles escolhem aparece no ' +
+    'cabeçalho, em quadros que o Ctrl+P (projeto), o Ctrl+A (agente) ou um clique recolhem. Sai com ' +
     'Ctrl+C duas vezes. Precisa de um terminal interativo.',
   flags: [{ name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true }],
 };
@@ -67,6 +68,8 @@ export const panelCommand: ShellCommand = {
     const logo = container.has(PANEL_LOGO) ? container.get(PANEL_LOGO) : undefined;
     const { cwd, env } = container.get(PLATFORM);
     const home = env['HOME'];
+    // The footer says the keys of the cards the session shows, once there is one.
+    const session: { current?: PanelSession } = {};
     const heading = [
       `\u001b[1m\u001b[32m${version ?? 'choliba'}\u001b[39m\u001b[22m`,
       `\u001b[90m${shortPath(cwd, home)}\u001b[39m`,
@@ -76,7 +79,9 @@ export const panelCommand: ShellCommand = {
         ? await container.get(PANEL_OPENER)({
             title: version ?? 'choliba',
             titleColor: 'green',
-            footer: () => ['\u001b[90m  Ctrl+P projeto · Ctrl+C duas vezes sai\u001b[39m'],
+            footer: () => [
+              `\u001b[90m  ${[...(session.current?.shortcuts() ?? []), 'Ctrl+C duas vezes sai'].join(' · ')}\u001b[39m`,
+            ],
             hint: PANEL_HINT,
             splash: {
               ...(logo === undefined ? {} : { image: logo }),
@@ -93,7 +98,7 @@ export const panelCommand: ShellCommand = {
       io.fail('erro: o painel precisa de um terminal interativo.');
       return;
     }
-    panelSession(container, panel, container.get(PANEL_COMMANDS));
+    session.current = panelSession(container, panel, container.get(PANEL_COMMANDS));
     await new Promise<void>((resolve) => {
       panel.onInterrupt(() => {
         panel.close();
