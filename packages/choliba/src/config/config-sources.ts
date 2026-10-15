@@ -6,17 +6,28 @@ import type { Platform } from '@choliba/core';
 import { findWorkspaceRoot } from './workspace';
 import { ENV_FILE } from './workspace-layout';
 
-/** The workspace root when the command starts inside one, or nothing outside a workspace. */
-export function workspaceRootOrNothing(platform: Platform): string | undefined {
+type Env = Readonly<Record<string, string | undefined>>;
+
+/** The workspace root above `cwd`, or nothing outside a workspace. */
+export function workspaceRootAt(cwd: string): string | undefined {
   try {
-    return findWorkspaceRoot(platform.cwd);
+    return findWorkspaceRoot(cwd);
   } catch {
     return undefined;
   }
 }
 
+/** The workspace root when the command starts inside one, or nothing outside a workspace. */
+export function workspaceRootOrNothing(platform: Platform): string | undefined {
+  return workspaceRootAt(platform.cwd);
+}
+
+/** `env` first, then the `.env` of `root` when there is one. */
+export function configSourcesAt(env: Env, root: string | undefined): readonly ConfigSource[] {
+  return root === undefined ? [envSource(env)] : [envSource(env), fileSource(join(root, ENV_FILE))];
+}
+
 /** Process environment first, then the workspace's `.env` when one exists. */
 export function workspaceConfigSources(platform: Platform): readonly ConfigSource[] {
-  const root = workspaceRootOrNothing(platform);
-  return root === undefined ? [envSource(platform.env)] : [envSource(platform.env), fileSource(join(root, ENV_FILE))];
+  return configSourcesAt(platform.env, workspaceRootOrNothing(platform));
 }

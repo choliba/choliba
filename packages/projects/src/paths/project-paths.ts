@@ -38,6 +38,20 @@ export function projectTestsFolder(projectsDir: string, project: string): string
   return path.join(projectDir(projectsDir, project), TESTS_SUBDIR);
 }
 
+/** A file Playwright runs by default: `*.spec.ts`, `*.test.js` and their `c`/`m`/`x` variants. */
+const SPEC_FILE = /\.(spec|test)\.[cm]?[jt]sx?$/;
+
+/** The spec files of the project's `tests/`, in subfolders too, relative to it and sorted; none without the folder. */
+export function listProjectSpecs(projectsDir: string, project: string): string[] {
+  const testsFolder = projectTestsFolder(projectsDir, project);
+  if (!fs.existsSync(testsFolder)) return [];
+  return fs
+    .readdirSync(testsFolder, { recursive: true, encoding: 'utf8' })
+    .filter((file) => SPEC_FILE.test(file) && fs.statSync(path.join(testsFolder, file)).isFile())
+    .map((file) => file.split(path.sep).join('/'))
+    .sort();
+}
+
 export function configJsonPath(projectsDir: string, project: string): string {
   return projectConfigFile(projectDir(projectsDir, project));
 }

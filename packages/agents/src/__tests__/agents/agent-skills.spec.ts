@@ -1,6 +1,8 @@
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { formatSkillsInstruction, resolveSkills, skillDescription } from '../../agents/agent-skills';
+import { formatSkillsInstruction, listSkills, resolveSkills, skillDescription } from '../../agents/agent-skills';
+import { makeTmpDir } from '../helpers/tmp';
 
 const SKILLS = join(__dirname, '..', 'fixtures', 'skills');
 
@@ -37,6 +39,52 @@ describe('resolveSkills', () => {
     expect(() => resolveSkills(SKILLS, [{ name: 'nope' }])).toThrow(
       `skill "nope" não encontrada: ${join(SKILLS, 'nope', 'SKILL.md')} não existe.`,
     );
+  });
+});
+
+describe('listSkills', () => {
+  it('lists each folder that has a SKILL.md, sorted, with its description', () => {
+    const tmp = makeTmpDir('skills');
+    try {
+      for (const [name, description] of [
+        ['zeta', 'Last.'],
+        ['alpha', 'First.'],
+      ] as const) {
+        mkdirSync(join(tmp.path, name));
+        writeFileSync(join(tmp.path, name, 'SKILL.md'), `---\ndescription: ${description}\n---\n`);
+      }
+      mkdirSync(join(tmp.path, 'not-a-skill'));
+      writeFileSync(join(tmp.path, 'README.md'), '# not a skill\n');
+
+      expect(listSkills(tmp.path)).toEqual([
+        { name: 'alpha', description: 'First.', path: join(tmp.path, 'alpha', 'SKILL.md') },
+        { name: 'zeta', description: 'Last.', path: join(tmp.path, 'zeta', 'SKILL.md') },
+      ]);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('has none in a missing or empty folder', () => {
+    const tmp = makeTmpDir('skills');
+    try {
+      expect(listSkills(tmp.path)).toEqual([]);
+      expect(listSkills(join(tmp.path, 'missing'))).toEqual([]);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('fails naming a SKILL.md without a description', () => {
+    const tmp = makeTmpDir('skills');
+    try {
+      mkdirSync(join(tmp.path, 'broken'));
+      writeFileSync(join(tmp.path, 'broken', 'SKILL.md'), '# no frontmatter\n');
+
+      expect(() => listSkills(tmp.path)).toThrow(`${join(tmp.path, 'broken', 'SKILL.md')}: sem frontmatter YAML`);
+    } finally {
+      tmp.cleanup();
+    }
   });
 });
 

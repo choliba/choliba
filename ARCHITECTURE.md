@@ -21,7 +21,7 @@ um container e uma tabela de comandos, sem decorator e sem reflection.
 | `packages/runner`   | os testes E2E pelo Playwright, os portões red/green e o reporter; `run tests`                                                                                                                               |
 | `packages/sandbox`  | onde o provider roda: `local` ou `docker` (`sandbox/local/`, `sandbox/docker/`), as montagens do container e as regras de caminho (`deny`, exceções `!`); só depende do `core`                              |
 | `packages/agents`   | os agentes: o `agent.yaml`, a montagem de uma execução (`runs/`), os steps, os providers; `run agent` e `list agents`                                                                                       |
-| `packages/choliba`  | o app: `main.ts`, a pasta de trabalho, as fontes de configuração, `list config`, `set config`, a raiz, `check`, `setup`, `lint` e `format`; o pacote publicado                                              |
+| `packages/choliba`  | o app: `main.ts`, a pasta de trabalho, as fontes de configuração, `list config`, `set config`, a raiz, `check`, `setup`, `lint` e `format`; a fachada `choliba` para scripts (`api/`); o pacote publicado   |
 
 ## Invariantes
 

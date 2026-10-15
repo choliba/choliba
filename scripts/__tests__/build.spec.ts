@@ -5,6 +5,27 @@ import { dirname, join } from 'node:path';
 
 const repo = join(__dirname, '..', '..');
 const CONFIG_EXAMPLE = readFileSync(join(repo, 'packages', 'config', 'examples', 'config.ts'), 'utf8');
+const CHOLIBA_EXAMPLE = readFileSync(join(repo, 'packages', 'choliba', 'examples', 'choliba.ts'), 'utf8');
+const LIBRARY_GUIDE = readFileSync(join(repo, 'docs', 'guias', 'usar-como-biblioteca.md'), 'utf8');
+
+/** A workspace's agent, as the facade example lists it. */
+const ECHO_AGENT = `version: 1
+agent:
+  id: echo
+  name: Echo
+  version: 1.0.0
+  description: Repete a tarefa.
+models: [modelo-a]
+role: Repete.
+context: [Nada.]
+input: A tarefa.
+flow: 1. Repita.
+output: A tarefa.
+notes: [Fixture.]
+permissions:
+  deny:
+    write: [agents/]
+`;
 
 const SUBPATHS = [
   '.',
@@ -152,6 +173,7 @@ function assertExports(out: string): void {
   const configGuide = readFileSync(join(repo, 'packages', 'config', 'README.md'), 'utf8');
   expect(readFileSync(join(out, 'config', 'README.md'), 'utf8')).toBe(configGuide);
   expect(configGuide).toContain(`\`\`\`ts\n${CONFIG_EXAMPLE}\`\`\``);
+  expect(LIBRARY_GUIDE).toContain(`\`\`\`ts\n${CHOLIBA_EXAMPLE}\`\`\``);
 }
 
 describe('the installable package', () => {
@@ -172,6 +194,12 @@ describe('the installable package', () => {
       writeFileSync(join(app, 'config.ts'), CONFIG_EXAMPLE);
       writeFileSync(join(app, '.env'), 'EXAMPLE_NAME=from-dotenv\n');
       writeFileSync(join(app, 'settings.yaml'), 'server:\n  port: 4321\n');
+      writeFileSync(join(app, 'package.json'), '{ "type": "module", "dependencies": { "choliba": "*" } }\n');
+      writeFileSync(join(app, 'choliba.ts'), CHOLIBA_EXAMPLE);
+      mkdirSync(join(app, '.choliba', 'agents', 'echo'), { recursive: true });
+      writeFileSync(join(app, '.choliba', 'agents', 'echo', 'agent.yaml'), ECHO_AGENT);
+      mkdirSync(join(app, '.choliba', 'skills', 'repeat'), { recursive: true });
+      writeFileSync(join(app, '.choliba', 'skills', 'repeat', 'SKILL.md'), '---\ndescription: Repete.\n---\n');
       writeFileSync(
         join(app, 'tsconfig.json'),
         `${JSON.stringify({
@@ -186,12 +214,15 @@ describe('the installable package', () => {
             types: ['node'],
             typeRoots: [join(repo, 'node_modules', '@types')],
           },
-          files: ['check.ts', 'config.ts'],
+          files: ['check.ts', 'config.ts', 'choliba.ts'],
         })}\n`,
       );
       run('node', ['check.mjs'], app);
       run('bun', ['check.mjs'], app);
       expect(run('bun', ['config.ts'], app)).toBe('{"name":"from-dotenv","port":4321}\n');
+      expect(run('bun', [join(app, 'choliba.ts')], join(app, '.choliba'))).toBe(
+        `raiz: ${app}\nagentes em ${join(app, '.choliba', 'agents')}\n- echo 1.0.0\nskill repeat: Repete.\n`,
+      );
       run('node', [join(repo, 'node_modules/typescript/bin/tsc'), '-p', 'tsconfig.json', '--pretty', 'false'], app);
       expect(run('bun', [join(out, 'bin', 'choliba.js'), '--help'], app)).toContain('Usage:');
     } finally {

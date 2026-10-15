@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 15/10/2026 03:35:55 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 15/10/2026 10:18:54 — não editar manualmente.
 
 ## Resumo
 
@@ -103,11 +103,13 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 19 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 21 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
 🟢|[src/add/add.command.ts](packages/choliba/src/add/add.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/api/choliba-api.ts](packages/choliba/src/api/choliba-api.ts)|100.00|100.00|100.00|100.00
+🟢|[src/api/choliba-projects.ts](packages/choliba/src/api/choliba-projects.ts)|100.00|100.00|100.00|100.00
 🟢|[src/app-shell.ts](packages/choliba/src/app-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/check/check.command.ts](packages/choliba/src/check/check.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/check/check.ts](packages/choliba/src/check/check.ts)|100.00|100.00|100.00|100.00
@@ -217,7 +219,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 28 arquivos</summary>
+<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 29 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -245,6 +247,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/projects/projects.constants.ts](packages/projects/src/projects/projects.constants.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects.service.ts](packages/projects/src/projects/projects.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tickets/ticket-criteria.ts](packages/projects/src/tickets/ticket-criteria.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tickets/ticket-info.ts](packages/projects/src/tickets/ticket-info.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tickets/ticket-superseded.ts](packages/projects/src/tickets/ticket-superseded.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tickets/ticket-template.ts](packages/projects/src/tickets/ticket-template.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tickets/ticket.ts](packages/projects/src/tickets/ticket.ts)|100.00|100.00|100.00|100.00

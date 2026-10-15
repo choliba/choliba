@@ -1,0 +1,10 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "choliba": ["../src/index.ts"]
+    },
+    "types": ["node"]
+  },
+  "include": ["choliba.ts"]
+}
