@@ -1,8 +1,14 @@
+import { join } from 'node:path';
+
 import { agentsShell } from '@choliba/agents';
 import { defineConfig, type ConfigGroup } from '@choliba/config';
 import {
   coreShell,
   createShell,
+  findResource,
+  PANEL_ICON,
+  PANEL_LOGO,
+  PANEL_VERSION,
   PLATFORM,
   parseColors,
   THEME_CHOICES,
@@ -19,7 +25,7 @@ import { addCommand } from './add';
 import { cholibaApi, type Choliba, type CholibaOptions } from './api';
 import { checkCommand } from './check';
 import { findWorkspaceRoot, listConfigCommand, setConfigCommand, workspaceConfigSources } from './config';
-import { CHOLIBA_ORDER, CHOLIBA_ROOT, CHOLIBA_VERBS, cholibaManifest, PACKAGE_NAME } from './help';
+import { CHOLIBA_ORDER, CHOLIBA_ROOT, CHOLIBA_VERBS, cholibaManifest, OWL_ICON, PACKAGE_NAME } from './help';
 import { RUNTIME, type Runtime } from './runtime';
 import { setupCommand } from './setup';
 import { formatCommand, lintCommand, TOOLS, ToolsService } from './tooling';
@@ -49,6 +55,9 @@ export function cholibaShell(runtime: Runtime): ShellModule {
     },
     provide: (container) => {
       container.provide(RUNTIME, () => runtime);
+      container.provide(PANEL_LOGO, () => findResource(join('assets', 'choliba-logo.png'), __dirname));
+      container.provide(PANEL_ICON, () => OWL_ICON);
+      container.provide(PANEL_VERSION, () => versionLine(PACKAGE_NAME, cholibaManifest()));
       container.provide(WORKSPACE_ROOT, (current) => findWorkspaceRoot(current.get(PLATFORM).cwd));
       container.provide(THEME_CHOICES, (current) => parseColors(current.get(cholibaConfig.token).colors));
       container.provide(TOOLS, (c) => new ToolsService(c.get(RUNTIME), c.get(WORKSPACE_ROOT), c.get(PLATFORM).which));

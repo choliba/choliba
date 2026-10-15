@@ -10,6 +10,7 @@ import { openPanel } from '../../terminal/panel/panel';
 interface FakeChunk {
   readonly text: string;
   readonly fg?: string;
+  readonly bg?: string;
   readonly bold?: boolean;
 }
 
@@ -103,7 +104,16 @@ class FakeNode {
   }
 }
 
+/** Three by two pixels: red over blue, nothing over green, nothing over nothing. */
+const PIXELS = {
+  data: new Uint8Array([255, 0, 0, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 0, 255, 0, 255, 0, 0, 0, 0]),
+  width: 3,
+  height: 2,
+  stride: 12,
+};
+
 function fakeToolkit(failToOpen = false) {
+  const images: { source: string; resized?: object; disposed: number }[] = [];
   const keys: ((key: PanelKey) => void)[] = [];
   const configs: PanelRendererConfig[] = [];
   const renderer = {
@@ -150,11 +160,32 @@ function fakeToolkit(failToOpen = false) {
         super('select', options as Record<string, unknown>);
       }
     },
+    NativeImage: {
+      load: (source) => {
+        if (source === '/missing.png') return Promise.reject(new Error('no file'));
+        const loaded: { source: string; resized?: object; disposed: number } = { source, disposed: 0 };
+        images.push(loaded);
+        const image = {
+          width: 146,
+          height: 180,
+          resize: (options: object) => {
+            loaded.resized = options;
+            return image;
+          },
+          raw: () => PIXELS,
+          dispose: () => {
+            loaded.disposed += 1;
+          },
+        };
+        return Promise.resolve(image);
+      },
+    },
     StyledText: class {
       constructor(readonly chunks: FakeChunk[]) {}
     },
     stringToStyledText: (content) => ({ chunks: [{ text: content }] }),
     fg: (color) => (input) => ({ text: input, fg: color }),
+    bg: (color) => (input) => ({ ...input, bg: color }),
     bold: (input) => ({ ...input, bold: true }),
   };
   const press = (key: PanelKey): void => {
@@ -162,7 +193,7 @@ function fakeToolkit(failToOpen = false) {
       listener(key);
     });
   };
-  return { kit, renderer, configs, press };
+  return { kit, renderer, configs, press, images };
 }
 
 const OPTIONS = {
@@ -191,6 +222,155 @@ describe('openPanel', () => {
     expect(scroll.built).toMatchObject({ title: ' test-writer ', titleColor: '#11a8cd', stickyScroll: true });
     expect(footer.content).toEqual({ chunks: [{ text: 'provider', bold: true }, { text: ' largura 60' }] });
     expect(footer.height).toBe(1);
+  });
+
+  it('welcomes in the center with no box nor field, the image in half blocks over the lines, until Enter', async () => {
+    const { kit, renderer, press, images } = fakeToolkit();
+    await openPanel(kit, {
+      ...OPTIONS,
+      splash: {
+        image: '/assets/logo.png',
+        lines: ['\u001b[1mBem-vindo\u001b[22m', '', 'Tecle Enter.'],
+        note: 'choliba 1.2.3',
+      },
+    });
+
+    const [layout] = renderer.root.children;
+    const [scroll, select, bottom, splash] = layout?.children ?? [];
+    const input = bottom?.children[1];
+    expect([scroll?.kind, select?.kind, bottom?.kind, splash?.kind]).toEqual(['scroll', 'select', 'box', 'box']);
+    expect(splash?.built).toMatchObject({
+      flexDirection: 'column',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      zIndex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    });
+    expect(images).toEqual([
+      { source: '/assets/logo.png', resized: { width: 24, height: 30, kernel: 'area' }, disposed: 2 },
+    ]);
+    const [picture, welcome, blank, hint, note] = splash?.children ?? [];
+    expect(picture?.built).toMatchObject({ flexDirection: 'column', position: 'relative', top: -3 });
+    expect(picture?.children.map((row) => row.content)).toEqual([
+      {
+        chunks: [{ text: '▀', fg: '#ff0000', bg: '#0000ff' }, { text: '▄', fg: '#00ff00' }, { text: ' ' }],
+      },
+    ]);
+    expect(welcome?.content).toEqual({ chunks: [{ text: 'Bem-vindo', bold: true }] });
+    expect([welcome?.height, blank?.height]).toEqual(['auto', 1]);
+    expect(hint?.content).toEqual({ chunks: [{ text: 'Tecle Enter.' }] });
+    expect(note?.content).toEqual({ chunks: [{ text: 'choliba 1.2.3', fg: '#e5e5e5' }] });
+    expect(note?.built).toMatchObject({ position: 'absolute', bottom: 0, right: 1 });
+    expect([splash?.visible, scroll?.visible, bottom?.visible, input?.focused]).toEqual([true, false, false, 0]);
+
+    press({ name: 'a', ctrl: false });
+    expect(splash?.visible).toBe(true);
+    press({ name: 'return', ctrl: false });
+    expect([splash?.visible, scroll?.visible, bottom?.visible, input?.focused]).toEqual([false, true, true, 1]);
+    press({ name: 'return', ctrl: false });
+    expect(input?.focused).toBe(1);
+  });
+
+  it('welcomes with the lines alone when the image does not load or there is none', async () => {
+    for (const image of ['/missing.png', undefined]) {
+      const { kit, renderer } = fakeToolkit();
+      await openPanel(kit, { ...OPTIONS, splash: { ...(image === undefined ? {} : { image }), lines: ['Oi'] } });
+
+      expect(renderer.root.children[0]?.children[3]?.children.map((child) => child.kind)).toEqual(['text']);
+    }
+  });
+
+  it('leaves with Esc on the welcome at once, and leaves Esc to the questions after it', async () => {
+    const { kit, press } = fakeToolkit();
+    const panel = await openPanel(kit, { ...OPTIONS, splash: { lines: ['Oi'] } });
+    let interrupted = 0;
+    panel.onInterrupt(() => {
+      interrupted += 1;
+    });
+
+    press({ name: 'escape', ctrl: false });
+    expect(interrupted).toBe(1);
+    press({ name: 'return', ctrl: false });
+    press({ name: 'escape', ctrl: false });
+    expect(interrupted).toBe(1);
+  });
+
+  it('closes the welcome when a line is written first, and with Enter of the keypad', async () => {
+    const written = fakeToolkit();
+    const panel = await openPanel(written.kit, { ...OPTIONS, splash: { lines: ['Oi'] } });
+    panel.write('ola\n');
+    panel.write('de novo\n');
+    const [layout] = written.renderer.root.children;
+    expect([layout?.children[3]?.visible, layout?.children[2]?.visible]).toEqual([false, true]);
+
+    const keypad = fakeToolkit();
+    await openPanel(keypad.kit, { ...OPTIONS, splash: { lines: ['Oi'] } });
+    keypad.press({ name: 'kpenter', ctrl: false });
+    expect(keypad.renderer.root.children[0]?.children[3]?.visible).toBe(false);
+  });
+
+  it('draws a header with its icon over the lines, which take the width with no border, the footer under the field', async () => {
+    const { kit, renderer } = fakeToolkit();
+    await openPanel(kit, {
+      ...OPTIONS,
+      header: { icon: PIXELS, lines: ['\u001b[1mcholiba 1.2.3\u001b[22m', '~/loja'] },
+    });
+
+    const [layout] = renderer.root.children;
+    const [header, scroll, select, bottom, footer] = layout?.children ?? [];
+    expect([header?.kind, scroll?.kind, select?.kind, bottom?.kind, footer?.kind]).toEqual([
+      'box',
+      'scroll',
+      'select',
+      'box',
+      'text',
+    ]);
+    expect(header?.built).toMatchObject({ flexDirection: 'row', gap: 2, paddingLeft: 1, paddingBottom: 1 });
+    const [icon, lines] = header?.children ?? [];
+    expect(icon?.built).toMatchObject({ position: 'relative', top: -0 });
+    expect(icon?.children).toHaveLength(1);
+    expect(lines?.children.map((line) => line.content)).toEqual([
+      { chunks: [{ text: 'choliba 1.2.3', bold: true }] },
+      { chunks: [{ text: '~/loja' }] },
+    ]);
+    expect(scroll?.built).toMatchObject({ border: false, title: '' });
+    expect(bottom?.children.map((child) => child.kind)).toEqual(['text', 'textarea']);
+    expect(footer?.content).toEqual({ chunks: [{ text: 'provider', bold: true }, { text: ' largura 60' }] });
+    expect(bottom?.height).toBe(3);
+  });
+
+  it('draws a header of lines alone when it has no icon, hidden with the field while the welcome shows', async () => {
+    const { kit, renderer, press } = fakeToolkit();
+    await openPanel(kit, { ...OPTIONS, header: { lines: ['oi'] }, splash: { lines: ['Bem-vindo'] } });
+
+    const [layout] = renderer.root.children;
+    const [header, , , bottom, footer] = layout?.children ?? [];
+    expect(header?.children.map((child) => child.kind)).toEqual(['box']);
+    expect([header?.visible, bottom?.visible, footer?.visible]).toEqual([false, false, false]);
+    press({ name: 'return', ctrl: false });
+    expect([header?.visible, bottom?.visible, footer?.visible]).toEqual([true, true, true]);
+  });
+
+  it('marks what the person said on a band of its own, after a blank row', async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, { ...OPTIONS, splash: { lines: ['Oi'] } });
+    panel.say('olá');
+
+    const [layout] = renderer.root.children;
+    const [scroll, , , splash] = layout?.children ?? [];
+    const [band] = scroll?.children ?? [];
+    expect(splash?.visible).toBe(false);
+    expect(band?.built).toMatchObject({
+      flexDirection: 'row',
+      marginTop: 1,
+      paddingLeft: 1,
+      backgroundColor: '#373737',
+    });
+    expect(band?.children[0]?.content).toEqual({ chunks: [{ text: '❯ olá' }] });
   });
 
   it('puts the field on the left of the footer, focused, with the hint, and the list hidden', async () => {
