@@ -1,6 +1,7 @@
 import type { ConfigGroup } from '@choliba/config';
 
 import type { CommandEntry, CommandExample, RootSpec } from '../../help';
+import type { ChatPanel } from '../../terminal';
 import type { Container } from '../container';
 import type { ShellIo } from '../shell-io';
 
@@ -66,6 +67,39 @@ export interface ShellModule {
   /** Configuration groups this package contributes; their values are built only when their token is requested. */
   readonly config?: readonly ConfigGroup[];
   readonly commands: readonly ShellCommand[];
+  /** Commands typed in `choliba panel` with a `/` (`/projects`): each package brings its own. */
+  readonly panel?: readonly PanelCommand[];
   /** The app's root: no command, `--help`, `--version`, `__complete`, `__describe` and `__entries`. */
   readonly root?: ShellRoot;
+}
+
+/** What a panel command has: the container, the panel it was typed in, and the session's context. */
+export interface PanelCommandContext {
+  readonly container: Container;
+  readonly panel: Pick<ChatPanel, 'write' | 'say' | 'choose'>;
+  readonly context: PanelContext;
+}
+
+/** What the panel's session is acting on (`projeto`, `ticket`), and the cards it shows in the header about it. */
+export interface PanelContext {
+  get(key: string): string | undefined;
+  /** Sets `key`, or removes it when `value` is undefined. */
+  set(key: string, value: string | undefined): void;
+  /**
+   * Shows a card titled `title` in the header with `lines` (escape codes kept), and `summary` while the cards are
+   * collapsed (Ctrl+P); hides it when `lines` is undefined.
+   */
+  show(title: string, lines: readonly string[] | undefined, summary?: string): void;
+}
+
+/** A command of the panel: the word after `/`, what it does in a line, and running it. */
+export interface PanelCommand {
+  readonly name: string;
+  readonly description: string;
+  /**
+   * Why it cannot run now (`Escolha um projeto antes`), or nothing when it can: the panel shows it in the list in place
+   * of what the command does. Asked as the person types, so it reads little.
+   */
+  readonly unavailable?: (context: PanelContext, container: Container) => string | undefined;
+  readonly run: (context: PanelCommandContext) => Promise<void>;
 }

@@ -1,6 +1,14 @@
 export { Container, token, type Factory, type Token } from './container';
-export { CONFIG_CATALOG, createShell, PLATFORM, type Shell } from './create-shell';
-export type { ShellCommand, ShellModule, ShellRoot, ShellVerb } from './interfaces/shell.interface';
+export { CONFIG_CATALOG, createShell, PANEL_COMMANDS, PLATFORM, type Shell } from './create-shell';
+export type {
+  PanelCommand,
+  PanelCommandContext,
+  PanelContext,
+  ShellCommand,
+  ShellModule,
+  ShellRoot,
+  ShellVerb,
+} from './interfaces/shell.interface';
 export { ShellIo, type ShellStreams } from './shell-io';
 export { coreShell } from './core-shell';
 export { PANEL_ICON, PANEL_LOGO, PANEL_OPENER, PANEL_SPEC, PANEL_VERSION } from './panel.command';

@@ -1,50 +1,14 @@
 import { coreShell, PANEL_ICON, PANEL_LOGO, PANEL_OPENER, PANEL_VERSION } from '../../shell';
 import type { ChatPanel, PanelOptions } from '../../terminal';
-import { BufferWritable, fakePlatform, replace, runShell, VERBS_ROOT, type FakePlatform } from '../../testing';
-
-/** A panel that keeps what is written, and lets a spec send a message or press Ctrl+C. */
-function fakePanel() {
-  const written: string[] = [];
-  const said: string[] = [];
-  const messages: ((text: string) => void)[] = [];
-  const interrupts: (() => void)[] = [];
-  let closed = false;
-  const panel: ChatPanel = {
-    write: (text) => {
-      written.push(text);
-    },
-    say: (text) => {
-      said.push(text);
-    },
-    refresh: () => undefined,
-    onInterrupt: (listener) => {
-      interrupts.push(listener);
-    },
-    ask: () => Promise.resolve({ status: 'skipped' }),
-    onMessage: (listener) => {
-      messages.push(listener);
-    },
-    close: () => {
-      closed = true;
-    },
-  };
-  return {
-    panel,
-    written,
-    said,
-    send: (text: string) => {
-      messages.forEach((listener) => {
-        listener(text);
-      });
-    },
-    interrupt: () => {
-      interrupts.forEach((listener) => {
-        listener();
-      });
-    },
-    closed: () => closed,
-  };
-}
+import {
+  BufferWritable,
+  fakeChatPanel as fakePanel,
+  fakePlatform,
+  replace,
+  runShell,
+  VERBS_ROOT,
+  type FakePlatform,
+} from '../../testing';
 
 const ICON = { data: new Uint8Array(4), width: 1, height: 1, stride: 4 };
 
@@ -72,7 +36,7 @@ describe('choliba panel', () => {
     expect(opened).toHaveLength(1);
     expect(opened[0]).toMatchObject({
       title: 'choliba 1.2.3',
-      hint: 'Digite uma mensagem',
+      hint: 'Digite uma mensagem ou / para os comandos',
       splash: {
         image: '/assets/logo.webp',
         lines: [
@@ -87,7 +51,7 @@ describe('choliba panel', () => {
         lines: ['\u001b[1m\u001b[32mcholiba 1.2.3\u001b[39m\u001b[22m', '\u001b[90m~/loja\u001b[39m'],
       },
     });
-    expect(opened[0]?.footer(80)).toEqual(['\u001b[90m  Ctrl+C duas vezes sai\u001b[39m']);
+    expect(opened[0]?.footer(80)).toEqual(['\u001b[90m  Ctrl+P projeto · Ctrl+C duas vezes sai\u001b[39m']);
     fake.send('ola');
     expect(fake.said).toEqual(['ola']);
     expect(fake.written).toEqual([]);

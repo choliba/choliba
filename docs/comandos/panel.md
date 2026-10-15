@@ -26,7 +26,7 @@ choliba panel
 
 ## Detalhes
 
-O painel abre com as boas-vindas: Enter mostra o campo, e o que você envia nele aparece na caixa; Esc sai. Depois do Enter, sai com Ctrl+C duas vezes. Precisa de um terminal interativo.
+O painel abre com as boas-vindas: Enter mostra o campo, e Esc sai. No campo, `/` lista os comandos do painel (`/projects` escolhe o projeto, `/tickets` o ticket), e o que eles escolhem aparece no cabeçalho. Sai com Ctrl+C duas vezes. Precisa de um terminal interativo.
 
 ## Opções
 

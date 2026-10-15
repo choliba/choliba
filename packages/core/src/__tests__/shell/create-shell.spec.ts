@@ -3,6 +3,7 @@ import { defineConfig, type ConfigSource } from '@choliba/config';
 import {
   CONFIG_CATALOG,
   createShell,
+  PANEL_COMMANDS,
   ExpectedError,
   PLATFORM,
   token,
@@ -36,6 +37,29 @@ const greeter: ShellModule = {
     },
   ],
 };
+
+describe('createShell — panel commands', () => {
+  const panelCommand = (name: string) => ({ name, description: name, run: () => Promise.resolve() });
+
+  it("gathers the modules' panel commands, in their order, and none when no module has any", () => {
+    const one: ShellModule = { name: 'one', commands: [], panel: [panelCommand('projects')] };
+    const two: ShellModule = { name: 'two', commands: [], panel: [panelCommand('agents')] };
+
+    expect(
+      createShell(fakePlatform(), [one, greeter, two])
+        .container.get(PANEL_COMMANDS)
+        .map((command) => command.name),
+    ).toEqual(['projects', 'agents']);
+    expect(createShell(fakePlatform(), [greeter]).container.get(PANEL_COMMANDS)).toEqual([]);
+  });
+
+  it('refuses two panel commands of one name, naming both modules', () => {
+    const one: ShellModule = { name: 'one', commands: [], panel: [panelCommand('projects')] };
+    const two: ShellModule = { name: 'two', commands: [], panel: [panelCommand('projects')] };
+
+    expect(() => createShell(fakePlatform(), [one, two])).toThrow('o comando de painel /projects vem de one e de two.');
+  });
+});
 
 describe('createShell', () => {
   it('runs the command the first word names, with the services of its package', async () => {
