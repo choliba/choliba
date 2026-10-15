@@ -11,10 +11,12 @@ export interface PanelToolkit<Context, Node, Styled extends { readonly chunks: C
   readonly TextRenderable: new (context: Context, options: PanelTextOptions<Styled>) => Node & PanelText<Styled>;
   readonly TextareaRenderable: new (context: Context, options: PanelTextareaOptions) => Node & PanelInput<Styled>;
   readonly SelectRenderable: new (context: Context, options: PanelSelectOptions) => Node & PanelSelect;
+  readonly NativeImage: { load(source: string): Promise<PanelImage> };
   readonly StyledText: new (chunks: Chunk[]) => Styled;
   /** Plain text, in the renderable's own color: its chunks are what a run with no style of choliba's is. */
   stringToStyledText(content: string): Styled;
   fg(color: string): (input: string) => Chunk;
+  bg(color: string): (input: Chunk) => Chunk;
   bold(input: Chunk): Chunk;
 }
 
@@ -49,6 +51,7 @@ export interface PanelNode<Node> {
 
 export interface PanelBox<Node> extends PanelNode<Node> {
   height: number | 'auto' | `${number}%`;
+  visible: boolean;
 }
 
 /** The multiline field of the footer (`TextareaRenderable`): Enter submits and Shift+Enter adds a line. */
@@ -81,6 +84,7 @@ export interface PanelSelect {
 
 export interface PanelScroll<Node> extends PanelNode<Node> {
   readonly scrollHeight: number;
+  visible: boolean;
   scrollBy(delta: number, unit?: 'viewport'): void;
   scrollTo(position: number): void;
 }
@@ -88,12 +92,27 @@ export interface PanelScroll<Node> extends PanelNode<Node> {
 export interface PanelText<Styled> {
   content: Styled | string;
   height: number | 'auto' | `${number}%`;
+  visible: boolean;
 }
 
 export interface PanelBoxOptions {
   readonly flexDirection: 'column' | 'row';
   readonly width?: '100%';
   readonly height?: '100%' | number;
+  /** Space between its children, and inside its left and bottom edges, in cells. */
+  readonly gap?: number;
+  readonly paddingLeft?: number;
+  readonly paddingBottom?: number;
+  readonly marginTop?: number;
+  /** A hex color behind what the box draws. */
+  readonly backgroundColor?: string;
+  /** Placed over the layout, at `top`/`left`, above what is there (`zIndex`): it takes no room of its own. */
+  readonly position?: 'absolute' | 'relative';
+  readonly top?: number;
+  readonly left?: number;
+  readonly zIndex?: number;
+  readonly alignItems?: 'center';
+  readonly justifyContent?: 'center';
   /** A line above and below, as the field's row has. */
   readonly border?: ('top' | 'bottom')[];
 }
@@ -131,8 +150,26 @@ export interface PanelScrollOptions {
   readonly scrollX: false;
 }
 
+/** A decoded picture (`NativeImage`): resized, and read as RGBA pixels. */
+export interface PanelImage {
+  readonly width: number;
+  readonly height: number;
+  resize(options: { readonly width: number; readonly height: number; readonly kernel: 'area' }): PanelImage;
+  raw(format: 'rgba8'): {
+    readonly data: Uint8Array;
+    readonly width: number;
+    readonly height: number;
+    readonly stride: number;
+  };
+  dispose(): void;
+}
+
 export interface PanelTextOptions<Styled> {
   readonly content: Styled | string;
   readonly wrapMode: 'word';
   readonly height?: number;
+  /** Placed in a corner of its parent, `bottom` rows and `right` columns from its edges. */
+  readonly position?: 'absolute';
+  readonly bottom?: number;
+  readonly right?: number;
 }

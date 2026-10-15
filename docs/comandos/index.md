@@ -60,6 +60,7 @@ A saída só tem cor num terminal. `--no-color`, `NO_COLOR=1`, `FORCE_COLOR=0`, 
 
 | Comando                                     | O que faz                                                                                                   |
 | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| [`choliba panel`](./panel.md)               | Abre o painel interativo do choliba no terminal.                                                            |
 | [`choliba help`](./help.md)                 | Mostra a ajuda da raiz ou de um comando                                                                     |
 | [`choliba version`](./version.md)           | Mostra a versão instalada                                                                                   |
 | [`choliba terminal run`](./terminal-run.md) | Roda um processo e prefixa cada linha da saída com um rótulo, para um script ver o que o processo escreveu. |

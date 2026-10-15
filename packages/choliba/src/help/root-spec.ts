@@ -19,7 +19,17 @@ export const CHOLIBA_ROOT: RootSpec = {
 };
 
 /** The order of `choliba --help`'s commands, by name. Names missing here come after, as they were registered. */
-export const CHOLIBA_ORDER: readonly string[] = ['run', 'add', 'new', 'list', 'check', 'setup', 'lint', 'format'];
+export const CHOLIBA_ORDER: readonly string[] = [
+  'run',
+  'add',
+  'new',
+  'list',
+  'check',
+  'panel',
+  'setup',
+  'lint',
+  'format',
+];
 
 /** The verbs of the root: each package registers its types under them (`run agent`, `run tests`, `new project`…). */
 export const CHOLIBA_VERBS: readonly ShellVerb[] = [

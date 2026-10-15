@@ -1,4 +1,7 @@
-import { type ShellModule } from '@choliba/core';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+
+import { PANEL_ICON, PANEL_LOGO, PANEL_VERSION, type ShellModule } from '@choliba/core';
 import { fakePlatform } from '@choliba/core/testing';
 
 import { CHOLIBA_SHELL, createCholibaShell } from '../app-shell';
@@ -21,10 +24,30 @@ describe('the choliba shell', () => {
     expect(createCholibaShell(fakePlatform(), runtime).container.get(RUNTIME)).toBe(runtime);
   });
 
+  it("gives the panel the owl it ships, in the package's assets", () => {
+    const logo = createCholibaShell(fakePlatform(), fakeRuntime()).container.get(PANEL_LOGO);
+
+    expect(logo.endsWith(join('assets', 'choliba-logo.png'))).toBe(true);
+    expect(existsSync(logo)).toBe(true);
+  });
+
+  it('gives the panel the owl drawn for its header', () => {
+    expect(createCholibaShell(fakePlatform(), fakeRuntime()).container.get(PANEL_ICON)).toMatchObject({
+      width: 10,
+      height: 8,
+    });
+  });
+
+  it('gives the panel the version line of --version', () => {
+    expect(createCholibaShell(fakePlatform(), fakeRuntime()).container.get(PANEL_VERSION)).toMatch(
+      /^choliba 0\.0\.1-dev/,
+    );
+  });
+
   it('runs every command and verb, and nothing of the old root', () => {
     const shell = createCholibaShell(fakePlatform(), fakeRuntime());
 
-    for (const word of ['run', 'add', 'new', 'list', 'check', 'setup', 'lint', 'format', 'terminal']) {
+    for (const word of ['run', 'add', 'new', 'list', 'check', 'panel', 'setup', 'lint', 'format', 'terminal']) {
       expect(shell.has(word)).toBe(true);
     }
     for (const word of ['agents', 'projects', 'tests', '__complete']) {

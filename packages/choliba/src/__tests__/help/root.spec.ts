@@ -83,7 +83,7 @@ describe('choliba __complete', () => {
         const complete = async (...words: string[]): Promise<string> =>
           (await choliba(['__complete', ...words], root)).out;
 
-        expect(await complete('')).toBe('run\nadd\nnew\nlist\ncheck\nsetup\nlint\nformat\nset\nhelp\nversion\n');
+        expect(await complete('')).toBe('run\nadd\nnew\nlist\ncheck\npanel\nsetup\nlint\nformat\nset\nhelp\nversion\n');
         expect(await complete('ec')).toBe('');
         expect(await complete('run', '')).toBe('agent\ntests\n');
         expect(await complete('run', 'agent', 'ec')).toBe('echo\n');

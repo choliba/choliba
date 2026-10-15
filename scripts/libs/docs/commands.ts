@@ -22,7 +22,7 @@ export const COMMAND_GROUPS: readonly CommandGroup[] = [
   { title: 'Projetos', commands: ['new', 'list', 'check'] },
   { title: 'Agentes, skills e MCPs', commands: ['add'] },
   { title: 'Pasta de trabalho', commands: ['setup', 'set', 'lint', 'format'] },
-  { title: 'Gerais', commands: ['help', 'version', 'terminal run'] },
+  { title: 'Gerais', commands: ['panel', 'help', 'version', 'terminal run'] },
 ];
 
 /**

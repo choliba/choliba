@@ -2,10 +2,11 @@ import { ThemeService } from '../theme';
 import { PLATFORM } from './create-shell';
 import type { ShellModule } from './interfaces/shell.interface';
 import { THEME, THEME_CHOICES } from './shell.constants';
+import { panelCommand, providePanel } from './panel.command';
 import { provideTerminal, terminalCommand } from './terminal.command';
 
 /**
- * What @choliba/core gives the shell: the configuration, the theme, `terminal run`, `list config` and `set config`, built
+ * What @choliba/core gives the shell: the configuration, the theme, `terminal run`, `panel`, `list config` and `set config`, built
  * from the platform.
  */
 export const coreShell: ShellModule = {
@@ -17,6 +18,7 @@ export const coreShell: ShellModule = {
       return new ThemeService(env, stdout, noColorFlag, choices);
     });
     provideTerminal(container);
+    providePanel(container);
   },
-  commands: [terminalCommand],
+  commands: [terminalCommand, panelCommand],
 };
