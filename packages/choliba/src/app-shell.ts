@@ -1,5 +1,5 @@
 import { agentsShell } from '@choliba/agents';
-import { defineConfig } from '@choliba/config';
+import { defineConfig, type ConfigGroup } from '@choliba/config';
 import {
   coreShell,
   createShell,
@@ -16,6 +16,7 @@ import { projectsShell } from '@choliba/projects';
 import { runnerShell } from '@choliba/runner';
 
 import { addCommand } from './add';
+import { cholibaApi, type Choliba, type CholibaOptions } from './api';
 import { checkCommand } from './check';
 import { findWorkspaceRoot, listConfigCommand, setConfigCommand, workspaceConfigSources } from './config';
 import { CHOLIBA_ORDER, CHOLIBA_ROOT, CHOLIBA_VERBS, cholibaManifest, PACKAGE_NAME } from './help';
@@ -70,3 +71,17 @@ export function createCholibaShell(
 ): Shell {
   return createShell(platform, [...modules, cholibaShell(runtime)], workspaceConfigSources(platform));
 }
+
+/** The configuration groups of choliba's shell, in its order and each once: what `list config` lists. */
+function cholibaConfigGroups(): readonly ConfigGroup[] {
+  const groups = [...CHOLIBA_SHELL.flatMap((module) => module.config ?? []), cholibaConfig];
+  return groups.filter((group, index) => groups.indexOf(group) === index);
+}
+
+/** choliba for a script, from `options.cwd` (else the process's folder) and `options.env` (else its environment). */
+export function openCholiba(options: CholibaOptions = {}): Choliba {
+  return cholibaApi(cholibaConfigGroups(), options);
+}
+
+/** choliba for a script, from the process's folder and environment, read on first use (`openCholiba()`). */
+export const choliba: Choliba = openCholiba();

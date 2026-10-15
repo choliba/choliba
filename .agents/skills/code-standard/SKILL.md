@@ -24,8 +24,10 @@ written here, with its reason.
   specs import (`@choliba/runner/shared/env`, `@choliba/runner/shared/pages/base-page`).
 - **App** (`bin`): `src/main.ts`, wiring only. It builds the `Platform` and the `Runtime` and calls
   `createCholibaShell(platform, runtime).run()`. `src/index.ts` exports that shell (`createCholibaShell`,
-  `cholibaShell`, `CHOLIBA_SHELL` and the `Runtime` type) and does nothing on import. Nothing else imports
-  `main.ts`. `--version` uses `findManifest` and `versionLine` from `@choliba/core`.
+  `cholibaShell`, `CHOLIBA_SHELL` and the `Runtime` type) and the read-only facade for scripts (`choliba`,
+  `openCholiba`, from the `api/` folder), and does nothing on import. Nothing else imports `main.ts`. The facade is
+  the one other place that reads the process (`process.cwd()`, `process.env`), and only when a script uses it and
+  passes no `cwd` or `env`: a script has no `main.ts` to build a `Platform` for it. `--version` uses `findManifest` and `versionLine` from `@choliba/core`.
 - **Installed package.** `choliba` republishes each of those entries as a subpath: `choliba`, `choliba/core`,
   `choliba/core/testing`, `choliba/agents`, `choliba/projects`, `choliba/runner`, `choliba/sandbox`, `choliba/runner/env`,
   `choliba/runner/pages/base-page` and `choliba/eslint`. Experimental until 1.0. Code in this repository keeps

@@ -39,7 +39,8 @@ export {
   SKILLS_SUBDIR,
   SKILL_FILE,
 } from './agents';
-export { resolveSkills, skillDescription } from './agents';
+export { listSkills, resolveSkill, resolveSkills, SkillError, skillDescription } from './agents';
+export type { SkillSummary } from './agents';
 export { mcpConfig, resolveMcps } from './common';
 export {
   formatInstall,
