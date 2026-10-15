@@ -34,6 +34,8 @@ class FakeNode {
   selectedIndex = 0;
   virtualLineCountOverride: number | undefined;
   options: { name: string; description: string }[] = [];
+  onMouseDown: (() => void) | undefined;
+  title: string | undefined;
   private readonly listeners = new Map<string, (() => void)[]>();
 
   constructor(
@@ -76,6 +78,10 @@ class FakeNode {
 
   getSelectedIndex(): number {
     return this.selectedIndex;
+  }
+
+  setSelectedIndex(index: number): void {
+    this.selectedIndex = index;
   }
 
   get plainText(): string {
@@ -236,7 +242,7 @@ describe('openPanel', () => {
     });
 
     const [layout] = renderer.root.children;
-    const [scroll, select, bottom, splash] = layout?.children ?? [];
+    const [scroll, select, bottom, , , splash] = layout?.children ?? [];
     const input = bottom?.children[1];
     expect([scroll?.kind, select?.kind, bottom?.kind, splash?.kind]).toEqual(['scroll', 'select', 'box', 'box']);
     expect(splash?.built).toMatchObject({
@@ -280,7 +286,7 @@ describe('openPanel', () => {
       const { kit, renderer } = fakeToolkit();
       await openPanel(kit, { ...OPTIONS, splash: { ...(image === undefined ? {} : { image }), lines: ['Oi'] } });
 
-      expect(renderer.root.children[0]?.children[3]?.children.map((child) => child.kind)).toEqual(['text']);
+      expect(renderer.root.children[0]?.children[5]?.children.map((child) => child.kind)).toEqual(['text']);
     }
   });
 
@@ -305,12 +311,12 @@ describe('openPanel', () => {
     panel.write('ola\n');
     panel.write('de novo\n');
     const [layout] = written.renderer.root.children;
-    expect([layout?.children[3]?.visible, layout?.children[2]?.visible]).toEqual([false, true]);
+    expect([layout?.children[5]?.visible, layout?.children[2]?.visible]).toEqual([false, true]);
 
     const keypad = fakeToolkit();
     await openPanel(keypad.kit, { ...OPTIONS, splash: { lines: ['Oi'] } });
     keypad.press({ name: 'kpenter', ctrl: false });
-    expect(keypad.renderer.root.children[0]?.children[3]?.visible).toBe(false);
+    expect(keypad.renderer.root.children[0]?.children[5]?.visible).toBe(false);
   });
 
   it('draws a header with its icon over the lines, which take the width with no border, the footer under the field', async () => {
@@ -321,14 +327,16 @@ describe('openPanel', () => {
     });
 
     const [layout] = renderer.root.children;
-    const [header, scroll, select, bottom, footer] = layout?.children ?? [];
-    expect([header?.kind, scroll?.kind, select?.kind, bottom?.kind, footer?.kind]).toEqual([
-      'box',
-      'scroll',
-      'select',
-      'box',
-      'text',
-    ]);
+    const [header, scroll, select, bottom, suggestions, picker, footer] = layout?.children ?? [];
+    expect([
+      header?.kind,
+      scroll?.kind,
+      select?.kind,
+      bottom?.kind,
+      suggestions?.kind,
+      picker?.kind,
+      footer?.kind,
+    ]).toEqual(['box', 'scroll', 'select', 'box', 'box', 'box', 'text']);
     expect(header?.built).toMatchObject({ flexDirection: 'row', gap: 2, paddingLeft: 1, paddingBottom: 1 });
     const [icon, lines] = header?.children ?? [];
     expect(icon?.built).toMatchObject({ position: 'relative', top: -0 });
@@ -348,11 +356,36 @@ describe('openPanel', () => {
     await openPanel(kit, { ...OPTIONS, header: { lines: ['oi'] }, splash: { lines: ['Bem-vindo'] } });
 
     const [layout] = renderer.root.children;
-    const [header, , , bottom, footer] = layout?.children ?? [];
+    const [header, , , bottom, , , footer] = layout?.children ?? [];
     expect(header?.children.map((child) => child.kind)).toEqual(['box']);
     expect([header?.visible, bottom?.visible, footer?.visible]).toEqual([false, false, false]);
     press({ name: 'return', ctrl: false });
     expect([header?.visible, bottom?.visible, footer?.visible]).toEqual([true, true, true]);
+  });
+
+  it('answers after a blank row, ● beside the lines, which wrap beside it', async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, { ...OPTIONS, splash: { lines: ['Oi'] } });
+    panel.answer('Projeto ativo: \u001b[1msite\u001b[22m.\nsegunda\n');
+    panel.answer('uma');
+
+    const [scroll, , , , , splash] = renderer.root.children[0]?.children ?? [];
+    const [reply, other] = scroll?.children ?? [];
+    expect(splash?.visible).toBe(false);
+    expect(reply?.built).toMatchObject({ flexDirection: 'row', marginTop: 1, paddingLeft: 1 });
+    const [bullet, text] = reply?.children ?? [];
+    expect(bullet?.built).toMatchObject({ content: '● ', flexShrink: 0 });
+    expect(text?.built).toMatchObject({ flexGrow: 1 });
+    expect(text?.content).toEqual({
+      chunks: [
+        { text: 'Projeto ativo: ' },
+        { text: 'site', bold: true },
+        { text: '.' },
+        { text: '\n' },
+        { text: 'segunda' },
+      ],
+    });
+    expect(other?.children[1]?.content).toEqual({ chunks: [{ text: 'uma' }] });
   });
 
   it('marks what the person said on a band of its own, after a blank row', async () => {
@@ -361,7 +394,7 @@ describe('openPanel', () => {
     panel.say('olá');
 
     const [layout] = renderer.root.children;
-    const [scroll, , , splash] = layout?.children ?? [];
+    const [scroll, , , , , splash] = layout?.children ?? [];
     const [band] = scroll?.children ?? [];
     expect(splash?.visible).toBe(false);
     expect(band?.built).toMatchObject({
@@ -371,6 +404,258 @@ describe('openPanel', () => {
       backgroundColor: '#373737',
     });
     expect(band?.children[0]?.content).toEqual({ chunks: [{ text: '❯ olá' }] });
+  });
+
+  it('chooses in place of the field, ❯ on the highlight and ✔ on the current option, the keys moving it', async () => {
+    const { kit, renderer, press } = fakeToolkit();
+    const panel = await openPanel(kit, OPTIONS);
+    const [layout] = renderer.root.children;
+    const [, , bottom, suggestions, picker] = layout?.children ?? [];
+    const [title, description, , ...rest] = picker?.children ?? [];
+    const options = rest.slice(0, 8);
+    const hints = rest.at(-1);
+    const input = bottom?.children[1];
+    panel.suggest(['  /projects']);
+
+    const chosen = panel.choose({
+      title: 'Escolha o projeto',
+      description: 'Onde agir.',
+      options: [{ label: 'loja', detail: 'Loja de exemplo' }, { label: 'blog-novo', current: true }, { label: 'c' }],
+    });
+    expect(picker?.built).toMatchObject({
+      flexDirection: 'column',
+      border: ['top', 'bottom'],
+      paddingLeft: 1,
+      flexShrink: 0,
+    });
+    expect([picker?.visible, bottom?.visible, suggestions?.visible, input?.focused]).toEqual([true, false, false, 0]);
+    expect(title?.content).toEqual({ chunks: [{ text: 'Escolha o projeto', bold: true }] });
+    expect(description?.content).toEqual({ chunks: [{ text: 'Onde agir.', fg: '#666666' }] });
+    expect(hints?.content).toEqual({
+      chunks: [{ text: '↑↓ ou Tab move · Enter escolhe · clique escolhe · Esc cancela', fg: '#666666' }],
+    });
+    const texts = (): string[] =>
+      options
+        .filter((row) => row.visible)
+        .map((row) =>
+          typeof row.content === 'string' ? row.content : row.content.chunks.map((chunk) => chunk.text).join(''),
+        );
+    expect(texts()).toEqual(['  1. loja         Loja de exemplo', '❯ 2. blog-novo ✔', '  3. c          ']);
+    expect(picker?.height).toBe(10);
+
+    press({ name: 'down', ctrl: false });
+    expect(texts()[2]).toBe('❯ 3. c          ');
+    press({ name: 'tab', ctrl: false });
+    expect(texts()[0]).toBe('❯ 1. loja         Loja de exemplo');
+    press({ name: 'up', ctrl: false });
+    press({ name: '2', ctrl: false });
+    press({ name: '9', ctrl: false });
+    press({ name: 'a', ctrl: false });
+    expect(texts()[1]).toBe('❯ 2. blog-novo ✔');
+    press({ name: 'return', ctrl: false });
+    expect(await chosen).toBe(1);
+    expect([picker?.visible, bottom?.visible]).toEqual([false, true]);
+    expect(input?.focused).toBeGreaterThan(0);
+  });
+
+  it('picks the option clicked, and none past the list or when no choice is open', async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, OPTIONS);
+    const picker = renderer.root.children[0]?.children[4];
+    const rows = picker?.children.slice(3, 11) ?? [];
+
+    const chosen = panel.choose({ title: 'T', description: 'D', options: [{ label: 'a' }, { label: 'b' }] });
+    rows[5]?.onMouseDown?.();
+    rows[1]?.onMouseDown?.();
+    expect(await chosen).toBe(1);
+    rows[0]?.onMouseDown?.();
+  });
+
+  it('wraps a long detail under itself in the width of the panel, and follows the highlight through a long list', async () => {
+    const { kit, renderer, press } = fakeToolkit();
+    const panel = await openPanel(kit, OPTIONS);
+    const picker = renderer.root.children[0]?.children[4];
+    const rows = picker?.children.slice(3, 11) ?? [];
+    const text = (row: (typeof rows)[number] | undefined): string =>
+      row === undefined || typeof row.content === 'string'
+        ? ''
+        : row.content.chunks.map((chunk) => chunk.text).join('');
+
+    void panel.choose({
+      title: 'T',
+      description: 'D',
+      options: [
+        { label: 'site', detail: 'Uma página só, para experimentar o choliba: um formulário de newsletter.' },
+        ...Array.from({ length: 10 }, (_, index) => ({ label: `p${String(index)}` })),
+      ],
+    });
+    expect(text(rows[0])).toBe(
+      '❯ 1. site    Uma página só, para experimentar o choliba: um\n             formulário de newsletter.',
+    );
+    expect([rows[0]?.height, rows[1]?.height, picker?.height]).toEqual([2, 1, 16]);
+
+    for (let step = 0; step < 9; step += 1) press({ name: 'down', ctrl: false });
+    expect(text(rows[7])).toBe('❯ 10. p8    ');
+    expect(text(rows[0])).toBe('  3. p1    ');
+    press({ name: 'escape', ctrl: false });
+  });
+
+  it('gives nothing when the choice is left with Esc, and leaves the keys alone when none is open', async () => {
+    const { kit, renderer, press } = fakeToolkit();
+    const panel = await openPanel(kit, OPTIONS);
+    const chosen = panel.choose({ title: 'T', description: 'D', options: [] });
+    press({ name: 'return', ctrl: false });
+    press({ name: 'escape', ctrl: false });
+
+    expect(await chosen).toBeUndefined();
+    expect(renderer.root.children[0]?.children[4]?.visible).toBe(false);
+    press({ name: 'escape', ctrl: false });
+    press({ name: '1', ctrl: false });
+  });
+
+  it('gives the keys to its key listeners first, the ones they take kept from the panel', async () => {
+    const { kit, renderer, press } = fakeToolkit();
+    const panel = await openPanel(kit, OPTIONS);
+    const seen: string[] = [];
+    panel.onKey((key) => {
+      seen.push(key.name);
+      return key.name === 'pageup';
+    });
+    const [scroll] = renderer.root.children[0]?.children ?? [];
+
+    press({ name: 'pageup', ctrl: false });
+    press({ name: 'pagedown', ctrl: false });
+
+    expect(seen).toEqual(['pageup', 'pagedown']);
+    expect(scroll?.scrolls).toEqual(['by 1 viewport']);
+  });
+
+  it('shows suggestions under the field, a row each that gives its index when clicked, and puts text in the field', async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, OPTIONS);
+    const typed: string[] = [];
+    panel.onTyping((text) => typed.push(text));
+    const [layout] = renderer.root.children;
+    const [, , bottom, suggestions] = layout?.children ?? [];
+    const rows = suggestions?.children ?? [];
+    const clicked: number[] = [];
+
+    panel.fill('/p');
+    expect([typed, bottom?.children[1]?.plainText]).toEqual([['/p'], '/p']);
+    panel.suggest(['  /projects', '  /pull'], (index) => clicked.push(index));
+    expect([suggestions?.visible, suggestions?.height, rows.length]).toEqual([true, 2, 10]);
+    expect(rows.map((row) => row.visible).slice(0, 3)).toEqual([true, true, false]);
+    expect(rows[1]?.content).toEqual({ chunks: [{ text: '  /pull' }] });
+    rows[1]?.onMouseDown?.();
+    expect(clicked).toEqual([1]);
+
+    panel.suggest([]);
+    expect([suggestions?.visible, suggestions?.height]).toEqual([false, 0]);
+    rows[0]?.onMouseDown?.();
+    expect(clicked).toEqual([1]);
+  });
+
+  it('shows cards on the right of the header lines, each made once and then filled or hidden', async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });
+    const header = renderer.root.children[0]?.children[0];
+
+    panel.cards([
+      { title: 'projeto', lines: ['site', '', 'Loja', 'local', '---', '2 tickets', 'a mais'], summary: 'site · 2' },
+      { title: 'ticket', lines: ['site-1'] },
+    ]);
+    const [, projeto, ticket] = header?.children ?? [];
+    expect(projeto?.built).toMatchObject({
+      flexDirection: 'column',
+      border: true,
+      title: ' projeto ',
+      width: 44,
+      paddingLeft: 1,
+      paddingRight: 1,
+      flexShrink: 0,
+    });
+    expect([projeto?.title, projeto?.height, ticket?.height]).toEqual([' ▾ projeto ', 8, 3]);
+    expect(projeto?.children.map((row) => row.content)).toEqual([
+      { chunks: [{ text: 'site' }] },
+      { chunks: [] },
+      { chunks: [{ text: 'Loja' }] },
+      { chunks: [{ text: 'local' }] },
+      { chunks: [{ text: '─'.repeat(40), fg: '#666666' }] },
+      { chunks: [{ text: '2 tickets' }] },
+    ]);
+    expect(projeto?.children[0]?.built).toMatchObject({ wrapMode: 'word', height: 1 });
+    expect(ticket?.children.map((row) => row.visible)).toEqual([true, false, false, false, false, false]);
+
+    panel.cards([{ title: 'ticket', lines: ['site-2'] }]);
+    expect([projeto?.visible, ticket?.visible, header?.children.length]).toEqual([false, true, 3]);
+    expect(ticket?.children[0]?.content).toEqual({ chunks: [{ text: 'site-2' }] });
+
+    const plain = fakeToolkit();
+    const bare = await openPanel(plain.kit, OPTIONS);
+    bare.cards([{ title: 'projeto', lines: ['x'] }]);
+  });
+
+  it('wraps a long card line between words, its row and the card as tall as it takes', async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });
+    panel.cards([
+      {
+        title: 'projeto',
+        lines: [
+          'site',
+          '\u001b[90mLoja de exemplo: Uma página só, para experimentar o choliba: um formulário.\u001b[39m',
+        ],
+      },
+    ]);
+    const projeto = renderer.root.children[0]?.children[0]?.children[1];
+
+    expect(projeto?.children.slice(0, 2).map((row) => row.height)).toEqual([1, 2]);
+    expect(projeto?.height).toBe(5);
+  });
+
+  it('collapses the cards to their summary with Ctrl+P or a click, and opens them again', async () => {
+    const { kit, renderer, press } = fakeToolkit();
+    const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });
+    panel.cards([
+      { title: 'projeto', lines: ['site', '', 'Loja'], summary: 'site · 2' },
+      { title: 'ticket', lines: ['site-1', 'x'] },
+    ]);
+    const [, projeto, ticket] = renderer.root.children[0]?.children[0]?.children ?? [];
+
+    press({ name: 'p', ctrl: true });
+    expect([projeto?.title, projeto?.height, ticket?.height]).toEqual([' ▸ projeto ', 3, 3]);
+    expect(projeto?.children[0]?.content).toEqual({ chunks: [{ text: 'site · 2' }] });
+    expect(ticket?.children[0]?.content).toEqual({ chunks: [{ text: 'site-1' }] });
+    panel.cards([{ title: 'vazio', lines: [] }]);
+
+    projeto?.onMouseDown?.();
+    panel.cards([{ title: 'projeto', lines: ['site', '', 'Loja'], summary: 'site · 2' }]);
+    expect([projeto?.title, projeto?.height]).toEqual([' ▾ projeto ', 5]);
+    press({ name: 'p', ctrl: false });
+    expect(projeto?.title).toBe(' ▾ projeto ');
+
+    const plain = fakeToolkit();
+    await openPanel(plain.kit, OPTIONS);
+    plain.press({ name: 'p', ctrl: true });
+  });
+
+  it('replaces the header lines, a line no longer given kept empty, and ignores it with no header', async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a', 'b'] } });
+    const column = renderer.root.children[0]?.children[0]?.children[0];
+
+    panel.heading(['a', 'b', 'c']);
+    expect(column?.children.map((row) => row.content)).toEqual([
+      { chunks: [{ text: 'a' }] },
+      { chunks: [{ text: 'b' }] },
+      { chunks: [{ text: 'c' }] },
+    ]);
+    panel.heading(['x']);
+    expect(column?.children.map((row) => row.content)).toEqual([{ chunks: [{ text: 'x' }] }, '', '']);
+
+    const plain = fakeToolkit();
+    const bare = await openPanel(plain.kit, OPTIONS);
+    bare.heading(['nada']);
   });
 
   it('puts the field on the left of the footer, focused, with the hint, and the list hidden', async () => {

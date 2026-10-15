@@ -4,7 +4,8 @@ import { ansiChunks, type StyledChunk } from '../frame';
 import type { PanelKey, PanelTextareaKeyBinding, PanelToolkit } from './interfaces/panel.interface';
 import { PALETTE } from './panel-palette';
 import { questionDesk, type PanelQuestion, type PanelReply } from './panel-question';
-import { headerBox, splashBox, type PanelHeader, type PanelSplash } from './panel-welcome';
+import { chooser, type PanelChoice, type PanelChooseRequest } from './panel-choose';
+import { CARD_RULE, headerBox, splashBox, type PanelCard, type PanelHeader, type PanelSplash } from './panel-welcome';
 
 /** The band behind what the person said: a gray a little lighter than a dark terminal. */
 const SAID_BACKGROUND = '#373737';
@@ -17,6 +18,9 @@ const INTERRUPT_NOTICE = 'Tecle Ctrl+C de novo para interromper';
 
 /** How often the footer is drawn again; also the panel's frame rate. */
 const FRAMES_PER_SECOND = 30;
+
+/** How many suggestions show under the field at most. */
+const MAX_SUGGESTIONS = 10;
 
 /** The input grows with its wrapped content up to this many terminal rows. */
 const MAX_INPUT_LINES = 5;
@@ -51,7 +55,8 @@ export interface PanelOptions {
   readonly header?: PanelHeader;
 }
 
-export type { PanelHeader, PanelSplash };
+export { CARD_RULE };
+export type { PanelCard, PanelChoice, PanelChooseRequest, PanelHeader, PanelSplash };
 
 /** A run drawn in a panel of its own: the session's lines scroll in it, under them the footer. */
 export interface Panel {
@@ -69,10 +74,32 @@ export interface Panel {
   close(): void;
 }
 
-/** A panel where a person talks: what they said is marked apart from the other lines. */
+/** A panel where a person talks: what they said is marked apart from the other lines, and they choose in it. */
 export interface ChatPanel extends Panel {
   /** What the person said, added at the bottom on a band of its own after a blank row: `❯` and the text. */
   say(text: string): void;
+  /** A reply to the person, added at the bottom after a blank row: `●`, and the text's lines beside it. */
+  answer(text: string): void;
+  /** Asks the person to choose, in place of the field: the index chosen with Enter, or nothing on Esc. */
+  choose(request: PanelChooseRequest): Promise<number | undefined>;
+  /** Called with what is in the field each time it changes. */
+  onTyping(listener: (text: string) => void): void;
+  /**
+   * Lines shown under the field, with their escape codes, while the person types, each a row `onPick` gets the
+   * index of when clicked; none hides them.
+   */
+  suggest(lines: readonly string[], onPick?: (index: number) => void): void;
+  /** Puts `text` in the field, in place of what was there. */
+  fill(text: string): void;
+  /** Called with each key the person presses in the field, before the field takes it; `true` keeps it from it. */
+  onKey(listener: (key: PanelKey) => boolean): void;
+  /** Replaces the lines of the header beside its icon; a panel with no header ignores it. */
+  heading(lines: readonly string[]): void;
+  /**
+   * Shows these cards in the header, on the right of its lines; Ctrl+P collapses them to their summary and opens them
+   * again. A panel with no header ignores it.
+   */
+  cards(cards: readonly PanelCard[]): void;
 }
 
 /** What a key does to the panel: scroll it a page, to the start or to the end, or interrupt the run. */
@@ -120,7 +147,8 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
   const welcome = { kit, renderer, styled };
   const compact = options.header !== undefined;
   const layout = new kit.BoxRenderable(renderer, { flexDirection: 'column', width: '100%', height: '100%' });
-  const header = options.header === undefined ? undefined : headerBox(welcome, options.header);
+  const top = options.header === undefined ? undefined : headerBox(welcome, options.header);
+  const header = top?.box;
   const scroll = new kit.ScrollBoxRenderable(renderer, {
     flexGrow: 1,
     border: !compact,
@@ -136,7 +164,7 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     showScrollIndicator: true,
     visible: false,
   });
-  const bottom = new kit.BoxRenderable(renderer, { flexDirection: 'row', border: ['top', 'bottom'] });
+  const bottom = new kit.BoxRenderable(renderer, { flexDirection: 'row', border: ['top', 'bottom'], flexShrink: 0 });
   const prompt = new kit.TextRenderable(renderer, { content: '❯ ', wrapMode: 'word' });
   const input = new kit.TextareaRenderable(renderer, {
     placeholder: options.hint,
@@ -146,14 +174,41 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     wrapMode: 'word',
     keyBindings: TEXTAREA_KEYS,
   });
-  const footer = new kit.TextRenderable(renderer, { content: '', wrapMode: 'word' });
+  const footer = new kit.TextRenderable(renderer, { content: '', wrapMode: 'word', flexShrink: 0 });
   bottom.add(prompt);
   bottom.add(input);
   if (!compact) bottom.add(footer);
+  // One row per suggestion, so a click picks it; the rows are made once and filled as the person types.
+  const suggestions = new kit.BoxRenderable(renderer, { flexDirection: 'column', flexShrink: 0 });
+  suggestions.visible = false;
+  let pick: ((index: number) => void) | undefined;
+  const suggestionRows = Array.from({ length: MAX_SUGGESTIONS }, (_, index) => {
+    const row = new kit.TextRenderable(renderer, { content: '', wrapMode: 'word', height: 1 });
+    row.onMouseDown = () => {
+      pick?.(index);
+    };
+    suggestions.add(row);
+    return row;
+  });
+  const picker = chooser(kit, renderer, styled, {
+    onOpen: () => {
+      bottom.visible = false;
+      suggestions.visible = false;
+      // The chooser takes the keys: the field must not get what is typed meanwhile.
+      input.blur();
+    },
+    onClose: () => {
+      bottom.visible = true;
+      input.focus();
+    },
+    columns: () => renderer.width,
+  });
   if (header !== undefined) layout.add(header);
   layout.add(scroll);
   layout.add(select);
   layout.add(bottom);
+  layout.add(suggestions);
+  layout.add(picker.box);
   // With a header the footer is a status line of its own, under the field.
   if (compact) layout.add(footer);
   const splash = options.splash === undefined ? undefined : await splashBox(welcome, options.splash);
@@ -166,7 +221,14 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     input.height = Math.min(MAX_INPUT_LINES, Math.max(1, logicalLineCount, input.virtualLineCount));
     bottom.height = Math.max(input.height, footerLineCount) + 2;
   };
-  input.onContentChange = resizeInput;
+  const typing: ((text: string) => void)[] = [];
+  const keyListeners: ((key: PanelKey) => boolean)[] = [];
+  input.onContentChange = () => {
+    resizeInput();
+    typing.forEach((listener) => {
+      listener(input.plainText);
+    });
+  };
   const desk = questionDesk(input, select, options.hint);
   // A welcome hides the field until Enter: then, or when a line is written first, the field shows, focused.
   // The box stays hidden too, so its border never shows under the welcome.
@@ -231,6 +293,13 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
       });
       return;
     }
+    if (picker.key(key)) return;
+    // Ctrl+P collapses the header's cards to a line, or opens them again.
+    if (key.ctrl && key.name === 'p') {
+      top?.toggleCards();
+      return;
+    }
+    if (keyListeners.some((listener) => listener(key))) return;
     if (desk.key(key)) return;
     const action = keyAction(key);
     if (action !== undefined) scrollActions[action]?.();
@@ -264,6 +333,41 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
       });
       band.add(new kit.TextRenderable(renderer, { content: styled([`❯ ${text}`]), wrapMode: 'word' }));
       scroll.add(band);
+    },
+    choose: (request) => picker.open(request),
+    onTyping: (listener) => {
+      typing.push(listener);
+    },
+    onKey: (listener) => {
+      keyListeners.push(listener);
+    },
+    fill: (text) => {
+      input.setText(text);
+    },
+    suggest: (lines, onPick) => {
+      const shown = lines.slice(0, MAX_SUGGESTIONS);
+      pick = onPick;
+      suggestionRows.forEach((row, index) => {
+        const line = shown[index];
+        row.visible = line !== undefined;
+        row.content = line === undefined ? '' : styled([line]);
+      });
+      suggestions.height = shown.length;
+      suggestions.visible = shown.length > 0 && !picker.isOpen;
+    },
+    heading: (lines) => {
+      top?.heading(lines);
+    },
+    cards: (cards) => {
+      top?.cards(cards);
+    },
+    answer: (text) => {
+      begin();
+      const reply = new kit.BoxRenderable(renderer, { flexDirection: 'row', marginTop: 1, paddingLeft: 1 });
+      reply.add(new kit.TextRenderable(renderer, { content: '● ', wrapMode: 'word', flexShrink: 0 }));
+      const lines = (text.endsWith('\n') ? text.slice(0, -1) : text).split('\n');
+      reply.add(new kit.TextRenderable(renderer, { content: styled(lines), wrapMode: 'word', flexGrow: 1 }));
+      scroll.add(reply);
     },
     refresh,
     onInterrupt: (listener) => {

@@ -1,4 +1,5 @@
 export { BufferWritable } from './buffer-writable';
+export { fakeChatPanel, type FakeChatPanel } from './fake-chat-panel';
 export { FAKE_NOW, fakePlatform } from './fake-platform';
 export { FakeSignals } from './fake-signals';
 export type { FakePlatform } from './interfaces/fake-platform.interface';

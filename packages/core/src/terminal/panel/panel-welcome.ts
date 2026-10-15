@@ -1,6 +1,7 @@
-import type { PanelBox, PanelToolkit } from './interfaces/panel.interface';
+import type { PanelBox, PanelText, PanelToolkit } from './interfaces/panel.interface';
 import { halfBlockArt, type ArtCell, type ArtPixels } from './panel-art';
 import { PALETTE } from './panel-palette';
+import { wrappedRows } from './panel-text';
 
 /** The welcome image's rows: two pixels each, so a picture reads in half blocks; its width follows its proportions. */
 const SPLASH_IMAGE_ROWS = 15;
@@ -126,17 +127,126 @@ export async function splashBox<Context, Node, Styled extends { readonly chunks:
   return box;
 }
 
+/** The header: its row, and how its lines are replaced. */
+export interface Header<Node> {
+  readonly box: Node & PanelBox<Node>;
+  /** Replaces the lines beside the icon, with their escape codes. */
+  heading(lines: readonly string[]): void;
+  /** Shows these cards on the right of the lines, in their order; a card no longer given is hidden. */
+  cards(cards: readonly PanelCard[]): void;
+  /** Collapses the cards to their summary, or opens them again; open at first. */
+  toggleCards(): void;
+}
+
+/** A card of the header: a box titled `title`, with `lines` in it, a long one wrapped between words and `---` a rule. */
+export interface PanelCard {
+  readonly title: string;
+  readonly lines: readonly string[];
+  /** The one line it shows while the cards are collapsed; its first line when absent. */
+  readonly summary?: string;
+}
+
+/** A card's width, in columns, its border included. */
+const CARD_WIDTH = 44;
+
+/** The columns a card's text has: its width less the borders and the margins inside them. */
+const CARD_TEXT_WIDTH = CARD_WIDTH - 4;
+
+/** A card line that is a rule across the card, in gray: what separates its parts. */
+export const CARD_RULE = '---';
+
+const RULE = `\u001b[90m${'─'.repeat(CARD_TEXT_WIDTH)}\u001b[39m`;
+
+/** How many lines a card shows. */
+const CARD_LINES = 6;
+
 /** The header row: the icon, then the lines beside it, with a blank row under both. */
 export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk[] }, Chunk>(
   welcome: WelcomeKit<Context, Node, Styled, Chunk>,
   header: PanelHeader,
-): Node & PanelBox<Node> {
+): Header<Node> {
   const { kit, renderer, styled } = welcome;
-  const box = new kit.BoxRenderable(renderer, { flexDirection: 'row', gap: 2, paddingLeft: 1, paddingBottom: 1 });
+  const box = new kit.BoxRenderable(renderer, {
+    flexDirection: 'row',
+    gap: 2,
+    paddingLeft: 1,
+    paddingBottom: 1,
+    flexShrink: 0,
+  });
   if (header.icon !== undefined) box.add(artBox(welcome, halfBlockArt(header.icon), 0));
-  const lines = new kit.BoxRenderable(renderer, { flexDirection: 'column' });
-  for (const line of header.lines)
-    lines.add(new kit.TextRenderable(renderer, { content: styled([line]), wrapMode: 'word' }));
-  box.add(lines);
-  return box;
+  const column = new kit.BoxRenderable(renderer, { flexDirection: 'column' });
+  box.add(column);
+  // A line no longer given keeps its row, empty, so the header does not jump.
+  const rows: PanelText<Styled>[] = [];
+  const heading = (lines: readonly string[]): void => {
+    lines.forEach((line, index) => {
+      const row = rows[index];
+      if (row !== undefined) {
+        row.content = styled([line]);
+        return;
+      }
+      const added = new kit.TextRenderable(renderer, { content: styled([line]), wrapMode: 'word', height: 1 });
+      rows.push(added);
+      column.add(added);
+    });
+    rows.slice(lines.length).forEach((row) => {
+      row.content = '';
+    });
+  };
+  heading(header.lines);
+  // A card is made the first time its title shows, then only filled or hidden: the header keeps its order.
+  const made = new Map<string, { readonly box: Node & PanelBox<Node>; readonly rows: PanelText<Styled>[] }>();
+  const cardOf = (title: string): { readonly box: Node & PanelBox<Node>; readonly rows: PanelText<Styled>[] } => {
+    const known = made.get(title);
+    if (known !== undefined) return known;
+    const card = new kit.BoxRenderable(renderer, {
+      flexDirection: 'column',
+      border: true,
+      title: ` ${title} `,
+      width: CARD_WIDTH,
+      paddingLeft: 1,
+      paddingRight: 1,
+      flexShrink: 0,
+    });
+    const rows = Array.from({ length: CARD_LINES }, () => {
+      const row = new kit.TextRenderable(renderer, { content: '', wrapMode: 'word', height: 1 });
+      card.add(row);
+      return row;
+    });
+    // A click on a card opens or collapses the cards, as Ctrl+P does.
+    card.onMouseDown = () => {
+      toggleCards();
+    };
+    box.add(card);
+    made.set(title, { box: card, rows });
+    return { box: card, rows };
+  };
+  let collapsed = false;
+  let current: readonly PanelCard[] = [];
+  const cards = (shown: readonly PanelCard[]): void => {
+    current = shown;
+    for (const [title, card] of made) card.box.visible = shown.some((each) => each.title === title);
+    for (const each of shown) {
+      const card = cardOf(each.title);
+      const lines = collapsed ? [each.summary ?? each.lines[0] ?? ''] : each.lines.slice(0, CARD_LINES);
+      card.box.visible = true;
+      card.box.title = ` ${collapsed ? '▸' : '▾'} ${each.title} `;
+      // A long line wraps between words in the card's width, its row as tall as the lines it takes.
+      let height = 0;
+      card.rows.forEach((row, index) => {
+        const line = lines[index];
+        row.visible = line !== undefined;
+        row.content = line === undefined ? '' : styled([line === CARD_RULE ? RULE : line]);
+        const rows = line === undefined ? 1 : wrappedRows(line, CARD_TEXT_WIDTH);
+        row.height = rows;
+        if (line !== undefined) height += rows;
+      });
+      card.box.height = height + 2;
+    }
+  };
+  const toggleCards = (): void => {
+    collapsed = !collapsed;
+    cards(current);
+  };
+  return { box, heading, cards, toggleCards };
 }

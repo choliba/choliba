@@ -7,6 +7,7 @@ export { DEFAULT_COLUMNS, formatElapsed, StatusFooter } from './status-footer';
 export {
   loadPanelToolkit,
   openOpenTuiPanel,
+  CARD_RULE,
   openPanel,
   pixelMap,
   type ArtColor,
@@ -14,6 +15,9 @@ export {
   openPanelWith,
   type OpenTuiToolkit,
   type ChatPanel,
+  type PanelCard,
+  type PanelChoice,
+  type PanelChooseRequest,
   type Panel,
   type PanelHeader,
   type PanelSplash,

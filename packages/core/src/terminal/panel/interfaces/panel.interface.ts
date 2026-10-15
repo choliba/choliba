@@ -52,6 +52,10 @@ export interface PanelNode<Node> {
 export interface PanelBox<Node> extends PanelNode<Node> {
   height: number | 'auto' | `${number}%`;
   visible: boolean;
+  /** The title on its top border. */
+  set title(title: string | undefined);
+  /** Called when the person clicks it. */
+  set onMouseDown(listener: ((event: never) => void) | undefined);
 }
 
 /** The multiline field of the footer (`TextareaRenderable`): Enter submits and Shift+Enter adds a line. */
@@ -63,6 +67,7 @@ export interface PanelInput<Styled> {
   onSubmit: ((event: PanelFieldEvent) => void) | undefined;
   onContentChange: ((event: PanelFieldEvent) => void) | undefined;
   focus(): void;
+  blur(): void;
   setText(text: string): void;
 }
 
@@ -79,6 +84,7 @@ export interface PanelSelect {
   focus(): void;
   blur(): void;
   getSelectedIndex(): number;
+  setSelectedIndex(index: number): void;
   on(event: 'itemSelected', listener: () => void): unknown;
 }
 
@@ -93,16 +99,20 @@ export interface PanelText<Styled> {
   content: Styled | string;
   height: number | 'auto' | `${number}%`;
   visible: boolean;
+  /** Called when the person clicks it. */
+  set onMouseDown(listener: ((event: never) => void) | undefined);
 }
 
 export interface PanelBoxOptions {
   readonly flexDirection: 'column' | 'row';
-  readonly width?: '100%';
+  readonly width?: '100%' | number;
   readonly height?: '100%' | number;
   /** Space between its children, and inside its left and bottom edges, in cells. */
   readonly gap?: number;
   readonly paddingLeft?: number;
   readonly paddingBottom?: number;
+  /** 0 keeps its rows when the panel is short: the lines' box gives up its room instead. */
+  readonly flexShrink?: number;
   readonly marginTop?: number;
   /** A hex color behind what the box draws. */
   readonly backgroundColor?: string;
@@ -113,8 +123,13 @@ export interface PanelBoxOptions {
   readonly zIndex?: number;
   readonly alignItems?: 'center';
   readonly justifyContent?: 'center';
-  /** A line above and below, as the field's row has. */
-  readonly border?: ('top' | 'bottom')[];
+  /** A line above and below, as the field's row has, or all around. */
+  readonly border?: ('top' | 'bottom')[] | true;
+  /** The title on the top border. */
+  readonly title?: string;
+  readonly paddingRight?: number;
+  /** `hidden` cuts what is wider than the box. */
+  readonly overflow?: 'hidden';
 }
 
 export interface PanelTextareaOptions {
@@ -166,8 +181,13 @@ export interface PanelImage {
 
 export interface PanelTextOptions<Styled> {
   readonly content: Styled | string;
-  readonly wrapMode: 'word';
+  /** `none` keeps a line whole, for its box to cut. */
+  readonly wrapMode: 'word' | 'none';
   readonly height?: number;
+  /** 0 keeps its rows when the panel is short. */
+  readonly flexShrink?: number;
+  /** 1 takes the room left in its row. */
+  readonly flexGrow?: number;
   /** Placed in a corner of its parent, `bottom` rows and `right` columns from its edges. */
   readonly position?: 'absolute';
   readonly bottom?: number;
