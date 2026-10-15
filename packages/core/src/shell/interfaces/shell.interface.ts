@@ -1,7 +1,7 @@
 import type { ConfigGroup } from '@choliba/config';
 
 import type { CommandEntry, CommandExample, RootSpec } from '../../help';
-import type { ChatPanel, PanelCard } from '../../terminal';
+import type { ChatPanel, PanelCard, PanelKey } from '../../terminal';
 import type { Container } from '../container';
 import type { ShellIo } from '../shell-io';
 
@@ -95,6 +95,13 @@ export interface PanelContext {
    * codes kept); undefined removes it. The lines keep the order their names first came in.
    */
   label(name: string, value: string | undefined): void;
+  /**
+   * Shows `line` (escape codes kept) in the status line under the field, before the cards' keys; undefined removes it.
+   * The parts keep the order their names first came in.
+   */
+  status(name: string, line: string | undefined): void;
+  /** Called with each key pressed in the field while no list is open under it; `true` keeps it from the field. */
+  onKey(listener: (key: PanelKey) => boolean): void;
 }
 
 /** A command of the panel: the word after `/`, what it does in a line, and running it. */

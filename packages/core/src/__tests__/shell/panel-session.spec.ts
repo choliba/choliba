@@ -153,7 +153,7 @@ describe('panelSession', () => {
     set?.show('projeto', { lines: ['loja'] });
     set?.show('ticket', { lines: ['loja-1'] });
     set?.show('projeto', { lines: ['site'], summary: 'site · 2', key: 'p' });
-    expect(session.shortcuts()).toEqual(['Ctrl+P projeto']);
+    expect(session.status()).toEqual(['\u001b[90mCtrl+P projeto\u001b[39m']);
     set?.show('ticket', undefined);
 
     expect(fake.cards).toEqual([
@@ -292,5 +292,43 @@ describe('panelSession', () => {
       [...HEADING, '\u001b[90mprovider\u001b[39m cursor', '\u001b[90mmodelo\u001b[39m padrão'],
       [...HEADING, '\u001b[90mmodelo\u001b[39m padrão'],
     ]);
+  });
+
+  it('puts what the commands give in the status line before the cards keys, and hands them the keys of the field', async () => {
+    const fake = fakeChatPanel();
+    let set: PanelCommandContext['context'] | undefined;
+    const session = panelSession(
+      new Container(),
+      fake.panel,
+      [
+        {
+          name: 'ctx',
+          description: 'Contexto',
+          run: ({ context }) => {
+            set = context;
+            return Promise.resolve();
+          },
+        },
+      ],
+      HEADING,
+    );
+    fake.send('/ctx');
+    await new Promise((resolve) => setImmediate(resolve));
+    set?.status('modo', 'modo plan');
+    set?.show('projeto', { lines: ['site'], key: 'p' });
+    expect(session.status()).toEqual(['modo plan', '\u001b[90mCtrl+P projeto\u001b[39m']);
+    set?.status('modo', undefined);
+    expect(session.status()).toEqual(['\u001b[90mCtrl+P projeto\u001b[39m']);
+
+    const pressed: string[] = [];
+    set?.onKey((key) => {
+      pressed.push(key.name);
+      return key.name === 'tab';
+    });
+    expect(fake.press('tab')).toBe(true);
+    expect(fake.press('left')).toBe(false);
+    fake.type('/c');
+    expect(fake.press('tab')).toBe(true);
+    expect(pressed).toEqual(['tab', 'left']);
   });
 });

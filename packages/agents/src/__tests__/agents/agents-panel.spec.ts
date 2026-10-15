@@ -55,6 +55,12 @@ function withAgents(dir: string, provider = 'auto', installed: (bin: string) => 
     () => new ProviderRegistry([new ClaudeAgentProvider(), new ClaudeOllamaAgentProvider(), new CursorAgentProvider()]),
   );
   const labels = new Map<string, string>();
+  const statuses = new Map<string, string>();
+  const keyListeners: ((key: {
+    readonly name: string;
+    readonly ctrl: boolean;
+    readonly shift?: boolean;
+  }) => boolean)[] = [];
   const values = new Map<string, string>();
   const shown: [string, readonly string[] | undefined, string | undefined][] = [];
   const keys: (string | undefined)[] = [];
@@ -72,6 +78,13 @@ function withAgents(dir: string, provider = 'auto', installed: (bin: string) => 
       if (value === undefined) labels.delete(name);
       else labels.set(name, value);
     },
+    status: (name, line) => {
+      if (line === undefined) statuses.delete(name);
+      else statuses.set(name, line);
+    },
+    onKey: (listener) => {
+      keyListeners.push(listener);
+    },
   };
   const fake = fakeChatPanel();
   const [command] = agentsPanel;
@@ -85,6 +98,8 @@ function withAgents(dir: string, provider = 'auto', installed: (bin: string) => 
     shown,
     keys,
     labels,
+    statuses,
+    shiftTab: () => keyListeners.some((listener) => listener({ name: 'tab', ctrl: false, shift: true })),
     run: () => command.run({ container, panel: fake.panel, context }),
   };
 }

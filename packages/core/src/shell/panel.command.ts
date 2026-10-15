@@ -44,9 +44,10 @@ export const PANEL_SPEC: CommandSpec = {
   details:
     'O painel abre com as boas-vindas: Enter mostra o campo, e Esc sai. No campo, `/` lista os comandos do painel ' +
     '(`/projects` escolhe o projeto, `/tickets` o ticket, `/agents` o agente), e o que eles escolhem aparece no ' +
-    'cabeçalho, em quadros que o Ctrl+P (projeto), o Ctrl+A (agente) ou um clique recolhem; com o agente, o ' +
-    'provider e o modelo que uma execução usaria. Sai com ' +
-    'Ctrl+C duas vezes. Precisa de um terminal interativo.',
+    'cabeçalho, em quadros que o Ctrl+P (projeto), o Ctrl+A (agente) ou um clique recolhem. Com o agente, o ' +
+    'cabeçalho mostra o provider e o modelo que uma execução usaria, e a linha de status o modo; `/provider`, ' +
+    '`/model` e `/mode` os escolhem para a sessão, e o Shift+Tab alterna o modo. Sai com Ctrl+C duas vezes. ' +
+    'Precisa de um terminal interativo.',
   flags: [{ name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true }],
 };
 
@@ -69,7 +70,7 @@ export const panelCommand: ShellCommand = {
     const logo = container.has(PANEL_LOGO) ? container.get(PANEL_LOGO) : undefined;
     const { cwd, env } = container.get(PLATFORM);
     const home = env['HOME'];
-    // The footer says the keys of the cards the session shows, once there is one.
+    // The footer says what the session's commands put in it and the keys of its cards, once there is a session.
     const session: { current?: PanelSession } = {};
     const heading = [
       `\u001b[1m\u001b[32m${version ?? 'choliba'}\u001b[39m\u001b[22m`,
@@ -81,7 +82,7 @@ export const panelCommand: ShellCommand = {
             title: version ?? 'choliba',
             titleColor: 'green',
             footer: () => [
-              `\u001b[90m  ${[...(session.current?.shortcuts() ?? []), 'Ctrl+C duas vezes sai'].join(' · ')}\u001b[39m`,
+              `  ${[...(session.current?.status() ?? []), '\u001b[90mCtrl+C duas vezes sai\u001b[39m'].join('\u001b[90m · \u001b[39m')}`,
             ],
             hint: PANEL_HINT,
             splash: {
