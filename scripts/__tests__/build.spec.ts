@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
 const repo = join(__dirname, '..', '..');
+const CONFIG_EXAMPLE = readFileSync(join(repo, 'packages', 'config', 'examples', 'config.ts'), 'utf8');
 
 const SUBPATHS = [
   '.',
@@ -148,6 +149,9 @@ function assertExports(out: string): void {
   expect(readFileSync(join(out, 'core', 'README.md'), 'utf8')).toBe(
     readFileSync(join(repo, 'packages', 'core', 'README.md'), 'utf8'),
   );
+  const configGuide = readFileSync(join(repo, 'packages', 'config', 'README.md'), 'utf8');
+  expect(readFileSync(join(out, 'config', 'README.md'), 'utf8')).toBe(configGuide);
+  expect(configGuide).toContain(`\`\`\`ts\n${CONFIG_EXAMPLE}\`\`\``);
 }
 
 describe('the installable package', () => {
@@ -165,6 +169,9 @@ describe('the installable package', () => {
       linkDependencies(join(app, 'node_modules'), dependencies);
       writeFileSync(join(app, 'check.mjs'), CHECKER);
       writeFileSync(join(app, 'check.ts'), TYPECHECK);
+      writeFileSync(join(app, 'config.ts'), CONFIG_EXAMPLE);
+      writeFileSync(join(app, '.env'), 'EXAMPLE_NAME=from-dotenv\n');
+      writeFileSync(join(app, 'settings.yaml'), 'server:\n  port: 4321\n');
       writeFileSync(
         join(app, 'tsconfig.json'),
         `${JSON.stringify({
@@ -175,12 +182,16 @@ describe('the installable package', () => {
             noEmit: true,
             skipLibCheck: true,
             noUnusedLocals: true,
+            // `@types/bun` only points at `bun-types`, which is not installed. `process` comes from `@types/node`.
+            types: ['node'],
+            typeRoots: [join(repo, 'node_modules', '@types')],
           },
-          files: ['check.ts'],
+          files: ['check.ts', 'config.ts'],
         })}\n`,
       );
       run('node', ['check.mjs'], app);
       run('bun', ['check.mjs'], app);
+      expect(run('bun', ['config.ts'], app)).toBe('{"name":"from-dotenv","port":4321}\n');
       run('node', [join(repo, 'node_modules/typescript/bin/tsc'), '-p', 'tsconfig.json', '--pretty', 'false'], app);
       expect(run('bun', [join(out, 'bin', 'choliba.js'), '--help'], app)).toContain('Usage:');
     } finally {

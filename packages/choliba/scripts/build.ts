@@ -177,6 +177,8 @@ function copyResources(outDir: string): void {
   cpSync(join(packageDir, 'templates', 'example'), join(outDir, 'templates', 'example'), { recursive: true });
   // The guide of choliba/core, next to its entry, for whoever installed the package.
   cpSync(join(packagesDir, 'core', 'README.md'), join(outDir, 'core', 'README.md'));
+  // The independent configuration guide, next to its public entry.
+  cpSync(join(packagesDir, 'config', 'README.md'), join(outDir, 'config', 'README.md'));
 }
 
 function runTsc(config: string, what: string): void {
