@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import { PROJECTS_SUBDIR } from '@choliba/core';
+import { PROJECTS_SUBDIR } from '../../paths';
 
 import { applyLocations, CHOL_GLOBAL_DIR, CHOL_PROJECTS_DIR, CHOL_TICKET_RUNS, resolveProjectsDir } from '../../index';
 

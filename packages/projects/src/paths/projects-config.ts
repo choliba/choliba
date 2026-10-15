@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 
 import { defineConfig } from '@choliba/config';
-import { PROJECTS_SUBDIR } from '@choliba/core';
+import { PROJECTS_SUBDIR } from './project-layout';
 
 /** The projects group's keys: where artifacts, projects and ticket runs live. */
 export const projectsConfig = defineConfig('projects', {

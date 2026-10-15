@@ -1,6 +1,7 @@
 import path from 'node:path';
 
-import { ExpectedError, PROJECTS_SUBDIR } from '@choliba/core';
+import { ExpectedError } from '@choliba/core';
+import { PROJECTS_SUBDIR } from './project-layout';
 
 import type { projectsConfig } from './projects-config';
 

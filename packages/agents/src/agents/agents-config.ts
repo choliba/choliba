@@ -1,5 +1,5 @@
 import { defineConfig } from '@choliba/config';
-import { DEFAULT_AGENTS_DIR, DEFAULT_MCPS_DIR, DEFAULT_SKILLS_DIR } from '@choliba/core';
+import { DEFAULT_AGENTS_DIR, DEFAULT_MCPS_DIR, DEFAULT_SKILLS_DIR } from './agent-layout';
 
 /** The agents group's keys: providers, their files and the tools a run offers. */
 export const agentsConfig = defineConfig('agents', {

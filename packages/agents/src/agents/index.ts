@@ -1,4 +1,5 @@
 export * from './agent-dirs';
+export * from './agent-layout';
 export { agentsConfig } from './agents-config';
 export * from './agent-loader';
 export * from './agent-print';

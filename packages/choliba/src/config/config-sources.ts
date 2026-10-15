@@ -4,8 +4,7 @@ import { envSource, fileSource, type ConfigSource } from '@choliba/config';
 import type { Platform } from '@choliba/core';
 
 import { findWorkspaceRoot } from './workspace';
-
-const ENV_FILE = '.env';
+import { ENV_FILE } from './workspace-layout';
 
 /** The workspace root when the command starts inside one, or nothing outside a workspace. */
 export function workspaceRootOrNothing(platform: Platform): string | undefined {

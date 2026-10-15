@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { PACKAGE_FILE } from './files';
+const PACKAGE_FILE = 'package.json';
 
 /** What `--version` reads from an app's own package.json: the release build writes `version` and `gitHead`. */
 export interface PackageManifest {
