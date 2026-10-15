@@ -140,10 +140,9 @@ function templateVariables(env: string): readonly string[] {
   return [...env.matchAll(/^(?:# )?(CHOL_[A-Z_]+)=/gm)].map((match) => match[1] ?? '');
 }
 
-/** Every `CHOL_*` named in the first column of the reference table. */
+/** Every `CHOL_*` named in the variable column of the reference table. */
 function documentedVariables(reference: string): readonly string[] {
-  const firstColumns = [...reference.matchAll(/^\| ([^|]+)\|/gm)].map((match) => match[1] ?? '');
-  return firstColumns.flatMap((column) => [...column.matchAll(/`(CHOL_[A-Z_]+)`/g)].map((match) => match[1] ?? ''));
+  return [...reference.matchAll(/^\| `[^`]+` +\| `(CHOL_[A-Z_]+)`/gm)].map((match) => match[1] ?? '');
 }
 
 describe('the workspace templates', () => {

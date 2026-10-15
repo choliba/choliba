@@ -5,7 +5,6 @@ import { boldAnsi, paintAnsi, rawArgsAfter, visibleWidth, wrapVisible } from '..
 import { BufferWritable, FakeSignals, fakePlatform, runShell } from '../../testing';
 import { fakeSpawner, streamFromChunks } from '../terminal/helpers/fake-spawner';
 import { ajudaDeServir, sugestoes } from './ajuda';
-import { configuracao } from './configuracao';
 import { lerLinha } from './linha';
 import { olaModule } from './ola';
 import { rodar } from './processo';
@@ -73,7 +72,6 @@ const OUTPUTS: Readonly<Record<string, () => Promise<string>>> = {
   'ajudaDeServir()': () => Promise.resolve(`${ajudaDeServir()}\n`),
   'tabelaDeIdades(40)': () => Promise.resolve(`${tabelaDeIdades(40)}\n`),
   "quadro('build', 'compilando\\npronto', 24)": () => Promise.resolve(`${quadro('build', 'compilando\npronto', 24)}\n`),
-  "configuracao({ PORTA: '8080' })": () => Promise.resolve(`${JSON.stringify(configuracao({ PORTA: '8080' }))}\n`),
 };
 
 describe('o guia do core (README.md)', () => {

@@ -13,14 +13,15 @@ um container e uma tabela de comandos, sem decorator e sem reflection.
 
 ## Os pacotes
 
-| Pacote              | O que tem                                                                                                                                                                                                                                        |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `packages/core`     | a plataforma (o processo e o Bun como valores), a configuração da pasta de trabalho, o tema de cores, o help, o autocomplete, a casca e o runner de processos (`terminal/`); guia de uso em [`packages/core/README.md`](packages/core/README.md) |
-| `packages/projects` | projetos e tickets: onde ficam, criar, conferir; `new project` e `list projects`                                                                                                                                                                 |
-| `packages/runner`   | os testes E2E pelo Playwright, os portões red/green e o reporter; `run tests`                                                                                                                                                                    |
-| `packages/sandbox`  | onde o provider roda: `local` ou `docker` (`sandbox/local/`, `sandbox/docker/`), as montagens do container e as regras de caminho (`deny`, exceções `!`); só depende do `core`                                                                   |
-| `packages/agents`   | os agentes: o `agent.yaml`, a montagem de uma execução (`runs/`), os steps, os providers; `run agent` e `list agents`                                                                                                                            |
-| `packages/choliba`  | o app: `main.ts`, a raiz (os verbos e o help), `check`, `setup`, `lint`, `format`; o pacote publicado                                                                                                                                            |
+| Pacote              | O que tem                                                                                                                                                                                                   |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/config`   | o mecanismo independente de configuração: grupos tipados, fontes, formatos e escrita; não conhece nenhuma chave do choliba                                                                                  |
+| `packages/core`     | a plataforma (o processo e o Bun como valores), o tema de cores, o help, o autocomplete, a casca e o runner de processos (`terminal/`); guia de uso em [`packages/core/README.md`](packages/core/README.md) |
+| `packages/projects` | projetos e tickets: onde ficam, criar, conferir; `new project` e `list projects`                                                                                                                            |
+| `packages/runner`   | os testes E2E pelo Playwright, os portões red/green e o reporter; `run tests`                                                                                                                               |
+| `packages/sandbox`  | onde o provider roda: `local` ou `docker` (`sandbox/local/`, `sandbox/docker/`), as montagens do container e as regras de caminho (`deny`, exceções `!`); só depende do `core`                              |
+| `packages/agents`   | os agentes: o `agent.yaml`, a montagem de uma execução (`runs/`), os steps, os providers; `run agent` e `list agents`                                                                                       |
+| `packages/choliba`  | o app: `main.ts`, a pasta de trabalho, as fontes de configuração, `list config`, `set config`, a raiz, `check`, `setup`, `lint` e `format`; o pacote publicado                                              |
 
 ## Invariantes
 
@@ -70,13 +71,15 @@ Detalhes e as receitas (um comando novo, um provider novo, um spec): skill
   raiz (`help`, lidas de novo a cada vez) e o `run(container, io)`. Um comando sem `help` não aparece no
   `--help`: é o caso de `terminal`, no `coreShell`.
 - **Um módulo por pacote.** Cada pacote exporta um `ShellModule` (`coreShell`, `agentsShell`, `projectsShell`,
-  `runnerShell`) com as fábricas e os comandos. O app os lista, nessa ordem, em `CHOLIBA_SHELL`
+  `runnerShell`) com as fábricas, os comandos e os grupos de configuração que consome. O app os lista, nessa ordem, em `CHOLIBA_SHELL`
   (`packages/choliba/src/app-shell.ts`) e acrescenta por último o `cholibaShell(runtime)`, com `check`, `lint`,
   `format` e `setup`. Um comando novo entra no módulo do pacote dele, não nessa lista.
-- **O que o `core` dá a todos.** O `coreShell` registra `CONFIG` (um `ConfigService`) e `THEME` (um
-  `ThemeService`) a partir de `PLATFORM`, que o `createShell` registra com a plataforma que o `main.ts` montou. A
-  fábrica de outro pacote pede o que precisa, como `container.get(CONFIG)`. O `Runtime` do app entra pelo token
-  `RUNTIME`, e só o `cholibaShell` o registra.
+- **Configuração composta pelo app.** Cada pacote declara suas próprias chaves com `defineConfig` e lê o objeto
+  tipado pelo token do grupo. O `createShell` reúne esses grupos em `CONFIG_CATALOG` e registra a leitura
+  preguiçosa. O app encontra a pasta de trabalho, fornece `WORKSPACE_ROOT` e ordena as fontes: ambiente primeiro,
+  depois o `.env`. `list config` e `set config` pertencem ao app. O `coreShell` registra apenas `THEME`; o app
+  entrega as escolhas de `CHOL_COLORS` por `THEME_CHOICES`.
+- **Runtime do app.** O `Runtime` entra pelo token `RUNTIME`, e só o `cholibaShell` o registra.
 - **Uma raiz por app.** O `cholibaShell` tem `root`: o texto do `--help`, a linha do `--version`, a ordem dos
   comandos (`CHOLIBA_ORDER`) e os verbos (`CHOLIBA_VERBS`: `run`, `new`, `list`). Cada pacote registra os seus tipos
   sob um verbo (`run agent`, `run tests`, `new project`, `list agents`, `list projects`), e a casca monta o verbo com
