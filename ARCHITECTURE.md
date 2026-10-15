@@ -13,14 +13,14 @@ um container e uma tabela de comandos, sem decorator e sem reflection.
 
 ## Os pacotes
 
-| Pacote              | O que tem                                                                                                                                                                      |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `packages/core`     | a plataforma (o processo e o Bun como valores), a configuração da pasta de trabalho, o tema de cores, o help, o autocomplete, a casca e o runner de processos (`terminal/`)    |
-| `packages/projects` | projetos e tickets: onde ficam, criar, conferir; `new project` e `list projects`                                                                                               |
-| `packages/runner`   | os testes E2E pelo Playwright, os portões red/green e o reporter; `run tests`                                                                                                  |
-| `packages/sandbox`  | onde o provider roda: `local` ou `docker` (`sandbox/local/`, `sandbox/docker/`), as montagens do container e as regras de caminho (`deny`, exceções `!`); só depende do `core` |
-| `packages/agents`   | os agentes: o `agent.yaml`, a montagem de uma execução (`runs/`), os steps, os providers; `run agent` e `list agents`                                                          |
-| `packages/choliba`  | o app: `main.ts`, a raiz (os verbos e o help), `check`, `setup`, `lint`, `format`; o pacote publicado                                                                          |
+| Pacote              | O que tem                                                                                                                                                                                                                                        |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `packages/core`     | a plataforma (o processo e o Bun como valores), a configuração da pasta de trabalho, o tema de cores, o help, o autocomplete, a casca e o runner de processos (`terminal/`); guia de uso em [`packages/core/README.md`](packages/core/README.md) |
+| `packages/projects` | projetos e tickets: onde ficam, criar, conferir; `new project` e `list projects`                                                                                                                                                                 |
+| `packages/runner`   | os testes E2E pelo Playwright, os portões red/green e o reporter; `run tests`                                                                                                                                                                    |
+| `packages/sandbox`  | onde o provider roda: `local` ou `docker` (`sandbox/local/`, `sandbox/docker/`), as montagens do container e as regras de caminho (`deny`, exceções `!`); só depende do `core`                                                                   |
+| `packages/agents`   | os agentes: o `agent.yaml`, a montagem de uma execução (`runs/`), os steps, os providers; `run agent` e `list agents`                                                                                                                            |
+| `packages/choliba`  | o app: `main.ts`, a raiz (os verbos e o help), `check`, `setup`, `lint`, `format`; o pacote publicado                                                                                                                                            |
 
 ## Invariantes
 
