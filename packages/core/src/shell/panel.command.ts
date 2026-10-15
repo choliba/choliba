@@ -44,7 +44,8 @@ export const PANEL_SPEC: CommandSpec = {
   details:
     'O painel abre com as boas-vindas: Enter mostra o campo, e Esc sai. No campo, `/` lista os comandos do painel ' +
     '(`/projects` escolhe o projeto, `/tickets` o ticket, `/agents` o agente), e o que eles escolhem aparece no ' +
-    'cabeçalho, em quadros que o Ctrl+P (projeto), o Ctrl+A (agente) ou um clique recolhem. Sai com ' +
+    'cabeçalho, em quadros que o Ctrl+P (projeto), o Ctrl+A (agente) ou um clique recolhem; com o agente, o ' +
+    'provider e o modelo que uma execução usaria. Sai com ' +
     'Ctrl+C duas vezes. Precisa de um terminal interativo.',
   flags: [{ name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true }],
 };
@@ -98,7 +99,7 @@ export const panelCommand: ShellCommand = {
       io.fail('erro: o painel precisa de um terminal interativo.');
       return;
     }
-    session.current = panelSession(container, panel, container.get(PANEL_COMMANDS));
+    session.current = panelSession(container, panel, container.get(PANEL_COMMANDS), heading);
     await new Promise<void>((resolve) => {
       panel.onInterrupt(() => {
         panel.close();

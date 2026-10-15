@@ -33,6 +33,7 @@ function withProjects(projects: Readonly<Record<string, Readonly<Record<string, 
       shown.push([title, card?.lines, card?.summary]);
       keys.push(card?.key);
     },
+    label: () => undefined,
   };
   const shown: [string, readonly string[] | undefined, string | undefined][] = [];
   const keys: (string | undefined)[] = [];
@@ -210,7 +211,12 @@ describe('the panel commands of @choliba/projects', () => {
     const panel = withProjects({ blog: { 'config.json': '{}' }, loja: LOJA });
     try {
       const tickets = projectsPanel[1];
-      const context = { get: (key: string) => panel.values.get(key), set: () => undefined, show: () => undefined };
+      const context = {
+        get: (key: string) => panel.values.get(key),
+        set: () => undefined,
+        show: () => undefined,
+        label: () => undefined,
+      };
       expect(tickets?.unavailable?.(context, panel.container)).toBe('Escolha um projeto antes, com /projects');
       await panel.tickets();
 

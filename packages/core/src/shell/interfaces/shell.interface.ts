@@ -90,6 +90,11 @@ export interface PanelContext {
    * letter that opens or collapses it with Ctrl. Undefined hides it.
    */
   show(title: string, card: Omit<PanelCard, 'title'> | undefined): void;
+  /**
+   * Shows `name value` in the header's column, under its fixed lines, the name in gray and `value` as given (escape
+   * codes kept); undefined removes it. The lines keep the order their names first came in.
+   */
+  label(name: string, value: string | undefined): void;
 }
 
 /** A command of the panel: the word after `/`, what it does in a line, and running it. */
