@@ -5,9 +5,6 @@ import {
   APP_DIR,
   ARTIFACTS_DIR,
   BUNFIG_FILE,
-  DEFAULT_AGENTS_DIR,
-  DEFAULT_MCPS_DIR,
-  DEFAULT_SKILLS_DIR,
   EDITORCONFIG_FILE,
   ENV_EXAMPLE_FILE,
   ENV_FILE,
@@ -24,6 +21,7 @@ import {
   findResource,
   installShellCompletion,
 } from '@choliba/core';
+import { DEFAULT_AGENTS_DIR, DEFAULT_MCPS_DIR, DEFAULT_SKILLS_DIR } from '@choliba/agents';
 import { createProject, projectTemplatesDir } from '@choliba/projects';
 
 import { findWorkspaceRoot } from '../config';

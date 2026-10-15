@@ -2,7 +2,7 @@
 
 import { dirname, join } from 'node:path';
 
-import { RUNS_DIR } from '@choliba/core';
+import { RUNS_DIR } from '../agent-layout';
 import { agentURL, EXCEPTION_PREFIX, type Sandbox } from '@choliba/sandbox';
 
 import { invocationFromAgent, effectivePolicy } from '../invocation';

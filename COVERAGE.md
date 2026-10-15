@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 15/10/2026 03:13:04 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 15/10/2026 03:28:09 — não editar manualmente.
 
 ## Resumo
 
@@ -18,11 +18,12 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 76 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 77 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
 🟢|[src/agents/agent-dirs.ts](packages/agents/src/agents/agent-dirs.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/agent-layout.ts](packages/agents/src/agents/agent-layout.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agent-loader.ts](packages/agents/src/agents/agent-loader.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agent-print.ts](packages/agents/src/agents/agent-print.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agent-skills.ts](packages/agents/src/agents/agent-skills.ts)|100.00|100.00|100.00|100.00
