@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 
-import { formatHelp, openOpenTuiPanel, type CommandSpec, CHOL_ROOT } from '@choliba/core';
+import { formatHelp, openOpenTuiPanel, type CommandSpec } from '@choliba/core';
 import { AppError, ensureApp, type ProjectSettings, type RunningApp } from '@choliba/projects';
 import { readSandbox, type Sandbox, type SandboxConfigError } from '@choliba/sandbox';
 
@@ -21,6 +21,7 @@ import { formatDryRun, type DryRunInput } from './dry-run';
 import { runAgent } from './run-agent';
 import { wantsFooter } from './run-footer';
 import { planRunTools, type PlannedFile } from '../../common';
+import { CHOL_ROOT } from '../../common';
 import { launchFor, realDisk, type Launch, type LaunchDisk } from './sandbox-launch';
 import {
   acceptedFlagNames,

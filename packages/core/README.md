@@ -660,7 +660,7 @@ arquivo diz, como é o costume.
 
 <!-- prettier-ignore -->
 ```ts
-import { mergeConfig, parseConfigFile } from 'choliba/core';
+import { dotenv } from '@choliba/config';
 
 const ARQUIVO = ['# A porta do servidor', 'PORTA=3000', 'NOME="Ana Maria"'].join('\n');
 
@@ -668,7 +668,7 @@ const ARQUIVO = ['# A porta do servidor', 'PORTA=3000', 'NOME="Ana Maria"'].join
 export function configuracao(
   env: Readonly<Record<string, string | undefined>>,
 ): Readonly<Record<string, string | undefined>> {
-  return mergeConfig(parseConfigFile(ARQUIVO), env);
+  return { ...dotenv.parse(ARQUIVO, '.env'), ...env } as Readonly<Record<string, string | undefined>>;
 }
 ```
 

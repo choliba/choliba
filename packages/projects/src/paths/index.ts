@@ -1,9 +1,11 @@
 export {
   applyLocations,
+  CHOL_GLOBAL_DIR,
+  CHOL_PROJECTS_DIR,
+  CHOL_TICKET_RUNS,
   projectLocations,
   readAppliedLocations,
   LocationsError,
-  resolveLocations,
   resolveProjectsDir,
   type ProjectLocations,
 } from './locations';

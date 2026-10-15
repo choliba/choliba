@@ -1,8 +1,7 @@
 import { existsSync, mkdirSync, realpathSync, statSync } from 'node:fs';
 import { delimiter, dirname, isAbsolute, join } from 'node:path';
 
-import { CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR } from '@choliba/core';
-import { resolveLocations, resolveTicketRunsFolder, resolveTicketRunsRoot } from '@choliba/projects';
+import { resolveTicketRunsFolder, resolveTicketRunsRoot } from '@choliba/projects';
 import {
   agentURL,
   type ContainerUser,
@@ -25,6 +24,8 @@ import {
   type ProviderRequest,
   type ResolvedProvider,
 } from '../../common';
+import { CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR } from '../../common';
+import { locationsOf } from './run-context';
 import { definedConfig } from '../agent-dirs';
 
 type Config = Readonly<Record<string, string | undefined>>;
@@ -127,7 +128,7 @@ function outputFolders(request: ProviderRequest, config: Config): readonly strin
     ? [fromRoot(config[CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR] ?? DEFAULT_PLAYWRIGHT_OUTPUT_DIR, root)]
     : [];
   if (request.project === undefined) return playwright;
-  const ticketRuns = resolveTicketRunsRoot(resolveLocations(root, config));
+  const ticketRuns = resolveTicketRunsRoot(locationsOf(config));
   return [...playwright, resolveTicketRunsFolder(ticketRuns, request.project.name)];
 }
 

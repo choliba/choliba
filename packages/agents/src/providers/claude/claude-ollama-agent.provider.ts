@@ -1,7 +1,7 @@
-import { CHOL_OLLAMA_URL } from '@choliba/core';
-
 import type { ProviderRequest, ProviderVariablesInput } from '../../common';
 import { ClaudeAgentProvider } from './claude-agent.provider';
+
+const CHOL_OLLAMA_URL = 'CHOL_OLLAMA_URL';
 
 /** Where Ollama listens when `CHOL_OLLAMA_URL` says nothing. */
 export const DEFAULT_OLLAMA_URL = 'http://localhost:11434';

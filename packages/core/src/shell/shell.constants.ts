@@ -1,12 +1,11 @@
 import { token } from './container';
-import type { ConfigService } from '../config';
 import type { ThemeService } from '../theme';
 import type { ThemeChoices } from '../theme';
 
-/** The workspace a command runs in and its configuration: `container.get(CONFIG)` in any package's factory. */
-export const CONFIG = token<ConfigService>('ConfigService');
+/** The workspace selected by the app; core defines only the integration token, not how it is found. */
+export const WORKSPACE_ROOT = token<string>('WorkspaceRoot');
 
 /** Whether and how choliba colors its output: `container.get(THEME)` in any package's factory. */
 export const THEME = token<ThemeService>('ThemeService');
-/** Choices an app read for the theme; a shell without them uses the legacy workspace configuration bridge. */
+/** Choices an app read for the theme. */
 export const THEME_CHOICES = token<ThemeChoices>('ThemeChoices');

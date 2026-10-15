@@ -1,31 +1,19 @@
-import { ConfigService } from '../../config';
-import { ThemeService } from '../../theme';
+import { parseColors, ThemeService } from '../../theme';
 import { BufferWritable, fakePlatform, type FakePlatform } from '../../testing';
-import { makeWorkspace } from '../helpers/workspace';
 
-function themeFor(platform: FakePlatform): ThemeService {
-  return new ThemeService(
-    new ConfigService(platform.cwd, platform.env),
-    platform.env,
-    platform.stdout,
-    platform.noColorFlag,
-  );
+function themeFor(platform: FakePlatform, colors?: string): ThemeService {
+  return new ThemeService(platform.env, platform.stdout, platform.noColorFlag, parseColors(colors));
 }
 
 describe('ThemeService', () => {
-  it('paints with the colors of the workspace .env when stdout is a terminal', () => {
-    const workspace = makeWorkspace({ '.env': 'CHOL_COLORS=agents.implementer=blue\n' });
-    try {
-      const theme = themeFor(fakePlatform({ cwd: workspace.path, stdout: new BufferWritable(true) }));
+  it('paints with the choices supplied by the app when stdout is a terminal', () => {
+    const theme = themeFor(fakePlatform({ stdout: new BufferWritable(true) }), 'agents.implementer=blue');
 
-      expect(theme.enabled()).toBe(true);
-      expect(theme.theme().enabled).toBe(true);
-      expect(theme.colorOf('agents', 'implementer')).toBe('blue');
-      expect(theme.paint('agents', 'implementer', 'x')).toBe('\u001b[34mx\u001b[0m');
-      expect(theme.paint('agents', 'novo', 'x', 'gray')).toBe('\u001b[90mx\u001b[0m');
-    } finally {
-      workspace.cleanup();
-    }
+    expect(theme.enabled()).toBe(true);
+    expect(theme.theme().enabled).toBe(true);
+    expect(theme.colorOf('agents', 'implementer')).toBe('blue');
+    expect(theme.paint('agents', 'implementer', 'x')).toBe('\u001b[34mx\u001b[0m');
+    expect(theme.paint('agents', 'novo', 'x', 'gray')).toBe('\u001b[90mx\u001b[0m');
   });
 
   it('writes plain text with --no-color, NO_COLOR or a pipe', () => {
@@ -39,10 +27,8 @@ describe('ThemeService', () => {
     }
   });
 
-  it('takes CHOL_COLORS from the process environment outside a workspace', () => {
-    const theme = themeFor(
-      fakePlatform({ stdout: new BufferWritable(true), env: { CHOL_COLORS: 'states.error=yellow' } }),
-    );
+  it('takes color choices independently from the process environment', () => {
+    const theme = themeFor(fakePlatform({ stdout: new BufferWritable(true) }), 'states.error=yellow');
 
     expect(theme.colorOf('states', 'error')).toBe('yellow');
   });

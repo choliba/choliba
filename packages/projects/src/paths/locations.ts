@@ -1,13 +1,6 @@
 import path from 'node:path';
 
-import {
-  CHOL_GLOBAL_DIR,
-  CHOL_PROJECTS_DIR,
-  CHOL_TICKET_RUNS,
-  ExpectedError,
-  PROJECTS_SUBDIR,
-  loadRepoConfig,
-} from '@choliba/core';
+import { ExpectedError, PROJECTS_SUBDIR } from '@choliba/core';
 
 import type { projectsConfig } from './projects-config';
 
@@ -18,6 +11,10 @@ import type { projectsConfig } from './projects-config';
  */
 
 export class LocationsError extends ExpectedError {}
+
+export const CHOL_GLOBAL_DIR = 'CHOL_GLOBAL_DIR';
+export const CHOL_PROJECTS_DIR = 'CHOL_PROJECTS_DIR';
+export const CHOL_TICKET_RUNS = 'CHOL_TICKET_RUNS';
 
 export interface ProjectLocations {
   CHOL_GLOBAL_DIR: string;
@@ -46,31 +43,6 @@ export function projectLocations(config: ReturnType<typeof projectsConfig.read>)
     CHOL_PROJECTS_DIR: projectsDir,
     ...(ticketRuns === undefined || ticketRuns === '' ? {} : { CHOL_TICKET_RUNS: ticketRuns }),
   };
-}
-
-function pickLocations(config: Readonly<Record<string, string | undefined>>): ProjectLocations {
-  const globalDir = config[CHOL_GLOBAL_DIR]?.trim();
-  if (!globalDir) {
-    throw new LocationsError(
-      `${CHOL_GLOBAL_DIR} não definida: defina no .env da pasta de trabalho (a que depende de choliba) ou no ambiente.`,
-    );
-  }
-
-  const projectsDir = resolveProjectsDir(globalDir, config[CHOL_PROJECTS_DIR]);
-  const ticketRuns = config[CHOL_TICKET_RUNS]?.trim();
-  return {
-    CHOL_GLOBAL_DIR: globalDir,
-    CHOL_PROJECTS_DIR: projectsDir,
-    ...(ticketRuns ? { CHOL_TICKET_RUNS: ticketRuns } : {}),
-  };
-}
-
-export function resolveLocations(
-  repoRoot: string,
-  processConfig: Readonly<Record<string, string | undefined>> = process.env,
-  readFile?: (path: string) => string | undefined,
-): ProjectLocations {
-  return pickLocations(loadRepoConfig(repoRoot, processConfig, readFile));
 }
 
 /**

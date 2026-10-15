@@ -1,12 +1,12 @@
 import { agentsShell } from '@choliba/agents';
 import { defineConfig } from '@choliba/config';
 import {
-  CONFIG,
   coreShell,
   createShell,
   PLATFORM,
   parseColors,
   THEME_CHOICES,
+  WORKSPACE_ROOT,
   versionLine,
   type Platform,
   type Shell,
@@ -17,7 +17,7 @@ import { runnerShell } from '@choliba/runner';
 
 import { addCommand } from './add';
 import { checkCommand } from './check';
-import { listConfigCommand, setConfigCommand, workspaceConfigSources } from './config';
+import { findWorkspaceRoot, listConfigCommand, setConfigCommand, workspaceConfigSources } from './config';
 import { CHOLIBA_ORDER, CHOLIBA_ROOT, CHOLIBA_VERBS, cholibaManifest, PACKAGE_NAME } from './help';
 import { RUNTIME, type Runtime } from './runtime';
 import { setupCommand } from './setup';
@@ -48,8 +48,9 @@ export function cholibaShell(runtime: Runtime): ShellModule {
     },
     provide: (container) => {
       container.provide(RUNTIME, () => runtime);
+      container.provide(WORKSPACE_ROOT, (current) => findWorkspaceRoot(current.get(PLATFORM).cwd));
       container.provide(THEME_CHOICES, (current) => parseColors(current.get(cholibaConfig.token).colors));
-      container.provide(TOOLS, (c) => new ToolsService(c.get(RUNTIME), c.get(CONFIG), c.get(PLATFORM).which));
+      container.provide(TOOLS, (c) => new ToolsService(c.get(RUNTIME), c.get(WORKSPACE_ROOT), c.get(PLATFORM).which));
     },
     commands: [addCommand, checkCommand, listConfigCommand, setConfigCommand, lintCommand, formatCommand, setupCommand],
   };

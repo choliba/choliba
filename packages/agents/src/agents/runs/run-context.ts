@@ -10,7 +10,7 @@ import {
   type Writable,
   type WritableWithColumns,
 } from '@choliba/core';
-import { resolveLocations, type ProjectSettings, type RunningApp } from '@choliba/projects';
+import { projectLocations, type ProjectLocations, type ProjectSettings, type RunningApp } from '@choliba/projects';
 import type { Sandbox } from '@choliba/sandbox';
 
 import type { ParsedAgentsArgs } from './agents-flags';
@@ -59,7 +59,16 @@ export function errorMessage(error: unknown): string {
 }
 
 export function projectsDir(deps: RunAgentsCliDeps): string {
-  return resolveLocations(deps.repoRoot, deps.config, () => undefined).CHOL_PROJECTS_DIR;
+  return locationsOf(deps.config).CHOL_PROJECTS_DIR;
+}
+
+/** The projects group represented in the run's flat provider environment. */
+export function locationsOf(config: Readonly<Record<string, string | undefined>>): ProjectLocations {
+  return projectLocations({
+    globalDir: config['CHOL_GLOBAL_DIR'],
+    projectsDir: config['CHOL_PROJECTS_DIR'] ?? '',
+    ticketRuns: config['CHOL_TICKET_RUNS'],
+  });
 }
 
 export type RunArgs = Extract<ParsedAgentsArgs, { kind: 'run' }>;

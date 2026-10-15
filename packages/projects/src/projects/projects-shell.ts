@@ -1,4 +1,4 @@
-import { CONFIG, PLATFORM, type ShellModule } from '@choliba/core';
+import type { ShellModule } from '@choliba/core';
 
 import { projectsConfig } from '../paths';
 import { LocationsService } from '../locations';
@@ -12,7 +12,7 @@ export const projectsShell: ShellModule = {
   name: '@choliba/projects',
   config: [projectsConfig],
   provide: (container) => {
-    container.provide(LOCATIONS, (c) => new LocationsService(c.get(CONFIG), c.get(PLATFORM).env));
+    container.provide(LOCATIONS, (c) => new LocationsService(c.get(projectsConfig.token)));
     container.provide(PROJECTS, (c) => new ProjectsService(c.get(LOCATIONS)));
   },
   commands: [newProjectCommand, listProjectsCommand],

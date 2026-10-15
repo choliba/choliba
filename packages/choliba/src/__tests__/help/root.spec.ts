@@ -44,7 +44,10 @@ describe('choliba', () => {
     withWorkspace(
       async (root) => {
         const which = (bin: string): string | null => (bin === 'claude' ? '/usr/bin/true' : null);
-        const dry = await choliba(['run', 'agent', 'echo', '--dry-run', 'repita'], root, { which });
+        const dry = await choliba(['run', 'agent', 'echo', '--dry-run', 'repita'], root, {
+          which,
+          env: { HOME: '/tmp' },
+        });
         expect(dry.code).toBe(0);
         expect(dry.out).toContain('Sem --dry-run, faria nesta ordem:');
 

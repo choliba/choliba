@@ -1,24 +1,3 @@
-export { ConfigService } from './config.service';
-export {
-  CHOL_ROOT,
-  CHOL_GLOBAL_DIR,
-  CHOL_PROJECTS_DIR,
-  CHOL_AGENTS_DIR,
-  CHOL_AGENTS_PROVIDER,
-  CHOL_MCPS_DIR,
-  CHOL_SKILLS_DIR,
-  CHOL_TICKET_RUNS,
-  CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR,
-  CHOL_COLORS,
-  CHOL_SANDBOX,
-  CHOL_SANDBOX_IMAGE,
-  CHOL_NETWORK,
-  CHOL_OLLAMA_URL,
-} from './vars';
-export { loadConfigFile, loadRepoConfig, mergeConfig, parseConfigFile } from './repo-config';
-export { CONFIG_KEYS, configSettings, type ConfigKey, type ConfigOrigin, type ConfigSetting } from './config-keys';
-export { configValueError, findConfigKey, withEnvValue, writeConfigValue } from './env-file';
-export { findWorkspaceRoot, PACKAGE_NAME, WorkspaceNotFoundError } from './workspace';
 export { existingResourceStarts, findResource, locateResource, resourceStarts } from './resources';
 export {
   AGENT_FILE,
@@ -53,5 +32,4 @@ export {
   TICKETS_SUBDIR,
   TICKET_RUNS_SUBDIR,
 } from './layout';
-export type { RepoConfig } from './repo-config';
 export { findManifest, versionLine, type PackageManifest } from './package-version';

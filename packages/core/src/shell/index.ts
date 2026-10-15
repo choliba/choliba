@@ -4,4 +4,4 @@ export type { ShellCommand, ShellModule, ShellRoot, ShellVerb } from './interfac
 export { ShellIo, type ShellStreams } from './shell-io';
 export { coreShell } from './core-shell';
 export { TERMINAL_RUN_SPEC } from './terminal.command';
-export { CONFIG, THEME, THEME_CHOICES } from './shell.constants';
+export { THEME, THEME_CHOICES, WORKSPACE_ROOT } from './shell.constants';

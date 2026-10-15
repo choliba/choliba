@@ -2,22 +2,20 @@
 
 import { dirname, join } from 'node:path';
 
+import { RUNS_DIR } from '@choliba/core';
+import { agentURL, EXCEPTION_PREFIX, type Sandbox } from '@choliba/sandbox';
+
+import { invocationFromAgent, effectivePolicy } from '../invocation';
+import type { AgentDefinition } from '../../common';
 import {
   CHOL_AGENTS_DIR,
-  CHOL_AGENTS_PROVIDER,
   CHOL_GLOBAL_DIR,
   CHOL_MCPS_DIR,
   CHOL_PROJECTS_DIR,
   CHOL_ROOT,
   CHOL_SKILLS_DIR,
   CHOL_TICKET_RUNS,
-  RUNS_DIR,
-} from '@choliba/core';
-import { resolveLocations } from '@choliba/projects';
-import { agentURL, EXCEPTION_PREFIX, type Sandbox } from '@choliba/sandbox';
-
-import { invocationFromAgent, effectivePolicy } from '../invocation';
-import type { AgentDefinition } from '../../common';
+} from '../../common';
 import type { AgentInvocation, CommandPrepareInput } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
 import { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '../agent-dirs';
@@ -36,7 +34,9 @@ import {
   checkedExecuteDirs,
 } from './run-checks';
 import type { PreparedRun, RunAgentsCliDeps, RunArgs, RunContext, Stopped } from './run-context';
-import { STOPPED, errorMessage, toAbsolute } from './run-context';
+import { STOPPED, errorMessage, locationsOf, toAbsolute } from './run-context';
+
+const CHOL_AGENTS_PROVIDER = 'CHOL_AGENTS_PROVIDER';
 import { providerModel } from './provider-model';
 import { LOCATION_VARS, agentTexts, withExpandedVars } from '../../common';
 import { withDefinitionDenies, withProjectDenies } from '../../common';
@@ -89,9 +89,7 @@ function locationVars(
 ): Readonly<Record<string, string>> {
   // Resolved only when used: an agent naming none of them runs without CHOL_GLOBAL_DIR, and one that does
   // gets the clear "CHOL_GLOBAL_DIR não definida" instead of a missing variable.
-  const locations = agentTexts(agent).some((text) => LOCATION_VAR.test(text))
-    ? resolveLocations(deps.repoRoot, deps.config, () => undefined)
-    : undefined;
+  const locations = agentTexts(agent).some((text) => LOCATION_VAR.test(text)) ? locationsOf(deps.config) : undefined;
   return {
     [CHOL_ROOT]: deps.repoRoot,
     [CHOL_AGENTS_DIR]: resolveAgentsDir(undefined, deps.config, deps.repoRoot),
