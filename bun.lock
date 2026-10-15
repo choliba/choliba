@@ -32,6 +32,7 @@
       "name": "@choliba/agents",
       "version": "0.0.0",
       "dependencies": {
+        "@choliba/config": "workspace:*",
         "@choliba/core": "workspace:*",
         "@choliba/projects": "workspace:*",
         "@choliba/sandbox": "workspace:*",
