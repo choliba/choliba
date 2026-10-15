@@ -1,11 +1,24 @@
 export {
   applyLocations,
+  CHOL_GLOBAL_DIR,
+  CHOL_PROJECTS_DIR,
+  CHOL_TICKET_RUNS,
+  projectLocations,
   readAppliedLocations,
   LocationsError,
-  resolveLocations,
   resolveProjectsDir,
   type ProjectLocations,
 } from './locations';
+export {
+  PROJECTS_SUBDIR,
+  PROJECT_CONFIG_FILE,
+  PROJECT_ENV_EXAMPLE_FILE,
+  PROJECT_ENV_FILE,
+  TESTS_SUBDIR,
+  TICKETS_SUBDIR,
+  TICKET_RUNS_SUBDIR,
+} from './project-layout';
+export { projectsConfig } from './projects-config';
 export {
   REPORT_FOLDER,
   TEST_RESULTS_FOLDER,

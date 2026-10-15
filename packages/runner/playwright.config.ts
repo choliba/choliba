@@ -1,12 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { applyLocations, resolveLocations } from '@choliba/projects';
+import { applyLocations } from '@choliba/projects';
 import * as projects from '@choliba/projects';
 import { defineConfig, devices, type PlaywrightTestConfig } from '@playwright/test';
 
 import type { PlaywrightProjectConfig } from './shared/env';
 import { getTargetProject } from './shared/project-scope';
+import { workspaceLocations } from './shared/workspace-config';
 
 const packageRoot = import.meta.dirname;
 // The workspace comes from the runner CLI (`CHOLIBA_WORKSPACE`); run by hand inside this repository,
@@ -14,7 +15,7 @@ const packageRoot = import.meta.dirname;
 const monorepoRoot = process.env['CHOLIBA_WORKSPACE'] ?? path.join(packageRoot, '..', '..');
 const EXT = import.meta.url.endsWith('.ts') ? '.ts' : '.js';
 
-const playwrightEnv = resolveLocations(monorepoRoot, process.env);
+const playwrightEnv = workspaceLocations(monorepoRoot, process.env);
 applyLocations(playwrightEnv);
 
 const projectsDir = playwrightEnv.CHOL_PROJECTS_DIR;

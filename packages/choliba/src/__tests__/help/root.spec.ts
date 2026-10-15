@@ -44,7 +44,10 @@ describe('choliba', () => {
     withWorkspace(
       async (root) => {
         const which = (bin: string): string | null => (bin === 'claude' ? '/usr/bin/true' : null);
-        const dry = await choliba(['run', 'agent', 'echo', '--dry-run', 'repita'], root, { which });
+        const dry = await choliba(['run', 'agent', 'echo', '--dry-run', 'repita'], root, {
+          which,
+          env: { HOME: '/tmp' },
+        });
         expect(dry.code).toBe(0);
         expect(dry.out).toContain('Sem --dry-run, faria nesta ordem:');
 
@@ -87,7 +90,7 @@ describe('choliba __complete', () => {
         expect(await complete('run', 'agent', 'echo', '--provider', '')).toBe('auto\nclaude\nclaude-ollama\ncursor\n');
         expect(await complete('run', 'tests', '--ex')).toBe('--expect\n');
         expect(await complete('new', '')).toBe('project\n');
-        expect(await complete('list', '')).toBe('config\nagents\nprojects\n');
+        expect(await complete('list', '')).toBe('agents\nprojects\nconfig\n');
       },
       { '.env': ENV },
     ));

@@ -1,7 +1,7 @@
 import { chmodSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR } from '@choliba/core';
+export const CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR = 'CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR';
 import { denyExceptions, isException } from '@choliba/sandbox';
 
 import type { PermissionPolicy } from '../interfaces/execution.interface';

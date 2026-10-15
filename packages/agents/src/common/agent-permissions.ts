@@ -26,7 +26,7 @@ export interface ToolRule {
 /**
  * What an agent's `agent.yaml#permissions` declares, read so the providers can enforce it instead of
  * only asking the model to follow it. Paths are as written (absolute, relative to the workspace root
- * or with `${VAR}` until `vars.ts` expands them). Anything not allowed is denied.
+ * or with `${VAR}` until `agent-vars.ts` expands them). Anything not allowed is denied.
  */
 export interface AgentPermissions {
   readonly allowRead: readonly string[];

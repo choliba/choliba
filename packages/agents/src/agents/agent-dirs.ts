@@ -1,13 +1,8 @@
 import { isAbsolute, join } from 'node:path';
 
-import {
-  CHOL_AGENTS_DIR,
-  CHOL_MCPS_DIR,
-  CHOL_SKILLS_DIR,
-  DEFAULT_AGENTS_DIR,
-  DEFAULT_MCPS_DIR,
-  DEFAULT_SKILLS_DIR,
-} from '@choliba/core';
+import { DEFAULT_AGENTS_DIR, DEFAULT_MCPS_DIR, DEFAULT_SKILLS_DIR } from './agent-layout';
+
+import { CHOL_AGENTS_DIR, CHOL_MCPS_DIR, CHOL_SKILLS_DIR } from '../common';
 
 type Config = Readonly<Record<string, string | undefined>>;
 

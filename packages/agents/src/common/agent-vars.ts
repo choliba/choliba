@@ -1,15 +1,13 @@
 import type { AgentDefinition, AgentModeSteps, AgentSections, AgentStep } from './interfaces/agent.interface';
 import type { ExecutionMode } from './interfaces/execution.interface';
 import { mapPermissions } from './agent-permissions';
-import {
-  CHOL_AGENTS_DIR,
-  CHOL_GLOBAL_DIR,
-  CHOL_MCPS_DIR,
-  CHOL_ROOT,
-  CHOL_SKILLS_DIR,
-  CHOL_PROJECTS_DIR,
-  CHOL_TICKET_RUNS,
-} from '@choliba/core';
+export const CHOL_ROOT = 'CHOL_ROOT';
+export const CHOL_AGENTS_DIR = 'CHOL_AGENTS_DIR';
+export const CHOL_SKILLS_DIR = 'CHOL_SKILLS_DIR';
+export const CHOL_MCPS_DIR = 'CHOL_MCPS_DIR';
+export const CHOL_GLOBAL_DIR = 'CHOL_GLOBAL_DIR';
+export const CHOL_PROJECTS_DIR = 'CHOL_PROJECTS_DIR';
+export const CHOL_TICKET_RUNS = 'CHOL_TICKET_RUNS';
 
 const VAR_PATTERN = /\$\{([A-Z_][A-Z0-9_]*)\}/g;
 /** Same pattern without `g`: `test` on a global regex keeps `lastIndex` between calls. */

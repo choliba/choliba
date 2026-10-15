@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { closeSync, mkdirSync, openSync, readFileSync, rmSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
-import { CACHE_DIR } from '@choliba/core';
+import { CACHE_DIR } from '../agent-layout';
 
 import type { AgentStep } from '../../common';
 import { ADD_FILES_USAGE, addFiles } from './step-add-files';

@@ -1,10 +1,10 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { coreShell, FILES_MARKER } from '@choliba/core';
-import { fakePlatform, runShell } from '@choliba/core/testing';
+import { FILES_MARKER } from '@choliba/core';
+import { fakePlatform } from '@choliba/core/testing';
 
-import { cholibaShell } from '../../app-shell';
+import { createCholibaShell } from '../../app-shell';
 import { fakeRuntime, withFolder, withWorkspace, type FakeRuntime } from '../helpers/runtime';
 
 /** An agent with no skills or MCPs, as the source to install. */
@@ -17,7 +17,7 @@ async function add(
   argv: readonly string[] = ['add', ...args],
 ): Promise<{ code: number; out: string; err: string }> {
   const platform = fakePlatform({ argv, cwd });
-  const code = await runShell([coreShell, cholibaShell(runtime)], platform);
+  const code = await createCholibaShell(platform, runtime).run();
   return { code, out: platform.stdout.text(), err: platform.stderr.text() };
 }
 

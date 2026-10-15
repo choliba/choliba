@@ -32,7 +32,8 @@ for manifest in packages/*/package.json apps/*/package.json; do
   dir="$(dirname "$manifest")"
   grep -q '"typecheck"' "$manifest" && pass "$dir has a typecheck script" || miss "$dir has no typecheck script (typecheck silently skips it)"
   grep -q 'tsconfig.base.json' "$dir/tsconfig.json" 2>/dev/null && pass "$dir/tsconfig.json extends tsconfig.base.json" || miss "$dir/tsconfig.json missing or does not extend tsconfig.base.json"
-  ls "$dir"/src/__tests__/*.spec.ts >/dev/null 2>&1 && pass "$dir has at least one spec in src/__tests__/" || miss "$dir has no *.spec.ts in src/__tests__/"
+  find "$dir/src/__tests__" -type f -name '*.spec.ts' -print -quit 2>/dev/null | grep -q . &&
+    pass "$dir has at least one spec in src/__tests__/" || miss "$dir has no *.spec.ts in src/__tests__/"
   # Jest only discovers src/__tests__/**/*.spec.ts, so a spec anywhere else silently never runs.
   stray="$(find "$dir/src" -name '*.spec.ts' -not -path '*/__tests__/*' 2>/dev/null)"
   [[ -z "$stray" ]] && pass "$dir has no spec outside src/__tests__/" || miss "spec(s) outside src/__tests__/ never run: $stray"

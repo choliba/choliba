@@ -38,6 +38,11 @@ export class Container {
     this.instances.set(key, value);
   }
 
+  /** Whether `key` has a factory or a value put in place by `override`. */
+  has<T>(key: Token<T>): boolean {
+    return this.factories.has(key) || this.instances.has(key);
+  }
+
   /** What `key` gives, built on the first call. */
   get<T>(key: Token<T>): T {
     if (this.instances.has(key)) {

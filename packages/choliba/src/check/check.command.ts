@@ -1,12 +1,14 @@
 import {
-  CONFIG,
   messageOf,
   type CommandEntry,
   type CommandSpec,
   type Container,
   type ShellCommand,
   type ShellIo,
+  WORKSPACE_ROOT,
 } from '@choliba/core';
+import { agentsConfig } from '@choliba/agents';
+import { projectsConfig } from '@choliba/projects';
 import { PROJECTS, projectCompletions } from '@choliba/projects';
 
 import { allFine, checkWorkspace, formatCheck } from './check';
@@ -70,9 +72,17 @@ export const checkCommand: ShellCommand = {
       checkProject(container, io, project);
       return Promise.resolve();
     }
-    const config = container.get(CONFIG);
-    const root = config.workspaceRoot();
-    const sections = checkWorkspace(root, config.load(root));
+    const root = container.get(WORKSPACE_ROOT);
+    const agents = container.get(agentsConfig.token);
+    const projects = container.get(projectsConfig.token);
+    const sections = checkWorkspace(root, {
+      CHOL_AGENTS_DIR: agents.agentsDir,
+      CHOL_SKILLS_DIR: agents.skillsDir,
+      CHOL_MCPS_DIR: agents.mcpsDir,
+      CHOL_GLOBAL_DIR: projects.globalDir,
+      CHOL_PROJECTS_DIR: projects.projectsDir,
+      CHOL_TICKET_RUNS: projects.ticketRuns,
+    });
     io.write(`${formatCheck(sections)}\n`);
     io.exit(allFine(sections) ? 0 : 1);
     return Promise.resolve();

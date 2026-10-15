@@ -12,12 +12,13 @@ type Layer = (typeof LAYERS)[number];
 
 /** The folders of `src/` of each package that follows the standard, by layer (`common` is always `common/`). */
 const STRUCTURE: Readonly<Record<string, Partial<Record<Exclude<Layer, 'common'>, readonly string[]>>>> = {
+  config: { domain: ['formats', 'sources', 'groups'] },
   core: { module: ['platform', 'config', 'help', 'cli', 'theme', 'runtime', 'shell', 'terminal', 'testing'] },
   projects: { domain: ['paths'], module: ['locations', 'tickets', 'projects'] },
   runner: { module: ['tests'] },
   sandbox: { domain: ['sandbox'] },
   agents: { module: ['agents', 'providers'] },
-  choliba: { domain: ['help', 'runtime'], module: ['check', 'setup', 'tooling'] },
+  choliba: { domain: ['help', 'runtime'], module: ['check', 'config', 'setup', 'tooling'] },
 };
 
 /** File-name suffixes still in use: a service, a provider, a dto, a command and injection-token constants. */

@@ -17,4 +17,5 @@ export { containerName, DockerSandbox } from './docker/docker-sandbox';
 export { bwrapOnPath } from './local/bwrap-on-path';
 export { resolverFolder } from './local/resolver-folder';
 export { LocalSandbox, SandboxEnforcementError } from './local/local-sandbox';
+export { sandboxConfig } from './sandbox-config';
 export * from './sandbox';

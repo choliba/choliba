@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { envSource, fileSource } from '@choliba/config';
 import { complete, coreShell, createShell, describe as describeWords, formatSuggestions } from '@choliba/core';
 import { fakePlatform, replace, runShell, type FakePlatform, VERBS_ROOT } from '@choliba/core/testing';
 
@@ -128,7 +129,14 @@ describe('runnerShell', () => {
 
 describe('TestsService.helpSpec — completion and description', () => {
   function specIn(cwd: string): ReturnType<TestsService['helpSpec']> {
-    return createShell(fakePlatform({ cwd }), [coreShell, runnerShell, VERBS_ROOT]).container.get(TESTS).helpSpec();
+    const platform = fakePlatform({ cwd });
+    return createShell(
+      platform,
+      [coreShell, runnerShell, VERBS_ROOT],
+      [envSource(platform.env), fileSource(path.join(cwd, '.env'))],
+    )
+      .container.get(TESTS)
+      .helpSpec();
   }
 
   it('completes its flags, the projects, their tickets and the values of --expect', () =>

@@ -10,8 +10,9 @@ import {
   resolveSkills,
   resolveSkillsDir,
 } from '@choliba/agents';
-import { listProjectNames, loadProjectSettings, resolveLocations, retiredCriteria } from '@choliba/projects';
-import { ENV_FILE } from '@choliba/core';
+import { listProjectNames, loadProjectSettings, projectLocations, retiredCriteria } from '@choliba/projects';
+
+import { ENV_FILE } from '../config';
 
 type Config = Readonly<Record<string, string | undefined>>;
 
@@ -60,10 +61,14 @@ export function checkAgents(root: string, config: Config): CheckSection {
 }
 
 /** Every project, checked as a run checks it: its files, the active environment, no `CHANGE_ME` left. */
-export function checkProjects(root: string, config: Config): CheckSection {
+export function checkProjects(_root: string, config: Config): CheckSection {
   let projectsDir: string;
   try {
-    projectsDir = resolveLocations(root, config, () => undefined).CHOL_PROJECTS_DIR;
+    projectsDir = projectLocations({
+      globalDir: config['CHOL_GLOBAL_DIR'],
+      projectsDir: config['CHOL_PROJECTS_DIR'] ?? '',
+      ticketRuns: config['CHOL_TICKET_RUNS'],
+    }).CHOL_PROJECTS_DIR;
   } catch (error) {
     return { title: 'Projetos', items: [{ name: ENV_FILE, problem: problemOf(error) }] };
   }

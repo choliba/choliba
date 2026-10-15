@@ -3,7 +3,8 @@ import { join } from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
-import { isAnsiColor, AGENT_FILE, ExpectedError } from '@choliba/core';
+import { isAnsiColor, ExpectedError } from '@choliba/core';
+import { AGENT_FILE } from './agent-layout';
 
 import type {
   AgentAfterSteps,

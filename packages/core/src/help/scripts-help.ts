@@ -2,7 +2,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 
 import type { CommandEntry, CommandSpec } from './interfaces/help.interface';
-import { PACKAGE_FILE } from '../config';
+
+const PACKAGE_FILE = 'package.json';
 
 export interface PackageScripts {
   readonly scripts: Readonly<Record<string, string>>;
