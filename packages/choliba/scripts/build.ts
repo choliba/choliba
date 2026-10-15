@@ -27,7 +27,7 @@ const packageDir = join(import.meta.dir, '..');
 const packagesDir = join(packageDir, '..');
 const repoRoot = join(packagesDir, '..');
 const entriesDir = join(packageDir, 'scripts', 'entries');
-const BUNDLED = ['agents', 'core', 'projects', 'runner', 'sandbox'];
+const BUNDLED = ['agents', 'config', 'core', 'projects', 'runner', 'sandbox'];
 
 /** Set from the loaded file before its imports, so a lookup during import sees this package, not the build machine. */
 const SHIPPED_DIR = 'globalThis.__CHOLIBA_SHIPPED_DIR__ = decodeURIComponent(new URL(".", import.meta.url).pathname);';
@@ -35,6 +35,7 @@ const SHIPPED_DIR = 'globalThis.__CHOLIBA_SHIPPED_DIR__ = decodeURIComponent(new
 const ENTRY_FILES = [
   'bin/choliba.ts',
   'index.ts',
+  'config.ts',
   'core.ts',
   'core/testing.ts',
   'agents.ts',
@@ -52,6 +53,13 @@ const ENTRY_FILES = [
 
 const SHIPPED: readonly ShippedExport[] = [
   { subpath: '.', js: './index.js', types: 'index.d.ts', declaration: 'types/choliba/src/index.d.ts', kind: 'star' },
+  {
+    subpath: './config',
+    js: './config.js',
+    types: 'config.d.ts',
+    declaration: 'types/config/src/index.d.ts',
+    kind: 'star',
+  },
   { subpath: './core', js: './core.js', types: 'core.d.ts', declaration: 'types/core/src/index.d.ts', kind: 'star' },
   {
     subpath: './core/testing',
@@ -116,6 +124,7 @@ const SPECIFIERS: readonly (readonly [string, string])[] = [
   ['@choliba/core/testing', 'choliba/core/testing'],
   ['@choliba/runner/shared/pages/base-page', 'choliba/runner/pages/base-page'],
   ['@choliba/runner/shared/env', 'choliba/runner/env'],
+  ['@choliba/config', 'choliba/config'],
   ['@choliba/core', 'choliba/core'],
   ['@choliba/agents', 'choliba/agents'],
   ['@choliba/projects', 'choliba/projects'],
@@ -204,6 +213,7 @@ function emitPackage(name: string, outDir: string, include: readonly string[]): 
 }
 
 function emitDeclarations(outDir: string): void {
+  emitPackage('config', outDir, ['src']);
   emitPackage('core', outDir, ['src']);
   emitPackage('agents', outDir, ['src']);
   emitPackage('projects', outDir, ['src']);
