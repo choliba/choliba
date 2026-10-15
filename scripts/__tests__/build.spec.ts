@@ -136,6 +136,9 @@ function assertExports(out: string): void {
   expect(Object.keys(core)).toEqual(['types', 'import']);
   expect(manifest.exports['./package.json']).toBe('./package.json');
   expect(readFileSync(join(out, 'agents.js'), 'utf8')).toContain('__CHOLIBA_SHIPPED_DIR__');
+  expect(readFileSync(join(out, 'core', 'README.md'), 'utf8')).toBe(
+    readFileSync(join(repo, 'packages', 'core', 'README.md'), 'utf8'),
+  );
 }
 
 describe('the installable package', () => {
