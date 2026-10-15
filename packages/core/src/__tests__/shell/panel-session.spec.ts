@@ -54,7 +54,7 @@ describe('panelSession', () => {
     await settle();
 
     expect(ran).toEqual(['tickets', 'projects', 'projects']);
-    expect(fake.said).toEqual(['/tickets', '/p', '/']);
+    expect(fake.said).toEqual(['/tickets', '/projects', '/projects']);
     expect(fake.choices).toEqual([]);
   });
 
@@ -117,10 +117,7 @@ describe('panelSession', () => {
     fake.type('/projects loja');
 
     expect(fake.suggested).toEqual([
-      [
-        '\u001b[1m❯ /projects\u001b[22m  \u001b[90mEscolhe o projeto\u001b[39m',
-        '  /pull      \u001b[90mPuxa\u001b[39m',
-      ],
+      ['\u001b[1m❯ /projects\u001b[22m  Escolhe o projeto', '  /pull      \u001b[90mPuxa\u001b[39m'],
       [],
       [],
     ]);
@@ -129,7 +126,7 @@ describe('panelSession', () => {
   it('keeps the values the commands set, and shows their cards in the header in the order first shown', async () => {
     const fake = fakeChatPanel();
     let set: PanelCommandContext['context'] | undefined;
-    panelSession(new Container(), fake.panel, [
+    const session = panelSession(new Container(), fake.panel, [
       {
         name: 'ctx',
         description: 'Contexto',
@@ -146,9 +143,10 @@ describe('panelSession', () => {
     set?.set('projeto', undefined);
     expect(set?.get('projeto')).toBeUndefined();
 
-    set?.show('projeto', ['loja']);
-    set?.show('ticket', ['loja-1']);
-    set?.show('projeto', ['site'], 'site · 2');
+    set?.show('projeto', { lines: ['loja'] });
+    set?.show('ticket', { lines: ['loja-1'] });
+    set?.show('projeto', { lines: ['site'], summary: 'site · 2', key: 'p' });
+    expect(session.shortcuts()).toEqual(['Ctrl+P projeto']);
     set?.show('ticket', undefined);
 
     expect(fake.cards).toEqual([
@@ -158,10 +156,10 @@ describe('panelSession', () => {
         { title: 'ticket', lines: ['loja-1'] },
       ],
       [
-        { title: 'projeto', lines: ['site'], summary: 'site · 2' },
+        { title: 'projeto', lines: ['site'], summary: 'site · 2', key: 'p' },
         { title: 'ticket', lines: ['loja-1'] },
       ],
-      [{ title: 'projeto', lines: ['site'], summary: 'site · 2' }],
+      [{ title: 'projeto', lines: ['site'], summary: 'site · 2', key: 'p' }],
     ]);
     expect(fake.headings).toEqual([]);
   });
@@ -195,7 +193,7 @@ describe('panelSession', () => {
     fake.type('/t');
     expect(fake.suggested.at(-1)).toEqual([
       '\u001b[90m  /tickets  Escolha um projeto antes\u001b[39m',
-      '\u001b[1m❯ /tests  \u001b[22m  \u001b[90mRoda os testes\u001b[39m',
+      '\u001b[1m❯ /tests  \u001b[22m  Roda os testes',
     ]);
     fake.press('down');
     fake.press('up');

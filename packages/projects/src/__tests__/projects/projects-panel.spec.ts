@@ -29,11 +29,13 @@ function withProjects(projects: Readonly<Record<string, Readonly<Record<string, 
       if (value === undefined) values.delete(key);
       else values.set(key, value);
     },
-    show: (title, lines, summary) => {
-      shown.push([title, lines, summary]);
+    show: (title, card) => {
+      shown.push([title, card?.lines, card?.summary]);
+      keys.push(card?.key);
     },
   };
   const shown: [string, readonly string[] | undefined, string | undefined][] = [];
+  const keys: (string | undefined)[] = [];
   const fake = fakeChatPanel();
   const [projectsCommand, ticketsCommand] = projectsPanel;
   if (projectsCommand === undefined || ticketsCommand === undefined) throw new Error('commands');
@@ -41,6 +43,7 @@ function withProjects(projects: Readonly<Record<string, Readonly<Record<string, 
     fake,
     values,
     shown,
+    keys,
     container,
     projects: () => projectsCommand.run({ container, panel: fake.panel, context }),
     tickets: () => ticketsCommand.run({ container, panel: fake.panel, context }),

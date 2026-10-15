@@ -1,4 +1,4 @@
-import type { PanelBox, PanelText, PanelToolkit } from './interfaces/panel.interface';
+import type { PanelBox, PanelScroll, PanelText, PanelToolkit } from './interfaces/panel.interface';
 import { halfBlockArt, type ArtCell, type ArtPixels } from './panel-art';
 import { PALETTE } from './panel-palette';
 import { wrappedRows } from './panel-text';
@@ -134,31 +134,40 @@ export interface Header<Node> {
   heading(lines: readonly string[]): void;
   /** Shows these cards on the right of the lines, in their order; a card no longer given is hidden. */
   cards(cards: readonly PanelCard[]): void;
-  /** Collapses the cards to their summary, or opens them again; open at first. */
-  toggleCards(): void;
+  /** Opens or collapses the card whose key is `key` (Ctrl+`key`): `true` when a card has it. Open at first. */
+  toggleKey(key: string): boolean;
 }
 
 /** A card of the header: a box titled `title`, with `lines` in it, a long one wrapped between words and `---` a rule. */
 export interface PanelCard {
   readonly title: string;
   readonly lines: readonly string[];
-  /** The one line it shows while the cards are collapsed; its first line when absent. */
+  /** The one line it shows while collapsed; its first line when absent. */
   readonly summary?: string;
+  /** The letter that, with Ctrl, opens or collapses it (`p` for Ctrl+P). */
+  readonly key?: string;
 }
 
 /** A card's width, in columns, its border included. */
 const CARD_WIDTH = 44;
 
-/** The columns a card's text has: its width less the borders and the margins inside them. */
-const CARD_TEXT_WIDTH = CARD_WIDTH - 4;
+/** The columns a card's text has: its width less the borders, the margins inside them and the scroll bar. */
+const CARD_TEXT_WIDTH = CARD_WIDTH - 5;
 
 /** A card line that is a rule across the card, in gray: what separates its parts. */
 export const CARD_RULE = '---';
 
 const RULE = `\u001b[90m${'─'.repeat(CARD_TEXT_WIDTH)}\u001b[39m`;
 
-/** How many lines a card shows. */
+/** How many lines a card holds. */
 const CARD_LINES = 6;
+
+/**
+ * Every open card's rows, its border included: all cards stand as tall, and what does not fit scrolls inside one. A
+ * collapsed card is its border and one row.
+ */
+const CARD_HEIGHT = 10;
+const COLLAPSED_HEIGHT = 3;
 
 /** The header row: the icon, then the lines beside it, with a blank row under both. */
 export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk[] }, Chunk>(
@@ -195,14 +204,17 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
   };
   heading(header.lines);
   // A card is made the first time its title shows, then only filled or hidden: the header keeps its order.
-  const made = new Map<string, { readonly box: Node & PanelBox<Node>; readonly rows: PanelText<Styled>[] }>();
-  const cardOf = (title: string): { readonly box: Node & PanelBox<Node>; readonly rows: PanelText<Styled>[] } => {
+  const made = new Map<string, { readonly box: Node & PanelScroll<Node>; readonly rows: PanelText<Styled>[] }>();
+  const cardOf = (title: string): { readonly box: Node & PanelScroll<Node>; readonly rows: PanelText<Styled>[] } => {
     const known = made.get(title);
     if (known !== undefined) return known;
-    const card = new kit.BoxRenderable(renderer, {
-      flexDirection: 'column',
+    const card = new kit.ScrollBoxRenderable(renderer, {
+      flexGrow: 0,
       border: true,
       title: ` ${title} `,
+      titleColor: PALETTE.white,
+      stickyScroll: false,
+      scrollX: false,
       width: CARD_WIDTH,
       paddingLeft: 1,
       paddingRight: 1,
@@ -213,40 +225,43 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
       card.add(row);
       return row;
     });
-    // A click on a card opens or collapses the cards, as Ctrl+P does.
+    // A click on a card opens or collapses that card alone.
     card.onMouseDown = () => {
-      toggleCards();
+      toggleCard(title);
     };
     box.add(card);
     made.set(title, { box: card, rows });
     return { box: card, rows };
   };
-  let collapsed = false;
+  const collapsed = new Set<string>();
   let current: readonly PanelCard[] = [];
   const cards = (shown: readonly PanelCard[]): void => {
     current = shown;
     for (const [title, card] of made) card.box.visible = shown.some((each) => each.title === title);
     for (const each of shown) {
       const card = cardOf(each.title);
-      const lines = collapsed ? [each.summary ?? each.lines[0] ?? ''] : each.lines.slice(0, CARD_LINES);
+      const folded = collapsed.has(each.title);
+      const lines = folded ? [each.summary ?? each.lines[0] ?? ''] : each.lines.slice(0, CARD_LINES);
       card.box.visible = true;
-      card.box.title = ` ${collapsed ? '▸' : '▾'} ${each.title} `;
+      card.box.title = ` ${folded ? '▸' : '▾'} ${each.title} `;
       // A long line wraps between words in the card's width, its row as tall as the lines it takes.
-      let height = 0;
       card.rows.forEach((row, index) => {
         const line = lines[index];
         row.visible = line !== undefined;
         row.content = line === undefined ? '' : styled([line === CARD_RULE ? RULE : line]);
-        const rows = line === undefined ? 1 : wrappedRows(line, CARD_TEXT_WIDTH);
-        row.height = rows;
-        if (line !== undefined) height += rows;
+        row.height = line === undefined ? 1 : wrappedRows(line, CARD_TEXT_WIDTH);
       });
-      card.box.height = height + 2;
+      card.box.height = folded ? COLLAPSED_HEIGHT : CARD_HEIGHT;
     }
   };
-  const toggleCards = (): void => {
-    collapsed = !collapsed;
+  const toggleCard = (title: string): void => {
+    if (!collapsed.delete(title)) collapsed.add(title);
     cards(current);
   };
-  return { box, heading, cards, toggleCards };
+  const toggleKey = (key: string): boolean => {
+    const card = current.find((each) => each.key === key);
+    if (card !== undefined) toggleCard(card.title);
+    return card !== undefined;
+  };
+  return { box, heading, cards, toggleKey };
 }

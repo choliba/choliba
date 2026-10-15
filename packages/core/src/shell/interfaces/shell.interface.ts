@@ -1,7 +1,7 @@
 import type { ConfigGroup } from '@choliba/config';
 
 import type { CommandEntry, CommandExample, RootSpec } from '../../help';
-import type { ChatPanel } from '../../terminal';
+import type { ChatPanel, PanelCard } from '../../terminal';
 import type { Container } from '../container';
 import type { ShellIo } from '../shell-io';
 
@@ -86,10 +86,10 @@ export interface PanelContext {
   /** Sets `key`, or removes it when `value` is undefined. */
   set(key: string, value: string | undefined): void;
   /**
-   * Shows a card titled `title` in the header with `lines` (escape codes kept), and `summary` while the cards are
-   * collapsed (Ctrl+P); hides it when `lines` is undefined.
+   * Shows a card titled `title` in the header: its lines (escape codes kept), the summary it shows collapsed, and the
+   * letter that opens or collapses it with Ctrl. Undefined hides it.
    */
-  show(title: string, lines: readonly string[] | undefined, summary?: string): void;
+  show(title: string, card: Omit<PanelCard, 'title'> | undefined): void;
 }
 
 /** A command of the panel: the word after `/`, what it does in a line, and running it. */

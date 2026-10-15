@@ -80,7 +80,7 @@ const projectsPanelCommand: PanelCommand = {
     context.set(TICKET, undefined);
     context.set(DESCRIPTION, project.description);
     const card = projectCard(container.get(PROJECTS), project.name, project.description);
-    context.show(CARD, card.lines, card.summary);
+    context.show(CARD, { ...card, key: 'p' });
     panel.write(`Projeto ativo: \u001b[1m${project.name}\u001b[22m.`);
   },
 };
@@ -118,7 +118,7 @@ const ticketsPanelCommand: PanelCommand = {
     if (ticket === undefined) return;
     context.set(TICKET, ticket.id);
     const card = projectCard(container.get(PROJECTS), project, context.get(DESCRIPTION) ?? '', ticket.id);
-    context.show(CARD, card.lines, card.summary);
+    context.show(CARD, { ...card, key: 'p' });
     panel.write(ticketSummary(ticket).join('\n'));
   },
 };

@@ -96,8 +96,8 @@ export interface ChatPanel extends Panel {
   /** Replaces the lines of the header beside its icon; a panel with no header ignores it. */
   heading(lines: readonly string[]): void;
   /**
-   * Shows these cards in the header, on the right of its lines; Ctrl+P collapses them to their summary and opens them
-   * again. A panel with no header ignores it.
+   * Shows these cards in the header, on the right of its lines; Ctrl and a card's key, or a click on it, collapses it to
+   * its summary and opens it again. A panel with no header ignores it.
    */
   cards(cards: readonly PanelCard[]): void;
 }
@@ -294,11 +294,8 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
       return;
     }
     if (picker.key(key)) return;
-    // Ctrl+P collapses the header's cards to a line, or opens them again.
-    if (key.ctrl && key.name === 'p') {
-      top?.toggleCards();
-      return;
-    }
+    // Ctrl and a card's key open or collapse that card.
+    if (key.ctrl && top?.toggleKey(key.name) === true) return;
     if (keyListeners.some((listener) => listener(key))) return;
     if (desk.key(key)) return;
     const action = keyAction(key);

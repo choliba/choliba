@@ -555,7 +555,7 @@ describe('openPanel', () => {
     expect(clicked).toEqual([1]);
   });
 
-  it('shows cards on the right of the header lines, each made once and then filled or hidden', async () => {
+  it('shows cards on the right of the header lines, all as tall and scrolling inside, each made once', async () => {
     const { kit, renderer } = fakeToolkit();
     const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });
     const header = renderer.root.children[0]?.children[0];
@@ -565,22 +565,26 @@ describe('openPanel', () => {
       { title: 'ticket', lines: ['site-1'] },
     ]);
     const [, projeto, ticket] = header?.children ?? [];
+    expect(projeto?.kind).toBe('scroll');
     expect(projeto?.built).toMatchObject({
-      flexDirection: 'column',
+      flexGrow: 0,
       border: true,
       title: ' projeto ',
+      titleColor: '#e5e5e5',
+      stickyScroll: false,
+      scrollX: false,
       width: 44,
       paddingLeft: 1,
       paddingRight: 1,
       flexShrink: 0,
     });
-    expect([projeto?.title, projeto?.height, ticket?.height]).toEqual([' ▾ projeto ', 8, 3]);
+    expect([projeto?.title, projeto?.height, ticket?.height]).toEqual([' ▾ projeto ', 10, 10]);
     expect(projeto?.children.map((row) => row.content)).toEqual([
       { chunks: [{ text: 'site' }] },
       { chunks: [] },
       { chunks: [{ text: 'Loja' }] },
       { chunks: [{ text: 'local' }] },
-      { chunks: [{ text: '─'.repeat(40), fg: '#666666' }] },
+      { chunks: [{ text: '─'.repeat(39), fg: '#666666' }] },
       { chunks: [{ text: '2 tickets' }] },
     ]);
     expect(projeto?.children[0]?.built).toMatchObject({ wrapMode: 'word', height: 1 });
@@ -595,7 +599,7 @@ describe('openPanel', () => {
     bare.cards([{ title: 'projeto', lines: ['x'] }]);
   });
 
-  it('wraps a long card line between words, its row and the card as tall as it takes', async () => {
+  it('wraps a long card line between words, its row as tall as it takes', async () => {
     const { kit, renderer } = fakeToolkit();
     const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });
     panel.cards([
@@ -610,29 +614,37 @@ describe('openPanel', () => {
     const projeto = renderer.root.children[0]?.children[0]?.children[1];
 
     expect(projeto?.children.slice(0, 2).map((row) => row.height)).toEqual([1, 2]);
-    expect(projeto?.height).toBe(5);
+    expect(projeto?.height).toBe(10);
   });
 
-  it('collapses the cards to their summary with Ctrl+P or a click, and opens them again', async () => {
+  it('collapses a card to its summary with Ctrl and its key or a click on it, and opens it again', async () => {
     const { kit, renderer, press } = fakeToolkit();
     const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });
     panel.cards([
-      { title: 'projeto', lines: ['site', '', 'Loja'], summary: 'site · 2' },
-      { title: 'ticket', lines: ['site-1', 'x'] },
+      { title: 'projeto', lines: ['site', '', 'Loja'], summary: 'site · 2', key: 'p' },
+      { title: 'agente', lines: ['echo', 'x'], key: 'a' },
     ]);
-    const [, projeto, ticket] = renderer.root.children[0]?.children[0]?.children ?? [];
+    const [, projeto, agente] = renderer.root.children[0]?.children[0]?.children ?? [];
 
     press({ name: 'p', ctrl: true });
-    expect([projeto?.title, projeto?.height, ticket?.height]).toEqual([' ▸ projeto ', 3, 3]);
+    expect([projeto?.title, projeto?.height, agente?.title, agente?.height]).toEqual([
+      ' ▸ projeto ',
+      3,
+      ' ▾ agente ',
+      10,
+    ]);
     expect(projeto?.children[0]?.content).toEqual({ chunks: [{ text: 'site · 2' }] });
-    expect(ticket?.children[0]?.content).toEqual({ chunks: [{ text: 'site-1' }] });
-    panel.cards([{ title: 'vazio', lines: [] }]);
+    press({ name: 'a', ctrl: true });
+    expect(agente?.children[0]?.content).toEqual({ chunks: [{ text: 'echo' }] });
+    expect(agente?.title).toBe(' ▸ agente ');
 
     projeto?.onMouseDown?.();
-    panel.cards([{ title: 'projeto', lines: ['site', '', 'Loja'], summary: 'site · 2' }]);
-    expect([projeto?.title, projeto?.height]).toEqual([' ▾ projeto ', 5]);
+    expect([projeto?.title, projeto?.height, agente?.title]).toEqual([' ▾ projeto ', 10, ' ▸ agente ']);
     press({ name: 'p', ctrl: false });
-    expect(projeto?.title).toBe(' ▾ projeto ');
+    press({ name: 'x', ctrl: true });
+    expect([projeto?.title, agente?.title]).toEqual([' ▾ projeto ', ' ▸ agente ']);
+    panel.cards([{ title: 'agente', lines: [], key: 'a' }]);
+    expect(agente?.children[0]?.content).toEqual({ chunks: [] });
 
     const plain = fakeToolkit();
     await openPanel(plain.kit, OPTIONS);

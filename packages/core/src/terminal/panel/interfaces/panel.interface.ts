@@ -91,6 +91,11 @@ export interface PanelSelect {
 export interface PanelScroll<Node> extends PanelNode<Node> {
   readonly scrollHeight: number;
   visible: boolean;
+  height: number | 'auto' | `${number}%`;
+  /** The title on its top border. */
+  set title(title: string | undefined);
+  /** Called when the person clicks it. */
+  set onMouseDown(listener: ((event: never) => void) | undefined);
   scrollBy(delta: number, unit?: 'viewport'): void;
   scrollTo(position: number): void;
 }
@@ -159,10 +164,16 @@ export interface PanelScrollOptions {
   readonly border: boolean;
   readonly title: string;
   readonly titleColor: string;
+  /** Whether it follows its end as lines are added, from `stickyStart`. */
   readonly stickyScroll: boolean;
-  readonly stickyStart: 'bottom';
+  readonly stickyStart?: 'bottom';
   /** No horizontal scroll: a long line wraps at the panel's width instead of growing past it. */
   readonly scrollX: false;
+  readonly width?: number;
+  readonly paddingLeft?: number;
+  readonly paddingRight?: number;
+  /** 0 keeps its rows when the panel is short. */
+  readonly flexShrink?: number;
 }
 
 /** A decoded picture (`NativeImage`): resized, and read as RGBA pixels. */

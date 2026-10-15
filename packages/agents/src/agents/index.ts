@@ -39,3 +39,4 @@ export { listAgentsCommand } from './agents-list.command';
 export { runAgentCommand, runAgentEntry } from './agents-run.command';
 export { AGENT_PROVIDERS, AGENTS } from './agents.constants';
 export { AgentsService, type AgentsPlatform } from './agents.service';
+export { agentsPanel } from './agents-panel';
