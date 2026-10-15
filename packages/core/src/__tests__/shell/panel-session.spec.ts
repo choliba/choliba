@@ -2,6 +2,8 @@ import { Container, type PanelCommand, type PanelCommandContext } from '../../sh
 import { panelSession } from '../../shell/panel-session';
 import { fakeChatPanel } from '../../testing';
 
+const HEADING = ['choliba 1.2.3', '~/loja'];
+
 /** Commands that note each run, and one that fails. */
 function commands() {
   const ran: string[] = [];
@@ -29,7 +31,7 @@ function commands() {
 function session() {
   const fake = fakeChatPanel();
   const { ran, list } = commands();
-  panelSession(new Container(), fake.panel, list);
+  panelSession(new Container(), fake.panel, list, HEADING);
   return { fake, ran, settle: () => new Promise((resolve) => setImmediate(resolve)) };
 }
 
@@ -126,16 +128,21 @@ describe('panelSession', () => {
   it('keeps the values the commands set, and shows their cards in the header in the order first shown', async () => {
     const fake = fakeChatPanel();
     let set: PanelCommandContext['context'] | undefined;
-    const session = panelSession(new Container(), fake.panel, [
-      {
-        name: 'ctx',
-        description: 'Contexto',
-        run: ({ context }) => {
-          set = context;
-          return Promise.resolve();
+    const session = panelSession(
+      new Container(),
+      fake.panel,
+      [
+        {
+          name: 'ctx',
+          description: 'Contexto',
+          run: ({ context }) => {
+            set = context;
+            return Promise.resolve();
+          },
         },
-      },
-    ]);
+      ],
+      HEADING,
+    );
     fake.send('/ctx');
     await new Promise((resolve) => setImmediate(resolve));
     set?.set('projeto', 'loja');
@@ -187,7 +194,7 @@ describe('panelSession', () => {
         },
       },
     ];
-    panelSession(new Container(), fake.panel, list);
+    panelSession(new Container(), fake.panel, list, HEADING);
     const settle = () => new Promise((resolve) => setImmediate(resolve));
 
     fake.type('/t');
@@ -233,19 +240,57 @@ describe('panelSession', () => {
 
   it('answers what a command writes', async () => {
     const fake = fakeChatPanel();
-    panelSession(new Container(), fake.panel, [
-      {
-        name: 'diz',
-        description: 'Diz',
-        run: ({ panel }) => {
-          panel.write('oi');
-          return Promise.resolve();
+    panelSession(
+      new Container(),
+      fake.panel,
+      [
+        {
+          name: 'diz',
+          description: 'Diz',
+          run: ({ panel }) => {
+            panel.write('oi');
+            return Promise.resolve();
+          },
         },
-      },
-    ]);
+      ],
+      HEADING,
+    );
     fake.send('/diz');
     await new Promise((resolve) => setImmediate(resolve));
 
     expect(fake.written).toEqual(['oi']);
+  });
+
+  it('shows the labels the commands set in the header column, under its fixed lines, in the order they came', async () => {
+    const fake = fakeChatPanel();
+    let set: PanelCommandContext['context'] | undefined;
+    panelSession(
+      new Container(),
+      fake.panel,
+      [
+        {
+          name: 'ctx',
+          description: 'Contexto',
+          run: ({ context }) => {
+            set = context;
+            return Promise.resolve();
+          },
+        },
+      ],
+      HEADING,
+    );
+    fake.send('/ctx');
+    await new Promise((resolve) => setImmediate(resolve));
+    set?.label('provider', 'claude');
+    set?.label('modelo', 'padrão');
+    set?.label('provider', 'cursor');
+    set?.label('provider', undefined);
+
+    expect(fake.headings).toEqual([
+      [...HEADING, '\u001b[90mprovider\u001b[39m claude'],
+      [...HEADING, '\u001b[90mprovider\u001b[39m claude', '\u001b[90mmodelo\u001b[39m padrão'],
+      [...HEADING, '\u001b[90mprovider\u001b[39m cursor', '\u001b[90mmodelo\u001b[39m padrão'],
+      [...HEADING, '\u001b[90mmodelo\u001b[39m padrão'],
+    ]);
   });
 });

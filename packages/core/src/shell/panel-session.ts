@@ -34,10 +34,17 @@ function slashWord(text: string): string | undefined {
   return text.startsWith('/') && !text.includes(' ') ? text.slice(1) : undefined;
 }
 
-/** The session's context: its values, and the cards they show in the header, in the order each was first shown. */
-function sessionContext(onCards: (cards: readonly PanelCard[]) => void): PanelContext {
+/** What the context shows in the header: its cards, and the `name value` lines of its column. */
+interface ContextView {
+  cards(cards: readonly PanelCard[]): void;
+  labels(lines: readonly string[]): void;
+}
+
+/** The session's context: its values, and the cards and labels they show in the header, each in the order it came. */
+function sessionContext(view: ContextView): PanelContext {
   const values = new Map<string, string>();
   const cards = new Map<string, PanelCard>();
+  const labels = new Map<string, string>();
   return {
     get: (key) => values.get(key),
     set: (key, value) => {
@@ -47,7 +54,12 @@ function sessionContext(onCards: (cards: readonly PanelCard[]) => void): PanelCo
     show: (title, card) => {
       if (card === undefined) cards.delete(title);
       else cards.set(title, { ...card, title });
-      onCards([...cards.values()]);
+      view.cards([...cards.values()]);
+    },
+    label: (name, value) => {
+      if (value === undefined) labels.delete(name);
+      else labels.set(name, value);
+      view.labels([...labels].map(([each, shown]) => `\u001b[90m${each}\u001b[39m ${shown}`));
     },
   };
 }
@@ -61,16 +73,26 @@ export interface PanelSession {
  * The panel's session: while a `/word` is typed, the commands that start with it show under the field, ↑ and ↓ move
  * the highlight over the ones that can run, Tab puts the highlighted one in the field, a click runs one, and Esc hides
  * them; Enter runs the command named whole, else the highlighted one. A command that cannot run says why. Anything
- * else is said. The cards the commands show go in the header.
+ * else is said. The cards the commands show go in the header, and their labels in its column, under `heading`.
  */
-export function panelSession(container: Container, panel: ChatPanel, commands: readonly PanelCommand[]): PanelSession {
+export function panelSession(
+  container: Container,
+  panel: ChatPanel,
+  commands: readonly PanelCommand[],
+  heading: readonly string[],
+): PanelSession {
   let shortcuts: readonly string[] = [];
-  const context = sessionContext((cards) => {
-    panel.cards(cards);
-    shortcuts = cards.flatMap((card) =>
-      card.key === undefined ? [] : [`Ctrl+${card.key.toUpperCase()} ${card.title}`],
-    );
-    panel.refresh();
+  const context = sessionContext({
+    cards: (cards) => {
+      panel.cards(cards);
+      shortcuts = cards.flatMap((card) =>
+        card.key === undefined ? [] : [`Ctrl+${card.key.toUpperCase()} ${card.title}`],
+      );
+      panel.refresh();
+    },
+    labels: (lines) => {
+      panel.heading([...heading, ...lines]);
+    },
   });
   const matching = (word: string): readonly PanelCommand[] =>
     commands.filter((command) => command.name.startsWith(word));
