@@ -1,35 +1,9 @@
-import {
-  CARD_RULE,
-  messageOf,
-  boldAnsi,
-  paintAnsi,
-  PLATFORM,
-  THEME,
-  WORKSPACE_ROOT,
-  type Container,
-  type PanelCommand,
-  type PanelContext,
-} from '@choliba/core';
+import { boldAnsi, CARD_RULE, messageOf, paintAnsi, THEME, type PanelCommand } from '@choliba/core';
 
 import type { AgentDefinition } from '../common';
-import { resolveAgentsDir } from './agent-dirs';
 import { listAgents } from './agent-loader';
-import { agentsConfig } from './agents-config';
-import { AGENT_PROVIDERS } from './agents.constants';
-import { providerModel } from './runs/provider-model';
-import { AUTO } from '../common';
-
-/** The context key and the card's title in the panel's header. */
-const AGENT = 'agente';
-
-/** The workspace's agents folder, as `choliba run agent` finds it: `CHOL_AGENTS_DIR`, else `.choliba/agents`. */
-function agentsDir(container: Container): string {
-  return resolveAgentsDir(
-    undefined,
-    { CHOL_AGENTS_DIR: container.get(agentsConfig.token).agentsDir },
-    container.get(WORKSPACE_ROOT),
-  );
-}
+import { runChoices } from './agents-panel-choices';
+import { AGENT, agentsDir, listenModeKey, MODE, MODEL, showRun } from './agents-panel-state';
 
 /** What a run of the agent needs: a project and a ticket, a project, or nothing. */
 function needs(agent: AgentDefinition): string {
@@ -58,42 +32,6 @@ function agentCard(
     ],
     summary: `${painted(agent.id)} ${version}`,
   };
-}
-
-const bold = (text: string): string => `\u001b[1m\u001b[36m${text}\u001b[39m\u001b[22m`;
-const gray = (text: string): string => `\u001b[90m${text}\u001b[39m`;
-const warn = (text: string): string => `\u001b[33m${text}\u001b[39m`;
-
-/**
- * Shows in the header the provider and the model a run of `agent` would take, found as `choliba run agent` finds them:
- * `CHOL_AGENTS_PROVIDER` (`auto`, the first installed, by default) and what `agent.yaml#models` gives that provider.
- * What would stop the run shows as one word in yellow, its reason `answer`ed in the chat: the header keeps its size.
- */
-function labelRun(
-  container: Container,
-  context: PanelContext,
-  agent: AgentDefinition,
-  answer: (text: string) => void,
-): void {
-  const registry = container.get(AGENT_PROVIDERS);
-  const preference = container.get(agentsConfig.token).provider;
-  let provider;
-  try {
-    provider = registry.resolve(preference, container.get(PLATFORM).which).adapter;
-  } catch {
-    context.label('provider', warn('nenhum instalado'));
-    context.label('modelo', gray('—'));
-    answer(warn(`Nenhum provider instalado para ${preference}: o agente não roda nesta máquina.`));
-    return;
-  }
-  context.label('provider', `${bold(provider.id)}${preference === AUTO ? gray(' (auto)') : ''}`);
-  const model = providerModel(provider, undefined, agent.supportedModels, registry);
-  if ('error' in model) {
-    context.label('modelo', warn('indisponível'));
-    answer(warn(model.error));
-    return;
-  }
-  context.label('modelo', model.model === undefined ? gray(`padrão do ${provider.id}`) : bold(model.model));
 }
 
 /** `/agents`: the active agent, chosen among the workspace's; it only chooses, nothing runs. */
@@ -125,11 +63,13 @@ const agentsPanelCommand: PanelCommand = {
     const painted = (text: string): string => boldAnsi(paintAnsi(color, text));
     context.show(AGENT, { ...agentCard(agent, painted), key: 'a' });
     panel.write(`Agente ativo: ${painted(agent.id)}.`);
-    labelRun(container, context, agent, (text) => {
-      panel.write(text);
-    });
+    // Another agent has its own models and modes: back to its defaults. The provider stays.
+    context.set(MODEL, undefined);
+    context.set(MODE, undefined);
+    listenModeKey(container, context);
+    showRun(container, context, panel);
   },
 };
 
 /** What @choliba/agents brings to `choliba panel`. */
-export const agentsPanel: readonly PanelCommand[] = [agentsPanelCommand];
+export const agentsPanel: readonly PanelCommand[] = [agentsPanelCommand, ...runChoices];

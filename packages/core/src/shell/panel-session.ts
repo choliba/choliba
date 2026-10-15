@@ -1,5 +1,5 @@
 import { messageOf } from '../cli';
-import type { ChatPanel, PanelCard } from '../terminal';
+import type { ChatPanel, PanelCard, PanelKey } from '../terminal';
 import type { Container } from './container';
 import type { PanelCommand, PanelContext } from './interfaces/shell.interface';
 
@@ -38,6 +38,8 @@ function slashWord(text: string): string | undefined {
 interface ContextView {
   cards(cards: readonly PanelCard[]): void;
   labels(lines: readonly string[]): void;
+  status(parts: readonly string[]): void;
+  onKey(listener: (key: PanelKey) => boolean): void;
 }
 
 /** The session's context: its values, and the cards and labels they show in the header, each in the order it came. */
@@ -45,6 +47,7 @@ function sessionContext(view: ContextView): PanelContext {
   const values = new Map<string, string>();
   const cards = new Map<string, PanelCard>();
   const labels = new Map<string, string>();
+  const statuses = new Map<string, string>();
   return {
     get: (key) => values.get(key),
     set: (key, value) => {
@@ -61,12 +64,20 @@ function sessionContext(view: ContextView): PanelContext {
       else labels.set(name, value);
       view.labels([...labels].map(([each, shown]) => `\u001b[90m${each}\u001b[39m ${shown}`));
     },
+    status: (name, line) => {
+      if (line === undefined) statuses.delete(name);
+      else statuses.set(name, line);
+      view.status([...statuses.values()]);
+    },
+    onKey: (listener) => {
+      view.onKey(listener);
+    },
   };
 }
 
-/** What a session tells its panel: the keys of the cards shown, as the footer says them (`Ctrl+P projeto`). */
+/** What a session tells its panel's footer: the parts the commands put in it, then the keys of the cards shown. */
 export interface PanelSession {
-  shortcuts(): readonly string[];
+  status(): readonly string[];
 }
 
 /**
@@ -82,16 +93,25 @@ export function panelSession(
   heading: readonly string[],
 ): PanelSession {
   let shortcuts: readonly string[] = [];
+  let parts: readonly string[] = [];
+  const keyListeners: ((key: PanelKey) => boolean)[] = [];
   const context = sessionContext({
     cards: (cards) => {
       panel.cards(cards);
       shortcuts = cards.flatMap((card) =>
-        card.key === undefined ? [] : [`Ctrl+${card.key.toUpperCase()} ${card.title}`],
+        card.key === undefined ? [] : [`\u001b[90mCtrl+${card.key.toUpperCase()} ${card.title}\u001b[39m`],
       );
       panel.refresh();
     },
     labels: (lines) => {
       panel.heading([...heading, ...lines]);
+    },
+    status: (shown) => {
+      parts = shown;
+      panel.refresh();
+    },
+    onKey: (listener) => {
+      keyListeners.push(listener);
     },
   });
   const matching = (word: string): readonly PanelCommand[] =>
@@ -155,7 +175,7 @@ export function panelSession(
     show(found);
   });
   panel.onKey((key) => {
-    if (shown.length === 0) return false;
+    if (shown.length === 0) return keyListeners.some((listener) => listener(key));
     const command = shown[highlighted];
     if (key.name === 'escape') show([]);
     else if (key.name === 'tab') {
@@ -183,5 +203,5 @@ export function panelSession(
     }
     void run(command);
   });
-  return { shortcuts: () => shortcuts };
+  return { status: () => [...parts, ...shortcuts] };
 }

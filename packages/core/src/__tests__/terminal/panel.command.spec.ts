@@ -23,7 +23,7 @@ describe('choliba panel', () => {
     const opener = (options: PanelOptions): Promise<ChatPanel> => {
       opened.push(options);
       // The panel draws its footer as it opens, before the session is there.
-      expect(options.footer(80)).toEqual(['\u001b[90m  Ctrl+C duas vezes sai\u001b[39m']);
+      expect(options.footer(80)).toEqual(['  \u001b[90mCtrl+C duas vezes sai\u001b[39m']);
       return Promise.resolve(fake.panel);
     };
     const platform = terminal();
@@ -53,7 +53,7 @@ describe('choliba panel', () => {
         lines: ['\u001b[1m\u001b[32mcholiba 1.2.3\u001b[39m\u001b[22m', '\u001b[90m~/loja\u001b[39m'],
       },
     });
-    expect(opened[0]?.footer(80)).toEqual(['\u001b[90m  Ctrl+C duas vezes sai\u001b[39m']);
+    expect(opened[0]?.footer(80)).toEqual(['  \u001b[90mCtrl+C duas vezes sai\u001b[39m']);
     fake.send('ola');
     expect(fake.said).toEqual(['ola']);
     expect(fake.written).toEqual([]);

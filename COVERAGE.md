@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 15/10/2026 16:28:26 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 15/10/2026 19:40:03 — não editar manualmente.
 
 ## Resumo
 
@@ -18,7 +18,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 78 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 80 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -30,6 +30,8 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/agent-validation.ts](packages/agents/src/agents/agent-validation.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-config.ts](packages/agents/src/agents/agents-config.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-list.command.ts](packages/agents/src/agents/agents-list.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/agents-panel-choices.ts](packages/agents/src/agents/agents-panel-choices.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/agents-panel-state.ts](packages/agents/src/agents/agents-panel-state.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-panel.ts](packages/agents/src/agents/agents-panel.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-run.command.ts](packages/agents/src/agents/agents-run.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-shell.ts](packages/agents/src/agents/agents-shell.ts)|100.00|100.00|100.00|100.00
@@ -156,7 +158,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 65 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 66 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -218,6 +220,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/terminal/writable.ts](packages/core/src/terminal/writable.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/buffer-writable.ts](packages/core/src/testing/buffer-writable.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/fake-chat-panel.ts](packages/core/src/testing/fake-chat-panel.ts)|100.00|100.00|100.00|100.00
+🟢|[src/testing/fake-panel-context.ts](packages/core/src/testing/fake-panel-context.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/fake-platform.ts](packages/core/src/testing/fake-platform.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/fake-signals.ts](packages/core/src/testing/fake-signals.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/run-shell.ts](packages/core/src/testing/run-shell.ts)|100.00|100.00|100.00|100.00
