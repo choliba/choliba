@@ -37,6 +37,9 @@ um container e uma tabela de comandos, sem decorator e sem reflection.
 - **Só o `main.ts` lê o Bun e o `process`.** Ele monta o `Platform` (stdout, ambiente, spawn, git…) e o `Runtime`
   (as ferramentas que o choliba roda) e os entrega à casca; todo o resto recebe isso pelo container, e os specs
   passam versões falsas (`@choliba/core/testing`).
+- **Cada nome de pasta e de arquivo tem um dono.** O `agents` define os de `.choliba/`, do cache e das execuções
+  (`agents/agent-layout.ts`), o `projects` os de projetos e tickets (`paths/project-layout.ts`) e o app os da raiz
+  da pasta de trabalho (`config/workspace-layout.ts`). O `core` não conhece o layout do choliba.
 - **A lógica fica em funções; a casca registra o que um comando precisa.** Um service é uma classe comum,
   construída por uma fábrica num token. Um comando lê os argumentos como foram digitados (`ShellIo`), chama o
   service e define o código de saída.

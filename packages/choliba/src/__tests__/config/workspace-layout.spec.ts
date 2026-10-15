@@ -1,11 +1,19 @@
-import * as core from '@choliba/core';
-
 import * as layout from '../../config/workspace-layout';
 
 describe('workspace layout', () => {
-  it('keeps the names core still exports while they move here', () => {
-    const names = Object.keys(layout) as (keyof typeof layout)[];
-
-    expect(names.map((name) => [name, layout[name]])).toEqual(names.map((name) => [name, core[name]]));
+  it('names the folders and files at the workspace root', () => {
+    expect(layout).toEqual({
+      APP_DIR: 'app',
+      ARTIFACTS_DIR: '.cache/choliba',
+      ENV_FILE: '.env',
+      PACKAGE_FILE: 'package.json',
+      ENV_EXAMPLE_FILE: '.env.example',
+      GITIGNORE_FILE: '.gitignore',
+      BUNFIG_FILE: 'bunfig.toml',
+      PRETTIERRC_FILE: '.prettierrc.json',
+      PRETTIERIGNORE_FILE: '.prettierignore',
+      ESLINT_CONFIG_FILE: 'eslint.config.mjs',
+      EDITORCONFIG_FILE: '.editorconfig',
+    });
   });
 });

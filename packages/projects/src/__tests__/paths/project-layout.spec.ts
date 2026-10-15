@@ -1,11 +1,15 @@
-import * as core from '@choliba/core';
-
 import * as layout from '../../paths/project-layout';
 
 describe('project layout', () => {
-  it('keeps the names core still exports while they move here', () => {
-    const names = Object.keys(layout) as (keyof typeof layout)[];
-
-    expect(names.map((name) => [name, layout[name]])).toEqual(names.map((name) => [name, core[name]]));
+  it('names the folders and files of the projects', () => {
+    expect(layout).toEqual({
+      PROJECTS_SUBDIR: 'projects',
+      TICKETS_SUBDIR: 'tickets',
+      TESTS_SUBDIR: 'tests',
+      TICKET_RUNS_SUBDIR: 'ticket-runs',
+      PROJECT_CONFIG_FILE: 'config.json',
+      PROJECT_ENV_FILE: '.env.json',
+      PROJECT_ENV_EXAMPLE_FILE: '.env.example.json',
+    });
   });
 });
