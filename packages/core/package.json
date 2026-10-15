@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@choliba/config": "workspace:*",
     "@opentui/core": "0.5.14",
     "yaml": "^2.8.1"
   }

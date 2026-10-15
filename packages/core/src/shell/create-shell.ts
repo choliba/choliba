@@ -1,3 +1,5 @@
+import { configCatalog, type ConfigCatalog, type ConfigGroup, type ConfigSource } from '@choliba/config';
+
 import { messageOf } from '../cli';
 import { ExpectedError } from '../common';
 import { unknownWordMessage, type CommandEntry, type CommandSpec } from '../help';
@@ -9,6 +11,8 @@ import { ShellIo } from './shell-io';
 
 /** The process and the runtime, as `main.ts` reads them: what every package's services start from. */
 export const PLATFORM = token<Platform>('Platform');
+/** Every configuration group contributed by the shell's modules. */
+export const CONFIG_CATALOG = token<ConfigCatalog>('ConfigCatalog');
 
 /** An app's commands: which first words it runs, their help entries, and running one. */
 export interface Shell {
@@ -108,10 +112,25 @@ function typesOfVerbs(
   });
 }
 
-/** The shell of an app on `platform`: each module registers its services, and its commands go in the table. */
-export function createShell(platform: Platform, modules: readonly ShellModule[]): Shell {
+/** Registers the modules' configuration catalog and each group's lazy value. */
+function provideConfig(container: Container, modules: readonly ShellModule[], sources: readonly ConfigSource[]): void {
+  const groups: readonly ConfigGroup[] = modules.flatMap((module) => module.config ?? []);
+  const catalog = configCatalog(groups);
+  container.provide(CONFIG_CATALOG, () => catalog);
+  for (const group of groups) {
+    container.provide(group.token, () => group.read(sources));
+  }
+}
+
+/** The shell of an app on `platform`: each module registers its services, config and commands. */
+export function createShell(
+  platform: Platform,
+  modules: readonly ShellModule[],
+  configSources: readonly ConfigSource[] = [],
+): Shell {
   const container = new Container();
   container.provide(PLATFORM, () => platform);
+  provideConfig(container, modules, configSources);
   for (const module of modules) {
     module.provide?.(container);
   }

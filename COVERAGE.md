@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 14/10/2026 07:21:27 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 14/10/2026 23:53:41 — não editar manualmente.
 
 ## Resumo
 
@@ -9,6 +9,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 🟢|**Total**|100.00|100.00|100.00|100.00
 🟢|[packages/agents](packages/agents)|100.00|100.00|100.00|100.00
 🟢|[packages/choliba](packages/choliba)|100.00|100.00|100.00|100.00
+🟢|[packages/config](packages/config)|100.00|100.00|100.00|100.00
 🟢|[packages/core](packages/core)|100.00|100.00|100.00|100.00
 🟢|[packages/projects](packages/projects)|100.00|100.00|100.00|100.00
 🟢|[packages/runner](packages/runner)|100.00|100.00|100.00|100.00
@@ -118,6 +119,28 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/tooling/lint.command.ts](packages/choliba/src/tooling/lint.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tooling/tooling.constants.ts](packages/choliba/src/tooling/tooling.constants.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tooling/tools.service.ts](packages/choliba/src/tooling/tools.service.ts)|100.00|100.00|100.00|100.00
+
+</details>
+
+<details>
+<summary>🟢 <b>packages/config</b> — 100.00% das linhas, 14 arquivos</summary>
+
+Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
+--|--|--|--|--|--
+🟢|[src/common/config-error.ts](packages/config/src/common/config-error.ts)|100.00|100.00|100.00|100.00
+🟢|[src/formats/config-tree.ts](packages/config/src/formats/config-tree.ts)|100.00|100.00|100.00|100.00
+🟢|[src/formats/dotenv-format.ts](packages/config/src/formats/dotenv-format.ts)|100.00|100.00|100.00|100.00
+🟢|[src/formats/format-for.ts](packages/config/src/formats/format-for.ts)|100.00|100.00|100.00|100.00
+🟢|[src/formats/json-format.ts](packages/config/src/formats/json-format.ts)|100.00|100.00|100.00|100.00
+🟢|[src/formats/yaml-format.ts](packages/config/src/formats/yaml-format.ts)|100.00|100.00|100.00|100.00
+🟢|[src/groups/config-catalog.ts](packages/config/src/groups/config-catalog.ts)|100.00|100.00|100.00|100.00
+🟢|[src/groups/config-settings.ts](packages/config/src/groups/config-settings.ts)|100.00|100.00|100.00|100.00
+🟢|[src/groups/config-write.ts](packages/config/src/groups/config-write.ts)|100.00|100.00|100.00|100.00
+🟢|[src/groups/define-config.ts](packages/config/src/groups/define-config.ts)|100.00|100.00|100.00|100.00
+🟢|[src/groups/key-conversion.ts](packages/config/src/groups/key-conversion.ts)|100.00|100.00|100.00|100.00
+🟢|[src/groups/key-reading.ts](packages/config/src/groups/key-reading.ts)|100.00|100.00|100.00|100.00
+🟢|[src/sources/env-source.ts](packages/config/src/sources/env-source.ts)|100.00|100.00|100.00|100.00
+🟢|[src/sources/file-source.ts](packages/config/src/sources/file-source.ts)|100.00|100.00|100.00|100.00
 
 </details>
 
