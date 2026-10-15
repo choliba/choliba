@@ -87,7 +87,7 @@ describe('choliba __complete', () => {
         expect(await complete('run', 'agent', 'echo', '--provider', '')).toBe('auto\nclaude\nclaude-ollama\ncursor\n');
         expect(await complete('run', 'tests', '--ex')).toBe('--expect\n');
         expect(await complete('new', '')).toBe('project\n');
-        expect(await complete('list', '')).toBe('config\nagents\nprojects\n');
+        expect(await complete('list', '')).toBe('agents\nprojects\nconfig\n');
       },
       { '.env': ENV },
     ));

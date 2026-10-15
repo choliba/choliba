@@ -21,7 +21,7 @@ describe('coreShell', () => {
     ).toBe(false);
   });
 
-  it('runs the hidden terminal command, list config and set config', () => {
-    expect(coreShell.commands.map((command) => command.name)).toEqual(['terminal', 'config', 'config']);
+  it('runs the hidden terminal command', () => {
+    expect(coreShell.commands.map((command) => command.name)).toEqual(['terminal']);
   });
 });

@@ -18,7 +18,7 @@ const STRUCTURE: Readonly<Record<string, Partial<Record<Exclude<Layer, 'common'>
   runner: { module: ['tests'] },
   sandbox: { domain: ['sandbox'] },
   agents: { module: ['agents', 'providers'] },
-  choliba: { domain: ['help', 'runtime'], module: ['check', 'setup', 'tooling'] },
+  choliba: { domain: ['help', 'runtime'], module: ['check', 'config', 'setup', 'tooling'] },
 };
 
 /** File-name suffixes still in use: a service, a provider, a dto, a command and injection-token constants. */

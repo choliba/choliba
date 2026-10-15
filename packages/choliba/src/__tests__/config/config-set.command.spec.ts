@@ -1,8 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { coreShell } from '../..';
-import type { Platform } from '../../platform';
-import { BufferWritable, fakePlatform, runShell, VERBS_ROOT } from '../../testing';
+import type { Platform } from '@choliba/core';
+import { BufferWritable, fakePlatform } from '@choliba/core/testing';
+
+import { createCholibaShell } from '../../app-shell';
+import { fakeRuntime } from '../helpers/runtime';
 import { makeWorkspace } from '../helpers/workspace';
 
 async function setConfig(
@@ -12,10 +14,10 @@ async function setConfig(
 ): Promise<{ code: number; out: string; err: string }> {
   const stdout = new BufferWritable();
   const stderr = new BufferWritable();
-  const code = await runShell(
-    [coreShell, VERBS_ROOT],
+  const code = await createCholibaShell(
     fakePlatform({ argv: ['set', 'config', ...args], cwd, stdout, stderr, ...extra }),
-  );
+    fakeRuntime(),
+  ).run();
   return { code, out: stdout.text(), err: stderr.text() };
 }
 
@@ -177,7 +179,7 @@ describe('choliba set config', () => {
 
   it('is listed by the help of set', async () => {
     const stdout = new BufferWritable();
-    await runShell([coreShell, VERBS_ROOT], fakePlatform({ argv: ['set', '--help'], cwd: '/', stdout }));
+    await createCholibaShell(fakePlatform({ argv: ['set', '--help'], cwd: '/', stdout }), fakeRuntime()).run();
 
     expect(stdout.text()).toMatch(/config +Grava uma chave da configuração no \.env/);
   });

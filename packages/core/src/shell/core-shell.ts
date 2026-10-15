@@ -2,9 +2,7 @@ import { ConfigService } from '../config';
 import { ThemeService } from '../theme';
 import { PLATFORM } from './create-shell';
 import type { ShellModule } from './interfaces/shell.interface';
-import { CONFIG, THEME } from './shell.constants';
-import { listConfigCommand } from './config-list.command';
-import { setConfigCommand } from './config-set.command';
+import { CONFIG, THEME, THEME_CHOICES } from './shell.constants';
 import { provideTerminal, terminalCommand } from './terminal.command';
 
 /**
@@ -20,9 +18,10 @@ export const coreShell: ShellModule = {
     });
     container.provide(THEME, (current) => {
       const { env, stdout, noColorFlag } = current.get(PLATFORM);
-      return new ThemeService(current.get(CONFIG), env, stdout, noColorFlag);
+      const choices = current.has(THEME_CHOICES) ? current.get(THEME_CHOICES) : undefined;
+      return new ThemeService(current.get(CONFIG), env, stdout, noColorFlag, choices);
     });
     provideTerminal(container);
   },
-  commands: [terminalCommand, listConfigCommand, setConfigCommand],
+  commands: [terminalCommand],
 };

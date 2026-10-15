@@ -1,5 +1,7 @@
-import { coreShell } from '../..';
-import { BufferWritable, fakePlatform, runShell, VERBS_ROOT } from '../../testing';
+import { BufferWritable, fakePlatform } from '@choliba/core/testing';
+
+import { createCholibaShell } from '../../app-shell';
+import { fakeRuntime } from '../helpers/runtime';
 import { makeWorkspace } from '../helpers/workspace';
 
 async function listConfig(
@@ -9,10 +11,10 @@ async function listConfig(
 ): Promise<{ code: number; out: string; err: string }> {
   const stdout = new BufferWritable();
   const stderr = new BufferWritable();
-  const code = await runShell(
-    [coreShell, VERBS_ROOT],
+  const code = await createCholibaShell(
     fakePlatform({ argv: ['list', 'config', ...args], cwd, env, stdout, stderr }),
-  );
+    fakeRuntime(),
+  ).run();
   return { code, out: stdout.text(), err: stderr.text() };
 }
 
