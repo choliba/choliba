@@ -36,7 +36,7 @@ raiz: /home/voce/meu-workspace
 agentes em /home/voce/meu-workspace/.choliba/agents
 - implementer 1.0.2
 - product-owner 1.3.1
-- test-writer 1.1.1
+- test-writer 1.1.2
 skill playwright-cli: Automate browser interactions, test web pages and work with Playwright tests.
 ```
 
