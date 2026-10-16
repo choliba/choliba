@@ -100,6 +100,7 @@ export interface PanelScroll<Node> extends PanelNode<Node> {
   set onMouseDown(listener: ((event: never) => void) | undefined);
   scrollBy(delta: number, unit?: 'viewport'): void;
   scrollTo(position: number): void;
+  remove(child: Node): void;
 }
 
 export interface PanelText<Styled> {

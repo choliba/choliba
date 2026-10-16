@@ -65,7 +65,7 @@ describe('choliba panel', () => {
     expect(platform.stderr.text()).toBe('');
   });
 
-  it('stops what runs on Ctrl+C, the panel open, and /clear stops it and forgets the context', async () => {
+  it('stops what runs on Ctrl+C, the panel open, and /clear stops it and forgets the context and the chat', async () => {
     const fake = fakePanel();
     let stopped = 0;
     const runner: ShellModule = {
@@ -110,7 +110,8 @@ describe('choliba panel', () => {
     fake.send('/agente');
     await settle();
     expect(stopped).toBe(2);
-    expect(fake.written).toEqual(['Contexto limpo.', 'nenhum']);
+    expect(fake.written).toEqual(['nenhum']);
+    expect(fake.said).toEqual(['/agente']);
 
     fake.interrupt();
     expect(await code).toBe(0);
