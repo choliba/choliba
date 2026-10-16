@@ -3,6 +3,7 @@ import { boldAnsi, CARD_RULE, messageOf, paintAnsi, THEME, type PanelCommand } f
 import type { AgentDefinition } from '../common';
 import { listAgents } from './agent-loader';
 import { runChoices } from './agents-panel-choices';
+import { talkToAgent } from './agents-panel-run';
 import { AGENT, agentsDir, listenModeKey, MODE, MODEL, showRun } from './agents-panel-state';
 
 /** What a run of the agent needs: a project and a ticket, a project, or nothing. */
@@ -34,7 +35,7 @@ function agentCard(
   };
 }
 
-/** `/agents`: the active agent, chosen among the workspace's; it only chooses, nothing runs. */
+/** `/agents`: the active agent, chosen among the workspace's; then what is sent with no `/` is its task. */
 const agentsPanelCommand: PanelCommand = {
   name: 'agents',
   description: 'Escolhe o agente que vai trabalhar',
@@ -67,6 +68,7 @@ const agentsPanelCommand: PanelCommand = {
     context.set(MODEL, undefined);
     context.set(MODE, undefined);
     listenModeKey(container, context);
+    talkToAgent(container, context);
     showRun(container, context, panel);
   },
 };

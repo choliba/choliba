@@ -223,7 +223,8 @@ async function runAndRecord(
       signals: deps.signals,
       now: deps.now,
       footer: wantsFooter(deps.stdout, deps.config),
-      panel: openOpenTuiPanel,
+      panel: deps.panel ?? openOpenTuiPanel,
+      hostedPanel: deps.hostedPanel === true,
     },
   );
 

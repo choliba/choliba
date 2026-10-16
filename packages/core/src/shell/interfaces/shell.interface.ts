@@ -76,7 +76,8 @@ export interface ShellModule {
 /** What a panel command has: the container, the panel it was typed in, and the session's context. */
 export interface PanelCommandContext {
   readonly container: Container;
-  readonly panel: Pick<ChatPanel, 'write' | 'say' | 'choose'>;
+  /** The panel the command was typed in; its `write` answers in the chat (`●`). */
+  readonly panel: ChatPanel;
   readonly context: PanelContext;
 }
 
@@ -102,6 +103,18 @@ export interface PanelContext {
   status(name: string, line: string | undefined): void;
   /** Called with each key pressed in the field while no list is open under it; `true` keeps it from the field. */
   onKey(listener: (key: PanelKey) => boolean): void;
+  /**
+   * Who gets what is sent with no `/`, once it is said: `panel` is the session's own, whose `write` adds lines as they
+   * are. Undefined: what is sent is only said.
+   */
+  converse(handler: ((text: string, panel: ChatPanel) => void) | undefined): void;
+  /**
+   * What stops the work running now (a run of an agent), which Ctrl+C twice and /clear call before anything else;
+   * undefined once it is over.
+   */
+  busy(stop: (() => void) | undefined): void;
+  /** Stops what runs, and forgets every value, card, label and status part: the chat and the conversation stay. */
+  clear(): void;
 }
 
 /** A command of the panel: the word after `/`, what it does in a line, and running it. */

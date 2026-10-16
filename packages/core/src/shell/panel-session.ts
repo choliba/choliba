@@ -40,6 +40,10 @@ interface ContextView {
   labels(lines: readonly string[]): void;
   status(parts: readonly string[]): void;
   onKey(listener: (key: PanelKey) => boolean): void;
+  converse(handler: ((text: string, panel: ChatPanel) => void) | undefined): void;
+  busy(stop: (() => void) | undefined): void;
+  /** Stops what runs; the context forgets its own state after. */
+  stop(): void;
 }
 
 /** The session's context: its values, and the cards and labels they show in the header, each in the order it came. */
@@ -72,19 +76,36 @@ function sessionContext(view: ContextView): PanelContext {
     onKey: (listener) => {
       view.onKey(listener);
     },
+    converse: (handler) => {
+      view.converse(handler);
+    },
+    busy: (stop) => {
+      view.busy(stop);
+    },
+    clear: () => {
+      view.stop();
+      for (const map of [values, cards, labels, statuses]) map.clear();
+      view.cards([]);
+      view.labels([]);
+      view.status([]);
+    },
   };
 }
 
-/** What a session tells its panel's footer: the parts the commands put in it, then the keys of the cards shown. */
+/** What a session tells its panel: the footer's parts, and what to stop before Ctrl+C closes the panel. */
 export interface PanelSession {
+  /** The parts the commands put in the status line, then the keys of the cards shown. */
   status(): readonly string[];
+  /** Stops the work running now: `true` when there was some, and then the panel stays open. */
+  stop(): boolean;
 }
 
 /**
  * The panel's session: while a `/word` is typed, the commands that start with it show under the field, ↑ and ↓ move
  * the highlight over the ones that can run, Tab puts the highlighted one in the field, a click runs one, and Esc hides
  * them; Enter runs the command named whole, else the highlighted one. A command that cannot run says why. Anything
- * else is said. The cards the commands show go in the header, and their labels in its column, under `heading`.
+ * else is said, and goes to the conversation a command set, if any. The cards the commands show go in the header, and
+ * their labels in its column, under `heading`.
  */
 export function panelSession(
   container: Container,
@@ -95,6 +116,14 @@ export function panelSession(
   let shortcuts: readonly string[] = [];
   let parts: readonly string[] = [];
   const keyListeners: ((key: PanelKey) => boolean)[] = [];
+  let conversation: ((text: string, panel: ChatPanel) => void) | undefined;
+  let running: (() => void) | undefined;
+  const stopRunning = (): boolean => {
+    const stop = running;
+    running = undefined;
+    stop?.();
+    return stop !== undefined;
+  };
   const context = sessionContext({
     cards: (cards) => {
       panel.cards(cards);
@@ -112,6 +141,15 @@ export function panelSession(
     },
     onKey: (listener) => {
       keyListeners.push(listener);
+    },
+    converse: (handler) => {
+      conversation = handler;
+    },
+    busy: (stop) => {
+      running = stop;
+    },
+    stop: () => {
+      stopRunning();
     },
   });
   const matching = (word: string): readonly PanelCommand[] =>
@@ -196,12 +234,15 @@ export function panelSession(
     const command = commands.find((each) => each.name === word) ?? found[Math.min(choice, found.length - 1)];
     // The band says the command that runs, not the start of it that was typed (`/`, `/p`).
     panel.say(command === undefined ? text : `/${command.name}`);
-    if (word === undefined) return;
+    if (word === undefined) {
+      conversation?.(text, panel);
+      return;
+    }
     if (command === undefined) {
       panel.answer(unknownCommand(word));
       return;
     }
     void run(command);
   });
-  return { status: () => [...parts, ...shortcuts] };
+  return { status: () => [...parts, ...shortcuts], stop: stopRunning };
 }

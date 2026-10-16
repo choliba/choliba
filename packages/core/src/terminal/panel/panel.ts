@@ -127,6 +127,7 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     screenMode: 'alternate-screen',
     exitOnCtrlC: false,
     useMouse: true,
+    autoFocus: false,
     targetFps: FRAMES_PER_SECOND,
   });
   const styled = (lines: readonly string[]): Styled => {

@@ -58,6 +58,11 @@ export interface RunAgentDeps {
    * then draws the frame and footer. Absent, never a panel.
    */
   readonly panel?: (options: PanelOptions) => Promise<Panel | undefined>;
+  /**
+   * `true` when the panel is lent by a host that keeps the conversation (`choliba panel`): the run then leaves its
+   * lines there instead of printing its frame on the terminal when it closes.
+   */
+  readonly hostedPanel?: boolean;
 }
 
 /** A timer that calls `tick` every `ms`, not keeping the process alive by itself. */
@@ -194,6 +199,7 @@ function panelScreen(panel: Panel, current: ReportedInfo, request: RunAgentReque
     close: (exitCode) => {
       stop();
       panel.close();
+      if (deps.hostedPanel === true) return;
       const top = frameTop(name, width(), (text) => theme.paint('agents', name, text, color));
       const lines = frameLines(transcript.join(''), width());
       deps.stdout.write(

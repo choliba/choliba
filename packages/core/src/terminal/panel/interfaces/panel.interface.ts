@@ -24,6 +24,8 @@ export interface PanelRendererConfig {
   readonly screenMode: 'alternate-screen';
   readonly exitOnCtrlC: boolean;
   readonly useMouse: boolean;
+  /** Whether a click focuses what it lands on: off, so the field keeps the keys whatever is clicked. */
+  readonly autoFocus: boolean;
   readonly targetFps: number;
 }
 

@@ -1,4 +1,4 @@
-import { coreShell, PANEL_ICON, PANEL_LOGO, PANEL_OPENER, PANEL_VERSION } from '../../shell';
+import { coreShell, PANEL_ICON, PANEL_LOGO, PANEL_OPENER, PANEL_VERSION, type ShellModule } from '../../shell';
 import type { ChatPanel, PanelOptions } from '../../terminal';
 import {
   BufferWritable,
@@ -63,6 +63,58 @@ describe('choliba panel', () => {
     expect(await code).toBe(0);
     expect(fake.closed()).toBe(true);
     expect(platform.stderr.text()).toBe('');
+  });
+
+  it('stops what runs on Ctrl+C, the panel open, and /clear stops it and forgets the context', async () => {
+    const fake = fakePanel();
+    let stopped = 0;
+    const runner: ShellModule = {
+      name: 'runner',
+      commands: [],
+      panel: [
+        {
+          name: 'start',
+          description: 'Começa',
+          run: ({ context }) => {
+            context.set('agente', 'echo');
+            context.busy(() => {
+              stopped += 1;
+            });
+            return Promise.resolve();
+          },
+        },
+        {
+          name: 'agente',
+          description: 'Diz o agente',
+          run: ({ panel, context }) => {
+            panel.write(context.get('agente') ?? 'nenhum');
+            return Promise.resolve();
+          },
+        },
+      ],
+    };
+    const settle = () => new Promise((resolve) => setImmediate(resolve));
+    const code = runShell([coreShell, runner, VERBS_ROOT], terminal(), [
+      replace(PANEL_OPENER, () => Promise.resolve(fake.panel)),
+    ]);
+    await settle();
+    fake.send('/start');
+    await settle();
+    fake.interrupt();
+    expect([stopped, fake.closed()]).toEqual([1, false]);
+
+    fake.send('/start');
+    await settle();
+    fake.send('/clear');
+    await settle();
+    fake.send('/agente');
+    await settle();
+    expect(stopped).toBe(2);
+    expect(fake.written).toEqual(['Contexto limpo.', 'nenhum']);
+
+    fake.interrupt();
+    expect(await code).toBe(0);
+    expect(fake.closed()).toBe(true);
   });
 
   it('welcomes with no image when the app gives none', async () => {

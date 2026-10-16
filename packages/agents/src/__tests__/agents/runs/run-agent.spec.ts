@@ -949,6 +949,26 @@ describe('runAgent — panel', () => {
     );
   });
 
+  it("leaves the lines in a host's panel, printing no frame on the terminal, when the panel is lent", async () => {
+    const s = setup(
+      fakeSpawner({
+        stdout: streamFromChunks([
+          eventLines([
+            { type: 'text', text: 'olá' },
+            { type: 'done', isError: false, text: 'ok' },
+          ]),
+        ]),
+      }).spawner,
+    );
+    const { open, record } = fakePanel();
+
+    expect(await runAgent(s.request(), { ...deps(s, open), hostedPanel: true })).toBe(0);
+
+    expect(record.written.join('')).toContain('olá');
+    expect(record.closed).toBe(1);
+    expect(s.stdout.chunks.join('')).toBe('');
+  });
+
   it('asks the panel the questions of the ask run tool, and keeps question and answer in the frame', async () => {
     const s = setup(
       fakeSpawner({

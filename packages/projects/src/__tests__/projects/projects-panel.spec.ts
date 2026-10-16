@@ -36,6 +36,9 @@ function withProjects(projects: Readonly<Record<string, Readonly<Record<string, 
     label: () => undefined,
     status: () => undefined,
     onKey: () => undefined,
+    converse: () => undefined,
+    busy: () => undefined,
+    clear: () => undefined,
   };
   const shown: [string, readonly string[] | undefined, string | undefined][] = [];
   const keys: (string | undefined)[] = [];
@@ -220,6 +223,9 @@ describe('the panel commands of @choliba/projects', () => {
         label: () => undefined,
         status: () => undefined,
         onKey: () => undefined,
+        converse: () => undefined,
+        busy: () => undefined,
+        clear: () => undefined,
       };
       expect(tickets?.unavailable?.(context, panel.container)).toBe('Escolha um projeto antes, com /projects');
       await panel.tickets();
