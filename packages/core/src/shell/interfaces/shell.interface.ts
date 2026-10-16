@@ -113,7 +113,7 @@ export interface PanelContext {
    * undefined once it is over.
    */
   busy(stop: (() => void) | undefined): void;
-  /** Stops what runs, and forgets every value, card, label and status part: the chat and the conversation stay. */
+  /** Stops what runs, and forgets every value, card, label and status part: who gets what is sent with no `/` stays. */
   clear(): void;
 }
 

@@ -78,6 +78,10 @@ export function fakeChatPanel(): FakeChatPanel {
       cards.push(shown);
     },
     refresh: () => undefined,
+    clear: () => {
+      written.length = 0;
+      said.length = 0;
+    },
     onInterrupt: (listener) => {
       interrupts.push(listener);
     },

@@ -50,7 +50,7 @@ export const PANEL_SPEC: CommandSpec = {
     'do agente: ele roda no painel com essas escolhas (sem ticket, um agente de tickets pergunta o tipo do ticket ' +
     'novo que a execução cria), o que se envia enquanto roda vai para ele, e as perguntas ' +
     'dele aparecem no campo. Ctrl+C duas vezes para a execução; sem nada rodando, sai do painel. `/clear` para o ' +
-    'que roda e limpa o contexto (projeto, ticket e agente), mas não a conversa. ' +
+    'que roda e limpa o contexto (projeto, ticket e agente) e a conversa. ' +
     'Precisa de um terminal interativo.',
   flags: [{ name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true }],
 };
@@ -116,13 +116,13 @@ export const panelCommand: ShellCommand = {
   },
 };
 
-/** `/clear`: stops what runs and forgets the session's context; the chat stays. */
+/** `/clear`: stops what runs, forgets the session's context, and empties the conversation. */
 export const clearPanelCommand: PanelCommand = {
   name: 'clear',
-  description: 'Para o que roda e limpa o contexto (a conversa fica)',
+  description: 'Para o que roda e limpa o contexto e a conversa',
   run: ({ panel, context }) => {
     context.clear();
-    panel.write('Contexto limpo.');
+    panel.clear();
     return Promise.resolve();
   },
 };

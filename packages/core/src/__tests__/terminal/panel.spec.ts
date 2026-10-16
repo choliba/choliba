@@ -60,6 +60,10 @@ class FakeNode {
     return this.children.length;
   }
 
+  remove(child: FakeNode): void {
+    this.children.splice(this.children.indexOf(child), 1);
+  }
+
   scrollBy(delta: number, unit?: 'viewport'): void {
     this.scrolls.push(`by ${String(delta)} ${unit ?? ''}`.trim());
   }
@@ -363,6 +367,22 @@ describe('openPanel', () => {
     expect([header?.visible, bottom?.visible, footer?.visible]).toEqual([false, false, false]);
     press({ name: 'return', ctrl: false });
     expect([header?.visible, bottom?.visible, footer?.visible]).toEqual([true, true, true]);
+  });
+
+  it('empties the conversation on clear, and writes after it again', async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, OPTIONS);
+    panel.write('linha\noutra');
+    panel.say('olá');
+    panel.answer('oi');
+    const [scroll] = renderer.root.children[0]?.children ?? [];
+    expect(scroll?.children).toHaveLength(4);
+
+    panel.clear();
+    expect(scroll?.children).toEqual([]);
+    panel.answer('de novo');
+    panel.clear();
+    expect(scroll?.children).toEqual([]);
   });
 
   it('answers after a blank row, ● beside the lines, which wrap beside it', async () => {

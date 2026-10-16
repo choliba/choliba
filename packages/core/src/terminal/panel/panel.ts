@@ -93,6 +93,8 @@ export interface ChatPanel extends Panel {
   fill(text: string): void;
   /** Called with each key the person presses in the field, before the field takes it; `true` keeps it from it. */
   onKey(listener: (key: PanelKey) => boolean): void;
+  /** Empties the conversation: every line written, said and answered goes; the header and the field stay. */
+  clear(): void;
   /** Replaces the lines of the header beside its icon; a panel with no header ignores it. */
   heading(lines: readonly string[]): void;
   /**
@@ -313,13 +315,18 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     resizeInput();
   };
   refresh();
+  // What the conversation added to the scroll box, so `clear` can take it out.
+  const chat: Node[] = [];
+  const talk = (node: Node): void => {
+    chat.push(node);
+    scroll.add(node);
+  };
 
   return {
     write: (text) => {
       begin();
       const lines = (text.endsWith('\n') ? text.slice(0, -1) : text).split('\n');
-      for (const line of lines)
-        scroll.add(new kit.TextRenderable(renderer, { content: styled([line]), wrapMode: 'word' }));
+      for (const line of lines) talk(new kit.TextRenderable(renderer, { content: styled([line]), wrapMode: 'word' }));
     },
     say: (text) => {
       begin();
@@ -330,7 +337,7 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
         backgroundColor: SAID_BACKGROUND,
       });
       band.add(new kit.TextRenderable(renderer, { content: styled([`❯ ${text}`]), wrapMode: 'word' }));
-      scroll.add(band);
+      talk(band);
     },
     choose: (request) => picker.open(request),
     onTyping: (listener) => {
@@ -353,6 +360,9 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
       suggestions.height = shown.length;
       suggestions.visible = shown.length > 0 && !picker.isOpen;
     },
+    clear: () => {
+      for (const node of chat.splice(0)) scroll.remove(node);
+    },
     heading: (lines) => {
       top?.heading(lines);
     },
@@ -365,7 +375,7 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
       reply.add(new kit.TextRenderable(renderer, { content: '● ', wrapMode: 'word', flexShrink: 0 }));
       const lines = (text.endsWith('\n') ? text.slice(0, -1) : text).split('\n');
       reply.add(new kit.TextRenderable(renderer, { content: styled(lines), wrapMode: 'word', flexGrow: 1 }));
-      scroll.add(reply);
+      talk(reply);
     },
     refresh,
     onInterrupt: (listener) => {
