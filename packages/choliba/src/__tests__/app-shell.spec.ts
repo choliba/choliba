@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { listAgents } from '@choliba/agents';
 import { PANEL_ICON, PANEL_LOGO, PANEL_VERSION, type ShellModule } from '@choliba/core';
 import { fakePlatform } from '@choliba/core/testing';
 
@@ -53,6 +54,20 @@ describe('the choliba shell', () => {
     for (const word of ['agents', 'projects', 'tests', '__complete']) {
       expect(shell.has(word)).toBe(false);
     }
+  });
+
+  it("runs the command of each official agent's step that calls choliba", () => {
+    const shell = createCholibaShell(fakePlatform(), fakeRuntime());
+    const calls = listAgents(join(__dirname, '..', '..', '..', '..', '.choliba', 'agents')).flatMap((agent) =>
+      Object.values(agent.steps).flatMap((steps) =>
+        [...steps.before, ...steps.after.success, ...steps.after.failure, ...steps.after.always]
+          .filter((step) => step.action === 'run' && step.args[0] === 'bunx' && step.args[1] === 'choliba')
+          .map((step) => `${agent.id}: ${step.args.slice(2, 4).join(' ')}`),
+      ),
+    );
+
+    expect(calls.length).toBeGreaterThan(0);
+    expect(calls.filter((call) => !shell.has(call.split(' ')[1] ?? ''))).toEqual([]);
   });
 
   it.each([
