@@ -2,7 +2,7 @@ import type { CommandSpec } from '../help';
 import { openOpenTuiPanel, type ArtPixels, type ChatPanel, type PanelOptions } from '../terminal';
 import { token, type Container } from './container';
 import { PANEL_COMMANDS, PLATFORM } from './create-shell';
-import type { ShellCommand } from './interfaces/shell.interface';
+import type { PanelCommand, ShellCommand } from './interfaces/shell.interface';
 import { panelSession, type PanelSession } from './panel-session';
 
 /** Opens a panel, or gives nothing where it cannot (`openOpenTuiPanel`); a spec puts a fake one in its place. */
@@ -46,7 +46,11 @@ export const PANEL_SPEC: CommandSpec = {
     '(`/projects` escolhe o projeto, `/tickets` o ticket, `/agents` o agente), e o que eles escolhem aparece no ' +
     'cabeçalho, em quadros que o Ctrl+P (projeto), o Ctrl+A (agente) ou um clique recolhem. Com o agente, o ' +
     'cabeçalho mostra o provider e o modelo que uma execução usaria, e a linha de status o modo; `/provider`, ' +
-    '`/model` e `/mode` os escolhem para a sessão, e o Shift+Tab alterna o modo. Sai com Ctrl+C duas vezes. ' +
+    '`/model` e `/mode` os escolhem para a sessão, e o Shift+Tab alterna o modo. Uma mensagem sem `/` é a tarefa ' +
+    'do agente: ele roda no painel com essas escolhas (sem ticket, um agente de tickets pergunta o tipo do ticket ' +
+    'novo que a execução cria), o que se envia enquanto roda vai para ele, e as perguntas ' +
+    'dele aparecem no campo. Ctrl+C duas vezes para a execução; sem nada rodando, sai do painel. `/clear` para o ' +
+    'que roda e limpa o contexto (projeto, ticket e agente), mas não a conversa. ' +
     'Precisa de um terminal interativo.',
   flags: [{ name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true }],
 };
@@ -102,11 +106,24 @@ export const panelCommand: ShellCommand = {
     }
     session.current = panelSession(container, panel, container.get(PANEL_COMMANDS), heading);
     await new Promise<void>((resolve) => {
+      // Ctrl+C twice stops what runs first (a run of an agent); with nothing running, it closes the panel.
       panel.onInterrupt(() => {
+        if (session.current?.stop() === true) return;
         panel.close();
         resolve();
       });
     });
+  },
+};
+
+/** `/clear`: stops what runs and forgets the session's context; the chat stays. */
+export const clearPanelCommand: PanelCommand = {
+  name: 'clear',
+  description: 'Para o que roda e limpa o contexto (a conversa fica)',
+  run: ({ panel, context }) => {
+    context.clear();
+    panel.write('Contexto limpo.');
+    return Promise.resolve();
   },
 };
 

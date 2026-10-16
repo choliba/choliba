@@ -2,7 +2,7 @@ import { ThemeService } from '../theme';
 import { PLATFORM } from './create-shell';
 import type { ShellModule } from './interfaces/shell.interface';
 import { THEME, THEME_CHOICES } from './shell.constants';
-import { panelCommand, providePanel } from './panel.command';
+import { clearPanelCommand, panelCommand, providePanel } from './panel.command';
 import { provideTerminal, terminalCommand } from './terminal.command';
 
 /**
@@ -21,4 +21,5 @@ export const coreShell: ShellModule = {
     providePanel(container);
   },
   commands: [terminalCommand, panelCommand],
+  panel: [clearPanelCommand],
 };

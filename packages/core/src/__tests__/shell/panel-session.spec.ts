@@ -331,4 +331,58 @@ describe('panelSession', () => {
     expect(fake.press('tab')).toBe(true);
     expect(pressed).toEqual(['tab', 'left']);
   });
+
+  it('hands what has no slash to the conversation a command set, stops what runs, and clears the context', async () => {
+    const fake = fakeChatPanel();
+    let set: PanelCommandContext['context'] | undefined;
+    const session = panelSession(
+      new Container(),
+      fake.panel,
+      [
+        {
+          name: 'ctx',
+          description: 'Contexto',
+          run: ({ context }) => {
+            set = context;
+            return Promise.resolve();
+          },
+        },
+      ],
+      HEADING,
+    );
+    fake.send('/ctx');
+    await new Promise((resolve) => setImmediate(resolve));
+    const heard: string[] = [];
+    set?.converse((text, panel) => {
+      heard.push(text);
+      expect(panel).toBe(fake.panel);
+    });
+    fake.send('olá');
+    expect(heard).toEqual(['olá']);
+
+    expect(session.stop()).toBe(false);
+    let stopped = 0;
+    set?.busy(() => {
+      stopped += 1;
+    });
+    expect(session.stop()).toBe(true);
+    expect(session.stop()).toBe(false);
+    expect(stopped).toBe(1);
+
+    set?.busy(() => {
+      stopped += 1;
+    });
+    set?.set('agente', 'echo');
+    set?.show('agente', { lines: ['echo'], key: 'a' });
+    set?.label('modelo', 'sonnet');
+    set?.status('modo', 'modo plan');
+    set?.clear();
+    expect(stopped).toBe(2);
+    expect(set?.get('agente')).toBeUndefined();
+    expect(session.status()).toEqual([]);
+    expect(fake.cards.at(-1)).toEqual([]);
+    expect(fake.headings.at(-1)).toEqual(HEADING);
+    fake.send('de novo');
+    expect(heard).toEqual(['olá', 'de novo']);
+  });
 });

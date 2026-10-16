@@ -1,4 +1,13 @@
-import type { CommandSpec, Platform, ProcessRunnerService, ThemeService } from '@choliba/core';
+import type {
+  CommandSpec,
+  Panel,
+  PanelOptions,
+  Platform,
+  ProcessRunnerService,
+  ThemeService,
+  Writable,
+  WritableWithColumns,
+} from '@choliba/core';
 
 import type { ProviderRegistry } from '../common';
 import { listAgentsSpec } from './runs/agents-spec';
@@ -7,6 +16,14 @@ import type { RunAgentsCliDeps } from './runs/run-context';
 
 /** What a run reads from the process: where it writes, the clock, the signals, git and the executables on PATH. */
 export type AgentsPlatform = Pick<Platform, 'which' | 'clock' | 'stdout' | 'stderr' | 'signals' | 'git'>;
+
+/** What a host lends a run of an agent: its open panel, and where the run's own lines go. */
+export interface HostedRun {
+  /** The host's open panel, as the run opens it: with its title and the footer it would draw. */
+  readonly panel: (options: PanelOptions) => Promise<Panel | undefined>;
+  readonly stdout: WritableWithColumns;
+  readonly stderr: Writable;
+}
 
 /** `choliba run agent` and `choliba list agents`: the workspace's agents, run through a provider. */
 export class AgentsService {
@@ -22,6 +39,20 @@ export class AgentsService {
   /** Runs the command line after `choliba run agent`; resolves with the exit code. */
   run(argv: readonly string[]): Promise<number> {
     return runAgentsCli(argv, this.deps());
+  }
+
+  /**
+   * Runs the command line after `choliba run agent` inside a host's open panel (`choliba panel`): the run draws in
+   * `host.panel`, says what it says before and after in `host.stdout` and `host.stderr`, and prints no frame at the end.
+   */
+  runHosted(argv: readonly string[], host: HostedRun): Promise<number> {
+    return runAgentsCli(argv, {
+      ...this.deps(),
+      stdout: host.stdout,
+      stderr: host.stderr,
+      panel: host.panel,
+      hostedPanel: true,
+    });
   }
 
   /** Lists the agents, from the command line after `choliba list agents`; returns the exit code. */

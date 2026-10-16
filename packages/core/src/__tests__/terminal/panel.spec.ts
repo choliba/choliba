@@ -223,7 +223,9 @@ describe('openPanel', () => {
     const { kit, renderer, configs } = fakeToolkit();
     await openPanel(kit, OPTIONS);
 
-    expect(configs).toEqual([{ screenMode: 'alternate-screen', exitOnCtrlC: false, useMouse: true, targetFps: 30 }]);
+    expect(configs).toEqual([
+      { screenMode: 'alternate-screen', exitOnCtrlC: false, useMouse: true, autoFocus: false, targetFps: 30 },
+    ]);
     const { scroll, footer } = layoutOf(renderer);
     expect(scroll.built).toMatchObject({ title: ' test-writer ', titleColor: '#11a8cd', stickyScroll: true });
     expect(footer.content).toEqual({ chunks: [{ text: 'provider', bold: true }, { text: ' largura 60' }] });
