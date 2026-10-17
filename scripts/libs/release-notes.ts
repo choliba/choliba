@@ -250,7 +250,7 @@ export function releaseNotes(releases: readonly Release[], context: NotesContext
     `bun add --trust ${context.repoUrl}/releases/download/${context.tag}/${asset}`,
     '```',
     '',
-    'A versão instalada (`bunx choliba --version`) é a do título de cada atualização abaixo.',
+    'A versão instalada (`bun choliba --version`) é a do título de cada atualização abaixo.',
   ].join('\n');
   const days = byDay(releases).map((day, index) => daySection(day, context, index === 0));
   return `${[intro, ...days].join('\n\n')}\n`;

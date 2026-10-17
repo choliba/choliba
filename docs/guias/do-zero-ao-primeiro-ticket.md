@@ -32,7 +32,7 @@ O `new project` cria `projects/<nome>/` a partir do modelo, com `config.json`, `
 `tickets/`. O nome sai da pasta da aplicação quando você não o dá, e o `description` vem do README dela:
 
 ```bash
-bunx choliba new project minha-app --app-dir /home/voce/dev/minha-app --base-url http://localhost:3000
+bun choliba new project minha-app --app-dir /home/voce/dev/minha-app --base-url http://localhost:3000
 cp projects/minha-app/.env.example.json projects/minha-app/.env.json
 ```
 
@@ -94,9 +94,9 @@ Os agentes nunca sobem a aplicação. Sem `start`, quem sobe é você, e um agen
 4. Instale os agentes que escrevem o ticket, os testes e o código
 
 ```bash
-bunx choliba add github:choliba/choliba --path .choliba/agents/product-owner
-bunx choliba add github:choliba/choliba --path .choliba/agents/test-writer
-bunx choliba add github:choliba/choliba --path .choliba/agents/implementer
+bun choliba add github:choliba/choliba --path .choliba/agents/product-owner
+bun choliba add github:choliba/choliba --path .choliba/agents/test-writer
+bun choliba add github:choliba/choliba --path .choliba/agents/implementer
 ```
 
 Cada um traz as skills que declara. O que mais dá para instalar está em
@@ -107,7 +107,7 @@ Cada um traz as skills que declara. O que mais dá para instalar está em
 Com tudo no lugar, nada sai com `✗`:
 
 ```
-$ bunx choliba check
+$ bun choliba check
 Agentes (/home/voce/dev/dev-tools/.choliba/agents)
   ✓ implementer
   ✓ product-owner
@@ -123,13 +123,13 @@ Projetos (/home/voce/dev/dev-tools/projects)
 A aplicação precisa responder no `baseURL`. O ticket novo fica `minha-app-1`:
 
 ```bash
-bunx choliba run agent product-owner --project minha-app --type story "a página inicial mostra o nome do site"
-bunx choliba run agent test-writer --project minha-app --ticket minha-app-1
-bunx choliba run agent implementer --project minha-app --ticket minha-app-1
+bun choliba run agent product-owner --project minha-app --type story "a página inicial mostra o nome do site"
+bun choliba run agent test-writer --project minha-app --ticket minha-app-1
+bun choliba run agent implementer --project minha-app --ticket minha-app-1
 ```
 
 Os testes desse ticket, a qualquer momento:
 
 ```bash
-bunx choliba run tests minha-app:1
+bun choliba run tests minha-app:1
 ```

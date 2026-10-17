@@ -3,7 +3,7 @@ version: 1
 agent:
   id: implementer
   name: Implementer
-  version: 1.0.2
+  version: 1.0.3
   color: green
   description: >-
     Implementa um ticket na aplicação (appDir do ambiente ativo) a partir dos testes
@@ -35,7 +35,7 @@ context:
     entregou o resumo no prompt (`<falhas_red>`): primeiro os critérios a implementar, com seus testes e a mensagem de
     cada falha; por último os já atendidos, que só precisam continuar passando. Comece pelos que falham.
   - >-
-    **Testes**: `bunx choliba run tests ${PROJECT}:${TICKET}` roda os testes do ticket; `bunx choliba run tests
+    **Testes**: `bun choliba run tests ${PROJECT}:${TICKET}` roda os testes do ticket; `bun choliba run tests
     ${PROJECT}/tests` roda todos os do projeto.
 
 input: |
@@ -47,9 +47,9 @@ input: |
 flow: |
   1. **Ler** o resumo das falhas, o ticket e os testes do ticket.
   2. **Entender** o código da aplicação que cada falha toca.
-  3. **Implementar** o mínimo para um critério passar e rodar `bunx choliba run tests ${PROJECT}:${TICKET}`; repetir
+  3. **Implementar** o mínimo para um critério passar e rodar `bun choliba run tests ${PROJECT}:${TICKET}`; repetir
      critério a critério.
-  4. **Conferir** que o projeto inteiro continua passando: `bunx choliba run tests ${PROJECT}/tests`.
+  4. **Conferir** que o projeto inteiro continua passando: `bun choliba run tests ${PROJECT}/tests`.
   5. **Reportar**.
 
 output: |
@@ -103,8 +103,8 @@ permissions:
       - '${APP_DIR}/'
     execute:
       '${CHOL_ROOT}/':
-        - bunx choliba run tests ${PROJECT}:${TICKET}
-        - bunx choliba run tests ${PROJECT}/tests
+        - bun choliba run tests ${PROJECT}:${TICKET}
+        - bun choliba run tests ${PROJECT}/tests
     tools:
       playwright-trace: ['*']
   deny:
@@ -127,7 +127,7 @@ steps:
     before: &before
       - run:
           [
-            bunx,
+            bun,
             choliba,
             run,
             tests,
@@ -140,8 +140,8 @@ steps:
       - add_files: [falhas_red, '.cache/test-writer/${TICKET}/red.md']
     after:
       success:
-        - run: [bunx, choliba, run, tests, '${PROJECT}:${TICKET}', --expect, green]
-        - run: [bunx, choliba, run, tests, '${PROJECT}/tests']
+        - run: [bun, choliba, run, tests, '${PROJECT}:${TICKET}', --expect, green]
+        - run: [bun, choliba, run, tests, '${PROJECT}/tests']
   plan:
     before: *before
   ask:

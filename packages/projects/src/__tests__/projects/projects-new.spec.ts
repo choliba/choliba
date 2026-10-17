@@ -97,7 +97,7 @@ describe('choliba new project', () => {
       expect(fs.existsSync(path.join(projectsDir, 'loja', '.env.json'))).toBe(false);
       expect(out).toContain(`Projeto "loja" criado em ${path.join(projectsDir, 'loja')}.`);
       expect(out).toContain('.env.example.json');
-      expect(out).toContain('bunx choliba check loja');
+      expect(out).toContain('bun choliba check loja');
       expect(out).not.toContain('Falta preencher');
     }));
 

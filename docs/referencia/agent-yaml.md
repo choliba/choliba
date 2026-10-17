@@ -129,7 +129,7 @@ defini-la no `.env` ou no ambiente é erro.
 permissions:
   allow:
     execute:
-      '${CHOL_ROOT}/': [bunx choliba run tests] # os comandos rodam a partir da raiz
+      '${CHOL_ROOT}/': [bun choliba run tests] # os comandos rodam a partir da raiz
 ```
 
 ### `${CHOL_AGENTS_DIR}`
@@ -284,10 +284,10 @@ Cada modo tem o seu `before` e o seu `after`; um modo sem `steps` não roda nada
 steps:
   execute:
     before: # guarda: uma ação falhou → para tudo, o agente não roda
-      - run: [bunx, choliba, tests, '${PROJECT}:${TICKET}', --expect, red]
+      - run: [bun, choliba, run, tests, '${PROJECT}:${TICKET}', --expect, red]
     after:
       success: # o agente saiu com 0
-        - run: [bunx, choliba, tests, '${PROJECT}:${TICKET}', --expect, green]
+        - run: [bun, choliba, run, tests, '${PROJECT}:${TICKET}', --expect, green]
       failure: # o agente falhou: erro, limite, Ctrl+C
         - run: [bun, scripts/report-failure.ts, '${AGENT_EXIT_CODE}']
       always: # sempre, depois de success ou failure
@@ -327,7 +327,7 @@ comando. A saída inteira, stdout e stderr na ordem em que o comando escreveu, f
 falha diz qual (`saída completa: .cache/steps/….log`); um step que dá certo não deixa log.
 
 ```
-✗ execute.before 1/2 falhou — run: bunx choliba run tests tt:TT-1 --expect red (código 2)
+✗ execute.before 1/2 falhou — run: bun choliba run tests tt:TT-1 --expect red (código 2)
   <as últimas linhas da saída do comando>
   O agente não foi executado.
 ```
@@ -339,11 +339,11 @@ a repete em outro lugar. O `implementer` usa isso para que `plan` e `ask` prepar
 steps:
   execute:
     before: &before # a lista do before de execute ganha o nome "before"
-      - run: [bunx, choliba, tests, '${PROJECT}:${TICKET}', --expect, red, --failures, '.cache/test-writer/${TICKET}/red.md']
+      - run: [bun, choliba, run, tests, '${PROJECT}:${TICKET}', --expect, red, --failures, '.cache/test-writer/${TICKET}/red.md']
       - add_files: [falhas_red, '.cache/test-writer/${TICKET}/red.md']
     after:
       success:
-        - run: [bunx, choliba, tests, '${PROJECT}:${TICKET}', --expect, green]
+        - run: [bun, choliba, run, tests, '${PROJECT}:${TICKET}', --expect, green]
   plan:
     before: *before # a mesma lista do before de execute
   ask:

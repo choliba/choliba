@@ -100,6 +100,6 @@ com os verbos do app.
 
 `.choliba/` é o layout de uma pasta de trabalho: `agents/`, `skills/` e `mcps/`. Neste repositório ela guarda o
 que vai para o usuário: os agentes oficiais e as skills que eles nomeiam, que ele instala com
-`bunx choliba add github:choliba/choliba --path .choliba/agents/<agente>`. O choliba roda esses mesmos agentes daqui,
+`bun choliba add github:choliba/choliba --path .choliba/agents/<agente>`. O choliba roda esses mesmos agentes daqui,
 pelo layout padrão, sem caso especial. `.agents/` guarda só o ferramental de quem desenvolve o choliba: as skills de
 desenvolvimento, que nenhum usuário recebe.
