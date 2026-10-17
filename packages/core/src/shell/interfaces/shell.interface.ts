@@ -95,6 +95,8 @@ export interface PanelContext {
    * letter that opens or collapses it with Ctrl. Undefined hides it.
    */
   show(title: string, card: Omit<PanelCard, 'title'> | undefined): void;
+  /** Turns a spinner in the title of the card `title` while `busy` (an agent's run), and stops it after. */
+  spin(title: string, busy: boolean): void;
   /**
    * Shows `name value` in the header's column, under its fixed lines, the name in gray and `value` as given (escape
    * codes kept); undefined removes it. The lines keep the order their names first came in.

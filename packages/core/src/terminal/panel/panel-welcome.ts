@@ -136,6 +136,8 @@ export interface Header<Node> {
   cards(cards: readonly PanelCard[]): void;
   /** Opens or collapses the card whose key is `key` (Ctrl+`key`): `true` when a card has it. Open at first. */
   toggleKey(key: string): boolean;
+  /** Stops the spinners: the panel is closing. */
+  stop(): void;
 }
 
 /** A card of the header: a box titled `title`, with `lines` in it, a long one wrapped between words and `---` a rule. */
@@ -148,7 +150,13 @@ export interface PanelCard {
   readonly key?: string;
   /** Its place among the cards, the lowest first (`sandbox` 1, `projeto` 2, `agente` 3); without it, after those that have one. */
   readonly order?: number;
+  /** Its work is running: a spinner turns in its title until it is not. */
+  readonly busy?: boolean;
 }
+
+/** The frames of a busy card's spinner, one every `SPIN_MS`. */
+const SPINNER = '⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏';
+const SPIN_MS = 80;
 
 /** A card's width, in columns, its border included. */
 const CARD_WIDTH = 44;
@@ -230,8 +238,24 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
   };
   const collapsed = new Set<string>();
   let current: readonly PanelCard[] = [];
+  let frame = 0;
+  let spinning: ReturnType<typeof setInterval> | undefined;
+  const stop = (): void => {
+    clearInterval(spinning);
+    spinning = undefined;
+  };
+  // The spinner turns only while a card is busy: no timer runs for a header at rest.
+  const spin = (busy: boolean): void => {
+    if (!busy) stop();
+    else
+      spinning ??= setInterval(() => {
+        frame = (frame + 1) % SPINNER.length;
+        cards(current);
+      }, SPIN_MS);
+  };
   const cards = (shown: readonly PanelCard[]): void => {
     current = shown;
+    spin(shown.some((each) => each.busy === true));
     for (const [title, card] of made) card.box.visible = shown.some((each) => each.title === title);
     for (const each of shown) {
       const card = cardOf(each.title);
@@ -247,7 +271,7 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
         card.rows.push(row);
       }
       card.box.visible = true;
-      card.box.title = ` ${folded ? '▸' : '▾'} ${each.title} `;
+      card.box.title = ` ${folded ? '▸' : '▾'} ${each.title}${each.busy === true ? ` ${SPINNER.charAt(frame)}` : ''} `;
       // A long line wraps between words in the card's width, its row as tall as the lines it takes.
       card.rows.forEach((row, index) => {
         const line = lines[index];
@@ -267,5 +291,5 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     if (card !== undefined) toggleCard(card.title);
     return card !== undefined;
   };
-  return { box, heading, cards, toggleKey };
+  return { box, heading, cards, toggleKey, stop };
 }

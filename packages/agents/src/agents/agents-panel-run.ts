@@ -1,7 +1,7 @@
 import type { ChatPanel, Container, Panel, PanelContext, PanelOptions } from '@choliba/core';
 
 import type { AgentDefinition } from '../common';
-import { activeAgent, bold, flag, gray, PROJECT, sessionArgv, TICKET, warn } from './agents-panel-state';
+import { activeAgent, AGENT, bold, flag, gray, PROJECT, sessionArgv, TICKET, warn } from './agents-panel-state';
 import { AGENTS } from './agents.constants';
 
 /** The status line's part while an agent runs. */
@@ -58,7 +58,7 @@ const talking = new WeakSet<PanelContext>();
 /**
  * Makes what is sent with no `/` the task of the active agent: it runs as `choliba run agent` would, in the session's
  * panel, with the session's choices. While it runs, what is sent goes to it, its questions are asked in the field, the
- * status line says it runs, and Ctrl+C twice or /clear stop it.
+ * agent's card turns a spinner and the status line says it runs, and Ctrl+C twice or /clear stop it.
  */
 export function talkToAgent(container: Container, context: PanelContext): void {
   if (talking.has(context)) return;
@@ -81,6 +81,7 @@ export function talkToAgent(container: Container, context: PanelContext): void {
       sending = undefined;
       context.status(RUN, undefined);
       context.busy(undefined);
+      context.spin(AGENT, false);
     };
     context.busy(() => {
       stopRun?.();
@@ -103,7 +104,8 @@ export function talkToAgent(container: Container, context: PanelContext): void {
         close: done,
       });
     const startedAt = Date.now();
-    panel.answer(`Rodando ${bold(agent.id)}…`);
+    // The agent's card turns a spinner while it runs; the chat keeps only what the run says.
+    context.spin(AGENT, true);
     await container
       .get(AGENTS)
       .runHosted(argv, { panel: hosted, stdout: replies(panel, (line) => line), stderr: replies(panel, warn) })

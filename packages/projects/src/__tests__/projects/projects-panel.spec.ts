@@ -40,6 +40,7 @@ function withProjects(projects: Readonly<Record<string, Readonly<Record<string, 
     busy: () => undefined,
     clear: () => undefined,
     onChange: () => undefined,
+    spin: () => undefined,
   };
   const shown: [string, readonly string[] | undefined, string | undefined][] = [];
   const keys: (string | undefined)[] = [];
@@ -85,7 +86,7 @@ describe('the panel commands of @choliba/projects', () => {
     ]);
   });
 
-  it('chooses the active project, marking the current one, and clears the ticket when it changes', async () => {
+  it('chooses the active project, marking the current one, clears the ticket when it changes, and asks for one', async () => {
     const panel = withProjects({ blog: { 'config.json': '{}' }, loja: LOJA });
     try {
       panel.values.set('ticket', 'blog-1');
@@ -100,34 +101,42 @@ describe('the panel commands of @choliba/projects', () => {
           { label: 'loja', detail: 'Loja de exemplo', current: false },
         ],
       });
+      expect(panel.fake.choices[1]?.title).toBe('Escolha o ticket de loja');
       expect([...panel.values]).toEqual([
         ['projeto', 'loja'],
         ['descrição', 'Loja de exemplo'],
+        ['ticket', 'loja-2'],
       ]);
-      expect(panel.shown).toEqual([
+      expect(panel.shown[0]).toEqual([
+        'projeto',
         [
-          'projeto',
-          [
-            '\u001b[1m\u001b[36mloja\u001b[39m\u001b[22m',
-            '---',
-            'Loja de exemplo',
-            '\u001b[90mlocal · http://localhost:5173/\u001b[39m',
-            '---',
-            '2 tickets',
-          ],
-          '\u001b[1m\u001b[36mloja\u001b[39m\u001b[22m · 2 tickets',
+          '\u001b[1m\u001b[36mloja\u001b[39m\u001b[22m',
+          '---',
+          'Loja de exemplo',
+          '\u001b[90mlocal · http://localhost:5173/\u001b[39m',
+          '---',
+          '2 tickets',
         ],
+        '\u001b[1m\u001b[36mloja\u001b[39m\u001b[22m · 2 tickets',
       ]);
-      expect(panel.fake.written).toEqual(['Projeto ativo: \u001b[1mloja\u001b[22m.']);
+      expect(panel.fake.written[0]).toBe('Projeto ativo: \u001b[1mloja\u001b[22m.');
 
       panel.values.set('ticket', 'loja-1');
       await panel.projects();
-      expect(panel.fake.choices[1]?.options[1]?.current).toBe(true);
+      expect(panel.fake.choices[2]?.options[1]?.current).toBe(true);
       expect(panel.values.get('ticket')).toBe('loja-1');
+
+      panel.fake.answer(0);
+      await panel.projects();
+      expect([panel.values.get('projeto'), panel.values.has('ticket'), panel.fake.choices.length]).toEqual([
+        'blog',
+        false,
+        4,
+      ]);
 
       panel.fake.answer(undefined);
       await panel.projects();
-      expect(panel.values.get('projeto')).toBe('loja');
+      expect(panel.values.get('projeto')).toBe('blog');
     } finally {
       panel.cleanup();
     }
@@ -183,7 +192,7 @@ describe('the panel commands of @choliba/projects', () => {
 
       expect(panel.fake.choices[0]).toEqual({
         title: 'Escolha o ticket de loja',
-        description: 'O ticket em que os testes e os agentes vão agir.',
+        description: 'O ticket em que os testes e os agentes vão agir. Esc deixa como está.',
         options: [
           { label: 'loja-1', detail: 'Carrinho', current: false },
           { label: 'loja-2', current: true },
@@ -228,6 +237,7 @@ describe('the panel commands of @choliba/projects', () => {
         busy: () => undefined,
         clear: () => undefined,
         onChange: () => undefined,
+        spin: () => undefined,
       };
       expect(tickets?.unavailable?.(context, panel.container)).toBe('Escolha um projeto antes, com /projects');
       await panel.tickets();

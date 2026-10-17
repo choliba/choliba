@@ -647,6 +647,33 @@ describe('openPanel', () => {
     expect(projeto?.height).toBe(10);
   });
 
+  it("turns a spinner in a busy card's title, only while one is busy, and stops it on close", async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });
+    jest.useFakeTimers();
+    try {
+      panel.cards([
+        { title: 'projeto', lines: ['site'] },
+        { title: 'agente', lines: ['echo'], busy: true },
+      ]);
+      const [, projeto, agente] = renderer.root.children[0]?.children[0]?.children ?? [];
+      expect([projeto?.title, agente?.title]).toEqual([' ▾ projeto ', ' ▾ agente ⠋ ']);
+      jest.advanceTimersByTime(160);
+      expect(agente?.title).toBe(' ▾ agente ⠹ ');
+
+      panel.cards([{ title: 'agente', lines: ['echo'] }]);
+      expect([agente?.title, jest.getTimerCount()]).toEqual([' ▾ agente ', 0]);
+
+      panel.cards([{ title: 'agente', lines: ['echo'], busy: true }]);
+      panel.cards([{ title: 'agente', lines: ['echo'], busy: true }]);
+      expect(jest.getTimerCount()).toBe(1);
+      panel.close();
+      expect(jest.getTimerCount()).toBe(0);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('collapses a card to its summary with Ctrl and its key or a click on it, and opens it again', async () => {
     const { kit, renderer, press } = fakeToolkit();
     const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });
