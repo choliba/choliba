@@ -156,17 +156,17 @@ describe('buildPrepare / buildAfter', () => {
       run.mockRestore();
     }
   });
-  it("hands the run's signal to its steps, before and after, so Ctrl+C stops the command running", async () => {
+  it("hands the run's signal to its steps, before and after, and the agent's answer to those after", async () => {
     const base = loadAgent(FIXTURES, 'with-prepare');
     const signal = new AbortController().signal;
     const before = jest.spyOn(actionsModule, 'runBeforeSteps').mockResolvedValue([]);
     const after = jest.spyOn(actionsModule, 'runAfterSteps').mockResolvedValue([]);
     try {
       await buildPrepare(base)?.({ task: 'x', repoRoot: '/repo', agent: base, mode: 'execute', signal });
-      await buildAfter(base)?.({ repoRoot: '/repo', mode: 'execute', exitCode: 0, signal });
+      await buildAfter(base)?.({ repoRoot: '/repo', mode: 'execute', exitCode: 0, signal, answer: 'feito' });
 
       expect(before.mock.calls[0]?.[0]).toEqual({ repoRoot: '/repo', since: undefined, signal });
-      expect(after.mock.calls[0]?.[0]).toEqual({ repoRoot: '/repo', since: undefined, signal });
+      expect(after.mock.calls[0]?.[0]).toEqual({ repoRoot: '/repo', since: undefined, signal, answer: 'feito' });
     } finally {
       before.mockRestore();
       after.mockRestore();

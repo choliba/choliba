@@ -303,6 +303,24 @@ steps:
 | `git_diff`        | `before` | Grava o diff do working tree e põe o caminho e o índice no prompt. |
 | `read_files`      | `before` | Põe o conteúdo de arquivos no prompt, dentro de uma tag (`<tag>`). |
 | `record_git_head` | `after`  | Grava o commit atual, base do próximo `--since pending`.           |
+| `write_files`     | `after`  | Grava a resposta final do agente em cada arquivo dado.             |
+
+O `write_files` é o choliba gravando, não o agente: o arquivo sai mesmo de um modelo que não chamaria a ferramenta
+de escrita, e o agente não precisa de permissão para ele. Os caminhos são relativos à pasta de trabalho ou absolutos
+(com as variáveis do agente, como `${PROJECT_DIR}`); as pastas que faltarem são criadas e o que houver é substituído.
+Um bloco de código que envolva a resposta inteira (` ```markdown … ``` `) sai. Sem resposta (o agente falhou ou não
+escreveu texto), a ação falha; por isso ela costuma ficar em `after.success`:
+
+```yaml
+steps:
+  execute:
+    after:
+      success:
+        - write_files: ['${PROJECT_DIR}/tech-stack.md']
+```
+
+Gravar nas pastas de agentes, skills e MCPs termina a execução com código 1, como qualquer mudança nelas (veja
+acima).
 
 O que o `before` produz entra na tarefa que o agente recebe; cada arquivo do `read_files` e o índice do `git_diff` vão
 como dado, dentro de `<untrusted_input>` (veja [Segurança](seguranca.md)). O `after` é um `try/catch/finally` sobre

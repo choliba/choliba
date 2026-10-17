@@ -293,7 +293,8 @@
         "additionalProperties": false,
         "properties": {
           "run": { "$ref": "#/definitions/args" },
-          "record_git_head": { "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "maxItems": 1 }] }
+          "record_git_head": { "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "maxItems": 1 }] },
+          "write_files": { "$ref": "#/definitions/args" }
         }
       }
     },

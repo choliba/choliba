@@ -339,6 +339,11 @@ describe('validateAgentYamlV1', () => {
     it('checks the number of arguments of each action', () => {
       expect(validate(steps({ execute: { before: [{ read_files: ['t'] }] } })).valid).toBe(false);
       expect(validate(steps({ execute: { before: [{ add_files: ['t', 'x'] }] } })).valid).toBe(false);
+      expect(validate(steps({ execute: { after: { success: [{ write_files: ['a.md', 'b.md'] }] } } })).valid).toBe(
+        true,
+      );
+      expect(validate(steps({ execute: { before: [{ write_files: ['a.md'] }] } })).valid).toBe(false);
+      expect(validate(steps({ execute: { after: [{ write_files: [] }] } })).valid).toBe(false);
       expect(validate(steps({ execute: { after: [{ record_git_head: ['a', 'b'] }] } })).valid).toBe(false);
       expect(validate(steps({ execute: { before: [{ run: [] }] } })).valid).toBe(false);
     });

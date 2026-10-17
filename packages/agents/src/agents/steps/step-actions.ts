@@ -6,6 +6,7 @@ import { CACHE_DIR } from '../agent-layout';
 import type { AgentStep } from '../../common';
 import { READ_FILES_USAGE, readFiles } from './step-read-files';
 import { recordGitHead } from './git-state';
+import { WRITE_FILES_USAGE, writeFiles } from './step-write-files';
 import { spawnToEnd } from './step-spawn';
 import { GIT_DIFF_USAGE, parseGitDiffArgs, runGitDiff } from './working-tree-diff';
 
@@ -34,6 +35,8 @@ export interface StepContext {
   readonly logDir?: string;
   /** Stops the command of the step running (Ctrl+C in the panel); the step then fails. */
   readonly signal?: AbortSignal;
+  /** The agent's final answer, after it ran clean: what `write_files` saves. */
+  readonly answer?: string;
 }
 
 export interface AgentAction {
@@ -155,6 +158,17 @@ export const ACTIONS: Readonly<Record<string, AgentAction>> = {
     producesSection: false,
     run: (context, args) => {
       recordGitHead(context.repoRoot, argAt(args, 0, 'record_git_head <arquivo>'));
+      return undefined;
+    },
+  },
+  write_files: {
+    usage: WRITE_FILES_USAGE,
+    phases: ['after_execute'],
+    accepts: (args) => args.length > 0,
+    producesSection: false,
+    run: (context, args) => {
+      argAt(args, 0, WRITE_FILES_USAGE);
+      writeFiles(context.repoRoot, context.answer, args);
       return undefined;
     },
   },

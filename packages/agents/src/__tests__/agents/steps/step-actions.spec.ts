@@ -67,11 +67,11 @@ describe('checkStep', () => {
 
   it('names an unknown action, a wrong list and wrong arguments', () => {
     expect(checkStep({ action: 'nope', args: [] }, 'after_execute')).toEqual({
-      error: 'ação desconhecida "nope" (esperado: run, git_diff, read_files, record_git_head)',
+      error: 'ação desconhecida "nope" (esperado: run, git_diff, read_files, record_git_head, write_files)',
     });
     // The old name of read_files is gone, with no alias.
     expect(checkStep({ action: 'add_files', args: ['t', 'x.md'] }, 'before_execute')).toEqual({
-      error: 'ação desconhecida "add_files" (esperado: run, git_diff, read_files, record_git_head)',
+      error: 'ação desconhecida "add_files" (esperado: run, git_diff, read_files, record_git_head, write_files)',
     });
     expect(checkStep({ action: 'git_diff', args: ['a', 'b'] }, 'after_execute')).toEqual({
       error: '"git_diff" não pode ser usado em after_execute',
@@ -244,6 +244,23 @@ describe('the run action', () => {
   });
 });
 
+describe('the write_files action', () => {
+  it("saves the agent's answer after it, and fails saying so when there is none", async () => {
+    const tmp = makeTmpDir('actions-write');
+    try {
+      const steps = [{ action: 'write_files', args: ['out/stack.md'] }];
+
+      expect(await runAfterSteps({ repoRoot: tmp.path, since: undefined, answer: 'feito' }, steps, 'a')).toEqual([]);
+      expect(readFileSync(join(tmp.path, 'out', 'stack.md'), 'utf8')).toBe('feito\n');
+
+      const [failure] = await runAfterSteps({ repoRoot: tmp.path, since: undefined }, steps, 'a');
+      expect(failure).toMatchObject({ status: undefined, output: 'o agente não deu resposta para gravar' });
+    } finally {
+      tmp.cleanup();
+    }
+  });
+});
+
 describe('runAfterSteps', () => {
   it('runs every step, even after one fails, and returns the ones that failed', async () => {
     const repo = makeTmpGitRepo();
@@ -326,6 +343,7 @@ describe('ACTIONS', () => {
     const context = { repoRoot: '/repo', since: undefined };
 
     expect(() => ACTIONS['record_git_head']?.run(context, [])).toThrow('argumento faltando: record_git_head <arquivo>');
+    expect(() => ACTIONS['write_files']?.run(context, [])).toThrow('argumento faltando: write_files <arquivo...>');
     await expect(ACTIONS['run']?.run(context, [])).rejects.toThrow('argumento faltando: run <comando> [args...]');
     expect(() => ACTIONS['read_files']?.run(context, [])).toThrow('argumento faltando: read_files <tag> <glob...>');
     expect(() => ACTIONS['git_diff']?.run(context, ['a'])).toThrow(
