@@ -12,6 +12,7 @@ import type {
 import type { ProviderRegistry } from '../common';
 import { listAgentsSpec } from './runs/agents-spec';
 import { agentsHelpSpec, runAgentsCli, runAgentsList } from './runs/run-agents';
+import type { DryRunInput } from './runs/dry-run';
 import type { RunAgentsCliDeps } from './runs/run-context';
 
 /** What a run reads from the process: where it writes, the clock, the signals, git and the executables on PATH. */
@@ -53,6 +54,25 @@ export class AgentsService {
       panel: host.panel,
       hostedPanel: true,
     });
+  }
+
+  /**
+   * What `choliba run agent <argv> --dry-run` would show, as data (the panel shows the sandbox's mounts from it); or
+   * what it says instead when the command line would not run. Nothing runs and nothing is written.
+   */
+  async preview(argv: readonly string[]): Promise<DryRunInput | string> {
+    let shown: DryRunInput | undefined;
+    const said: string[] = [];
+    const sink = { write: (chunk: string) => said.push(chunk), isTTY: false as const, columns: 100 };
+    await runAgentsCli([...argv, '--dry-run'], {
+      ...this.deps(),
+      stdout: sink,
+      stderr: sink,
+      preview: (input) => {
+        shown = input;
+      },
+    });
+    return shown ?? said.join('').trim();
   }
 
   /** Lists the agents, from the command line after `choliba list agents`; returns the exit code. */

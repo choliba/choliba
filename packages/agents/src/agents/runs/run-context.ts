@@ -16,6 +16,7 @@ import { projectLocations, type ProjectLocations, type ProjectSettings, type Run
 import type { Sandbox } from '@choliba/sandbox';
 
 import type { ParsedAgentsArgs } from './agents-flags';
+import type { DryRunInput } from './dry-run';
 import type { AgentInvocation } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
 import type { ProviderRequest } from '../../common';
@@ -54,6 +55,8 @@ export interface RunAgentsCliDeps {
   readonly panel?: (options: PanelOptions) => Promise<Panel | undefined>;
   /** `true` when `panel` lends a host's open panel, which keeps the conversation: no frame is printed at the end. */
   readonly hostedPanel?: boolean;
+  /** Takes what `--dry-run` would show, in place of printing it: a host that shows it its own way (the panel). */
+  readonly preview?: (input: DryRunInput) => void;
 }
 
 export function toAbsolute(path: string, repoRoot: string): string {

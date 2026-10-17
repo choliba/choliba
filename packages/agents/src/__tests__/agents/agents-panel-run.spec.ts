@@ -12,6 +12,7 @@ import {
 import { BufferWritable, fakeChatPanel, fakePanelContext, fakePlatform } from '@choliba/core/testing';
 
 import { ProviderRegistry } from '../../common';
+import { ClaudeAgentProvider } from '../../providers';
 import { agentsConfig } from '../../agents/agents-config';
 import { talkToAgent } from '../../agents/agents-panel-run';
 import { AGENTS } from '../../agents/agents.constants';
@@ -148,6 +149,7 @@ describe('talkToAgent', () => {
         ['provider', 'claude'],
         ['modelo', 'sonnet'],
         ['modo', 'plan'],
+        ['sandbox', 'docker'],
       ] as const) {
         ticket.state.context.set(key, value);
       }
@@ -165,6 +167,8 @@ describe('talkToAgent', () => {
         'sonnet',
         '--mode',
         'plan',
+        '--sandbox',
+        'docker',
         'faça',
       ]);
 
@@ -264,6 +268,35 @@ describe('AgentsService.runHosted', () => {
       expect(code).toBe(1);
       expect(stderr.text() + stdout.text()).toContain('nada');
       expect(opened).toEqual([]);
+      expect(platform.stdout.text()).toBe('');
+    } finally {
+      tmp.cleanup();
+    }
+  });
+});
+
+describe('AgentsService.preview', () => {
+  it('gives what --dry-run would show as data, or what it says when the command line would not run', async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      cpSync(join(FIXTURES, '..', 'skills'), join(tmp.path, '.choliba', 'skills'), { recursive: true });
+      const platform = fakePlatform({ which: (bin) => `/usr/bin/${bin}` });
+      const service = new AgentsService(
+        () => tmp.path,
+        { CHOL_AGENTS_DIR: tmp.path, CHOL_SANDBOX: 'docker' },
+        new ProviderRegistry([new ClaudeAgentProvider()]),
+        new ProcessRunnerService({ spawner: platform.spawn }),
+        new ThemeService({}, platform.stdout, false, {}),
+        platform,
+      );
+
+      const shown = await service.preview(['echo', 'prévia']);
+      expect(shown).toMatchObject({ providerId: 'claude', container: { image: 'choliba-agent', network: 'isolated' } });
+      const paths = typeof shown === 'string' ? [] : (shown.container?.mounts.map((mount) => mount.path) ?? []);
+      expect(paths).toContain(join(tmp.path, '.choliba', 'skills', 'dummy-skill'));
+
+      expect(await service.preview(['nada'])).toContain('nada');
       expect(platform.stdout.text()).toBe('');
     } finally {
       tmp.cleanup();

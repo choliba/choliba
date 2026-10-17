@@ -1,10 +1,12 @@
-import { PLATFORM, WORKSPACE_ROOT, type ChatPanel, type Container, type PanelContext } from '@choliba/core';
+import { messageOf, PLATFORM, WORKSPACE_ROOT, type ChatPanel, type Container, type PanelContext } from '@choliba/core';
+import { sandboxConfig } from '@choliba/sandbox';
 
 import { AUTO, type AgentDefinition, type AgentProvider, type ExecutionMode } from '../common';
 import { resolveAgentsDir } from './agent-dirs';
 import { loadAgent } from './agent-loader';
 import { agentsConfig } from './agents-config';
 import { AGENT_PROVIDERS } from './agents.constants';
+import { isSandboxChoice, type SandboxChoice } from './runs/agents-flags';
 import { providerModel } from './runs/provider-model';
 
 /** What the panel's session keeps about a run of an agent: the context keys of each choice. */
@@ -12,6 +14,39 @@ export const AGENT = 'agente';
 export const PROVIDER = 'provider';
 export const MODEL = 'modelo';
 export const MODE = 'modo';
+export const SANDBOX = 'sandbox';
+
+/** The context keys `/projects` and `/tickets` of `@choliba/projects` set. */
+export const PROJECT = 'projeto';
+export const TICKET = 'ticket';
+
+/** `[name, value]`, or nothing when there is no value or the agent does not take it. */
+export function flag(name: string, value: string | undefined, taken = true): readonly string[] {
+  return value === undefined || !taken ? [] : [name, value];
+}
+
+/**
+ * The command line after `choliba run agent` for `task`: the agent, then the project it takes and `ticket` (its ticket
+ * flags), then the provider, the model, the mode and the sandbox chosen in the session (one left at its default is no
+ * flag: the run decides, as it would on the command line).
+ */
+export function sessionArgv(
+  context: PanelContext,
+  agent: AgentDefinition,
+  ticket: readonly string[],
+  task: string,
+): readonly string[] {
+  return [
+    agent.id,
+    ...flag('--project', context.get(PROJECT), agent.projectRequired),
+    ...ticket,
+    ...flag('--provider', context.get(PROVIDER)),
+    ...flag('--model', context.get(MODEL)),
+    ...flag('--mode', context.get(MODE)),
+    ...flag('--sandbox', context.get(SANDBOX)),
+    task,
+  ];
+}
 
 export const bold = (text: string): string => `\u001b[1m\u001b[36m${text}\u001b[39m\u001b[22m`;
 export const gray = (text: string): string => `\u001b[90m${text}\u001b[39m`;
@@ -116,4 +151,22 @@ export function listenModeKey(container: Container, context: PanelContext): void
     showRun(container, context);
     return true;
   });
+}
+
+/** Why a run cannot use `choice` here: Docker is not installed; nothing when it can. */
+export function sandboxProblem(container: Container, choice: SandboxChoice): string | undefined {
+  return choice === 'docker' && container.get(PLATFORM).which('docker') === null
+    ? 'O sandbox docker precisa do comando docker, que não foi encontrado: instale o Docker ou use local.'
+    : undefined;
+}
+
+/** Where a run of the session puts the provider: the one chosen with /sandbox, else `CHOL_SANDBOX`, or why neither. */
+export function sandboxChoice(container: Container, context: PanelContext): SandboxChoice | { readonly error: string } {
+  let value = context.get(SANDBOX);
+  try {
+    value ??= container.get(sandboxConfig.token).mode;
+  } catch (error) {
+    return { error: messageOf(error) };
+  }
+  return isSandboxChoice(value) ? value : { error: `CHOL_SANDBOX="${value}" não existe: use local ou docker.` };
 }

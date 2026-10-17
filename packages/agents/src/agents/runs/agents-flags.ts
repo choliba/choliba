@@ -41,6 +41,18 @@ export function sinceDescription(defaultBase = 'base do git_diff do agente'): st
   return `Base do diff: ${SINCE_PENDING} (desde a última execução registrada), HEAD~N, branch, tag ou SHA (padrão: ${defaultBase})`;
 }
 
+/** Where the provider runs, as `--sandbox` and `/sandbox` say it: the values `CHOL_SANDBOX` takes. */
+export const SANDBOX_CHOICES = {
+  local: 'Nesta máquina, isolado com bwrap',
+  docker: 'Num container do Docker',
+} as const;
+
+/** A value of `--sandbox`. */
+export type SandboxChoice = keyof typeof SANDBOX_CHOICES;
+
+/** Whether `value` is one of `SANDBOX_CHOICES`. */
+export const isSandboxChoice = (value: string): value is SandboxChoice => Object.hasOwn(SANDBOX_CHOICES, value);
+
 /** Flags that only matter for agents with a `git_diff` in `before_execute` (they pick the diff base). */
 export const PREPARE_FLAGS: readonly string[] = ['--since', `--since-${SINCE_PENDING}`];
 
@@ -92,6 +104,12 @@ export function runFlagDefinitions(providers: ProviderRegistry): readonly RunFla
     },
     ...providers.choices().map((choice) => ({ name: `--${choice}`, description: `Atalho para --provider ${choice}` })),
     { name: '--model', valueName: 'string', description: 'Modelo; precisa estar em models do agente' },
+    {
+      name: '--sandbox',
+      valueName: 'string',
+      description: 'Onde o provider roda, só nesta execução (padrão: CHOL_SANDBOX):',
+      choices: Object.entries(SANDBOX_CHOICES).map(([name, description]) => ({ name, description })),
+    },
     { name: '--agents-dir', valueName: 'dir', description: 'Pasta dos agentes (padrão: .choliba/agents/)' },
     {
       name: '--add-dir',
@@ -141,6 +159,8 @@ export interface ParsedRunArgs {
   readonly ticket: string | undefined;
   readonly provider: string | undefined;
   readonly model: string | undefined;
+  /** `--sandbox`: where the provider runs in this run, over `CHOL_SANDBOX`. */
+  readonly sandbox: SandboxChoice | undefined;
   readonly agentsDir: string | undefined;
   readonly addDirs: readonly string[];
   readonly dryRun: boolean;
@@ -225,6 +245,7 @@ export function parseAgentsArgs(argv: readonly string[], providers: ProviderRegi
   let ticket: string | undefined;
   let provider: string | undefined;
   let model: string | undefined;
+  let sandbox: SandboxChoice | undefined;
   let agentsDir: string | undefined;
   const addDirs: string[] = [];
   let dryRun = false;
@@ -315,6 +336,14 @@ export function parseAgentsArgs(argv: readonly string[], providers: ProviderRegi
       model = nextValue(queue, '--model');
       continue;
     }
+    if (arg === '--sandbox') {
+      const value = nextValue(queue, '--sandbox');
+      if (!isSandboxChoice(value)) {
+        throw new AgentsArgsError(`--sandbox precisa ser local ou docker, não "${value}". ${USAGE}`);
+      }
+      sandbox = value;
+      continue;
+    }
     if (arg === '--agents-dir') {
       agentsDir = nextValue(queue, '--agents-dir');
       continue;
@@ -364,6 +393,7 @@ export function parseAgentsArgs(argv: readonly string[], providers: ProviderRegi
     ticket,
     provider,
     model,
+    sandbox,
     agentsDir,
     addDirs,
     dryRun,

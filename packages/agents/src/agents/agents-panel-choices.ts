@@ -11,11 +11,14 @@ import {
   modelFor,
   PROVIDER,
   providerChoice,
+  SANDBOX,
+  sandboxChoice,
+  sandboxProblem,
   showRun,
   warn,
 } from './agents-panel-state';
 import { AGENT_PROVIDERS } from './agents.constants';
-import { MODE_CHOICES } from './runs/agents-flags';
+import { MODE_CHOICES, SANDBOX_CHOICES, type SandboxChoice } from './runs/agents-flags';
 
 /** Why a choice about the active agent cannot be made yet. */
 const NO_AGENT = 'Escolha um agente antes, com /agents';
@@ -151,5 +154,35 @@ const modeCommand: PanelCommand = {
   },
 };
 
+/** The values of `--sandbox`, in the order /sandbox lists them. */
+const SANDBOXES: readonly SandboxChoice[] = ['local', 'docker'];
+
+/** `/sandbox`: where the provider runs, for this session; with no choice, `CHOL_SANDBOX` decides. */
+const sandboxCommand: PanelCommand = {
+  name: 'sandbox',
+  description: 'Escolhe onde o provider roda',
+  run: async ({ container, panel, context }) => {
+    const active = sandboxChoice(container, context);
+    const chosen = await panel.choose({
+      title: 'Escolha o sandbox',
+      description: 'Onde o provider roda nesta sessão. O padrão vem de CHOL_SANDBOX.',
+      options: SANDBOXES.map((sandbox) => ({
+        label: sandbox,
+        detail: sandboxProblem(container, sandbox) === undefined ? SANDBOX_CHOICES[sandbox] : 'Docker não encontrado',
+        current: sandbox === active,
+      })),
+    });
+    const sandbox = chosen === undefined ? undefined : SANDBOXES[chosen];
+    if (sandbox === undefined || sandbox === active) return;
+    const problem = sandboxProblem(container, sandbox);
+    if (problem !== undefined) {
+      panel.write(warn(problem));
+      return;
+    }
+    context.set(SANDBOX, sandbox);
+    panel.write(`Sandbox: ${bold(sandbox)}.`);
+  },
+};
+
 /** The choices about a run of the active agent that `choliba panel` takes. */
-export const runChoices: readonly PanelCommand[] = [providerCommand, modelCommand, modeCommand];
+export const runChoices: readonly PanelCommand[] = [providerCommand, modelCommand, modeCommand, sandboxCommand];

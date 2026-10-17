@@ -52,6 +52,7 @@ export interface PanelNode<Node> {
 }
 
 export interface PanelBox<Node> extends PanelNode<Node> {
+  remove(child: Node): void;
   height: number | 'auto' | `${number}%`;
   visible: boolean;
   /** The title on its top border. */

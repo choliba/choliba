@@ -44,6 +44,8 @@ interface ContextView {
   busy(stop: (() => void) | undefined): void;
   /** Stops what runs; the context forgets its own state after. */
   stop(): void;
+  /** Once the context is clear: what the packages show in a new session shows again. */
+  restart(): void;
 }
 
 /** The session's context: its values, and the cards and labels they show in the header, each in the order it came. */
@@ -52,16 +54,25 @@ function sessionContext(view: ContextView): PanelContext {
   const cards = new Map<string, PanelCard>();
   const labels = new Map<string, string>();
   const statuses = new Map<string, string>();
+  const changes: ((key: string | undefined) => void)[] = [];
+  const changed = (key: string | undefined): void => {
+    for (const listener of changes) listener(key);
+  };
   return {
     get: (key) => values.get(key),
     set: (key, value) => {
       if (value === undefined) values.delete(key);
       else values.set(key, value);
+      changed(key);
+    },
+    onChange: (listener) => {
+      changes.push(listener);
     },
     show: (title, card) => {
       if (card === undefined) cards.delete(title);
       else cards.set(title, { ...card, title });
-      view.cards([...cards.values()]);
+      const place = (each: PanelCard): number => each.order ?? Number.MAX_SAFE_INTEGER;
+      view.cards([...cards.values()].sort((one, other) => place(one) - place(other)));
     },
     label: (name, value) => {
       if (value === undefined) labels.delete(name);
@@ -88,6 +99,8 @@ function sessionContext(view: ContextView): PanelContext {
       view.cards([]);
       view.labels([]);
       view.status([]);
+      view.restart();
+      changed(undefined);
     },
   };
 }
@@ -105,13 +118,15 @@ export interface PanelSession {
  * the highlight over the ones that can run, Tab puts the highlighted one in the field, a click runs one, and Esc hides
  * them; Enter runs the command named whole, else the highlighted one. A command that cannot run says why. Anything
  * else is said, and goes to the conversation a command set, if any. The cards the commands show go in the header, and
- * their labels in its column, under `heading`.
+ * their labels in its column, under `heading`. Each of `starts` shows what its package shows in a new session, as the
+ * session begins and again after the context is cleared.
  */
 export function panelSession(
   container: Container,
   panel: ChatPanel,
   commands: readonly PanelCommand[],
   heading: readonly string[],
+  starts: readonly ((container: Container, context: PanelContext) => void)[] = [],
 ): PanelSession {
   let shortcuts: readonly string[] = [];
   let parts: readonly string[] = [];
@@ -151,7 +166,14 @@ export function panelSession(
     stop: () => {
       stopRunning();
     },
+    restart: () => {
+      begin();
+    },
   });
+  const begin = (): void => {
+    for (const start of starts) start(container, context);
+  };
+  begin();
   const matching = (word: string): readonly PanelCommand[] =>
     commands.filter((command) => command.name.startsWith(word));
   const why = (command: PanelCommand): string | undefined => command.unavailable?.(context, container);

@@ -1665,7 +1665,24 @@ describe('runAgentsCli — CHOL_SANDBOX', () => {
 
     const noDocker = harness([], { config: { CHOL_SANDBOX: 'docker' } });
     expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, 'x'], noDocker.deps)).toBe(1);
-    expect(noDocker.stderr.chunks.join('')).toContain('o comando docker não foi encontrado');
+    expect(noDocker.stderr.chunks.join('')).toContain('O sandbox docker precisa do comando docker');
+  });
+
+  it('takes --sandbox over CHOL_SANDBOX for this run, and refuses a value it does not take', async () => {
+    const docker = harness([], { which: whichOf(['agent', 'docker']), config: { CHOL_SANDBOX: 'local' } });
+    const argv = ['echo', '--agents-dir', FIXTURES, '--provider', 'cursor', '--dry-run'];
+    expect(await runAgentsCli([...argv, '--sandbox', 'docker', 'x'], docker.deps)).toBe(0);
+    expect(docker.stdout.chunks.join('')).toContain('num container (docker, imagem choliba-agent)');
+
+    const local = harness([], { which: whichOf(['claude']), config: { CHOL_SANDBOX: 'docker' } });
+    expect(
+      await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', '--sandbox', 'local', 'x'], local.deps),
+    ).toBe(0);
+    expect(local.stdout.chunks.join('')).toContain('no bwrap, que só vê:');
+
+    const wrong = harness([]);
+    expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--sandbox', 'vm', 'x'], wrong.deps)).toBe(1);
+    expect(wrong.stderr.chunks.join('')).toContain('--sandbox precisa ser local ou docker, não "vm".');
   });
 
   it('says in --dry-run which container the provider would run in, writing nothing', async () => {
