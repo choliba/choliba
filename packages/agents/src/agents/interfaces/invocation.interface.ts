@@ -1,5 +1,6 @@
 import type { ExecutionMode, PermissionPolicy, PromptInput } from '../../common';
 import type { StepFailure } from '../steps/step-actions';
+import type { StepProject } from '../steps/step-write-config';
 
 export interface CommandPrepareInput extends PromptInput {
   readonly mode: ExecutionMode;
@@ -18,8 +19,10 @@ export interface CommandAfterInput {
   readonly exitCode: number;
   /** Stops the command of the step running (Ctrl+C in the panel). */
   readonly signal?: AbortSignal;
-  /** The agent's final answer, when it ran clean: what a `write_files` step saves. */
+  /** The agent's final answer, when it ran clean: what a `write_files` or `write_config` step saves. */
   readonly answer?: string;
+  /** The run's project (`--project`): where a `write_config` step saves. */
+  readonly project?: StepProject;
 }
 
 export interface CommandPrepareResult {

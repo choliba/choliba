@@ -68,12 +68,12 @@ describe('checkStep', () => {
   it('names an unknown action, a wrong list and wrong arguments', () => {
     expect(checkStep({ action: 'nope', args: [] }, 'after_execute')).toEqual({
       error:
-        'ação desconhecida "nope" (esperado: run, git_diff, search_files, read_files, record_git_head, write_files)',
+        'ação desconhecida "nope" (esperado: run, git_diff, search_files, read_files, record_git_head, write_files, write_config)',
     });
     // The old name of read_files is gone, with no alias.
     expect(checkStep({ action: 'add_files', args: ['t', 'x.md'] }, 'before_execute')).toEqual({
       error:
-        'ação desconhecida "add_files" (esperado: run, git_diff, search_files, read_files, record_git_head, write_files)',
+        'ação desconhecida "add_files" (esperado: run, git_diff, search_files, read_files, record_git_head, write_files, write_config)',
     });
     expect(checkStep({ action: 'git_diff', args: ['a', 'b'] }, 'after_execute')).toEqual({
       error: '"git_diff" não pode ser usado em after_execute',
@@ -125,6 +125,15 @@ describe('checkStep', () => {
     });
     expect(check({ tag: 't', dirs: ['.'], pattern: ['x'], ignore: ['ok', 'a//b'] })).toEqual({
       error: `o campo "ignore" tem um padrão inválido "a//b": tem // ou um nome vazio: ${usage}`,
+    });
+  });
+
+  it('takes in write_config only a key of config.json that the choliba writes', () => {
+    const check = (key: string) => checkStep({ action: 'write_config', args: [], options: { key } }, 'after_execute');
+
+    expect(check('stack')).toEqual({ action: expect.anything() as unknown });
+    expect(check('envs')).toEqual({
+      error: 'o campo "key" é uma chave do config.json que o choliba grava (stack): esperado "write_config: { key }"',
     });
   });
 

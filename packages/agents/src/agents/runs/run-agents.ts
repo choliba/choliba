@@ -183,6 +183,7 @@ async function runAfter(
   command: AgentInvocation,
   ended: { readonly mode: ExecutionMode; readonly exitCode: number; readonly answer: string | undefined },
   deps: RunAgentsCliDeps,
+  project: string | undefined,
 ): Promise<number> {
   const { mode, exitCode, answer } = ended;
   const input = {
@@ -191,6 +192,7 @@ async function runAfter(
     exitCode,
     ...(deps.signal === undefined ? {} : { signal: deps.signal }),
     ...(answer === undefined ? {} : { answer }),
+    ...(project === undefined ? {} : { project: { projectsDir: projectsDir(deps), name: project } }),
   };
   const failures = (await command.after?.(input)) ?? [];
   for (const failure of failures) {
@@ -214,6 +216,7 @@ async function runAndRecord(
   providerRequest: ProviderRequest,
   deps: RunAgentsCliDeps,
   sandbox: Sandbox,
+  project: string | undefined,
 ): Promise<number> {
   const toolFiles = planRunTools(providerRequest, deps.config);
   const files = [...toolFiles, ...(resolved.adapter.previewWorkspace?.(providerRequest) ?? [])];
@@ -252,7 +255,7 @@ async function runAndRecord(
     },
   );
 
-  return runAfter(command, { mode, exitCode, answer }, deps);
+  return runAfter(command, { mode, exitCode, answer }, deps, project);
 }
 
 /** The run's deps with `--sandbox` in place of `CHOL_SANDBOX`, so everything after it sees one sandbox. */
@@ -414,6 +417,7 @@ async function runPrepared(
     prepared.providerRequest,
     deps,
     sandbox,
+    settings?.project,
   );
   const changes = definitionChanges(before, definitionSnapshot(directories));
   const guarded = changes.length === 0 ? exitCode : definitionChangeExit(changes, deps);

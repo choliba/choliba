@@ -330,6 +330,13 @@
       "required": ["files"],
       "properties": { "files": { "$ref": "#/definitions/args" } }
     },
+    "writeConfig": {
+      "description": "Grava a resposta final do agente, um JSON, na chave key do config.json do projeto da execução (--project), conferida pela regra da chave; as outras chaves ficam como estão.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key"],
+      "properties": { "key": { "enum": ["stack"] } }
+    },
     "beforeSteps": {
       "type": "array",
       "items": {
@@ -357,7 +364,8 @@
         "properties": {
           "run": { "$ref": "#/definitions/args" },
           "record_git_head": { "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "maxItems": 1 }] },
-          "write_files": { "$ref": "#/definitions/writeFiles" }
+          "write_files": { "$ref": "#/definitions/writeFiles" },
+          "write_config": { "$ref": "#/definitions/writeConfig" }
         }
       }
     },

@@ -113,6 +113,18 @@ describe('loadProjectSettings', () => {
     });
   });
 
+  it('keeps an optional stack, checked, and refuses a wrong one naming the file', () => {
+    withProject({ envs: [ENV], stack: { language: 'PHP' } }, { development: {} }, (projectsDir) => {
+      expect(loadProjectSettings(projectsDir, 'demo').config.stack).toEqual({
+        language: 'PHP',
+        frameworks: [],
+        libraries: [],
+        tools: [],
+      });
+    });
+    expectFailure({ envs: [ENV], stack: { tools: [] } }, { development: {} }, 'config.stack.language é obrigatório');
+  });
+
   it('keeps how the environment prepares and starts its application', () => {
     const env = { ...ENV, setup: ['bun install', 'bun run build'], start: 'bun run dev' };
     withProject({ envs: [env] }, { development: {} }, (projectsDir) => {
