@@ -77,11 +77,18 @@ funciona do mesmo jeito. Essas três pastas são o padrão; `CHOL_AGENTS_DIR`, `
 
 ## Atualização
 
-A URL da release não muda a cada versão.
+Dentro da pasta de trabalho:
 
-> _Durante a fase de desenvolvimento_
+```
+bun choliba update
+```
 
-Para o Bun baixar o pacote novo (e não reaproveitar o do cache), remova e instale de novo, dentro da pasta de trabalho:
+Ele compara a versão instalada com a da [release](https://github.com/choliba/choliba/releases/tag/v0.0.1-dev), baixa
+o pacote novo, confere o SHA-256, instala e mostra as novidades desde a versão que você tinha. Para só ver se há
+versão nova, sem instalar: `bun choliba update --check`. Detalhes em [`choliba update`](comandos/update.md).
+
+Sem o comando (numa instalação anterior a ele), o passo a passo é este. A URL da release não muda a cada versão,
+então, para o Bun baixar o pacote novo (e não reaproveitar o do cache), remova e instale de novo:
 
 ```
 bun remove choliba

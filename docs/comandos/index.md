@@ -50,12 +50,13 @@ A saída só tem cor num terminal. `--no-color`, `NO_COLOR=1`, `FORCE_COLOR=0`, 
 
 ## Pasta de trabalho
 
-| Comando                         | O que faz                                                          |
-| ------------------------------- | ------------------------------------------------------------------ |
-| [`choliba setup`](./setup.md)   | Liga o autocomplete no bash (roda sozinho ao instalar com --trust) |
-| [`choliba set`](./set.md)       | Grava uma chave da configuração no .env                            |
-| [`choliba lint`](./lint.md)     | ESLint na pasta de trabalho, com a configuração que vem no choliba |
-| [`choliba format`](./format.md) | Prettier na pasta de trabalho: confere, ou corrige com --write     |
+| Comando                         | O que faz                                                           |
+| ------------------------------- | ------------------------------------------------------------------- |
+| [`choliba setup`](./setup.md)   | Liga o autocomplete no bash (roda sozinho ao instalar com --trust)  |
+| [`choliba update`](./update.md) | Atualiza o choliba para a versão mais recente e mostra as novidades |
+| [`choliba set`](./set.md)       | Grava uma chave da configuração no .env                             |
+| [`choliba lint`](./lint.md)     | ESLint na pasta de trabalho, com a configuração que vem no choliba  |
+| [`choliba format`](./format.md) | Prettier na pasta de trabalho: confere, ou corrige com --write      |
 
 ## Gerais
 
