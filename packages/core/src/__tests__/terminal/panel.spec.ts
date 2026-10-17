@@ -2,6 +2,7 @@ import type {
   PanelFieldEvent,
   PanelKey,
   PanelRendererConfig,
+  PanelSelection,
   PanelToolkit,
 } from '../../terminal/panel/interfaces/panel.interface';
 import { loadPanelToolkit, openOpenTuiPanel, openPanelWith } from '../../terminal/panel/panel-toolkit';
@@ -101,6 +102,13 @@ class FakeNode {
     this.onContentChange?.({});
   }
 
+  /** How many times the cursor was put after the last character. */
+  atEnd = 0;
+
+  gotoBufferEnd(): void {
+    this.atEnd += 1;
+  }
+
   on(event: string, listener: () => void): this {
     this.listeners.set(event, [...(this.listeners.get(event) ?? []), listener]);
     return this;
@@ -126,6 +134,8 @@ function fakeToolkit(failToOpen = false) {
   const images: { source: string; resized?: object; disposed: number }[] = [];
   const keys: ((key: PanelKey) => void)[] = [];
   const configs: PanelRendererConfig[] = [];
+  const selections: ((selection: PanelSelection | null) => void)[] = [];
+  const copied: string[] = [];
   const renderer = {
     root: new FakeNode('root', {}),
     width: 60,
@@ -134,6 +144,13 @@ function fakeToolkit(failToOpen = false) {
       on: (_event: 'keypress', listener: (key: PanelKey) => void) => {
         keys.push(listener);
       },
+    },
+    on: (_event: 'selection', listener: (selection: PanelSelection | null) => void) => {
+      selections.push(listener);
+    },
+    copyToClipboardOSC52: (text: string) => {
+      copied.push(text);
+      return true;
     },
     destroy(): void {
       this.destroyed = true;
@@ -203,7 +220,12 @@ function fakeToolkit(failToOpen = false) {
       listener(key);
     });
   };
-  return { kit, renderer, configs, press, images };
+  const select = (text: string | null): void => {
+    selections.forEach((listener) => {
+      listener(text === null ? null : { getSelectedText: () => text });
+    });
+  };
+  return { kit, renderer, configs, press, images, select, copied };
 }
 
 const OPTIONS = {
@@ -793,6 +815,69 @@ describe('openPanel', () => {
     input.emit('submit');
     expect(sent).toEqual(['continue com React']);
     expect(input.value).toBe('');
+  });
+
+  it('brings back what was sent with ↑ and ↓, on an empty field, keeping the keys from it', async () => {
+    const { kit, renderer, press } = fakeToolkit();
+    const panel = await openPanel(kit, OPTIONS);
+    const { input } = layoutOf(renderer);
+    const taken: string[] = [];
+    panel.onKey((key) => {
+      taken.push(key.name);
+      return false;
+    });
+    let prevented = 0;
+    const key = (name: string): void => {
+      press({
+        name,
+        ctrl: false,
+        preventDefault: () => {
+          prevented += 1;
+        },
+      });
+    };
+    for (const text of ['primeira', '/sandbox']) {
+      input.value = text;
+      input.emit('submit');
+    }
+
+    key('up');
+    expect([input.plainText, input.atEnd]).toEqual(['/sandbox', 1]);
+    key('up');
+    key('up');
+    expect(input.plainText).toBe('primeira');
+    key('down');
+    expect(input.plainText).toBe('/sandbox');
+    key('down');
+    expect(input.plainText).toBe('');
+    expect([prevented, taken]).toEqual([5, []]);
+
+    key('down');
+    input.setText('digitado');
+    key('up');
+    expect([input.plainText, prevented, taken]).toEqual(['digitado', 5, ['down', 'up']]);
+  });
+
+  it('leaves ↑ and ↓ to a question waiting for its answer', async () => {
+    const { kit, renderer, press } = fakeToolkit();
+    const panel = await openPanel(kit, OPTIONS);
+    const { input } = layoutOf(renderer);
+    input.value = 'enviada';
+    input.emit('submit');
+
+    void panel.ask({ question: 'Framework?', options: ['React', 'Vue'], multi: false });
+    press({ name: 'up', ctrl: false });
+    expect(input.plainText).toBe('');
+  });
+
+  it('copies what is dragged over with the mouse to the clipboard, and nothing for an empty selection', async () => {
+    const { kit, select, copied } = fakeToolkit();
+    await openPanel(kit, OPTIONS);
+
+    select('bun run check');
+    select('');
+    select(null);
+    expect(copied).toEqual(['bun run check']);
   });
 
   it('shows the choices in the list, takes the highlighted one, and asks the next question after', async () => {

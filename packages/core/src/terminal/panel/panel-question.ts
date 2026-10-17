@@ -18,6 +18,8 @@ export interface QuestionDesk {
   onMessage(listener: (text: string) => void): void;
   /** Space marks a choice of a question of several; Esc skips the question. `true` when the key was the desk's. */
   key(key: PanelKey): boolean;
+  /** Whether a question waits for its answer. */
+  pending(): boolean;
 }
 
 interface Pending {
@@ -146,5 +148,6 @@ export function questionDesk<Styled>(input: PanelInput<Styled>, select: PanelSel
       remark(pending);
       return true;
     },
+    pending: () => current() !== undefined,
   };
 }
