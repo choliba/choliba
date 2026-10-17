@@ -606,7 +606,7 @@ describe('openPanel', () => {
     const header = renderer.root.children[0]?.children[0];
 
     panel.cards([
-      { title: 'projeto', lines: ['site', '', 'Loja', 'local', '---', '2 tickets', 'a mais'], summary: 'site · 2' },
+      { title: 'projeto', lines: ['site', '', 'Loja', 'local', '---', '2 tickets', 'a mais'], summary: ['site · 2'] },
       { title: 'ticket', lines: ['site-1'] },
     ]);
     const [, projeto, ticket] = header?.children ?? [];
@@ -716,7 +716,7 @@ describe('openPanel', () => {
     const { kit, renderer, press } = fakeToolkit();
     const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });
     panel.cards([
-      { title: 'projeto', lines: ['site', '', 'Loja'], summary: 'site · 2', key: 'p' },
+      { title: 'projeto', lines: ['site', '', 'Loja'], summary: ['site · 2', 'local', 'demais'], key: 'p' },
       { title: 'agente', lines: ['echo', 'x'], key: 'a' },
     ]);
     const [, projeto, agente] = renderer.root.children[0]?.children[0]?.children ?? [];
@@ -729,6 +729,8 @@ describe('openPanel', () => {
       10,
     ]);
     expect(projeto?.children[0]?.content).toEqual({ chunks: [{ text: 'site · 2' }] });
+    expect(projeto?.children[1]?.content).toEqual({ chunks: [{ text: 'local' }] });
+    expect([projeto?.children[2]?.visible, projeto?.built['borderColor']]).toEqual([false, '#666666']);
     press({ name: 'a', ctrl: true });
     expect(agente?.children[0]?.content).toEqual({ chunks: [{ text: 'echo' }] });
     expect(agente?.title).toBe(' ▸ agente ^A ');

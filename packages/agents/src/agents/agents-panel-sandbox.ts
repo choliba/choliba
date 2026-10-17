@@ -72,20 +72,21 @@ async function reachLines(container: Container, context: PanelContext): Promise<
 function sandboxHead(container: Container, context: PanelContext): Pick<PanelCard, 'lines' | 'summary'> {
   const choice = sandboxChoice(container, context);
   if (typeof choice !== 'string') {
-    return { lines: [warn('indisponível'), CARD_RULE, choice.error], summary: warn('indisponível') };
+    return { lines: [warn('indisponível'), CARD_RULE, choice.error], summary: [warn('indisponível')] };
   }
   const problem = sandboxProblem(container, choice);
   const name = problem === undefined ? bold(choice) : warn(choice);
   const origin = gray(context.get(SANDBOX) === undefined ? 'padrão (CHOL_SANDBOX)' : 'escolhido nesta sessão');
+  const head = `${name} ${gray(`· ${ENGINE[choice]}`)}`;
   return {
     lines: [
-      `${name} ${gray(`· ${ENGINE[choice]}`)}`,
+      head,
       CARD_RULE,
       `${SANDBOX_CHOICES[choice]}: o provider só vê o que está montado.`,
       origin,
       ...(problem === undefined ? [] : [warn(problem)]),
     ],
-    summary: `${name} ${origin}`,
+    summary: [head, origin],
   };
 }
 

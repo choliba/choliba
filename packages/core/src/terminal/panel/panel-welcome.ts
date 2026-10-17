@@ -145,8 +145,8 @@ export interface Header<Node> {
 export interface PanelCard {
   readonly title: string;
   readonly lines: readonly string[];
-  /** The one line it shows while collapsed; its first line when absent. */
-  readonly summary?: string;
+  /** The lines it shows while collapsed, two at most; its first line when absent. */
+  readonly summary?: readonly string[];
   /** The letter that, with Ctrl, opens or collapses it (`p` for Ctrl+P), shown in its title (`^P`). */
   readonly key?: string;
   /** Its place among the cards, the lowest first (`sandbox` 1, `projeto` 2, `agente` 3); without it, after those that have one. */
@@ -189,10 +189,14 @@ const RULE = `\u001b[90m${'─'.repeat(CARD_TEXT_WIDTH)}\u001b[39m`;
 
 /**
  * Every open card's rows, its border included: all cards stand as tall, and what does not fit scrolls inside one. A
- * collapsed card is its border, its summary and a blank row: as tall as the header's icon, four rows.
+ * collapsed card is its border and the two lines of its summary: as tall as the header's icon, four rows.
  */
 const CARD_HEIGHT = 10;
-const COLLAPSED_HEIGHT = 4;
+const COLLAPSED_LINES = 2;
+const COLLAPSED_HEIGHT = COLLAPSED_LINES + 2;
+
+/** The cards' border: a dim gray, so their lines read before it. */
+const CARD_BORDER = PALETTE.gray;
 
 /** The header row: the icon, then the lines beside it, with a blank row under both. */
 export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk[] }, Chunk>(
@@ -244,6 +248,7 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
       border: true,
       title: ` ${title} `,
       titleColor: PALETTE.white,
+      borderColor: CARD_BORDER,
       stickyScroll: false,
       scrollX: false,
       width: CARD_WIDTH,
@@ -301,7 +306,7 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
       box.remove(card.box);
       box.add(card.box);
       const folded = collapsed.has(each.title);
-      const lines = folded ? [each.summary ?? each.lines[0] ?? ''] : each.lines;
+      const lines = folded ? (each.summary ?? [each.lines[0] ?? '']).slice(0, COLLAPSED_LINES) : each.lines;
       // A card gets the rows its longest content asks for; what does not fit its height scrolls.
       while (card.rows.length < lines.length) {
         const row = new kit.TextRenderable(renderer, { content: '', wrapMode: 'word', height: 1 });

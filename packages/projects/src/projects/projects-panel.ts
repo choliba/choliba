@@ -15,29 +15,39 @@ const CARD = 'projeto';
 
 /**
  * The project's card: its name, what it is, where its active environment runs (or that its settings are not done
- * yet), and its tickets, with the active one; collapsed, its name and its tickets.
+ * yet), and its tickets, with the active one; collapsed, its name and the active ticket, then its tickets and where it
+ * runs.
  */
 function projectCard(
   projects: ProjectsService,
   project: string,
   description: string,
   ticket?: string,
-): { readonly lines: readonly string[]; readonly summary: string } {
+): { readonly lines: readonly string[]; readonly summary: readonly string[] } {
   const projectsDir = projects.projectsDir();
   let place: string;
+  // Collapsed, the address without its scheme nor its last slash, so the line fits the card.
+  let shortPlace: string;
   try {
     const { environment } = loadProjectSettings(projectsDir, project);
     place = `\u001b[90m${environment.nome} · ${environment.baseURL}\u001b[39m`;
+    const host = environment.baseURL.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    shortPlace = `\u001b[90m${environment.nome} · ${host}\u001b[39m`;
   } catch {
     place = '\u001b[33mconfiguração incompleta: choliba check ' + project + '\u001b[39m';
+    shortPlace = place;
   }
   const count = listTicketKeys(projectsDir, project).length;
   const tickets = `${String(count)} ${count === 1 ? 'ticket' : 'tickets'}`;
   const name = `\u001b[1m\u001b[36m${project}\u001b[39m\u001b[22m`;
   const status = ticket === undefined ? tickets : `${tickets} · ativo \u001b[1m${ticket}\u001b[22m`;
   const about = description === '' ? '\u001b[90msem descrição\u001b[39m' : description;
+  const active = ticket === undefined ? name : `${name} · ativo \u001b[1m${ticket}\u001b[22m`;
   // A rule under its name and another before its tickets, so each part reads on its own.
-  return { lines: [name, CARD_RULE, about, place, CARD_RULE, status], summary: `${name} · ${status}` };
+  return {
+    lines: [name, CARD_RULE, about, place, CARD_RULE, status],
+    summary: [active, `${tickets} \u001b[90m·\u001b[39m ${shortPlace}`],
+  };
 }
 
 /** A ticket's summary in the panel: its title, then each criterion and whether a test covers it. */

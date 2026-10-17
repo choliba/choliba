@@ -152,7 +152,7 @@ describe('panelSession', () => {
 
     set?.show('projeto', { lines: ['loja'] });
     set?.show('ticket', { lines: ['loja-1'] });
-    set?.show('projeto', { lines: ['site'], summary: 'site · 2', key: 'p' });
+    set?.show('projeto', { lines: ['site'], summary: ['site · 2'], key: 'p' });
     expect(session.status()).toEqual([]);
     set?.show('ticket', undefined);
 
@@ -163,10 +163,10 @@ describe('panelSession', () => {
         { title: 'ticket', lines: ['loja-1'] },
       ],
       [
-        { title: 'projeto', lines: ['site'], summary: 'site · 2', key: 'p' },
+        { title: 'projeto', lines: ['site'], summary: ['site · 2'], key: 'p' },
         { title: 'ticket', lines: ['loja-1'] },
       ],
-      [{ title: 'projeto', lines: ['site'], summary: 'site · 2', key: 'p' }],
+      [{ title: 'projeto', lines: ['site'], summary: ['site · 2'], key: 'p' }],
     ]);
     expect(fake.headings).toEqual([]);
 
