@@ -74,8 +74,12 @@ choliba run agent test-writer --claude-ollama --project loja --ticket loja-1
   Um agente sem nenhum é recusado antes de rodar.
 - Um modelo `ollama:` só roda no `claude-ollama`: com `--claude` ou `--cursor`, o choliba recusa e diz qual provider
   usar.
-- O `claude-ollama` não entra no `auto`: roda só quando nomeado (`--provider claude-ollama`, `--claude-ollama` ou
-  `CHOL_AGENTS_PROVIDER`).
+- O `claude-ollama` não entra no `auto`: roda quando nomeado (`--provider claude-ollama`, `--claude-ollama` ou
+  `CHOL_AGENTS_PROVIDER`), ou quando **todos** os modelos do agente são `ollama:`. Nesse caso só ele roda o agente, e
+  o choliba o escolhe sozinho, sem `--provider`: a ordem é `--provider` (no painel, o `/provider` da sessão), depois o
+  provider dos modelos do agente, depois `CHOL_AGENTS_PROVIDER`, depois `auto`. O `--dry-run` diz quando o provider
+  veio dos modelos (`claude-ollama (dos modelos do agente)`). Um agente com algum modelo de outro provider segue a
+  escolha de sempre.
 - O endereço é `CHOL_OLLAMA_URL` (padrão `http://localhost:11434`). O choliba põe esse endereço e o token do Ollama na
   sessão e deixa vazias as credenciais do Claude, para nenhuma delas ir ao Ollama. No docker, veja
   [Ollama](sandbox.md#ollama).
