@@ -72,14 +72,14 @@ Sem `cwd`, a busca parte da pasta atual. Sem `env`, o ambiente é o do processo.
 
 ## A versão
 
-`choliba.version` é a versão do choliba que está rodando, como o `choliba --version` mostra, sem o nome. Ela não
+`choliba.version` é a versão do choliba que está rodando, exatamente como o `choliba --version` mostra. Ela não
 depende da pasta de trabalho:
 
 ```ts
-choliba.version; // '0.0.1-dev.66+ce2dc61'
+choliba.version; // 'choliba 0.0.1-dev.66+ce2dc61'
 ```
 
-Sem o `package.json` do choliba à vista, vale `(versão desconhecida)`.
+Sem o `package.json` do choliba à vista, vale `choliba (versão desconhecida)`.
 
 ## Configuração
 
