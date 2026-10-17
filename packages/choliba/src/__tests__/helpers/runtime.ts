@@ -52,6 +52,7 @@ export function fakeRuntime(
       if (tty) terminal.push(text);
       return tty;
     },
+    get: () => Promise.reject(new Error('sem rede nos specs')),
     ...rest,
     runs,
     detached,

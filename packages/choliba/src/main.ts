@@ -121,6 +121,7 @@ const runtime: Runtime = {
       return false;
     }
   },
+  get: (url, headers) => fetch(url, { headers: { ...headers } }),
 };
 
 process.exitCode = await createCholibaShell(platform, runtime).run();

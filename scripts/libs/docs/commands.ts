@@ -21,7 +21,7 @@ export const COMMAND_GROUPS: readonly CommandGroup[] = [
   { title: 'Ticket e testes', commands: ['run'] },
   { title: 'Projetos', commands: ['new', 'list', 'check'] },
   { title: 'Agentes, skills e MCPs', commands: ['add'] },
-  { title: 'Pasta de trabalho', commands: ['setup', 'set', 'lint', 'format'] },
+  { title: 'Pasta de trabalho', commands: ['setup', 'update', 'set', 'lint', 'format'] },
   { title: 'Gerais', commands: ['panel', 'help', 'version', 'terminal run'] },
 ];
 

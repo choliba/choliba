@@ -29,6 +29,7 @@ import { CHOLIBA_ORDER, CHOLIBA_ROOT, CHOLIBA_VERBS, cholibaManifest, OWL_ICON, 
 import { RUNTIME, type Runtime } from './runtime';
 import { setupCommand } from './setup';
 import { formatCommand, lintCommand, TOOLS, ToolsService } from './tooling';
+import { updateCommand } from './update';
 
 const cholibaConfig = defineConfig('choliba', {
   colors: {
@@ -39,7 +40,7 @@ const cholibaConfig = defineConfig('choliba', {
 });
 
 /**
- * The commands of the choliba app itself in the shell, on its `runtime`: `add`, `check`, `lint`, `format` and `setup`. The
+ * The commands of the choliba app itself in the shell, on its `runtime`: `add`, `check`, `lint`, `format`, `setup` and `update`. The
  * app's last module, as only the app has a runtime.
  */
 export function cholibaShell(runtime: Runtime): ShellModule {
@@ -62,7 +63,16 @@ export function cholibaShell(runtime: Runtime): ShellModule {
       container.provide(THEME_CHOICES, (current) => parseColors(current.get(cholibaConfig.token).colors));
       container.provide(TOOLS, (c) => new ToolsService(c.get(RUNTIME), c.get(WORKSPACE_ROOT), c.get(PLATFORM).which));
     },
-    commands: [addCommand, checkCommand, listConfigCommand, setConfigCommand, lintCommand, formatCommand, setupCommand],
+    commands: [
+      addCommand,
+      checkCommand,
+      listConfigCommand,
+      setConfigCommand,
+      lintCommand,
+      formatCommand,
+      setupCommand,
+      updateCommand,
+    ],
   };
 }
 
