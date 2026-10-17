@@ -99,8 +99,8 @@ describe('buildPrepare / buildAfter', () => {
       expect(run).not.toHaveBeenCalled();
       expect(result?.promptBody.split('\n\n')).toEqual([
         '[execute.before 1/3 — git_diff: develop .cache/with-prepare/diff.patch --pending .cache/with-prepare/last-base: produzido aqui na execução real]',
-        '[execute.before 2/3 — add_files: documentacao_atual docs/**/*.md: produzido aqui na execução real]',
-        '[execute.before 3/3 — add_files: readme_atual README.md: produzido aqui na execução real]',
+        '[execute.before 2/3 — read_files: documentacao_atual docs/**/*.md: produzido aqui na execução real]',
+        '[execute.before 3/3 — read_files: readme_atual README.md: produzido aqui na execução real]',
       ]);
     } finally {
       run.mockRestore();

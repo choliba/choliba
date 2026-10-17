@@ -301,10 +301,10 @@ steps:
 | ----------------- | -------- | ------------------------------------------------------------------ |
 | `run`             | os dois  | Roda um comando, sem shell, a partir da pasta de trabalho.         |
 | `git_diff`        | `before` | Grava o diff do working tree e põe o caminho e o índice no prompt. |
-| `add_files`       | `before` | Põe o conteúdo de arquivos no prompt, dentro de uma tag (`<tag>`). |
+| `read_files`      | `before` | Põe o conteúdo de arquivos no prompt, dentro de uma tag (`<tag>`). |
 | `record_git_head` | `after`  | Grava o commit atual, base do próximo `--since pending`.           |
 
-O que o `before` produz entra na tarefa que o agente recebe; cada arquivo do `add_files` e o índice do `git_diff` vão
+O que o `before` produz entra na tarefa que o agente recebe; cada arquivo do `read_files` e o índice do `git_diff` vão
 como dado, dentro de `<untrusted_input>` (veja [Segurança](seguranca.md)). O `after` é um `try/catch/finally` sobre
 o agente:
 
@@ -340,7 +340,7 @@ steps:
   execute:
     before: &before # a lista do before de execute ganha o nome "before"
       - run: [bun, choliba, run, tests, '${PROJECT}:${TICKET}', --expect, red, --failures, '.cache/test-writer/${TICKET}/red.md']
-      - add_files: [falhas_red, '.cache/test-writer/${TICKET}/red.md']
+      - read_files: [falhas_red, '.cache/test-writer/${TICKET}/red.md']
     after:
       success:
         - run: [bun, choliba, run, tests, '${PROJECT}:${TICKET}', --expect, green]

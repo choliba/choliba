@@ -70,7 +70,7 @@ ticket_types: [story, bug, improvement]
 steps:
   execute:
     before:
-      - add_files: [ticket, '\${TICKET_FILE}']
+      - read_files: [ticket, '\${TICKET_FILE}']
     after:
       success:
         - run: [bunx, choliba, tests, '\${PROJECT}:\${TICKET}']
@@ -318,7 +318,7 @@ describe('validateAgentYamlV1', () => {
     });
 
     it('rejects a step with two actions', () => {
-      expect(validate(steps({ execute: { before: [{ run: ['a'], add_files: ['t', 'x'] }] } })).valid).toBe(false);
+      expect(validate(steps({ execute: { before: [{ run: ['a'], read_files: ['t', 'x'] }] } })).valid).toBe(false);
     });
 
     it('accepts each action only where it runs', () => {
@@ -332,12 +332,13 @@ describe('validateAgentYamlV1', () => {
           }),
         ).valid,
       ).toBe(true);
-      expect(validate(steps({ execute: { after: [{ add_files: ['t', 'x'] }] } })).valid).toBe(false);
+      expect(validate(steps({ execute: { after: [{ read_files: ['t', 'x'] }] } })).valid).toBe(false);
       expect(validate(steps({ execute: { before: [{ record_git_head: ['h'] }] } })).valid).toBe(false);
     });
 
     it('checks the number of arguments of each action', () => {
-      expect(validate(steps({ execute: { before: [{ add_files: ['t'] }] } })).valid).toBe(false);
+      expect(validate(steps({ execute: { before: [{ read_files: ['t'] }] } })).valid).toBe(false);
+      expect(validate(steps({ execute: { before: [{ add_files: ['t', 'x'] }] } })).valid).toBe(false);
       expect(validate(steps({ execute: { after: [{ record_git_head: ['a', 'b'] }] } })).valid).toBe(false);
       expect(validate(steps({ execute: { before: [{ run: [] }] } })).valid).toBe(false);
     });

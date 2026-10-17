@@ -77,7 +77,7 @@ ticket_types: [story, bug, improvement]
 steps:
   execute:
     before:
-      - add_files: [ticket, '${TICKET_FILE}']
+      - read_files: [ticket, '${TICKET_FILE}']
     after:
       success:
         - run: [bun, choliba, run, tests, '${PROJECT}:${TICKET}']
