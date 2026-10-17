@@ -54,11 +54,42 @@ function ticketSummary(ticket: TicketInfo): readonly string[] {
   ];
 }
 
-/** `/projects`: the active project, chosen among the workspace's; another one clears the active ticket. */
+/** The active ticket, chosen among the active project's, and its summary; Esc leaves the ticket as it was. */
+async function chooseTicket({ container, panel, context }: PanelCommandContext): Promise<void> {
+  const project = context.get(PROJECT);
+  if (project === undefined) return;
+  const tickets = readTickets(container.get(PROJECTS).projectsDir(), project);
+  if (tickets.length === 0) {
+    panel.write(`O projeto ${project} ainda não tem tickets.`);
+    return;
+  }
+  const active = context.get(TICKET);
+  const chosen = await panel.choose({
+    title: `Escolha o ticket de ${project}`,
+    description: 'O ticket em que os testes e os agentes vão agir. Esc deixa como está.',
+    options: tickets.map((ticket) => ({
+      label: ticket.id,
+      ...(ticket.title === undefined ? {} : { detail: ticket.title }),
+      current: ticket.id === active,
+    })),
+  });
+  const ticket = chosen === undefined ? undefined : tickets[chosen];
+  if (ticket === undefined) return;
+  context.set(TICKET, ticket.id);
+  const card = projectCard(container.get(PROJECTS), project, context.get(DESCRIPTION) ?? '', ticket.id);
+  context.show(CARD, { ...card, key: 'p', order: 2 });
+  panel.write(ticketSummary(ticket).join('\n'));
+}
+
+/**
+ * `/projects`: the active project, chosen among the workspace's; another one clears the active ticket and, when it has
+ * tickets, asks for one at once.
+ */
 const projectsPanelCommand: PanelCommand = {
   name: 'projects',
   description: 'Escolhe o projeto em que o painel age',
-  run: async ({ container, panel, context }: PanelCommandContext) => {
+  run: async (command: PanelCommandContext) => {
+    const { container, panel, context } = command;
     const projects = container.get(PROJECTS).list();
     if (projects.length === 0) {
       panel.write('Nenhum projeto na pasta de projetos. Crie um com `choliba new project`.');
@@ -82,6 +113,7 @@ const projectsPanelCommand: PanelCommand = {
     const card = projectCard(container.get(PROJECTS), project.name, project.description);
     context.show(CARD, { ...card, key: 'p', order: 2 });
     panel.write(`Projeto ativo: \u001b[1m${project.name}\u001b[22m.`);
+    if (listTicketKeys(container.get(PROJECTS).projectsDir(), project.name).length > 0) await chooseTicket(command);
   },
 };
 
@@ -96,31 +128,7 @@ const ticketsPanelCommand: PanelCommand = {
       ? `O projeto ${project} ainda não tem tickets`
       : undefined;
   },
-  run: async ({ container, panel, context }: PanelCommandContext) => {
-    const project = context.get(PROJECT);
-    if (project === undefined) return;
-    const tickets = readTickets(container.get(PROJECTS).projectsDir(), project);
-    if (tickets.length === 0) {
-      panel.write(`O projeto ${project} ainda não tem tickets.`);
-      return;
-    }
-    const active = context.get(TICKET);
-    const chosen = await panel.choose({
-      title: `Escolha o ticket de ${project}`,
-      description: 'O ticket em que os testes e os agentes vão agir.',
-      options: tickets.map((ticket) => ({
-        label: ticket.id,
-        ...(ticket.title === undefined ? {} : { detail: ticket.title }),
-        current: ticket.id === active,
-      })),
-    });
-    const ticket = chosen === undefined ? undefined : tickets[chosen];
-    if (ticket === undefined) return;
-    context.set(TICKET, ticket.id);
-    const card = projectCard(container.get(PROJECTS), project, context.get(DESCRIPTION) ?? '', ticket.id);
-    context.show(CARD, { ...card, key: 'p', order: 2 });
-    panel.write(ticketSummary(ticket).join('\n'));
-  },
+  run: chooseTicket,
 };
 
 /** What @choliba/projects brings to `choliba panel`. */

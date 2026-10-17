@@ -173,6 +173,15 @@ describe('panelSession', () => {
     set?.show('agente', { lines: ['echo'], order: 3 });
     set?.show('sandbox', { lines: ['local'], order: 1 });
     expect(fake.cards.at(-1)?.map((card) => card.title)).toEqual(['sandbox', 'agente', 'projeto']);
+
+    set?.spin('agente', true);
+    expect(fake.cards.at(-1)?.map((card) => card.busy)).toEqual([undefined, true, undefined]);
+    set?.spin('agente', false);
+    expect(fake.cards.at(-1)?.[1]).toEqual({ title: 'agente', lines: ['echo'], order: 3 });
+    set?.spin('agente', true);
+    set?.clear();
+    set?.show('agente', { lines: ['echo'] });
+    expect(fake.cards.at(-1)).toEqual([{ title: 'agente', lines: ['echo'] }]);
   });
 
   it('shows a command that cannot run in gray with why, skips it with the keys, and says why when sent', async () => {

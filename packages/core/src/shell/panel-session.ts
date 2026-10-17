@@ -54,6 +54,12 @@ function sessionContext(view: ContextView): PanelContext {
   const cards = new Map<string, PanelCard>();
   const labels = new Map<string, string>();
   const statuses = new Map<string, string>();
+  const spinning = new Set<string>();
+  const showCards = (): void => {
+    const place = (each: PanelCard): number => each.order ?? Number.MAX_SAFE_INTEGER;
+    const sorted = [...cards.values()].sort((one, other) => place(one) - place(other));
+    view.cards(sorted.map((each) => (spinning.has(each.title) ? { ...each, busy: true } : each)));
+  };
   const changes: ((key: string | undefined) => void)[] = [];
   const changed = (key: string | undefined): void => {
     for (const listener of changes) listener(key);
@@ -71,8 +77,12 @@ function sessionContext(view: ContextView): PanelContext {
     show: (title, card) => {
       if (card === undefined) cards.delete(title);
       else cards.set(title, { ...card, title });
-      const place = (each: PanelCard): number => each.order ?? Number.MAX_SAFE_INTEGER;
-      view.cards([...cards.values()].sort((one, other) => place(one) - place(other)));
+      showCards();
+    },
+    spin: (title, busy) => {
+      if (busy) spinning.add(title);
+      else spinning.delete(title);
+      showCards();
     },
     label: (name, value) => {
       if (value === undefined) labels.delete(name);
@@ -96,6 +106,7 @@ function sessionContext(view: ContextView): PanelContext {
     clear: () => {
       view.stop();
       for (const map of [values, cards, labels, statuses]) map.clear();
+      spinning.clear();
       view.cards([]);
       view.labels([]);
       view.status([]);

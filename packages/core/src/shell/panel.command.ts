@@ -43,7 +43,7 @@ export const PANEL_SPEC: CommandSpec = {
   examples: [{ description: 'Abre o painel', command: 'choliba panel' }],
   details:
     'O painel abre com as boas-vindas: Enter mostra o campo, e Esc sai. No campo, `/` lista os comandos do painel ' +
-    '(`/projects` escolhe o projeto, `/tickets` o ticket, `/agents` o agente), e o que eles escolhem aparece no ' +
+    '(`/projects` escolhe o projeto e já pergunta o ticket, `/tickets` troca o ticket, `/agents` o agente), e o que eles escolhem aparece no ' +
     'cabeçalho, em quadros que o Ctrl+P (projeto), o Ctrl+A (agente) ou um clique recolhem. Com o agente, o ' +
     'cabeçalho mostra o provider e o modelo que uma execução usaria, e a linha de status o modo; `/provider`, ' +
     '`/model` e `/mode` os escolhem para a sessão, e o Shift+Tab alterna o modo. Desde o início, o quadro do sandbox ' +

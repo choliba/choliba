@@ -75,7 +75,8 @@ describe('talkToAgent', () => {
 
       const [run] = talk.asked;
       expect(run?.argv).toEqual(['echo', 'diga olá']);
-      expect(talk.fake.written).toEqual([`Rodando ${bold('echo')}…`]);
+      expect(talk.fake.written).toEqual([]);
+      expect(talk.state.spinning.has('agente')).toBe(true);
 
       const options = { title: 'echo', titleColor: 'green', footer: () => ['claude · 00:01'], hint: '' };
       const panel: Panel | undefined = await run?.host.panel(options as PanelOptions);
@@ -103,6 +104,7 @@ describe('talkToAgent', () => {
       run?.end(0);
       await talk.settle();
       expect(talk.fake.written.at(-1)).toBe(`echo terminou: ${bold('código 0')} ${gray('· 0s')}`);
+      expect(talk.state.spinning.size).toBe(0);
 
       talk.state.send('de novo', talk.fake.panel);
       await talk.settle();
@@ -202,7 +204,7 @@ describe('talkToAgent', () => {
       run?.end(2);
       await talk.settle();
       now.mockRestore();
-      expect(talk.fake.written.slice(1)).toEqual([
+      expect(talk.fake.written).toEqual([
         'preparando',
         warn('falhou'),
         `echo terminou: ${warn('código 2')} ${gray('· 2m14s')}`,

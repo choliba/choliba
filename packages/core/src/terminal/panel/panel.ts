@@ -387,6 +387,7 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     },
     close: () => {
       clearTimeout(armed);
+      top?.stop();
       renderer.destroy();
     },
   };
