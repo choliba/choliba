@@ -70,6 +70,17 @@ isolado.agents.dir; // '/tmp/ws/meus/agentes'
 
 Sem `cwd`, a busca parte da pasta atual. Sem `env`, o ambiente é o do processo.
 
+## A versão
+
+`choliba.version` é a versão do choliba que está rodando, como o `choliba --version` mostra, sem o nome. Ela não
+depende da pasta de trabalho:
+
+```ts
+choliba.version; // '0.0.1-dev.66+ce2dc61'
+```
+
+Sem o `package.json` do choliba à vista, vale `(versão desconhecida)`.
+
 ## Configuração
 
 `choliba.config(grupo)` lê um grupo de configuração das mesmas fontes da CLI, nesta ordem:

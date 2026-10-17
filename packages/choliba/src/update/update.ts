@@ -2,9 +2,9 @@ import { createHash } from 'node:crypto';
 import { readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
-import { findManifest, messageOf, versionLine, type PackageManifest } from '@choliba/core';
+import { findManifest, messageOf, type PackageManifest } from '@choliba/core';
 
-import { PACKAGE_NAME } from '../help';
+import { PACKAGE_NAME, shownVersion } from '../help';
 import type { HttpResponse, Runtime } from '../runtime';
 import { releaseNumber, whatIsNew, type Emphasis } from './release-notes';
 
@@ -84,11 +84,6 @@ async function currentRelease(runtime: Runtime): Promise<Release> {
 /** The installed choliba, read from the workspace's `node_modules`; none when it is not there. */
 export function installedManifest(root: string): PackageManifest | undefined {
   return findManifest(PACKAGE_NAME, [join(root, 'node_modules', PACKAGE_NAME)]);
-}
-
-/** The version as `--version` shows it, without the name: `0.0.1-dev.62+27dbedb`. */
-function shown(manifest: PackageManifest | undefined): string {
-  return versionLine(PACKAGE_NAME, manifest).slice(PACKAGE_NAME.length + 1);
 }
 
 /** The package, downloaded and checked against the release's SHA-256; a file that does not match is not kept. */
@@ -175,24 +170,26 @@ export async function update(runtime: Runtime, root: string, options: UpdateOpti
     const since = releaseNumber(before?.version ?? '') ?? -1;
     const release = await currentRelease(runtime);
     if (release.number <= since) {
-      io.write(`O choliba já está na versão mais recente (${shown(before)}).\n`);
+      io.write(`O choliba já está na versão mais recente (${shownVersion(before)}).\n`);
       return 0;
     }
-    const stop = local ? localPackageStop(shown(before), release, options, io) : undefined;
+    const stop = local ? localPackageStop(shownVersion(before), release, options, io) : undefined;
     if (stop !== undefined) return stop;
     // A local package has no release to count the news from: none are shown for it.
     const news = local ? [] : newsLines(release, since, io.bold);
     if (options.check) {
-      const lines = [`Há uma versão nova: ${release.title} (instalada: ${shown(before)}).`, ...news];
+      const lines = [`Há uma versão nova: ${release.title} (instalada: ${shownVersion(before)}).`, ...news];
       io.write(`${[...lines, '', 'Para atualizar: choliba update'].join('\n')}\n`);
       return 0;
     }
     const code = await install(runtime, root, release, io);
     if (code !== 0) {
-      io.fail(`O bun add terminou com código ${String(code)}: o choliba continua em ${shown(before)}.`);
+      io.fail(`O bun add terminou com código ${String(code)}: o choliba continua em ${shownVersion(before)}.`);
       return code;
     }
-    io.write(`${[`Atualizado de ${shown(before)} para ${shown(installedManifest(root))}.`, ...news].join('\n')}\n`);
+    io.write(
+      `${[`Atualizado de ${shownVersion(before)} para ${shownVersion(installedManifest(root))}.`, ...news].join('\n')}\n`,
+    );
     return 0;
   } catch (error) {
     if (!(error instanceof UpdateStop)) throw error;
