@@ -17,6 +17,7 @@ import { sandboxConfig } from '@choliba/sandbox';
 
 import { agentsConfig } from '../../agents/agents-config';
 import { agentsPanel } from '../../agents/agents-panel';
+import { showRun } from '../../agents/agents-panel-state';
 import { AGENT_PROVIDERS } from '../../agents/agents.constants';
 import { ClaudeAgentProvider, ClaudeOllamaAgentProvider, CursorAgentProvider } from '../../providers';
 import { makeTmpDir } from '../helpers/tmp';
@@ -73,6 +74,33 @@ const warn = (text: string): string => `\u001b[33m${text}\u001b[39m`;
 const noCursor = (bin: string): boolean => !['agent', 'cursor-agent', 'cursor'].includes(bin);
 
 describe('/provider', () => {
+  it('takes the provider an agent of only ollama: models asks for, over CHOL_AGENTS_PROVIDER, until /provider', async () => {
+    const tmp = makeTmpDir('choices-agent-provider');
+    try {
+      agentsFolder(tmp.path);
+      const echo = readFileSync(join(FIXTURES, 'echo', 'agent.yaml'), 'utf8');
+      mkdirSync(join(tmp.path, 'only'));
+      writeFileSync(
+        join(tmp.path, 'only', 'agent.yaml'),
+        echo.replace('id: echo', 'id: only').replace('  - claude-3-5-sonnet\n  - gpt-4o\n', '  - ollama:qwen3.5:4b\n'),
+      );
+      const panel = session(tmp.path, noCursor, 'claude');
+      panel.state.context.set('agente', 'only');
+      showRun(panel.container, panel.state.context);
+
+      expect(panel.state.labels.get('provider')).toBe(bold('claude-ollama'));
+      await panel.run('provider', undefined);
+      expect(panel.fake.choices[0]?.options.find((option) => option.current)?.label).toBe('claude-ollama');
+
+      // A provider chosen in the session goes on winning.
+      panel.state.context.set('provider', 'claude');
+      showRun(panel.container, panel.state.context);
+      expect(panel.state.labels.get('provider')).toBe(bold('claude'));
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
   it('lists auto and each provider, saying which are installed, the chosen one checked', async () => {
     const tmp = makeTmpDir('choices');
     try {

@@ -4,6 +4,7 @@ import { sandboxConfig } from '@choliba/sandbox';
 import { AUTO, type AgentDefinition, type AgentProvider, type ExecutionMode } from '../common';
 import { resolveAgentsDir } from './agent-dirs';
 import { loadAgent } from './agent-loader';
+import { agentProvider } from './agent-provider';
 import { agentCard } from './agents-panel-card';
 import { agentsConfig } from './agents-config';
 import { AGENT_PROVIDERS } from './agents.constants';
@@ -73,9 +74,17 @@ export function activeAgent(container: Container, context: PanelContext): AgentD
   }
 }
 
-/** The provider the session runs with: the one chosen with /provider, else `CHOL_AGENTS_PROVIDER`. */
-export function providerChoice(container: Container, context: PanelContext): string {
-  return context.get(PROVIDER) ?? container.get(agentsConfig.token).provider;
+/**
+ * The provider a run of `agent` (the active one by default) takes in the session: the one chosen with /provider, else
+ * the one the agent asks for (its models' own, `agentProvider`), else `CHOL_AGENTS_PROVIDER`, as a run decides.
+ */
+export function providerChoice(
+  container: Container,
+  context: PanelContext,
+  agent: AgentDefinition | undefined = activeAgent(container, context),
+): string {
+  const own = agent === undefined ? undefined : agentProvider(agent, container.get(AGENT_PROVIDERS));
+  return context.get(PROVIDER) ?? own ?? container.get(agentsConfig.token).provider;
 }
 
 /** The provider `choice` names on this machine (under `auto`, the first installed), or nothing when none is. */
@@ -115,7 +124,7 @@ function runLabels(
   context: PanelContext,
   agent: AgentDefinition,
 ): { readonly provider: string; readonly model: string; readonly problem?: string } {
-  const choice = providerChoice(container, context);
+  const choice = providerChoice(container, context, agent);
   const provider = installedProvider(container, choice);
   if (provider === undefined) {
     return {

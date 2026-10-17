@@ -1871,6 +1871,36 @@ describe('runAgentsCli — claude-ollama', () => {
     });
   });
 
+  it('runs an agent of only ollama: models with claude-ollama, over CHOL_AGENTS_PROVIDER, saying why', async () => {
+    await withOllamaAgent(['"ollama:qwen3.5:4b"'], async (agentsDir) => {
+      const { deps, stdout } = harness([], {
+        providers: PROVIDERS_WITH_OLLAMA,
+        config: { CHOL_AGENTS_PROVIDER: 'claude' },
+      });
+
+      expect(await runAgentsCli(['local', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(0);
+      expect(stdout.chunks.join('')).toContain(
+        '[agente] claude-ollama (dos modelos do agente) · modelo ollama:qwen3.5:4b',
+      );
+    });
+  });
+
+  it('keeps --provider over the agent, and the usual choice for an agent of mixed models', async () => {
+    await withOllamaAgent(['"ollama:qwen3.5:4b"'], async (agentsDir) => {
+      const { deps, stdout } = harness([], { providers: PROVIDERS_WITH_OLLAMA });
+
+      expect(await runAgentsCli(['local', '--agents-dir', agentsDir, '--claude', '--dry-run', 'x'], deps)).toBe(0);
+      expect(stdout.chunks.join('')).toContain('[agente] claude · modelo padrão do provider');
+    });
+    await withOllamaAgent(MODELS, async (agentsDir) => {
+      const { deps, stdout } = harness([], { providers: PROVIDERS_WITH_OLLAMA });
+
+      expect(await runAgentsCli(['local', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(0);
+      expect(stdout.chunks.join('')).toContain('[agente] claude · modelo');
+      expect(stdout.chunks.join('')).not.toContain('dos modelos do agente');
+    });
+  });
+
   it('refuses an ollama: model on claude, and claude-ollama for an agent that declares none', async () => {
     await withOllamaAgent(MODELS, async (agentsDir) => {
       const { deps, stderr } = harness([], { providers: PROVIDERS_WITH_OLLAMA });
