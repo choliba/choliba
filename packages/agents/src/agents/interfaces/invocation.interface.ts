@@ -7,6 +7,8 @@ export interface CommandPrepareInput extends PromptInput {
   readonly since?: string;
   /** `--dry-run`: run nothing; what the steps would add to the prompt is shown as a marker instead. */
   readonly dryRun?: boolean;
+  /** Stops the command of the step running (Ctrl+C in the panel). */
+  readonly signal?: AbortSignal;
 }
 
 /** What the steps that run after the agent need: where, in which mode, and how the agent ended. */
@@ -14,6 +16,8 @@ export interface CommandAfterInput {
   readonly repoRoot: string;
   readonly mode: ExecutionMode;
   readonly exitCode: number;
+  /** Stops the command of the step running (Ctrl+C in the panel). */
+  readonly signal?: AbortSignal;
 }
 
 export interface CommandPrepareResult {
@@ -38,10 +42,10 @@ export interface AgentInvocation {
    * When set, runs before building the user prompt. Required for commands that must preload context (e.g. diff).
    * A failed step throws `StepFailedError`: the run stops there, before the agent.
    */
-  readonly prepare?: (input: CommandPrepareInput) => CommandPrepareResult;
+  readonly prepare?: (input: CommandPrepareInput) => Promise<CommandPrepareResult>;
   /**
    * When set, runs after the agent, whatever the mode and however it ended (e.g. check the tests, persist state
    * for a later `--since pending`, clean up). Returns the steps that failed; none failing is an empty list.
    */
-  readonly after?: (input: CommandAfterInput) => readonly StepFailure[];
+  readonly after?: (input: CommandAfterInput) => Promise<readonly StepFailure[]>;
 }

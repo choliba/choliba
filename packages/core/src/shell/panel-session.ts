@@ -120,7 +120,7 @@ function sessionContext(view: ContextView): PanelContext {
 export interface PanelSession {
   /** The parts the commands put in the status line, then the keys of the cards shown. */
   status(): readonly string[];
-  /** Stops the work running now: `true` when there was some, and then the panel stays open. */
+  /** Asks the work running now to stop: `true` when there is some, and then the panel stays open. */
   stop(): boolean;
 }
 
@@ -144,9 +144,9 @@ export function panelSession(
   const keyListeners: ((key: PanelKey) => boolean)[] = [];
   let conversation: ((text: string, panel: ChatPanel) => void) | undefined;
   let running: (() => void) | undefined;
+  // What runs stays running until it says it is over (`busy(undefined)`): Ctrl+C asks it to stop, and closes nothing.
   const stopRunning = (): boolean => {
     const stop = running;
-    running = undefined;
     stop?.();
     return stop !== undefined;
   };

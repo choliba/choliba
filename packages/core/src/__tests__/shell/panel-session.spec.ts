@@ -379,8 +379,10 @@ describe('panelSession', () => {
       stopped += 1;
     });
     expect(session.stop()).toBe(true);
+    expect(session.stop()).toBe(true);
+    set?.busy(undefined);
     expect(session.stop()).toBe(false);
-    expect(stopped).toBe(1);
+    expect(stopped).toBe(2);
 
     set?.busy(() => {
       stopped += 1;
@@ -390,7 +392,7 @@ describe('panelSession', () => {
     set?.label('modelo', 'sonnet');
     set?.status('modo', 'modo plan');
     set?.clear();
-    expect(stopped).toBe(2);
+    expect(stopped).toBe(3);
     expect(set?.get('agente')).toBeUndefined();
     expect(session.status()).toEqual([]);
     expect(fake.cards.at(-1)).toEqual([]);

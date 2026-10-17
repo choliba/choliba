@@ -1050,7 +1050,7 @@ describe('runAgentsCli — run', () => {
           taskRequired: false,
           prepare: (input) => {
             sinceValues.push(input.since);
-            return { task: 'prepared task', promptBody: 'preloaded context' };
+            return Promise.resolve({ task: 'prepared task', promptBody: 'preloaded context' });
           },
         }),
       ],
@@ -1070,7 +1070,7 @@ describe('runAgentsCli — run', () => {
           agent: 'echo',
           description: 'd',
           taskRequired: false,
-          prepare: () => ({ task: 'prepared task', promptBody: 'preloaded context' }),
+          prepare: () => Promise.resolve({ task: 'prepared task', promptBody: 'preloaded context' }),
         }),
       ],
     });
@@ -1256,7 +1256,7 @@ describe('runAgentsCli — run', () => {
       description: 'd',
       taskRequired: false,
       policy: 'edits',
-      prepare: () => ({ task: 'sync', promptBody: 'ctx' }),
+      prepare: () => Promise.resolve({ task: 'sync', promptBody: 'ctx' }),
       after,
     });
   }
@@ -1268,10 +1268,39 @@ describe('runAgentsCli — run', () => {
     output: 'CA-01 falhou',
   });
 
+  it("hands the run's signal to the steps before and after the agent", async () => {
+    const tmp = makeTmpDir('cli-signal');
+    try {
+      const signal = new AbortController().signal;
+      const seen: (AbortSignal | undefined)[] = [];
+      const command = defineInvocation({
+        name: 'sync-docs',
+        agent: 'echo',
+        description: 'd',
+        taskRequired: false,
+        policy: 'edits',
+        prepare: (input) => {
+          seen.push(input.signal);
+          return Promise.resolve({ task: 'sync', promptBody: 'ctx' });
+        },
+        after: (input) => {
+          seen.push(input.signal);
+          return Promise.resolve([]);
+        },
+      });
+      const { deps } = harness(claudeStdout(claudeSuccessLine()), { repoRoot: tmp.path, commands: [command], signal });
+
+      expect(await runAgentsCli(['sync-docs', '--agents-dir', FIXTURES], deps)).toBe(0);
+      expect(seen).toEqual([signal, signal]);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
   it('runs the after hook once the agent is done, in every mode, with how the agent ended', async () => {
     const tmp = makeTmpDir('cli-after');
     try {
-      const after = jest.fn(() => []);
+      const after = jest.fn(() => Promise.resolve([]));
       const { deps } = harness(claudeStdout(claudeSuccessLine('1. plan step')), {
         repoRoot: tmp.path,
         commands: [syncDocs(after)],
@@ -1289,7 +1318,7 @@ describe('runAgentsCli — run', () => {
     try {
       const { deps, stderr } = harness(claudeStdout(claudeSuccessLine()), {
         repoRoot: tmp.path,
-        commands: [syncDocs(() => [failedStep(3), failedStep(undefined)])],
+        commands: [syncDocs(() => Promise.resolve([failedStep(3), failedStep(undefined)]))],
       });
 
       expect(await runAgentsCli(['sync-docs', '--agents-dir', FIXTURES], deps)).toBe(3);
@@ -1313,7 +1342,7 @@ describe('runAgentsCli — run', () => {
     const tmp = makeTmpDir('cli-after-agent-fail');
     try {
       const failing = `${JSON.stringify({ type: 'result', is_error: true, result: 'boom' })}\n`;
-      const after = jest.fn(() => [failedStep(3)]);
+      const after = jest.fn(() => Promise.resolve([failedStep(3)]));
       const { deps, stderr } = harness(claudeStdout(failing), { repoRoot: tmp.path, commands: [syncDocs(after)] });
 
       const exitCode = await runAgentsCli(['sync-docs', '--agents-dir', FIXTURES], deps);
