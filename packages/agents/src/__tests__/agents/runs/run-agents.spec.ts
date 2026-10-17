@@ -1297,7 +1297,7 @@ describe('runAgentsCli — run', () => {
     }
   });
 
-  it('runs the after hook once the agent is done, in every mode, with how the agent ended', async () => {
+  it('runs the after hook once the agent is done, in every mode, with how the agent ended and its answer', async () => {
     const tmp = makeTmpDir('cli-after');
     try {
       const after = jest.fn(() => Promise.resolve([]));
@@ -1307,7 +1307,7 @@ describe('runAgentsCli — run', () => {
       });
 
       expect(await runAgentsCli(['sync-docs', '--agents-dir', FIXTURES, '--mode-plan'], deps)).toBe(0);
-      expect(after).toHaveBeenCalledWith({ repoRoot: tmp.path, mode: 'plan', exitCode: 0 });
+      expect(after).toHaveBeenCalledWith({ repoRoot: tmp.path, mode: 'plan', exitCode: 0, answer: '1. plan step' });
     } finally {
       tmp.cleanup();
     }

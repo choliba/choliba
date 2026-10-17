@@ -280,7 +280,7 @@
           "git_diff": {
             "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "minItems": 2, "maxItems": 4 }]
           },
-          "add_files": { "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "minItems": 2 }] }
+          "read_files": { "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "minItems": 2 }] }
         }
       }
     },
@@ -293,7 +293,8 @@
         "additionalProperties": false,
         "properties": {
           "run": { "$ref": "#/definitions/args" },
-          "record_git_head": { "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "maxItems": 1 }] }
+          "record_git_head": { "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "maxItems": 1 }] },
+          "write_files": { "$ref": "#/definitions/args" }
         }
       }
     },

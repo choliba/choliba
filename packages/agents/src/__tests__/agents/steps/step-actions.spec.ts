@@ -67,13 +67,17 @@ describe('checkStep', () => {
 
   it('names an unknown action, a wrong list and wrong arguments', () => {
     expect(checkStep({ action: 'nope', args: [] }, 'after_execute')).toEqual({
-      error: 'ação desconhecida "nope" (esperado: run, git_diff, add_files, record_git_head)',
+      error: 'ação desconhecida "nope" (esperado: run, git_diff, read_files, record_git_head, write_files)',
+    });
+    // The old name of read_files is gone, with no alias.
+    expect(checkStep({ action: 'add_files', args: ['t', 'x.md'] }, 'before_execute')).toEqual({
+      error: 'ação desconhecida "add_files" (esperado: run, git_diff, read_files, record_git_head, write_files)',
     });
     expect(checkStep({ action: 'git_diff', args: ['a', 'b'] }, 'after_execute')).toEqual({
       error: '"git_diff" não pode ser usado em after_execute',
     });
-    expect(checkStep({ action: 'add_files', args: ['tag'] }, 'before_execute')).toEqual({
-      error: 'esperado "add_files <tag> <glob...>"',
+    expect(checkStep({ action: 'read_files', args: ['tag'] }, 'before_execute')).toEqual({
+      error: 'esperado "read_files <tag> <glob...>"',
     });
   });
 });
@@ -90,7 +94,7 @@ describe('runBeforeSteps', () => {
         [
           { action: 'git_diff', args: ['develop', '.cache/x/diff.patch'] },
           { action: 'run', args: ['bun', 'x', 'check'] },
-          { action: 'add_files', args: ['readme_atual', 'README.md'] },
+          { action: 'read_files', args: ['readme_atual', 'README.md'] },
         ],
         'execute.before',
       );
@@ -180,13 +184,13 @@ describe('runBeforeSteps', () => {
     ).toBeUndefined();
     expect(
       await failureOf(() =>
-        runBeforeSteps({ repoRoot: '/r', since: undefined }, [{ action: 'add_files', args: ['t'] }], 'b'),
+        runBeforeSteps({ repoRoot: '/r', since: undefined }, [{ action: 'read_files', args: ['t'] }], 'b'),
       ),
     ).toEqual({
       label: 'b 1/1',
-      step: { action: 'add_files', args: ['t'] },
+      step: { action: 'read_files', args: ['t'] },
       status: undefined,
-      output: 'esperado "add_files <tag> <glob...>"',
+      output: 'esperado "read_files <tag> <glob...>"',
     });
   });
 
@@ -240,6 +244,23 @@ describe('the run action', () => {
   });
 });
 
+describe('the write_files action', () => {
+  it("saves the agent's answer after it, and fails saying so when there is none", async () => {
+    const tmp = makeTmpDir('actions-write');
+    try {
+      const steps = [{ action: 'write_files', args: ['out/stack.md'] }];
+
+      expect(await runAfterSteps({ repoRoot: tmp.path, since: undefined, answer: 'feito' }, steps, 'a')).toEqual([]);
+      expect(readFileSync(join(tmp.path, 'out', 'stack.md'), 'utf8')).toBe('feito\n');
+
+      const [failure] = await runAfterSteps({ repoRoot: tmp.path, since: undefined }, steps, 'a');
+      expect(failure).toMatchObject({ status: undefined, output: 'o agente não deu resposta para gravar' });
+    } finally {
+      tmp.cleanup();
+    }
+  });
+});
+
 describe('runAfterSteps', () => {
   it('runs every step, even after one fails, and returns the ones that failed', async () => {
     const repo = makeTmpGitRepo();
@@ -282,12 +303,12 @@ describe('previewBeforeSteps', () => {
       previewBeforeSteps(
         [
           { action: 'run', args: ['x'] },
-          { action: 'add_files', args: ['falhas_red', 'red.md'] },
+          { action: 'read_files', args: ['falhas_red', 'red.md'] },
           { action: 'nope', args: [] },
         ],
         'execute.before',
       ),
-    ).toEqual(['[execute.before 2/3 — add_files: falhas_red red.md: produzido aqui na execução real]']);
+    ).toEqual(['[execute.before 2/3 — read_files: falhas_red red.md: produzido aqui na execução real]']);
   });
 });
 
@@ -313,7 +334,7 @@ describe('formatStepFailure / stepExitCode / describeStep', () => {
   });
 
   it('writes a step as it is in agent.yaml', () => {
-    expect(describeStep({ action: 'add_files', args: ['t', 'a.md'] })).toBe('add_files: t a.md');
+    expect(describeStep({ action: 'read_files', args: ['t', 'a.md'] })).toBe('read_files: t a.md');
   });
 });
 
@@ -322,8 +343,9 @@ describe('ACTIONS', () => {
     const context = { repoRoot: '/repo', since: undefined };
 
     expect(() => ACTIONS['record_git_head']?.run(context, [])).toThrow('argumento faltando: record_git_head <arquivo>');
+    expect(() => ACTIONS['write_files']?.run(context, [])).toThrow('argumento faltando: write_files <arquivo...>');
     await expect(ACTIONS['run']?.run(context, [])).rejects.toThrow('argumento faltando: run <comando> [args...]');
-    expect(() => ACTIONS['add_files']?.run(context, [])).toThrow('argumento faltando: add_files <tag> <glob...>');
+    expect(() => ACTIONS['read_files']?.run(context, [])).toThrow('argumento faltando: read_files <tag> <glob...>');
     expect(() => ACTIONS['git_diff']?.run(context, ['a'])).toThrow(
       'argumentos inválidos: git_diff <base> <arquivo> [--pending <estado>]',
     );

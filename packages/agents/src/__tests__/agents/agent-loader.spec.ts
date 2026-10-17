@@ -109,7 +109,7 @@ describe('parseAgentYaml', () => {
       ticket_types: ['story'],
       allow_without_ticket: true,
       steps: {
-        plan: { before: [{ add_files: ['t', 'x.md'] }], after: [{ run: ['echo', 'a'] }] },
+        plan: { before: [{ read_files: ['t', 'x.md'] }], after: [{ run: ['echo', 'a'] }] },
         ask: { after: { success: [{ run: ['ok'] }], failure: [{ run: ['ko', '${AGENT_EXIT_CODE}'] }] } },
       },
     });
@@ -142,7 +142,7 @@ describe('parseAgentYaml', () => {
       steps: {
         execute: NO_STEPS,
         plan: {
-          before: [{ action: 'add_files', args: ['t', 'x.md'] }],
+          before: [{ action: 'read_files', args: ['t', 'x.md'] }],
           after: { success: [], failure: [], always: [{ action: 'run', args: ['echo', 'a'] }] },
         },
         ask: {

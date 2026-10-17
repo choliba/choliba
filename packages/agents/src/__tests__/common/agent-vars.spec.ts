@@ -148,7 +148,7 @@ describe('withExpandedVars', () => {
   it('fills in the arguments of every step, keeping ${AGENT_EXIT_CODE} for after the agent', () => {
     const agent = echoWith({
       steps: stepsIn({
-        before: [{ action: 'add_files', args: ['falhas', '.cache/${TICKET}.md'] }],
+        before: [{ action: 'read_files', args: ['falhas', '.cache/${TICKET}.md'] }],
         after: {
           success: [{ action: 'run', args: ['bunx', 'choliba', 'tests', '${PROJECT}:${TICKET}'] }],
           failure: [{ action: 'run', args: ['report', '${TICKET}', '${AGENT_EXIT_CODE}'] }],
@@ -160,7 +160,7 @@ describe('withExpandedVars', () => {
     const expanded = withExpandedVars(agent, () => ({ PROJECT: 'demo', TICKET: 'demo-2' }));
 
     expect(expanded.steps.execute).toEqual({
-      before: [{ action: 'add_files', args: ['falhas', '.cache/demo-2.md'] }],
+      before: [{ action: 'read_files', args: ['falhas', '.cache/demo-2.md'] }],
       after: {
         success: [{ action: 'run', args: ['bunx', 'choliba', 'tests', 'demo:demo-2'] }],
         failure: [{ action: 'run', args: ['report', 'demo-2', '${AGENT_EXIT_CODE}'] }],

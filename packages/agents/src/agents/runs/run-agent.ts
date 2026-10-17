@@ -63,6 +63,8 @@ export interface RunAgentDeps {
    * lines there instead of printing its frame on the terminal when it closes.
    */
   readonly hostedPanel?: boolean;
+  /** Called with the agent's final answer when the session ends clean: the `write_files` steps after it save it. */
+  readonly answered?: (answer: string) => void;
 }
 
 /** A timer that calls `tick` every `ms`, not keeping the process alive by itself. */
@@ -521,6 +523,7 @@ async function followSession(
     screen.err.write(`${writtenToolCallMessage(reportedModel, written)}\n`);
     return 1;
   }
+  if (exitCode === 0 && answer !== undefined) deps.answered?.(answer);
 
   if (exitCode === 0 && request.providerRequest.mode === 'plan') {
     const content =
