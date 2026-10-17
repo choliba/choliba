@@ -18,6 +18,8 @@ export interface CommandAfterInput {
   readonly exitCode: number;
   /** Stops the command of the step running (Ctrl+C in the panel). */
   readonly signal?: AbortSignal;
+  /** The agent's final answer, when it ran clean: what a `write_files` step saves. */
+  readonly answer?: string;
 }
 
 export interface CommandPrepareResult {

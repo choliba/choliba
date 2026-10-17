@@ -36,8 +36,8 @@ steps:
   execute:
     before:
       - git_diff: [develop, .cache/with-prepare/diff.patch, --pending, .cache/with-prepare/last-base]
-      - add_files: [documentacao_atual, 'docs/**/*.md']
-      - add_files: [readme_atual, README.md]
+      - read_files: [documentacao_atual, 'docs/**/*.md']
+      - read_files: [readme_atual, README.md]
     after:
       success:
         - record_git_head: [.cache/with-prepare/last-base]

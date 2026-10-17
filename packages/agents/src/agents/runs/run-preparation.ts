@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 import { RUNS_DIR } from '../agent-layout';
 import { agentURL, EXCEPTION_PREFIX, type Sandbox } from '@choliba/sandbox';
 
+import { agentProvider } from '../agent-provider';
 import { invocationFromAgent, effectivePolicy } from '../invocation';
 import type { AgentDefinition } from '../../common';
 import {
@@ -140,10 +141,21 @@ function resolveAddDirs(
 }
 
 /** Step 5: which provider binary this run actually talks to. */
-function resolveProviderChoice(parsed: RunArgs, deps: RunAgentsCliDeps): ResolvedProvider | undefined {
+/**
+ * The provider of the run: `--provider`, else the one the agent asks for (its models' own, `agentProvider`), else
+ * `CHOL_AGENTS_PROVIDER`, else `auto`. The agent's comes before the environment's, which could not run its models.
+ */
+function resolveProviderChoice(
+  parsed: RunArgs,
+  agent: AgentDefinition,
+  deps: RunAgentsCliDeps,
+): { readonly resolved: ResolvedProvider; readonly fromAgent: boolean } | undefined {
+  const fromAgent = parsed.provider === undefined ? agentProvider(agent, deps.providers) : undefined;
   try {
-    const providerPreference = deps.providers.parsePreference(parsed.provider ?? deps.config[CHOL_AGENTS_PROVIDER]);
-    return deps.providers.resolve(providerPreference, deps.which);
+    const providerPreference = deps.providers.parsePreference(
+      parsed.provider ?? fromAgent ?? deps.config[CHOL_AGENTS_PROVIDER],
+    );
+    return { resolved: deps.providers.resolve(providerPreference, deps.which), fromAgent: fromAgent !== undefined };
   } catch (error) {
     deps.stderr.write(`${errorMessage(error)}\n`);
     return undefined;
@@ -297,10 +309,11 @@ export async function prepareRun(
     return STOPPED;
   }
   const addDirs = resolveAddDirs(command, parsed, deps, executeDirs);
-  const resolved = resolveProviderChoice(parsed, deps);
-  if (resolved === undefined) {
+  const choice = resolveProviderChoice(parsed, agent, deps);
+  if (choice === undefined) {
     return STOPPED;
   }
+  const { resolved, fromAgent } = choice;
   const chosen = providerModel(resolved.adapter, parsed.model, agent.supportedModels, deps.providers);
   if ('error' in chosen) {
     deps.stderr.write(`${chosen.error}\n`);
@@ -324,5 +337,5 @@ export async function prepareRun(
   const { project } = context;
   const withModel = { ...built.providerRequest, model: chosen.model };
   const providerRequest = project === undefined ? withModel : { ...withModel, project };
-  return { ...built, providerRequest, resolved, command };
+  return { ...built, providerRequest, resolved, providerFromAgent: fromAgent, command };
 }

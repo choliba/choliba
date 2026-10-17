@@ -55,7 +55,12 @@ export function buildAfter(
   }
   return async (input) => {
     const after = agent.steps[input.mode].after;
-    const context = { repoRoot: input.repoRoot, since: undefined, ...signalOf(input) };
+    const context = {
+      repoRoot: input.repoRoot,
+      since: undefined,
+      ...signalOf(input),
+      ...(input.answer === undefined ? {} : { answer: input.answer }),
+    };
     const outcome = input.exitCode === 0 ? 'success' : 'failure';
     const run = (block: 'success' | 'failure' | 'always'): Promise<readonly StepFailure[]> =>
       runAfterSteps(context, expandExitCode(after[block], input.exitCode), `${input.mode}.after.${block}`);

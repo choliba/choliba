@@ -275,6 +275,36 @@ describe('runAgent', () => {
     expect(await run(proseRun)).toBe(0);
   });
 
+  it('hands the final answer on when the session ends clean, and nothing when it fails', async () => {
+    const answers: string[] = [];
+    const deps = (s: Setup) => ({
+      runner: s.runner,
+      stdout: s.stdout,
+      stderr: s.stderr,
+      signals: s.signals,
+      now: () => new Date(0),
+      answered: (answer: string) => answers.push(answer),
+    });
+    const clean = setup(
+      fakeSpawner({ stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'a análise' }])]) })
+        .spawner,
+    );
+    const failed = setup(
+      fakeSpawner({
+        stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'pela metade' }])]),
+        exitCode: 2,
+      }).spawner,
+    );
+    const silent = setup(
+      fakeSpawner({ stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: '' }])]) }).spawner,
+    );
+
+    expect(await runAgent(clean.request(), deps(clean))).toBe(0);
+    expect(await runAgent(failed.request(), deps(failed))).toBe(2);
+    expect(await runAgent(silent.request(), deps(silent))).toBe(0);
+    expect(answers).toEqual(['a análise']);
+  });
+
   it('propagates a non-zero process exit code even when the last done event looked successful', async () => {
     const lines = eventLines([{ type: 'done', isError: false, text: 'ok' }]);
     const s = setup(fakeSpawner({ stdout: streamFromChunks([lines]), exitCode: 3 }).spawner);

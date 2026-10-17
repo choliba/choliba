@@ -108,7 +108,8 @@ function runDryRun(
     return 1;
   }
   const input: DryRunInput = {
-    providerId: resolved.adapter.id,
+    // Said when the agent's models chose it, so the reader sees why it is not the environment's.
+    providerId: `${resolved.adapter.id}${prepared.providerFromAgent === true ? ' (dos modelos do agente)' : ''}`,
     command: resolved.command,
     args,
     request: providerRequest,
@@ -180,15 +181,16 @@ function sandboxFor(deps: RunAgentsCliDeps): Sandbox | undefined {
  */
 async function runAfter(
   command: AgentInvocation,
-  mode: ExecutionMode,
-  exitCode: number,
+  ended: { readonly mode: ExecutionMode; readonly exitCode: number; readonly answer: string | undefined },
   deps: RunAgentsCliDeps,
 ): Promise<number> {
+  const { mode, exitCode, answer } = ended;
   const input = {
     repoRoot: deps.repoRoot,
     mode,
     exitCode,
     ...(deps.signal === undefined ? {} : { signal: deps.signal }),
+    ...(answer === undefined ? {} : { answer }),
   };
   const failures = (await command.after?.(input)) ?? [];
   for (const failure of failures) {
@@ -215,6 +217,7 @@ async function runAndRecord(
 ): Promise<number> {
   const toolFiles = planRunTools(providerRequest, deps.config);
   const files = [...toolFiles, ...(resolved.adapter.previewWorkspace?.(providerRequest) ?? [])];
+  let answer: string | undefined;
   const exitCode = await runAgent(
     {
       provider: resolved,
@@ -243,10 +246,13 @@ async function runAndRecord(
       footer: wantsFooter(deps.stdout, deps.config),
       panel: deps.panel ?? openOpenTuiPanel,
       hostedPanel: deps.hostedPanel === true,
+      answered: (text) => {
+        answer = text;
+      },
     },
   );
 
-  return runAfter(command, mode, exitCode, deps);
+  return runAfter(command, { mode, exitCode, answer }, deps);
 }
 
 /** The run's deps with `--sandbox` in place of `CHOL_SANDBOX`, so everything after it sees one sandbox. */

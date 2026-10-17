@@ -4,8 +4,9 @@ import { join, relative } from 'node:path';
 import { CACHE_DIR } from '../agent-layout';
 
 import type { AgentStep } from '../../common';
-import { ADD_FILES_USAGE, addFiles } from './step-add-files';
+import { READ_FILES_USAGE, readFiles } from './step-read-files';
 import { recordGitHead } from './git-state';
+import { WRITE_FILES_USAGE, writeFiles } from './step-write-files';
 import { spawnToEnd } from './step-spawn';
 import { GIT_DIFF_USAGE, parseGitDiffArgs, runGitDiff } from './working-tree-diff';
 
@@ -34,6 +35,8 @@ export interface StepContext {
   readonly logDir?: string;
   /** Stops the command of the step running (Ctrl+C in the panel); the step then fails. */
   readonly signal?: AbortSignal;
+  /** The agent's final answer, after it ran clean: what `write_files` saves. */
+  readonly answer?: string;
 }
 
 export interface AgentAction {
@@ -141,12 +144,12 @@ export const ACTIONS: Readonly<Record<string, AgentAction>> = {
       return runGitDiff(config, context);
     },
   },
-  add_files: {
-    usage: ADD_FILES_USAGE,
+  read_files: {
+    usage: READ_FILES_USAGE,
     phases: ['before_execute'],
     accepts: (args) => args.length >= 2,
     producesSection: true,
-    run: (context, args) => addFiles(context.repoRoot, argAt(args, 0, ADD_FILES_USAGE), args.slice(1)),
+    run: (context, args) => readFiles(context.repoRoot, argAt(args, 0, READ_FILES_USAGE), args.slice(1)),
   },
   record_git_head: {
     usage: 'record_git_head <arquivo>',
@@ -155,6 +158,17 @@ export const ACTIONS: Readonly<Record<string, AgentAction>> = {
     producesSection: false,
     run: (context, args) => {
       recordGitHead(context.repoRoot, argAt(args, 0, 'record_git_head <arquivo>'));
+      return undefined;
+    },
+  },
+  write_files: {
+    usage: WRITE_FILES_USAGE,
+    phases: ['after_execute'],
+    accepts: (args) => args.length > 0,
+    producesSection: false,
+    run: (context, args) => {
+      argAt(args, 0, WRITE_FILES_USAGE);
+      writeFiles(context.repoRoot, context.answer, args);
       return undefined;
     },
   },
@@ -192,7 +206,7 @@ export interface StepFailure {
   readonly output: string;
 }
 
-/** `add_files: falhas_red .cache/…`: a step as the user wrote it. */
+/** `read_files: falhas_red .cache/…`: a step as the user wrote it. */
 export function describeStep(step: AgentStep): string {
   return `${step.action}: ${step.args.join(' ')}`;
 }
