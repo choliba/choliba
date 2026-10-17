@@ -114,6 +114,47 @@ describe('talkToAgent', () => {
     }
   });
 
+  it("stops a step's command on Ctrl+C outside the agent's session, the session inside it, and stays busy to the end", async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      const talk = conversation(tmp.path, 'echo');
+      talk.state.send('faça', talk.fake.panel);
+      await talk.settle();
+      const [run] = talk.asked;
+      expect(run?.host.signal?.aborted).toBe(false);
+      expect(talk.state.stop()).toBe(true);
+      expect(run?.host.signal?.aborted).toBe(true);
+      run?.end(1);
+      await talk.settle();
+
+      talk.state.send('de novo', talk.fake.panel);
+      await talk.settle();
+      const second = talk.asked[1];
+      const panel = await second?.host.panel({ footer: () => [] } as unknown as PanelOptions);
+      let interrupted = 0;
+      panel?.onInterrupt(() => {
+        interrupted += 1;
+      });
+      expect(talk.state.stop()).toBe(true);
+      expect([interrupted, second?.host.signal?.aborted]).toEqual([1, false]);
+
+      panel?.close();
+      expect(talk.state.spinning.has('agente')).toBe(true);
+      talk.state.send('enquanto os steps rodam', talk.fake.panel);
+      await talk.settle();
+      expect(talk.asked).toHaveLength(2);
+      expect(talk.state.stop()).toBe(true);
+      expect([interrupted, second?.host.signal?.aborted]).toEqual([1, true]);
+
+      second?.end(1);
+      await talk.settle();
+      expect([talk.state.spinning.size, talk.state.stop()]).toEqual([0, false]);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
   it('says what the agent needs and the session lacks, and passes the choices as flags', async () => {
     const tmp = makeTmpDir('panel-run');
     try {
@@ -269,6 +310,10 @@ describe('AgentsService.runHosted', () => {
 
       expect(code).toBe(1);
       expect(stderr.text() + stdout.text()).toContain('nada');
+      const signal = new AbortController().signal;
+      expect(
+        await service.runHosted(['nada'], { panel: () => Promise.resolve(undefined), stdout, stderr, signal }),
+      ).toBe(1);
       expect(opened).toEqual([]);
       expect(platform.stdout.text()).toBe('');
     } finally {

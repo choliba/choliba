@@ -24,6 +24,8 @@ export interface HostedRun {
   readonly panel: (options: PanelOptions) => Promise<Panel | undefined>;
   readonly stdout: WritableWithColumns;
   readonly stderr: Writable;
+  /** Stops the command of the step running before or after the agent (Ctrl+C in the host's panel). */
+  readonly signal?: AbortSignal;
 }
 
 /** `choliba run agent` and `choliba list agents`: the workspace's agents, run through a provider. */
@@ -53,6 +55,7 @@ export class AgentsService {
       stderr: host.stderr,
       panel: host.panel,
       hostedPanel: true,
+      ...(host.signal === undefined ? {} : { signal: host.signal }),
     });
   }
 

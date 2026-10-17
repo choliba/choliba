@@ -5,6 +5,11 @@ import { expandExitCode } from '../../common';
 import { type StepFailure, previewBeforeSteps, runAfterSteps, runBeforeSteps } from './step-actions';
 import { parseGitDiffArgs } from './working-tree-diff';
 
+/** The step context's `signal`, when the run has one to stop its steps with. */
+function signalOf(input: { readonly signal?: AbortSignal }): { readonly signal?: AbortSignal } {
+  return input.signal === undefined ? {} : { signal: input.signal };
+}
+
 /** Every step of `agent` in `pick` of each mode, in mode order. */
 function allSteps(agent: AgentDefinition, pick: (steps: AgentModeSteps) => readonly AgentStep[]): readonly AgentStep[] {
   return EXECUTION_MODES.flatMap((mode) => pick(agent.steps[mode]));
@@ -18,17 +23,16 @@ function allSteps(agent: AgentDefinition, pick: (steps: AgentModeSteps) => reado
  */
 export function buildPrepare(
   agent: AgentDefinition,
-): ((input: CommandPrepareInput) => CommandPrepareResult) | undefined {
+): ((input: CommandPrepareInput) => Promise<CommandPrepareResult>) | undefined {
   if (allSteps(agent, (steps) => steps.before).length === 0 && agent.defaultTask === undefined) {
     return undefined;
   }
-  return (input) => {
+  return async (input) => {
     const steps = agent.steps[input.mode].before;
     const prefix = `${input.mode}.before`;
+    const context = { repoRoot: input.repoRoot, since: input.since, ...signalOf(input) };
     const sections =
-      input.dryRun === true
-        ? previewBeforeSteps(steps, prefix)
-        : runBeforeSteps({ repoRoot: input.repoRoot, since: input.since }, steps, prefix);
+      input.dryRun === true ? previewBeforeSteps(steps, prefix) : await runBeforeSteps(context, steps, prefix);
     const hasTask = input.task.trim() !== '';
     const focus = hasTask ? [`Foco pedido pelo usuário: ${input.task}`] : [];
     const task = hasTask ? input.task : (agent.defaultTask ?? input.task);
@@ -42,18 +46,20 @@ export function buildPrepare(
  * `always`, each with `${AGENT_EXIT_CODE}` filled in. Every step runs even when one fails; the ones
  * that failed are returned. `undefined` when the agent has no `after` step in any mode.
  */
-export function buildAfter(agent: AgentDefinition): ((input: CommandAfterInput) => readonly StepFailure[]) | undefined {
+export function buildAfter(
+  agent: AgentDefinition,
+): ((input: CommandAfterInput) => Promise<readonly StepFailure[]>) | undefined {
   const declared = allSteps(agent, (steps) => [...steps.after.success, ...steps.after.failure, ...steps.after.always]);
   if (declared.length === 0) {
     return undefined;
   }
-  return (input) => {
+  return async (input) => {
     const after = agent.steps[input.mode].after;
-    const context = { repoRoot: input.repoRoot, since: undefined };
+    const context = { repoRoot: input.repoRoot, since: undefined, ...signalOf(input) };
     const outcome = input.exitCode === 0 ? 'success' : 'failure';
-    const run = (block: 'success' | 'failure' | 'always'): readonly StepFailure[] =>
+    const run = (block: 'success' | 'failure' | 'always'): Promise<readonly StepFailure[]> =>
       runAfterSteps(context, expandExitCode(after[block], input.exitCode), `${input.mode}.after.${block}`);
-    return [...run(outcome), ...run('always')];
+    return [...(await run(outcome)), ...(await run('always'))];
   };
 }
 

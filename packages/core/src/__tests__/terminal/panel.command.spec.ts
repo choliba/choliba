@@ -77,8 +77,10 @@ describe('choliba panel', () => {
           description: 'Começa',
           run: ({ context }) => {
             context.set('agente', 'echo');
+            // Asked to stop, the work ends and says so, as a run does.
             context.busy(() => {
               stopped += 1;
+              context.busy(undefined);
             });
             return Promise.resolve();
           },

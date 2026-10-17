@@ -1,4 +1,3 @@
-import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 
 import { formatHelp, openOpenTuiPanel, type CommandSpec } from '@choliba/core';
@@ -16,6 +15,7 @@ import { resolveAgentsDir } from '../agent-dirs';
 import type { ProviderRequest } from '../../common';
 import type { ResolvedProvider } from '../../common';
 import { formatStepFailure, stepExitCode } from '../steps/step-actions';
+import { spawnToEnd } from '../steps/step-spawn';
 import { formatAgentDetail, runList } from './agent-detail';
 import { formatDryRun, type DryRunInput } from './dry-run';
 import { runAgent } from './run-agent';
@@ -178,8 +178,19 @@ function sandboxFor(deps: RunAgentsCliDeps): Sandbox | undefined {
  * ended. Each failed step is reported; the run ends with the agent's exit code when the agent
  * failed, else with the first failed step's.
  */
-function runAfter(command: AgentInvocation, mode: ExecutionMode, exitCode: number, deps: RunAgentsCliDeps): number {
-  const failures = command.after?.({ repoRoot: deps.repoRoot, mode, exitCode }) ?? [];
+async function runAfter(
+  command: AgentInvocation,
+  mode: ExecutionMode,
+  exitCode: number,
+  deps: RunAgentsCliDeps,
+): Promise<number> {
+  const input = {
+    repoRoot: deps.repoRoot,
+    mode,
+    exitCode,
+    ...(deps.signal === undefined ? {} : { signal: deps.signal }),
+  };
+  const failures = (await command.after?.(input)) ?? [];
   for (const failure of failures) {
     deps.stderr.write(`${formatStepFailure(failure)}\n`);
   }
@@ -346,7 +357,7 @@ async function appFor(settings: ProjectSettings | undefined, deps: RunAgentsCliD
         logDir: join(deps.repoRoot, '.cache', 'app'),
         env: process.env,
         stderr: deps.stderr,
-        spawn: spawnSync,
+        spawn: spawnToEnd,
       }));
   try {
     return await ensure(settings);
@@ -373,7 +384,7 @@ async function runPrepared(
   sandbox: Sandbox,
 ): Promise<number> {
   const { parsed, deps } = context;
-  const prepared = prepareRun(context, command, agent);
+  const prepared = await prepareRun(context, command, agent);
   if ('exitCode' in prepared) {
     return prepared.exitCode;
   }

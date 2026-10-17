@@ -76,15 +76,24 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     }
     running = true;
     let stopRun: (() => void) | undefined;
-    const done = (): void => {
-      running = false;
+    let inSession = false;
+    const steps = new AbortController();
+    // The agent's session ends before the steps after it: the run stays busy until the very end.
+    const closeSession = (): void => {
+      inSession = false;
       sending = undefined;
       context.status(RUN, undefined);
+    };
+    const done = (): void => {
+      closeSession();
+      running = false;
       context.busy(undefined);
       context.spin(AGENT, false);
     };
+    // Ctrl+C stops the agent's session while it is open, else the command of the step running.
     context.busy(() => {
-      stopRun?.();
+      if (inSession) stopRun?.();
+      else steps.abort();
     });
     const hosted = (options: PanelOptions): Promise<Panel> =>
       Promise.resolve({
@@ -95,20 +104,26 @@ export function talkToAgent(container: Container, context: PanelContext): void {
           context.status(RUN, `${gray('rodando')} ${bold(agent.id)} ${gray(options.footer(80).join(' '))}`);
         },
         onInterrupt: (listener) => {
+          inSession = true;
           stopRun = listener;
         },
         ask: (question) => panel.ask(question),
         onMessage: (listener) => {
           sending = listener;
         },
-        close: done,
+        close: closeSession,
       });
     const startedAt = Date.now();
     // The agent's card turns a spinner while it runs; the chat keeps only what the run says.
     context.spin(AGENT, true);
     await container
       .get(AGENTS)
-      .runHosted(argv, { panel: hosted, stdout: replies(panel, (line) => line), stderr: replies(panel, warn) })
+      .runHosted(argv, {
+        panel: hosted,
+        stdout: replies(panel, (line) => line),
+        stderr: replies(panel, warn),
+        signal: steps.signal,
+      })
       .then((code) => {
         done();
         const how = code === 0 ? bold('código 0') : warn(`código ${String(code)}`);

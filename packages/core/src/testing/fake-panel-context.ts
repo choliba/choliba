@@ -15,7 +15,7 @@ export interface FakePanelContext {
   press(name: string, shift?: boolean): boolean;
   /** The person sends `text` with no `/` in `panel`: `true` when a conversation took it. */
   send(text: string, panel: ChatPanel): boolean;
-  /** Ctrl+C twice: `true` when something was running, and is stopped now. */
+  /** Ctrl+C twice: `true` when something is running, and was asked to stop. */
   stop(): boolean;
 }
 
@@ -32,7 +32,6 @@ export function fakePanelContext(): FakePanelContext {
   let running: (() => void) | undefined;
   const stop = (): boolean => {
     const current = running;
-    running = undefined;
     current?.();
     return current !== undefined;
   };

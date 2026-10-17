@@ -155,13 +155,13 @@ function resolveProviderChoice(parsed: RunArgs, deps: RunAgentsCliDeps): Resolve
  * on `--dry-run`) and the task it may have rewritten. A failed step stops the run with the step's own
  * exit code; the message says which step, what it ran and that the agent did not run.
  */
-function runPrepare(
+async function runPrepare(
   prepare: NonNullable<AgentInvocation['prepare']>,
   input: CommandPrepareInput,
   deps: RunAgentsCliDeps,
-): { templateOutput: string; effectiveTask: string } | Stopped {
+): Promise<{ templateOutput: string; effectiveTask: string } | Stopped> {
   try {
-    const prepared = prepare(input);
+    const prepared = await prepare(deps.signal === undefined ? input : { ...input, signal: deps.signal });
     return { templateOutput: prepared.promptBody, effectiveTask: prepared.task };
   } catch (error) {
     if (error instanceof StepFailedError) {
@@ -174,7 +174,7 @@ function runPrepare(
 }
 
 /** Step 6: the actual `ProviderRequest`, via the command's `prepare` hook (or plain `prompt`) — and the task that hook may have rewritten. */
-function buildProviderRequest(
+async function buildProviderRequest(
   command: AgentInvocation,
   agent: AgentDefinition,
   mode: ExecutionMode,
@@ -185,12 +185,12 @@ function buildProviderRequest(
   mcpServers: readonly McpServer[],
   parsed: RunArgs,
   deps: RunAgentsCliDeps,
-): { effectiveTask: string; providerRequest: ProviderRequest } | Stopped {
+): Promise<{ effectiveTask: string; providerRequest: ProviderRequest } | Stopped> {
   const base = { task, repoRoot: deps.repoRoot, agent, mode, dryRun: parsed.dryRun };
   const prompted =
     command.prepare === undefined
       ? { templateOutput: command.prompt({ task, repoRoot: deps.repoRoot, agent }), effectiveTask: task }
-      : runPrepare(command.prepare, parsed.since === undefined ? base : { ...base, since: parsed.since }, deps);
+      : await runPrepare(command.prepare, parsed.since === undefined ? base : { ...base, since: parsed.since }, deps);
   if ('exitCode' in prompted) {
     return prompted;
   }
@@ -265,11 +265,11 @@ export function definitionDirectories(context: RunContext): readonly string[] {
 }
 
 /** Everything one run needs before its provider starts; `Stopped` when a check or a step stops it (reason on `stderr`). */
-export function prepareRun(
+export async function prepareRun(
   context: RunContext,
   declaredCommand: AgentInvocation,
   declaredAgent: AgentDefinition,
-): (PreparedRun & { command: AgentInvocation }) | Stopped {
+): Promise<(PreparedRun & { command: AgentInvocation }) | Stopped> {
   const { parsed, deps } = context;
   const expanded = expandAgent(declaredAgent, context.vars, deps);
   if (expanded === undefined || !checkModelSupported(parsed, expanded, deps)) {
@@ -306,7 +306,7 @@ export function prepareRun(
     deps.stderr.write(`${chosen.error}\n`);
     return STOPPED;
   }
-  const built = buildProviderRequest(
+  const built = await buildProviderRequest(
     command,
     withSkills,
     context.mode,
