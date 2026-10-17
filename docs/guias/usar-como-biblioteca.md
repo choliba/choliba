@@ -34,9 +34,9 @@ Rode `bun choliba.ts` de qualquer subpasta. A saída é parecida com:
 ```text
 raiz: /home/voce/meu-workspace
 agentes em /home/voce/meu-workspace/.choliba/agents
-- implementer 1.0.2
-- product-owner 1.3.1
-- test-writer 1.1.2
+- implementer 1.0.3
+- product-owner 1.3.2
+- test-writer 1.1.3
 skill playwright-cli: Automate browser interactions, test web pages and work with Playwright tests.
 ```
 
@@ -124,7 +124,7 @@ choliba.agents.list().map((agent) => agent.id); // ['implementer', 'product-owne
 choliba.agents.list().filter((agent) => agent.projectRequired);
 
 const implementer = choliba.agents.get('implementer');
-implementer.version; // '1.0.2'
+implementer.version; // '1.0.3'
 implementer.supportedModels; // os modelos do agent.yaml
 
 choliba.agents.skills('implementer'); // [{ name: 'playwright-cli', description, path, instructions }, ...]

@@ -83,15 +83,15 @@ uma pasta vazia ao `check` verde, está em
 
 ```sh
 # o exemplo que o setup cria, e os agentes em .choliba/agents/
-bunx choliba check
+bun choliba check
 
 # o ticket, os testes e a implementação
-bunx choliba run agent product-owner --project minha-app --type story "a busca aceita filtro por data"
-bunx choliba run agent test-writer --project minha-app --ticket minha-app-1
-bunx choliba run agent implementer --project minha-app --ticket minha-app-1
+bun choliba run agent product-owner --project minha-app --type story "a busca aceita filtro por data"
+bun choliba run agent test-writer --project minha-app --ticket minha-app-1
+bun choliba run agent implementer --project minha-app --ticket minha-app-1
 
 # os testes do ticket, a qualquer momento
-bunx choliba run tests minha-app:1
+bun choliba run tests minha-app:1
 ```
 
 Qualquer comando de agente aceita [`--dry-run`](docs/comandos/run.md#--dry-run), que mostra o que ele faria, na

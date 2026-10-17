@@ -251,7 +251,7 @@ export function formatInstall(
     ...installed.map((item) => `  ${item.kind} ${item.name} → ${relative(workspaceRoot, item.to)}`),
     ...(warnings.length === 0 ? [] : ['', 'Avisos:', ...warnings.map((warning) => `  - ${warning}`)]),
     '',
-    'Confira com: bunx choliba check',
+    'Confira com: bun choliba check',
   ].join('\n');
 }
 

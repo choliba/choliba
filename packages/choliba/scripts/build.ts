@@ -325,7 +325,7 @@ function writeManifest(outDir: string, dependencies: Record<string, string>): st
         bin: { choliba: 'bin/choliba.js' },
         exports: exportMap(),
         // Builds the workspace (folders, .env, .gitignore) and turns bash completion on. Bun runs it only
-        // for trusted packages: `bun add --trust choliba`, or `bunx choliba setup` afterwards.
+        // for trusted packages: `bun add --trust choliba`, or `bun choliba setup` afterwards.
         scripts: { postinstall: 'bun bin/choliba.js setup' },
         engines: { bun: '>=1.2' },
         dependencies,

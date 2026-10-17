@@ -45,7 +45,7 @@ bun add --trust ./choliba-0.0.1-dev.tgz
 - Se você rodou sem `--trust`:
 
 ```
-bunx choliba setup
+bun choliba setup
 ```
 
 Sem sobrescrever o que já existe, ele:
@@ -95,7 +95,7 @@ bun add --trust ./choliba-0.0.1-dev.tgz
 Para conferir qual versão ficou instalada, rode
 
 ```
-bunx choliba --version
+bun choliba --version
 ```
 
 e compare com o título da última atualização nas [notas da release](https://github.com/choliba/choliba/releases/tag/v0.0.1-dev).
@@ -103,6 +103,6 @@ e compare com o título da última atualização nas [notas da release](https://
 A saída tem este formato:
 
 ```
-$ bunx choliba --version
+$ bun choliba --version
 choliba 0.0.1-dev.16+1a2b3c4
 ```

@@ -56,18 +56,24 @@ describe('the choliba shell', () => {
     }
   });
 
-  it("runs the command of each official agent's step that calls choliba", () => {
+  it("runs the command of each official agent's step that calls choliba, always with bun", () => {
     const shell = createCholibaShell(fakePlatform(), fakeRuntime());
-    const calls = listAgents(join(__dirname, '..', '..', '..', '..', '.choliba', 'agents')).flatMap((agent) =>
-      Object.values(agent.steps).flatMap((steps) =>
-        [...steps.before, ...steps.after.success, ...steps.after.failure, ...steps.after.always]
-          .filter((step) => step.action === 'run' && step.args[0] === 'bunx' && step.args[1] === 'choliba')
-          .map((step) => `${agent.id}: ${step.args.slice(2, 4).join(' ')}`),
+    const agents = listAgents(join(__dirname, '..', '..', '..', '..', '.choliba', 'agents'));
+    const steps = agents.flatMap((agent) =>
+      Object.values(agent.steps).flatMap((each) =>
+        [...each.before, ...each.after.success, ...each.after.failure, ...each.after.always]
+          .filter((step) => step.action === 'run' && step.args[1] === 'choliba')
+          .map((step) => ({ agent: agent.id, runner: step.args[0], words: step.args.slice(2, 4) })),
       ),
     );
 
-    expect(calls.length).toBeGreaterThan(0);
-    expect(calls.filter((call) => !shell.has(call.split(' ')[1] ?? ''))).toEqual([]);
+    expect(steps.length).toBeGreaterThan(0);
+    expect(steps.filter((step) => !shell.has(step.words[0]))).toEqual([]);
+    // bunx downloads a missing choliba from npm and runs it; bun only runs the installed one.
+    expect(steps.filter((step) => step.runner !== 'bun')).toEqual([]);
+    const commands = agents.flatMap((agent) => agent.permissions.allowExecute.flatMap((entry) => entry.commands));
+    expect(commands.filter((command) => command.startsWith('bunx choliba'))).toEqual([]);
+    expect(commands.some((command) => command.startsWith('bun choliba'))).toBe(true);
   });
 
   it.each([

@@ -87,7 +87,7 @@ export const realDisk: LaunchDisk = {
 
 /**
  * The `bun` running choliba and, when it sits beside it, its `bunx`: the run tools start with `env bun`, and an agent's
- * commands (`bunx choliba run tests`) call `bunx`, both from a home the sandbox empties. `bunx` is `bun` under another
+ * commands (`bun choliba run tests`) call `bun`, and another agent's may call `bunx`, both from a home the sandbox empties. `bunx` is `bun` under another
  * name, so mounting its path gives the sandbox the same binary there.
  */
 function runtimeFiles(disk: LaunchDisk): readonly string[] {
@@ -135,7 +135,7 @@ function outputFolders(request: ProviderRequest, config: Config): readonly strin
 /**
  * How to start the provider for `input.request`. On this machine, `bwrap` with the same mounts as the container.
  * In a container (`CHOL_SANDBOX=docker`), `docker run` with those mounts, the installed packages (`node_modules`, which
- * the run tools and `bunx choliba` load) and the output folders, as the workspace's owner, and the provider's
+ * the run tools and `bun choliba` load) and the output folders, as the workspace's owner, and the provider's
  * credentials by name.
  */
 export function launchFor(input: LaunchInput, disk: LaunchDisk = realDisk): Launch {

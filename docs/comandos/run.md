@@ -77,11 +77,11 @@ nenhuma pasta de execução, nenhum provider. Vale em qualquer modo. Ele só lê
 agente aparece do mesmo jeito.
 
 ```
-$ bunx choliba run agent implementer --mode plan --dry-run --project app --ticket app-1
+$ bun choliba run agent implementer --mode plan --dry-run --project app --ticket app-1
 Sem --dry-run, faria nesta ordem:
 
  1. [CLI]    confere http://localhost:5173/: sem resposta, para aqui (o ambiente não tem envs[].start)
- 2. [CLI]    plan.before 1/2 — run: bunx choliba run tests app:app-1 --expect red --failures .cache/test-writer/app-1/red.md
+ 2. [CLI]    plan.before 1/2 — run: bun choliba run tests app:app-1 --expect red --failures .cache/test-writer/app-1/red.md
              se falhar: para aqui, o agente não roda
  3. [CLI]    plan.before 2/2 — add_files: falhas_red .cache/test-writer/app-1/red.md
              se falhar: para aqui, o agente não roda
