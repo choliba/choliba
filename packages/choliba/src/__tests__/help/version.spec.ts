@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { cholibaManifest } from '../../help/version';
+import { cholibaManifest, shownVersion } from '../../help/version';
 
 function withDir(run: (dir: string) => void): void {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'choliba-version-'));
@@ -50,5 +50,13 @@ describe('cholibaManifest', () => {
 
   it('is the package of these sources when run from them', () => {
     expect(cholibaManifest()?.version).toMatch(/^0\.0\.1-dev/);
+  });
+});
+
+describe('shownVersion', () => {
+  it('is the version as --version shows it, without the name', () => {
+    expect(shownVersion({ version: '0.0.1-dev.66', gitHead: 'ce2dc61db1cbd0ca' })).toBe('0.0.1-dev.66+ce2dc61');
+    expect(shownVersion({ version: '0.0.1-dev' })).toBe('0.0.1-dev');
+    expect(shownVersion(undefined)).toBe('(versão desconhecida)');
   });
 });

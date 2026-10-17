@@ -5,6 +5,7 @@ import { configCatalog, configSettings, type ConfigGroup } from '@choliba/config
 import { LocationsService, ProjectsService, projectsConfig } from '@choliba/projects';
 
 import { configSourcesAt, findWorkspaceRoot } from '../config';
+import { cholibaManifest, shownVersion } from '../help';
 import { cholibaProjects } from './choliba-projects';
 import type {
   Choliba,
@@ -53,6 +54,9 @@ export function cholibaApi(groups: readonly ConfigGroup[], options: CholibaOptio
   return {
     get root() {
       return root();
+    },
+    get version() {
+      return shownVersion(cholibaManifest());
     },
     config,
     agents,

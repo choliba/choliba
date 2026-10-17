@@ -5,6 +5,7 @@ import { defineConfig } from '@choliba/config';
 import { fakePlatform } from '@choliba/core/testing';
 import { sandboxConfig } from '@choliba/sandbox';
 
+import { cholibaManifest, shownVersion } from '../../help';
 import { createCholibaShell, openCholiba } from '../../app-shell';
 import { choliba } from '../../index';
 import { fakeRuntime } from '../helpers/runtime';
@@ -190,6 +191,11 @@ describe('openCholiba', () => {
 describe('choliba', () => {
   it('is the facade of the process, read only when used', () => {
     expect(choliba.root).toBe(openCholiba({ cwd: process.cwd() }).root);
+  });
+
+  it('says the version of the choliba running, as --version does', () => {
+    expect(choliba.version).toBe(shownVersion(cholibaManifest()));
+    expect(choliba.version).toMatch(/^0\.0\.1-dev/);
   });
 
   it('reads the process environment when given none', () => {
