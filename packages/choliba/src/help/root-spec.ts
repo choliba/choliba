@@ -27,6 +27,7 @@ export const CHOLIBA_ORDER: readonly string[] = [
   'check',
   'panel',
   'setup',
+  'update',
   'lint',
   'format',
 ];
