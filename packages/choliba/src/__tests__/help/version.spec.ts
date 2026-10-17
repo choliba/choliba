@@ -42,6 +42,26 @@ describe('cholibaManifest', () => {
     });
   });
 
+  it('reads the package the bundle loaded when imported by another tool, not the sources it was built from', () => {
+    withDir((dir) => {
+      writeManifest(path.join(dir, 'vite'), { name: 'vite', version: '8.3.4' });
+      writeManifest(path.join(dir, 'sources'), { name: 'choliba', version: '0.0.1-dev' });
+      writeManifest(path.join(dir, 'choliba'), { name: 'choliba', version: '0.0.1-dev.67', gitHead: 'a3147c6119a3' });
+      const runner = path.join(dir, 'vite', 'bin', 'vite.js');
+      fs.mkdirSync(path.dirname(runner));
+      fs.writeFileSync(runner, '');
+      const holder = globalThis as { __CHOLIBA_SHIPPED_DIR__?: string };
+      try {
+        holder.__CHOLIBA_SHIPPED_DIR__ = path.join(dir, 'choliba');
+        const manifest = cholibaManifest(path.join(dir, 'sources', 'src', 'help'), ['node', runner]);
+
+        expect(shownVersion(manifest)).toBe('0.0.1-dev.67+a3147c6');
+      } finally {
+        delete holder.__CHOLIBA_SHIPPED_DIR__;
+      }
+    });
+  });
+
   it('finds nothing when no package.json up the way is choliba', () => {
     withDir((dir) => {
       expect(cholibaManifest(dir, [])).toBeUndefined();

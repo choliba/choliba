@@ -2,10 +2,11 @@ import { resolve } from 'node:path';
 
 import { agentsConfig, listAgents, listSkills, loadAgent, resolveSkill, resolveSkills } from '@choliba/agents';
 import { configCatalog, configSettings, type ConfigGroup } from '@choliba/config';
+import { versionLine } from '@choliba/core';
 import { LocationsService, ProjectsService, projectsConfig } from '@choliba/projects';
 
 import { configSourcesAt, findWorkspaceRoot } from '../config';
-import { cholibaManifest, shownVersion } from '../help';
+import { cholibaManifest, PACKAGE_NAME } from '../help';
 import { cholibaProjects } from './choliba-projects';
 import type {
   Choliba,
@@ -56,7 +57,7 @@ export function cholibaApi(groups: readonly ConfigGroup[], options: CholibaOptio
       return root();
     },
     get version() {
-      return shownVersion(cholibaManifest());
+      return versionLine(PACKAGE_NAME, cholibaManifest());
     },
     config,
     agents,

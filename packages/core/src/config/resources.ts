@@ -47,7 +47,7 @@ export function existingResourceStarts(sourceDir: string, argv: readonly string[
  * `import.meta.url`, because this module is also loaded by Jest, which cannot parse `import.meta`. Absent from
  * the sources and from the `bin`, where the running script is enough.
  */
-function shippedDir(): string | undefined {
+export function shippedDir(): string | undefined {
   const value = (globalThis as { readonly __CHOLIBA_SHIPPED_DIR__?: unknown }).__CHOLIBA_SHIPPED_DIR__;
   if (typeof value !== 'string' || value === '') {
     return undefined;

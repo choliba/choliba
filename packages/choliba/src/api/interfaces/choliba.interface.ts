@@ -79,7 +79,7 @@ export interface CholibaProjects {
 export interface Choliba {
   /** The nearest folder, from `cwd` up, whose `package.json` depends on choliba. */
   readonly root: string;
-  /** The version of the choliba running, as `choliba --version` shows it without the name: `0.0.1-dev.66+ce2dc61`. */
+  /** The version of the choliba running, as `choliba --version` shows it: `choliba 0.0.1-dev.66+ce2dc61`. */
   readonly version: string;
   readonly config: CholibaConfig;
   readonly agents: CholibaAgents;
