@@ -21,8 +21,8 @@ export const COMMAND_GROUPS: readonly CommandGroup[] = [
   { title: 'Ticket e testes', commands: ['run'] },
   { title: 'Projetos', commands: ['new', 'list', 'check'] },
   { title: 'Agentes, skills e MCPs', commands: ['add'] },
-  { title: 'Pasta de trabalho', commands: ['setup', 'set', 'lint', 'format'] },
-  { title: 'Gerais', commands: ['help', 'version', 'terminal run'] },
+  { title: 'Pasta de trabalho', commands: ['setup', 'update', 'set', 'lint', 'format'] },
+  { title: 'Gerais', commands: ['panel', 'help', 'version', 'terminal run'] },
 ];
 
 /**
@@ -257,7 +257,8 @@ const INDEX_INTRO: readonly string[] = [
   '> Cada comando do choliba, com o uso, os exemplos, os detalhes e as opções, gerado do mesmo spec que produz o --help.',
   '',
   'O comando é `choliba`, instalado na pasta de trabalho, em `node_modules/.bin/`, que não está no `PATH`. Rode-o com o',
-  'Bun na frente: `bunx choliba <comando>` (ou `bun choliba <comando>`); as páginas omitem o `bunx`. A raiz tem poucos',
+  'Bun na frente: `bun choliba <comando>`; as páginas omitem o `bun`. Prefira `bun` a `bunx`: sem o choliba instalado, o',
+  '`bunx` baixa do npm o que tiver esse nome e executa (veja Segurança). A raiz tem poucos',
   'comandos. `run`, `new` e `list` são verbos: o tipo vem na palavra seguinte (`choliba run agent`, `choliba new',
   'project`, `choliba list projects`) e está na página do verbo. Uma palavra que o choliba não conhece é erro, com a',
   'sugestão do nome mais parecido (`comando desconhecido: chek. Você quis dizer "check"?`).',

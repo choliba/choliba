@@ -34,22 +34,21 @@ function prepare(setup: readonly string[] | undefined, statuses: readonly (numbe
     calls.push({ command, cwd: options.cwd, shell: options.shell });
     return { status: statuses[calls.length - 1] ?? 0 };
   };
-  const run = (): void => {
+  const run = (): Promise<void> =>
     prepareApp(settingsWith(setup), {
       projectsDir: '/p',
       env,
       stderr: { write: (chunk: string) => said.push(chunk) },
       spawn,
     });
-  };
   return { calls, said, run };
 }
 
 describe('prepareApp', () => {
-  it('runs each setup command in the application folder, in order, saying which', () => {
+  it('runs each setup command in the application folder, in order, saying which', async () => {
     const { calls, said, run } = prepare(['bun install', 'bun run build'], [0, 0]);
 
-    run();
+    await run();
 
     expect(calls).toEqual([
       { command: 'bun install', cwd: '/code/app', shell: true },
@@ -61,17 +60,13 @@ describe('prepareApp', () => {
     ]);
   });
 
-  it('stops at the first command that fails with an AppError, naming it, its code and where it is declared', () => {
+  it('stops at the first command that fails with an AppError, naming it, its code and where it is declared', async () => {
     const { calls, run } = prepare(['bun install', 'bun run build'], [2]);
 
-    const error = (() => {
-      try {
-        run();
-        return undefined;
-      } catch (thrown) {
-        return thrown;
-      }
-    })();
+    const error: unknown = await run().then(
+      () => undefined,
+      (thrown: unknown) => thrown,
+    );
 
     expect(error).toBeInstanceOf(AppError);
     expect((error as Error).message).toBe(
@@ -80,11 +75,11 @@ describe('prepareApp', () => {
     expect(calls).toHaveLength(1);
   });
 
-  it('does nothing without setup, or in a batch whose application is already prepared', () => {
+  it('does nothing without setup, or in a batch whose application is already prepared', async () => {
     const none = prepare(undefined, []);
-    none.run();
+    await none.run();
     const batch = prepare(['bun install'], [], { [APP_PREPARED_ENV]: '1' });
-    batch.run();
+    await batch.run();
 
     expect([...none.calls, ...batch.calls]).toEqual([]);
   });

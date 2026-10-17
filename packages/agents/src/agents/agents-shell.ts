@@ -6,13 +6,15 @@ import { ProviderRegistry } from '../common';
 import { agentsConfig } from './agents-config';
 import { ClaudeAgentProvider, ClaudeOllamaAgentProvider, CursorAgentProvider } from '../providers';
 import { listAgentsCommand } from './agents-list.command';
+import { agentsPanel } from './agents-panel';
+import { watchSandbox } from './agents-panel-sandbox';
 import { runAgentCommand } from './agents-run.command';
 import { AGENT_PROVIDERS, AGENTS } from './agents.constants';
 import { AgentsService } from './agents.service';
 
 /**
- * @choliba/agents in the shell: the providers (adding one is adding its class to the list), `choliba run agent` and
- * `choliba list agents`.
+ * @choliba/agents in the shell: the providers (adding one is adding its class to the list), `choliba run agent`,
+ * `choliba list agents`, and `/agents` in the panel.
  */
 export const agentsShell: ShellModule = {
   name: '@choliba/agents',
@@ -56,4 +58,8 @@ export const agentsShell: ShellModule = {
     });
   },
   commands: [runAgentCommand, listAgentsCommand],
+  panel: agentsPanel,
+  panelStart: (container, context) => {
+    watchSandbox(container, context);
+  },
 };

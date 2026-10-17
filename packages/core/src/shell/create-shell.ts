@@ -5,7 +5,7 @@ import { ExpectedError } from '../common';
 import { unknownWordMessage, type CommandEntry, type CommandSpec } from '../help';
 import type { Platform } from '../platform';
 import { Container, token } from './container';
-import type { ShellCommand, ShellModule, ShellRoot, ShellVerb } from './interfaces/shell.interface';
+import type { PanelCommand, ShellCommand, ShellModule, ShellRoot, ShellVerb } from './interfaces/shell.interface';
 import { programOf, rootAction, rootOf, unknownCommand } from './root-run';
 import { ShellIo } from './shell-io';
 
@@ -13,6 +13,10 @@ import { ShellIo } from './shell-io';
 export const PLATFORM = token<Platform>('Platform');
 /** Every configuration group contributed by the shell's modules. */
 export const CONFIG_CATALOG = token<ConfigCatalog>('ConfigCatalog');
+/** Every panel command contributed by the shell's modules, in their order. */
+export const PANEL_COMMANDS = token<readonly PanelCommand[]>('PanelCommands');
+/** What each module shows in a new panel session, in the modules' order. */
+export const PANEL_STARTS = token<readonly NonNullable<ShellModule['panelStart']>[]>('PanelStarts');
 
 /** An app's commands: which first words it runs, their help entries, and running one. */
 export interface Shell {
@@ -112,6 +116,24 @@ function typesOfVerbs(
   });
 }
 
+/** Registers the modules' panel commands; two with one name are a bug, named with both modules. */
+function providePanelCommands(container: Container, modules: readonly ShellModule[]): void {
+  const owners = new Map<string, string>();
+  for (const module of modules) {
+    for (const command of module.panel ?? []) {
+      const owner = owners.get(command.name);
+      if (owner !== undefined) {
+        throw new Error(`o comando de painel /${command.name} vem de ${owner} e de ${module.name}.`);
+      }
+      owners.set(command.name, module.name);
+    }
+  }
+  const commands = modules.flatMap((module) => module.panel ?? []);
+  container.provide(PANEL_COMMANDS, () => commands);
+  const starts = modules.flatMap((module) => (module.panelStart === undefined ? [] : [module.panelStart]));
+  container.provide(PANEL_STARTS, () => starts);
+}
+
 /** Registers the modules' configuration catalog and each group's lazy value. */
 function provideConfig(container: Container, modules: readonly ShellModule[], sources: readonly ConfigSource[]): void {
   const contributed: readonly ConfigGroup[] = modules.flatMap((module) => module.config ?? []);
@@ -132,6 +154,7 @@ export function createShell(
   const container = new Container();
   container.provide(PLATFORM, () => platform);
   provideConfig(container, modules, configSources);
+  providePanelCommands(container, modules);
   for (const module of modules) {
     module.provide?.(container);
   }

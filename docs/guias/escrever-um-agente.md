@@ -55,7 +55,7 @@ permissions:
     read: ['${PROJECT_DIR}/', '${APP_DIR}/']
     write: ['${PROJECT_DIR}/tests/']
     execute:
-      '${CHOL_ROOT}/': [bunx choliba run tests]
+      '${CHOL_ROOT}/': [bun choliba run tests]
       '${APP_DIR}/': [git log, git diff]
     tools:
       playwright-cli: ['*']
@@ -80,7 +80,7 @@ steps:
       - add_files: [ticket, '${TICKET_FILE}']
     after:
       success:
-        - run: [bunx, choliba, tests, '${PROJECT}:${TICKET}']
+        - run: [bun, choliba, run, tests, '${PROJECT}:${TICKET}']
 ```
 
 O que cada chave quer dizer, se é obrigatória e o padrão: [referência do `agent.yaml`](../referencia/agent-yaml.md).

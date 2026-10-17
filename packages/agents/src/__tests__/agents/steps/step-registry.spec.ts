@@ -25,7 +25,7 @@ describe('buildPrepare / buildAfter', () => {
     expect(buildAfter(agent)).toBeUndefined();
   });
 
-  it('wires the steps of with-prepare: its before in execute, and its after.success', () => {
+  it('wires the steps of with-prepare: its before in execute, and its after.success', async () => {
     const agent = loadAgent(FIXTURES, 'with-prepare');
     const prepare = buildPrepare(agent);
     const after = buildAfter(agent);
@@ -37,7 +37,7 @@ describe('buildPrepare / buildAfter', () => {
     const getDiff = jest.spyOn(gitDiff, 'getWorkingTreeDiff').mockReturnValue('diff --git a/a.ts b/a.ts\n');
     const tmp = makeTmpDir('registry-hooks');
     try {
-      const result = prepare({ task: '', repoRoot: tmp.path, agent, mode: 'execute' });
+      const result = await prepare({ task: '', repoRoot: tmp.path, agent, mode: 'execute' });
       expect(result.task).toBe('Atualize a documentação com base no contexto entregue.');
       expect(result.promptBody).toContain('.cache/with-prepare/diff.patch');
       expect(result.promptBody).toContain('<documentacao_atual>');
@@ -46,7 +46,7 @@ describe('buildPrepare / buildAfter', () => {
 
       const gitRepo = makeTmpGitRepo();
       try {
-        expect(after({ repoRoot: gitRepo.path, mode: 'execute', exitCode: 0 })).toEqual([]);
+        expect(await after({ repoRoot: gitRepo.path, mode: 'execute', exitCode: 0 })).toEqual([]);
         expect(readGitState(gitRepo.path, '.cache/with-prepare/last-base')).toMatch(/^[0-9a-f]{40}$/);
       } finally {
         gitRepo.cleanup();
@@ -57,18 +57,18 @@ describe('buildPrepare / buildAfter', () => {
     }
   });
 
-  it('runs only the before steps of the run mode, adds the user task as focus and passes --since', () => {
+  it('runs only the before steps of the run mode, adds the user task as focus and passes --since', async () => {
     const base = loadAgent(FIXTURES, 'with-prepare');
-    const run = jest.spyOn(actionsModule, 'runBeforeSteps').mockReturnValue(['ctx']);
+    const run = jest.spyOn(actionsModule, 'runBeforeSteps').mockResolvedValue(['ctx']);
     try {
-      const result = buildPrepare(base)?.({
+      const result = await buildPrepare(base)?.({
         task: 'focar README',
         repoRoot: '/repo',
         agent: base,
         mode: 'execute',
         since: 'HEAD~1',
       });
-      const plan = buildPrepare(base)?.({ task: 'x', repoRoot: '/repo', agent: base, mode: 'plan' });
+      const plan = await buildPrepare(base)?.({ task: 'x', repoRoot: '/repo', agent: base, mode: 'plan' });
 
       expect(result).toEqual({ task: 'focar README', promptBody: 'ctx\n\nFoco pedido pelo usuário: focar README' });
       expect(run).toHaveBeenNthCalledWith(
@@ -84,11 +84,17 @@ describe('buildPrepare / buildAfter', () => {
     }
   });
 
-  it('runs nothing on --dry-run, marking what each step would add', () => {
+  it('runs nothing on --dry-run, marking what each step would add', async () => {
     const base = loadAgent(FIXTURES, 'with-prepare');
     const run = jest.spyOn(actionsModule, 'runBeforeSteps');
     try {
-      const result = buildPrepare(base)?.({ task: '', repoRoot: '/repo', agent: base, mode: 'execute', dryRun: true });
+      const result = await buildPrepare(base)?.({
+        task: '',
+        repoRoot: '/repo',
+        agent: base,
+        mode: 'execute',
+        dryRun: true,
+      });
 
       expect(run).not.toHaveBeenCalled();
       expect(result?.promptBody.split('\n\n')).toEqual([
@@ -101,11 +107,11 @@ describe('buildPrepare / buildAfter', () => {
     }
   });
 
-  it('builds a prepare from default_task alone, whose prompt is the task', () => {
+  it('builds a prepare from default_task alone, whose prompt is the task', async () => {
     const echo = loadAgent(FIXTURES, 'echo');
     const agent: AgentDefinition = { ...echo, defaultTask: 'padrão' };
 
-    expect(buildPrepare(agent)?.({ task: ' ', repoRoot: '/repo', agent, mode: 'execute' })).toEqual({
+    expect(await buildPrepare(agent)?.({ task: ' ', repoRoot: '/repo', agent, mode: 'execute' })).toEqual({
       task: 'padrão',
       promptBody: 'padrão',
     });
@@ -113,13 +119,13 @@ describe('buildPrepare / buildAfter', () => {
       ...NO_STEPS,
       before: [{ action: 'run', args: ['x'] }],
     });
-    expect(buildPrepare(withoutDefault)?.({ task: '', repoRoot: '/repo', agent, mode: 'execute' })).toEqual({
+    expect(await buildPrepare(withoutDefault)?.({ task: '', repoRoot: '/repo', agent, mode: 'execute' })).toEqual({
       task: '',
       promptBody: '',
     });
   });
 
-  it('runs success or failure after the agent, then always, each with the exit code filled in', () => {
+  it('runs success or failure after the agent, then always, each with the exit code filled in', async () => {
     const echo = loadAgent(FIXTURES, 'echo');
     const agent = withSteps(echo, 'plan', {
       before: [],
@@ -130,13 +136,13 @@ describe('buildPrepare / buildAfter', () => {
       },
     });
     const failure = { label: 'x', step: { action: 'run', args: [] }, status: 1, output: '' };
-    const run = jest.spyOn(actionsModule, 'runAfterSteps').mockReturnValue([failure]);
+    const run = jest.spyOn(actionsModule, 'runAfterSteps').mockResolvedValue([failure]);
     try {
       const after = buildAfter(agent);
 
-      expect(after?.({ repoRoot: '/repo', mode: 'plan', exitCode: 0 })).toEqual([failure, failure]);
-      expect(after?.({ repoRoot: '/repo', mode: 'plan', exitCode: 3 })).toHaveLength(2);
-      expect(after?.({ repoRoot: '/repo', mode: 'execute', exitCode: 0 })).toHaveLength(2);
+      expect(await after?.({ repoRoot: '/repo', mode: 'plan', exitCode: 0 })).toEqual([failure, failure]);
+      expect(await after?.({ repoRoot: '/repo', mode: 'plan', exitCode: 3 })).toHaveLength(2);
+      expect(await after?.({ repoRoot: '/repo', mode: 'execute', exitCode: 0 })).toHaveLength(2);
       const context = { repoRoot: '/repo', since: undefined };
       expect(run.mock.calls).toEqual([
         [context, [{ action: 'run', args: ['ok', '0'] }], 'plan.after.success'],
@@ -148,6 +154,22 @@ describe('buildPrepare / buildAfter', () => {
       ]);
     } finally {
       run.mockRestore();
+    }
+  });
+  it("hands the run's signal to its steps, before and after, so Ctrl+C stops the command running", async () => {
+    const base = loadAgent(FIXTURES, 'with-prepare');
+    const signal = new AbortController().signal;
+    const before = jest.spyOn(actionsModule, 'runBeforeSteps').mockResolvedValue([]);
+    const after = jest.spyOn(actionsModule, 'runAfterSteps').mockResolvedValue([]);
+    try {
+      await buildPrepare(base)?.({ task: 'x', repoRoot: '/repo', agent: base, mode: 'execute', signal });
+      await buildAfter(base)?.({ repoRoot: '/repo', mode: 'execute', exitCode: 0, signal });
+
+      expect(before.mock.calls[0]?.[0]).toEqual({ repoRoot: '/repo', since: undefined, signal });
+      expect(after.mock.calls[0]?.[0]).toEqual({ repoRoot: '/repo', since: undefined, signal });
+    } finally {
+      before.mockRestore();
+      after.mockRestore();
     }
   });
 });

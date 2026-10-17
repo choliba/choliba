@@ -1,7 +1,7 @@
 import type { RenderContext, Renderable, StyledText, TextChunk } from '@opentui/core';
 
 import type { PanelToolkit } from './interfaces/panel.interface';
-import { openPanel, type Panel, type PanelOptions } from './panel';
+import { openPanel, type ChatPanel, type PanelOptions } from './panel';
 
 /** The panel's toolkit as OpenTUI gives it. */
 export type OpenTuiToolkit = PanelToolkit<RenderContext, Renderable, StyledText, TextChunk>;
@@ -25,7 +25,7 @@ export async function loadPanelToolkit(): Promise<OpenTuiToolkit | undefined> {
 export async function openPanelWith<Context, Node, Styled extends { readonly chunks: Chunk[] }, Chunk>(
   load: () => Promise<PanelToolkit<Context, Node, Styled, Chunk> | undefined>,
   options: PanelOptions,
-): Promise<Panel | undefined> {
+): Promise<ChatPanel | undefined> {
   const kit = await load();
   if (kit === undefined) return undefined;
   try {
@@ -36,6 +36,6 @@ export async function openPanelWith<Context, Node, Styled extends { readonly chu
 }
 
 /** The panel on OpenTUI, what a run on a terminal draws. */
-export function openOpenTuiPanel(options: PanelOptions): Promise<Panel | undefined> {
+export function openOpenTuiPanel(options: PanelOptions): Promise<ChatPanel | undefined> {
   return openPanelWith(loadPanelToolkit, options);
 }

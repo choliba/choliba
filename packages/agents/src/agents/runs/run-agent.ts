@@ -58,6 +58,11 @@ export interface RunAgentDeps {
    * then draws the frame and footer. Absent, never a panel.
    */
   readonly panel?: (options: PanelOptions) => Promise<Panel | undefined>;
+  /**
+   * `true` when the panel is lent by a host that keeps the conversation (`choliba panel`): the run then leaves its
+   * lines there instead of printing its frame on the terminal when it closes.
+   */
+  readonly hostedPanel?: boolean;
 }
 
 /** A timer that calls `tick` every `ms`, not keeping the process alive by itself. */
@@ -194,6 +199,7 @@ function panelScreen(panel: Panel, current: ReportedInfo, request: RunAgentReque
     close: (exitCode) => {
       stop();
       panel.close();
+      if (deps.hostedPanel === true) return;
       const top = frameTop(name, width(), (text) => theme.paint('agents', name, text, color));
       const lines = frameLines(transcript.join(''), width());
       deps.stdout.write(
@@ -465,10 +471,15 @@ async function followSession(
   deps.signals.on('SIGTERM', onSigterm);
   screen.onInterrupt(onSigint);
   input.begin();
-  // What the person sends goes to the session and stays in the frame, saying why when it could not reach the agent.
+  // What the person sends goes to the session and stays in the frame, saying why when it could not reach the agent. A
+  // host's panel already shows what was said: there, the frame says only that it did not reach the agent.
   screen.onMessage((text) => {
     const refused = input.send(text);
-    screen.out.write(`› ${text}${refused === undefined ? '' : ` (não entregue: ${refused})`}\n`);
+    if (deps.hostedPanel !== true) {
+      screen.out.write(`› ${text}${refused === undefined ? '' : ` (não entregue: ${refused})`}\n`);
+    } else if (refused !== undefined) {
+      screen.out.write(`(não entregue: ${refused})\n`);
+    }
   });
   const stopAsking = runToolsOf(request.providerRequest).some((tool) => tool.name === 'ask')
     ? watchQuestions(

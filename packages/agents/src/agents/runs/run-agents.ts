@@ -1,4 +1,3 @@
-import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 
 import { formatHelp, openOpenTuiPanel, type CommandSpec } from '@choliba/core';
@@ -16,6 +15,7 @@ import { resolveAgentsDir } from '../agent-dirs';
 import type { ProviderRequest } from '../../common';
 import type { ResolvedProvider } from '../../common';
 import { formatStepFailure, stepExitCode } from '../steps/step-actions';
+import { spawnToEnd } from '../steps/step-spawn';
 import { formatAgentDetail, runList } from './agent-detail';
 import { formatDryRun, type DryRunInput } from './dry-run';
 import { runAgent } from './run-agent';
@@ -107,7 +107,7 @@ function runDryRun(
     deps.stderr.write(`${errorMessage(error)}\n`);
     return 1;
   }
-  const output = formatDryRun({
+  const input: DryRunInput = {
     providerId: resolved.adapter.id,
     command: resolved.command,
     args,
@@ -118,20 +118,25 @@ function runDryRun(
     workspaceFiles,
     ...(settings === undefined ? {} : { app: settings.environment }),
     ...described,
-  });
-  deps.stdout.write(`${output}\n`);
+  };
+  if (deps.preview === undefined) deps.stdout.write(`${formatDryRun(input)}\n`);
+  else deps.preview(input);
   return 0;
 }
 
 /** What `--dry-run` says about where the provider runs: the container, or `bwrap` on this machine. */
 function sandboxView(sandbox: Sandbox, launch: Launch): Pick<DryRunInput, 'container' | 'local'> {
-  if (sandbox.kind === 'docker') return { container: containerOf(sandbox.image, launch) };
+  if (sandbox.kind === 'docker') return { container: containerOf(sandbox.image, sandbox.network, launch) };
   return { local: { mounts: launch.paths, skipped: launch.skipped } };
 }
 
 /** What `--dry-run` says about the container: the image, the mounts and the paths left to the image. */
-function containerOf(image: string, launch: Launch): NonNullable<DryRunInput['container']> {
-  return { image, mounts: launch.paths, skipped: launch.skipped };
+function containerOf(
+  image: string,
+  network: 'isolated' | 'host',
+  launch: Launch,
+): NonNullable<DryRunInput['container']> {
+  return { image, network, mounts: launch.paths, skipped: launch.skipped };
 }
 
 /**
@@ -160,7 +165,9 @@ function sandboxFor(deps: RunAgentsCliDeps): Sandbox | undefined {
     return undefined;
   }
   if (sandbox.kind === 'docker' && deps.which('docker') === null) {
-    deps.stderr.write('CHOL_SANDBOX=docker, mas o comando docker não foi encontrado: instale o Docker ou use local.\n');
+    deps.stderr.write(
+      'O sandbox docker precisa do comando docker, que não foi encontrado: instale o Docker ou use local.\n',
+    );
     return undefined;
   }
   return sandbox;
@@ -171,8 +178,19 @@ function sandboxFor(deps: RunAgentsCliDeps): Sandbox | undefined {
  * ended. Each failed step is reported; the run ends with the agent's exit code when the agent
  * failed, else with the first failed step's.
  */
-function runAfter(command: AgentInvocation, mode: ExecutionMode, exitCode: number, deps: RunAgentsCliDeps): number {
-  const failures = command.after?.({ repoRoot: deps.repoRoot, mode, exitCode }) ?? [];
+async function runAfter(
+  command: AgentInvocation,
+  mode: ExecutionMode,
+  exitCode: number,
+  deps: RunAgentsCliDeps,
+): Promise<number> {
+  const input = {
+    repoRoot: deps.repoRoot,
+    mode,
+    exitCode,
+    ...(deps.signal === undefined ? {} : { signal: deps.signal }),
+  };
+  const failures = (await command.after?.(input)) ?? [];
   for (const failure of failures) {
     deps.stderr.write(`${formatStepFailure(failure)}\n`);
   }
@@ -223,14 +241,21 @@ async function runAndRecord(
       signals: deps.signals,
       now: deps.now,
       footer: wantsFooter(deps.stdout, deps.config),
-      panel: openOpenTuiPanel,
+      panel: deps.panel ?? openOpenTuiPanel,
+      hostedPanel: deps.hostedPanel === true,
     },
   );
 
   return runAfter(command, mode, exitCode, deps);
 }
 
-async function runCommand(parsed: RunArgs, deps: RunAgentsCliDeps): Promise<number> {
+/** The run's deps with `--sandbox` in place of `CHOL_SANDBOX`, so everything after it sees one sandbox. */
+function withSandbox(parsed: RunArgs, deps: RunAgentsCliDeps): RunAgentsCliDeps {
+  return parsed.sandbox === undefined ? deps : { ...deps, config: { ...deps.config, CHOL_SANDBOX: parsed.sandbox } };
+}
+
+async function runCommand(parsed: RunArgs, given: RunAgentsCliDeps): Promise<number> {
+  const deps = withSandbox(parsed, given);
   if (deps.config[CHOL_ROOT] !== undefined) {
     deps.stderr.write(
       `${CHOL_ROOT} is found by the application (the folder whose package.json depends on choliba) and cannot be set: remove it from .env and from the environment.\n`,
@@ -332,7 +357,7 @@ async function appFor(settings: ProjectSettings | undefined, deps: RunAgentsCliD
         logDir: join(deps.repoRoot, '.cache', 'app'),
         env: process.env,
         stderr: deps.stderr,
-        spawn: spawnSync,
+        spawn: spawnToEnd,
       }));
   try {
     return await ensure(settings);
@@ -359,7 +384,7 @@ async function runPrepared(
   sandbox: Sandbox,
 ): Promise<number> {
   const { parsed, deps } = context;
-  const prepared = prepareRun(context, command, agent);
+  const prepared = await prepareRun(context, command, agent);
   if ('exitCode' in prepared) {
     return prepared.exitCode;
   }

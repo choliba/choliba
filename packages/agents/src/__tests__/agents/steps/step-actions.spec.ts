@@ -24,9 +24,13 @@ import { makeTmpDir } from '../../helpers/tmp';
 function recordingSpawn(status: number | null = 0, ...chunks: readonly string[]): StepSpawn & { calls: unknown[][] } {
   const calls: unknown[][] = [];
   const spawn: StepSpawn = (command, args, options) => {
-    calls.push([command, args, { cwd: options.cwd, shell: options.shell }]);
+    calls.push([
+      command,
+      args,
+      { cwd: options.cwd, shell: options.shell, ...(options.signal ? { signal: true } : {}) },
+    ]);
     for (const chunk of chunks) writeSync(options.stdio[1], chunk);
-    return { status };
+    return Promise.resolve({ status });
   };
   return Object.assign(spawn, { calls });
 }
@@ -35,9 +39,9 @@ function recordingSpawn(status: number | null = 0, ...chunks: readonly string[])
 const LOGS = makeTmpDir('step-logs').path;
 
 /** The failure `action` throws, as `StepFailedError` carries it. */
-function failureOf(action: () => unknown): StepFailure {
+async function failureOf(action: () => Promise<unknown>): Promise<StepFailure> {
   try {
-    action();
+    await action();
   } catch (error) {
     if (error instanceof StepFailedError) {
       return error.failure;
@@ -75,13 +79,13 @@ describe('checkStep', () => {
 });
 
 describe('runBeforeSteps', () => {
-  it('collects the prompt sections of the actions, in order', () => {
+  it('collects the prompt sections of the actions, in order', async () => {
     const tmp = makeTmpDir('actions-sections');
     const getDiff = jest.spyOn(gitDiff, 'getWorkingTreeDiff').mockReturnValue('diff --git a/a.ts b/a.ts\n');
     try {
       writeFileSync(join(tmp.path, 'README.md'), '# Hi\n');
       const spawn = recordingSpawn();
-      const sections = runBeforeSteps(
+      const sections = await runBeforeSteps(
         { repoRoot: tmp.path, since: undefined, spawn, logDir: LOGS },
         [
           { action: 'git_diff', args: ['develop', '.cache/x/diff.patch'] },
@@ -103,14 +107,14 @@ describe('runBeforeSteps', () => {
     }
   });
 
-  it('stops at the first failing command, with its position, status and the end of its output', () => {
+  it('stops at the first failing command, with its position, status and the end of its output', async () => {
     const spawn = recordingSpawn(2, 'checking\n', '[error] bad\n');
     const steps = [
       { action: 'run', args: ['bun', 'x', 'prettier'] },
       { action: 'run', args: ['never', 'runs'] },
     ];
 
-    const failure = failureOf(() =>
+    const failure = await failureOf(() =>
       runBeforeSteps({ repoRoot: '/repo', since: undefined, spawn, logDir: LOGS }, steps, 'plan.before'),
     );
     expect(failure).toMatchObject({ label: 'plan.before 1/2', step: steps[0], status: 2 });
@@ -122,9 +126,9 @@ describe('runBeforeSteps', () => {
     expect(spawn.calls).toHaveLength(1);
   });
 
-  it('keeps only the last lines of a long output, and the log the whole of it', () => {
+  it('keeps only the last lines of a long output, and the log the whole of it', async () => {
     const spawn = recordingSpawn(1, Array.from({ length: 30 }, (_, index) => `line ${String(index)}`).join('\n'));
-    const { output } = failureOf(() =>
+    const { output } = await failureOf(() =>
       runBeforeSteps(
         { repoRoot: '/repo', since: undefined, spawn, logDir: LOGS },
         [{ action: 'run', args: ['x'] }],
@@ -137,17 +141,17 @@ describe('runBeforeSteps', () => {
     expect(output.split('\n').at(-1)).toMatch(/^saída completa: /);
   });
 
-  it('leaves no log when the command succeeds, and keeps the logs in .cache/steps of the workspace by default', () => {
+  it('leaves no log when the command succeeds, and keeps the logs in .cache/steps of the workspace by default', async () => {
     const tmp = makeTmpDir('steps-workspace');
     try {
-      runBeforeSteps(
+      await runBeforeSteps(
         { repoRoot: tmp.path, since: undefined, spawn: recordingSpawn(0, 'ok') },
         [{ action: 'run', args: ['x'] }],
         'execute.before',
       );
       expect(readdirSync(join(tmp.path, '.cache', 'steps'))).toEqual([]);
 
-      const { output } = failureOf(() =>
+      const { output } = await failureOf(() =>
         runBeforeSteps(
           { repoRoot: tmp.path, since: undefined, spawn: recordingSpawn(1) },
           [{ action: 'run', args: ['x'] }],
@@ -161,19 +165,21 @@ describe('runBeforeSteps', () => {
     }
   });
 
-  it('has no status for a command a signal ended, nor for an action that is not a command', () => {
+  it('has no status for a command a signal ended, nor for an action that is not a command', async () => {
     const killed = recordingSpawn(null);
     expect(
-      failureOf(() =>
-        runBeforeSteps(
-          { repoRoot: '/r', since: undefined, spawn: killed, logDir: LOGS },
-          [{ action: 'run', args: ['x'] }],
-          'b',
-        ),
+      (
+        await failureOf(() =>
+          runBeforeSteps(
+            { repoRoot: '/r', since: undefined, spawn: killed, logDir: LOGS },
+            [{ action: 'run', args: ['x'] }],
+            'b',
+          ),
+        )
       ).status,
     ).toBeUndefined();
     expect(
-      failureOf(() =>
+      await failureOf(() =>
         runBeforeSteps({ repoRoot: '/r', since: undefined }, [{ action: 'add_files', args: ['t'] }], 'b'),
       ),
     ).toEqual({
@@ -184,8 +190,8 @@ describe('runBeforeSteps', () => {
     });
   });
 
-  it('turns an error an action throws into its output', () => {
-    const failure = failureOf(() =>
+  it('turns an error an action throws into its output', async () => {
+    const failure = await failureOf(() =>
       runBeforeSteps(
         { repoRoot: '/r', since: undefined },
         [{ action: 'git_diff', args: ['a', 'b', '--pending'] }],
@@ -196,10 +202,10 @@ describe('runBeforeSteps', () => {
     expect(failure.output).toBe('esperado "git_diff <base> <arquivo> [--pending <estado>]"');
   });
 
-  it('takes the message of an error an action throws as its output, with no status', () => {
+  it('takes the message of an error an action throws as its output, with no status', async () => {
     const tmp = makeTmpDir('actions-not-a-repo');
     try {
-      const [failure] = runAfterSteps(
+      const [failure] = await runAfterSteps(
         { repoRoot: tmp.path, since: undefined },
         [{ action: 'record_git_head', args: ['.cache/x/last-base'] }],
         'execute.after.success',
@@ -213,19 +219,33 @@ describe('runBeforeSteps', () => {
     }
   });
 
-  it('runs real commands by default', () => {
+  it('runs real commands by default', async () => {
     expect(
-      runBeforeSteps({ repoRoot: process.cwd(), since: undefined }, [{ action: 'run', args: ['true'] }], 'b'),
+      await runBeforeSteps({ repoRoot: process.cwd(), since: undefined }, [{ action: 'run', args: ['true'] }], 'b'),
     ).toEqual([]);
   });
 });
 
+describe('the run action', () => {
+  it("hands the run's signal to the command, so Ctrl+C stops it", async () => {
+    const spawn = recordingSpawn(0);
+    const signal = new AbortController().signal;
+    await runBeforeSteps(
+      { repoRoot: '/repo', since: undefined, spawn, logDir: LOGS, signal },
+      [{ action: 'run', args: ['x'] }],
+      'b',
+    );
+
+    expect(spawn.calls).toEqual([['x', [], { cwd: '/repo', shell: false, signal: true }]]);
+  });
+});
+
 describe('runAfterSteps', () => {
-  it('runs every step, even after one fails, and returns the ones that failed', () => {
+  it('runs every step, even after one fails, and returns the ones that failed', async () => {
     const repo = makeTmpGitRepo();
     try {
       const spawn = recordingSpawn(3, 'boom');
-      const failures = runAfterSteps(
+      const failures = await runAfterSteps(
         { repoRoot: repo.path, since: undefined, spawn, logDir: LOGS },
         [
           { action: 'run', args: ['bun', 'x', 'prettier'] },
@@ -298,11 +318,11 @@ describe('formatStepFailure / stepExitCode / describeStep', () => {
 });
 
 describe('ACTIONS', () => {
-  it('rejects a direct call with a missing argument', () => {
+  it('rejects a direct call with a missing argument', async () => {
     const context = { repoRoot: '/repo', since: undefined };
 
     expect(() => ACTIONS['record_git_head']?.run(context, [])).toThrow('argumento faltando: record_git_head <arquivo>');
-    expect(() => ACTIONS['run']?.run(context, [])).toThrow('argumento faltando: run <comando> [args...]');
+    await expect(ACTIONS['run']?.run(context, [])).rejects.toThrow('argumento faltando: run <comando> [args...]');
     expect(() => ACTIONS['add_files']?.run(context, [])).toThrow('argumento faltando: add_files <tag> <glob...>');
     expect(() => ACTIONS['git_diff']?.run(context, ['a'])).toThrow(
       'argumentos inválidos: git_diff <base> <arquivo> [--pending <estado>]',

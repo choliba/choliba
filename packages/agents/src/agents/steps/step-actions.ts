@@ -1,4 +1,3 @@
-import { spawnSync } from 'node:child_process';
 import { closeSync, mkdirSync, openSync, readFileSync, rmSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
@@ -7,6 +6,7 @@ import { CACHE_DIR } from '../agent-layout';
 import type { AgentStep } from '../../common';
 import { ADD_FILES_USAGE, addFiles } from './step-add-files';
 import { recordGitHead } from './git-state';
+import { spawnToEnd } from './step-spawn';
 import { GIT_DIFF_USAGE, parseGitDiffArgs, runGitDiff } from './working-tree-diff';
 
 export type StepPhase = 'before_execute' | 'after_execute';
@@ -15,12 +15,15 @@ export interface StepSpawnResult {
   readonly status: number | null;
 }
 
-/** `spawnSync` with the command's stdout and stderr both written to one open file (`fd`), in the order it wrote them. */
+/**
+ * Runs the command with its stdout and stderr both written to one open file (`fd`), in the order it wrote them, and
+ * resolves once it ends; `signal` stops it.
+ */
 export type StepSpawn = (
   command: string,
   args: readonly string[],
-  options: { cwd: string; stdio: ['ignore', number, number]; shell: false },
-) => StepSpawnResult;
+  options: { cwd: string; stdio: ['ignore', number, number]; shell: false; signal?: AbortSignal },
+) => Promise<StepSpawnResult>;
 
 export interface StepContext {
   readonly repoRoot: string;
@@ -29,6 +32,8 @@ export interface StepContext {
   readonly spawn?: StepSpawn;
   /** Where a `run` keeps what its command printed; `.cache/steps/` of the workspace when absent. */
   readonly logDir?: string;
+  /** Stops the command of the step running (Ctrl+C in the panel); the step then fails. */
+  readonly signal?: AbortSignal;
 }
 
 export interface AgentAction {
@@ -40,7 +45,7 @@ export interface AgentAction {
   /** Whether the action adds a section to the prompt (`--dry-run` shows a marker in its place). */
   readonly producesSection: boolean;
   /** Runs the action; a `before_execute` action may return a section for the prompt. */
-  readonly run: (context: StepContext, args: readonly string[]) => string | undefined;
+  readonly run: (context: StepContext, args: readonly string[]) => string | undefined | Promise<string | undefined>;
 }
 
 function argAt(args: readonly string[], index: number, usage: string): string {
@@ -86,14 +91,19 @@ class StepCommandError extends Error {
  * Runs the command with its stdout and stderr in one log, so they keep the order it wrote them in. A failure shows the
  * last lines and where the log is; a success leaves no log.
  */
-function runCommand(context: StepContext, args: readonly string[]): undefined {
+async function runCommand(context: StepContext, args: readonly string[]): Promise<undefined> {
   const command = argAt(args, 0, 'run <comando> [args...]');
-  const spawn: StepSpawn = context.spawn ?? spawnSync;
+  const spawn: StepSpawn = context.spawn ?? spawnToEnd;
   const log = stepLog(context);
   const fd = openSync(log, 'w');
   let result: StepSpawnResult;
   try {
-    result = spawn(command, args.slice(1), { cwd: context.repoRoot, stdio: ['ignore', fd, fd], shell: false });
+    result = await spawn(command, args.slice(1), {
+      cwd: context.repoRoot,
+      stdio: ['ignore', fd, fd],
+      shell: false,
+      ...(context.signal === undefined ? {} : { signal: context.signal }),
+    });
   } finally {
     closeSync(fd);
   }
@@ -212,18 +222,18 @@ function errorOutput(error: unknown): string {
 }
 
 /** Runs one step; the section it produced (if any), or how it failed. */
-function runStep(
+async function runStep(
   context: StepContext,
   step: AgentStep,
   phase: StepPhase,
   label: string,
-): { readonly section: string | undefined } | { readonly failure: StepFailure } {
+): Promise<{ readonly section: string | undefined } | { readonly failure: StepFailure }> {
   const checked = checkStep(step, phase);
   if ('error' in checked) {
     return { failure: { label, step, status: undefined, output: checked.error } };
   }
   try {
-    return { section: checked.action.run(context, step.args) };
+    return { section: await checked.action.run(context, step.args) };
   } catch (error) {
     const status = error instanceof StepCommandError ? error.status : undefined;
     return { failure: { label, step, status, output: errorOutput(error) } };
@@ -239,10 +249,14 @@ function stepLabel(prefix: string, index: number, total: number): string {
  * Runs the `before` steps in order and returns the prompt sections they produced. The first
  * failure stops everything: it throws `StepFailedError`, and the steps after it do not run.
  */
-export function runBeforeSteps(context: StepContext, steps: readonly AgentStep[], prefix: string): readonly string[] {
+export async function runBeforeSteps(
+  context: StepContext,
+  steps: readonly AgentStep[],
+  prefix: string,
+): Promise<readonly string[]> {
   const sections: string[] = [];
   for (const [index, step] of steps.entries()) {
-    const result = runStep(context, step, 'before_execute', stepLabel(prefix, index, steps.length));
+    const result = await runStep(context, step, 'before_execute', stepLabel(prefix, index, steps.length));
     if ('failure' in result) {
       throw new StepFailedError(result.failure);
     }
@@ -254,15 +268,17 @@ export function runBeforeSteps(context: StepContext, steps: readonly AgentStep[]
 }
 
 /** Runs the `after` steps in order, every one of them even when one fails, and returns those that failed. */
-export function runAfterSteps(
+export async function runAfterSteps(
   context: StepContext,
   steps: readonly AgentStep[],
   prefix: string,
-): readonly StepFailure[] {
-  return steps.flatMap((step, index) => {
-    const result = runStep(context, step, 'after_execute', stepLabel(prefix, index, steps.length));
-    return 'failure' in result ? [result.failure] : [];
-  });
+): Promise<readonly StepFailure[]> {
+  const failures: StepFailure[] = [];
+  for (const [index, step] of steps.entries()) {
+    const result = await runStep(context, step, 'after_execute', stepLabel(prefix, index, steps.length));
+    if ('failure' in result) failures.push(result.failure);
+  }
+  return failures;
 }
 
 /**

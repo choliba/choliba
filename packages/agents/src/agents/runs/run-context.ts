@@ -4,6 +4,8 @@ import { isAbsolute, join } from 'node:path';
 
 import {
   type GitRunner,
+  type Panel,
+  type PanelOptions,
   type ProcessRunnerService,
   type SignalSource,
   type Theme,
@@ -14,6 +16,7 @@ import { projectLocations, type ProjectLocations, type ProjectSettings, type Run
 import type { Sandbox } from '@choliba/sandbox';
 
 import type { ParsedAgentsArgs } from './agents-flags';
+import type { DryRunInput } from './dry-run';
 import type { AgentInvocation } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
 import type { ProviderRequest } from '../../common';
@@ -48,6 +51,14 @@ export interface RunAgentsCliDeps {
    * logging to `.cache/app/`); the specs pass a fake.
    */
   readonly ensureApp?: (settings: ProjectSettings) => Promise<RunningApp>;
+  /** Opens the panel a run is drawn in on a terminal; `openOpenTuiPanel` when absent. */
+  readonly panel?: (options: PanelOptions) => Promise<Panel | undefined>;
+  /** `true` when `panel` lends a host's open panel, which keeps the conversation: no frame is printed at the end. */
+  readonly hostedPanel?: boolean;
+  /** Stops the command of the step running: the panel's Ctrl+C, which the steps then report as failed. */
+  readonly signal?: AbortSignal;
+  /** Takes what `--dry-run` would show, in place of printing it: a host that shows it its own way (the panel). */
+  readonly preview?: (input: DryRunInput) => void;
 }
 
 export function toAbsolute(path: string, repoRoot: string): string {

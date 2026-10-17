@@ -313,7 +313,7 @@ async function runTarget(
   }
   const ticket = canonicalTicket(projectsDir, target);
   try {
-    prepareApp(settings, { projectsDir, env: context.env, stderr: context.stderr, spawn: context.spawnSyncFn });
+    await prepareApp(settings, { projectsDir, env: context.env, stderr: context.stderr, spawn: context.spawnSyncFn });
   } catch (err) {
     fail(`erro: ${(err as Error).message}`);
   }

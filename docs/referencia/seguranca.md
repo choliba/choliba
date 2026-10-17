@@ -42,9 +42,13 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
 - **`--add-dir <pasta>`** libera a leitura de uma pasta a mais só naquela execução (pode repetir), como se ela
   estivesse em `allow.read`; o `deny` do agente continua valendo por cima dela.
 - **Execução por diretório.** Os comandos rodam a partir da pasta da execução, dentro do workspace (por isso
-  `bunx choliba ...` funciona sem `cd`). Um diretório de `execute` fora do workspace precisa estar em `allow.read`,
+  `bun choliba ...` funciona sem `cd`). Um diretório de `execute` fora do workspace precisa estar em `allow.read`,
   porque rodar comandos nele já dá acesso ao que há lá. Os providers aplicam em que diretórios o agente entra e
   quais comandos roda, mas não o vínculo "este comando só neste diretório": na prática vale a união dos dois.
+- **`bun choliba`, nunca `bunx choliba`.** Os agentes oficiais chamam o choliba com `bun`, que roda o instalado na
+  pasta de trabalho e, sem ele, falha na hora (`Script not found`). O `bunx`, sem o choliba instalado, baixa do npm o
+  pacote que tiver esse nome e o executa: um agente rodaria código de quem publicasse o nome. Num agente seu, use
+  `bun choliba` nos `steps` e nas permissões de execução.
 - **Ferramentas da run.** O que só os agentes usam (apagar, o navegador, o leitor de trace) não é comando público do
   choliba: é um script que ele cria ao lado da pasta da execução, libera só para aquela sessão, nega para escrita e
   apaga no fim. O apagar resolve cada caminho antes de agir e recusa o que sai de `allow.delete`. Veja

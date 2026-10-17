@@ -58,6 +58,7 @@ describe('formatDryRun', () => {
       input({
         container: {
           image: 'choliba-agent',
+          network: 'isolated',
           mounts: [
             { path: '/repo', access: 'read', directory: true },
             { path: '/repo/.cache/runs/1', access: 'write', directory: true },

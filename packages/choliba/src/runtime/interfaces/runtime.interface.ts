@@ -4,6 +4,14 @@ export interface CapturedRun {
   readonly stderr: string;
 }
 
+/** A response of an HTTP GET, as much of `fetch`'s as choliba reads. */
+export interface HttpResponse {
+  readonly ok: boolean;
+  readonly status: number;
+  text(): Promise<string>;
+  arrayBuffer(): Promise<ArrayBuffer>;
+}
+
 /**
  * What the choliba app needs from Bun and the machine beyond `Platform`: running the tools it ships
  * (ESLint, Prettier, Playwright), finding them, and the deferred step of `setup`. Only `main.ts` builds the
@@ -28,4 +36,6 @@ export interface Runtime {
   sleep(ms: number): Promise<void>;
   /** Writes straight to the terminal (`/dev/tty`); false when there is none, as in CI. */
   writeTerminal(text: string): boolean;
+  /** An HTTP GET of `url` with `headers` (`fetch`); rejects when there is no network. */
+  get(url: string, headers?: Readonly<Record<string, string>>): Promise<HttpResponse>;
 }

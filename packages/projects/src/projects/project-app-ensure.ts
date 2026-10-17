@@ -72,7 +72,7 @@ async function waitUntilUp(settings: ProjectSettings, app: LaunchedApp, logFile:
  * down and the environment has no `start`.
  */
 export async function ensureApp(settings: ProjectSettings, deps: EnsureAppDeps): Promise<RunningApp> {
-  prepareApp(settings, deps);
+  await prepareApp(settings, deps);
   const { baseURL, start, nome } = settings.environment;
   if (await (deps.isUp ?? answers)(baseURL)) {
     return { started: false, stop: () => undefined };

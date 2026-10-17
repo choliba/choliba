@@ -77,11 +77,11 @@ nenhuma pasta de execução, nenhum provider. Vale em qualquer modo. Ele só lê
 agente aparece do mesmo jeito.
 
 ```
-$ bunx choliba run agent implementer --mode plan --dry-run --project app --ticket app-1
+$ bun choliba run agent implementer --mode plan --dry-run --project app --ticket app-1
 Sem --dry-run, faria nesta ordem:
 
  1. [CLI]    confere http://localhost:5173/: sem resposta, para aqui (o ambiente não tem envs[].start)
- 2. [CLI]    plan.before 1/2 — run: bunx choliba run tests app:app-1 --expect red --failures .cache/test-writer/app-1/red.md
+ 2. [CLI]    plan.before 1/2 — run: bun choliba run tests app:app-1 --expect red --failures .cache/test-writer/app-1/red.md
              se falhar: para aqui, o agente não roda
  3. [CLI]    plan.before 2/2 — add_files: falhas_red .cache/test-writer/app-1/red.md
              se falhar: para aqui, o agente não roda
@@ -126,6 +126,7 @@ Antes do agente, com `--project`, o choliba deixa a aplicação pronta: veja
 | `--claude-ollama`     | Atalho para --provider claude-ollama                                                                                                                                                                                                                                                                                                                                                                                   |
 | `--cursor`            | Atalho para --provider cursor                                                                                                                                                                                                                                                                                                                                                                                          |
 | `--model <string>`    | Modelo; precisa estar em models do agente                                                                                                                                                                                                                                                                                                                                                                              |
+| `--sandbox <string>`  | Onde o provider roda, só nesta execução (padrão: CHOL_SANDBOX):<br>`local`: Nesta máquina, isolado com bwrap<br>`docker`: Num container do Docker                                                                                                                                                                                                                                                                      |
 | `--agents-dir <dir>`  | Pasta dos agentes (padrão: .choliba/agents/)                                                                                                                                                                                                                                                                                                                                                                           |
 | `--add-dir <dir>`     | Pasta extra que o agente pode ler (pode repetir); o deny do agente continua valendo                                                                                                                                                                                                                                                                                                                                    |
 | `--dry-run`           | Mostra o que seria executado, na ordem, sem executar nada                                                                                                                                                                                                                                                                                                                                                              |

@@ -12,7 +12,7 @@ export type SetupSpawn = (
   command: string,
   args: readonly string[],
   options: { cwd: string; env: NodeJS.ProcessEnv; stdio: 'inherit'; shell: true },
-) => { status: number | null };
+) => { status: number | null } | Promise<{ readonly status: number | null }>;
 
 export interface PrepareAppContext {
   readonly projectsDir: string;
@@ -24,14 +24,14 @@ export interface PrepareAppContext {
 /**
  * Runs the active environment's `setup` commands (`config.json#envs[].setup`) in its `appDir`, in order; the
  * first that fails throws `AppError`, naming the command and where it is declared. Nothing to do without `setup`,
- * or in a batch whose application is already prepared.
+ * or in a batch whose application is already prepared. A `spawn` that resolves later leaves the process free meanwhile.
  */
-export function prepareApp(settings: ProjectSettings, context: PrepareAppContext): void {
+export async function prepareApp(settings: ProjectSettings, context: PrepareAppContext): Promise<void> {
   const { setup = [], nome } = settings.environment;
   if (context.env[APP_PREPARED_ENV] !== undefined) return;
   for (const command of setup) {
     context.stderr.write(`preparando a aplicação: ${command} (em ${settings.appDir})\n`);
-    const { status } = context.spawn(command, [], {
+    const { status } = await context.spawn(command, [], {
       cwd: settings.appDir,
       env: context.env,
       stdio: 'inherit',

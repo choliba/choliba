@@ -10,7 +10,8 @@ editLink: false
 > Cada comando do choliba, com o uso, os exemplos, os detalhes e as opções, gerado do mesmo spec que produz o --help.
 
 O comando é `choliba`, instalado na pasta de trabalho, em `node_modules/.bin/`, que não está no `PATH`. Rode-o com o
-Bun na frente: `bunx choliba <comando>` (ou `bun choliba <comando>`); as páginas omitem o `bunx`. A raiz tem poucos
+Bun na frente: `bun choliba <comando>`; as páginas omitem o `bun`. Prefira `bun` a `bunx`: sem o choliba instalado, o
+`bunx` baixa do npm o que tiver esse nome e executa (veja Segurança). A raiz tem poucos
 comandos. `run`, `new` e `list` são verbos: o tipo vem na palavra seguinte (`choliba run agent`, `choliba new
 project`, `choliba list projects`) e está na página do verbo. Uma palavra que o choliba não conhece é erro, com a
 sugestão do nome mais parecido (`comando desconhecido: chek. Você quis dizer "check"?`).
@@ -49,17 +50,19 @@ A saída só tem cor num terminal. `--no-color`, `NO_COLOR=1`, `FORCE_COLOR=0`, 
 
 ## Pasta de trabalho
 
-| Comando                         | O que faz                                                          |
-| ------------------------------- | ------------------------------------------------------------------ |
-| [`choliba setup`](./setup.md)   | Liga o autocomplete no bash (roda sozinho ao instalar com --trust) |
-| [`choliba set`](./set.md)       | Grava uma chave da configuração no .env                            |
-| [`choliba lint`](./lint.md)     | ESLint na pasta de trabalho, com a configuração que vem no choliba |
-| [`choliba format`](./format.md) | Prettier na pasta de trabalho: confere, ou corrige com --write     |
+| Comando                         | O que faz                                                           |
+| ------------------------------- | ------------------------------------------------------------------- |
+| [`choliba setup`](./setup.md)   | Liga o autocomplete no bash (roda sozinho ao instalar com --trust)  |
+| [`choliba update`](./update.md) | Atualiza o choliba para a versão mais recente e mostra as novidades |
+| [`choliba set`](./set.md)       | Grava uma chave da configuração no .env                             |
+| [`choliba lint`](./lint.md)     | ESLint na pasta de trabalho, com a configuração que vem no choliba  |
+| [`choliba format`](./format.md) | Prettier na pasta de trabalho: confere, ou corrige com --write      |
 
 ## Gerais
 
 | Comando                                     | O que faz                                                                                                   |
 | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| [`choliba panel`](./panel.md)               | Abre o painel interativo do choliba no terminal.                                                            |
 | [`choliba help`](./help.md)                 | Mostra a ajuda da raiz ou de um comando                                                                     |
 | [`choliba version`](./version.md)           | Mostra a versão instalada                                                                                   |
 | [`choliba terminal run`](./terminal-run.md) | Roda um processo e prefixa cada linha da saída com um rótulo, para um script ver o que o processo escreveu. |

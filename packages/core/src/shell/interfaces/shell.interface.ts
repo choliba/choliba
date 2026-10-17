@@ -1,6 +1,7 @@
 import type { ConfigGroup } from '@choliba/config';
 
 import type { CommandEntry, CommandExample, RootSpec } from '../../help';
+import type { ChatPanel, PanelCard, PanelKey } from '../../terminal';
 import type { Container } from '../container';
 import type { ShellIo } from '../shell-io';
 
@@ -66,6 +67,70 @@ export interface ShellModule {
   /** Configuration groups this package contributes; their values are built only when their token is requested. */
   readonly config?: readonly ConfigGroup[];
   readonly commands: readonly ShellCommand[];
+  /** Commands typed in `choliba panel` with a `/` (`/projects`): each package brings its own. */
+  readonly panel?: readonly PanelCommand[];
+  /** What the package shows in a new panel session (`sandbox local`), and again after /clear forgets the context. */
+  readonly panelStart?: (container: Container, context: PanelContext) => void;
   /** The app's root: no command, `--help`, `--version`, `__complete`, `__describe` and `__entries`. */
   readonly root?: ShellRoot;
+}
+
+/** What a panel command has: the container, the panel it was typed in, and the session's context. */
+export interface PanelCommandContext {
+  readonly container: Container;
+  /** The panel the command was typed in; its `write` answers in the chat (`●`). */
+  readonly panel: ChatPanel;
+  readonly context: PanelContext;
+}
+
+/** What the panel's session is acting on (`projeto`, `ticket`), and the cards it shows in the header about it. */
+export interface PanelContext {
+  get(key: string): string | undefined;
+  /** Sets `key`, or removes it when `value` is undefined. */
+  set(key: string, value: string | undefined): void;
+  /** Called with each key set or removed, and with no key once /clear forgets them all. */
+  onChange(listener: (key: string | undefined) => void): void;
+  /**
+   * Shows a card titled `title` in the header: its lines (escape codes kept), the summary it shows collapsed, and the
+   * letter that opens or collapses it with Ctrl. Undefined hides it.
+   */
+  show(title: string, card: Omit<PanelCard, 'title'> | undefined): void;
+  /** Turns a spinner in the title of the card `title` while `busy` (an agent's run), and stops it after. */
+  spin(title: string, busy: boolean): void;
+  /**
+   * Shows `name value` in the header's column, under its fixed lines, the name in gray and `value` as given (escape
+   * codes kept); undefined removes it. The lines keep the order their names first came in.
+   */
+  label(name: string, value: string | undefined): void;
+  /**
+   * Shows `line` (escape codes kept) in the status line under the field, before the cards' keys; undefined removes it.
+   * The parts keep the order their names first came in.
+   */
+  status(name: string, line: string | undefined): void;
+  /** Called with each key pressed in the field while no list is open under it; `true` keeps it from the field. */
+  onKey(listener: (key: PanelKey) => boolean): void;
+  /**
+   * Who gets what is sent with no `/`, once it is said: `panel` is the session's own, whose `write` adds lines as they
+   * are. Undefined: what is sent is only said.
+   */
+  converse(handler: ((text: string, panel: ChatPanel) => void) | undefined): void;
+  /**
+   * What stops the work running now (a run of an agent), which Ctrl+C twice and /clear call before anything else;
+   * undefined once it is over.
+   */
+  busy(stop: (() => void) | undefined): void;
+  /** Stops what runs, and forgets every value, card, label and status part: who gets what is sent with no `/` stays. */
+  clear(): void;
+}
+
+/** A command of the panel: the word after `/`, what it does in a line, and running it. */
+export interface PanelCommand {
+  readonly name: string;
+  readonly description: string;
+  /**
+   * Why it cannot run now (`Escolha um projeto antes`), or nothing when it can: the panel shows it in the list in place
+   * of what the command does. Asked as the person types, so it reads little.
+   */
+  readonly unavailable?: (context: PanelContext, container: Container) => string | undefined;
+  readonly run: (context: PanelCommandContext) => Promise<void>;
 }

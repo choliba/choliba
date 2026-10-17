@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 15/10/2026 10:18:54 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 17/10/2026 04:58:10 — não editar manualmente.
 
 ## Resumo
 
@@ -18,7 +18,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 77 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 84 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -30,6 +30,12 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/agent-validation.ts](packages/agents/src/agents/agent-validation.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-config.ts](packages/agents/src/agents/agents-config.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-list.command.ts](packages/agents/src/agents/agents-list.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/agents-panel-card.ts](packages/agents/src/agents/agents-panel-card.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/agents-panel-choices.ts](packages/agents/src/agents/agents-panel-choices.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/agents-panel-run.ts](packages/agents/src/agents/agents-panel-run.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/agents-panel-sandbox.ts](packages/agents/src/agents/agents-panel-sandbox.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/agents-panel-state.ts](packages/agents/src/agents/agents-panel-state.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/agents-panel.ts](packages/agents/src/agents/agents-panel.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-run.command.ts](packages/agents/src/agents/agents-run.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-shell.ts](packages/agents/src/agents/agents-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents.constants.ts](packages/agents/src/agents/agents.constants.ts)|100.00|100.00|100.00|100.00
@@ -72,6 +78,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/steps/step-add-files.ts](packages/agents/src/agents/steps/step-add-files.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/step-constants.ts](packages/agents/src/agents/steps/step-constants.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/step-registry.ts](packages/agents/src/agents/steps/step-registry.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/steps/step-spawn.ts](packages/agents/src/agents/steps/step-spawn.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/working-tree-diff.ts](packages/agents/src/agents/steps/working-tree-diff.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/agent-mcps.ts](packages/agents/src/common/agent-mcps.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/agent-permissions.ts](packages/agents/src/common/agent-permissions.ts)|100.00|100.00|100.00|100.00
@@ -103,7 +110,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 21 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 25 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -118,6 +125,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/config/config-sources.ts](packages/choliba/src/config/config-sources.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/workspace-layout.ts](packages/choliba/src/config/workspace-layout.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/workspace.ts](packages/choliba/src/config/workspace.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/owl-icon.ts](packages/choliba/src/help/owl-icon.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/root-spec.ts](packages/choliba/src/help/root-spec.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/version.ts](packages/choliba/src/help/version.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runtime/runtime.constants.ts](packages/choliba/src/runtime/runtime.constants.ts)|100.00|100.00|100.00|100.00
@@ -128,6 +136,9 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/tooling/lint.command.ts](packages/choliba/src/tooling/lint.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tooling/tooling.constants.ts](packages/choliba/src/tooling/tooling.constants.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tooling/tools.service.ts](packages/choliba/src/tooling/tools.service.ts)|100.00|100.00|100.00|100.00
+🟢|[src/update/release-notes.ts](packages/choliba/src/update/release-notes.ts)|100.00|100.00|100.00|100.00
+🟢|[src/update/update.command.ts](packages/choliba/src/update/update.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/update/update.ts](packages/choliba/src/update/update.ts)|100.00|100.00|100.00|100.00
 
 </details>
 
@@ -154,7 +165,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 57 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 67 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -179,6 +190,8 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/shell/container.ts](packages/core/src/shell/container.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/core-shell.ts](packages/core/src/shell/core-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/create-shell.ts](packages/core/src/shell/create-shell.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/panel-session.ts](packages/core/src/shell/panel-session.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/panel.command.ts](packages/core/src/shell/panel.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/root-run.ts](packages/core/src/shell/root-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/shell-io.ts](packages/core/src/shell/shell-io.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/shell.constants.ts](packages/core/src/shell/shell.constants.ts)|100.00|100.00|100.00|100.00
@@ -194,8 +207,14 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/terminal/frame/ansi-text.ts](packages/core/src/terminal/frame/ansi-text.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/frame/frame.ts](packages/core/src/terminal/frame/frame.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/live-region.ts](packages/core/src/terminal/live-region.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/panel/panel-art.ts](packages/core/src/terminal/panel/panel-art.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/panel/panel-choose.ts](packages/core/src/terminal/panel/panel-choose.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/panel/panel-history.ts](packages/core/src/terminal/panel/panel-history.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/panel/panel-palette.ts](packages/core/src/terminal/panel/panel-palette.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/panel/panel-question.ts](packages/core/src/terminal/panel/panel-question.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/panel/panel-text.ts](packages/core/src/terminal/panel/panel-text.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/panel/panel-toolkit.ts](packages/core/src/terminal/panel/panel-toolkit.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/panel/panel-welcome.ts](packages/core/src/terminal/panel/panel-welcome.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/panel/panel.ts](packages/core/src/terminal/panel/panel.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/process-runner.service.ts](packages/core/src/terminal/process-runner.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/session.ts](packages/core/src/terminal/session.ts)|100.00|100.00|100.00|100.00
@@ -208,6 +227,8 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/terminal/terminal.service.ts](packages/core/src/terminal/terminal.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/writable.ts](packages/core/src/terminal/writable.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/buffer-writable.ts](packages/core/src/testing/buffer-writable.ts)|100.00|100.00|100.00|100.00
+🟢|[src/testing/fake-chat-panel.ts](packages/core/src/testing/fake-chat-panel.ts)|100.00|100.00|100.00|100.00
+🟢|[src/testing/fake-panel-context.ts](packages/core/src/testing/fake-panel-context.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/fake-platform.ts](packages/core/src/testing/fake-platform.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/fake-signals.ts](packages/core/src/testing/fake-signals.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/run-shell.ts](packages/core/src/testing/run-shell.ts)|100.00|100.00|100.00|100.00
@@ -219,7 +240,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 29 arquivos</summary>
+<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 30 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -242,6 +263,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/projects/project.ts](packages/projects/src/projects/project.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects-list.command.ts](packages/projects/src/projects/projects-list.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects-new.command.ts](packages/projects/src/projects/projects-new.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/projects/projects-panel.ts](packages/projects/src/projects/projects-panel.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects-shell.ts](packages/projects/src/projects/projects-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects-spec.ts](packages/projects/src/projects/projects-spec.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects.constants.ts](packages/projects/src/projects/projects.constants.ts)|100.00|100.00|100.00|100.00

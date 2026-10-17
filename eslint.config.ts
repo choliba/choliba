@@ -15,6 +15,8 @@ export default defineConfig(
       '.choliba/skills/**',
       '.claude/**',
       '.playwright-cli/**',
+      // Local state of the runs (gitignored): a trace the playwright-trace skill extracts there brings its own .ts.
+      '.cache/**',
       'docs/.vitepress/cache/**',
     ],
   },

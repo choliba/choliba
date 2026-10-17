@@ -32,7 +32,7 @@ function report(project: NewProject, dir: string, created: CreatedProject): stri
     ...describeCreated(created, project.appDir),
     ...(missing.length === 0 ? [] : [`Falta preencher no config.json: ${missing.join(' e ')}.`]),
     'Antes de rodar: copie .env.example.json para .env.json e troque os CHANGE_ME.',
-    `Confira com: bunx choliba check ${project.name}`,
+    `Confira com: bun choliba check ${project.name}`,
   ].join('\n');
 }
 

@@ -23,4 +23,5 @@ export { newProjectCommand } from './projects-new.command';
 export { PROJECTS } from './projects.constants';
 export { ProjectsService, type ProjectSummary, type ProjectTickets } from './projects.service';
 export { listProjectsSpec, newProjectSpec } from './projects-spec';
+export { projectsPanel } from './projects-panel';
 export { projectsShell } from './projects-shell';

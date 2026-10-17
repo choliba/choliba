@@ -175,6 +175,7 @@ function copyResources(outDir: string): void {
   cpSync(join(packagesDir, 'projects', 'templates'), join(outDir, 'templates'), { recursive: true });
   cpSync(join(packageDir, 'templates', 'workspace'), join(outDir, 'templates', 'workspace'), { recursive: true });
   cpSync(join(packageDir, 'templates', 'example'), join(outDir, 'templates', 'example'), { recursive: true });
+  cpSync(join(packageDir, 'assets'), join(outDir, 'assets'), { recursive: true });
   // The guide of choliba/core, next to its entry, for whoever installed the package.
   cpSync(join(packagesDir, 'core', 'README.md'), join(outDir, 'core', 'README.md'));
   // The independent configuration guide, next to its public entry.
@@ -324,7 +325,7 @@ function writeManifest(outDir: string, dependencies: Record<string, string>): st
         bin: { choliba: 'bin/choliba.js' },
         exports: exportMap(),
         // Builds the workspace (folders, .env, .gitignore) and turns bash completion on. Bun runs it only
-        // for trusted packages: `bun add --trust choliba`, or `bunx choliba setup` afterwards.
+        // for trusted packages: `bun add --trust choliba`, or `bun choliba setup` afterwards.
         scripts: { postinstall: 'bun bin/choliba.js setup' },
         engines: { bun: '>=1.2' },
         dependencies,
