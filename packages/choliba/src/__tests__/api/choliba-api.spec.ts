@@ -2,10 +2,11 @@ import { join } from 'node:path';
 
 import { agentsConfig } from '@choliba/agents';
 import { defineConfig } from '@choliba/config';
+import { versionLine } from '@choliba/core';
 import { fakePlatform } from '@choliba/core/testing';
 import { sandboxConfig } from '@choliba/sandbox';
 
-import { cholibaManifest, shownVersion } from '../../help';
+import { cholibaManifest, PACKAGE_NAME } from '../../help';
 import { createCholibaShell, openCholiba } from '../../app-shell';
 import { choliba } from '../../index';
 import { fakeRuntime } from '../helpers/runtime';
@@ -194,8 +195,8 @@ describe('choliba', () => {
   });
 
   it('says the version of the choliba running, as --version does', () => {
-    expect(choliba.version).toBe(shownVersion(cholibaManifest()));
-    expect(choliba.version).toMatch(/^0\.0\.1-dev/);
+    expect(choliba.version).toBe(versionLine(PACKAGE_NAME, cholibaManifest()));
+    expect(choliba.version).toMatch(/^choliba 0\.0\.1-dev/);
   });
 
   it('reads the process environment when given none', () => {
