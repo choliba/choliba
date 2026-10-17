@@ -23,7 +23,7 @@ describe('choliba panel', () => {
     const opener = (options: PanelOptions): Promise<ChatPanel> => {
       opened.push(options);
       // The panel draws its footer as it opens, before the session is there.
-      expect(options.footer(80)).toEqual(['  \u001b[90mCtrl+C duas vezes sai\u001b[39m']);
+      expect(options.footer(80)).toEqual([`  ${' '.repeat(55)}\u001b[90mCtrl+C duas vezes sai\u001b[39m`]);
       return Promise.resolve(fake.panel);
     };
     const platform = terminal();
@@ -53,7 +53,7 @@ describe('choliba panel', () => {
         lines: ['\u001b[1m\u001b[32mcholiba 1.2.3\u001b[39m\u001b[22m', '\u001b[90m~/loja\u001b[39m'],
       },
     });
-    expect(opened[0]?.footer(80)).toEqual(['  \u001b[90mCtrl+C duas vezes sai\u001b[39m']);
+    expect(opened[0]?.footer(80)).toEqual([`  ${' '.repeat(55)}\u001b[90mCtrl+C duas vezes sai\u001b[39m`]);
     fake.send('ola');
     expect(fake.said).toEqual(['ola']);
     expect(fake.written).toEqual([]);
@@ -118,6 +118,41 @@ describe('choliba panel', () => {
     fake.interrupt();
     expect(await code).toBe(0);
     expect(fake.closed()).toBe(true);
+  });
+
+  it('puts what the commands give on the left of the footer and how to leave on the right, or after it when narrow', async () => {
+    const opened: PanelOptions[] = [];
+    const fake = fakePanel();
+    const moder: ShellModule = {
+      name: 'moder',
+      commands: [],
+      panel: [
+        {
+          name: 'modo',
+          description: 'Põe o modo',
+          run: ({ context }) => {
+            context.status('modo', 'plan');
+            return Promise.resolve();
+          },
+        },
+      ],
+    };
+    const settle = () => new Promise((resolve) => setImmediate(resolve));
+    const code = runShell([coreShell, moder, VERBS_ROOT], terminal(), [
+      replace(PANEL_OPENER, (options: PanelOptions) => {
+        opened.push(options);
+        return Promise.resolve(fake.panel);
+      }),
+    ]);
+    await settle();
+    fake.send('/modo');
+    await settle();
+
+    const leave = '\u001b[90mCtrl+C duas vezes sai\u001b[39m';
+    expect(opened[0]?.footer(40)).toEqual([`  plan${' '.repeat(11)}${leave}`]);
+    expect(opened[0]?.footer(30)).toEqual([`  plan\u001b[90m · \u001b[39m${leave}`]);
+    fake.interrupt();
+    expect(await code).toBe(0);
   });
 
   it('welcomes with no image when the app gives none', async () => {

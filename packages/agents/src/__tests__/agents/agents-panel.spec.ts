@@ -62,7 +62,7 @@ function withAgents(dir: string, provider = 'auto', installed: (bin: string) => 
     readonly shift?: boolean;
   }) => boolean)[] = [];
   const values = new Map<string, string>();
-  const shown: [string, readonly string[] | undefined, string | undefined][] = [];
+  const shown: [string, readonly string[] | undefined, string | undefined, string | undefined][] = [];
   const keys: (string | undefined)[] = [];
   const context: PanelContext = {
     get: (key) => values.get(key),
@@ -71,7 +71,7 @@ function withAgents(dir: string, provider = 'auto', installed: (bin: string) => 
       else values.set(key, value);
     },
     show: (title, card) => {
-      shown.push([title, card?.lines, card?.summary]);
+      shown.push([title, card?.lines, card?.summary, card?.color]);
       keys.push(card?.key);
     },
     label: (name, value) => {
@@ -144,6 +144,7 @@ describe('/agents', () => {
             '\u001b[90msem projeto · claude-3-5-sonnet, gpt-4o\u001b[39m',
           ],
           `${painted('magenta', 'echo')} \u001b[90m1.0.0\u001b[39m`,
+          'magenta',
         ],
       ]);
       expect(agents.fake.written).toEqual([`Agente ativo: ${painted('magenta', 'echo')}.`]);
