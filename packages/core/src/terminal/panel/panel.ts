@@ -223,8 +223,10 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
   const resizeInput = (): void => {
     // OpenTUI emits the content event before its wrapped-line view always reflects a newly inserted newline.
     const logicalLineCount = input.plainText.split('\n').length;
-    input.height = Math.min(MAX_INPUT_LINES, Math.max(1, logicalLineCount, input.virtualLineCount));
-    bottom.height = Math.max(input.height, footerLineCount) + 2;
+    const rows = Math.min(MAX_INPUT_LINES, Math.max(1, logicalLineCount, input.virtualLineCount));
+    input.height = rows;
+    // Read back, OpenTUI's height is the last layout's, not the one just set: the box takes the rows themselves.
+    bottom.height = Math.max(rows, footerLineCount) + 2;
   };
   const typing: ((text: string) => void)[] = [];
   const keyListeners: ((key: PanelKey) => boolean)[] = [];

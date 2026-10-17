@@ -812,6 +812,17 @@ describe('openPanel', () => {
     expect(bottom.height).toBe(3);
   });
 
+  it("grows the field's box with the rows themselves, as OpenTUI reads back the last layout's height", async () => {
+    const { kit, renderer } = fakeToolkit();
+    await openPanel(kit, OPTIONS);
+    const { input, bottom } = layoutOf(renderer);
+    // A pasted text: the height read back stays the one laid out before it.
+    Object.defineProperty(input, 'height', { get: () => 1, set: () => undefined });
+
+    input.setText('1\n2\n3');
+    expect(bottom.height).toBe(5);
+  });
+
   it('asks in the field and takes the answer in words, then sends what is typed with no question', async () => {
     const { kit, renderer } = fakeToolkit();
     const panel = await openPanel(kit, OPTIONS);
