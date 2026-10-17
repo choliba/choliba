@@ -4,6 +4,7 @@ import { sandboxConfig } from '@choliba/sandbox';
 import { AUTO, type AgentDefinition, type AgentProvider, type ExecutionMode } from '../common';
 import { resolveAgentsDir } from './agent-dirs';
 import { loadAgent } from './agent-loader';
+import { agentCard } from './agents-panel-card';
 import { agentsConfig } from './agents-config';
 import { AGENT_PROVIDERS } from './agents.constants';
 import { isSandboxChoice, type SandboxChoice } from './runs/agents-flags';
@@ -108,31 +109,43 @@ function modeLine(agent: AgentDefinition, current: ExecutionMode): string {
   return `${gray('modo')} ${modes} ${gray('(shift+tab alterna)')}`;
 }
 
+/** The provider and the model a run of `agent` would take, as the header's column shows them, and what would stop it. */
+function runLabels(
+  container: Container,
+  context: PanelContext,
+  agent: AgentDefinition,
+): { readonly provider: string; readonly model: string; readonly problem?: string } {
+  const choice = providerChoice(container, context);
+  const provider = installedProvider(container, choice);
+  if (provider === undefined) {
+    return {
+      provider: warn('nenhum instalado'),
+      model: gray('—'),
+      problem: `Nenhum provider instalado para ${choice}: o agente não roda nesta máquina.`,
+    };
+  }
+  const named = `${bold(provider.id)}${choice === AUTO ? gray(' (auto)') : ''}`;
+  const model = modelFor(container, provider, context.get(MODEL), agent);
+  if ('error' in model) return { provider: named, model: warn('indisponível'), problem: model.error };
+  return { provider: named, model: model.model === undefined ? gray(`padrão do ${provider.id}`) : bold(model.model) };
+}
+
 /**
  * Shows what a run of the active agent would take, found as `choliba run agent` finds it: the provider and the model in
- * the header's column, the mode in the status line. What would stop the run shows as one word in yellow, its reason
- * written in the `panel`'s chat, so the header keeps its size. With no agent, nothing shows.
+ * the header's column, the mode in the status line, and the agent's card, whose collapsed summary says the mode and the
+ * model. What would stop the run shows as one word in yellow, its reason written in the `panel`'s chat, so the header
+ * keeps its size. With no agent, nothing shows.
  */
 export function showRun(container: Container, context: PanelContext, panel?: Pick<ChatPanel, 'write'>): void {
   const agent = activeAgent(container, context);
   if (agent === undefined) return;
-  context.status(MODE, modeLine(agent, modeChoice(context, agent)));
-  const choice = providerChoice(container, context);
-  const provider = installedProvider(container, choice);
-  if (provider === undefined) {
-    context.label(PROVIDER, warn('nenhum instalado'));
-    context.label(MODEL, gray('—'));
-    panel?.write(warn(`Nenhum provider instalado para ${choice}: o agente não roda nesta máquina.`));
-    return;
-  }
-  context.label(PROVIDER, `${bold(provider.id)}${choice === AUTO ? gray(' (auto)') : ''}`);
-  const model = modelFor(container, provider, context.get(MODEL), agent);
-  if ('error' in model) {
-    context.label(MODEL, warn('indisponível'));
-    panel?.write(warn(model.error));
-    return;
-  }
-  context.label(MODEL, model.model === undefined ? gray(`padrão do ${provider.id}`) : bold(model.model));
+  const mode = modeChoice(context, agent);
+  context.status(MODE, modeLine(agent, mode));
+  const labels = runLabels(container, context, agent);
+  context.label(PROVIDER, labels.provider);
+  context.label(MODEL, labels.model);
+  if (labels.problem !== undefined) panel?.write(warn(labels.problem));
+  context.show(AGENT, agentCard(container, agent, `${bold(mode)} ${gray('·')} ${labels.model}`));
 }
 
 /** The sessions whose Shift+Tab already moves the mode: the key is listened to once per session. */

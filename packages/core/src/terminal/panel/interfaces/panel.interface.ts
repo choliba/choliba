@@ -183,6 +183,8 @@ export interface PanelScrollOptions {
   readonly border: boolean;
   readonly title: string;
   readonly titleColor: string;
+  /** A hex color for its border; the toolkit's own when absent. */
+  readonly borderColor?: string;
   /** Whether it follows its end as lines are added, from `stickyStart`. */
   readonly stickyScroll: boolean;
   readonly stickyStart?: 'bottom';

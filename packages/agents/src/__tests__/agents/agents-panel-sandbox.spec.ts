@@ -91,7 +91,7 @@ describe('the sandbox card', () => {
           '---',
           gray('…'),
         ],
-        summary: `${bold('local')} ${gray('padrão (CHOL_SANDBOX)')}`,
+        summary: [`${bold('local')} ${gray('· bwrap')}`, gray('padrão (CHOL_SANDBOX)')],
         key: 's',
         order: 1,
       });
@@ -199,7 +199,7 @@ describe('the sandbox card', () => {
         const wrong = session(tmp.path, sandbox);
         await showSandboxCard(wrong.container, wrong.state.context);
         expect(wrong.card()?.lines.slice(0, 3)).toEqual([warn('indisponível'), '---', why]);
-        expect(wrong.card()?.summary).toBe(warn('indisponível'));
+        expect(wrong.card()?.summary).toEqual([warn('indisponível')]);
       }
     } finally {
       tmp.cleanup();

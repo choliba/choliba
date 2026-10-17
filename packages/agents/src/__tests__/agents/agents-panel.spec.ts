@@ -62,7 +62,7 @@ function withAgents(dir: string, provider = 'auto', installed: (bin: string) => 
     readonly shift?: boolean;
   }) => boolean)[] = [];
   const values = new Map<string, string>();
-  const shown: [string, readonly string[] | undefined, string | undefined, string | undefined][] = [];
+  const shown: [string, readonly string[] | undefined, readonly string[] | undefined, string | undefined][] = [];
   const keys: (string | undefined)[] = [];
   const context: PanelContext = {
     get: (key) => values.get(key),
@@ -143,7 +143,10 @@ describe('/agents', () => {
             CARD_RULE,
             '\u001b[90msem projeto · claude-3-5-sonnet, gpt-4o\u001b[39m',
           ],
-          `${painted('magenta', 'echo')} \u001b[90m1.0.0\u001b[39m`,
+          [
+            `${painted('magenta', 'echo')} \u001b[90m1.0.0\u001b[39m`,
+            '\u001b[1m\u001b[36mexecute\u001b[39m\u001b[22m \u001b[90m·\u001b[39m \u001b[90mpadrão do cursor\u001b[39m',
+          ],
           'magenta',
         ],
       ]);

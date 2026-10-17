@@ -42,7 +42,7 @@ function withProjects(projects: Readonly<Record<string, Readonly<Record<string, 
     onChange: () => undefined,
     spin: () => undefined,
   };
-  const shown: [string, readonly string[] | undefined, string | undefined][] = [];
+  const shown: [string, readonly string[] | undefined, readonly string[] | undefined][] = [];
   const keys: (string | undefined)[] = [];
   const fake = fakeChatPanel();
   const [projectsCommand, ticketsCommand] = projectsPanel;
@@ -117,7 +117,10 @@ describe('the panel commands of @choliba/projects', () => {
           '---',
           '2 tickets',
         ],
-        '\u001b[1m\u001b[36mloja\u001b[39m\u001b[22m · 2 tickets',
+        [
+          '\u001b[1m\u001b[36mloja\u001b[39m\u001b[22m',
+          '2 tickets \u001b[90m·\u001b[39m \u001b[90mlocal · localhost:5173\u001b[39m',
+        ],
       ]);
       expect(panel.fake.written[0]).toBe('Projeto ativo: \u001b[1mloja\u001b[22m.');
 
@@ -185,9 +188,10 @@ describe('the panel commands of @choliba/projects', () => {
         '---',
         '2 tickets · ativo \u001b[1mloja-1\u001b[22m',
       ]);
-      expect(panel.shown[0]?.[2]).toBe(
-        '\u001b[1m\u001b[36mloja\u001b[39m\u001b[22m · 2 tickets · ativo \u001b[1mloja-1\u001b[22m',
-      );
+      expect(panel.shown[0]?.[2]).toEqual([
+        '\u001b[1m\u001b[36mloja\u001b[39m\u001b[22m · ativo \u001b[1mloja-1\u001b[22m',
+        '2 tickets \u001b[90m·\u001b[39m \u001b[90mlocal · localhost:5173\u001b[39m',
+      ]);
       panel.values.set('descrição', 'Loja de exemplo');
 
       expect(panel.fake.choices[0]).toEqual({
