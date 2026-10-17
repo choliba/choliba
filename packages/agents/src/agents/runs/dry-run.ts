@@ -25,6 +25,8 @@ export interface DryRunInput {
   /** `CHOL_SANDBOX=docker`: the image the provider runs in and what the container mounts. */
   readonly container?: {
     readonly image: string;
+    /** `CHOL_NETWORK`: the container's network. */
+    readonly network: 'isolated' | 'host';
     readonly mounts: readonly SandboxPath[];
     /** What the agent may reach that the image keeps as its own (`isImagePath`). */
     readonly skipped: readonly string[];
@@ -122,7 +124,8 @@ function agentEntry(input: DryRunInput, systemPrompt: string): Entry {
   };
 }
 
-const ACCESS_LABEL: Readonly<Record<SandboxPath['access'], string>> = {
+/** How `--dry-run` and the panel's sandbox card name what a path is to the agent. */
+export const ACCESS_LABEL: Readonly<Record<SandboxPath['access'], string>> = {
   read: 'leitura',
   write: 'escrita',
   hidden: 'oculto ',

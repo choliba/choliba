@@ -7,6 +7,7 @@ import { agentsConfig } from './agents-config';
 import { ClaudeAgentProvider, ClaudeOllamaAgentProvider, CursorAgentProvider } from '../providers';
 import { listAgentsCommand } from './agents-list.command';
 import { agentsPanel } from './agents-panel';
+import { watchSandbox } from './agents-panel-sandbox';
 import { runAgentCommand } from './agents-run.command';
 import { AGENT_PROVIDERS, AGENTS } from './agents.constants';
 import { AgentsService } from './agents.service';
@@ -58,4 +59,7 @@ export const agentsShell: ShellModule = {
   },
   commands: [runAgentCommand, listAgentsCommand],
   panel: agentsPanel,
+  panelStart: (container, context) => {
+    watchSandbox(container, context);
+  },
 };

@@ -24,6 +24,7 @@ export function fakePanelContext(): FakePanelContext {
   const labels = new Map<string, string>();
   const statuses = new Map<string, string>();
   const keys: ((key: PanelKey) => boolean)[] = [];
+  const changes: ((key: string | undefined) => void)[] = [];
   let conversation: ((text: string, panel: ChatPanel) => void) | undefined;
   let running: (() => void) | undefined;
   const stop = (): boolean => {
@@ -40,6 +41,10 @@ export function fakePanelContext(): FakePanelContext {
     get: (key) => values.get(key),
     set: (key, value) => {
       keep(values, key, value);
+      for (const listener of changes) listener(key);
+    },
+    onChange: (listener) => {
+      changes.push(listener);
     },
     show: (title, card) => {
       keep(cards, title, card);
@@ -62,6 +67,7 @@ export function fakePanelContext(): FakePanelContext {
     clear: () => {
       stop();
       for (const map of [values, cards, labels, statuses]) map.clear();
+      for (const listener of changes) listener(undefined);
     },
   };
   return {

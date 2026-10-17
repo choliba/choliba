@@ -13,6 +13,8 @@ import {
 import { fakeChatPanel, fakePanelContext, fakePlatform } from '@choliba/core/testing';
 
 import { ProviderRegistry } from '../../common';
+import { sandboxConfig } from '@choliba/sandbox';
+
 import { agentsConfig } from '../../agents/agents-config';
 import { agentsPanel } from '../../agents/agents-panel';
 import { AGENT_PROVIDERS } from '../../agents/agents.constants';
@@ -33,9 +35,13 @@ function agentsFolder(dir: string): void {
 }
 
 /** The panel's commands on a machine whose binaries are `installed`, with `provider` as `CHOL_AGENTS_PROVIDER`. */
-function session(dir: string, installed: (bin: string) => boolean, provider = 'auto') {
+function session(dir: string, installed: (bin: string) => boolean, provider = 'auto', sandbox = 'local') {
   const container = new Container();
   container.provide(agentsConfig.token, () => ({ ...agentsConfig.read([]), agentsDir: dir, provider }));
+  container.provide(sandboxConfig.token, () => {
+    if (sandbox === 'erro') throw new Error('CHOL_SANDBOX: use local ou docker');
+    return { ...sandboxConfig.read([]), mode: sandbox };
+  });
   container.provide(WORKSPACE_ROOT, () => '/');
   const platform = fakePlatform({ which: (bin: string) => (installed(bin) ? `/usr/bin/${bin}` : null) });
   container.provide(PLATFORM, () => platform);
@@ -56,7 +62,7 @@ function session(dir: string, installed: (bin: string) => boolean, provider = 'a
     return command(name).run({ container, panel: fake.panel, context: state.context });
   };
   const why = (name: string): string | undefined => command(name).unavailable?.(state.context, container);
-  return { fake, state, run, why };
+  return { fake, state, run, why, container };
 }
 
 const bold = (text: string): string => `\u001b[1m\u001b[36m${text}\u001b[39m\u001b[22m`;
@@ -279,6 +285,54 @@ describe('/mode', () => {
       await panel.run('agents', 1);
 
       expect([panel.state.values.get('modo'), panel.state.values.get('modelo')]).toEqual([undefined, undefined]);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+});
+
+describe('/sandbox', () => {
+  it('lists local and docker with what each is, the configured one checked, and takes one for the session', async () => {
+    const tmp = makeTmpDir('choices');
+    try {
+      agentsFolder(tmp.path);
+      const panel = session(tmp.path, () => true);
+      await panel.run('sandbox', 1);
+
+      expect(panel.why('sandbox')).toBeUndefined();
+      expect(panel.fake.choices[0]).toEqual({
+        title: 'Escolha o sandbox',
+        description: 'Onde o provider roda nesta sessão. O padrão vem de CHOL_SANDBOX.',
+        options: [
+          { label: 'local', detail: 'Nesta máquina, isolado com bwrap', current: true },
+          { label: 'docker', detail: 'Num container do Docker', current: false },
+        ],
+      });
+      expect(panel.state.values.get('sandbox')).toBe('docker');
+      expect(panel.fake.written).toEqual([`Sandbox: ${bold('docker')}.`]);
+
+      await panel.run('sandbox', 1);
+      await panel.run('sandbox', undefined);
+      expect(panel.fake.written).toHaveLength(1);
+      await panel.run('sandbox', 0);
+      expect(panel.state.values.get('sandbox')).toBe('local');
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('refuses docker without Docker, saying so in the list too', async () => {
+    const tmp = makeTmpDir('choices');
+    try {
+      agentsFolder(tmp.path);
+      const panel = session(tmp.path, (bin) => bin !== 'docker');
+      await panel.run('sandbox', 1);
+
+      expect(panel.fake.choices[0]?.options[1]?.detail).toBe('Docker não encontrado');
+      expect(panel.fake.written).toEqual([
+        warn('O sandbox docker precisa do comando docker, que não foi encontrado: instale o Docker ou use local.'),
+      ]);
+      expect(panel.state.values.has('sandbox')).toBe(false);
     } finally {
       tmp.cleanup();
     }

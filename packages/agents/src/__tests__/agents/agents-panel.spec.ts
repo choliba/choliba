@@ -88,6 +88,7 @@ function withAgents(dir: string, provider = 'auto', installed: (bin: string) => 
     converse: () => undefined,
     busy: () => undefined,
     clear: () => undefined,
+    onChange: () => undefined,
   };
   const fake = fakeChatPanel();
   const [command] = agentsPanel;

@@ -69,6 +69,8 @@ export interface ShellModule {
   readonly commands: readonly ShellCommand[];
   /** Commands typed in `choliba panel` with a `/` (`/projects`): each package brings its own. */
   readonly panel?: readonly PanelCommand[];
+  /** What the package shows in a new panel session (`sandbox local`), and again after /clear forgets the context. */
+  readonly panelStart?: (container: Container, context: PanelContext) => void;
   /** The app's root: no command, `--help`, `--version`, `__complete`, `__describe` and `__entries`. */
   readonly root?: ShellRoot;
 }
@@ -86,6 +88,8 @@ export interface PanelContext {
   get(key: string): string | undefined;
   /** Sets `key`, or removes it when `value` is undefined. */
   set(key: string, value: string | undefined): void;
+  /** Called with each key set or removed, and with no key once /clear forgets them all. */
+  onChange(listener: (key: string | undefined) => void): void;
   /**
    * Shows a card titled `title` in the header: its lines (escape codes kept), the summary it shows collapsed, and the
    * letter that opens or collapses it with Ctrl. Undefined hides it.

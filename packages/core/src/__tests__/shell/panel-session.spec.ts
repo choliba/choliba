@@ -125,7 +125,7 @@ describe('panelSession', () => {
     ]);
   });
 
-  it('keeps the values the commands set, and shows their cards in the header in the order first shown', async () => {
+  it('keeps the values the commands set, and shows their cards by their order, then in the order first shown', async () => {
     const fake = fakeChatPanel();
     let set: PanelCommandContext['context'] | undefined;
     const session = panelSession(
@@ -169,6 +169,10 @@ describe('panelSession', () => {
       [{ title: 'projeto', lines: ['site'], summary: 'site · 2', key: 'p' }],
     ]);
     expect(fake.headings).toEqual([]);
+
+    set?.show('agente', { lines: ['echo'], order: 3 });
+    set?.show('sandbox', { lines: ['local'], order: 1 });
+    expect(fake.cards.at(-1)?.map((card) => card.title)).toEqual(['sandbox', 'agente', 'projeto']);
   });
 
   it('shows a command that cannot run in gray with why, skips it with the keys, and says why when sent', async () => {
@@ -384,5 +388,44 @@ describe('panelSession', () => {
     expect(fake.headings.at(-1)).toEqual(HEADING);
     fake.send('de novo');
     expect(heard).toEqual(['olá', 'de novo']);
+  });
+
+  it('shows what each package shows in a new session, as it begins and again after the context is cleared, telling each change', async () => {
+    const fake = fakeChatPanel();
+    let set: PanelCommandContext['context'] | undefined;
+    let begun = 0;
+    panelSession(
+      new Container(),
+      fake.panel,
+      [
+        {
+          name: 'ctx',
+          description: 'Contexto',
+          run: ({ context }) => {
+            set = context;
+            return Promise.resolve();
+          },
+        },
+      ],
+      HEADING,
+      [
+        (_container, context) => {
+          begun += 1;
+          context.label('sandbox', 'local');
+        },
+      ],
+    );
+    expect([begun, fake.headings.at(-1)]).toEqual([1, [...HEADING, '\u001b[90msandbox\u001b[39m local']]);
+
+    fake.send('/ctx');
+    await new Promise((resolve) => setImmediate(resolve));
+    const changes: (string | undefined)[] = [];
+    set?.onChange((key) => changes.push(key));
+    set?.set('agente', 'echo');
+    set?.set('agente', undefined);
+    set?.label('modelo', 'sonnet');
+    set?.clear();
+    expect([begun, fake.headings.at(-1)]).toEqual([2, [...HEADING, '\u001b[90msandbox\u001b[39m local']]);
+    expect(changes).toEqual(['agente', 'agente', undefined]);
   });
 });

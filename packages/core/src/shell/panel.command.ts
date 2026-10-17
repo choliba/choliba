@@ -1,7 +1,7 @@
 import type { CommandSpec } from '../help';
 import { openOpenTuiPanel, type ArtPixels, type ChatPanel, type PanelOptions } from '../terminal';
 import { token, type Container } from './container';
-import { PANEL_COMMANDS, PLATFORM } from './create-shell';
+import { PANEL_COMMANDS, PANEL_STARTS, PLATFORM } from './create-shell';
 import type { PanelCommand, ShellCommand } from './interfaces/shell.interface';
 import { panelSession, type PanelSession } from './panel-session';
 
@@ -46,7 +46,9 @@ export const PANEL_SPEC: CommandSpec = {
     '(`/projects` escolhe o projeto, `/tickets` o ticket, `/agents` o agente), e o que eles escolhem aparece no ' +
     'cabeçalho, em quadros que o Ctrl+P (projeto), o Ctrl+A (agente) ou um clique recolhem. Com o agente, o ' +
     'cabeçalho mostra o provider e o modelo que uma execução usaria, e a linha de status o modo; `/provider`, ' +
-    '`/model` e `/mode` os escolhem para a sessão, e o Shift+Tab alterna o modo. Uma mensagem sem `/` é a tarefa ' +
+    '`/model` e `/mode` os escolhem para a sessão, e o Shift+Tab alterna o modo. Desde o início, o quadro do sandbox ' +
+    '(Ctrl+S) mostra onde o provider roda (o de CHOL_SANDBOX) e o que a execução do agente monta, e `/sandbox` o ' +
+    'troca para a sessão. Uma mensagem sem `/` é a tarefa ' +
     'do agente: ele roda no painel com essas escolhas (sem ticket, um agente de tickets pergunta o tipo do ticket ' +
     'novo que a execução cria), o que se envia enquanto roda vai para ele, e as perguntas ' +
     'dele aparecem no campo. Ctrl+C duas vezes para a execução; sem nada rodando, sai do painel. `/clear` para o ' +
@@ -104,7 +106,13 @@ export const panelCommand: ShellCommand = {
       io.fail('erro: o painel precisa de um terminal interativo.');
       return;
     }
-    session.current = panelSession(container, panel, container.get(PANEL_COMMANDS), heading);
+    session.current = panelSession(
+      container,
+      panel,
+      container.get(PANEL_COMMANDS),
+      heading,
+      container.get(PANEL_STARTS),
+    );
     await new Promise<void>((resolve) => {
       // Ctrl+C twice stops what runs first (a run of an agent); with nothing running, it closes the panel.
       panel.onInterrupt(() => {

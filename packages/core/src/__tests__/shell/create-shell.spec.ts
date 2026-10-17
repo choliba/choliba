@@ -4,6 +4,7 @@ import {
   CONFIG_CATALOG,
   createShell,
   PANEL_COMMANDS,
+  PANEL_STARTS,
   ExpectedError,
   PLATFORM,
   token,
@@ -51,6 +52,16 @@ describe('createShell — panel commands', () => {
         .map((command) => command.name),
     ).toEqual(['projects', 'agents']);
     expect(createShell(fakePlatform(), [greeter]).container.get(PANEL_COMMANDS)).toEqual([]);
+  });
+
+  it("gathers the modules' panel starts, in their order, and none when no module has any", () => {
+    const start = (): void => undefined;
+    const other = (): void => undefined;
+    const one: ShellModule = { name: 'one', commands: [], panelStart: start };
+    const two: ShellModule = { name: 'two', commands: [], panelStart: other };
+
+    expect(createShell(fakePlatform(), [one, greeter, two]).container.get(PANEL_STARTS)).toEqual([start, other]);
+    expect(createShell(fakePlatform(), [greeter]).container.get(PANEL_STARTS)).toEqual([]);
   });
 
   it('refuses two panel commands of one name, naming both modules', () => {

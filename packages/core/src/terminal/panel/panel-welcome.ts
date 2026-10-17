@@ -146,6 +146,8 @@ export interface PanelCard {
   readonly summary?: string;
   /** The letter that, with Ctrl, opens or collapses it (`p` for Ctrl+P). */
   readonly key?: string;
+  /** Its place among the cards, the lowest first (`sandbox` 1, `projeto` 2, `agente` 3); without it, after those that have one. */
+  readonly order?: number;
 }
 
 /** A card's width, in columns, its border included. */
@@ -158,9 +160,6 @@ const CARD_TEXT_WIDTH = CARD_WIDTH - 5;
 export const CARD_RULE = '---';
 
 const RULE = `\u001b[90m${'─'.repeat(CARD_TEXT_WIDTH)}\u001b[39m`;
-
-/** How many lines a card holds. */
-const CARD_LINES = 6;
 
 /**
  * Every open card's rows, its border included: all cards stand as tall, and what does not fit scrolls inside one. A
@@ -220,11 +219,7 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
       paddingRight: 1,
       flexShrink: 0,
     });
-    const rows = Array.from({ length: CARD_LINES }, () => {
-      const row = new kit.TextRenderable(renderer, { content: '', wrapMode: 'word', height: 1 });
-      card.add(row);
-      return row;
-    });
+    const rows: PanelText<Styled>[] = [];
     // A click on a card opens or collapses that card alone.
     card.onMouseDown = () => {
       toggleCard(title);
@@ -240,8 +235,17 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     for (const [title, card] of made) card.box.visible = shown.some((each) => each.title === title);
     for (const each of shown) {
       const card = cardOf(each.title);
+      // Taken out and put back, each card goes after the ones before it: the header follows the order given.
+      box.remove(card.box);
+      box.add(card.box);
       const folded = collapsed.has(each.title);
-      const lines = folded ? [each.summary ?? each.lines[0] ?? ''] : each.lines.slice(0, CARD_LINES);
+      const lines = folded ? [each.summary ?? each.lines[0] ?? ''] : each.lines;
+      // A card gets the rows its longest content asks for; what does not fit its height scrolls.
+      while (card.rows.length < lines.length) {
+        const row = new kit.TextRenderable(renderer, { content: '', wrapMode: 'word', height: 1 });
+        card.box.add(row);
+        card.rows.push(row);
+      }
       card.box.visible = true;
       card.box.title = ` ${folded ? '▸' : '▾'} ${each.title} `;
       // A long line wraps between words in the card's width, its row as tall as the lines it takes.

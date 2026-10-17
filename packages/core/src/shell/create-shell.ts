@@ -15,6 +15,8 @@ export const PLATFORM = token<Platform>('Platform');
 export const CONFIG_CATALOG = token<ConfigCatalog>('ConfigCatalog');
 /** Every panel command contributed by the shell's modules, in their order. */
 export const PANEL_COMMANDS = token<readonly PanelCommand[]>('PanelCommands');
+/** What each module shows in a new panel session, in the modules' order. */
+export const PANEL_STARTS = token<readonly NonNullable<ShellModule['panelStart']>[]>('PanelStarts');
 
 /** An app's commands: which first words it runs, their help entries, and running one. */
 export interface Shell {
@@ -128,6 +130,8 @@ function providePanelCommands(container: Container, modules: readonly ShellModul
   }
   const commands = modules.flatMap((module) => module.panel ?? []);
   container.provide(PANEL_COMMANDS, () => commands);
+  const starts = modules.flatMap((module) => (module.panelStart === undefined ? [] : [module.panelStart]));
+  container.provide(PANEL_STARTS, () => starts);
 }
 
 /** Registers the modules' configuration catalog and each group's lazy value. */

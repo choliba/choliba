@@ -608,13 +608,21 @@ describe('openPanel', () => {
       { chunks: [{ text: 'local' }] },
       { chunks: [{ text: '─'.repeat(39), fg: '#666666' }] },
       { chunks: [{ text: '2 tickets' }] },
+      { chunks: [{ text: 'a mais' }] },
     ]);
     expect(projeto?.children[0]?.built).toMatchObject({ wrapMode: 'word', height: 1 });
-    expect(ticket?.children.map((row) => row.visible)).toEqual([true, false, false, false, false, false]);
+    expect(ticket?.children.map((row) => row.visible)).toEqual([true]);
 
     panel.cards([{ title: 'ticket', lines: ['site-2'] }]);
     expect([projeto?.visible, ticket?.visible, header?.children.length]).toEqual([false, true, 3]);
     expect(ticket?.children[0]?.content).toEqual({ chunks: [{ text: 'site-2' }] });
+
+    panel.cards([
+      { title: 'ticket', lines: ['site-2'] },
+      { title: 'projeto', lines: ['site'] },
+    ]);
+    expect(header?.children.slice(1).map((card) => card.title)).toEqual([' ▾ ticket ', ' ▾ projeto ']);
+    expect(projeto?.children.map((row) => row.visible)).toEqual([true, false, false, false, false, false, false]);
 
     const plain = fakeToolkit();
     const bare = await openPanel(plain.kit, OPTIONS);

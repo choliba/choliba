@@ -1,20 +1,11 @@
 import type { ChatPanel, Container, Panel, PanelContext, PanelOptions } from '@choliba/core';
 
 import type { AgentDefinition } from '../common';
-import { activeAgent, bold, gray, MODE, MODEL, PROVIDER, warn } from './agents-panel-state';
+import { activeAgent, bold, flag, gray, PROJECT, sessionArgv, TICKET, warn } from './agents-panel-state';
 import { AGENTS } from './agents.constants';
-
-/** The context keys `/projects` and `/tickets` of `@choliba/projects` set. */
-const PROJECT = 'projeto';
-const TICKET = 'ticket';
 
 /** The status line's part while an agent runs. */
 const RUN = 'execução';
-
-/** `[name, value]`, or nothing when there is no value or the agent does not take it. */
-function flag(name: string, value: string | undefined, taken = true): readonly string[] {
-  return value === undefined || !taken ? [] : [name, value];
-}
 
 /**
  * The ticket flags of a run of `agent`: the ticket chosen with /tickets; with none, and an agent that needs one, a new
@@ -40,9 +31,8 @@ async function ticketFlags(
 }
 
 /**
- * The command line after `choliba run agent` for `task`: the agent, then the project and the ticket it takes, then the
- * provider, the model and the mode chosen in the session (one left at its default is no flag: the run decides, as it
- * would on the command line). What the agent needs and the session lacks is said instead; nothing when cancelled.
+ * The command line after `choliba run agent` for `task`, with the session's choices (`sessionArgv`). What the agent
+ * needs and the session lacks is said instead; nothing when the ticket's question is cancelled.
  */
 async function runArgv(
   context: PanelContext,
@@ -50,19 +40,10 @@ async function runArgv(
   task: string,
   panel: ChatPanel,
 ): Promise<readonly string[] | string | undefined> {
-  const project = context.get(PROJECT);
-  if (agent.projectRequired && project === undefined) return 'Escolha um projeto antes, com /projects.';
+  if (agent.projectRequired && context.get(PROJECT) === undefined) return 'Escolha um projeto antes, com /projects.';
   const ticket = await ticketFlags(context, agent, panel);
   if (ticket === undefined) return undefined;
-  return [
-    agent.id,
-    ...flag('--project', project, agent.projectRequired),
-    ...ticket,
-    ...flag('--provider', context.get(PROVIDER)),
-    ...flag('--model', context.get(MODEL)),
-    ...flag('--mode', context.get(MODE)),
-    task,
-  ];
+  return sessionArgv(context, agent, ticket, task);
 }
 
 /** How long a run took, as the panel says it: `2m14s`, `9s`. */

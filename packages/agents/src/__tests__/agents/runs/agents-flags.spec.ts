@@ -263,7 +263,9 @@ describe('parseAgentsArgs — run', () => {
 describe('RUN_FLAGS', () => {
   it('lists only flags the parser accepts after a command name', () => {
     for (const flag of RUN_FLAGS) {
-      const value = flag.name === '--mode' ? ['plan'] : flag.valueName === undefined ? [] : ['x'];
+      // A flag with choices takes one of them (--mode, --sandbox); any other value flag takes any word.
+      const choice = flag.choices?.[0]?.name;
+      const value = choice !== undefined ? [choice] : flag.valueName === undefined ? [] : ['x'];
       // --show-prompt only makes sense with --dry-run, which it needs.
       const needs = flag.name === '--show-prompt' ? ['--dry-run'] : [];
       for (const form of [flag.name, ...(flag.aliases ?? [])]) {
