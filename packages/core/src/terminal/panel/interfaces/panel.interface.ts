@@ -33,13 +33,24 @@ export interface PanelRenderer<Node> {
   readonly root: PanelNode<Node>;
   readonly width: number;
   readonly keyInput: { on(event: 'keypress', listener: (key: PanelKey) => void): unknown };
+  /** Called when the person lets go of the mouse after dragging it over text. */
+  on(event: 'selection', listener: (selection: PanelSelection | null) => void): unknown;
+  /** Puts `text` in the terminal's clipboard (OSC 52); `false` when the terminal does not take it. */
+  copyToClipboardOSC52(text: string): boolean;
   destroy(): void;
+}
+
+/** The text dragged over with the mouse. */
+export interface PanelSelection {
+  getSelectedText(): string;
 }
 
 export interface PanelKey {
   readonly name: string;
   readonly ctrl: boolean;
   readonly shift?: boolean;
+  /** Keeps the key from the focused field. */
+  preventDefault?(): void;
 }
 
 /** The toolkit's content and submit events carry no data in the installed API. */
@@ -72,6 +83,8 @@ export interface PanelInput<Styled> {
   focus(): void;
   blur(): void;
   setText(text: string): void;
+  /** Puts the cursor after the last character. */
+  gotoBufferEnd(): unknown;
 }
 
 export interface PanelSelectOption {

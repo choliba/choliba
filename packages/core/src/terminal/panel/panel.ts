@@ -2,6 +2,7 @@ import type { AnsiColor } from '../../theme';
 import { ansiChunks, type StyledChunk } from '../frame';
 
 import type { PanelKey, PanelTextareaKeyBinding, PanelToolkit } from './interfaces/panel.interface';
+import { fieldHistory } from './panel-history';
 import { PALETTE } from './panel-palette';
 import { questionDesk, type PanelQuestion, type PanelReply } from './panel-question';
 import { chooser, type PanelChoice, type PanelChooseRequest } from './panel-choose';
@@ -119,7 +120,8 @@ function keyAction(key: PanelKey): 'page-up' | 'page-down' | 'top' | 'bottom' | 
  * the person scrolls up (mouse wheel, PgUp/PgDn, Home/End), and under it one row: the field on the left, where
  * questions are asked and messages typed, and the footer on the right. With a header, the header above the lines,
  * which have no border, and the footer under the field. A welcome may come first. Escape codes become the toolkit's
- * own styles (`ansiChunks`).
+ * own styles (`ansiChunks`). ↑ and ↓ on an empty field bring back what was sent; text dragged over with the mouse is
+ * copied to the clipboard.
  */
 export async function openPanel<Context, Node, Styled extends { readonly chunks: Chunk[] }, Chunk>(
   kit: PanelToolkit<Context, Node, Styled, Chunk>,
@@ -233,6 +235,19 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     });
   };
   const desk = questionDesk(input, select, options.hint);
+  const history = fieldHistory();
+  desk.onMessage((text) => {
+    history.record(text);
+  });
+  // ↑ and ↓ bring back what was sent, while the field is empty or shows it and no question takes the keys.
+  const recall = (key: PanelKey): boolean => {
+    if (desk.pending() || (key.name !== 'up' && key.name !== 'down')) return false;
+    const text = history.step(input.plainText, key.name === 'up' ? -1 : 1);
+    if (text === undefined) return false;
+    input.setText(text);
+    input.gotoBufferEnd();
+    return true;
+  };
   // A welcome hides the field until Enter: then, or when a line is written first, the field shows, focused.
   // The box stays hidden too, so its border never shows under the welcome.
   let welcoming = splash !== undefined;
@@ -299,10 +314,19 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     if (picker.key(key)) return;
     // Ctrl and a card's key open or collapse that card.
     if (key.ctrl && top?.toggleKey(key.name) === true) return;
-    if (keyListeners.some((listener) => listener(key))) return;
+    if (recall(key) || keyListeners.some((listener) => listener(key))) {
+      key.preventDefault?.();
+      return;
+    }
     if (desk.key(key)) return;
     const action = keyAction(key);
     if (action !== undefined) scrollActions[action]?.();
+  });
+
+  // The panel takes the mouse, so the terminal selects nothing: what is dragged over goes to the clipboard on release.
+  renderer.on('selection', (selection) => {
+    const text = selection?.getSelectedText() ?? '';
+    if (text !== '') renderer.copyToClipboardOSC52(text);
   });
 
   const refresh = (): void => {
