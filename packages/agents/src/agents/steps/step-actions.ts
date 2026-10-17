@@ -7,6 +7,7 @@ import type { AgentStep } from '../../common';
 import { READ_FILES_FIELDS, READ_FILES_USAGE, readFiles } from './step-read-files';
 import { recordGitHead } from './git-state';
 import { WRITE_FILES_FIELDS, WRITE_FILES_USAGE, writeFiles } from './step-write-files';
+import { type StepProject, WRITE_CONFIG_FIELDS, WRITE_CONFIG_USAGE, writeConfig } from './step-write-config';
 import { fieldsError, listField, type FieldSpec } from './step-fields';
 import { SEARCH_FILES_FIELDS, SEARCH_FILES_USAGE, searchFiles } from './step-search-files';
 import { spawnToEnd } from './step-spawn';
@@ -37,8 +38,10 @@ export interface StepContext {
   readonly logDir?: string;
   /** Stops the command of the step running (Ctrl+C in the panel); the step then fails. */
   readonly signal?: AbortSignal;
-  /** The agent's final answer, after it ran clean: what `write_files` saves. */
+  /** The agent's final answer, after it ran clean: what `write_files` and `write_config` save. */
   readonly answer?: string;
+  /** The run's project (`--project`), where `write_config` saves. */
+  readonly project?: StepProject;
 }
 
 export interface AgentAction {
@@ -190,6 +193,16 @@ export const ACTIONS: Readonly<Record<string, AgentAction>> = {
     producesSection: false,
     run: (context, step) => {
       writeFiles(context.repoRoot, context.answer, listField(step, 'files'));
+      return undefined;
+    },
+  },
+  write_config: {
+    usage: WRITE_CONFIG_USAGE,
+    phases: ['after_execute'],
+    check: fieldsCheck(WRITE_CONFIG_FIELDS, WRITE_CONFIG_USAGE),
+    producesSection: false,
+    run: (context, step) => {
+      writeConfig(context.project, context.answer, step);
       return undefined;
     },
   },

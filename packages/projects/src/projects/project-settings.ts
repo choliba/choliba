@@ -4,6 +4,7 @@ import fs from 'node:fs';
 
 import { PLACEHOLDER_VALUE, ProjectsError, readJsonFile } from '../common';
 import { assertProjectExists, configJsonPath, envJsonPath, projectDir, projectEnvExampleFile } from '../paths';
+import { parseProjectStack, type ProjectStack } from './project-stack';
 
 /** Reserved key of `.env.json`, merged into every environment; never an environment name. */
 const GLOBAL_KEY = '_global';
@@ -32,6 +33,8 @@ export interface ProjectSettingsConfig {
   readonly environment?: string;
   /** Same format as a ticket's: a device is on unless it is `false`; absent means all on. */
   readonly devices?: Readonly<Record<string, unknown>>;
+  /** What the application is built with, as the tech-stack-analyzer agent records it; optional. */
+  readonly stack?: ProjectStack;
 }
 
 /** Everything a run needs to know about a project, read and checked once. */
@@ -114,6 +117,15 @@ function parseEnvironment(value: unknown, index: number, file: string): ProjectE
   };
 }
 
+/** `stack`, checked; a wrong one fails naming the file. */
+function stackField(value: unknown, file: string): ProjectStack {
+  try {
+    return parseProjectStack(value, 'config.stack');
+  } catch (error) {
+    return fail(file, (error as ProjectsError).message);
+  }
+}
+
 function parseConfig(file: string): ProjectSettingsConfig {
   const raw = readRecord(file);
   const name = stringField(raw, 'name', file, 'config');
@@ -127,12 +139,14 @@ function parseConfig(file: string): ProjectSettingsConfig {
   }
   const environment = raw['environment'];
   const devices = raw['devices'];
+  const stack = raw['stack'];
   return {
     name,
     ...(description === undefined ? {} : { description }),
     envs: envs.map((item: unknown, index) => parseEnvironment(item, index, file)),
     ...(typeof environment === 'string' ? { environment } : {}),
     ...(isRecord(devices) ? { devices } : {}),
+    ...(stack === undefined ? {} : { stack: stackField(stack, file) }),
   };
 }
 

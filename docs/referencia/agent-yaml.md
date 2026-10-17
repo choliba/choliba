@@ -301,17 +301,18 @@ steps:
       - run: [rm, -f, .cache/tmp.patch]
 ```
 
-| Ação              | Onde     | O que faz                                                             |
-| ----------------- | -------- | --------------------------------------------------------------------- |
-| `run`             | os dois  | Roda um comando, sem shell, a partir da pasta de trabalho.            |
-| `git_diff`        | `before` | Grava o diff do working tree e põe o caminho e o índice no prompt.    |
-| `search_files`    | `before` | Põe no prompt um resumo de pastas: subpastas e arquivos por extensão. |
-| `read_files`      | `before` | Põe o conteúdo de arquivos no prompt, dentro de uma tag (`<tag>`).    |
-| `record_git_head` | `after`  | Grava o commit atual, base do próximo `--since pending`.              |
-| `write_files`     | `after`  | Grava a resposta final do agente em cada arquivo dado.                |
+| Ação              | Onde     | O que faz                                                                          |
+| ----------------- | -------- | ---------------------------------------------------------------------------------- |
+| `run`             | os dois  | Roda um comando, sem shell, a partir da pasta de trabalho.                         |
+| `git_diff`        | `before` | Grava o diff do working tree e põe o caminho e o índice no prompt.                 |
+| `search_files`    | `before` | Põe no prompt um resumo de pastas: subpastas e arquivos por extensão.              |
+| `read_files`      | `before` | Põe o conteúdo de arquivos no prompt, dentro de uma tag (`<tag>`).                 |
+| `record_git_head` | `after`  | Grava o commit atual, base do próximo `--since pending`.                           |
+| `write_files`     | `after`  | Grava a resposta final do agente em cada arquivo dado.                             |
+| `write_config`    | `after`  | Grava a resposta final do agente, um JSON, numa chave do `config.json` do projeto. |
 
-As ações de arquivo (`search_files`, `read_files` e `write_files`) usam campos com nome; as outras, uma lista de
-argumentos.
+As ações de arquivo (`search_files`, `read_files`, `write_files` e `write_config`) usam campos com nome; as outras,
+uma lista de argumentos.
 
 | Campo       | Em                           | O que é                                                                                                                  |
 | ----------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
@@ -356,7 +357,21 @@ steps:
   execute:
     after:
       success:
-        - write_files: { files: ['${PROJECT_DIR}/tech-stack.md'] }
+        - write_files: { files: ['${PROJECT_DIR}/relatorio.md'] }
+```
+
+O `write_config` também é o choliba gravando, no `config.json` do projeto da execução (`--project`); o agente não
+diz o arquivo. A resposta do agente tem de ser um JSON, sem nada em volta além de um bloco de código. Quem confere e
+grava é o `@choliba/projects`: o valor segue a regra da chave, as outras chaves do arquivo ficam como estão, e uma
+resposta que não é JSON ou não segue a regra falha sem tocar no arquivo. Hoje a única chave é `stack` (veja
+[`config.json`](config-json.md#stack)).
+
+```yaml
+steps:
+  execute:
+    after:
+      success:
+        - write_config: { key: stack }
 ```
 
 Gravar nas pastas de agentes, skills e MCPs termina a execução com código 1, como qualquer mudança nelas (veja

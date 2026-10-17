@@ -7,7 +7,7 @@ export type StepOptionValue = string | readonly string[];
 
 /**
  * One line of `steps.<mode>.before`/`.after`: `<action>: [args]`, or `<action>: { field: value }` for the file actions
- * (`search_files`, `read_files`, `write_files`). `run` runs an external command (no shell); any other action is a
+ * (`search_files`, `read_files`, `write_files`, `write_config`). `run` runs an external command (no shell); any other action is a
  * method of the CLI, registered in `steps/step-actions.ts`.
  */
 export interface AgentStep {

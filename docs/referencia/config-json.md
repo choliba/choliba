@@ -36,7 +36,7 @@ Um objeto JSON. `name` e `envs` são obrigatórios. `envs` tem pelo menos um amb
 }
 ```
 
-`environment`, `description`, `default`, `setup`, `start`, `resultsDir` e `devices` podem faltar.
+`environment`, `description`, `default`, `setup`, `start`, `resultsDir`, `devices` e `stack` podem faltar.
 
 ## Ambiente ativo
 
@@ -76,9 +76,27 @@ derruba no fim. Uma aplicação que já responde é usada como está, e o `start
 
 Um ticket ainda pode religar um navegador que o projeto desligou, com `devices` no ticket ou num critério.
 
+## `stack`
+
+Com o que a aplicação é feita. Quem costuma gravar é um agente que analisa o código, por um step
+[`write_config`](agent-yaml.md#steps); dá para escrever à mão também.
+
+```json
+"stack": {
+  "language": "TypeScript",
+  "frameworks": ["React 19", "Vite 8"],
+  "libraries": ["Tailwind CSS 4", "Radix UI"],
+  "tools": ["Docker"]
+}
+```
+
+`language`, a linguagem principal, é obrigatório. `frameworks`, `libraries` (as bibliotecas mais importantes) e
+`tools` (banco, ORM, Docker e outras ferramentas) são listas de textos e podem faltar. Outra chave dentro de `stack`
+é erro.
+
 ## O que barra a execução
 
 O projeto não roda, e o [`choliba check`](../comandos/check.md) o marca com `✗`, quando o arquivo não é um objeto, falta
 `name` ou `envs`, um ambiente não tem `nome`, `baseURL` ou `appDir`, ou um valor que a rodada usa, sem espaços nas
 pontas, é `CHANGE_ME`. Isso vale para `name`, e no ambiente ativo para `baseURL`, `appDir`, `start` e cada comando
-de `setup`. Um `CHANGE_ME` num ambiente que não é o ativo não barra.
+de `setup`. Um `CHANGE_ME` num ambiente que não é o ativo não barra. Um `stack` fora do formato também barra.
