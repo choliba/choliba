@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 17/10/2026 06:45:20 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 17/10/2026 10:17:18 — não editar manualmente.
 
 ## Resumo
 
@@ -18,7 +18,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 86 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 92 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -77,9 +77,15 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/steps/index-diff.ts](packages/agents/src/agents/steps/index-diff.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/step-actions.ts](packages/agents/src/agents/steps/step-actions.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/step-constants.ts](packages/agents/src/agents/steps/step-constants.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/steps/step-fields.ts](packages/agents/src/agents/steps/step-fields.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/steps/step-listing.ts](packages/agents/src/agents/steps/step-listing.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/step-read-files.ts](packages/agents/src/agents/steps/step-read-files.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/step-registry.ts](packages/agents/src/agents/steps/step-registry.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/steps/step-search-files.ts](packages/agents/src/agents/steps/step-search-files.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/steps/step-search.ts](packages/agents/src/agents/steps/step-search.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/steps/step-size.ts](packages/agents/src/agents/steps/step-size.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/step-spawn.ts](packages/agents/src/agents/steps/step-spawn.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/steps/step-write-config.ts](packages/agents/src/agents/steps/step-write-config.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/step-write-files.ts](packages/agents/src/agents/steps/step-write-files.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/working-tree-diff.ts](packages/agents/src/agents/steps/working-tree-diff.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/agent-mcps.ts](packages/agents/src/common/agent-mcps.ts)|100.00|100.00|100.00|100.00
@@ -167,7 +173,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 67 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 68 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -184,6 +190,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/help/shell-completion.ts](packages/core/src/help/shell-completion.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/suggest.ts](packages/core/src/help/suggest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/wants-help.ts](packages/core/src/help/wants-help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/paths/path-pattern.ts](packages/core/src/paths/path-pattern.ts)|100.00|100.00|100.00|100.00
 🟢|[src/platform/git-run.ts](packages/core/src/platform/git-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/platform/global-flags.ts](packages/core/src/platform/global-flags.ts)|100.00|100.00|100.00|100.00
 🟢|[src/platform/platform.constants.ts](packages/core/src/platform/platform.constants.ts)|100.00|100.00|100.00|100.00
@@ -242,7 +249,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 30 arquivos</summary>
+<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 31 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -262,6 +269,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/projects/project-app-prepare.ts](packages/projects/src/projects/project-app-prepare.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project-readme.ts](packages/projects/src/projects/project-readme.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project-settings.ts](packages/projects/src/projects/project-settings.ts)|100.00|100.00|100.00|100.00
+🟢|[src/projects/project-stack.ts](packages/projects/src/projects/project-stack.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project.ts](packages/projects/src/projects/project.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects-list.command.ts](packages/projects/src/projects/projects-list.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects-new.command.ts](packages/projects/src/projects/projects-new.command.ts)|100.00|100.00|100.00|100.00

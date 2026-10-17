@@ -1,3 +1,4 @@
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import * as gitDiff from '../../../agents/steps/git-working-tree-diff';
@@ -99,8 +100,8 @@ describe('buildPrepare / buildAfter', () => {
       expect(run).not.toHaveBeenCalled();
       expect(result?.promptBody.split('\n\n')).toEqual([
         '[execute.before 1/3 — git_diff: develop .cache/with-prepare/diff.patch --pending .cache/with-prepare/last-base: produzido aqui na execução real]',
-        '[execute.before 2/3 — read_files: documentacao_atual docs/**/*.md: produzido aqui na execução real]',
-        '[execute.before 3/3 — read_files: readme_atual README.md: produzido aqui na execução real]',
+        '[execute.before 2/3 — read_files: tag=documentacao_atual dirs=docs pattern=**/*.md: produzido aqui na execução real]',
+        '[execute.before 3/3 — read_files: tag=readme_atual dirs=. pattern=/README.md: produzido aqui na execução real]',
       ]);
     } finally {
       run.mockRestore();
@@ -170,6 +171,34 @@ describe('buildPrepare / buildAfter', () => {
     } finally {
       before.mockRestore();
       after.mockRestore();
+    }
+  });
+
+  it("saves the answer in the run's project config.json with a write_config step after the agent", async () => {
+    const write = { action: 'write_config', args: [], options: { key: 'stack' } };
+    const agent = withSteps(loadAgent(FIXTURES, 'echo'), 'execute', {
+      ...NO_STEPS,
+      after: { success: [write], failure: [], always: [] },
+    });
+    const projects = makeTmpDir('registry-write-config');
+    try {
+      mkdirSync(join(projects.path, 'demo'));
+      writeFileSync(join(projects.path, 'demo', 'config.json'), '{"name":"demo"}');
+
+      const failures = await buildAfter(agent)?.({
+        repoRoot: projects.path,
+        mode: 'execute',
+        exitCode: 0,
+        answer: '{"language":"PHP"}',
+        project: { projectsDir: projects.path, name: 'demo' },
+      });
+
+      expect(failures).toEqual([]);
+      expect(JSON.parse(readFileSync(join(projects.path, 'demo', 'config.json'), 'utf8'))).toMatchObject({
+        stack: { language: 'PHP' },
+      });
+    } finally {
+      projects.cleanup();
     }
   });
 });

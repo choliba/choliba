@@ -301,13 +301,50 @@ steps:
       - run: [rm, -f, .cache/tmp.patch]
 ```
 
-| Ação              | Onde     | O que faz                                                          |
-| ----------------- | -------- | ------------------------------------------------------------------ |
-| `run`             | os dois  | Roda um comando, sem shell, a partir da pasta de trabalho.         |
-| `git_diff`        | `before` | Grava o diff do working tree e põe o caminho e o índice no prompt. |
-| `read_files`      | `before` | Põe o conteúdo de arquivos no prompt, dentro de uma tag (`<tag>`). |
-| `record_git_head` | `after`  | Grava o commit atual, base do próximo `--since pending`.           |
-| `write_files`     | `after`  | Grava a resposta final do agente em cada arquivo dado.             |
+| Ação              | Onde     | O que faz                                                                          |
+| ----------------- | -------- | ---------------------------------------------------------------------------------- |
+| `run`             | os dois  | Roda um comando, sem shell, a partir da pasta de trabalho.                         |
+| `git_diff`        | `before` | Grava o diff do working tree e põe o caminho e o índice no prompt.                 |
+| `search_files`    | `before` | Põe no prompt um resumo de pastas: subpastas e arquivos por extensão.              |
+| `read_files`      | `before` | Põe o conteúdo de arquivos no prompt, dentro de uma tag (`<tag>`).                 |
+| `record_git_head` | `after`  | Grava o commit atual, base do próximo `--since pending`.                           |
+| `write_files`     | `after`  | Grava a resposta final do agente em cada arquivo dado.                             |
+| `write_config`    | `after`  | Grava a resposta final do agente, um JSON, numa chave do `config.json` do projeto. |
+
+As ações de arquivo (`search_files`, `read_files`, `write_files` e `write_config`) usam campos com nome; as outras,
+uma lista de argumentos.
+
+| Campo       | Em                           | O que é                                                                                                                  |
+| ----------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `tag`       | `search_files`, `read_files` | O nome do bloco no prompt (`<tag>…</tag>`), que o texto do agente cita.                                                  |
+| `dirs`      | `search_files`, `read_files` | Pastas onde procurar, relativas à pasta de trabalho ou absolutas.                                                        |
+| `pattern`   | `search_files`, `read_files` | O que achar, em [padrões de caminho](padroes-de-caminho.md): `/package.json` só na raiz da pasta, `*.php` em todo nível. |
+| `ignore`    | `search_files`, `read_files` | O que pular, no mesmo formato, somado ao de sempre: node_modules, vendor, dist, build, .git, .cache.                     |
+| `max_depth` | `search_files`               | Quantos níveis descer em cada pasta (1: só o que ela tem); sem ele, todos. O resumo avisa quando cortou.                 |
+| `files`     | `read_files`, `write_files`  | Caminhos de arquivos, relativos à pasta de trabalho ou absolutos.                                                        |
+| `max_size`  | `search_files`, `read_files` | O tamanho máximo do que o step põe no prompt (`40KB`, `2MB`, `512`); padrão `100KB`.                                     |
+
+- O `search_files` põe, por pasta de `dirs`, as subpastas até 2 níveis (no máximo 200) e quantos arquivos há de cada
+  extensão (as 30 mais comuns), dos que `pattern` acha (todos, sem ele). Serve para dar ao agente a forma de um app
+  grande sem pôr a lista de cada arquivo.
+- O `read_files` lê `files`, ou os arquivos que `pattern` acha em `dirs` (um dos dois; `dirs` sempre com `pattern`,
+  para não ler pastas inteiras por engano).
+- Passando de `max_size`, o step falha antes do agente, dizendo o tamanho, o limite, quantos arquivos achou e o que
+  fazer. Ele não corta o conteúdo: um prompt cortado perderia o texto do agente sem aviso. O `read_files` soma o
+  tamanho dos arquivos antes de lê-los, então um `pattern` largo demais para logo.
+
+```yaml
+steps:
+  execute:
+    before:
+      - search_files: { tag: estrutura, dirs: ['${APP_DIR}'], ignore: [assets, volumes], max_size: 8KB }
+      - read_files:
+          tag: manifestos
+          dirs: ['${APP_DIR}']
+          pattern: [/package.json, /composer.json, '/Dockerfile*']
+          max_size: 40KB
+      - read_files: { tag: ticket, files: ['${TICKET_FILE}'] }
+```
 
 O `write_files` é o choliba gravando, não o agente: o arquivo sai mesmo de um modelo que não chamaria a ferramenta
 de escrita, e o agente não precisa de permissão para ele. Os caminhos são relativos à pasta de trabalho ou absolutos
@@ -320,7 +357,21 @@ steps:
   execute:
     after:
       success:
-        - write_files: ['${PROJECT_DIR}/tech-stack.md']
+        - write_files: { files: ['${PROJECT_DIR}/relatorio.md'] }
+```
+
+O `write_config` também é o choliba gravando, no `config.json` do projeto da execução (`--project`); o agente não
+diz o arquivo. A resposta do agente tem de ser um JSON, sem nada em volta além de um bloco de código. Quem confere e
+grava é o `@choliba/projects`: o valor segue a regra da chave, as outras chaves do arquivo ficam como estão, e uma
+resposta que não é JSON ou não segue a regra falha sem tocar no arquivo. Hoje a única chave é `stack` (veja
+[`config.json`](config-json.md#stack)).
+
+```yaml
+steps:
+  execute:
+    after:
+      success:
+        - write_config: { key: stack }
 ```
 
 Gravar nas pastas de agentes, skills e MCPs termina a execução com código 1, como qualquer mudança nelas (veja
@@ -362,7 +413,7 @@ steps:
   execute:
     before: &before # a lista do before de execute ganha o nome "before"
       - run: [bun, choliba, run, tests, '${PROJECT}:${TICKET}', --expect, red, --failures, '.cache/test-writer/${TICKET}/red.md']
-      - read_files: [falhas_red, '.cache/test-writer/${TICKET}/red.md']
+      - read_files: { tag: falhas_red, files: ['.cache/test-writer/${TICKET}/red.md'] }
     after:
       success:
         - run: [bun, choliba, run, tests, '${PROJECT}:${TICKET}', --expect, green]

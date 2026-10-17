@@ -58,7 +58,10 @@ export function policyFromPermissions(permissions: AgentPermissions): Permission
   return permissions.allowWrite.length > 0 || permissions.allowDelete.length > 0 ? 'edits' : 'read-only';
 }
 
-type StepLines = readonly Readonly<Record<string, readonly string[]>>[];
+/** A step as agent.yaml writes it: a list of arguments, or named fields (a number, as `max_size: 40960`, is a text). */
+type StepValue = readonly string[] | Readonly<Record<string, string | number | readonly string[]>>;
+
+type StepLines = readonly Readonly<Record<string, StepValue>>[];
 
 interface AfterBlocks {
   readonly success?: StepLines;
@@ -111,16 +114,26 @@ function parseModes(modes: AgentYamlV1['modes']): { modes: readonly ExecutionMod
   return { modes: allowed, defaultMode: modes?.default ?? fallback };
 }
 
-/** Each step, `<action>: [args]`, checked against the action's own rules (e.g. `git_diff`'s arguments). */
+/** A step as the actions take it: its arguments, or its named fields with each number as a text. */
+function toStep(action: string, value: StepValue): AgentStep {
+  if (isList(value)) return { action, args: value };
+  const options = Object.fromEntries(
+    Object.entries(value).map(([name, field]) => [name, typeof field === 'number' ? String(field) : field]),
+  );
+  return { action, args: [], options };
+}
+
+/** Each step, `<action>: [args]` or `<action>: { fields }`, checked against the action's own rules. */
 function parseStepList(
   lines: StepLines | undefined,
   phase: StepPhase,
   fail: (reason: string) => never,
 ): readonly AgentStep[] {
   return (lines ?? []).flatMap((line) =>
-    Object.entries(line).map(([action, args]) => {
-      const checked = checkStep({ action, args }, phase);
-      return 'error' in checked ? fail(`"steps": ${checked.error}`) : { action, args };
+    Object.entries(line).map(([action, value]) => {
+      const step = toStep(action, value);
+      const checked = checkStep(step, phase);
+      return 'error' in checked ? fail(`"steps": ${checked.error}`) : step;
     }),
   );
 }

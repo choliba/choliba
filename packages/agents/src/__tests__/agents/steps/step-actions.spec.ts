@@ -67,18 +67,88 @@ describe('checkStep', () => {
 
   it('names an unknown action, a wrong list and wrong arguments', () => {
     expect(checkStep({ action: 'nope', args: [] }, 'after_execute')).toEqual({
-      error: 'ação desconhecida "nope" (esperado: run, git_diff, read_files, record_git_head, write_files)',
+      error:
+        'ação desconhecida "nope" (esperado: run, git_diff, search_files, read_files, record_git_head, write_files, write_config)',
     });
     // The old name of read_files is gone, with no alias.
     expect(checkStep({ action: 'add_files', args: ['t', 'x.md'] }, 'before_execute')).toEqual({
-      error: 'ação desconhecida "add_files" (esperado: run, git_diff, read_files, record_git_head, write_files)',
+      error:
+        'ação desconhecida "add_files" (esperado: run, git_diff, search_files, read_files, record_git_head, write_files, write_config)',
     });
     expect(checkStep({ action: 'git_diff', args: ['a', 'b'] }, 'after_execute')).toEqual({
       error: '"git_diff" não pode ser usado em after_execute',
     });
-    expect(checkStep({ action: 'read_files', args: ['tag'] }, 'before_execute')).toEqual({
-      error: 'esperado "read_files <tag> <glob...>"',
+    expect(checkStep({ action: 'run', args: [], options: { x: 'a' } }, 'before_execute')).toEqual({
+      error: 'esperado "run <comando> [args...]"',
     });
+  });
+
+  it('names what is wrong in the named fields of a file action', () => {
+    const usage = 'esperado "read_files: { tag, files | dirs + pattern | source + pattern, ignore?, max_size? }"';
+    const check = (options?: Readonly<Record<string, string | readonly string[]>>) =>
+      checkStep(
+        { action: 'read_files', args: ['t', 'x.md'], ...(options === undefined ? {} : { options }) },
+        'before_execute',
+      );
+
+    expect(check()).toEqual({ error: `escreva com campos nomeados, não como lista: ${usage}` });
+    expect(check({ tag: 't', dirs: ['.'], pattern: ['x'], depth: '2' })).toEqual({
+      error: `campo desconhecido "depth" (esperado: tag, files, dirs, source, pattern, ignore, max_size): ${usage}`,
+    });
+    expect(check({ dirs: ['.'], pattern: ['x'] })).toEqual({ error: `falta o campo "tag": ${usage}` });
+    expect(check({ tag: 't', dirs: ['.'] })).toEqual({
+      error: `use files, dirs com pattern, ou source com pattern: ${usage}`,
+    });
+    expect(check({ tag: 't', files: ['a.md'], dirs: ['.'], pattern: ['x'] })).toEqual({
+      error: `use files, dirs com pattern, ou source com pattern: ${usage}`,
+    });
+    expect(check({ tag: 't', files: ['a.md'] })).toEqual({ action: expect.anything() as unknown });
+    expect(check({ tag: 't', source: 'lista.txt', pattern: ['x'] })).toEqual({ action: expect.anything() as unknown });
+    expect(check({ tag: 't', source: 'lista.txt' })).toEqual({
+      error: `use files, dirs com pattern, ou source com pattern: ${usage}`,
+    });
+    expect(check({ tag: 't', files: ['a.md'], pattern: ['x'] })).toEqual({
+      error: `use files, dirs com pattern, ou source com pattern: ${usage}`,
+    });
+    expect(check({ tag: 't', dirs: [], pattern: ['x'] })).toEqual({
+      error: `o campo "dirs" é uma lista de textos, com pelo menos um: ${usage}`,
+    });
+    expect(check({ tag: ['t'], dirs: ['.'], pattern: ['x'] })).toEqual({ error: `o campo "tag" é um texto: ${usage}` });
+    expect(check({ tag: 't', dirs: ['.'], pattern: ['x'], max_size: '40 GB' })).toEqual({
+      error: `o campo "max_size" é um tamanho, como 40KB, 2MB ou 512: ${usage}`,
+    });
+    expect(check({ tag: 't', dirs: ['.'], pattern: ['x'], max_size: '40KB' })).toEqual({
+      action: expect.anything() as unknown,
+    });
+    expect(check({ tag: 't', dirs: ['.'], pattern: ['[a-z'] })).toEqual({
+      error: `o campo "pattern" tem um padrão inválido "[a-z": um [ sem o ] que o fecha: ${usage}`,
+    });
+    expect(check({ tag: 't', dirs: ['.'], pattern: ['x'], ignore: ['ok', 'a//b'] })).toEqual({
+      error: `o campo "ignore" tem um padrão inválido "a//b": tem // ou um nome vazio: ${usage}`,
+    });
+  });
+
+  it('takes in write_config only a key of config.json that the choliba writes', () => {
+    const check = (key: string) => checkStep({ action: 'write_config', args: [], options: { key } }, 'after_execute');
+
+    expect(check('stack')).toEqual({ action: expect.anything() as unknown });
+    expect(check('envs')).toEqual({
+      error: 'o campo "key" é uma chave do config.json que o choliba grava (stack): esperado "write_config: { key }"',
+    });
+  });
+
+  it('takes max_depth in search_files as a whole number from 1', () => {
+    const usage = 'esperado "search_files: { tag, dirs, pattern?, ignore?, max_depth?, files?, max_size? }"';
+    const check = (maxDepth: string) =>
+      checkStep(
+        { action: 'search_files', args: [], options: { tag: 't', dirs: ['.'], max_depth: maxDepth } },
+        'before_execute',
+      );
+
+    expect(check('3')).toEqual({ action: expect.anything() as unknown });
+    for (const wrong of ['0', '-1', '2.5', 'dois']) {
+      expect(check(wrong)).toEqual({ error: `o campo "max_depth" é um número inteiro, a partir de 1: ${usage}` });
+    }
   });
 });
 
@@ -94,12 +164,14 @@ describe('runBeforeSteps', () => {
         [
           { action: 'git_diff', args: ['develop', '.cache/x/diff.patch'] },
           { action: 'run', args: ['bun', 'x', 'check'] },
-          { action: 'read_files', args: ['readme_atual', 'README.md'] },
+          { action: 'read_files', args: [], options: { tag: 'readme_atual', dirs: ['.'], pattern: ['README.md'] } },
+          { action: 'search_files', args: [], options: { tag: 'estrutura', dirs: ['.'] } },
         ],
         'execute.before',
       );
 
-      expect(sections).toHaveLength(2);
+      expect(sections).toHaveLength(3);
+      expect(sections[2]).toContain('1 .md');
       expect(sections[0]).toContain('.cache/x/diff.patch');
       expect(sections[1]).toBe(
         '<readme_atual>\n\n<untrusted_input source="file:README.md">\n# Hi\n</untrusted_input>\n\n</readme_atual>',
@@ -184,13 +256,13 @@ describe('runBeforeSteps', () => {
     ).toBeUndefined();
     expect(
       await failureOf(() =>
-        runBeforeSteps({ repoRoot: '/r', since: undefined }, [{ action: 'read_files', args: ['t'] }], 'b'),
+        runBeforeSteps({ repoRoot: '/r', since: undefined }, [{ action: 'record_git_head', args: ['h'] }], 'b'),
       ),
     ).toEqual({
       label: 'b 1/1',
-      step: { action: 'read_files', args: ['t'] },
+      step: { action: 'record_git_head', args: ['h'] },
       status: undefined,
-      output: 'esperado "read_files <tag> <glob...>"',
+      output: '"record_git_head" não pode ser usado em before_execute',
     });
   });
 
@@ -248,7 +320,7 @@ describe('the write_files action', () => {
   it("saves the agent's answer after it, and fails saying so when there is none", async () => {
     const tmp = makeTmpDir('actions-write');
     try {
-      const steps = [{ action: 'write_files', args: ['out/stack.md'] }];
+      const steps = [{ action: 'write_files', args: [], options: { files: ['out/stack.md'] } }];
 
       expect(await runAfterSteps({ repoRoot: tmp.path, since: undefined, answer: 'feito' }, steps, 'a')).toEqual([]);
       expect(readFileSync(join(tmp.path, 'out', 'stack.md'), 'utf8')).toBe('feito\n');
@@ -303,12 +375,14 @@ describe('previewBeforeSteps', () => {
       previewBeforeSteps(
         [
           { action: 'run', args: ['x'] },
-          { action: 'read_files', args: ['falhas_red', 'red.md'] },
+          { action: 'read_files', args: [], options: { tag: 'falhas_red', dirs: ['.'], pattern: ['red.md'] } },
           { action: 'nope', args: [] },
         ],
         'execute.before',
       ),
-    ).toEqual(['[execute.before 2/3 — read_files: falhas_red red.md: produzido aqui na execução real]']);
+    ).toEqual([
+      '[execute.before 2/3 — read_files: tag=falhas_red dirs=. pattern=red.md: produzido aqui na execução real]',
+    ]);
   });
 });
 
@@ -334,7 +408,10 @@ describe('formatStepFailure / stepExitCode / describeStep', () => {
   });
 
   it('writes a step as it is in agent.yaml', () => {
-    expect(describeStep({ action: 'read_files', args: ['t', 'a.md'] })).toBe('read_files: t a.md');
+    expect(describeStep({ action: 'run', args: ['bun', 'x'] })).toBe('run: bun x');
+    expect(
+      describeStep({ action: 'read_files', args: [], options: { tag: 't', dirs: ['a', 'b'], max_size: '1KB' } }),
+    ).toBe('read_files: tag=t dirs=a,b max_size=1KB');
   });
 });
 
@@ -342,11 +419,14 @@ describe('ACTIONS', () => {
   it('rejects a direct call with a missing argument', async () => {
     const context = { repoRoot: '/repo', since: undefined };
 
-    expect(() => ACTIONS['record_git_head']?.run(context, [])).toThrow('argumento faltando: record_git_head <arquivo>');
-    expect(() => ACTIONS['write_files']?.run(context, [])).toThrow('argumento faltando: write_files <arquivo...>');
-    await expect(ACTIONS['run']?.run(context, [])).rejects.toThrow('argumento faltando: run <comando> [args...]');
-    expect(() => ACTIONS['read_files']?.run(context, [])).toThrow('argumento faltando: read_files <tag> <glob...>');
-    expect(() => ACTIONS['git_diff']?.run(context, ['a'])).toThrow(
+    const bare = (action: string, args: readonly string[] = []) => ({ action, args });
+    expect(() => ACTIONS['record_git_head']?.run(context, bare('record_git_head'))).toThrow(
+      'argumento faltando: record_git_head <arquivo>',
+    );
+    await expect(ACTIONS['run']?.run(context, bare('run'))).rejects.toThrow(
+      'argumento faltando: run <comando> [args...]',
+    );
+    expect(() => ACTIONS['git_diff']?.run(context, bare('git_diff', ['a']))).toThrow(
       'argumentos inválidos: git_diff <base> <arquivo> [--pending <estado>]',
     );
   });

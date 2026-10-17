@@ -60,6 +60,7 @@ export function buildAfter(
       since: undefined,
       ...signalOf(input),
       ...(input.answer === undefined ? {} : { answer: input.answer }),
+      ...(input.project === undefined ? {} : { project: input.project }),
     };
     const outcome = input.exitCode === 0 ? 'success' : 'failure';
     const run = (block: 'success' | 'failure' | 'always'): Promise<readonly StepFailure[]> =>

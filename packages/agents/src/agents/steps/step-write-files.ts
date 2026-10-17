@@ -1,7 +1,11 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
-export const WRITE_FILES_USAGE = 'write_files <arquivo...>';
+import type { FieldSpec } from './step-fields';
+
+export const WRITE_FILES_USAGE = 'write_files: { files }';
+
+export const WRITE_FILES_FIELDS: FieldSpec = { required: ['files'], optional: [], lists: ['files'] };
 
 /** A code block around the whole answer (```markdown … ```), which a model often adds: its first and last lines. */
 const WRAPPING_FENCE = /^```[^\n]*\n([\s\S]*)\n```$/;

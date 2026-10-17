@@ -2,13 +2,20 @@ import type { AnsiColor } from '@choliba/core';
 import type { ExecutionMode, PermissionPolicy } from './execution.interface';
 import type { AgentPermissions } from '../agent-permissions';
 
+/** A named field of a step: a text, or a list of texts. */
+export type StepOptionValue = string | readonly string[];
+
 /**
- * One line of `steps.<mode>.before`/`.after`: `<action>: [args]`. `run` runs an external command
- * (no shell); any other action is a method of the CLI, registered in `prepare/actions.ts`.
+ * One line of `steps.<mode>.before`/`.after`: `<action>: [args]`, or `<action>: { field: value }` for the file actions
+ * (`search_files`, `read_files`, `write_files`, `write_config`). `run` runs an external command (no shell); any other action is a
+ * method of the CLI, registered in `steps/step-actions.ts`.
  */
 export interface AgentStep {
   readonly action: string;
+  /** What a step written as a list gives; empty for one written with named fields. */
   readonly args: readonly string[];
+  /** What a step written with named fields gives; absent for one written as a list. */
+  readonly options?: Readonly<Record<string, StepOptionValue>>;
 }
 
 /** `steps.<mode>.after`: after the agent, `success` (it exited with 0) or `failure`, then `always`. */

@@ -268,6 +268,75 @@
     },
     "args": { "type": "array", "minItems": 1, "items": { "type": "string" } },
     "texts": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/text" } },
+    "maxSize": {
+      "description": "O tamanho máximo do que o step põe no prompt: um número, em bytes, ou com B, KB ou MB (40KB). Padrão: 100KB.",
+      "oneOf": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "string", "pattern": "^\\s*\\d+\\s*([Bb]|[Kk][Bb]|[Mm][Bb])?\\s*$" }
+      ]
+    },
+    "searchFiles": {
+      "description": "Põe no prompt um resumo de cada pasta: as pastas até 2 níveis e quantos arquivos há de cada extensão; com files, grava ali a lista completa do que achou.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag", "dirs"],
+      "properties": {
+        "tag": { "type": "string", "minLength": 1 },
+        "dirs": { "$ref": "#/definitions/args" },
+        "pattern": { "description": "O que achar: padrões de caminho (formato do gitignore, docs/referencia/padroes-de-caminho.md).", "$ref": "#/definitions/args" },
+        "ignore": { "description": "O que pular: padrões de caminho (formato do gitignore, docs/referencia/padroes-de-caminho.md), somados a node_modules, vendor, dist, build, .git e .cache.", "$ref": "#/definitions/args" },
+        "max_depth": {
+          "description": "Quantos níveis a busca desce em cada pasta de dirs (1: só o que ela tem); sem ele, todos. O resumo avisa quando cortou.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "files": { "$ref": "#/definitions/args" },
+        "max_size": { "$ref": "#/definitions/maxSize" }
+      }
+    },
+    "readFiles": {
+      "description": "Põe no prompt o conteúdo dos arquivos: os de files, os que pattern acha em dirs, ou os que pattern escolhe da lista em source.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag"],
+      "oneOf": [
+        {
+          "required": ["files"],
+          "not": { "anyOf": [{ "required": ["dirs"] }, { "required": ["source"] }, { "required": ["pattern"] }] }
+        },
+        {
+          "required": ["dirs", "pattern"],
+          "not": { "anyOf": [{ "required": ["files"] }, { "required": ["source"] }] }
+        },
+        {
+          "required": ["source", "pattern"],
+          "not": { "anyOf": [{ "required": ["files"] }, { "required": ["dirs"] }] }
+        }
+      ],
+      "properties": {
+        "tag": { "type": "string", "minLength": 1 },
+        "files": { "$ref": "#/definitions/args" },
+        "dirs": { "$ref": "#/definitions/args" },
+        "source": { "type": "string", "minLength": 1 },
+        "pattern": { "description": "O que achar: padrões de caminho (formato do gitignore, docs/referencia/padroes-de-caminho.md).", "$ref": "#/definitions/args" },
+        "ignore": { "description": "O que pular: padrões de caminho (formato do gitignore, docs/referencia/padroes-de-caminho.md), somados a node_modules, vendor, dist, build, .git e .cache.", "$ref": "#/definitions/args" },
+        "max_size": { "$ref": "#/definitions/maxSize" }
+      }
+    },
+    "writeFiles": {
+      "description": "Grava a resposta final do agente em cada arquivo.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["files"],
+      "properties": { "files": { "$ref": "#/definitions/args" } }
+    },
+    "writeConfig": {
+      "description": "Grava a resposta final do agente, um JSON, na chave key do config.json do projeto da execução (--project), conferida pela regra da chave; as outras chaves ficam como estão.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key"],
+      "properties": { "key": { "enum": ["stack"] } }
+    },
     "beforeSteps": {
       "type": "array",
       "items": {
@@ -280,7 +349,8 @@
           "git_diff": {
             "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "minItems": 2, "maxItems": 4 }]
           },
-          "read_files": { "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "minItems": 2 }] }
+          "search_files": { "$ref": "#/definitions/searchFiles" },
+          "read_files": { "$ref": "#/definitions/readFiles" }
         }
       }
     },
@@ -294,7 +364,8 @@
         "properties": {
           "run": { "$ref": "#/definitions/args" },
           "record_git_head": { "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "maxItems": 1 }] },
-          "write_files": { "$ref": "#/definitions/args" }
+          "write_files": { "$ref": "#/definitions/writeFiles" },
+          "write_config": { "$ref": "#/definitions/writeConfig" }
         }
       }
     },

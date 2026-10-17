@@ -93,8 +93,21 @@ function mapInstructions<Declaration extends { readonly name: string; readonly i
   );
 }
 
+/** `step` with `change` applied to each text it carries: its arguments, or each of its named fields. */
+function mapStepText(step: AgentStep, change: (text: string) => string): AgentStep {
+  const args = step.args.map(change);
+  if (step.options === undefined) return { ...step, args };
+  const options = Object.fromEntries(
+    Object.entries(step.options).map(([name, value]) => [
+      name,
+      typeof value === 'string' ? change(value) : value.map(change),
+    ]),
+  );
+  return { ...step, args, options };
+}
+
 function mapStepList(steps: readonly AgentStep[], field: string, change: TextChange): readonly AgentStep[] {
-  return steps.map((step) => ({ ...step, args: step.args.map((arg) => change(arg, field)) }));
+  return steps.map((step) => mapStepText(step, (text) => change(text, field)));
 }
 
 function mapModeSteps(steps: AgentModeSteps, mode: ExecutionMode, change: TextChange): AgentModeSteps {
@@ -209,5 +222,5 @@ export function withExpandedVars(
 /** `steps` with `${AGENT_EXIT_CODE}` replaced by the agent's exit code. */
 export function expandExitCode(steps: readonly AgentStep[], exitCode: number): readonly AgentStep[] {
   const vars = { [AGENT_EXIT_CODE]: String(exitCode) };
-  return steps.map((step) => ({ ...step, args: step.args.map((arg) => expandVars(arg, vars).text) }));
+  return steps.map((step) => mapStepText(step, (text) => expandVars(text, vars).text));
 }
