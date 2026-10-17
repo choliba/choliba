@@ -1,5 +1,5 @@
 import type { CommandSpec } from '../help';
-import { openOpenTuiPanel, type ArtPixels, type ChatPanel, type PanelOptions } from '../terminal';
+import { openOpenTuiPanel, visibleWidth, type ArtPixels, type ChatPanel, type PanelOptions } from '../terminal';
 import { token, type Container } from './container';
 import { PANEL_COMMANDS, PANEL_STARTS, PLATFORM } from './create-shell';
 import type { PanelCommand, ShellCommand } from './interfaces/shell.interface';
@@ -18,6 +18,27 @@ export const PANEL_VERSION = token<string>('PanelVersion');
 export const PANEL_LOGO = token<string>('PanelLogo');
 
 const PANEL_HINT = 'Digite uma mensagem ou / para os comandos';
+
+/** How to leave the panel, on the right of the footer. */
+const LEAVE = '\u001b[90mCtrl+C duas vezes sai\u001b[39m';
+
+/** What goes between two parts of the footer. */
+const FOOTER_SEPARATOR = '\u001b[90m · \u001b[39m';
+
+/** The footer's margin on each side, in columns. */
+const FOOTER_MARGIN = 2;
+
+/**
+ * The footer's line in `width` columns: what the session's commands put in it on the left, how to leave on the right;
+ * one after the other when they do not fit apart.
+ */
+function footerLine(parts: readonly string[], width: number): string {
+  const margin = ' '.repeat(FOOTER_MARGIN);
+  const left = parts.join(FOOTER_SEPARATOR);
+  const gap = width - 2 * FOOTER_MARGIN - visibleWidth(left) - visibleWidth(LEAVE);
+  if (gap < FOOTER_MARGIN) return `${margin}${[...parts, LEAVE].join(FOOTER_SEPARATOR)}`;
+  return `${margin}${left}${' '.repeat(gap)}${LEAVE}`;
+}
 
 /** `path` with the home folder as `~`, as a prompt shows it. */
 function shortPath(path: string, home: string | undefined): string {
@@ -76,7 +97,7 @@ export const panelCommand: ShellCommand = {
     const logo = container.has(PANEL_LOGO) ? container.get(PANEL_LOGO) : undefined;
     const { cwd, env } = container.get(PLATFORM);
     const home = env['HOME'];
-    // The footer says what the session's commands put in it and the keys of its cards, once there is a session.
+    // The footer says what the session's commands put in it, once there is a session, and how to leave.
     const session: { current?: PanelSession } = {};
     const heading = [
       `\u001b[1m\u001b[32m${version ?? 'choliba'}\u001b[39m\u001b[22m`,
@@ -87,9 +108,7 @@ export const panelCommand: ShellCommand = {
         ? await container.get(PANEL_OPENER)({
             title: version ?? 'choliba',
             titleColor: 'green',
-            footer: () => [
-              `  ${[...(session.current?.status() ?? []), '\u001b[90mCtrl+C duas vezes sai\u001b[39m'].join('\u001b[90m · \u001b[39m')}`,
-            ],
+            footer: (width) => [footerLine(session.current?.status() ?? [], width)],
             hint: PANEL_HINT,
             splash: {
               ...(logo === undefined ? {} : { image: logo }),

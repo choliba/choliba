@@ -118,7 +118,7 @@ function sessionContext(view: ContextView): PanelContext {
 
 /** What a session tells its panel: the footer's parts, and what to stop before Ctrl+C closes the panel. */
 export interface PanelSession {
-  /** The parts the commands put in the status line, then the keys of the cards shown. */
+  /** The parts the commands put in the status line; the cards show their own keys, in their titles. */
   status(): readonly string[];
   /** Asks the work running now to stop: `true` when there is some, and then the panel stays open. */
   stop(): boolean;
@@ -139,7 +139,6 @@ export function panelSession(
   heading: readonly string[],
   starts: readonly ((container: Container, context: PanelContext) => void)[] = [],
 ): PanelSession {
-  let shortcuts: readonly string[] = [];
   let parts: readonly string[] = [];
   const keyListeners: ((key: PanelKey) => boolean)[] = [];
   let conversation: ((text: string, panel: ChatPanel) => void) | undefined;
@@ -153,10 +152,6 @@ export function panelSession(
   const context = sessionContext({
     cards: (cards) => {
       panel.cards(cards);
-      shortcuts = cards.flatMap((card) =>
-        card.key === undefined ? [] : [`\u001b[90mCtrl+${card.key.toUpperCase()} ${card.title}\u001b[39m`],
-      );
-      panel.refresh();
     },
     labels: (lines) => {
       panel.heading([...heading, ...lines]);
@@ -277,5 +272,5 @@ export function panelSession(
     }
     void run(command);
   });
-  return { status: () => [...parts, ...shortcuts], stop: stopRunning };
+  return { status: () => parts, stop: stopRunning };
 }

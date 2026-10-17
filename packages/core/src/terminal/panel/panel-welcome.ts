@@ -1,3 +1,4 @@
+import { paintAnsi, type AnsiColor } from '../../theme';
 import type { PanelBox, PanelScroll, PanelText, PanelToolkit } from './interfaces/panel.interface';
 import { halfBlockArt, type ArtCell, type ArtPixels } from './panel-art';
 import { PALETTE } from './panel-palette';
@@ -146,17 +147,34 @@ export interface PanelCard {
   readonly lines: readonly string[];
   /** The one line it shows while collapsed; its first line when absent. */
   readonly summary?: string;
-  /** The letter that, with Ctrl, opens or collapses it (`p` for Ctrl+P). */
+  /** The letter that, with Ctrl, opens or collapses it (`p` for Ctrl+P), shown in its title (`^P`). */
   readonly key?: string;
   /** Its place among the cards, the lowest first (`sandbox` 1, `projeto` 2, `agente` 3); without it, after those that have one. */
   readonly order?: number;
   /** Its work is running: a spinner turns in its title until it is not. */
   readonly busy?: boolean;
+  /** The color of its spinner (an agent's card, the agent's color); white when absent. */
+  readonly color?: AnsiColor;
 }
 
-/** The frames of a busy card's spinner, one every `SPIN_MS`. */
-const SPINNER = '⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏';
-const SPIN_MS = 80;
+/** How many cells the bar of a busy card's spinner has. */
+const SPINNER_CELLS = 5;
+
+/** How many frames a busy card's spinner has, one every `SPIN_MS`: its block runs along the bar, there and back. */
+const SPINNER_FRAMES = 2 * SPINNER_CELLS - 2;
+
+/** The bar of the spinner in frame `step`. */
+function spinnerBar(step: number): string {
+  const place = step < SPINNER_CELLS ? step : SPINNER_FRAMES - step;
+  return '▱'.repeat(place) + '▰' + '▱'.repeat(SPINNER_CELLS - 1 - place);
+}
+const SPIN_MS = 120;
+
+/** A card's title on its border: its marker, its name, its shortcut (`^P`), and room for the spinner while busy. */
+function cardTitle(marker: string, card: PanelCard, busy: boolean): string {
+  const shortcut = card.key === undefined ? '' : ` ^${card.key.toUpperCase()}`;
+  return ` ${marker} ${card.title}${shortcut} ${busy ? `${' '.repeat(SPINNER_CELLS)} ` : ''}`;
+}
 
 /** A card's width, in columns, its border included. */
 const CARD_WIDTH = 44;
@@ -171,10 +189,10 @@ const RULE = `\u001b[90m${'─'.repeat(CARD_TEXT_WIDTH)}\u001b[39m`;
 
 /**
  * Every open card's rows, its border included: all cards stand as tall, and what does not fit scrolls inside one. A
- * collapsed card is its border and one row.
+ * collapsed card is its border, its summary and a blank row: as tall as the header's icon, four rows.
  */
 const CARD_HEIGHT = 10;
-const COLLAPSED_HEIGHT = 3;
+const COLLAPSED_HEIGHT = 4;
 
 /** The header row: the icon, then the lines beside it, with a blank row under both. */
 export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk[] }, Chunk>(
@@ -211,8 +229,14 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
   };
   heading(header.lines);
   // A card is made the first time its title shows, then only filled or hidden: the header keeps its order.
-  const made = new Map<string, { readonly box: Node & PanelScroll<Node>; readonly rows: PanelText<Styled>[] }>();
-  const cardOf = (title: string): { readonly box: Node & PanelScroll<Node>; readonly rows: PanelText<Styled>[] } => {
+  interface Card {
+    readonly box: Node & PanelScroll<Node>;
+    readonly rows: PanelText<Styled>[];
+    readonly spinner: PanelText<Styled>;
+  }
+  const made = new Map<string, Card>();
+  const cardOf = (shown: PanelCard): Card => {
+    const { title } = shown;
     const known = made.get(title);
     if (known !== undefined) return known;
     const card = new kit.ScrollBoxRenderable(renderer, {
@@ -232,9 +256,23 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     card.onMouseDown = () => {
       toggleCard(title);
     };
+    // The spinner is drawn over the top border, in the room its title leaves after the name: a title has one color.
+    const spinner = new kit.TextRenderable(renderer, {
+      content: '',
+      wrapMode: 'none',
+      position: 'absolute',
+      top: -1,
+      left: cardTitle('▾', shown, false).trimEnd().length + 2,
+      width: SPINNER_CELLS,
+      height: 1,
+      zIndex: 1,
+    });
+    spinner.visible = false;
+    card.wrapper.add(spinner);
     box.add(card);
-    made.set(title, { box: card, rows });
-    return { box: card, rows };
+    const built = { box: card, rows, spinner };
+    made.set(title, built);
+    return built;
   };
   const collapsed = new Set<string>();
   let current: readonly PanelCard[] = [];
@@ -249,7 +287,7 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     if (!busy) stop();
     else
       spinning ??= setInterval(() => {
-        frame = (frame + 1) % SPINNER.length;
+        frame = (frame + 1) % SPINNER_FRAMES;
         cards(current);
       }, SPIN_MS);
   };
@@ -258,7 +296,7 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     spin(shown.some((each) => each.busy === true));
     for (const [title, card] of made) card.box.visible = shown.some((each) => each.title === title);
     for (const each of shown) {
-      const card = cardOf(each.title);
+      const card = cardOf(each);
       // Taken out and put back, each card goes after the ones before it: the header follows the order given.
       box.remove(card.box);
       box.add(card.box);
@@ -271,7 +309,10 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
         card.rows.push(row);
       }
       card.box.visible = true;
-      card.box.title = ` ${folded ? '▸' : '▾'} ${each.title}${each.busy === true ? ` ${SPINNER.charAt(frame)}` : ''} `;
+      const busy = each.busy === true;
+      card.box.title = cardTitle(folded ? '▸' : '▾', each, busy);
+      card.spinner.visible = busy;
+      card.spinner.content = busy ? styled([paintAnsi(each.color ?? 'white', spinnerBar(frame))]) : '';
       // A long line wraps between words in the card's width, its row as tall as the lines it takes.
       card.rows.forEach((row, index) => {
         const line = lines[index];

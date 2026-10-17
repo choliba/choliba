@@ -62,7 +62,7 @@ const agentsPanelCommand: PanelCommand = {
     // The agent's color, as a run paints its label: `CHOL_COLORS` first, then its `agent.color`.
     const color = container.get(THEME).colorOf('agents', agent.id, agent.color);
     const painted = (text: string): string => boldAnsi(paintAnsi(color, text));
-    context.show(AGENT, { ...agentCard(agent, painted), key: 'a', order: 3 });
+    context.show(AGENT, { ...agentCard(agent, painted), key: 'a', order: 3, color });
     panel.write(`Agente ativo: ${painted(agent.id)}.`);
     // Another agent has its own models and modes: back to its defaults. The provider stays.
     context.set(MODEL, undefined);

@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 15/10/2026 22:40:13 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 17/10/2026 00:51:19 — não editar manualmente.
 
 ## Resumo
 
@@ -18,7 +18,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 82 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 83 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -77,6 +77,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/steps/step-add-files.ts](packages/agents/src/agents/steps/step-add-files.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/step-constants.ts](packages/agents/src/agents/steps/step-constants.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/step-registry.ts](packages/agents/src/agents/steps/step-registry.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/steps/step-spawn.ts](packages/agents/src/agents/steps/step-spawn.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/steps/working-tree-diff.ts](packages/agents/src/agents/steps/working-tree-diff.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/agent-mcps.ts](packages/agents/src/common/agent-mcps.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/agent-permissions.ts](packages/agents/src/common/agent-permissions.ts)|100.00|100.00|100.00|100.00
@@ -160,7 +161,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 66 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 67 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -204,6 +205,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/terminal/live-region.ts](packages/core/src/terminal/live-region.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/panel/panel-art.ts](packages/core/src/terminal/panel/panel-art.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/panel/panel-choose.ts](packages/core/src/terminal/panel/panel-choose.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/panel/panel-history.ts](packages/core/src/terminal/panel/panel-history.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/panel/panel-palette.ts](packages/core/src/terminal/panel/panel-palette.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/panel/panel-question.ts](packages/core/src/terminal/panel/panel-question.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/panel/panel-text.ts](packages/core/src/terminal/panel/panel-text.ts)|100.00|100.00|100.00|100.00

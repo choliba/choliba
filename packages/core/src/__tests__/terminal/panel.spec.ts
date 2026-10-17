@@ -168,6 +168,7 @@ function fakeToolkit(failToOpen = false) {
       }
     },
     ScrollBoxRenderable: class extends FakeNode {
+      readonly wrapper = new FakeNode('wrapper', {});
       constructor(_context: Renderer, options: object) {
         super('scroll', options as Record<string, unknown>);
       }
@@ -678,13 +679,28 @@ describe('openPanel', () => {
         { title: 'projeto', lines: ['site'] },
         { title: 'agente', lines: ['echo'], busy: true },
       ]);
-      const [, projeto, agente] = renderer.root.children[0]?.children[0]?.children ?? [];
-      expect([projeto?.title, agente?.title]).toEqual([' ▾ projeto ', ' ▾ agente ⠋ ']);
-      jest.advanceTimersByTime(160);
-      expect(agente?.title).toBe(' ▾ agente ⠹ ');
+      const [, projeto, agente] = (renderer.root.children[0]?.children[0]?.children ?? []) as (FakeNode & {
+        wrapper: FakeNode;
+      })[];
+      const spinner = agente?.wrapper.children[0];
+      expect([projeto?.title, agente?.title]).toEqual([' ▾ projeto ', ' ▾ agente       ']);
+      expect(spinner?.built).toMatchObject({ position: 'absolute', top: -1, left: 11, width: 5, zIndex: 1 });
+      expect([spinner?.visible, spinner?.content]).toEqual([true, { chunks: [{ text: '▰▱▱▱▱', fg: '#e5e5e5' }] }]);
+      jest.advanceTimersByTime(240);
+      expect(spinner?.content).toEqual({ chunks: [{ text: '▱▱▰▱▱', fg: '#e5e5e5' }] });
+      jest.advanceTimersByTime(600);
+      expect(spinner?.content).toEqual({ chunks: [{ text: '▱▰▱▱▱', fg: '#e5e5e5' }] });
+      panel.cards([{ title: 'agente', lines: ['echo'], busy: true, color: 'green' }]);
+      jest.advanceTimersByTime(120);
+      expect(spinner?.content).toEqual({ chunks: [{ text: '▰▱▱▱▱', fg: '#0dbc79' }] });
 
       panel.cards([{ title: 'agente', lines: ['echo'] }]);
-      expect([agente?.title, jest.getTimerCount()]).toEqual([' ▾ agente ', 0]);
+      expect([agente?.title, spinner?.visible, spinner?.content, jest.getTimerCount()]).toEqual([
+        ' ▾ agente ',
+        false,
+        '',
+        0,
+      ]);
 
       panel.cards([{ title: 'agente', lines: ['echo'], busy: true }]);
       panel.cards([{ title: 'agente', lines: ['echo'], busy: true }]);
@@ -707,21 +723,21 @@ describe('openPanel', () => {
 
     press({ name: 'p', ctrl: true });
     expect([projeto?.title, projeto?.height, agente?.title, agente?.height]).toEqual([
-      ' ▸ projeto ',
-      3,
-      ' ▾ agente ',
+      ' ▸ projeto ^P ',
+      4,
+      ' ▾ agente ^A ',
       10,
     ]);
     expect(projeto?.children[0]?.content).toEqual({ chunks: [{ text: 'site · 2' }] });
     press({ name: 'a', ctrl: true });
     expect(agente?.children[0]?.content).toEqual({ chunks: [{ text: 'echo' }] });
-    expect(agente?.title).toBe(' ▸ agente ');
+    expect(agente?.title).toBe(' ▸ agente ^A ');
 
     projeto?.onMouseDown?.();
-    expect([projeto?.title, projeto?.height, agente?.title]).toEqual([' ▾ projeto ', 10, ' ▸ agente ']);
+    expect([projeto?.title, projeto?.height, agente?.title]).toEqual([' ▾ projeto ^P ', 10, ' ▸ agente ^A ']);
     press({ name: 'p', ctrl: false });
     press({ name: 'x', ctrl: true });
-    expect([projeto?.title, agente?.title]).toEqual([' ▾ projeto ', ' ▸ agente ']);
+    expect([projeto?.title, agente?.title]).toEqual([' ▾ projeto ^P ', ' ▸ agente ^A ']);
     panel.cards([{ title: 'agente', lines: [], key: 'a' }]);
     expect(agente?.children[0]?.content).toEqual({ chunks: [] });
 

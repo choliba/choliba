@@ -115,6 +115,8 @@ export interface PanelScroll<Node> extends PanelNode<Node> {
   scrollBy(delta: number, unit?: 'viewport'): void;
   scrollTo(position: number): void;
   remove(child: Node): void;
+  /** What holds its view inside the border: a child placed on it stays put while the lines scroll. */
+  readonly wrapper: PanelNode<Node>;
 }
 
 export interface PanelText<Styled> {
@@ -216,8 +218,13 @@ export interface PanelTextOptions<Styled> {
   readonly flexShrink?: number;
   /** 1 takes the room left in its row. */
   readonly flexGrow?: number;
-  /** Placed in a corner of its parent, `bottom` rows and `right` columns from its edges. */
+  /** Placed in a corner of its parent, `bottom` rows and `right` columns from its edges, or at `top`/`left`. */
   readonly position?: 'absolute';
   readonly bottom?: number;
   readonly right?: number;
+  readonly top?: number;
+  readonly left?: number;
+  readonly width?: number;
+  /** Above what is there: a border it is placed on. */
+  readonly zIndex?: number;
 }
