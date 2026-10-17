@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 17/10/2026 01:39:38 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 17/10/2026 04:58:10 — não editar manualmente.
 
 ## Resumo
 
@@ -110,7 +110,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 22 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 25 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -136,6 +136,9 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/tooling/lint.command.ts](packages/choliba/src/tooling/lint.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tooling/tooling.constants.ts](packages/choliba/src/tooling/tooling.constants.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tooling/tools.service.ts](packages/choliba/src/tooling/tools.service.ts)|100.00|100.00|100.00|100.00
+🟢|[src/update/release-notes.ts](packages/choliba/src/update/release-notes.ts)|100.00|100.00|100.00|100.00
+🟢|[src/update/update.command.ts](packages/choliba/src/update/update.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/update/update.ts](packages/choliba/src/update/update.ts)|100.00|100.00|100.00|100.00
 
 </details>
 

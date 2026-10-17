@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
-import { findManifest, versionLine, type PackageManifest } from '@choliba/core';
+import { findManifest, messageOf, versionLine, type PackageManifest } from '@choliba/core';
 
 import { PACKAGE_NAME } from '../help';
 import type { HttpResponse, Runtime } from '../runtime';
@@ -39,7 +39,7 @@ class UpdateStop extends Error {}
 /** `get` on the network: a request that does not leave, or that GitHub refuses, says so with its address. */
 async function fetchFrom(runtime: Runtime, url: string): Promise<HttpResponse> {
   const response = await runtime.get(url, GITHUB_HEADERS).catch((error: unknown) => {
-    throw new UpdateStop(`Sem acesso a ${url}: ${error instanceof Error ? error.message : String(error)}.`);
+    throw new UpdateStop(`Sem acesso a ${url}: ${messageOf(error)}.`);
   });
   if (!response.ok) throw new UpdateStop(`O GitHub respondeu ${String(response.status)} para ${url}.`);
   return response;
@@ -54,10 +54,21 @@ function assetUrl(assets: unknown, name: string): string {
   return url;
 }
 
+/** The API's answer about the release, or why it cannot be read. */
+function parsedRelease(text: string): { name?: unknown; body?: unknown; assets?: unknown } {
+  try {
+    const parsed: unknown = JSON.parse(text);
+    if (typeof parsed === 'object' && parsed !== null) return parsed;
+  } catch {
+    // Said below, with the rest of what does not read as a release.
+  }
+  throw new UpdateStop('A API do GitHub respondeu algo que não é uma release.');
+}
+
 /** The current pre-release: its title (`0.0.1-dev.66 (2026-10-20)`), N, notes and the package's files. */
 async function currentRelease(runtime: Runtime): Promise<Release> {
   const response = await fetchFrom(runtime, RELEASE_API);
-  const release = JSON.parse(await response.text()) as { name?: unknown; body?: unknown; assets?: unknown };
+  const release = parsedRelease(await response.text());
   const title = typeof release.name === 'string' ? release.name : '';
   const number = releaseNumber(title);
   if (number === undefined) throw new UpdateStop(`A release do choliba tem um título sem versão: "${title}".`);

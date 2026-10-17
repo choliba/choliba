@@ -47,8 +47,9 @@ export function versionNotes(body: string): readonly VersionNotes[] {
   const notes: { version: string; number: number; suffix: string; lines: string[] }[] = [];
   for (const line of readableLines(body)) {
     const heading = VERSION_HEADING.exec(line);
-    if (heading?.[1] !== undefined && heading[2] !== undefined) {
-      notes.push({ version: heading[1], number: Number(heading[2]), suffix: heading[3] ?? '', lines: [] });
+    if (heading !== null) {
+      // The heading's three groups always match: the version, its N and what follows the link (maybe empty).
+      notes.push({ version: String(heading[1]), number: Number(heading[2]), suffix: String(heading[3]), lines: [] });
     } else if (line.startsWith('## ')) {
       // A date heading closes the version before it.
       notes.push({ version: '', number: -1, suffix: '', lines: [] });

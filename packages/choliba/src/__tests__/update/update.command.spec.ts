@@ -222,11 +222,46 @@ describe('choliba update', () => {
         [{ [API]: response(JSON.stringify({ ...RELEASE, assets: [] })) }, 'não tem o arquivo choliba-0.0.1-dev.tgz.'],
         [{ [API]: response(JSON.stringify({ ...RELEASE, assets: 'x', body: 1 })) }, 'não tem o arquivo'],
         [{ [API]: RELEASE_RESPONSE }, `Sem acesso a ${PACKAGE_URL}: getaddrinfo ENOTFOUND.`],
+        [{ [API]: response('<html>') }, 'A API do GitHub respondeu algo que não é uma release.'],
+        [{ [API]: response('null') }, 'A API do GitHub respondeu algo que não é uma release.'],
       ];
       for (const [answers, message] of cases) {
         const { code, err } = await update(root, installedRuntime(root, answers));
         expect([code, err]).toEqual([1, expect.stringContaining(message)]);
       }
+    }));
+
+  it('installs over a workspace with no choliba in node_modules, taking every version as new', () =>
+    withWorkspace(async (root) => {
+      const { code, out } = await update(root, installedRuntime(root));
+
+      expect([code, out.split('\n')[0]]).toEqual([0, 'Atualizado de (versão desconhecida) para 0.0.1-dev.62+27dbedb.']);
+      expect(out).toContain('0.0.1-dev.60+c4d4ca7');
+    }));
+
+  it('shows no news when the body has no version newer than the installed one', () =>
+    withWorkspace(async (root) => {
+      installed(root, '0.0.1-dev.62', '27dbedbffff');
+      const newer = response(JSON.stringify({ ...RELEASE, name: '0.0.1-dev.63 (2026-10-20)' }));
+
+      const { code, out } = await update(root, installedRuntime(root, { ...ONLINE, [API]: newer }), ['--check']);
+
+      expect([code, out]).toEqual([
+        0,
+        'Há uma versão nova: 0.0.1-dev.63 (2026-10-20) (instalada: 0.0.1-dev.62+27dbedb).\n\nPara atualizar: choliba update\n',
+      ]);
+    }));
+
+  it('lets an unexpected failure through, such as a package it cannot write', () =>
+    withWorkspace(async (root) => {
+      installed(root, '0.0.1-dev.60');
+      mkdirSync(join(root, 'choliba-0.0.1-dev.62.tgz'));
+      const runtime = installedRuntime(root);
+
+      const { code, err } = await update(root, runtime);
+
+      expect([code, err]).toEqual([1, expect.stringContaining('EISDIR')]);
+      expect(runtime.runs).toEqual([]);
     }));
 
   it('refuses when it runs from the sources, which update with git pull', () =>
