@@ -31,6 +31,7 @@ export * from './steps/git-working-tree-diff';
 export * from './steps/index-diff';
 export * from './steps/step-actions';
 export * from './steps/step-read-files';
+export * from './steps/step-search-files';
 export * from './steps/step-write-files';
 export * from './steps/step-constants';
 export * from './steps/step-registry';

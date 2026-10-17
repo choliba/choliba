@@ -4,9 +4,11 @@ import { join, relative } from 'node:path';
 import { CACHE_DIR } from '../agent-layout';
 
 import type { AgentStep } from '../../common';
-import { READ_FILES_USAGE, readFiles } from './step-read-files';
+import { READ_FILES_FIELDS, READ_FILES_USAGE, readFiles } from './step-read-files';
 import { recordGitHead } from './git-state';
-import { WRITE_FILES_USAGE, writeFiles } from './step-write-files';
+import { WRITE_FILES_FIELDS, WRITE_FILES_USAGE, writeFiles } from './step-write-files';
+import { fieldsError, listField, type FieldSpec } from './step-fields';
+import { SEARCH_FILES_FIELDS, SEARCH_FILES_USAGE, searchFiles } from './step-search-files';
 import { spawnToEnd } from './step-spawn';
 import { GIT_DIFF_USAGE, parseGitDiffArgs, runGitDiff } from './working-tree-diff';
 
@@ -43,12 +45,25 @@ export interface AgentAction {
   readonly usage: string;
   /** The lists this action may appear in. */
   readonly phases: readonly StepPhase[];
-  /** Whether `args` fit `usage`; checked when agent.yaml is loaded. */
-  readonly accepts: (args: readonly string[]) => boolean;
+  /** Why `step` does not fit the action (its arguments, or its named fields), or nothing; checked on load. */
+  readonly check: (step: AgentStep) => string | undefined;
   /** Whether the action adds a section to the prompt (`--dry-run` shows a marker in its place). */
   readonly producesSection: boolean;
   /** Runs the action; a `before_execute` action may return a section for the prompt. */
-  readonly run: (context: StepContext, args: readonly string[]) => string | undefined | Promise<string | undefined>;
+  readonly run: (context: StepContext, step: AgentStep) => string | undefined | Promise<string | undefined>;
+}
+
+/** The check of an action written as a list: no named fields, and arguments `accepts` takes. */
+function listCheck(accepts: (args: readonly string[]) => boolean, usage: string): AgentAction['check'] {
+  return (step) => (step.options === undefined && accepts(step.args) ? undefined : `esperado "${usage}"`);
+}
+
+/** The check of an action written with named fields, saying which field is wrong. */
+function fieldsCheck(spec: FieldSpec, usage: string): AgentAction['check'] {
+  return (step) => {
+    const error = fieldsError(step, spec);
+    return error === undefined ? undefined : `${error}: esperado "${usage}"`;
+  };
 }
 
 function argAt(args: readonly string[], index: number, usage: string): string {
@@ -120,55 +135,61 @@ async function runCommand(context: StepContext, args: readonly string[]): Promis
 }
 
 /**
- * Every action an agent.yaml line can name: `<action>: [args]`. `run` is the only external one; a new
- * method of the CLI is just an entry here.
+ * Every action an agent.yaml line can name: `<action>: [args]`, or `<action>: { field: value }` for the file actions.
+ * `run` is the only external one; a new method of the CLI is just an entry here.
  */
 export const ACTIONS: Readonly<Record<string, AgentAction>> = {
   run: {
     usage: 'run <comando> [args...]',
     phases: ['before_execute', 'after_execute'],
-    accepts: (args) => args.length > 0,
+    check: listCheck((args) => args.length > 0, 'run <comando> [args...]'),
     producesSection: false,
-    run: runCommand,
+    run: (context, step) => runCommand(context, step.args),
   },
   git_diff: {
     usage: GIT_DIFF_USAGE,
     phases: ['before_execute'],
-    accepts: (args) => parseGitDiffArgs(args) !== undefined,
+    check: listCheck((args) => parseGitDiffArgs(args) !== undefined, GIT_DIFF_USAGE),
     producesSection: true,
-    run: (context, args) => {
-      const config = parseGitDiffArgs(args);
+    run: (context, step) => {
+      const config = parseGitDiffArgs(step.args);
       if (config === undefined) {
         throw new Error(`argumentos inválidos: ${GIT_DIFF_USAGE}`);
       }
       return runGitDiff(config, context);
     },
   },
+  search_files: {
+    usage: SEARCH_FILES_USAGE,
+    phases: ['before_execute'],
+    check: fieldsCheck(SEARCH_FILES_FIELDS, SEARCH_FILES_USAGE),
+    producesSection: true,
+    run: (context, step) => searchFiles(context.repoRoot, step),
+  },
   read_files: {
     usage: READ_FILES_USAGE,
     phases: ['before_execute'],
-    accepts: (args) => args.length >= 2,
+    check: fieldsCheck(READ_FILES_FIELDS, READ_FILES_USAGE),
     producesSection: true,
-    run: (context, args) => readFiles(context.repoRoot, argAt(args, 0, READ_FILES_USAGE), args.slice(1)),
+    run: (context, step) => readFiles(context.repoRoot, step),
   },
   record_git_head: {
     usage: 'record_git_head <arquivo>',
     phases: ['after_execute'],
-    accepts: (args) => args.length === 1,
+    check: listCheck((args) => args.length === 1, 'record_git_head <arquivo>'),
     producesSection: false,
-    run: (context, args) => {
-      recordGitHead(context.repoRoot, argAt(args, 0, 'record_git_head <arquivo>'));
+    run: (context, step) => {
+      recordGitHead(context.repoRoot, argAt(step.args, 0, 'record_git_head <arquivo>'));
       return undefined;
     },
   },
   write_files: {
     usage: WRITE_FILES_USAGE,
     phases: ['after_execute'],
-    accepts: (args) => args.length > 0,
+    check: fieldsCheck(WRITE_FILES_FIELDS, WRITE_FILES_USAGE),
     producesSection: false,
-    run: (context, args) => {
-      argAt(args, 0, WRITE_FILES_USAGE);
-      writeFiles(context.repoRoot, context.answer, args);
+    run: (context, step) => {
+      writeFiles(context.repoRoot, context.answer, listField(step, 'files'));
       return undefined;
     },
   },
@@ -191,10 +212,8 @@ export function checkStep(
   if (!action.phases.includes(phase)) {
     return { error: `"${step.action}" não pode ser usado em ${phase}` };
   }
-  if (!action.accepts(step.args)) {
-    return { error: `esperado "${action.usage}"` };
-  }
-  return { action };
+  const error = action.check(step);
+  return error === undefined ? { action } : { error };
 }
 
 /** A step that failed: where it is (`execute.before 1/2`), what it ran, its exit status and what it said. */
@@ -206,9 +225,13 @@ export interface StepFailure {
   readonly output: string;
 }
 
-/** `read_files: falhas_red .cache/…`: a step as the user wrote it. */
+/** `run: bun choliba …`, or `read_files: tag=manifestos dirs=…`: a step as the user wrote it. */
 export function describeStep(step: AgentStep): string {
-  return `${step.action}: ${step.args.join(' ')}`;
+  if (step.options === undefined) return `${step.action}: ${step.args.join(' ')}`;
+  const fields = Object.entries(step.options).map(
+    ([name, value]) => `${name}=${typeof value === 'string' ? value : value.join(',')}`,
+  );
+  return `${step.action}: ${fields.join(' ')}`;
 }
 
 /** The exit code a run ends with when `failure` stops it: the status of the command, else 1. */
@@ -247,7 +270,7 @@ async function runStep(
     return { failure: { label, step, status: undefined, output: checked.error } };
   }
   try {
-    return { section: await checked.action.run(context, step.args) };
+    return { section: await checked.action.run(context, step) };
   } catch (error) {
     const status = error instanceof StepCommandError ? error.status : undefined;
     return { failure: { label, step, status, output: errorOutput(error) } };

@@ -137,7 +137,7 @@ steps:
             --failures,
             '.cache/test-writer/${TICKET}/red.md',
           ]
-      - read_files: [falhas_red, '.cache/test-writer/${TICKET}/red.md']
+      - read_files: { tag: falhas_red, files: ['.cache/test-writer/${TICKET}/red.md'] }
     after:
       success:
         - run: [bun, choliba, run, tests, '${PROJECT}:${TICKET}', --expect, green]

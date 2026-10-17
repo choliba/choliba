@@ -83,7 +83,7 @@ Sem --dry-run, faria nesta ordem:
  1. [CLI]    confere http://localhost:5173/: sem resposta, para aqui (o ambiente não tem envs[].start)
  2. [CLI]    plan.before 1/2 — run: bun choliba run tests app:app-1 --expect red --failures .cache/test-writer/app-1/red.md
              se falhar: para aqui, o agente não roda
- 3. [CLI]    plan.before 2/2 — read_files: falhas_red .cache/test-writer/app-1/red.md
+ 3. [CLI]    plan.before 2/2 — read_files: tag=falhas_red files=.cache/test-writer/app-1/red.md
              se falhar: para aqui, o agente não roda
  4. [agente] cursor · modelo padrão do provider · modo plan · na pasta .cache/runs/<id>
              skills: playwright-trace · MCPs: nenhum

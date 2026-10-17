@@ -70,10 +70,12 @@ ticket_types: [story, bug, improvement]
 steps:
   execute:
     before:
-      - read_files: [ticket, '\${TICKET_FILE}']
+      - search_files: { tag: estrutura, dirs: ['\${APP_DIR}'], ignore: [assets], max_size: 8KB }
+      - read_files: { tag: ticket, dirs: ['\${PROJECT_DIR}'], pattern: [tickets/*.json], max_size: 40960 }
     after:
       success:
         - run: [bunx, choliba, tests, '\${PROJECT}:\${TICKET}']
+        - write_files: { files: ['\${PROJECT_DIR}/resumo.md'] }
       failure:
         - run: [bunx, choliba, report, '\${AGENT_EXIT_CODE}']
       always:
@@ -336,14 +338,34 @@ describe('validateAgentYamlV1', () => {
       expect(validate(steps({ execute: { before: [{ record_git_head: ['h'] }] } })).valid).toBe(false);
     });
 
+    it('checks the named fields of the file actions', () => {
+      const read = (fields: object) => validate(steps({ execute: { before: [{ read_files: fields }] } })).valid;
+      const search = (fields: object) => validate(steps({ execute: { before: [{ search_files: fields }] } })).valid;
+      const write = (fields: object) => validate(steps({ execute: { after: [{ write_files: fields }] } })).valid;
+
+      expect(read({ tag: 't', dirs: ['.'], pattern: ['x'], ignore: ['a'], max_size: '40KB' })).toBe(true);
+      expect(read({ tag: 't', dirs: ['.'], pattern: ['x'], max_size: 1024 })).toBe(true);
+      expect(read({ tag: 't', dirs: ['.'] })).toBe(false);
+      expect(read({ tag: 't', files: ['a.md'] })).toBe(true);
+      expect(read({ tag: 't', files: ['a.md'], dirs: ['.'], pattern: ['x'] })).toBe(false);
+      expect(read({ tag: 't', source: 'lista.txt', pattern: ['x'] })).toBe(true);
+      expect(read({ tag: 't', source: 'lista.txt', dirs: ['.'], pattern: ['x'] })).toBe(false);
+      expect(read({ tag: 't', source: 'lista.txt' })).toBe(false);
+      expect(search({ tag: 't', dirs: ['.'], files: ['lista.txt'] })).toBe(true);
+      expect(read({ tag: 't', dirs: ['.'], pattern: ['x'], max_size: '40 GB' })).toBe(false);
+      expect(read({ tag: 't', dirs: ['.'], pattern: ['x'], depth: 2 })).toBe(false);
+      expect(validate(steps({ execute: { before: [{ read_files: ['t', 'x'] }] } })).valid).toBe(false);
+      expect(search({ tag: 't', dirs: ['.'] })).toBe(true);
+      expect(search({ dirs: ['.'] })).toBe(false);
+      expect(write({ files: ['a.md', 'b.md'] })).toBe(true);
+      expect(write({ files: [] })).toBe(false);
+      expect(validate(steps({ execute: { before: [{ write_files: { files: ['a.md'] } }] } })).valid).toBe(false);
+      expect(validate(steps({ execute: { after: [{ search_files: { tag: 't', dirs: ['.'] } }] } })).valid).toBe(false);
+    });
+
     it('checks the number of arguments of each action', () => {
-      expect(validate(steps({ execute: { before: [{ read_files: ['t'] }] } })).valid).toBe(false);
       expect(validate(steps({ execute: { before: [{ add_files: ['t', 'x'] }] } })).valid).toBe(false);
-      expect(validate(steps({ execute: { after: { success: [{ write_files: ['a.md', 'b.md'] }] } } })).valid).toBe(
-        true,
-      );
-      expect(validate(steps({ execute: { before: [{ write_files: ['a.md'] }] } })).valid).toBe(false);
-      expect(validate(steps({ execute: { after: [{ write_files: [] }] } })).valid).toBe(false);
+      expect(validate(steps({ execute: { after: [{ record_git_head: ['a', 'b'] }] } })).valid).toBe(false);
       expect(validate(steps({ execute: { after: [{ record_git_head: ['a', 'b'] }] } })).valid).toBe(false);
       expect(validate(steps({ execute: { before: [{ run: [] }] } })).valid).toBe(false);
     });
