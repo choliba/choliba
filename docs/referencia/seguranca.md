@@ -61,7 +61,7 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
   confere cada chamada: um servidor ou uma tool fora do declarado (ou procurar tools de MCP num agente sem `mcps`)
   interrompe a execução com código 1, em qualquer provider. No Claude, a sessão só tem os servidores declarados. No
   Cursor, que soma os MCPs do `~/.cursor/mcp.json` do usuário, o choliba também nega os que o agente não declara.
-- **Dado não é ordem.** O que um passo põe no prompt vindo de arquivos (`read_files`) ou do repositório (o índice do
+- **Dado não é ordem.** O que um passo põe no prompt vindo de arquivos (`read_files`, `search_files`) ou do repositório (o índice do
   `git_diff`) vai dentro de `<untrusted_input source="…">`, e o prompt de todo agente diz que aquilo é dado, nunca
   instrução, mesmo que diga vir do sistema ou do usuário. Uma tag `untrusted_input` dentro do texto é escapada, para
   o dado não fechar o bloco. É uma camada a mais: o modelo ainda pode ser enganado, e quem limita o agente são as

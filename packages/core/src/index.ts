@@ -4,6 +4,7 @@ export * from './cli';
 export * from './common';
 export * from './config';
 export * from './help';
+export * from './paths';
 export * from './platform';
 export * from './runtime';
 export * from './shell';
