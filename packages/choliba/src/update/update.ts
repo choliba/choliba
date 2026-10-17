@@ -114,52 +114,85 @@ function newsLines(release: Release, since: number, bold: Emphasis): readonly st
   return news.length === 0 ? [] : ['', 'Novidades:', '', ...news, `Detalhes: ${RELEASES_PAGE}`];
 }
 
+/** What `choliba update` was asked: only to check, and to replace even a local package. */
+export interface UpdateOptions {
+  readonly check: boolean;
+  readonly force: boolean;
+}
+
+/**
+ * Why the update stops before a local package (a version with no release number, built with `chol:pack`), which may
+ * be newer than the release: with `--check` a note on stdout, else a refusal; nothing with `--force`.
+ */
+function localPackageStop(
+  installed: string,
+  release: Release,
+  options: UpdateOptions,
+  io: UpdateIo,
+): number | undefined {
+  if (options.force) return undefined;
+  const why = `O choliba instalado (${installed}) é um pacote local, sem número de release: a release ${release.title} pode ser mais antiga que ele.`;
+  const how = 'Para trocá-lo pela release mesmo assim: choliba update --force';
+  if (options.check) {
+    io.write(`${why}\n${how}\n`);
+    return 0;
+  }
+  io.fail(`${why}\n${how}.`);
+  return 1;
+}
+
+/** The release's package, downloaded, checked and installed in `root`; the code of a `bun add` that failed. */
+async function install(runtime: Runtime, root: string, release: Release, io: UpdateIo): Promise<number> {
+  const name = `choliba-0.0.1-dev.${String(release.number)}.tgz`;
+  io.fail(`Baixando ${release.title}…`);
+  await download(runtime, release, join(root, name));
+  io.fail(`Instalando ${name}…`);
+  // Bun's own lines stay out of the result on stdout; they show only when it fails.
+  const added = runtime.capture(runtime.execPath, ['add', '--trust', `./${name}`], root);
+  if (added.status !== 0) {
+    if (added.stderr.trim() !== '') io.fail(added.stderr.trim());
+    return added.status ?? 1;
+  }
+  // The package files of the installations before it are no dependency any more.
+  for (const earlier of earlierPackages(root, name)) rmSync(join(root, earlier), { force: true });
+  return 0;
+}
+
 /**
  * `choliba update`: the installed version against the current pre-release; with a newer one, its package downloaded
  * to `root`, checked against its SHA-256 and installed with `bun add --trust` (which runs `choliba setup`), then what
- * changed and what is new. `check` stops before downloading, saying what would come. Run from the sources, it refuses.
+ * changed and what is new. `check` stops before downloading, saying what would come. A local package is replaced only
+ * with `force`. Run from the sources, it refuses.
  */
-export async function update(runtime: Runtime, root: string, check: boolean, io: UpdateIo): Promise<number> {
+export async function update(runtime: Runtime, root: string, options: UpdateOptions, io: UpdateIo): Promise<number> {
   if (basename(runtime.entryDir) === 'src') {
     io.fail('Este choliba roda do código-fonte, não de um pacote instalado: atualize com git pull.');
     return 1;
   }
   try {
     const before = installedManifest(root);
+    const local = before !== undefined && releaseNumber(before.version) === undefined;
     const since = releaseNumber(before?.version ?? '') ?? -1;
     const release = await currentRelease(runtime);
     if (release.number <= since) {
       io.write(`O choliba já está na versão mais recente (${shown(before)}).\n`);
       return 0;
     }
-    if (check) {
-      const lines = [
-        `Há uma versão nova: ${release.title} (instalada: ${shown(before)}).`,
-        ...newsLines(release, since, io.bold),
-      ];
+    const stop = local ? localPackageStop(shown(before), release, options, io) : undefined;
+    if (stop !== undefined) return stop;
+    // A local package has no release to count the news from: none are shown for it.
+    const news = local ? [] : newsLines(release, since, io.bold);
+    if (options.check) {
+      const lines = [`Há uma versão nova: ${release.title} (instalada: ${shown(before)}).`, ...news];
       io.write(`${[...lines, '', 'Para atualizar: choliba update'].join('\n')}\n`);
       return 0;
     }
-    const name = `choliba-0.0.1-dev.${String(release.number)}.tgz`;
-    io.fail(`Baixando ${release.title}…`);
-    await download(runtime, release, join(root, name));
-    io.fail(`Instalando ${name}…`);
-    // Bun's own lines stay out of the result on stdout; they show only when it fails.
-    const added = runtime.capture(runtime.execPath, ['add', '--trust', `./${name}`], root);
-    if (added.status !== 0) {
-      const code = added.status ?? 1;
-      io.fail(
-        `${added.stderr.trim()}\nO bun add terminou com código ${String(code)}: o choliba continua em ${shown(before)}.`,
-      );
+    const code = await install(runtime, root, release, io);
+    if (code !== 0) {
+      io.fail(`O bun add terminou com código ${String(code)}: o choliba continua em ${shown(before)}.`);
       return code;
     }
-    // The package files of the installations before it are no dependency any more.
-    for (const earlier of earlierPackages(root, name)) rmSync(join(root, earlier), { force: true });
-    const lines = [
-      `Atualizado de ${shown(before)} para ${shown(installedManifest(root))}.`,
-      ...newsLines(release, since, io.bold),
-    ];
-    io.write(`${lines.join('\n')}\n`);
+    io.write(`${[`Atualizado de ${shown(before)} para ${shown(installedManifest(root))}.`, ...news].join('\n')}\n`);
     return 0;
   } catch (error) {
     if (!(error instanceof UpdateStop)) throw error;

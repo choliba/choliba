@@ -79,7 +79,8 @@ function installedRuntime(
     capture: (command, args, cwd) => {
       runtime.runs.push({ command, args, cwd });
       if (status === 0) installed(root, '0.0.1-dev.62', '27dbedbffff');
-      return { status, stderr: status === 0 ? '' : 'error: falhou ao resolver\n' };
+      // A bun add that did not start (status null) says nothing.
+      return { status, stderr: typeof status === 'number' && status !== 0 ? 'error: falhou ao resolver\n' : '' };
     },
   });
   return Object.assign(runtime, { asked: net.asked });
@@ -162,15 +163,38 @@ describe('choliba update', () => {
       expect(out).toContain('\u001b[1m0.0.1-dev.62+27dbedb\u001b[22m (#207)');
     }));
 
-  it('installs the release over a package of no release (a local build), whose version has no number', () =>
+  it('stops before a local package, which may be newer than the release, and replaces it only with --force', () =>
     withWorkspace(async (root) => {
       installed(root, '0.0.1-dev');
-      const runtime = installedRuntime(root);
+      const why =
+        'O choliba instalado (0.0.1-dev+aaaaaaa) é um pacote local, sem número de release: a release 0.0.1-dev.62 (2026-10-15) pode ser mais antiga que ele.';
 
-      const { code, out } = await update(root, runtime);
+      const refused = installedRuntime(root);
+      const stopped = await update(root, refused);
+      expect([stopped.code, stopped.out]).toEqual([1, '']);
+      expect(stopped.err).toBe(`${why}\nPara trocá-lo pela release mesmo assim: choliba update --force.\n`);
+      expect([refused.asked, refused.runs]).toEqual([[API], []]);
 
-      expect(code).toBe(0);
-      expect(out.split('\n')[0]).toBe('Atualizado de 0.0.1-dev+aaaaaaa para 0.0.1-dev.62+27dbedb.');
+      const checked = await update(root, installedRuntime(root), ['--check']);
+      expect([checked.code, checked.out]).toEqual([
+        0,
+        `${why}\nPara trocá-lo pela release mesmo assim: choliba update --force\n`,
+      ]);
+
+      const forced = await update(root, installedRuntime(root), ['--force']);
+      expect([forced.code, forced.out]).toEqual([0, 'Atualizado de 0.0.1-dev+aaaaaaa para 0.0.1-dev.62+27dbedb.\n']);
+    }));
+
+  it('with --check and --force over a local package, says the release would come, with no news', () =>
+    withWorkspace(async (root) => {
+      installed(root, '0.0.1-dev');
+
+      const { code, out } = await update(root, installedRuntime(root), ['--check', '--force']);
+
+      expect([code, out]).toEqual([
+        0,
+        'Há uma versão nova: 0.0.1-dev.62 (2026-10-15) (instalada: 0.0.1-dev+aaaaaaa).\n\nPara atualizar: choliba update\n',
+      ]);
     }));
 
   it('installs nothing when the package does not match the release SHA-256', () =>
@@ -208,7 +232,10 @@ describe('choliba update', () => {
 
       const { code, err } = await update(root, installedRuntime(root, ONLINE, null));
 
-      expect([code, err]).toEqual([1, expect.stringContaining('O bun add terminou com código 1')]);
+      expect([code, err.split('\n').slice(-2)]).toEqual([
+        1,
+        ['O bun add terminou com código 1: o choliba continua em 0.0.1-dev.60+aaaaaaa.', ''],
+      ]);
     }));
 
   it('says why when there is no network, the API refuses, or the release is not as expected', () =>
