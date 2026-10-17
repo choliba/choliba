@@ -1036,6 +1036,26 @@ describe('runAgent — panel', () => {
     expect(record.options[0]?.hint).toBe('Enter envia · Ctrl+J cria uma linha');
   });
 
+  it("in a host's panel, which already shows what was said, writes only that a message did not reach the agent", async () => {
+    const delivered = setup(
+      fakeSpawner({ stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'ok' }])]) }).spawner,
+      { inputMessage: (text) => `>${text}\n` },
+    );
+    const sent = fakePanel(false, { status: 'skipped' }, 'use React');
+    expect(await runAgent(delivered.request(), { ...deps(delivered, sent.open), hostedPanel: true })).toBe(0);
+    expect(sent.record.written.join('')).not.toContain('use React');
+
+    const refusing = setup(
+      fakeSpawner({ stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'ok' }])]) }).spawner,
+    );
+    const refused = fakePanel(false, { status: 'skipped' }, 'use React');
+    expect(await runAgent(refusing.request(), { ...deps(refusing, refused.open), hostedPanel: true })).toBe(0);
+    expect(refused.record.written.join('')).toContain(
+      '(não entregue: este provider não recebe mensagens durante a execução)\n',
+    );
+    expect(refused.record.written.join('')).not.toContain('› use React');
+  });
+
   it('closes stdin when a guard stops the session', async () => {
     const handle = fakeSpawner({
       stdout: streamFromChunks([eventLines([{ type: 'tool-call', id: 't', name: 'Agent', summary: '' }])]),
