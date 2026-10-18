@@ -69,20 +69,20 @@ providers:
     models: [qwen3.5:4b]
 ```
 
-- Pelo menos um provider, entre os que o choliba conhece: `claude`, `claude-ollama` e `cursor`. Outro nome é recusado
-  ao carregar.
+- Pelo menos um provider, entre os que o choliba conhece: `claude`, `claude-ollama`, `codex` e `cursor`. Outro nome é
+  recusado ao carregar.
 - Cada provider tem pelo menos um modelo, sem repetir.
 - A ordem conta: em `auto`, roda o primeiro provider declarado que estiver instalado; num provider sem modelo próprio
-  (o `claude-ollama`), roda o primeiro modelo declarado para ele.
+  (o `claude-ollama`) ou que não informa o modelo que rodou (o `codex`), roda o primeiro modelo declarado para ele.
 
 Como uma execução escolhe:
 
-| A linha de comando diz       | Provider                                                                                         | Modelo                                                                         |
-| ---------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| `--provider X` e `--model Y` | X, que o agente precisa declarar                                                                 | Y, que precisa estar nos modelos de X                                          |
-| só `--provider X`            | X, que o agente precisa declarar                                                                 | o padrão de X, ou o primeiro modelo declarado para X quando ele não tem padrão |
-| só `--model Y`               | o provider que declara Y; se dois declaram, a execução pede `--provider`                         | Y                                                                              |
-| nenhum dos dois              | `CHOL_AGENTS_PROVIDER`, que o agente precisa declarar; em `auto`, o primeiro declarado instalado | como na linha "só `--provider X`"                                              |
+| A linha de comando diz       | Provider                                                                                         | Modelo                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| `--provider X` e `--model Y` | X, que o agente precisa declarar                                                                 | Y, que precisa estar nos modelos de X                                           |
+| só `--provider X`            | X, que o agente precisa declarar                                                                 | o padrão de X, ou o primeiro modelo declarado para X (`claude-ollama`, `codex`) |
+| só `--model Y`               | o provider que declara Y; se dois declaram, a execução pede `--provider`                         | Y                                                                               |
+| nenhum dos dois              | `CHOL_AGENTS_PROVIDER`, que o agente precisa declarar; em `auto`, o primeiro declarado instalado | como na linha "só `--provider X`"                                               |
 
 Um provider ou um modelo que o agente não declara é recusado antes de rodar, com a mensagem dizendo o que ele declara.
 O modelo que o provider informa ao começar também é conferido contra os modelos declarados para ele. No painel, o

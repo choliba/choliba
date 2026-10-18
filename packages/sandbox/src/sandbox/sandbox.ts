@@ -15,8 +15,8 @@ import type { Sandbox, SandboxBackendContext, SandboxNetwork } from './interface
 export const DEFAULT_SANDBOX_IMAGE = 'choliba-agent';
 
 /**
- * The provider's credentials, passed into the container by name when they are set: Claude Code's token from
- * `claude setup-token` or an API key, and Cursor's API key. The agent can read them there, as it can on this machine.
+ * The providers' environment credentials, passed into the container by name when they are set: Claude Code's token
+ * from `claude setup-token` or an API key, and Cursor's API key. Codex authentication lives in the mounted run dir.
  */
 export const SANDBOX_CREDENTIALS: readonly string[] = [
   'CLAUDE_CODE_OAUTH_TOKEN',

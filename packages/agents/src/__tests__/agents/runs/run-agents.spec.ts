@@ -1019,7 +1019,7 @@ describe('runAgentsCli — run', () => {
   it('rejects an invalid --provider value', async () => {
     const { deps, stderr } = harness([]);
 
-    expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--provider', 'codex', 'x'], deps)).toBe(1);
+    expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--provider', 'gpt', 'x'], deps)).toBe(1);
     expect(stderr.chunks.join('')).toContain('unknown provider');
   });
 

@@ -393,9 +393,14 @@ async function followSession(
   // is not shown, and the run fails.
   const stopGuard = { triggered: false };
   // The sandbox decides each tool call on the policy written from the agent (its MCPs) and the provider's limits.
-  const guard = toolGuard(request.providerRequest, adapter.unenforcedTools);
+  const guard = toolGuard(request.providerRequest, adapter);
 
-  const input = sessionInput(session, adapter.inputMessage?.bind(adapter), request.providerRequest.userPrompt);
+  const input = sessionInput(
+    session,
+    adapter.inputMessage?.bind(adapter),
+    request.providerRequest.userPrompt,
+    adapter.oneShotInput,
+  );
   const stop = (message: string): void => {
     stopGuard.triggered = true;
     screen.err.write(`${message}\n`);

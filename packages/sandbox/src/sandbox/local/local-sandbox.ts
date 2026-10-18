@@ -48,7 +48,9 @@ function requireProgram(input: SandboxPlanInput, disk: DiskFacts): SandboxProgra
   throw new SandboxEnforcementError(`O provider local não foi encontrado: ${input.command[0] ?? 'comando vazio'}.`);
 }
 
+/** At least one of the program's credentials set; one that authenticates by a file of its own lists none. */
 function requireCredential(program: SandboxProgram, environment: Readonly<Record<string, string>>): void {
+  if (program.credentials.length === 0) return;
   const present = program.credentials.some((name) => (environment[name] ?? '') !== '');
   if (present) return;
   throw new SandboxEnforcementError(program.credentialHelp);

@@ -110,6 +110,8 @@ function fakeAdapter(overrides: Partial<AgentProvider> = {}): AgentProvider {
     credentials: ['FAKE_TOKEN'],
     credentialHelp: 'set FAKE_TOKEN',
     needsModel: false,
+    enforcesExecute: true,
+    oneShotInput: false,
     unenforcedTools: [],
     inAuto: true,
     declaredModel: (model) => model,

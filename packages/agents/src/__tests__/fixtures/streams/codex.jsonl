@@ -1,0 +1,13 @@
+{"type":"thread.started","thread_id":"thread-1"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"message-1","type":"agent_message","text":"Vou ler o arquivo."}}
+{"type":"item.started","item":{"id":"command-1","type":"command_execution","command":"sed -n '1,20p' README.md","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"command-1","type":"command_execution","command":"sed -n '1,20p' README.md","aggregated_output":"# choliba\n","exit_code":0,"status":"completed"}}
+{"type":"item.started","item":{"id":"edit-1","type":"file_change","changes":[{"path":"README.md","kind":"update"}],"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"edit-1","type":"file_change","changes":[{"path":"README.md","kind":"update"}],"status":"completed"}}
+{"type":"item.started","item":{"id":"mcp-1","type":"mcp_tool_call","server":"browser","tool":"open","arguments":{"url":"https://example.com"},"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"mcp-1","type":"mcp_tool_call","server":"browser","tool":"open","arguments":{"url":"https://example.com"},"result":"opened","status":"completed"}}
+{"type":"item.started","item":{"id":"command-2","type":"command_execution","command":"touch /denied","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"command-2","type":"command_execution","command":"touch /denied","aggregated_output":"permission denied by sandbox","exit_code":1,"status":"failed"}}
+{"type":"item.completed","item":{"id":"message-2","type":"agent_message","text":"Terminei."}}
+{"type":"turn.completed","usage":{"input_tokens":10,"output_tokens":5}}

@@ -72,4 +72,4 @@ export {
   runAgentEntry,
 } from './agents';
 export type { AgentsPlatform } from './agents';
-export { ClaudeAgentProvider, CursorAgentProvider, knownProviders } from './providers';
+export { ClaudeAgentProvider, CodexAgentProvider, CursorAgentProvider, knownProviders } from './providers';

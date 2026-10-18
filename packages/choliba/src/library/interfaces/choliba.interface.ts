@@ -20,7 +20,7 @@ export interface CholibaConfig {
 
 /** A provider, as a script sees it: never the values of its credentials. */
 export interface CholibaProvider {
-  /** What `--provider` calls it: `claude`, `claude-ollama`, `cursor`. */
+  /** What `--provider` calls it: `claude`, `claude-ollama`, `codex`, `cursor`. */
   readonly id: string;
   /** Whether one of its commands is on the `PATH`. */
   readonly installed: boolean;

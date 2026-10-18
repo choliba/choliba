@@ -33,6 +33,13 @@ describe('agentRunChoice', () => {
     });
   });
 
+  it('names the first declared model of codex, whose stream does not say which it ran', () => {
+    const declared = agent([{ id: 'codex', models: ['gpt-6.1-sol', 'gpt-6-luna'] }]);
+
+    expect(pick(declared, {}, ['codex'])).toEqual({ provider: 'codex', model: 'gpt-6.1-sol' });
+    expect(pick(declared, { model: 'gpt-6-luna' }, ['codex'])).toEqual({ provider: 'codex', model: 'gpt-6-luna' });
+  });
+
   it('takes --provider or the preference only when the agent declares it, and when it is installed', () => {
     expect(pick(MIXED, { provider: 'claude-ollama' })).toEqual({ provider: 'claude-ollama', model: 'qwen3.5:4b' });
     expect(pick(MIXED, { preference: 'cursor' })).toEqual({
@@ -42,7 +49,7 @@ describe('agentRunChoice', () => {
       error: 'O provider cursor não está instalado nesta máquina.',
     });
     expect(pick(MIXED, { provider: 'gpt' })).toEqual({
-      error: 'unknown provider "gpt" (expected auto, claude, claude-ollama or cursor)',
+      error: 'unknown provider "gpt" (expected auto, claude, claude-ollama, codex or cursor)',
     });
   });
 

@@ -11,6 +11,7 @@ import {
 import {
   claudeOllamaProvider,
   claudeProvider,
+  codexProvider,
   cursorProvider,
   PROVIDERS,
   PROVIDERS_WITH_OLLAMA,
@@ -28,13 +29,14 @@ describe('ProviderRegistry.parsePreference', () => {
   it('passes through auto and the id of every provider', () => {
     expect(PROVIDERS.parsePreference('auto')).toBe('auto');
     expect(PROVIDERS.parsePreference('claude')).toBe('claude');
+    expect(PROVIDERS.parsePreference('codex')).toBe('codex');
     expect(PROVIDERS.parsePreference('cursor')).toBe('cursor');
   });
 
   it('rejects anything else, naming what it takes', () => {
-    expect(() => PROVIDERS.parsePreference('codex')).toThrow(InvalidProviderPreferenceError);
-    expect(() => PROVIDERS.parsePreference('codex')).toThrow(
-      'unknown provider "codex" (expected auto, claude or cursor)',
+    expect(() => PROVIDERS.parsePreference('gpt')).toThrow(InvalidProviderPreferenceError);
+    expect(() => PROVIDERS.parsePreference('gpt')).toThrow(
+      'unknown provider "gpt" (expected auto, claude, codex or cursor)',
     );
     expect(() => new ProviderRegistry([]).parsePreference('codex')).toThrow('(expected auto)');
   });
@@ -45,7 +47,8 @@ describe('ProviderRegistry.resolve', () => {
     expect(PROVIDERS.resolve('auto', whichOf(['claude', 'cursor-agent', 'agent'])).adapter).toBe(cursorProvider);
   });
 
-  it('falls back to claude in auto mode when no cursor binary is found', () => {
+  it('falls back from cursor to codex, then claude, in auto mode', () => {
+    expect(PROVIDERS.resolve('auto', whichOf(['codex', 'claude'])).adapter).toBe(codexProvider);
     expect(PROVIDERS.resolve('auto', whichOf(['claude'])).adapter).toBe(claudeProvider);
   });
 
@@ -65,19 +68,28 @@ describe('ProviderRegistry.resolve', () => {
 
   it('throws ProviderNotFoundError, naming what was tried, when nothing resolves', () => {
     expect(() => PROVIDERS.resolve('auto', whichOf([]))).toThrow(ProviderNotFoundError);
-    expect(() => PROVIDERS.resolve('auto', whichOf([]))).toThrow('(tried: cursor, claude)');
+    expect(() => PROVIDERS.resolve('auto', whichOf([]))).toThrow('(tried: cursor, codex, claude)');
     expect(() => PROVIDERS.resolve('claude', whichOf([]))).toThrow(/claude/);
   });
 });
 
 describe('ProviderRegistry — the names and descriptions --provider shows', () => {
   it('lists auto first, then the providers by id, whatever order they were found in', () => {
-    expect(new ProviderRegistry([cursorProvider, claudeProvider]).choices()).toEqual(['auto', 'claude', 'cursor']);
+    expect(new ProviderRegistry([cursorProvider, codexProvider, claudeProvider]).choices()).toEqual([
+      'auto',
+      'claude',
+      'codex',
+      'cursor',
+    ]);
   });
 
   it('lists the providers themselves by id, and knows the three choliba ships', () => {
-    expect(new ProviderRegistry([cursorProvider, claudeProvider]).list()).toEqual([claudeProvider, cursorProvider]);
-    expect(knownProviders().choices()).toEqual(['auto', 'claude', 'claude-ollama', 'cursor']);
+    expect(new ProviderRegistry([cursorProvider, codexProvider, claudeProvider]).list()).toEqual([
+      claudeProvider,
+      codexProvider,
+      cursorProvider,
+    ]);
+    expect(knownProviders().choices()).toEqual(['auto', 'claude', 'claude-ollama', 'codex', 'cursor']);
   });
 
   it("says auto's order and how each provider is found", () => {
@@ -87,6 +99,7 @@ describe('ProviderRegistry — the names and descriptions --provider shows', () 
         description: 'O primeiro provider que o agente declara e que está instalado, na ordem do agent.yaml.',
       },
       { name: 'claude', description: 'Comando `claude`.' },
+      { name: 'codex', description: 'Comando `codex`.' },
       {
         name: 'cursor',
         description: 'Comando `agent`, `cursor-agent` ou `cursor agent`, o primeiro que estiver instalado.',
@@ -96,10 +109,10 @@ describe('ProviderRegistry — the names and descriptions --provider shows', () 
 });
 
 describe('AGENT_PROVIDERS', () => {
-  it('gives claude, claude-ollama and cursor, in that order, once', () => {
+  it('gives claude, claude-ollama, codex and cursor, in that order, once', () => {
     const { container } = createShell(fakePlatform(), [coreShell, agentsShell, VERBS_ROOT]);
 
-    expect(container.get(AGENT_PROVIDERS).choices()).toEqual(['auto', 'claude', 'claude-ollama', 'cursor']);
+    expect(container.get(AGENT_PROVIDERS).choices()).toEqual(['auto', 'claude', 'claude-ollama', 'codex', 'cursor']);
     expect(container.get(AGENT_PROVIDERS)).toBe(container.get(AGENT_PROVIDERS));
   });
 });

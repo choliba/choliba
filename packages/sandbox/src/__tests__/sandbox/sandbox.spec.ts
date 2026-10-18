@@ -159,6 +159,11 @@ describe('the agent image', () => {
     expect(commands).toMatch(/^ARG CURSOR_SHA256_ARM64=[0-9a-f]{64}$/m);
     expect(commands).toContain('sha256sum -c -');
   });
+
+  it('installs the Codex CLI at the version covered by the provider fixtures', () => {
+    expect(dockerfile).toContain('ARG CODEX_VERSION=0.163.0');
+    expect(dockerfile).toContain('npm install -g "@openai/codex@${CODEX_VERSION}"');
+  });
 });
 
 describe('containerName', () => {

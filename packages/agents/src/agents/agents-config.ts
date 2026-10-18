@@ -7,7 +7,7 @@ export const agentsConfig = defineConfig('agents', {
     env: 'CHOL_AGENTS_PROVIDER',
     type: 'string',
     description: 'provider padrão dos agentes',
-    values: ['auto', 'claude', 'claude-ollama', 'cursor'],
+    values: ['auto', 'claude', 'claude-ollama', 'codex', 'cursor'],
     default: 'auto',
   },
   ollamaUrl: {

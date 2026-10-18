@@ -47,6 +47,18 @@ describe('sessionInput', () => {
     expect(fake.ended).toEqual([]);
   });
 
+  it('writes one-shot input once, closes it immediately and refuses later messages', () => {
+    const fake = fakeSession();
+    const input = sessionInput(fake.session, asLine, 'tarefa', true);
+
+    input.begin();
+    expect(fake.written).toEqual(['<tarefa>']);
+    expect(fake.ended).toEqual([true]);
+    expect(input.send('tarde demais')).toBe(NOT_READ);
+    input.turnEnded();
+    expect(fake.ended).toEqual([true]);
+  });
+
   it('closes stdin when a guard stops the session, and counts no turn below zero', () => {
     const fake = fakeSession(false);
     const input = sessionInput(fake.session, asLine, 'tarefa');

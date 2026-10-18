@@ -1,6 +1,13 @@
 import { decide, type PermissionContext, type PermissionPolicy, type ToolPolicy } from '@choliba/sandbox';
 
-import { pathPolicy, type AgentEvent, type McpDeclaration, type ProviderRequest } from '../../common';
+import {
+  pathPolicy,
+  type AgentEvent,
+  type AgentProvider,
+  type McpDeclaration,
+  type ProviderRequest,
+} from '../../common';
+import { commandRules, commandViolation, type CommandRules } from './command-guard';
 import { SUBAGENT_TOOLS, delegationMessage } from './delegation-guard';
 import { discoveryViolation, mcpCallMessage } from './mcp-guard';
 import { toolPolicy } from './tool-policy';
@@ -13,16 +20,22 @@ export interface ToolGuard {
   readonly mcps: readonly McpDeclaration[];
   readonly context: PermissionContext;
   readonly policy: PermissionPolicy;
+  /** The commands the agent may run, checked here when the provider cannot limit them (`enforcesExecute`). */
+  readonly commands?: CommandRules;
 }
 
 /** The guard of one run, its policy written from the agent's permissions and MCPs and the provider's limits. */
-export function toolGuard(request: ProviderRequest, unenforcedTools: readonly string[]): ToolGuard {
+export function toolGuard(
+  request: ProviderRequest,
+  provider: Pick<AgentProvider, 'unenforcedTools' | 'enforcesExecute'>,
+): ToolGuard {
   const agent = request.agent;
   return {
     agent: agent.name,
     mcps: agent.mcps,
     context: permissionContext(request),
-    policy: { path: pathPolicy(agent.permissions), tool: toolPolicy(agent.mcps, unenforcedTools) },
+    policy: { path: pathPolicy(agent.permissions), tool: toolPolicy(agent.mcps, provider.unenforcedTools) },
+    ...(provider.enforcesExecute ? {} : { commands: commandRules(request) }),
   };
 }
 
@@ -43,10 +56,15 @@ function deniedMessage(object: ToolRequest['object'], guard: ToolGuard): string 
 }
 
 /**
- * Why `event` stops the run, or `undefined` when it may go on. A call to a tool is asked of the sandbox, which
- * decides on the policy; a discovery of MCP tools is checked by the MCP guard.
+ * Why `event` stops the run, or `undefined` when it may go on. A command is checked against `permissions.execute`
+ * when the provider cannot limit it; a call to a tool is asked of the sandbox, which decides on the policy; a discovery
+ * of MCP tools is checked by the MCP guard.
  */
 export function toolViolation(event: AgentEvent, guard: ToolGuard): string | undefined {
+  if (guard.commands !== undefined && event.type === 'tool-call' && event.name === 'Bash') {
+    const violation = commandViolation(event.summary, guard.commands);
+    if (violation !== undefined) return violation;
+  }
   const request = toolRequest(event, guard.agent, guard.context);
   if (request === undefined) return discoveryViolation(event, guard.agent, guard.mcps);
   if (!asked(request.object, guard.policy.tool)) return undefined;

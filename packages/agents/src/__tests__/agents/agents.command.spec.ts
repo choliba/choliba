@@ -56,7 +56,7 @@ describe('choliba run agent and list agents', () => {
 
       const help = await choliba(['run', 'agent', '--help'], { cwd });
       expect(help.platform.stdout.text()).toContain('Usage:  choliba run agent AGENT [OPTIONS] [TASK...]');
-      expect(help.platform.stdout.text()).toContain('(auto, claude, claude-ollama, cursor)');
+      expect(help.platform.stdout.text()).toContain('(auto, claude, claude-ollama, codex, cursor)');
       expect(help.platform.stdout.text()).not.toContain('list');
     }));
 
