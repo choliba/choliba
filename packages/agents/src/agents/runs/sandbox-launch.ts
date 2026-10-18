@@ -116,6 +116,34 @@ function fromRoot(path: string, root: string): string {
   return isAbsolute(path) ? path : join(root, path);
 }
 
+/** Whether the agent has a Playwright run tool (`playwright-cli`, `playwright-trace`), which opens a browser. */
+function usesBrowser(request: ProviderRequest): boolean {
+  return runToolsOf(request).some((tool) => tool.name !== 'delete');
+}
+
+/**
+ * Where Playwright keeps its browsers on this machine: `PLAYWRIGHT_BROWSERS_PATH`, else `~/.cache/ms-playwright`.
+ * `PLAYWRIGHT_BROWSERS_PATH=0` keeps them in `node_modules`, which a run already reads.
+ */
+function browsersFolder(config: Config): string | undefined {
+  const set = config['PLAYWRIGHT_BROWSERS_PATH'];
+  if (set === '0') return undefined;
+  if (set !== undefined && set !== '') return set;
+  const home = config['HOME'];
+  return home === undefined ? undefined : join(home, '.cache', 'ms-playwright');
+}
+
+/**
+ * The browsers the Playwright run tools open on this machine (`playwright-trace snapshot`): the local sandbox hides the
+ * home they are kept in, so their folder comes back read-only. None in a container, whose image has its own, nor
+ * without a Playwright run tool or the folder.
+ */
+function browserFolders(input: LaunchInput, disk: LaunchDisk): readonly string[] {
+  if (input.sandbox.kind !== 'local' || !usesBrowser(input.request)) return [];
+  const folder = browsersFolder(input.config);
+  return folder !== undefined && disk.exists(folder) ? [folder] : [];
+}
+
 /**
  * Where the session's own commands write, outside the agent's permissions: the Playwright run tools' output folder,
  * when the agent has one of them, and the project's `ticket-runs/` (`choliba run tests` keeps its reports there). Created
@@ -123,8 +151,7 @@ function fromRoot(path: string, root: string): string {
  */
 function outputFolders(request: ProviderRequest, config: Config): readonly string[] {
   const root = request.workspaceRoot;
-  const browser = runToolsOf(request).some((tool) => tool.name !== 'delete');
-  const playwright = browser
+  const playwright = usesBrowser(request)
     ? [fromRoot(config[CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR] ?? DEFAULT_PLAYWRIGHT_OUTPUT_DIR, root)]
     : [];
   if (request.project === undefined) return playwright;
@@ -148,7 +175,7 @@ export function launchFor(input: LaunchInput, disk: LaunchDisk = realDisk): Laun
     policy: request.policy,
     addDirs: request.addDirs,
     runDir: request.runDir,
-    alsoRead: [...input.files.map((file) => file.path), join(root, 'node_modules')],
+    alsoRead: [...input.files.map((file) => file.path), join(root, 'node_modules'), ...browserFolders(input, disk)],
     alsoWrite: outputs,
   };
   const backend = createSandboxBackend(input.sandbox, {
