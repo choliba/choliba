@@ -39,6 +39,7 @@ function withProjects(projects: Readonly<Record<string, Readonly<Record<string, 
     converse: () => undefined,
     busy: () => undefined,
     clear: () => undefined,
+    quit: () => Promise.resolve(),
     onChange: () => undefined,
     spin: () => undefined,
   };
@@ -119,7 +120,8 @@ describe('the panel commands of @choliba/projects', () => {
         ],
         [
           '\u001b[1m\u001b[36mloja\u001b[39m\u001b[22m',
-          '2 tickets \u001b[90m·\u001b[39m \u001b[90mlocal · localhost:5173\u001b[39m',
+          '2 tickets \u001b[90m· local\u001b[39m',
+          '\u001b[90mlocalhost:5173\u001b[39m',
         ],
       ]);
       expect(panel.fake.written[0]).toBe('Projeto ativo: \u001b[1mloja\u001b[22m.');
@@ -190,7 +192,8 @@ describe('the panel commands of @choliba/projects', () => {
       ]);
       expect(panel.shown[0]?.[2]).toEqual([
         '\u001b[1m\u001b[36mloja\u001b[39m\u001b[22m · ativo \u001b[1mloja-1\u001b[22m',
-        '2 tickets \u001b[90m·\u001b[39m \u001b[90mlocal · localhost:5173\u001b[39m',
+        '2 tickets \u001b[90m· local\u001b[39m',
+        '\u001b[90mlocalhost:5173\u001b[39m',
       ]);
       panel.values.set('descrição', 'Loja de exemplo');
 
@@ -240,6 +243,7 @@ describe('the panel commands of @choliba/projects', () => {
         converse: () => undefined,
         busy: () => undefined,
         clear: () => undefined,
+        quit: () => Promise.resolve(),
         onChange: () => undefined,
         spin: () => undefined,
       };

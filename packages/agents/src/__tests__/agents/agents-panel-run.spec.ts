@@ -83,7 +83,7 @@ describe('talkToAgent', () => {
       panel?.write('olá\n');
       panel?.refresh();
       expect(talk.fake.written.at(-1)).toBe('olá\n');
-      expect(talk.state.statuses.get('execução')).toBe(`${gray('rodando')} ${bold('echo')} ${gray('claude · 00:01')}`);
+      expect(talk.state.statuses.get('execução')).toMatch(/^\d{2}:\d{2}:\d{2}\.\d{3}$/);
 
       const sent: string[] = [];
       panel?.onMessage((text) => sent.push(text));

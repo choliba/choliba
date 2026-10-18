@@ -121,6 +121,11 @@ export interface PanelContext {
   busy(stop: (() => void) | undefined): void;
   /** Stops what runs, and forgets every value, card, label and status part: who gets what is sent with no `/` stays. */
   clear(): void;
+  /**
+   * Closes the panel, as Ctrl+C twice with nothing running does; with a run going, asks it to stop and waits for it to
+   * end first, so no process it started stays running after the panel.
+   */
+  quit(): Promise<void>;
 }
 
 /** A command of the panel: the word after `/`, what it does in a line, and running it. */

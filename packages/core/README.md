@@ -31,7 +31,7 @@
   - [`LiveRegion`](#liveregion)
   - [`StatusFooter`](#statusfooter)
   - [`openOpenTuiPanel`](#openopentuipanel)
-  - [`visibleWidth` e `wrapVisible`](#visiblewidth-e-wrapvisible)
+  - [`visibleWidth`, `wrapVisible` e `truncateVisible`](#visiblewidth-wrapvisible-e-truncatevisible)
 - [`theme`](#theme)
   - [`paintAnsi` e `boldAnsi`](#paintansi-e-boldansi)
   - [`colorEnabled`](#colorenabled)
@@ -594,14 +594,15 @@ e um rodapé.
 linhas, `painel.ask(pergunta)` pergunta no campo, `painel.onMessage(...)` recebe o que a pessoa enviar e
 `painel.close()` devolve o terminal.
 
-### `visibleWidth` e `wrapVisible`
+### `visibleWidth`, `wrapVisible` e `truncateVisible`
 
-**O que é.** A largura de um texto na tela e a quebra dele numa largura, sem contar os códigos de cor.
+**O que é.** A largura de um texto na tela, a quebra dele numa largura e o corte dele numa linha só, sem contar os
+códigos de cor.
 
-**Para que serve.** Para alinhar e quebrar texto colorido.
+**Para que serve.** Para alinhar, quebrar e cortar texto colorido.
 
-**Como usar.** `visibleWidth(paintAnsi('green', 'ok'))` devolve `2`, e `wrapVisible('uma linha comprida', 10)` devolve
-`['uma linha', 'comprida']`.
+**Como usar.** `visibleWidth(paintAnsi('green', 'ok'))` devolve `2`, `wrapVisible('uma linha comprida', 10)` devolve
+`['uma linha', 'comprida']` e `truncateVisible('uma linha comprida', 10)` devolve `'uma linha…'`.
 
 ## `theme`
 

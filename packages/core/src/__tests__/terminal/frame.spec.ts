@@ -1,4 +1,12 @@
-import { frameBottom, frameLines, frameTop, textPieces, visibleWidth, wrapVisible } from '../../terminal';
+import {
+  frameBottom,
+  frameLines,
+  frameTop,
+  textPieces,
+  truncateVisible,
+  visibleWidth,
+  wrapVisible,
+} from '../../terminal';
 
 const RED = '\x1B[31m';
 const RESET = '\x1B[0m';
@@ -12,6 +20,20 @@ describe('visibleWidth / textPieces', () => {
       { text: RED, width: 0 },
       { text: 'b', width: 1 },
     ]);
+  });
+});
+
+describe('truncateVisible', () => {
+  it('keeps a line that fits, and cuts a longer one ending it with …, in the width', () => {
+    expect(truncateVisible('development · 10.11.0.11', 30)).toBe('development · 10.11.0.11');
+    expect(truncateVisible('development · 10.11.0.11/webol', 20)).toBe('development · 10.11…');
+    expect(visibleWidth(truncateVisible('abcdef', 4))).toBe(4);
+    expect(truncateVisible('abc', 0)).toBe('…');
+  });
+
+  it('keeps the colors of what stays, turning off a style still on after the …', () => {
+    expect(truncateVisible(`${RED}aaaa bbbb`, 6)).toBe(`${RED}aaaa …${RESET}`);
+    expect(truncateVisible(`${RED}aa${RESET} bbbb`, 5)).toBe(`${RED}aa${RESET} b…`);
   });
 });
 

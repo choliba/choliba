@@ -77,6 +77,9 @@ export interface PanelInput<Styled> {
   readonly plainText: string;
   readonly virtualLineCount: number;
   height: number | 'auto' | `${number}%`;
+  width: number | 'auto' | `${number}%`;
+  /** 1 takes the rest of its row; 0 keeps to its `width`. */
+  flexGrow: number | null | undefined;
   placeholder: Styled | string | null;
   onSubmit: ((event: PanelFieldEvent) => void) | undefined;
   onContentChange: ((event: PanelFieldEvent) => void) | undefined;
@@ -195,6 +198,13 @@ export interface PanelScrollOptions {
   readonly paddingRight?: number;
   /** 0 keeps its rows when the panel is short. */
   readonly flexShrink?: number;
+  /** Placed over the layout, at `top`/`left`, above what is there (`zIndex`): it takes no room of its own. */
+  readonly position?: 'absolute';
+  readonly top?: number;
+  readonly left?: number;
+  readonly zIndex?: number;
+  /** A hex color behind what it draws, so what it covers does not show through. */
+  readonly backgroundColor?: string;
 }
 
 /** A decoded picture (`NativeImage`): resized, and read as RGBA pixels. */

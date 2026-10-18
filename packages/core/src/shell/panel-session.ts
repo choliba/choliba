@@ -46,6 +46,8 @@ interface ContextView {
   stop(): void;
   /** Once the context is clear: what the packages show in a new session shows again. */
   restart(): void;
+  /** Stops what runs, waits for it to end, and closes the panel. */
+  quit(): Promise<void>;
 }
 
 /** The session's context: its values, and the cards and labels they show in the header, each in the order it came. */
@@ -113,6 +115,7 @@ function sessionContext(view: ContextView): PanelContext {
       view.restart();
       changed(undefined);
     },
+    quit: () => view.quit(),
   };
 }
 
@@ -122,6 +125,8 @@ export interface PanelSession {
   status(): readonly string[];
   /** Asks the work running now to stop: `true` when there is some, and then the panel stays open. */
   stop(): boolean;
+  /** Resolves once nothing runs: at once when nothing does. */
+  idle(): Promise<void>;
 }
 
 /**
@@ -138,11 +143,20 @@ export function panelSession(
   commands: readonly PanelCommand[],
   heading: readonly string[],
   starts: readonly ((container: Container, context: PanelContext) => void)[] = [],
+  close: () => void = () => undefined,
 ): PanelSession {
   let parts: readonly string[] = [];
   const keyListeners: ((key: PanelKey) => boolean)[] = [];
   let conversation: ((text: string, panel: ChatPanel) => void) | undefined;
   let running: (() => void) | undefined;
+  // Who waits for what runs to be over: /quit, before it closes the panel.
+  const waiting: (() => void)[] = [];
+  const idle = (): Promise<void> =>
+    running === undefined
+      ? Promise.resolve()
+      : new Promise((resolve) => {
+          waiting.push(resolve);
+        });
   // What runs stays running until it says it is over (`busy(undefined)`): Ctrl+C asks it to stop, and closes nothing.
   const stopRunning = (): boolean => {
     const stop = running;
@@ -168,9 +182,17 @@ export function panelSession(
     },
     busy: (stop) => {
       running = stop;
+      if (stop === undefined) for (const done of waiting.splice(0)) done();
     },
     stop: () => {
       stopRunning();
+    },
+    quit: async () => {
+      if (stopRunning()) {
+        panel.write('\u001b[90mParando o que roda antes de sair…\u001b[39m');
+        await idle();
+      }
+      close();
     },
     restart: () => {
       begin();
@@ -188,9 +210,17 @@ export function panelSession(
   let filter: string | undefined;
   const show = (found: readonly PanelCommand[]): void => {
     shown = found;
-    panel.suggest(suggestionLines(found, highlighted, why), (index) => {
-      clicked(index);
-    });
+    const command = found[highlighted];
+    // What Enter runs, beside the field: with one suggestion, the arrows have nowhere to move, so it says so.
+    const hint =
+      command === undefined || why(command) !== undefined ? undefined : `tecle Enter para selecionar /${command.name}`;
+    panel.suggest(
+      suggestionLines(found, highlighted, why),
+      (index) => {
+        clicked(index);
+      },
+      hint,
+    );
   };
   /** The next command from `from` by `step` that can run, around the list; `from` itself when none can. */
   const nextAvailable = (from: number, step: number): number => {
@@ -272,5 +302,5 @@ export function panelSession(
     }
     void run(command);
   });
-  return { status: () => parts, stop: stopRunning };
+  return { status: () => parts, stop: stopRunning, idle };
 }

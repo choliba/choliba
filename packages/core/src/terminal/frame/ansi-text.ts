@@ -81,3 +81,25 @@ export function wrapVisible(text: string, width: number): readonly string[] {
     return `${opening}${line.map((piece) => piece.text).join('')}${closing}`;
   });
 }
+
+/** The ellipsis that ends a line cut to fit. */
+const ELLIPSIS = '…';
+
+/**
+ * `text` in one line of at most `width` columns (at least 1), keeping its colors: as it is when it fits, else cut and
+ * ended with `…`, with the styles still on turned off after it.
+ */
+export function truncateVisible(text: string, width: number): string {
+  const room = Math.max(width, 1);
+  if (visibleWidth(text) <= room) return text;
+  let used = 0;
+  let styled = false;
+  let kept = '';
+  for (const piece of textPieces(text)) {
+    if (piece.width === 1 && used === room - 1) break;
+    if (piece.width === 0) styled = !isReset(piece.text);
+    used += piece.width;
+    kept += piece.text;
+  }
+  return `${kept}${ELLIPSIS}${styled ? RESET : ''}`;
+}
