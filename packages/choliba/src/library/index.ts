@@ -6,6 +6,7 @@ export type {
   CholibaMcp,
   CholibaOptions,
   CholibaProject,
+  CholibaProjectCounts,
   CholibaProjects,
   CholibaProvider,
   CholibaProviders,

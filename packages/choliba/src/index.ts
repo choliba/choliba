@@ -20,6 +20,7 @@ export type {
   CholibaMcp,
   CholibaOptions,
   CholibaProject,
+  CholibaProjectCounts,
   CholibaProjects,
   CholibaProvider,
   CholibaProviders,
@@ -28,7 +29,7 @@ export type {
   CholibaTickets,
   CholibaWorkspace,
 } from './library';
-export type { ProjectSettings, ProjectSummary, TicketCriterion, TicketInfo } from '@choliba/projects';
+export type { ProjectSettings, ProjectSummary, RetiredCriterion, TicketCriterion, TicketInfo } from '@choliba/projects';
 export type { AgentDefinition, SkillSummary } from '@choliba/agents';
 export type { ConfigGroup, ConfigSetting } from '@choliba/config';
 export type { Runtime } from './runtime';

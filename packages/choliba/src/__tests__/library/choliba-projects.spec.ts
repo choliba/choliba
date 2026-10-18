@@ -36,14 +36,14 @@ describe('choliba.projects', () => {
     const workspace = workspaceWithProject();
     try {
       const env = { CHOL_GLOBAL_DIR: join(workspace.path, 'global') };
-      const api = openCholiba({ cwd: workspace.path, env });
+      const library = openCholiba({ cwd: workspace.path, env });
 
-      expect(api.projects.dir).toBe(workspace.projects);
-      expect(api.projects.list()).toEqual([{ name: 'app', description: 'Loja de exemplo' }]);
+      expect(library.projects.dir).toBe(workspace.projects);
+      expect(library.projects.list()).toEqual([{ name: 'app', description: 'Loja de exemplo' }]);
 
       const platform = fakePlatform({ argv: ['list', 'projects'], cwd: workspace.path, env });
       await createCholibaShell(platform, fakeRuntime()).run();
-      for (const project of api.projects.list()) expect(platform.stdout.text()).toContain(project.name);
+      for (const project of library.projects.list()) expect(platform.stdout.text()).toContain(project.name);
     } finally {
       workspace.cleanup();
     }
@@ -88,11 +88,59 @@ describe('choliba.projects', () => {
   it('fails on an unknown project, naming its config.json', () => {
     const workspace = workspaceWithProject();
     try {
-      const api = openCholiba({ cwd: workspace.path, env: { CHOL_GLOBAL_DIR: join(workspace.path, 'global') } });
+      const library = openCholiba({ cwd: workspace.path, env: { CHOL_GLOBAL_DIR: join(workspace.path, 'global') } });
 
-      expect(() => api.projects.get('nada')).toThrow(
+      expect(() => library.projects.get('nada')).toThrow(
         `Projeto "nada" não encontrado (${join(workspace.projects, 'nada', 'config.json')} não existe).`,
       );
+    } finally {
+      workspace.cleanup();
+    }
+  });
+});
+
+describe('choliba.projects — README, counts and retired criteria', () => {
+  it("sums up the application's README, counts the tickets and criteria, and lists what a later ticket replaces", () => {
+    const workspace = makeWorkspace({
+      'global/projects/app/config.json': JSON.stringify({
+        name: 'Loja',
+        envs: [{ nome: 'local', baseURL: 'http://localhost:3000/', appDir: '../../../code', default: true }],
+      }),
+      'global/projects/app/.env.json': JSON.stringify({ local: {} }),
+      'global/projects/app/tickets/1.json': TICKET,
+      'global/projects/app/tickets/2.json': JSON.stringify({
+        titulo: 'Novo carrinho',
+        substitui: ['1:CA-01'],
+        criterios: [{ id: 'CA-01', descricao: ['Dado a'], testes: [] }],
+      }),
+      'code/README.md': '# Loja\n\nUma loja de exemplo para o choliba.\n',
+    });
+    try {
+      const app = openCholiba({
+        cwd: workspace.path,
+        env: { CHOL_GLOBAL_DIR: join(workspace.path, 'global') },
+      }).projects.get('app');
+
+      expect(app.readme).toBe('Loja: Uma loja de exemplo para o choliba.');
+      expect(app.counts).toEqual({ tickets: 2, criteria: 2, criteriaWithTests: 1 });
+      expect(app.tickets.retired()).toEqual([
+        { ticket: 'app-1', criterion: 'CA-01', by: 'app-2', tests: ['carrinho.spec.ts › adiciona'] },
+      ]);
+    } finally {
+      workspace.cleanup();
+    }
+  });
+
+  it('has no README summary when the application folder is not there', () => {
+    const workspace = workspaceWithProject();
+    try {
+      const app = openCholiba({
+        cwd: workspace.path,
+        env: { CHOL_GLOBAL_DIR: join(workspace.path, 'global') },
+      }).projects.get('app');
+
+      expect(app.readme).toBeUndefined();
+      expect(app.tickets.retired()).toEqual([]);
     } finally {
       workspace.cleanup();
     }

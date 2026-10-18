@@ -78,14 +78,14 @@ describe('openCholiba', () => {
   it('reads a group from the environment first, then the .env, then the default', () => {
     const workspace = workspaceWith({ '.env': 'CHOL_SANDBOX=docker\nMEU_RETRIES=5\n' });
     try {
-      const api = openCholiba({ cwd: workspace.path, env: { CHOL_NETWORK: 'host' } });
+      const library = openCholiba({ cwd: workspace.path, env: { CHOL_NETWORK: 'host' } });
       const mine = defineConfig('meu-script', {
         retries: { env: 'MEU_RETRIES', type: 'number', description: 'tentativas', default: 3 },
       });
 
-      expect(api.config(sandboxConfig)).toEqual({ mode: 'docker', image: 'choliba-agent', network: 'host' });
-      expect(api.config(agentsConfig).provider).toBe('auto');
-      expect(api.config(mine).retries).toBe(5);
+      expect(library.config(sandboxConfig)).toEqual({ mode: 'docker', image: 'choliba-agent', network: 'host' });
+      expect(library.config(agentsConfig).provider).toBe('auto');
+      expect(library.config(mine).retries).toBe(5);
     } finally {
       workspace.cleanup();
     }
@@ -137,13 +137,13 @@ describe('openCholiba', () => {
   it('lists and gets the agents, and the skills an agent declares', () => {
     const workspace = workspaceWith();
     try {
-      const api = openCholiba({ cwd: workspace.path, env: {} });
+      const library = openCholiba({ cwd: workspace.path, env: {} });
       const repeat = join(workspace.path, '.choliba', 'skills', 'repeat', 'SKILL.md');
 
-      expect(api.agents.list().map((agent) => agent.id)).toEqual(['echo']);
-      expect(api.agents.get('echo')).toMatchObject({ id: 'echo', version: '1.0.0', supportedModels: ['modelo-a'] });
-      expect(() => api.agents.get('revisor')).toThrow('agent "revisor" not found');
-      expect(api.agents.skills('echo')).toEqual([
+      expect(library.agents.list().map((agent) => agent.id)).toEqual(['echo']);
+      expect(library.agents.get('echo')).toMatchObject({ id: 'echo', version: '1.0.0', supportedModels: ['modelo-a'] });
+      expect(() => library.agents.get('revisor')).toThrow('agent "revisor" not found');
+      expect(library.agents.skills('echo')).toEqual([
         { name: 'repeat', description: 'Repete o texto.', path: repeat, instructions: 'Use sempre.' },
       ]);
     } finally {
@@ -154,15 +154,15 @@ describe('openCholiba', () => {
   it('lists and gets the skills', () => {
     const workspace = workspaceWith();
     try {
-      const api = openCholiba({ cwd: workspace.path, env: {} });
+      const library = openCholiba({ cwd: workspace.path, env: {} });
 
-      expect(api.skills.list().map((skill) => skill.name)).toEqual(['other', 'repeat']);
-      expect(api.skills.get('repeat')).toEqual({
+      expect(library.skills.list().map((skill) => skill.name)).toEqual(['other', 'repeat']);
+      expect(library.skills.get('repeat')).toEqual({
         name: 'repeat',
         description: 'Repete o texto.',
         path: join(workspace.path, '.choliba', 'skills', 'repeat', 'SKILL.md'),
       });
-      expect(() => api.skills.get('inexistente')).toThrow('skill "inexistente" não encontrada');
+      expect(() => library.skills.get('inexistente')).toThrow('skill "inexistente" não encontrada');
     } finally {
       workspace.cleanup();
     }
@@ -171,19 +171,19 @@ describe('openCholiba', () => {
   it('answers as the CLI does, for the agents and the configuration', async () => {
     const workspace = workspaceWith({ '.env': 'CHOL_SANDBOX=docker\n' });
     try {
-      const api = openCholiba({ cwd: workspace.path, env: {} });
+      const library = openCholiba({ cwd: workspace.path, env: {} });
       const platform = fakePlatform({ argv: ['list', 'config', '--json'], cwd: workspace.path, env: {} });
       await createCholibaShell(platform, fakeRuntime()).run();
       const listed = JSON.parse(platform.stdout.text()) as Record<string, { valor: string | null; origem: string }>;
 
-      expect(Object.keys(listed)).toEqual(api.config.list().map((setting) => setting.key.address.env));
-      for (const setting of api.config.list()) {
+      expect(Object.keys(listed)).toEqual(library.config.list().map((setting) => setting.key.address.env));
+      for (const setting of library.config.list()) {
         expect(listed[setting.key.address.env]?.origem).toBe(setting.origin);
       }
 
       const agents = fakePlatform({ argv: ['list', 'agents'], cwd: workspace.path, env: {} });
       await createCholibaShell(agents, fakeRuntime()).run();
-      for (const agent of api.agents.list()) expect(agents.stdout.text()).toContain(agent.id);
+      for (const agent of library.agents.list()) expect(agents.stdout.text()).toContain(agent.id);
     } finally {
       workspace.cleanup();
     }

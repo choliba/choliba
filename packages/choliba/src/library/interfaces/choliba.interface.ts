@@ -1,6 +1,6 @@
 import type { AgentDefinition, SkillSummary } from '@choliba/agents';
 import type { ConfigGroup, ConfigSetting } from '@choliba/config';
-import type { ProjectSettings, ProjectSummary, TicketInfo } from '@choliba/projects';
+import type { ProjectSettings, ProjectSummary, RetiredCriterion, TicketInfo } from '@choliba/projects';
 
 /** Where `choliba` looks, when not the process's own folder and environment. */
 export interface CholibaOptions {
@@ -92,6 +92,15 @@ export interface CholibaTickets {
   list(): readonly TicketInfo[];
   /** One ticket, by key (`app-1`) or suffix (`1`); an unknown one fails naming the file it looked for. */
   get(id: string): TicketInfo;
+  /** The criteria a later ticket replaces (`substitui`): `ticket`, `criterion`, `by` (the one replacing) and `tests`. */
+  retired(): readonly RetiredCriterion[];
+}
+
+/** How much a project has: its tickets, their criteria, and the criteria a test covers. */
+export interface CholibaProjectCounts {
+  readonly tickets: number;
+  readonly criteria: number;
+  readonly criteriaWithTests: number;
 }
 
 /** A project's specs. */
@@ -108,6 +117,9 @@ export interface CholibaProject {
   readonly dir: string;
   /** `config.json` and `.env.json` read and checked as a run reads them: it holds the credentials too. */
   readonly settings: ProjectSettings;
+  /** The summary of the README of the application (at the active environment's `appDir`), or `undefined`. */
+  readonly readme: string | undefined;
+  readonly counts: CholibaProjectCounts;
   readonly tickets: CholibaTickets;
   readonly tests: CholibaTests;
 }
