@@ -14,6 +14,7 @@ providers:
   codex:
     models:
       - gpt-6.1-sol
+  # Um modelo local, criado do Modelfile desta pasta: `ollama create tech-stack-analyzer -f Modelfile`.
   claude-ollama:
     models:
       - 'tech-stack-analyzer'
@@ -37,9 +38,8 @@ context:
     use seus manifestos, arquivos de configuração, estrutura e código como fontes da análise.
   - >-
     Antes de você começar, o choliba já pôs no prompt um resumo da estrutura da aplicação (em `<estrutura>`: as pastas
-    até 2 níveis e quantos arquivos há de cada extensão, sem node_modules, vendor, dist, .git, cache, volumes, assets e
-    edi) e o conteúdo dos
-    manifestos e arquivos de configuração que existirem (em `<manifestos>`). A extensão com mais arquivos costuma ser
+    até 2 níveis e quantos arquivos há de cada extensão, sem as dependências instaladas, o build, o .git, caches, logs,
+    imagens e fontes) e o conteúdo dos manifestos e arquivos de configuração que existirem (em `<manifestos>`). A extensão com mais arquivos costuma ser
     a linguagem principal. Parta deles; só abra outro arquivo de `${APP_DIR}` quando precisar confirmar algo.
 
 input: |
@@ -106,39 +106,29 @@ steps:
           dirs: ['${APP_DIR}']
           max_depth: 2
           # Padrões de caminho (docs/referencia/padroes-de-caminho.md): sem / é o nome em qualquer nível.
+          # O que não diz nada da stack: caches, logs, dados, imagens, fontes e configuração de editor.
           ignore:
             [
               cache,
-              volumes,
-              assets,
-              edi,
-              docker,
-              logs,
-              quester,
-              zip,
-              images,
-              '.cursor*',
-              '.git*',
-              '*.upload.*',
-              arquivos_upload,
-              arquivos_csv,
-              bd,
-              class,
-              .vscode,
-              FusionCharts3,
-              FusionCharts,
-              jscripts,
-              font,
-              lib,
-              relatorios,
-              styles,
               tmp,
-              '*.bat',
+              logs,
+              volumes,
+              coverage,
+              assets,
+              images,
+              fonts,
+              docs/,
+              '.cursor*',
+              .vscode,
+              .idea,
               '*.png',
               '*.jpg',
-              tests,
-              '.htaccess*',
-              docs/,
+              '*.jpeg',
+              '*.gif',
+              '*.svg',
+              '*.ico',
+              '*.woff*',
+              '*.map',
             ]
           files: ['${PROJECT_DIR}/.cache/arquivos.txt']
           max_size: 8KB
