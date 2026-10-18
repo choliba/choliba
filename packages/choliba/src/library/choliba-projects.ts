@@ -8,12 +8,15 @@ import {
   projectDir,
   projectTestsFolder,
   readmeSummary,
+  resolveReportFolder,
+  resolveTicketRunsRoot,
   readText,
   readTicket,
   readTickets,
   retiredCriteria,
   type ProjectsService,
 } from '@choliba/projects';
+import { ticketResults } from '@choliba/runner';
 
 import type { CholibaProject, CholibaProjectCounts, CholibaProjects } from './interfaces/choliba.interface';
 
@@ -35,7 +38,7 @@ function countsOf(projectsDir: string, name: string): CholibaProjectCounts {
 }
 
 /** The project `name` of `projectsDir`, checked to exist; its settings, tickets and specs are read when asked. */
-function cholibaProject(projectsDir: string, name: string): CholibaProject {
+function cholibaProject(projectsDir: string, runsRoot: string, name: string): CholibaProject {
   assertProjectExists(projectsDir, name);
   return {
     name,
@@ -53,6 +56,10 @@ function cholibaProject(projectsDir: string, name: string): CholibaProject {
       list: () => readTickets(projectsDir, name),
       get: (id) => readTicket(projectsDir, name, id),
       retired: () => retiredCriteria(projectsDir, name),
+      results: (id) => {
+        const ticket = readTicket(projectsDir, name, id);
+        return ticketResults(resolveReportFolder(runsRoot, name, ticket.id), ticket.criteria);
+      },
     },
     tests: {
       dir: projectTestsFolder(projectsDir, name),
@@ -62,12 +69,17 @@ function cholibaProject(projectsDir: string, name: string): CholibaProject {
 }
 
 /** The projects as the CLI's `service` sees them (`list projects`), each project got from its folder. */
-export function cholibaProjects(service: () => ProjectsService): CholibaProjects {
+export function cholibaProjects(service: () => ProjectsService, ticketRuns: () => string | undefined): CholibaProjects {
   return {
     get dir() {
       return service().projectsDir();
     },
     list: () => service().list(),
-    get: (name) => cholibaProject(service().projectsDir(), name),
+    get: (name) => {
+      const projectsDir = service().projectsDir();
+      // Where `choliba run tests` leaves each ticket's report: CHOL_TICKET_RUNS, else the projects folder.
+      const runsRoot = resolveTicketRunsRoot({ CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: ticketRuns() });
+      return cholibaProject(projectsDir, runsRoot, name);
+    },
   };
 }

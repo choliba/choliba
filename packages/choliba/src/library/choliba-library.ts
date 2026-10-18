@@ -103,6 +103,9 @@ export function cholibaLibrary(groups: readonly ConfigGroup[], options: CholibaO
     providers: cholibaProviders(providerSource),
     agents,
     skills,
-    projects: cholibaProjects(() => new ProjectsService(new LocationsService(read(projectsConfig)))),
+    projects: cholibaProjects(
+      () => new ProjectsService(new LocationsService(read(projectsConfig))),
+      () => read(projectsConfig).ticketRuns,
+    ),
   };
 }

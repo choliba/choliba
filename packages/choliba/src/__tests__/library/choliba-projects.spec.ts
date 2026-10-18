@@ -1,4 +1,5 @@
-import { join } from 'node:path';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 
 import { fakePlatform } from '@choliba/core/testing';
 
@@ -141,6 +142,47 @@ describe('choliba.projects — README, counts and retired criteria', () => {
 
       expect(app.readme).toBeUndefined();
       expect(app.tickets.retired()).toEqual([]);
+    } finally {
+      workspace.cleanup();
+    }
+  });
+});
+
+describe("choliba.projects — a ticket's results", () => {
+  const REPORT = JSON.stringify({
+    stats: { startTime: '2026-10-17T06:01:48.003Z', duration: 1200, expected: 1, unexpected: 0, skipped: 0, flaky: 0 },
+    suites: [
+      {
+        title: 'carrinho.spec.ts',
+        specs: [{ title: 'CA-01: adiciona', tests: [{ status: 'expected', results: [{ status: 'passed' }] }] }],
+      },
+    ],
+  });
+
+  it('reads the last run of a ticket from ticket-runs, or CHOL_TICKET_RUNS, and nothing when it never ran', () => {
+    const workspace = workspaceWithProject();
+    const report = 'app/ticket-runs/app-1/playwright-report/results.json';
+    try {
+      mkdirSync(dirname(join(workspace.projects, report)), { recursive: true });
+      writeFileSync(join(workspace.projects, report), REPORT);
+      mkdirSync(dirname(join(workspace.path, 'runs', report)), { recursive: true });
+      writeFileSync(join(workspace.path, 'runs', report), REPORT.replace('"duration":1200', '"duration":99'));
+      const global = join(workspace.path, 'global');
+      const app = openCholiba({ cwd: workspace.path, env: { CHOL_GLOBAL_DIR: global } }).projects.get('app');
+      const elsewhere = openCholiba({
+        cwd: workspace.path,
+        env: { CHOL_GLOBAL_DIR: global, CHOL_TICKET_RUNS: join(workspace.path, 'runs') },
+      }).projects.get('app');
+
+      expect(app.tickets.results('1')).toEqual({
+        ranAt: '2026-10-17T06:01:48.003Z',
+        duration: 1200,
+        stats: { passed: 1, failed: 0, skipped: 0, flaky: 0 },
+        tests: [{ title: 'CA-01: adiciona', file: 'carrinho.spec.ts', status: 'passed' }],
+        criteria: [{ id: 'CA-01', status: 'passou' }],
+      });
+      expect(elsewhere.tickets.results('app-1')?.duration).toBe(99);
+      expect(app.tickets.results('2')).toBeUndefined();
     } finally {
       workspace.cleanup();
     }

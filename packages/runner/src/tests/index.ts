@@ -4,6 +4,7 @@ export { findRunnerRoot } from './runner-root';
 export { testsCliSpec } from './tests-spec';
 export { runTests, type RunTestsOptions, type RunTestsResult } from './run-tests';
 export { TestsError } from './tests-error';
+export { ticketResults, type CriterionStatus, type TestResult, type TicketResults } from './ticket-results';
 export { runnerShell } from './tests-shell';
 export { testsCommand } from './tests.command';
 export { RUNNER_ROOT, TESTS, TESTS_HOOKS } from './tests.constants';

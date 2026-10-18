@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 18/10/2026 12:34:53 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 18/10/2026 12:46:10 — não editar manualmente.
 
 ## Resumo
 
@@ -291,7 +291,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/runner</b> — 100.00% das linhas, 16 arquivos</summary>
+<summary>🟢 <b>packages/runner</b> — 100.00% das linhas, 17 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -310,6 +310,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/tests/tests.constants.ts](packages/runner/src/tests/tests.constants.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/tests.service.ts](packages/runner/src/tests/tests.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/ticket-expand.ts](packages/runner/src/tests/ticket-expand.ts)|100.00|100.00|100.00|100.00
+🟢|[src/tests/ticket-results.ts](packages/runner/src/tests/ticket-results.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/ticket-verdict.ts](packages/runner/src/tests/ticket-verdict.ts)|100.00|100.00|100.00|100.00
 
 </details>

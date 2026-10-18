@@ -1,6 +1,7 @@
 import type { AgentDefinition, SkillSummary } from '@choliba/agents';
 import type { ConfigGroup, ConfigSetting } from '@choliba/config';
 import type { ProjectSettings, ProjectSummary, RetiredCriterion, TicketInfo } from '@choliba/projects';
+import type { TicketResults } from '@choliba/runner';
 
 /** Where `choliba` looks, when not the process's own folder and environment. */
 export interface CholibaOptions {
@@ -94,6 +95,11 @@ export interface CholibaTickets {
   get(id: string): TicketInfo;
   /** The criteria a later ticket replaces (`substitui`): `ticket`, `criterion`, `by` (the one replacing) and `tests`. */
   retired(): readonly RetiredCriterion[];
+  /**
+   * The ticket's last run, from the report `choliba run tests` left: when, how long, each test and where each criterion
+   * stands; `undefined` when it never ran.
+   */
+  results(id: string): TicketResults | undefined;
 }
 
 /** How much a project has: its tickets, their criteria, and the criteria a test covers. */
