@@ -20,6 +20,9 @@ providers:
     models:
       - Composer 2.5 Fast
       - Auto
+  codex:
+    models:
+      - gpt-6.1-sol
 
 role: |
   Você é o Implementer do projeto `${PROJECT}`. O agente `test-writer` já escreveu os testes do ticket `${TICKET}`: os

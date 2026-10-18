@@ -1,0 +1,15 @@
+# O modelo local do tech-stack-analyzer, para rodá-lo com --claude-ollama. Crie-o uma vez, nesta pasta:
+#
+#   ollama create tech-stack-analyzer -f Modelfile
+FROM qwen2.5-coder:7b
+
+# Mantém a análise determinística e factual.
+PARAMETER temperature 0.1
+
+# O prompt de um app médio dá cerca de 18 mil tokens e a resposta cerca de 1 mil; 24 mil deixam folga. Um contexto
+# menor ocupa menos memória e deixa mais camadas do modelo na GPU.
+PARAMETER num_ctx 24576
+
+# Sem SYSTEM: o choliba roda este modelo pelo Claude Code (provider claude-ollama), que sempre envia o próprio prompt
+# de sistema com o texto do agente, e o Ollama só usa o SYSTEM do Modelfile quando a requisição não traz nenhum. As
+# regras e o formato da resposta ficam num lugar só: o agent.yaml desta pasta.

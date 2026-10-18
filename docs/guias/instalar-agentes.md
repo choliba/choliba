@@ -27,6 +27,7 @@ também aparece como aviso.
 | agente | `.choliba/agents/product-owner`                | Escreve o ticket com critérios de aceite, usando a aplicação no navegador. |
 | agente | `.choliba/agents/test-writer`                  | Escreve um teste por critério, antes da implementação.                     |
 | agente | `.choliba/agents/implementer`                  | Muda a aplicação até os testes do ticket passarem.                         |
+| agente | `.choliba/agents/tech-stack-analyzer`          | Registra a stack da aplicação em `stack`, no `config.json` do projeto.     |
 | skill  | `.choliba/skills/playwright-cli`               | Ensina o agente a usar o navegador (a ferramenta da run `playwright-cli`). |
 | skill  | `.choliba/skills/playwright-trace`             | Ensina o agente a ler o `trace.zip` de um teste que falhou.                |
 | skill  | `.choliba/skills/playwright-component-testing` | Testes de componente com Playwright.                                       |

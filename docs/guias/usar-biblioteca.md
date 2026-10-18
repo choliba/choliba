@@ -42,6 +42,7 @@ providers: claude, claude-ollama, codex, cursor
 agentes em /home/voce/meu-workspace/.choliba/agents
 - implementer 1.0.3
 - product-owner 1.3.2
+- tech-stack-analyzer 1.0.0
 - test-writer 1.1.3
 skill playwright-cli: Automate browser interactions, test web pages and work with Playwright tests.
 ```
