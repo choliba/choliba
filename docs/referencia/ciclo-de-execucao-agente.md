@@ -84,6 +84,26 @@ permissões do `agent.yaml`.
 14. Fecha o ticket: um ticket novo que o agente não tocou é apagado; em `execute`, sobrar `CHANGE_ME` é erro.
 15. Derruba a aplicação, se foi ele quem a subiu no passo 4.
 
+**O log da execução.** Toda execução, menos `--dry-run`, grava um log em `.cache/logs/<agente>/<data e hora>.log`, e a
+última linha na tela diz onde ele está (`log em …`). Ele é escrito enquanto a execução acontece, uma linha de cada vez:
+uma execução interrompida deixa o log até onde chegou. Começa com o agente, o modo, o projeto, o ticket, o sandbox e a
+tarefa; depois, cada linha com a hora e a origem:
+
+- `[saida]` e `[erro]`: o que o choliba mostrou (os steps, a aplicação, o agente, as paradas), sem as cores;
+- `[provider]` e `[provider-erro]`: cada linha que o provider escreveu, como chegou, antes de o choliba traduzi-la;
+- `[choliba]`: o provider e o modelo da execução, o código e o tempo do agente quando a sessão termina, e o código e
+  o tempo total no fim.
+
+```text
+2026-10-18T22:22:14.481Z [choliba] provider codex · modelo gpt-6-luna
+2026-10-18T22:22:15.313Z [provider] {"type":"thread.started","thread_id":"…"}
+2026-10-18T22:22:18.284Z [erro] ✗ o agente rodou ls /tmp, fora de permissions.execute; a execução foi interrompida.
+2026-10-18T22:22:18.301Z [choliba] agente terminou: código 1 · tempo do agente 3.8s
+2026-10-18T22:22:18.306Z [choliba] fim: código 1 · tempo total 3.8s
+```
+
+Os logs ficam até alguém apagar `.cache/`. Como trazem o que o agente leu e respondeu, não os compartilhe sem olhar.
+
 O que cada agente do repositório faz em cada fase, em `execute`:
 
 | Agente          | Fase 1 (`before`)                                                            | Fase 2 (agente)                                                | Fase 3 (`after`)                                               |

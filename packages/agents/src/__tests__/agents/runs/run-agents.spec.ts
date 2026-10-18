@@ -34,6 +34,12 @@ const SKILLS = join(__dirname, '..', '..', 'fixtures', 'skills');
 const MCPS = join(__dirname, '..', '..', 'fixtures', 'mcps');
 /** Where the runs of these cases make their empty folder: `/repo` is not a real folder. */
 const RUNS = join(tmpdir(), `cli-run-spec-${String(process.pid)}`);
+const LOGS = join(tmpdir(), `cli-run-logs-${String(process.pid)}`);
+
+/** `stderr` without the line that ends every real run, saying where its log is. */
+function withoutLogLine(stderr: string): string {
+  return stderr.replace(/log em .*\.log\n$/, '');
+}
 /** The text an agent.yaml of these cases needs (`role`, `input`, `flow`, `output`), one YAML line each. */
 const SECTIONS = ['role: Revisa código.', 'input: Um diff.', 'flow: 1. Revise.', 'output: Comentários.'];
 
@@ -136,6 +142,7 @@ function harness(stdoutLines: readonly string[], overrides: Partial<RunAgentsCli
     stderr,
     signals: fakeSignalSource(),
     runsDir: RUNS,
+    logsDir: LOGS,
     // The application of a project run counts as up: the specs that care pass their own.
     ensureApp: () => Promise.resolve({ started: false, stop: () => undefined }),
     ...overrides,
@@ -379,7 +386,7 @@ describe('runAgentsCli — the application of a project run', () => {
       });
 
       expect(await runAgentsCli([...RUN, 'x'], deps)).toBe(1);
-      expect(stderr.chunks.join('')).toBe(
+      expect(withoutLogLine(stderr.chunks.join(''))).toBe(
         '✗ a aplicação não responde em http://ready.test e …\n  O agente não foi executado.\n',
       );
       expect(stdout.chunks.join('')).not.toContain('[provider]');
@@ -977,6 +984,25 @@ describe('runAgentsCli — run', () => {
     expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES], deps)).toBe(0);
   });
 
+  it('writes the log of the run as it goes: the header, the provider, its lines, the agent time and the end', async () => {
+    const { deps, stderr } = harness(claudeStdout(claudeSuccessLine()), {
+      commands: [defineInvocation({ name: 'echo', agent: 'echo', description: 'd', taskRequired: false })],
+    });
+
+    expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES], deps)).toBe(0);
+    const path = /log em (.*\.log)\n$/.exec(stderr.chunks.join(''))?.[1] ?? '';
+    const log = readFileSync(path, 'utf8');
+
+    expect(path.startsWith(join(LOGS, 'echo'))).toBe(true);
+    expect(log).toMatch(
+      /^choliba run agent echo 1\.0\.0\nmodo: execute\nprojeto: —\nticket: —\nsandbox: local\ntarefa: /,
+    );
+    expect(log).toContain('[choliba] provider claude · modelo padrão do provider');
+    expect(log).toContain(`[provider] ${claudeInitLine()}`);
+    expect(log).toMatch(/\[choliba\] agente terminou: código 0 · tempo do agente \d/);
+    expect(log).toMatch(/\[choliba\] fim: código 0 · tempo total \d+(\.\d)?m?s\n$/);
+  });
+
   it('shows why an agent that exists does not load, instead of calling it unknown', async () => {
     const { deps, stderr } = harness([]);
 
@@ -1383,7 +1409,7 @@ describe('runAgentsCli — run', () => {
     });
 
     expect(await runAgentsCli(['guarded', '--agents-dir', FIXTURES], deps)).toBe(2);
-    expect(stderr.chunks.join('')).toBe(
+    expect(withoutLogLine(stderr.chunks.join(''))).toBe(
       [
         '✗ execute.before 1/2 falhou — run: bunx choliba tests x --expect red (código 2)',
         '  nada a implementar',
