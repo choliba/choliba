@@ -40,7 +40,7 @@ export abstract class AgentProvider {
   /** What `--help` says it is, when the command it runs does not say enough. */
   readonly summary?: string;
 
-  /** The declared id of the model its stream reports, to check against `agent.yaml#models`. */
+  /** The declared id of the model its stream reports, to check against `agent.yaml#providers.<id>.models`. */
   declaredModel(reported: string): string {
     return reported;
   }

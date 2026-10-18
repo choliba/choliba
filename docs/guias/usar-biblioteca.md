@@ -193,9 +193,9 @@ Cada agente é um `AgentDefinition`, o mesmo tipo que a CLI usa, exportado por `
 
 `provider(id)` segue a escolha do `choliba run agent` sem `--provider`:
 
-1. o provider dos modelos do agente, quando todos são de um prefixo (`ollama:` roda no `claude-ollama`);
-2. senão, `providers.preferred`;
-3. em `auto`, o primeiro instalado. Sem nenhum instalado, `undefined`.
+1. `providers.preferred`, quando o agente o declara;
+2. em `auto`, o primeiro provider que o agente declara e que está instalado;
+3. `undefined` quando nenhum pode rodá-lo (a preferência não é declarada, ou nenhum declarado está instalado).
 
 ## Skills
 

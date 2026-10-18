@@ -69,9 +69,11 @@ export class ProviderRegistry {
 
   /** What each `--provider` value means, listed under `--provider` in `--help`. */
   descriptions(): readonly { readonly name: string; readonly description: string }[] {
-    const order = this.autoOrder().map((provider) => provider.id);
     return [
-      { name: AUTO, description: `O primeiro instalado, nesta ordem: ${order.join(', ')}.` },
+      {
+        name: AUTO,
+        description: 'O primeiro provider que o agente declara e que está instalado, na ordem do agent.yaml.',
+      },
       ...this.providers.map((provider) => ({
         name: provider.id,
         description: this.summary(provider),

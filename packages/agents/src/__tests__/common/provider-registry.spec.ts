@@ -82,7 +82,10 @@ describe('ProviderRegistry — the names and descriptions --provider shows', () 
 
   it("says auto's order and how each provider is found", () => {
     expect(PROVIDERS.descriptions()).toEqual([
-      { name: 'auto', description: 'O primeiro instalado, nesta ordem: cursor, claude.' },
+      {
+        name: 'auto',
+        description: 'O primeiro provider que o agente declara e que está instalado, na ordem do agent.yaml.',
+      },
       { name: 'claude', description: 'Comando `claude`.' },
       {
         name: 'cursor',

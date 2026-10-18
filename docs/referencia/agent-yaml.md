@@ -11,7 +11,7 @@ completo e o passo a passo estão em [Escrevendo um agente](../guias/escrever-um
 | --------------------------------- | ----------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `version`                         | sim         | —                   | Versão do padrão: `1`.                                                                                                                                                                                                                                                                                                                                      |
 | `agent`                           | sim         | —                   | `id` (igual à pasta, é o nome do comando), `name`, `version` (semver do agente), `description` e, opcional, `color` (cor do rótulo `[agente]`; `CHOL_COLORS` ganha dela).                                                                                                                                                                                   |
-| `models`                          | sim         | —                   | Modelos com que o agente pode rodar, pelo id que o provider informa. Um modelo do Ollama é `ollama:<modelo>` (veja [Modelos do Ollama](#modelos-do-ollama)).                                                                                                                                                                                                |
+| `providers`                       | sim         | —                   | Os providers com que o agente roda e, em cada um, os modelos que ele pode usar (veja [Providers e modelos](#providers-e-modelos)).                                                                                                                                                                                                                          |
 | `role`, `input`, `flow`, `output` | sim         | —                   | O texto do agente (veja [O texto do agente](../guias/escrever-um-agente.md#o-texto-do-agente)).                                                                                                                                                                                                                                                             |
 | `context`, `notes`                | não         | nenhum              | Listas de textos que completam o texto do agente.                                                                                                                                                                                                                                                                                                           |
 | `skills`                          | não         | `[]`                | Pastas em `.choliba/skills/`, com a instrução de uso de cada uma (veja [Skills e MCPs](../guias/escrever-um-agente.md#skills-e-mcps)).                                                                                                                                                                                                                      |
@@ -54,32 +54,50 @@ escrita e exclusão nelas em toda execução, e nenhuma exceção reabre.
 A forma antiga continua aceita: um caminho que começa com `!` dentro de `deny.read`, `deny.write` ou `deny.delete` é
 o mesmo que pô-lo em `exception` da mesma ação (`deny: { read: ['${CHOL_ROOT}/', '!${CHOL_ROOT}/docs/publico/'] }`).
 
-## Modelos do Ollama
+## Providers e modelos
 
-Um modelo declarado como `ollama:<modelo>` em `models` roda no [Ollama](https://ollama.com), pelo provider
-`claude-ollama`: o Claude Code, com as mesmas permissões e as mesmas paradas, falando com o Ollama em vez da API do
-Claude.
+`providers` diz com que providers o agente roda e, em cada um, com que modelos. Cada modelo vai pelo nome que
+**aquele** provider usa.
 
 ```yaml
-models:
-  - claude-sonnet-5
-  - 'ollama:qwen3.5:4b'
+providers:
+  claude:
+    models: [claude-sonnet-5]
+  cursor:
+    models: [Composer 2.5 Fast, Auto]
+  claude-ollama:
+    models: [qwen3.5:4b]
 ```
+
+- Pelo menos um provider, entre os que o choliba conhece: `claude`, `claude-ollama` e `cursor`. Outro nome é recusado
+  ao carregar.
+- Cada provider tem pelo menos um modelo, sem repetir.
+- A ordem conta: em `auto`, roda o primeiro provider declarado que estiver instalado; num provider sem modelo próprio
+  (o `claude-ollama`), roda o primeiro modelo declarado para ele.
+
+Como uma execução escolhe:
+
+| A linha de comando diz       | Provider                                                                                         | Modelo                                                                         |
+| ---------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| `--provider X` e `--model Y` | X, que o agente precisa declarar                                                                 | Y, que precisa estar nos modelos de X                                          |
+| só `--provider X`            | X, que o agente precisa declarar                                                                 | o padrão de X, ou o primeiro modelo declarado para X quando ele não tem padrão |
+| só `--model Y`               | o provider que declara Y; se dois declaram, a execução pede `--provider`                         | Y                                                                              |
+| nenhum dos dois              | `CHOL_AGENTS_PROVIDER`, que o agente precisa declarar; em `auto`, o primeiro declarado instalado | como na linha "só `--provider X`"                                              |
+
+Um provider ou um modelo que o agente não declara é recusado antes de rodar, com a mensagem dizendo o que ele declara.
+O modelo que o provider informa ao começar também é conferido contra os modelos declarados para ele. No painel, o
+`/provider` lista `auto` e os providers do agente, e o `/model` os modelos do provider da sessão.
+
+### Ollama
+
+Os modelos de `claude-ollama` rodam no [Ollama](https://ollama.com): é o Claude Code, com as mesmas permissões e as
+mesmas paradas, falando com o Ollama em vez da API do Claude. O modelo vai pelo nome do Ollama, como o `ollama list`
+mostra (`qwen3.5:4b`).
 
 ```bash
 choliba run agent test-writer --claude-ollama --project loja --ticket loja-1
 ```
 
-- Sem `--model`, o `claude-ollama` usa o primeiro `ollama:` da lista; com `--model`, o modelo tem que ser um `ollama:`.
-  Um agente sem nenhum é recusado antes de rodar.
-- Um modelo `ollama:` só roda no `claude-ollama`: com `--claude` ou `--cursor`, o choliba recusa e diz qual provider
-  usar.
-- O `claude-ollama` não entra no `auto`: roda quando nomeado (`--provider claude-ollama`, `--claude-ollama` ou
-  `CHOL_AGENTS_PROVIDER`), ou quando **todos** os modelos do agente são `ollama:`. Nesse caso só ele roda o agente, e
-  o choliba o escolhe sozinho, sem `--provider`: a ordem é `--provider` (no painel, o `/provider` da sessão), depois o
-  provider dos modelos do agente, depois `CHOL_AGENTS_PROVIDER`, depois `auto`. O `--dry-run` diz quando o provider
-  veio dos modelos (`claude-ollama (dos modelos do agente)`). Um agente com algum modelo de outro provider segue a
-  escolha de sempre.
 - O endereço é `CHOL_OLLAMA_URL` (padrão `http://localhost:11434`). O choliba põe esse endereço e o token do Ollama na
   sessão e deixa vazias as credenciais do Claude, para nenhuma delas ir ao Ollama. No docker, veja
   [Ollama](sandbox.md#ollama).
@@ -122,7 +140,7 @@ fechado: um nome fora da lista abaixo, ou usado onde não vale, impede o agente 
 
 **Onde valem**: no texto do agente (`role`, `context`, `input`, `flow`, `output`, `notes`), nas `instructions` de
 skills e MCPs, em `permissions` (caminhos, diretórios de `execute` e comandos) e nos argumentos das ações de
-`steps`. **Onde não valem**: `agent`, `models`, `task` e as `tools` de um MCP, que são valores fixos da declaração.
+`steps`. **Onde não valem**: `agent`, `providers`, `task` e as `tools` de um MCP, que são valores fixos da declaração.
 
 ### `${CHOL_ROOT}`
 
