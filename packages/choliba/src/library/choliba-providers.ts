@@ -1,4 +1,4 @@
-import type { AgentProvider, ProviderRegistry } from '@choliba/agents';
+import { agentProvider, AUTO, type AgentDefinition, type AgentProvider, type ProviderRegistry } from '@choliba/agents';
 import type { ConfigSource } from '@choliba/config';
 import { commandOnPath, ExpectedError } from '@choliba/core';
 
@@ -51,4 +51,20 @@ export function cholibaProviders(source: ProvidersSource): CholibaProviders {
       return source.preferred();
     },
   };
+}
+
+/**
+ * The provider that runs `agent` with no `--provider`, as `choliba run agent` picks it: the one its models belong to,
+ * else the preference, and under `auto` the first installed; `undefined` when `auto` finds none.
+ */
+export function agentRunsWith(source: ProvidersSource, agent: AgentDefinition): CholibaProvider | undefined {
+  const choice = agentProvider(agent, source.registry) ?? source.preferred();
+  if (choice !== AUTO) return cholibaProviders(source).get(choice);
+  try {
+    const { adapter } = source.registry.resolve(AUTO, (bin) => commandOnPath(bin, source.path()) ?? null);
+    return providerOf(source, adapter);
+  } catch {
+    // `resolve` fails only when no provider `auto` may pick is installed.
+    return undefined;
+  }
 }

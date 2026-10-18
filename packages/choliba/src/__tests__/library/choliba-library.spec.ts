@@ -261,3 +261,60 @@ describe('openCholiba — providers', () => {
     }
   });
 });
+
+describe("openCholiba — an agent's provider and MCPs", () => {
+  const WITH_MCPS = ECHO.replace(
+    'permissions:',
+    'mcps:\n  app:\n    tools: [abrir]\n    instructions: Use o app.\n  docs: null\n\npermissions:',
+  );
+  const OLLAMA = ECHO.replace('id: echo', 'id: local').replace('  - modelo-a', "  - 'ollama:qwen3.5:4b'");
+
+  /** The library of a workspace whose PATH has the `installed` commands, and `env` besides. */
+  function library(installed: readonly string[], env: Readonly<Record<string, string>> = {}) {
+    const workspace = workspaceWith({
+      '.choliba/agents/echo/agent.yaml': WITH_MCPS,
+      '.choliba/agents/local/agent.yaml': OLLAMA,
+      '.choliba/mcps/app.json': '{"command":"app"}',
+    });
+    const bin = join(workspace.path, 'bin');
+    mkdirSync(bin);
+    for (const command of installed) {
+      writeFileSync(join(bin, command), '');
+      chmodSync(join(bin, command), 0o755);
+    }
+    return { workspace, choliba: openCholiba({ cwd: workspace.path, env: { PATH: bin, ...env } }) };
+  }
+
+  it('gives the provider of its models, else the preference, else the first installed under auto', () => {
+    const auto = library(['claude']);
+    const chosen = library([], { CHOL_AGENTS_PROVIDER: 'cursor' });
+    const none = library([]);
+    try {
+      expect(auto.choliba.agents.provider('local')?.id).toBe('claude-ollama');
+      expect(auto.choliba.agents.provider('echo')?.id).toBe('claude');
+      expect(chosen.choliba.agents.provider('echo')).toMatchObject({ id: 'cursor', installed: false });
+      expect(none.choliba.agents.provider('echo')).toBeUndefined();
+    } finally {
+      for (const each of [auto, chosen, none]) each.workspace.cleanup();
+    }
+  });
+
+  it('lists the MCPs it declares, each with its file and whether it is there, not what the file holds', () => {
+    const { workspace, choliba } = library([]);
+    try {
+      expect(choliba.agents.mcps('echo')).toEqual([
+        {
+          name: 'app',
+          path: join(workspace.path, '.choliba', 'mcps', 'app.json'),
+          exists: true,
+          tools: ['abrir'],
+          instructions: 'Use o app.',
+        },
+        { name: 'docs', path: join(workspace.path, '.choliba', 'mcps', 'docs.json'), exists: false },
+      ]);
+      expect(choliba.agents.mcps('local')).toEqual([]);
+    } finally {
+      workspace.cleanup();
+    }
+  });
+});

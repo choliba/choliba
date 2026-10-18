@@ -3,6 +3,7 @@ export type {
   Choliba,
   CholibaAgents,
   CholibaConfig,
+  CholibaMcp,
   CholibaOptions,
   CholibaProject,
   CholibaProjects,

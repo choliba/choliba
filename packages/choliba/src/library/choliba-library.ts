@@ -1,4 +1,5 @@
-import { resolve } from 'node:path';
+import { existsSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 
 import {
   agentsConfig,
@@ -16,7 +17,7 @@ import { LocationsService, ProjectsService, projectsConfig } from '@choliba/proj
 import { configSourcesAt, findWorkspaceRoot } from '../config';
 import { cholibaManifest, PACKAGE_NAME } from '../help';
 import { cholibaProjects } from './choliba-projects';
-import { cholibaProviders } from './choliba-providers';
+import { agentRunsWith, cholibaProviders } from './choliba-providers';
 import type {
   Choliba,
   CholibaAgents,
@@ -54,6 +55,13 @@ export function cholibaLibrary(groups: readonly ConfigGroup[], options: CholibaO
     list: () => listSkills(skills.dir),
     get: (name) => resolveSkill(skills.dir, { name }),
   };
+  const providerSource = {
+    registry: knownProviders(),
+    sources,
+    preferred: () => read(agentsConfig).provider,
+    path: () => (options.env ?? process.env)['PATH'],
+  };
+  const mcpsDir = (): string => resolve(root(), read(agentsConfig).mcpsDir);
   const agents: CholibaAgents = {
     get dir() {
       return resolve(root(), read(agentsConfig).agentsDir);
@@ -61,7 +69,20 @@ export function cholibaLibrary(groups: readonly ConfigGroup[], options: CholibaO
     list: () => listAgents(agents.dir),
     get: (id) => loadAgent(agents.dir, id),
     skills: (id) => resolveSkills(skills.dir, agents.get(id).skills),
+    mcps: (id) =>
+      agents.get(id).mcps.map(({ name, tools, instructions }) => {
+        const path = join(mcpsDir(), `${name}.json`);
+        return {
+          name,
+          path,
+          exists: existsSync(path),
+          ...(tools === undefined ? {} : { tools }),
+          ...(instructions === undefined ? {} : { instructions }),
+        };
+      }),
+    provider: (id) => agentRunsWith(providerSource, agents.get(id)),
   };
+
   const workspace: CholibaWorkspace = {
     get root() {
       return root();
@@ -79,12 +100,7 @@ export function cholibaLibrary(groups: readonly ConfigGroup[], options: CholibaO
     },
     workspace,
     config,
-    providers: cholibaProviders({
-      registry: knownProviders(),
-      sources,
-      preferred: () => read(agentsConfig).provider,
-      path: () => (options.env ?? process.env)['PATH'],
-    }),
+    providers: cholibaProviders(providerSource),
     agents,
     skills,
     projects: cholibaProjects(() => new ProjectsService(new LocationsService(read(projectsConfig)))),

@@ -43,6 +43,19 @@ export interface CholibaProviders {
   readonly preferred: string;
 }
 
+/** An MCP server an agent declares, where its JSON is: never what the JSON holds, which may carry credentials. */
+export interface CholibaMcp {
+  readonly name: string;
+  /** Its `<name>.json` in `CHOL_MCPS_DIR`, absolute. */
+  readonly path: string;
+  /** Whether that file is there. */
+  readonly exists: boolean;
+  /** The only tools of it the agent may call; absent allows them all. */
+  readonly tools?: readonly string[];
+  /** How the agent uses it (`agent.yaml#mcps.<name>.instructions`). */
+  readonly instructions?: string;
+}
+
 /** The workspace's agents. */
 export interface CholibaAgents {
   /** The agents folder, absolute: `CHOL_AGENTS_DIR`, else `.choliba/agents`. */
@@ -53,6 +66,14 @@ export interface CholibaAgents {
   get(id: string): AgentDefinition;
   /** The skills the agent declares, resolved as a run gives them. */
   skills(id: string): readonly SkillSummary[];
+  /** The MCP servers the agent declares, each with its file in `CHOL_MCPS_DIR`. */
+  mcps(id: string): readonly CholibaMcp[];
+  /**
+   * The provider that runs the agent, as `choliba run agent` picks it with no `--provider`: the one its models belong
+   * to (`ollama:` ones run in `claude-ollama`), else `providers.preferred`, and under `auto` the first installed;
+   * `undefined` when `auto` finds none.
+   */
+  provider(id: string): CholibaProvider | undefined;
 }
 
 /** The workspace's skills. */
