@@ -27,11 +27,20 @@ describe('writeConfig', () => {
       mkdirSync(join(projects.path, 'demo'));
       writeFileSync(file, '{"name":"demo"}');
 
-      writeConfig({ projectsDir: projects.path, name: 'demo' }, '{"language":"PHP","frameworks":["Yii 1"]}', STEP);
+      writeConfig(
+        { projectsDir: projects.path, name: 'demo' },
+        '{"language":{"name":"PHP"},"frameworks":[{"name":"Yii","version":"^1.1"}]}',
+        STEP,
+      );
 
       expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({
         name: 'demo',
-        stack: { language: 'PHP', frameworks: ['Yii 1'], libraries: [], tools: [] },
+        stack: {
+          language: { name: 'PHP', version: '', url: '' },
+          frameworks: [{ name: 'Yii', version: '^1.1', url: '' }],
+          libraries: [],
+          tools: [],
+        },
       });
     } finally {
       projects.cleanup();

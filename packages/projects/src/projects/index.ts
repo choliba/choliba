@@ -14,7 +14,13 @@ export {
   type ProjectSettings,
   type ProjectSettingsConfig,
 } from './project-settings';
-export { parseProjectStack, PROJECT_CONFIG_KEYS, writeProjectConfigKey, type ProjectStack } from './project-stack';
+export {
+  parseProjectStack,
+  PROJECT_CONFIG_KEYS,
+  writeProjectConfigKey,
+  type ProjectStack,
+  type ProjectStackItem,
+} from './project-stack';
 export { findReadme, readText, readmeSummary } from './project-readme';
 export { APP_PREPARED_ENV, AppError, prepareApp, type PrepareAppContext, type SetupSpawn } from './project-app-prepare';
 export { ensureApp, type EnsureAppDeps, type RunningApp } from './project-app-ensure';

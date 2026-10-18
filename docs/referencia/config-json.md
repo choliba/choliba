@@ -83,16 +83,17 @@ Com o que a aplicação é feita. Quem costuma gravar é um agente que analisa o
 
 ```json
 "stack": {
-  "language": "TypeScript",
-  "frameworks": ["React 19", "Vite 8"],
-  "libraries": ["Tailwind CSS 4", "Radix UI"],
-  "tools": ["Docker"]
+  "language": { "name": "TypeScript", "version": "^5.9", "url": "https://www.typescriptlang.org/" },
+  "frameworks": [{ "name": "react", "version": "^19.0", "url": "https://react.dev/" }],
+  "libraries": [{ "name": "tailwindcss", "version": "^4.1", "url": "" }],
+  "tools": [{ "name": "Docker", "version": "", "url": "" }]
 }
 ```
 
-`language`, a linguagem principal, é obrigatório. `frameworks`, `libraries` (as bibliotecas mais importantes) e
-`tools` (banco, ORM, Docker e outras ferramentas) são listas de textos e podem faltar. Outra chave dentro de `stack`
-é erro.
+Cada item tem `name`, a versão que o manifesto declara (`version`) e a página dele (`url`). Só `name` é obrigatório:
+`version` e `url` que faltem viram `""`, e os espaços nas pontas saem. `language`, a linguagem principal, é obrigatório.
+`frameworks`, `libraries` (as bibliotecas mais importantes) e `tools` (banco, ORM, Docker e outras ferramentas) são
+listas de itens e podem faltar. Outra chave, em `stack` ou num item, é erro.
 
 ## O que barra a execução
 
