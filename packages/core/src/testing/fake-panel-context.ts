@@ -17,6 +17,8 @@ export interface FakePanelContext {
   send(text: string, panel: ChatPanel): boolean;
   /** Ctrl+C twice: `true` when something is running, and was asked to stop. */
   stop(): boolean;
+  /** Whether `quit` was called: it asks what runs to stop, and closes nothing here. */
+  quitted(): boolean;
 }
 
 /** A context that keeps what is set and shown, for a spec to read. */
@@ -30,6 +32,7 @@ export function fakePanelContext(): FakePanelContext {
   const changes: ((key: string | undefined) => void)[] = [];
   let conversation: ((text: string, panel: ChatPanel) => void) | undefined;
   let running: (() => void) | undefined;
+  let quitting = false;
   const stop = (): boolean => {
     const current = running;
     current?.();
@@ -76,6 +79,11 @@ export function fakePanelContext(): FakePanelContext {
       spinning.clear();
       for (const listener of changes) listener(undefined);
     },
+    quit: () => {
+      stop();
+      quitting = true;
+      return Promise.resolve();
+    },
   };
   return {
     context,
@@ -90,5 +98,6 @@ export function fakePanelContext(): FakePanelContext {
       return conversation !== undefined;
     },
     stop,
+    quitted: () => quitting,
   };
 }

@@ -20,7 +20,7 @@ export const PANEL_LOGO = token<string>('PanelLogo');
 const PANEL_HINT = 'Digite uma mensagem ou / para os comandos';
 
 /** How to leave the panel, on the right of the footer. */
-const LEAVE = '\u001b[90mCtrl+C duas vezes sai\u001b[39m';
+const LEAVE = '\u001b[90mCtrl+C duas vezes sair\u001b[39m';
 
 /** What goes between two parts of the footer. */
 const FOOTER_SEPARATOR = '\u001b[90m · \u001b[39m';
@@ -65,14 +65,15 @@ export const PANEL_SPEC: CommandSpec = {
   details:
     'O painel abre com as boas-vindas: Enter mostra o campo, e Esc sai. No campo, `/` lista os comandos do painel ' +
     '(`/projects` escolhe o projeto e já pergunta o ticket, `/tickets` troca o ticket, `/agents` o agente), e o que eles escolhem aparece no ' +
-    'cabeçalho, em quadros que o Ctrl+P (projeto), o Ctrl+A (agente) ou um clique recolhem. Com o agente, o ' +
-    'cabeçalho mostra o provider e o modelo que uma execução usaria, e a linha de status o modo; `/provider`, ' +
-    '`/model` e `/mode` os escolhem para a sessão, e o Shift+Tab alterna o modo. Desde o início, o quadro do sandbox ' +
-    '(Ctrl+S) mostra onde o provider roda (o de CHOL_SANDBOX) e o que a execução do agente monta, e `/sandbox` o ' +
-    'troca para a sessão. Uma mensagem sem `/` é a tarefa ' +
+    'cabeçalho, em quadros que entram recolhidos e que o Ctrl+P (projeto), o Ctrl+A (agente) ou um clique abrem, por cima da conversa, e recolhem. Desde o início, ' +
+    'a linha de status mostra o modo, que o Shift+Tab alterna, e o sandbox onde o provider roda (o de CHOL_SANDBOX), ' +
+    'que `/sandbox` troca para a sessão. Com o agente, o modo fica entre os que ele aceita, e o cabeçalho mostra o ' +
+    'provider e o modelo que uma execução usaria; `/provider`, `/model` e `/mode` os escolhem para a sessão. ' +
+    'Enquanto o agente roda, a linha de status mostra também há quanto tempo. Uma mensagem sem `/` é a tarefa ' +
     'do agente: ele roda no painel com essas escolhas (sem ticket, um agente de tickets pergunta o tipo do ticket ' +
     'novo que a execução cria), o que se envia enquanto roda vai para ele, e as perguntas ' +
-    'dele aparecem no campo. Ctrl+C duas vezes para a execução; sem nada rodando, sai do painel. `/clear` para o ' +
+    'dele aparecem no campo. Ctrl+C duas vezes para a execução; sem nada rodando, sai do painel. `/quit` sai do painel depois de parar a ' +
+    'execução e esperar que ela termine, para nenhum processo ficar rodando. `/clear` para o ' +
     'que roda e limpa o contexto (projeto, ticket e agente) e a conversa. ' +
     'Precisa de um terminal interativo.',
   flags: [{ name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true }],
@@ -125,19 +126,25 @@ export const panelCommand: ShellCommand = {
       io.fail('erro: o painel precisa de um terminal interativo.');
       return;
     }
-    session.current = panelSession(
-      container,
-      panel,
-      container.get(PANEL_COMMANDS),
-      heading,
-      container.get(PANEL_STARTS),
-    );
     await new Promise<void>((resolve) => {
-      // Ctrl+C twice stops what runs first (a run of an agent); with nothing running, it closes the panel.
-      panel.onInterrupt(() => {
-        if (session.current?.stop() === true) return;
+      const leave = (): void => {
         panel.close();
         resolve();
+      };
+      session.current = panelSession(
+        container,
+        panel,
+        container.get(PANEL_COMMANDS),
+        heading,
+        container.get(PANEL_STARTS),
+        leave,
+      );
+      // What the modules' starts put in the status line came before the session was here to give it: draw it now.
+      panel.refresh();
+      // Ctrl+C twice stops what runs first (a run of an agent); with nothing running, it closes the panel. So does /quit.
+      panel.onInterrupt(() => {
+        if (session.current?.stop() === true) return;
+        leave();
       });
     });
   },
@@ -152,6 +159,13 @@ export const clearPanelCommand: PanelCommand = {
     panel.clear();
     return Promise.resolve();
   },
+};
+
+/** `/quit`: closes the panel, once what runs (a run of an agent, the steps after it) has stopped and ended. */
+export const quitPanelCommand: PanelCommand = {
+  name: 'quit',
+  description: 'Sai do painel, depois de parar e esperar o que roda',
+  run: ({ context }) => context.quit(),
 };
 
 /** The panel's opener, `openOpenTuiPanel`, built when `choliba panel` asks for it. */

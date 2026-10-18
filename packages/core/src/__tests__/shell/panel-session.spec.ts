@@ -123,6 +123,18 @@ describe('panelSession', () => {
       [],
       [],
     ]);
+    // Beside the field, what Enter runs; nothing with no list.
+    expect(fake.hints).toEqual(['tecle Enter para selecionar /projects', undefined, undefined]);
+  });
+
+  it('says beside the field what Enter runs, following the arrows, even with one suggestion', () => {
+    const { fake } = session();
+    fake.type('/p');
+    fake.press('down');
+    expect(fake.hints.at(-1)).toBe('tecle Enter para selecionar /pull');
+    fake.type('/pu');
+    expect(fake.press('down')).toBe(true);
+    expect(fake.hints.at(-1)).toBe('tecle Enter para selecionar /pull');
   });
 
   it('keeps the values the commands set, and shows their cards by their order, then in the order first shown', async () => {
@@ -438,5 +450,70 @@ describe('panelSession', () => {
     set?.clear();
     expect([begun, fake.headings.at(-1)]).toEqual([2, [...HEADING, '\u001b[90msandbox\u001b[39m local']]);
     expect(changes).toEqual(['agente', 'agente', undefined]);
+  });
+});
+
+describe('panelSession — quitting', () => {
+  /** A session whose `work` command starts a run that ends only when asked to stop, and whose `quit` closes it. */
+  function running() {
+    const fake = fakeChatPanel();
+    let closed = 0;
+    let stopped = 0;
+    let end: (() => void) | undefined;
+    const work: PanelCommand = {
+      name: 'work',
+      description: 'Roda',
+      run: ({ context }) => {
+        // The run stops when asked, but is over only later, as an agent's run with the steps after it.
+        context.busy(() => {
+          stopped += 1;
+        });
+        end = () => {
+          context.busy(undefined);
+        };
+        return Promise.resolve();
+      },
+    };
+    const quit: PanelCommand = { name: 'quit', description: 'Sai', run: ({ context }) => context.quit() };
+    const session = panelSession(new Container(), fake.panel, [work, quit], HEADING, [], () => {
+      closed += 1;
+    });
+    const settle = () => new Promise((resolve) => setImmediate(resolve));
+    return { fake, session, settle, closed: () => closed, stopped: () => stopped, end: () => end?.() };
+  }
+
+  it('quits a session given no way to close, closing nothing', async () => {
+    const fake = fakeChatPanel();
+    const quit: PanelCommand = { name: 'quit', description: 'Sai', run: ({ context }) => context.quit() };
+    panelSession(new Container(), fake.panel, [quit], HEADING);
+    fake.send('/quit');
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(fake.closed()).toBe(false);
+  });
+
+  it('closes the panel at once when nothing runs', async () => {
+    const { fake, session, settle, closed } = running();
+    await session.idle();
+    fake.send('/quit');
+    await settle();
+
+    expect(closed()).toBe(1);
+    expect(fake.written).toEqual([]);
+  });
+
+  it('stops what runs and closes the panel only once it is over, so no process stays running', async () => {
+    const { fake, session, settle, closed, stopped, end } = running();
+    fake.send('/work');
+    await settle();
+    fake.send('/quit');
+    await settle();
+
+    expect([stopped(), closed()]).toEqual([1, 0]);
+    expect(fake.written).toEqual(['\u001b[90mParando o que roda antes de sair…\u001b[39m']);
+    end();
+    await settle();
+    expect(closed()).toBe(1);
+    await session.idle();
   });
 });

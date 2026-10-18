@@ -17,13 +17,53 @@ function terminal(args: readonly string[] = [], cwd = '/home/ana/loja'): FakePla
 }
 
 describe('choliba panel', () => {
+  it('closes the panel with /quit, with code 0', async () => {
+    const fake = fakePanel();
+    const code = runShell([coreShell, VERBS_ROOT], terminal(), [
+      replace(PANEL_OPENER, () => Promise.resolve(fake.panel)),
+    ]);
+    await new Promise((resolve) => setImmediate(resolve));
+    fake.send('/quit');
+
+    expect(await code).toBe(0);
+    expect(fake.closed()).toBe(true);
+  });
+
+  it("draws the status line a module's start fills, once the session is there to give it", async () => {
+    const fake = fakePanel();
+    let parts: readonly string[] = [];
+    let refreshes = 0;
+    const starter: ShellModule = {
+      name: 'starter',
+      commands: [],
+      panelStart: (_container, context) => {
+        context.status('sandbox', 'sandbox local');
+      },
+    };
+    const opener = (options: PanelOptions): Promise<ChatPanel> => {
+      // What the footer holds each time the panel draws it again.
+      fake.panel.refresh = () => {
+        refreshes += 1;
+        parts = options.footer(80);
+      };
+      return Promise.resolve(fake.panel);
+    };
+    const code = runShell([coreShell, starter, VERBS_ROOT], terminal(), [replace(PANEL_OPENER, opener)]);
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(refreshes).toBeGreaterThan(0);
+    expect(parts[0]).toContain('sandbox local');
+    fake.interrupt();
+    expect(await code).toBe(0);
+  });
+
   it('opens the panel, writes what is sent in it, and closes it on Ctrl+C with code 0', async () => {
     const fake = fakePanel();
     const opened: PanelOptions[] = [];
     const opener = (options: PanelOptions): Promise<ChatPanel> => {
       opened.push(options);
       // The panel draws its footer as it opens, before the session is there.
-      expect(options.footer(80)).toEqual([`  ${' '.repeat(55)}\u001b[90mCtrl+C duas vezes sai\u001b[39m`]);
+      expect(options.footer(80)).toEqual([`  ${' '.repeat(54)}\u001b[90mCtrl+C duas vezes sair\u001b[39m`]);
       return Promise.resolve(fake.panel);
     };
     const platform = terminal();
@@ -53,7 +93,7 @@ describe('choliba panel', () => {
         lines: ['\u001b[1m\u001b[32mcholiba 1.2.3\u001b[39m\u001b[22m', '\u001b[90m~/loja\u001b[39m'],
       },
     });
-    expect(opened[0]?.footer(80)).toEqual([`  ${' '.repeat(55)}\u001b[90mCtrl+C duas vezes sai\u001b[39m`]);
+    expect(opened[0]?.footer(80)).toEqual([`  ${' '.repeat(54)}\u001b[90mCtrl+C duas vezes sair\u001b[39m`]);
     fake.send('ola');
     expect(fake.said).toEqual(['ola']);
     expect(fake.written).toEqual([]);
@@ -148,8 +188,8 @@ describe('choliba panel', () => {
     fake.send('/modo');
     await settle();
 
-    const leave = '\u001b[90mCtrl+C duas vezes sai\u001b[39m';
-    expect(opened[0]?.footer(40)).toEqual([`  plan${' '.repeat(11)}${leave}`]);
+    const leave = '\u001b[90mCtrl+C duas vezes sair\u001b[39m';
+    expect(opened[0]?.footer(40)).toEqual([`  plan${' '.repeat(10)}${leave}`]);
     expect(opened[0]?.footer(30)).toEqual([`  plan\u001b[90m · \u001b[39m${leave}`]);
     fake.interrupt();
     expect(await code).toBe(0);

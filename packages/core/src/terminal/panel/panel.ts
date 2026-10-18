@@ -1,5 +1,5 @@
 import type { AnsiColor } from '../../theme';
-import { ansiChunks, type StyledChunk } from '../frame';
+import { ansiChunks, visibleWidth, type StyledChunk } from '../frame';
 
 import type { PanelKey, PanelTextareaKeyBinding, PanelToolkit } from './interfaces/panel.interface';
 import { fieldHistory } from './panel-history';
@@ -87,9 +87,9 @@ export interface ChatPanel extends Panel {
   onTyping(listener: (text: string) => void): void;
   /**
    * Lines shown under the field, with their escape codes, while the person types, each a row `onPick` gets the
-   * index of when clicked; none hides them.
+   * index of when clicked, and `hint` at the end of the field's row, in gray (what Enter does); none hides them.
    */
-  suggest(lines: readonly string[], onPick?: (index: number) => void): void;
+  suggest(lines: readonly string[], onPick?: (index: number) => void, hint?: string): void;
   /** Puts `text` in the field, in place of what was there. */
   fill(text: string): void;
   /** Called with each key the person presses in the field, before the field takes it; `true` keeps it from it. */
@@ -180,8 +180,12 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     keyBindings: TEXTAREA_KEYS,
   });
   const footer = new kit.TextRenderable(renderer, { content: '', wrapMode: 'word', flexShrink: 0 });
+  // Right after what is typed while suggestions show: what Enter would do.
+  const fieldHint = new kit.TextRenderable(renderer, { content: '', wrapMode: 'none', flexShrink: 0 });
+  fieldHint.visible = false;
   bottom.add(prompt);
   bottom.add(input);
+  bottom.add(fieldHint);
   if (!compact) bottom.add(footer);
   // One row per suggestion, so a click picks it; the rows are made once and filled as the person types.
   const suggestions = new kit.BoxRenderable(renderer, { flexDirection: 'column', flexShrink: 0 });
@@ -375,9 +379,15 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     fill: (text) => {
       input.setText(text);
     },
-    suggest: (lines, onPick) => {
+    suggest: (lines, onPick, hint) => {
       const shown = lines.slice(0, MAX_SUGGESTIONS);
       pick = onPick;
+      const hinted = shown.length > 0 && hint !== undefined;
+      fieldHint.visible = hinted;
+      fieldHint.content = hinted ? styled([` \u001b[90m${hint}\u001b[39m`]) : '';
+      // The field keeps to what is typed and its cursor, so the hint reads right after it; then it takes the row again.
+      input.flexGrow = hinted ? 0 : 1;
+      input.width = hinted ? visibleWidth(input.plainText) + 1 : 'auto';
       suggestionRows.forEach((row, index) => {
         const line = shown[index];
         row.visible = line !== undefined;

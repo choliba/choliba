@@ -34,6 +34,7 @@ export {
   frameTop,
   textPieces,
   visibleWidth,
+  truncateVisible,
   wrapVisible,
   type StyledChunk,
   type TextPiece,
