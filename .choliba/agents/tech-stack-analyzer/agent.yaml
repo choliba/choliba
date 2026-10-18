@@ -1,0 +1,179 @@
+version: 1
+
+agent:
+  id: tech-stack-analyzer
+  name: Tech Stack Analyzer
+  version: 1.0.0
+  color: cyan
+  description: >-
+    Analisa o código e a estrutura do projeto ativo para identificar a linguagem
+    principal, os frameworks, as bibliotecas mais importantes e outras tecnologias
+    ou ferramentas utilizadas, e registra a análise em stack, no config.json do projeto.
+    Age sobre um projeto (--project) e não altera o código da aplicação.
+providers:
+  codex:
+    models:
+      - gpt-6.1-sol
+  claude-ollama:
+    models:
+      - 'tech-stack-analyzer'
+
+role: |
+  Você é um agente especialista em análise de arquitetura de software e tecnologias. Sua tarefa é analisar a
+  estrutura de arquivos e o código do projeto `${PROJECT}` em `${APP_DIR}` e retornar exatamente os seguintes dados
+  de forma estruturada:
+
+  1. **Linguagem Principal:** (ex.: Python, TypeScript, Java)
+  2. **Framework(s):** (ex.: FastAPI, React, Spring Boot)
+  3. **Bibliotecas (Libs) Principais:** (principais dependências identificadas)
+  4. **Outras Tecnologias / Ferramentas:** (banco de dados, ORM, Docker etc.)
+
+  Mantenha sua resposta direta ao ponto. Você não grava arquivos: responda com a análise em JSON, e o choliba a
+  registra em `stack`, no `config.json` do projeto.
+
+context:
+  - >-
+    O projeto `${PROJECT}` já foi escolhido por quem executou o agente. O código da aplicação está em `${APP_DIR}`;
+    use seus manifestos, arquivos de configuração, estrutura e código como fontes da análise.
+  - >-
+    Antes de você começar, o choliba já pôs no prompt um resumo da estrutura da aplicação (em `<estrutura>`: as pastas
+    até 2 níveis e quantos arquivos há de cada extensão, sem node_modules, vendor, dist, .git, cache, volumes, assets e
+    edi) e o conteúdo dos
+    manifestos e arquivos de configuração que existirem (em `<manifestos>`). A extensão com mais arquivos costuma ser
+    a linguagem principal. Parta deles; só abra outro arquivo de `${APP_DIR}` quando precisar confirmar algo.
+
+input: |
+  - O projeto é `${PROJECT}`. Uma tarefa em texto livre, quando houver, apenas delimita ou aprofunda a análise.
+
+flow: |
+  1. Leia o resumo em `<estrutura>` e os manifestos em `<manifestos>`.
+  2. Só se algo ficar em dúvida, confirme no código de `${APP_DIR}`.
+  3. Responda com a análise, no formato definido. No modo execute, o choliba grava a sua resposta em `stack`, no
+     `config.json` do projeto.
+
+output: |
+  A resposta final é só um objeto JSON, sem texto antes ou depois, com estas quatro chaves e nenhuma outra. Cada item
+  é um objeto com `name`, `version` e `url`, sempre os três, sem espaço no começo ou no fim dos valores. O formato
+  abaixo tem marcadores entre `<` e `>`: troque cada um pelo que você achou; nunca os copie.
+
+  ```json
+  {
+    "language": { "name": "<linguagem>", "version": "<versão>", "url": "<página>" },
+    "frameworks": [{ "name": "<nome>", "version": "<versão>", "url": "<página>" }],
+    "libraries": [{ "name": "<nome>", "version": "<versão>", "url": "<página>" }],
+    "tools": [{ "name": "<nome>", "version": "<versão>", "url": "<página>" }]
+  }
+  ```
+
+  Exemplo de um item: `{ "name": "aura/sqlquery", "version": "^2.8", "url": "https://github.com/auraphp/Aura.SqlQuery" }`.
+
+  - `language`: a linguagem principal (a extensão com mais arquivos em `<estrutura>`), com a versão que o manifesto
+    exigir (`"php": "^8.3"` no composer.json, `engines` no package.json).
+  - `frameworks`: os frameworks dos manifestos (do `require` do composer.json, das `dependencies` do package.json).
+  - `libraries`: todas as outras dependências de produção que importam para entender o app (banco, cache, fila, nuvem,
+    HTTP, log, PDF, planilha, GraphQL). Não resuma: um app com 40 dependências tem muitas bibliotecas. Deixe de fora
+    só pacotes internos sem nome conhecido.
+  - `tools`: o que roda o app e o desenvolvimento: Docker e os serviços do docker-compose (banco, cache, busca), testes
+    (das dependências de desenvolvimento), análise de código e build.
+  - `version`: a versão como o manifesto declara (`^2.8` no composer.json, `^7.0` no package.json); de uma imagem do
+    Dockerfile ou do docker-compose, a tag dela (`php:8.3-fpm` dá `8.3-fpm`). Sem versão nos manifestos, `""`: a versão
+    instalada nesta máquina não é a do projeto.
+  - `url`: a página que os manifestos trazem (`homepage`); sem ela, `""`. Nunca monte uma URL pelo nome.
+  - Cada nome entra numa lista só. Lista sem nada encontrado fica `[]`.
+  - Não invente nomes, versões nem páginas: use só o que está em `<manifestos>`.
+
+permissions:
+  allow:
+    read:
+      - '${PROJECT_DIR}/config.json'
+      - '${APP_DIR}/'
+  deny:
+    write: ['*']
+    delete: ['*']
+    execute:
+      '${CHOL_ROOT}/': ['*']
+      '${APP_DIR}/': ['*']
+# O choliba monta o contexto antes do agente. O search_files acha os arquivos do app, grava a lista completa em
+# .cache/arquivos.txt do projeto (que fica salva mesmo se a execução parar) e põe só o resumo no prompt. O read_files
+# escolhe dessa lista os manifestos da raiz do app, sem varrer o app de novo, e põe o conteúdo deles no prompt. Um
+# modelo pequeno analisa o que recebe, sem gastar ferramentas procurando. `&before` dá nome à lista; `*before` a
+# repete em plan e ask.
+steps:
+  execute:
+    before: &before
+      - search_files:
+          tag: estrutura
+          dirs: ['${APP_DIR}']
+          max_depth: 2
+          # Padrões de caminho (docs/referencia/padroes-de-caminho.md): sem / é o nome em qualquer nível.
+          ignore:
+            [
+              cache,
+              volumes,
+              assets,
+              edi,
+              docker,
+              logs,
+              quester,
+              zip,
+              images,
+              '.cursor*',
+              '.git*',
+              '*.upload.*',
+              arquivos_upload,
+              arquivos_csv,
+              bd,
+              class,
+              .vscode,
+              FusionCharts3,
+              FusionCharts,
+              jscripts,
+              font,
+              lib,
+              relatorios,
+              styles,
+              tmp,
+              '*.bat',
+              '*.png',
+              '*.jpg',
+              tests,
+              '.htaccess*',
+              docs/,
+            ]
+          files: ['${PROJECT_DIR}/.cache/arquivos.txt']
+          max_size: 8KB
+      - read_files:
+          tag: manifestos
+          source: '${PROJECT_DIR}/.cache/arquivos.txt'
+          pattern:
+            - '/package.json'
+            - '/composer.json'
+            - '/tsconfig*.json'
+            - '/*.config.*'
+            - '/components.json'
+            - '/index.html'
+            - '/Makefile'
+            - '/phpunit.xml'
+            - '/Dockerfile*'
+            - '/docker-compose*.yml'
+            - '/pyproject.toml'
+            - '/requirements*.txt'
+            - '/go.mod'
+            - '/Cargo.toml'
+            - '/pom.xml'
+          max_size: 64KB
+    # O choliba grava a resposta: não depende de o modelo chamar a ferramenta de escrita.
+    after:
+      success:
+        - write_config: { key: stack }
+  plan:
+    before: *before
+  ask:
+    before: *before
+
+modes:
+  allow: [execute, plan, ask]
+  default: execute
+task:
+  required: false
+  default: Analise as tecnologias utilizadas pelo projeto.
