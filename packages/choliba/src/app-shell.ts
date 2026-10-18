@@ -22,7 +22,17 @@ import { projectsShell } from '@choliba/projects';
 import { runnerShell } from '@choliba/runner';
 
 import { addCommand } from './add';
-import { cholibaLibrary, type Choliba, type CholibaOptions } from './library';
+import {
+  cholibaLibrary,
+  type Choliba,
+  type CholibaAgents,
+  type CholibaConfig,
+  type CholibaOptions,
+  type CholibaProjects,
+  type CholibaProviders,
+  type CholibaSkills,
+  type CholibaWorkspace,
+} from './library';
 import { checkCommand } from './check';
 import { findWorkspaceRoot, listConfigCommand, setConfigCommand, workspaceConfigSources } from './config';
 import { CHOLIBA_ORDER, CHOLIBA_ROOT, CHOLIBA_VERBS, cholibaManifest, OWL_ICON, PACKAGE_NAME } from './help';
@@ -105,5 +115,11 @@ export function openCholiba(options: CholibaOptions = {}): Choliba {
 /** choliba for a script, from the process's folder and environment, read on first use (`openCholiba()`). */
 export const choliba: Choliba = openCholiba();
 
-// Each module of `choliba` by its name, to import alone: `import { agents } from 'choliba'`.
-export const { workspace, config, providers, agents, skills, projects } = choliba;
+// Each module of `choliba` by its name, to import alone: `import { agents } from 'choliba'`. Typed one by one, so the
+// published declarations name their types instead of inlining an `import()` a `nodenext` project cannot resolve.
+export const workspace: CholibaWorkspace = choliba.workspace;
+export const config: CholibaConfig = choliba.config;
+export const providers: CholibaProviders = choliba.providers;
+export const agents: CholibaAgents = choliba.agents;
+export const skills: CholibaSkills = choliba.skills;
+export const projects: CholibaProjects = choliba.projects;
