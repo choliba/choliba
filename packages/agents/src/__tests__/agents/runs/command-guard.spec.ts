@@ -96,6 +96,33 @@ describe('commandViolation', () => {
     expect(commandViolation("cd '/repo/docs'", RULES)).toBeUndefined();
   });
 
+  it('lets a command that only reads run, whatever the rules, as Codex reads with the shell', () => {
+    const none = { ...RULES, allowed: [] };
+
+    expect(commandViolation("/bin/bash -lc 'cat /repo/.choliba/skills/x/SKILL.md'", none)).toBeUndefined();
+    expect(commandViolation("/bin/bash -lc 'sed -n '\\''1,200p'\\'' README.md'", none)).toBeUndefined();
+    expect(commandViolation('/bin/bash -lc "sed -n \'1,80p\' \\"a b.md\\""', none)).toBeUndefined();
+    expect(commandViolation('sed -n 5p a.md', none)).toBeUndefined();
+    expect(commandViolation('sed -n "10,$p" a.md', none)).toBeUndefined();
+    expect(commandViolation("rg -n 'title' src | head -20", none)).toBeUndefined();
+    expect(commandViolation('ls -la && pwd && wc -l a.md && nl a.md | tail -5', none)).toBeUndefined();
+    expect(commandViolation("find src -name '*.ts' -type f", none)).toBeUndefined();
+    expect(commandViolation('grep -rn x .', none)).toBeUndefined();
+  });
+
+  it('stops a reading command that would run another program or write, and a sed that is not a print', () => {
+    const none = { ...RULES, allowed: [] };
+
+    expect(commandViolation('find . -name x -exec rm {} ;', none)).toContain('rodou find . -name x -exec rm {}');
+    expect(commandViolation('find . -delete', none)).toContain('rodou find . -delete');
+    expect(commandViolation('rg --pre ./run x', none)).toContain('rodou rg --pre ./run x');
+    expect(commandViolation('rg -z x', none)).toContain('rodou rg -z x');
+    expect(commandViolation("sed -i 's/a/b/' a.md", none)).toContain("rodou sed -i 's/a/b/' a.md");
+    expect(commandViolation("sed -n 'e rm -rf /' a.md", none)).toContain('rodou sed -n');
+    expect(commandViolation('cat a | xargs rm', none)).toContain('rodou xargs rm');
+    expect(commandViolation('cat a', { ...none, denied: ['cat'] })).toContain('rodou cat a');
+  });
+
   it('stops a substitution, which the rules cannot check', () => {
     expect(commandViolation('git status $(rm -rf /)', RULES)).toBe(
       '✗ o agente rodou um comando com substituição, que as permissões não conseguem conferir: git status $(rm -rf /); a execução foi interrompida.',

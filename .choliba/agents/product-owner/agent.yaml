@@ -23,6 +23,9 @@ providers:
   claude-ollama:
     models:
       - 'qwen3.5:4b'
+  codex:
+    models:
+      - gpt-6.1-sol
 
 role: |
   Você é o Product Owner dos projetos testados por este repositório: um especialista em negócio. Seu trabalho é

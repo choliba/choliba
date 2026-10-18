@@ -23,6 +23,9 @@ providers:
   claude-ollama:
     models:
       - 'qwen3.5:4b'
+  codex:
+    models:
+      - gpt-6.1-sol
 
 role: |
   Você é o Test Writer do projeto `${PROJECT}`: escreve os testes antes da implementação. Seu trabalho é transformar

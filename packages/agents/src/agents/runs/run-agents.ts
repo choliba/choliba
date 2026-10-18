@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import { formatHelp, openOpenTuiPanel, type CommandSpec } from '@choliba/core';
+import { formatDuration, formatHelp, openOpenTuiPanel, type CommandSpec } from '@choliba/core';
 import { AppError, ensureApp, type ProjectSettings, type RunningApp } from '@choliba/projects';
 import { readSandbox, type Sandbox, type SandboxConfigError } from '@choliba/sandbox';
 
@@ -19,6 +19,7 @@ import { spawnToEnd } from '../steps/step-spawn';
 import { formatAgentDetail, runList } from './agent-detail';
 import { formatDryRun, type DryRunInput } from './dry-run';
 import { runAgent } from './run-agent';
+import { loggedStream, NO_RUN_LOG, openRunLog, type RunLog } from './run-log';
 import { wantsFooter } from './run-footer';
 import { planRunTools, type PlannedFile } from '../../common';
 import { CHOL_ROOT } from '../../common';
@@ -217,10 +218,12 @@ async function runAndRecord(
   deps: RunAgentsCliDeps,
   sandbox: Sandbox,
   project: string | undefined,
+  log: RunContext['log'],
 ): Promise<number> {
   const toolFiles = planRunTools(providerRequest, deps.config);
   const files = [...toolFiles, ...(resolved.adapter.previewWorkspace?.(providerRequest) ?? [])];
   let answer: string | undefined;
+  log.log.write('choliba', `provider ${resolved.adapter.id} · modelo ${providerRequest.model ?? 'padrão do provider'}`);
   const exitCode = await runAgent(
     {
       provider: resolved,
@@ -242,8 +245,10 @@ async function runAndRecord(
     },
     {
       runner: deps.runner,
-      stdout: deps.stdout,
-      stderr: deps.stderr,
+      // The run's screen logs what it writes itself, so it gets the streams as they were before the log.
+      stdout: log.stdout,
+      stderr: log.stderr,
+      log: log.log,
       signals: deps.signals,
       now: deps.now,
       footer: wantsFooter(deps.stdout, deps.config),
@@ -333,19 +338,72 @@ async function runCommand(parsed: RunArgs, given: RunAgentsCliDeps): Promise<num
     ...taskAndMode,
     planContent: planResult.planContent,
     synthesized: !deps.commands.some((candidate) => candidate.name === parsed.command),
+    log: { log: NO_RUN_LOG, stdout: deps.stdout, stderr: deps.stderr },
   };
 
+  // From here on, a real run writes its log as it goes: the application, the steps, the agent and how it ended.
+  const logged = parsed.dryRun ? undefined : withRunLog(context, agent);
+  const runContext = logged === undefined ? context : { ...context, deps: logged.deps, log: logged.run };
   // The application is up before anything that may use it: the `before` steps (tests) and the agent. `--dry-run`
   // only says it would be.
-  const app = parsed.dryRun ? NO_APP : await appFor(projectRun.settings, deps);
+  const app = parsed.dryRun ? NO_APP : await appFor(projectRun.settings, runContext.deps);
   if (app === undefined) {
-    return 1;
+    return closeRunLog(logged, 1);
   }
   try {
-    return await runPrepared(context, command, agent, ticketTarget, projectRun.settings, sandbox);
+    const exitCode = await runPrepared(runContext, command, agent, ticketTarget, projectRun.settings, sandbox);
+    return closeRunLog(logged, exitCode);
   } finally {
     app.stop();
   }
+}
+
+/** A run's log, open, and the deps that write to it: what goes to `stdout` and `stderr` is logged too. */
+interface LoggedRun {
+  readonly log: RunLog;
+  readonly run: RunContext['log'];
+  readonly deps: RunAgentsCliDeps;
+  readonly started: number;
+  readonly stderr: RunAgentsCliDeps['stderr'];
+}
+
+/** What the log says first: the agent, the mode, the project, the ticket, the sandbox and the task. */
+function runLogHeader(context: RunContext, agent: AgentDefinition): readonly string[] {
+  return [
+    `choliba run agent ${agent.name} ${agent.version}`,
+    `modo: ${context.mode}`,
+    `projeto: ${context.project?.name ?? '—'}`,
+    `ticket: ${context.vars['TICKET'] ?? '—'}`,
+    `sandbox: ${context.sandbox.kind}`,
+    `tarefa: ${context.task}`,
+  ];
+}
+
+/** Opens the log of the run, in `.cache/logs/<agent>/`, and gives the deps whose `stdout` and `stderr` write to it. */
+function withRunLog(context: RunContext, agent: AgentDefinition): LoggedRun {
+  const { deps } = context;
+  const dir = deps.logsDir ?? join(deps.repoRoot, '.cache', 'logs');
+  const log = openRunLog(dir, agent.name, runLogHeader(context, agent), deps.now);
+  return {
+    log,
+    run: { log, stdout: deps.stdout, stderr: deps.stderr },
+    started: deps.now().getTime(),
+    stderr: deps.stderr,
+    deps: {
+      ...deps,
+      stdout: loggedStream(deps.stdout, log, 'saida'),
+      stderr: loggedStream(deps.stderr, log, 'erro'),
+    },
+  };
+}
+
+/** Ends the log with the run's code and how long it took, says where it is, and gives the code back. */
+function closeRunLog(logged: LoggedRun | undefined, exitCode: number): number {
+  if (logged === undefined) return exitCode;
+  const took = formatDuration(logged.deps.now().getTime() - logged.started);
+  logged.log.write('choliba', `fim: código ${String(exitCode)} · tempo total ${took}`);
+  logged.stderr.write(`log em ${logged.log.path}\n`);
+  return exitCode;
 }
 
 const NO_APP: RunningApp = { started: false, stop: () => undefined };
@@ -418,6 +476,7 @@ async function runPrepared(
     deps,
     sandbox,
     settings?.project,
+    context.log,
   );
   const changes = definitionChanges(before, definitionSnapshot(directories));
   const guarded = changes.length === 0 ? exitCode : definitionChangeExit(changes, deps);

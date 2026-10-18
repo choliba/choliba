@@ -23,6 +23,8 @@ fazem o trabalho em etapas:
 - **`product-owner`**: escreve o ticket usando a aplicação no navegador.
 - **`test-writer`**: transforma cada critério de aceite num teste que falha.
 - **`implementer`**: altera a aplicação até os testes passarem.
+- **`tech-stack-analyzer`**: registra a linguagem, os frameworks, as bibliotecas e as ferramentas da aplicação no
+  `config.json` do projeto.
 
 Quem garante a disciplina é a ferramenta, não o prompt: portões conferem que os testes falham antes e passam
 depois, e cada agente só lê, escreve e roda o que o seu `agent.yaml` libera. Tudo roda numa pasta de trabalho, que

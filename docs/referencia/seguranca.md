@@ -23,7 +23,11 @@ Os agentes rodam comandos e mexem em arquivos, então o choliba restringe o que 
   não é bloqueado. No Codex, o sandbox próprio fica desligado: ele roda dentro do `bwrap` ou do container, que só
   montam o que as permissões alcançam (`deny.read` escondido, `deny.write` só leitura). O Codex não limita comandos,
   então o choliba confere cada comando que ele roda contra `permissions.execute` (como o `Bash(comando:*)` do Claude)
-  e interrompe a execução, com código 1, no primeiro fora dele, ou com substituição (`$(…)`, crases). A conferência é
+  e interrompe a execução, com código 1, no primeiro fora dele, ou com substituição (`$(…)`, crases). Como o Codex lê
+  arquivos pelo shell, os comandos que só leem passam sempre: `cat`, `head`, `tail`, `ls`, `wc`, `nl`, `grep`, `rg`,
+  `find`, `pwd` e `sed -n '<início>,<fim>p'`, sem as opções que rodam outro programa ou gravam (`find -exec`,
+  `find -delete`, `rg --pre`, `rg -z`); o prompt do Codex diz para ler só com eles. O que eles alcançam é o que o
+  sandbox monta. A conferência é
   feita quando o comando aparece no stream, já começando a rodar. Limite do Codex: ele não recebe mensagens durante a
   execução, e a cópia do `auth.json` do `codex login` fica na pasta da execução, ao alcance do agente até ela ser
   apagada.

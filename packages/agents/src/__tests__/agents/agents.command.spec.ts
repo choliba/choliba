@@ -92,7 +92,7 @@ describe('choliba run agent and list agents', () => {
         stdout: new BufferWritable(true),
       });
 
-      expect(platform.stderr.text()).toBe('');
+      expect(platform.stderr.text()).toMatch(/^log em .*\/\.cache\/logs\/echo\/.*\.log\n$/);
       expect(code).toBe(0);
       const out = platform.stdout.text();
       expect(out).toContain('\u001b[35m[provider]\u001b[0m \u001b[35mclaude\u001b[0m');
