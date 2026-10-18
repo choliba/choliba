@@ -82,17 +82,17 @@ describe('projects', () => {
   });
 
   it('ticketSuffix tira o prefixo do projeto', () => {
-    expect(ticketSuffix('tradetools', 'tradetools-COND-01')).toBe('COND-01');
-    expect(ticketSuffix('tradetools', 'COND-01')).toBe('COND-01');
+    expect(ticketSuffix('loja', 'loja-COND-01')).toBe('COND-01');
+    expect(ticketSuffix('loja', 'COND-01')).toBe('COND-01');
   });
 
   it('fullTicket garante o prefixo do projeto', () => {
-    expect(fullTicket('tradetools', 'COND-01')).toBe('tradetools-COND-01');
-    expect(fullTicket('tradetools', 'tradetools-COND-01')).toBe('tradetools-COND-01');
+    expect(fullTicket('loja', 'COND-01')).toBe('loja-COND-01');
+    expect(fullTicket('loja', 'loja-COND-01')).toBe('loja-COND-01');
   });
 
   it('parseTarget separa projeto:ticket', () => {
-    expect(parseTarget('tradetools:COND-01')).toEqual({ project: 'tradetools', rawTicket: 'COND-01' });
+    expect(parseTarget('loja:COND-01')).toEqual({ project: 'loja', rawTicket: 'COND-01' });
   });
 
   it('parseTarget rejeita alvo inválido', () => {
@@ -116,61 +116,59 @@ describe('projects', () => {
 
   it('ticketJsonPath junta tickets/ + sufixo + .json', () => {
     comDiretorioTemporario((projetosDir) => {
-      comProjeto(projetosDir, 'tradetools', ['COND-01']);
-      expect(ticketJsonPath(projetosDir, 'tradetools', 'tradetools-COND-01')).toBe(
-        path.join(projetosDir, 'tradetools', 'tickets', 'COND-01.json'),
+      comProjeto(projetosDir, 'loja', ['COND-01']);
+      expect(ticketJsonPath(projetosDir, 'loja', 'loja-COND-01')).toBe(
+        path.join(projetosDir, 'loja', 'tickets', 'COND-01.json'),
       );
     });
   });
 
   it('ticketJsonPath canonicaliza a caixa', () => {
     comDiretorioTemporario((projetosDir) => {
-      comProjeto(projetosDir, 'tradetools', ['COND-01']);
-      expect(ticketJsonPath(projetosDir, 'tradetools', 'tradetools-cond-01')).toBe(
-        path.join(projetosDir, 'tradetools', 'tickets', 'COND-01.json'),
+      comProjeto(projetosDir, 'loja', ['COND-01']);
+      expect(ticketJsonPath(projetosDir, 'loja', 'loja-cond-01')).toBe(
+        path.join(projetosDir, 'loja', 'tickets', 'COND-01.json'),
       );
     });
   });
 
   it('canonicalizeSuffix resolve caixa errada', () => {
     comDiretorioTemporario((projetosDir) => {
-      comProjeto(projetosDir, 'tradetools', ['COND-01']);
-      expect(canonicalizeSuffix(projetosDir, 'tradetools', 'cond-01')).toBe('COND-01');
+      comProjeto(projetosDir, 'loja', ['COND-01']);
+      expect(canonicalizeSuffix(projetosDir, 'loja', 'cond-01')).toBe('COND-01');
     });
   });
 
   it('canonicalizeSuffix erra em colisão de caixa', () => {
     comDiretorioTemporario((projetosDir) => {
-      comProjeto(projetosDir, 'tradetools', ['cond-01', 'COND-01']);
-      expect(() => canonicalizeSuffix(projetosDir, 'tradetools', 'Cond-01')).toThrow(ProjectsError);
+      comProjeto(projetosDir, 'loja', ['cond-01', 'COND-01']);
+      expect(() => canonicalizeSuffix(projetosDir, 'loja', 'Cond-01')).toThrow(ProjectsError);
     });
   });
 
   it('canonicalTicket resolve qualquer forma de entrada', () => {
     comDiretorioTemporario((projetosDir) => {
-      comProjeto(projetosDir, 'tradetools', ['COND-01']);
-      for (const entrada of ['cond-01', 'COND-01', 'tradetools-cond-01']) {
-        expect(canonicalTicket(projetosDir, 'tradetools', entrada)).toBe('tradetools-COND-01');
+      comProjeto(projetosDir, 'loja', ['COND-01']);
+      for (const entrada of ['cond-01', 'COND-01', 'loja-cond-01']) {
+        expect(canonicalTicket(projetosDir, 'loja', entrada)).toBe('loja-COND-01');
       }
     });
   });
 
   it('resolveReportFolder com e sem ticket', () => {
     const raiz = '/fake/ticket-runs-root';
-    expect(resolveReportFolder(raiz, 'tradetools', 'tradetools-COND-01')).toBe(
-      path.join(raiz, 'tradetools', 'ticket-runs', 'tradetools-COND-01', 'playwright-report'),
+    expect(resolveReportFolder(raiz, 'loja', 'loja-COND-01')).toBe(
+      path.join(raiz, 'loja', 'ticket-runs', 'loja-COND-01', 'playwright-report'),
     );
-    expect(resolveReportFolder(raiz, 'tradetools')).toBe(
-      path.join(raiz, 'tradetools', 'ticket-runs', 'playwright-report'),
-    );
+    expect(resolveReportFolder(raiz, 'loja')).toBe(path.join(raiz, 'loja', 'ticket-runs', 'playwright-report'));
   });
 
   it('resolveTicketRunsFolder com e sem ticket', () => {
     const raiz = '/fake/ticket-runs-root';
-    expect(resolveTicketRunsFolder(raiz, 'tradetools', 'tradetools-COND-01')).toBe(
-      path.join(raiz, 'tradetools', 'ticket-runs', 'tradetools-COND-01'),
+    expect(resolveTicketRunsFolder(raiz, 'loja', 'loja-COND-01')).toBe(
+      path.join(raiz, 'loja', 'ticket-runs', 'loja-COND-01'),
     );
-    expect(resolveTicketRunsFolder(raiz, 'tradetools')).toBe(path.join(raiz, 'tradetools', 'ticket-runs'));
+    expect(resolveTicketRunsFolder(raiz, 'loja')).toBe(path.join(raiz, 'loja', 'ticket-runs'));
   });
 
   it('ticketSpecFiles deriva specs únicos e ordenados', () => {
@@ -185,12 +183,12 @@ describe('projects', () => {
 
   it('resolveTicketSpecFiles lê ticket.json do disco', () => {
     comDiretorioTemporario((projetosDir) => {
-      comProjeto(projetosDir, 'tradetools', ['COND-01']);
+      comProjeto(projetosDir, 'loja', ['COND-01']);
       fs.writeFileSync(
-        path.join(projetosDir, 'tradetools', 'tickets', 'COND-01.json'),
+        path.join(projetosDir, 'loja', 'tickets', 'COND-01.json'),
         JSON.stringify({ criterios: [{ id: 'CA-01', testes: ['x.spec.ts › d › CA-01: y'] }] }),
       );
-      expect(resolveTicketSpecFiles(projetosDir, 'tradetools', 'tradetools-COND-01')).toEqual(['x.spec.ts']);
+      expect(resolveTicketSpecFiles(projetosDir, 'loja', 'loja-COND-01')).toEqual(['x.spec.ts']);
     });
   });
 
