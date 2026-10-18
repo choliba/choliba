@@ -33,6 +33,10 @@ describe('printAgentDefinition', () => {
       displayName: 'Echo Agent',
       version: '1.0.0',
       description: 'Repete a tarefa recebida, usado nos testes deste pacote.',
+      providers: [
+        { id: 'claude', models: ['claude-3-5-sonnet'] },
+        { id: 'cursor', models: ['gpt-4o'] },
+      ],
       supportedModels: ['claude-3-5-sonnet', 'gpt-4o'],
       skills: [{ name: 'dummy-skill' }],
       mcps: [],

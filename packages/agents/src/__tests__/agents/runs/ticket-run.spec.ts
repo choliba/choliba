@@ -18,6 +18,7 @@ const plain: AgentDefinition = {
   displayName: 'PO',
   version: '1.0.0',
   description: 'd',
+  providers: [],
   supportedModels: [],
   skills: [],
   mcps: [],

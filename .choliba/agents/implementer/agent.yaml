@@ -12,10 +12,14 @@ agent:
     ticket falham pelo comportamento; no fim, o choliba confere que eles passam e
     que os testes do projeto continuam passando. Age sobre um projeto (--project) e
     um ticket (--ticket). Use depois do test-writer.
-models:
-  - claude-sonnet-5
-  - Composer 2.5 Fast
-  - Auto
+providers:
+  claude:
+    models:
+      - claude-sonnet-5
+  cursor:
+    models:
+      - Composer 2.5 Fast
+      - Auto
 
 role: |
   Você é o Implementer do projeto `${PROJECT}`. O agente `test-writer` já escreveu os testes do ticket `${TICKET}`: os

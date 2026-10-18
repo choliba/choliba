@@ -12,6 +12,7 @@ function request(model: string | undefined): ProviderRequest {
       displayName: 'Echo',
       version: '1.0.0',
       description: 'd',
+      providers: [],
       supportedModels: ['ollama:qwen3.5:4b'],
       skills: [],
       mcps: [],

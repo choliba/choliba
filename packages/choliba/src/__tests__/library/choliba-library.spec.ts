@@ -21,8 +21,10 @@ agent:
   version: 1.0.0
   description: Repete a tarefa recebida.
 
-models:
-  - modelo-a
+providers:
+  claude:
+    models:
+      - modelo-a
 
 role: |
   Você repete a tarefa.
@@ -267,7 +269,10 @@ describe("openCholiba — an agent's provider and MCPs", () => {
     'permissions:',
     'mcps:\n  app:\n    tools: [abrir]\n    instructions: Use o app.\n  docs: null\n\npermissions:',
   );
-  const OLLAMA = ECHO.replace('id: echo', 'id: local').replace('  - modelo-a', "  - 'ollama:qwen3.5:4b'");
+  const OLLAMA = ECHO.replace('id: echo', 'id: local').replace(
+    'claude:\n    models:\n      - modelo-a',
+    "claude-ollama:\n    models:\n      - 'ollama:qwen3.5:4b'",
+  );
 
   /** The library of a workspace whose PATH has the `installed` commands, and `env` besides. */
   function library(installed: readonly string[], env: Readonly<Record<string, string>> = {}) {

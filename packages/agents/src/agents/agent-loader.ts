@@ -90,7 +90,7 @@ interface AgentYamlV1 {
     readonly description: string;
     readonly color?: string;
   };
-  readonly models: readonly string[];
+  readonly providers: Readonly<Record<string, { readonly models: readonly string[] }>>;
   readonly role: string;
   readonly context?: readonly string[];
   readonly input: string;
@@ -197,14 +197,22 @@ function parseMcps(mcps: AgentYamlV1['mcps']): readonly McpDeclaration[] {
   return Object.entries(mcps).map(([name, entry]) => (entry === null ? { name } : { name, ...entry }));
 }
 
+/** `providers` as the agent declares them, in the file's order, and every model of them, in the same order. */
+function declaredProviders(
+  providers: AgentYamlV1['providers'],
+): Pick<AgentDefinition, 'providers' | 'supportedModels'> {
+  const declared = Object.entries(providers).map(([id, { models }]) => ({ id, models }));
+  return { providers: declared, supportedModels: declared.flatMap(({ models }) => models) };
+}
+
 /**
  * `${NAME}` is only filled in the texts `mapAgentTexts` goes through; in a fixed value of the
- * declaration (the identity, the models, the task, the tools of an MCP) it would stay as written.
+ * declaration (the identity, the providers and models, the task, the tools of an MCP) it would stay as written.
  */
 function misplacedVars(doc: AgentYamlV1, mcps: readonly McpDeclaration[]): readonly string[] {
   const fixed: Readonly<Record<string, unknown>> = {
     agent: doc.agent,
-    models: doc.models,
+    providers: doc.providers,
     task: doc.task,
     'mcps.tools': mcps.flatMap((mcp) => mcp.tools ?? []),
   };
@@ -237,7 +245,7 @@ export function parseAgentYaml(text: string, source: string, folder: string): Ya
     description: doc.agent.description,
     // The schema already took only the names the theme has; the guard just tells TypeScript so.
     ...(isAnsiColor(doc.agent.color) ? { color: doc.agent.color } : {}),
-    supportedModels: doc.models,
+    ...declaredProviders(doc.providers),
     sections: {
       role: doc.role,
       context: doc.context ?? [],

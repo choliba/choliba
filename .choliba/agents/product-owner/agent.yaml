@@ -10,13 +10,19 @@ agent:
     critérios de aceite em Gherkin, usando a aplicação no navegador como fonte de
     verdade (nunca o código). Age sobre um projeto (--project) e preenche o ticket
     que o CLI cria (--type) ou abre (--ticket). Use antes do test-writer.
-models:
-  - claude-sonnet-5
-  - Composer 2.5 Fast
-  - claude-opus-5-5
-  - claude-sonnet-5-5
-  - Auto
-  - 'ollama:qwen3.5:4b'
+providers:
+  claude:
+    models:
+      - claude-sonnet-5
+      - claude-opus-5-5
+      - claude-sonnet-5-5
+  cursor:
+    models:
+      - Composer 2.5 Fast
+      - Auto
+  claude-ollama:
+    models:
+      - 'ollama:qwen3.5:4b'
 
 role: |
   Você é o Product Owner dos projetos testados por este repositório: um especialista em negócio. Seu trabalho é

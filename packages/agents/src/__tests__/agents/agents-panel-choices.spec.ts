@@ -32,7 +32,12 @@ function agentsFolder(dir: string): void {
   mkdirSync(join(dir, 'local'));
   writeFileSync(
     join(dir, 'local', 'agent.yaml'),
-    echo.replace('id: echo', 'id: local').replace('  - gpt-4o\n', '  - ollama:qwen3.5:4b\n'),
+    echo
+      .replace('id: echo', 'id: local')
+      .replace(
+        '  cursor:\n    models:\n      - gpt-4o\n',
+        "  claude-ollama:\n    models:\n      - 'ollama:qwen3.5:4b'\n",
+      ),
   );
 }
 
@@ -83,7 +88,12 @@ describe('/provider', () => {
       mkdirSync(join(tmp.path, 'only'));
       writeFileSync(
         join(tmp.path, 'only', 'agent.yaml'),
-        echo.replace('id: echo', 'id: only').replace('  - claude-3-5-sonnet\n  - gpt-4o\n', '  - ollama:qwen3.5:4b\n'),
+        echo
+          .replace('id: echo', 'id: only')
+          .replace(
+            /providers:\n[\s\S]*?\n\n/,
+            "providers:\n  claude-ollama:\n    models:\n      - 'ollama:qwen3.5:4b'\n\n",
+          ),
       );
       const panel = session(tmp.path, noCursor, 'claude');
       panel.state.context.set('agente', 'only');

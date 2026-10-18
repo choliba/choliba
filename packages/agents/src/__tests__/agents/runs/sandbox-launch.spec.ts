@@ -18,6 +18,7 @@ function request(permissions: Partial<AgentPermissions> = {}, more: Partial<Prov
       displayName: 'Echo',
       version: '1.0.0',
       description: 'd',
+      providers: [],
       supportedModels: [],
       skills: [],
       mcps: [],

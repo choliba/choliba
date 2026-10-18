@@ -201,8 +201,9 @@ describe('runAgentsCli — help', () => {
           '  name: Long Help',
           '  version: 1.0.0',
           '  description: "Esta descrição é propositalmente longa o suficiente para forçar quebra de linha no help do agente quando exibida no terminal estreito do CLI."',
-          'models:',
-          '  - claude-3-5-sonnet',
+          'providers:',
+          '  claude:',
+          '    models: [claude-3-5-sonnet]',
           ...SECTIONS,
         ].join('\n'),
       );
@@ -1436,7 +1437,9 @@ function withCustomAgent(extra: string[], run: (agentsDir: string) => Promise<vo
     '  name: Custom',
     '  version: 1.0.0',
     '  description: d',
-    'models: [claude-3-5-sonnet]',
+    'providers:',
+    '  claude:',
+    '    models: [claude-3-5-sonnet]',
     ...SECTIONS,
     ...extra,
   ];
@@ -1827,6 +1830,15 @@ describe('runAgentsCli — CHOL_SANDBOX', () => {
   });
 });
 
+/** `providers` of an agent that declares `models`: `ollama:…` under claude-ollama, `claude…` under claude, the rest under cursor. */
+function providersYaml(models: readonly string[]): readonly string[] {
+  const owner = (model: string): string =>
+    model.startsWith('ollama:') ? 'claude-ollama' : model.startsWith('claude') ? 'claude' : 'cursor';
+  const groups = new Map<string, string[]>();
+  for (const model of models) groups.set(owner(model), [...(groups.get(owner(model)) ?? []), model]);
+  return ['providers:', ...[...groups].flatMap(([id, list]) => [`  ${id}:`, `    models: [${list.join(', ')}]`])];
+}
+
 describe('runAgentsCli — claude-ollama', () => {
   function withOllamaAgent(models: readonly string[], run: (agentsDir: string) => Promise<void>): Promise<void> {
     const tmp = makeTmpDir('cli-ollama-agent');
@@ -1839,7 +1851,7 @@ describe('runAgentsCli — claude-ollama', () => {
       '  name: Local',
       '  version: 1.0.0',
       '  description: d',
-      `models: [${models.join(', ')}]`,
+      ...providersYaml(models),
       ...SECTIONS,
     ];
     writeFileSync(join(dir, 'agent.yaml'), `${yaml.join('\n')}\n`);

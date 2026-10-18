@@ -15,6 +15,7 @@ function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
     displayName: 'Echo',
     version: '1.0.0',
     description: 'repeats things',
+    providers: [],
     supportedModels: [],
     skills: [],
     mcps: [],
