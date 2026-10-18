@@ -1,4 +1,5 @@
 import { paintAnsi, type AnsiColor } from '../../theme';
+import { truncateVisible } from '../frame';
 import type { PanelBox, PanelScroll, PanelText, PanelToolkit } from './interfaces/panel.interface';
 import { halfBlockArt, type ArtCell, type ArtPixels } from './panel-art';
 import { PALETTE } from './panel-palette';
@@ -145,7 +146,7 @@ export interface Header<Node> {
 export interface PanelCard {
   readonly title: string;
   readonly lines: readonly string[];
-  /** The lines it shows while collapsed, two at most; its first line when absent. */
+  /** The lines it shows while collapsed, three at most; its first line when absent. */
   readonly summary?: readonly string[];
   /** The letter that, with Ctrl, opens or collapses it (`p` for Ctrl+P), shown in its title (`^P`). */
   readonly key?: string;
@@ -189,14 +190,22 @@ const RULE = `\u001b[90m${'─'.repeat(CARD_TEXT_WIDTH)}\u001b[39m`;
 
 /**
  * Every open card's rows, its border included: all cards stand as tall, and what does not fit scrolls inside one. A
- * collapsed card is its border and the two lines of its summary: as tall as the header's icon, four rows.
+ * collapsed card is its border and three lines of its summary, each cut with `…` to the card's width so it never
+ * wraps: five rows, whose borders run through the middle of the first and the last, where the icon, half a row
+ * lower, begins and ends.
  */
 const CARD_HEIGHT = 10;
-const COLLAPSED_LINES = 2;
+const COLLAPSED_LINES = 3;
 const COLLAPSED_HEIGHT = COLLAPSED_LINES + 2;
 
 /** The cards' border: a dim gray, so their lines read before it. */
 const CARD_BORDER = PALETTE.gray;
+
+/**
+ * Behind a card, so an open one covers the conversation under it: the background of the dark theme `PALETTE` comes
+ * from.
+ */
+const CARD_BACKGROUND = '#1e1e1e';
 
 /** The header row: the icon, then the lines beside it, with a blank row under both. */
 export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk[] }, Chunk>(
@@ -210,8 +219,11 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     paddingLeft: 1,
     paddingBottom: 1,
     flexShrink: 0,
+    // Drawn after the conversation under it, so an open card covers it.
+    zIndex: 1,
   });
-  if (header.icon !== undefined) box.add(artBox(welcome, halfBlockArt(header.icon), 0));
+  // Half a row lower, the icon starts and ends where the collapsed cards' borders run, in the middle of a row.
+  if (header.icon !== undefined) box.add(artBox(welcome, halfBlockArt(header.icon, true), 0));
   const column = new kit.BoxRenderable(renderer, { flexDirection: 'column' });
   box.add(column);
   // A line no longer given keeps its row, empty, so the header does not jump.
@@ -234,6 +246,8 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
   heading(header.lines);
   // A card is made the first time its title shows, then only filled or hidden: the header keeps its order.
   interface Card {
+    /** Its place in the header, as tall as a collapsed card: opening the card does not move what is under it. */
+    readonly slot: Node & PanelBox<Node>;
     readonly box: Node & PanelScroll<Node>;
     readonly rows: PanelText<Styled>[];
     readonly spinner: PanelText<Styled>;
@@ -255,7 +269,20 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
       paddingLeft: 1,
       paddingRight: 1,
       flexShrink: 0,
+      // Over its slot: open, it grows down over the conversation instead of pushing it.
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      zIndex: 2,
+      backgroundColor: CARD_BACKGROUND,
     });
+    const slot = new kit.BoxRenderable(renderer, {
+      flexDirection: 'column',
+      width: CARD_WIDTH,
+      height: COLLAPSED_HEIGHT,
+      flexShrink: 0,
+    });
+    slot.add(card);
     const rows: PanelText<Styled>[] = [];
     // A click on a card opens or collapses that card alone.
     card.onMouseDown = () => {
@@ -274,12 +301,13 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     });
     spinner.visible = false;
     card.wrapper.add(spinner);
-    box.add(card);
-    const built = { box: card, rows, spinner };
+    box.add(slot);
+    const built = { slot, box: card, rows, spinner };
     made.set(title, built);
     return built;
   };
-  const collapsed = new Set<string>();
+  // Every card comes in collapsed; the ones opened with their key or a click are kept here.
+  const expanded = new Set<string>();
   let current: readonly PanelCard[] = [];
   let frame = 0;
   let spinning: ReturnType<typeof setInterval> | undefined;
@@ -299,21 +327,25 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
   const cards = (shown: readonly PanelCard[]): void => {
     current = shown;
     spin(shown.some((each) => each.busy === true));
-    for (const [title, card] of made) card.box.visible = shown.some((each) => each.title === title);
+    for (const [title, card] of made) card.slot.visible = shown.some((each) => each.title === title);
     for (const each of shown) {
       const card = cardOf(each);
       // Taken out and put back, each card goes after the ones before it: the header follows the order given.
-      box.remove(card.box);
-      box.add(card.box);
-      const folded = collapsed.has(each.title);
-      const lines = folded ? (each.summary ?? [each.lines[0] ?? '']).slice(0, COLLAPSED_LINES) : each.lines;
+      box.remove(card.slot);
+      box.add(card.slot);
+      const folded = !expanded.has(each.title);
+      const lines = folded
+        ? (each.summary ?? [each.lines[0] ?? ''])
+            .slice(0, COLLAPSED_LINES)
+            .map((line) => truncateVisible(line, CARD_TEXT_WIDTH))
+        : each.lines;
       // A card gets the rows its longest content asks for; what does not fit its height scrolls.
       while (card.rows.length < lines.length) {
         const row = new kit.TextRenderable(renderer, { content: '', wrapMode: 'word', height: 1 });
         card.box.add(row);
         card.rows.push(row);
       }
-      card.box.visible = true;
+      card.slot.visible = true;
       const busy = each.busy === true;
       card.box.title = cardTitle(folded ? '▸' : '▾', each, busy);
       card.spinner.visible = busy;
@@ -329,7 +361,7 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     }
   };
   const toggleCard = (title: string): void => {
-    if (!collapsed.delete(title)) collapsed.add(title);
+    if (!expanded.delete(title)) expanded.add(title);
     cards(current);
   };
   const toggleKey = (key: string): boolean => {

@@ -1,4 +1,4 @@
-import type { ChatPanel, Container, Panel, PanelContext, PanelOptions } from '@choliba/core';
+import { formatElapsed, type ChatPanel, type Container, type Panel, type PanelContext } from '@choliba/core';
 
 import type { AgentDefinition } from '../common';
 import { activeAgent, AGENT, bold, flag, gray, PROJECT, sessionArgv, TICKET, warn } from './agents-panel-state';
@@ -58,7 +58,7 @@ const talking = new WeakSet<PanelContext>();
 /**
  * Makes what is sent with no `/` the task of the active agent: it runs as `choliba run agent` would, in the session's
  * panel, with the session's choices. While it runs, what is sent goes to it, its questions are asked in the field, the
- * agent's card turns a spinner and the status line says it runs, and Ctrl+C twice or /clear stop it.
+ * agent's card turns a spinner and the status line says how long it has gone, and Ctrl+C twice or /clear stop it.
  */
 export function talkToAgent(container: Container, context: PanelContext): void {
   if (talking.has(context)) return;
@@ -95,13 +95,15 @@ export function talkToAgent(container: Container, context: PanelContext): void {
       if (inSession) stopRun?.();
       else steps.abort();
     });
-    const hosted = (options: PanelOptions): Promise<Panel> =>
+    const hosted = (): Promise<Panel> =>
       Promise.resolve({
         write: (line) => {
           panel.write(line);
         },
+        // How long the run has gone, always last in the status line, after the mode and the sandbox.
         refresh: () => {
-          context.status(RUN, `${gray('rodando')} ${bold(agent.id)} ${gray(options.footer(80).join(' '))}`);
+          context.status(RUN, undefined);
+          context.status(RUN, formatElapsed(Date.now() - startedAt));
         },
         onInterrupt: (listener) => {
           inSession = true;

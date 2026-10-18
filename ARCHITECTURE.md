@@ -13,15 +13,15 @@ um container e uma tabela de comandos, sem decorator e sem reflection.
 
 ## Os pacotes
 
-| Pacote              | O que tem                                                                                                                                                                                                   |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/config`   | o mecanismo independente de configuração: grupos tipados, fontes, formatos e escrita; não conhece nenhuma chave do choliba                                                                                  |
-| `packages/core`     | a plataforma (o processo e o Bun como valores), o tema de cores, o help, o autocomplete, a casca e o runner de processos (`terminal/`); guia de uso em [`packages/core/README.md`](packages/core/README.md) |
-| `packages/projects` | projetos e tickets: onde ficam, criar, conferir; `new project` e `list projects`                                                                                                                            |
-| `packages/runner`   | os testes E2E pelo Playwright, os portões red/green e o reporter; `run tests`                                                                                                                               |
-| `packages/sandbox`  | onde o provider roda: `local` ou `docker` (`sandbox/local/`, `sandbox/docker/`), as montagens do container e as regras de caminho (`deny`, exceções `!`); só depende do `core`                              |
-| `packages/agents`   | os agentes: o `agent.yaml`, a montagem de uma execução (`runs/`), os steps, os providers; `run agent` e `list agents`                                                                                       |
-| `packages/choliba`  | o app: `main.ts`, a pasta de trabalho, as fontes de configuração, `list config`, `set config`, a raiz, `check`, `setup`, `lint` e `format`; a fachada `choliba` para scripts (`api/`); o pacote publicado   |
+| Pacote              | O que tem                                                                                                                                                                                                        |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/config`   | o mecanismo independente de configuração: grupos tipados, fontes, formatos e escrita; não conhece nenhuma chave do choliba                                                                                       |
+| `packages/core`     | a plataforma (o processo e o Bun como valores), o tema de cores, o help, o autocomplete, a casca e o runner de processos (`terminal/`); guia de uso em [`packages/core/README.md`](packages/core/README.md)      |
+| `packages/projects` | projetos e tickets: onde ficam, criar, conferir; `new project` e `list projects`                                                                                                                                 |
+| `packages/runner`   | os testes E2E pelo Playwright, os portões red/green e o reporter; `run tests`                                                                                                                                    |
+| `packages/sandbox`  | onde o provider roda: `local` ou `docker` (`sandbox/local/`, `sandbox/docker/`), as montagens do container e as regras de caminho (`deny`, exceções `!`); só depende do `core`                                   |
+| `packages/agents`   | os agentes: o `agent.yaml`, a montagem de uma execução (`runs/`), os steps, os providers; `run agent` e `list agents`                                                                                            |
+| `packages/choliba`  | o app: `main.ts`, a pasta de trabalho, as fontes de configuração, `list config`, `set config`, a raiz, `check`, `setup`, `lint` e `format`; a biblioteca `choliba` para scripts (`library/`); o pacote publicado |
 
 ## Invariantes
 

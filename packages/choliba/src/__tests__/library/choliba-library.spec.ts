@@ -1,3 +1,4 @@
+import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { agentsConfig } from '@choliba/agents';
@@ -8,7 +9,7 @@ import { sandboxConfig } from '@choliba/sandbox';
 
 import { cholibaManifest, PACKAGE_NAME } from '../../help';
 import { createCholibaShell, openCholiba } from '../../app-shell';
-import { choliba } from '../../index';
+import { agents, choliba, config, projects, skills, workspace } from '../../index';
 import { fakeRuntime } from '../helpers/runtime';
 import { makeWorkspace } from '../helpers/workspace';
 
@@ -77,14 +78,14 @@ describe('openCholiba', () => {
   it('reads a group from the environment first, then the .env, then the default', () => {
     const workspace = workspaceWith({ '.env': 'CHOL_SANDBOX=docker\nMEU_RETRIES=5\n' });
     try {
-      const api = openCholiba({ cwd: workspace.path, env: { CHOL_NETWORK: 'host' } });
+      const library = openCholiba({ cwd: workspace.path, env: { CHOL_NETWORK: 'host' } });
       const mine = defineConfig('meu-script', {
         retries: { env: 'MEU_RETRIES', type: 'number', description: 'tentativas', default: 3 },
       });
 
-      expect(api.config(sandboxConfig)).toEqual({ mode: 'docker', image: 'choliba-agent', network: 'host' });
-      expect(api.config(agentsConfig).provider).toBe('auto');
-      expect(api.config(mine).retries).toBe(5);
+      expect(library.config(sandboxConfig)).toEqual({ mode: 'docker', image: 'choliba-agent', network: 'host' });
+      expect(library.config(agentsConfig).provider).toBe('auto');
+      expect(library.config(mine).retries).toBe(5);
     } finally {
       workspace.cleanup();
     }
@@ -136,13 +137,13 @@ describe('openCholiba', () => {
   it('lists and gets the agents, and the skills an agent declares', () => {
     const workspace = workspaceWith();
     try {
-      const api = openCholiba({ cwd: workspace.path, env: {} });
+      const library = openCholiba({ cwd: workspace.path, env: {} });
       const repeat = join(workspace.path, '.choliba', 'skills', 'repeat', 'SKILL.md');
 
-      expect(api.agents.list().map((agent) => agent.id)).toEqual(['echo']);
-      expect(api.agents.get('echo')).toMatchObject({ id: 'echo', version: '1.0.0', supportedModels: ['modelo-a'] });
-      expect(() => api.agents.get('revisor')).toThrow('agent "revisor" not found');
-      expect(api.agents.skills('echo')).toEqual([
+      expect(library.agents.list().map((agent) => agent.id)).toEqual(['echo']);
+      expect(library.agents.get('echo')).toMatchObject({ id: 'echo', version: '1.0.0', supportedModels: ['modelo-a'] });
+      expect(() => library.agents.get('revisor')).toThrow('agent "revisor" not found');
+      expect(library.agents.skills('echo')).toEqual([
         { name: 'repeat', description: 'Repete o texto.', path: repeat, instructions: 'Use sempre.' },
       ]);
     } finally {
@@ -153,15 +154,15 @@ describe('openCholiba', () => {
   it('lists and gets the skills', () => {
     const workspace = workspaceWith();
     try {
-      const api = openCholiba({ cwd: workspace.path, env: {} });
+      const library = openCholiba({ cwd: workspace.path, env: {} });
 
-      expect(api.skills.list().map((skill) => skill.name)).toEqual(['other', 'repeat']);
-      expect(api.skills.get('repeat')).toEqual({
+      expect(library.skills.list().map((skill) => skill.name)).toEqual(['other', 'repeat']);
+      expect(library.skills.get('repeat')).toEqual({
         name: 'repeat',
         description: 'Repete o texto.',
         path: join(workspace.path, '.choliba', 'skills', 'repeat', 'SKILL.md'),
       });
-      expect(() => api.skills.get('inexistente')).toThrow('skill "inexistente" não encontrada');
+      expect(() => library.skills.get('inexistente')).toThrow('skill "inexistente" não encontrada');
     } finally {
       workspace.cleanup();
     }
@@ -170,19 +171,19 @@ describe('openCholiba', () => {
   it('answers as the CLI does, for the agents and the configuration', async () => {
     const workspace = workspaceWith({ '.env': 'CHOL_SANDBOX=docker\n' });
     try {
-      const api = openCholiba({ cwd: workspace.path, env: {} });
+      const library = openCholiba({ cwd: workspace.path, env: {} });
       const platform = fakePlatform({ argv: ['list', 'config', '--json'], cwd: workspace.path, env: {} });
       await createCholibaShell(platform, fakeRuntime()).run();
       const listed = JSON.parse(platform.stdout.text()) as Record<string, { valor: string | null; origem: string }>;
 
-      expect(Object.keys(listed)).toEqual(api.config.list().map((setting) => setting.key.address.env));
-      for (const setting of api.config.list()) {
+      expect(Object.keys(listed)).toEqual(library.config.list().map((setting) => setting.key.address.env));
+      for (const setting of library.config.list()) {
         expect(listed[setting.key.address.env]?.origem).toBe(setting.origin);
       }
 
       const agents = fakePlatform({ argv: ['list', 'agents'], cwd: workspace.path, env: {} });
       await createCholibaShell(agents, fakeRuntime()).run();
-      for (const agent of api.agents.list()) expect(agents.stdout.text()).toContain(agent.id);
+      for (const agent of library.agents.list()) expect(agents.stdout.text()).toContain(agent.id);
     } finally {
       workspace.cleanup();
     }
@@ -190,6 +191,19 @@ describe('openCholiba', () => {
 });
 
 describe('choliba', () => {
+  it('gives each module by its name, the same as in choliba, the workspace with the root and the version', () => {
+    expect([workspace, config, agents, skills, projects]).toEqual([
+      choliba.workspace,
+      choliba.config,
+      choliba.agents,
+      choliba.skills,
+      choliba.projects,
+    ]);
+    expect([workspace.root, workspace.version]).toEqual([choliba.root, choliba.version]);
+    // The process's own PATH and environment.
+    expect(choliba.providers.list().map((provider) => provider.id)).toEqual(['claude', 'claude-ollama', 'cursor']);
+  });
+
   it('is the facade of the process, read only when used', () => {
     expect(choliba.root).toBe(openCholiba({ cwd: process.cwd() }).root);
   });
@@ -208,6 +222,98 @@ describe('choliba', () => {
     } finally {
       if (before === undefined) delete process.env['CHOL_AGENTS_DIR'];
       else process.env['CHOL_AGENTS_DIR'] = before;
+      workspace.cleanup();
+    }
+  });
+});
+
+describe('openCholiba — providers', () => {
+  it('lists the providers, saying which are installed and which credentials are set, never their values', () => {
+    const workspace = workspaceWith({ '.env': 'CURSOR_API_KEY=da-env\n' });
+    const bin = join(workspace.path, 'bin');
+    try {
+      mkdirSync(bin);
+      writeFileSync(join(bin, 'claude'), '');
+      chmodSync(join(bin, 'claude'), 0o755);
+      const providers = openCholiba({
+        cwd: workspace.path,
+        env: { PATH: bin, CLAUDE_CODE_OAUTH_TOKEN: 'do-ambiente', CHOL_AGENTS_PROVIDER: 'claude' },
+      }).providers;
+
+      expect(providers.list().map((provider) => [provider.id, provider.installed, provider.inAuto])).toEqual([
+        ['claude', true, true],
+        ['claude-ollama', true, false],
+        ['cursor', false, true],
+      ]);
+      expect(providers.get('claude').credentials).toEqual([
+        { name: 'CLAUDE_CODE_OAUTH_TOKEN', set: true },
+        { name: 'ANTHROPIC_API_KEY', set: false },
+        { name: 'ANTHROPIC_AUTH_TOKEN', set: false },
+      ]);
+      expect(providers.get('cursor').credentials).toContainEqual({ name: 'CURSOR_API_KEY', set: true });
+      expect(providers.get('claude-ollama')).toMatchObject({ modelPrefix: 'ollama:' });
+      expect(providers.get('claude').summary).not.toBe('');
+      expect(JSON.stringify(providers.list())).not.toContain('do-ambiente');
+      expect(providers.preferred).toBe('claude');
+      expect(() => providers.get('gpt')).toThrow('provider "gpt" não existe (existem: claude, claude-ollama, cursor)');
+    } finally {
+      workspace.cleanup();
+    }
+  });
+});
+
+describe("openCholiba — an agent's provider and MCPs", () => {
+  const WITH_MCPS = ECHO.replace(
+    'permissions:',
+    'mcps:\n  app:\n    tools: [abrir]\n    instructions: Use o app.\n  docs: null\n\npermissions:',
+  );
+  const OLLAMA = ECHO.replace('id: echo', 'id: local').replace('  - modelo-a', "  - 'ollama:qwen3.5:4b'");
+
+  /** The library of a workspace whose PATH has the `installed` commands, and `env` besides. */
+  function library(installed: readonly string[], env: Readonly<Record<string, string>> = {}) {
+    const workspace = workspaceWith({
+      '.choliba/agents/echo/agent.yaml': WITH_MCPS,
+      '.choliba/agents/local/agent.yaml': OLLAMA,
+      '.choliba/mcps/app.json': '{"command":"app"}',
+    });
+    const bin = join(workspace.path, 'bin');
+    mkdirSync(bin);
+    for (const command of installed) {
+      writeFileSync(join(bin, command), '');
+      chmodSync(join(bin, command), 0o755);
+    }
+    return { workspace, choliba: openCholiba({ cwd: workspace.path, env: { PATH: bin, ...env } }) };
+  }
+
+  it('gives the provider of its models, else the preference, else the first installed under auto', () => {
+    const auto = library(['claude']);
+    const chosen = library([], { CHOL_AGENTS_PROVIDER: 'cursor' });
+    const none = library([]);
+    try {
+      expect(auto.choliba.agents.provider('local')?.id).toBe('claude-ollama');
+      expect(auto.choliba.agents.provider('echo')?.id).toBe('claude');
+      expect(chosen.choliba.agents.provider('echo')).toMatchObject({ id: 'cursor', installed: false });
+      expect(none.choliba.agents.provider('echo')).toBeUndefined();
+    } finally {
+      for (const each of [auto, chosen, none]) each.workspace.cleanup();
+    }
+  });
+
+  it('lists the MCPs it declares, each with its file and whether it is there, not what the file holds', () => {
+    const { workspace, choliba } = library([]);
+    try {
+      expect(choliba.agents.mcps('echo')).toEqual([
+        {
+          name: 'app',
+          path: join(workspace.path, '.choliba', 'mcps', 'app.json'),
+          exists: true,
+          tools: ['abrir'],
+          instructions: 'Use o app.',
+        },
+        { name: 'docs', path: join(workspace.path, '.choliba', 'mcps', 'docs.json'), exists: false },
+      ]);
+      expect(choliba.agents.mcps('local')).toEqual([]);
+    } finally {
       workspace.cleanup();
     }
   });

@@ -5,8 +5,16 @@ import { dirname, join } from 'node:path';
 
 const repo = join(__dirname, '..', '..');
 const CONFIG_EXAMPLE = readFileSync(join(repo, 'packages', 'config', 'examples', 'config.ts'), 'utf8');
-const CHOLIBA_EXAMPLE = readFileSync(join(repo, 'packages', 'choliba', 'examples', 'choliba.ts'), 'utf8');
-const LIBRARY_GUIDE = readFileSync(join(repo, 'docs', 'guias', 'usar-como-biblioteca.md'), 'utf8');
+const LIBRARY_GUIDE = readFileSync(join(repo, 'docs', 'guias', 'usar-biblioteca.md'), 'utf8');
+
+/** The library guide's example a workspace runs as `choliba.ts`: the block under `<!-- exemplo-instalado: choliba.ts -->`. */
+function installedExample(guide: string): string {
+  const example = /<!-- exemplo-instalado: choliba\.ts -->\n\n```ts\n([\s\S]*?)```/.exec(guide)?.[1];
+  if (example === undefined) throw new Error('o guia da biblioteca não tem o exemplo instalado (choliba.ts)');
+  return example;
+}
+
+const CHOLIBA_EXAMPLE = installedExample(LIBRARY_GUIDE);
 
 /** A workspace's agent, as the facade example lists it. */
 const ECHO_AGENT = `version: 1
@@ -173,7 +181,6 @@ function assertExports(out: string): void {
   const configGuide = readFileSync(join(repo, 'packages', 'config', 'README.md'), 'utf8');
   expect(readFileSync(join(out, 'config', 'README.md'), 'utf8')).toBe(configGuide);
   expect(configGuide).toContain(`\`\`\`ts\n${CONFIG_EXAMPLE}\`\`\``);
-  expect(LIBRARY_GUIDE).toContain(`\`\`\`ts\n${CHOLIBA_EXAMPLE}\`\`\``);
 }
 
 describe('the installable package', () => {
@@ -221,7 +228,7 @@ describe('the installable package', () => {
       run('bun', ['check.mjs'], app);
       expect(run('bun', ['config.ts'], app)).toBe('{"name":"from-dotenv","port":4321}\n');
       expect(run('bun', [join(app, 'choliba.ts')], join(app, '.choliba'))).toBe(
-        `raiz: ${app}\nagentes em ${join(app, '.choliba', 'agents')}\n- echo 1.0.0\nskill repeat: Repete.\n`,
+        `raiz: ${app}\nproviders: claude, claude-ollama, cursor\nagentes em ${join(app, '.choliba', 'agents')}\n- echo 1.0.0\nskill repeat: Repete.\n`,
       );
       run('node', [join(repo, 'node_modules/typescript/bin/tsc'), '-p', 'tsconfig.json', '--pretty', 'false'], app);
       expect(run('bun', [join(out, 'bin', 'choliba.js'), '--help'], app)).toContain('Usage:');

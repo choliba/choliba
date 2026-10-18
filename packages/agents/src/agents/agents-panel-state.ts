@@ -1,7 +1,7 @@
 import { messageOf, PLATFORM, WORKSPACE_ROOT, type ChatPanel, type Container, type PanelContext } from '@choliba/core';
 import { sandboxConfig } from '@choliba/sandbox';
 
-import { AUTO, type AgentDefinition, type AgentProvider, type ExecutionMode } from '../common';
+import { AUTO, EXECUTION_MODES, type AgentDefinition, type AgentProvider, type ExecutionMode } from '../common';
 import { resolveAgentsDir } from './agent-dirs';
 import { loadAgent } from './agent-loader';
 import { agentProvider } from './agent-provider';
@@ -106,16 +106,33 @@ export function modelFor(
   return providerModel(provider, chosen, agent.supportedModels, container.get(AGENT_PROVIDERS));
 }
 
-/** The mode a run takes: the one chosen with /mode or Shift+Tab when the agent takes it, else its `modes.default`. */
-export function modeChoice(context: PanelContext, agent: AgentDefinition): ExecutionMode {
-  const chosen = context.get(MODE);
-  return agent.modes.find((mode) => mode === chosen) ?? agent.defaultMode;
+/** The modes the session moves through: the active agent's, or every mode before one is chosen. */
+function sessionModes(agent: AgentDefinition | undefined): readonly ExecutionMode[] {
+  return agent?.modes ?? EXECUTION_MODES;
 }
 
-/** The modes in the status line: the current one bold, the others in gray, and the key that moves it. */
-function modeLine(agent: AgentDefinition, current: ExecutionMode): string {
-  const modes = agent.modes.map((mode) => (mode === current ? bold(mode) : gray(mode))).join(gray(' · '));
-  return `${gray('modo')} ${modes} ${gray('(shift+tab alterna)')}`;
+/**
+ * The mode a run takes: the one chosen with /mode or Shift+Tab when the agent takes it, else its `modes.default`;
+ * with no agent yet, the one chosen, else `execute`.
+ */
+export function modeChoice(context: PanelContext, agent: AgentDefinition | undefined): ExecutionMode {
+  const chosen = context.get(MODE);
+  return sessionModes(agent).find((mode) => mode === chosen) ?? agent?.defaultMode ?? 'execute';
+}
+
+/**
+ * The modes in the status line: the current one bold, the others in gray, and the key that moves it. They are split by
+ * `|`, as `·` splits the status line's parts (the mode, the sandbox, the time).
+ */
+function modeLine(modes: readonly ExecutionMode[], current: ExecutionMode): string {
+  const shown = modes.map((mode) => (mode === current ? bold(mode) : gray(mode))).join(gray(' | '));
+  return `${gray('modo')} ${shown} ${gray('(shift+tab alterna)')}`;
+}
+
+/** The mode, then the sandbox, in the status line: the session's from its start, the agent's once one is chosen. */
+function showMode(container: Container, context: PanelContext, agent: AgentDefinition | undefined): void {
+  context.status(MODE, modeLine(sessionModes(agent), modeChoice(context, agent)));
+  showSandbox(container, context);
 }
 
 /** The provider and the model a run of `agent` would take, as the header's column shows them, and what would stop it. */
@@ -140,35 +157,35 @@ function runLabels(
 }
 
 /**
- * Shows what a run of the active agent would take, found as `choliba run agent` finds it: the provider and the model in
- * the header's column, the mode in the status line, and the agent's card, whose collapsed summary says the mode and the
- * model. What would stop the run shows as one word in yellow, its reason written in the `panel`'s chat, so the header
- * keeps its size. With no agent, nothing shows.
+ * Shows what a run would take, found as `choliba run agent` finds it: the mode and the sandbox in the status line, from
+ * the session's start; with an agent, the provider and the model in the header's column, and the agent's card, whose
+ * collapsed summary says the mode and the model. What would stop the run shows as one word in yellow, its reason
+ * written in the `panel`'s chat, so the header keeps its size.
  */
 export function showRun(container: Container, context: PanelContext, panel?: Pick<ChatPanel, 'write'>): void {
   const agent = activeAgent(container, context);
+  showMode(container, context, agent);
   if (agent === undefined) return;
   const mode = modeChoice(context, agent);
-  context.status(MODE, modeLine(agent, mode));
   const labels = runLabels(container, context, agent);
   context.label(PROVIDER, labels.provider);
   context.label(MODEL, labels.model);
   if (labels.problem !== undefined) panel?.write(warn(labels.problem));
-  context.show(AGENT, agentCard(container, agent, `${bold(mode)} ${gray('·')} ${labels.model}`));
+  context.show(AGENT, agentCard(container, agent, `${bold(mode)} ${gray('·')} ${labels.model}`, context.get(TICKET)));
 }
 
 /** The sessions whose Shift+Tab already moves the mode: the key is listened to once per session. */
 const listening = new WeakSet<PanelContext>();
 
-/** Makes Shift+Tab move the active agent's mode to the next one it takes, around, once per session. */
+/** Makes Shift+Tab move the mode to the next one, around, among the active agent's or every mode; once per session. */
 export function listenModeKey(container: Container, context: PanelContext): void {
   if (listening.has(context)) return;
   listening.add(context);
   context.onKey((key) => {
     if (key.name !== 'tab' || key.shift !== true) return false;
     const agent = activeAgent(container, context);
-    if (agent === undefined) return false;
-    const next = agent.modes[(agent.modes.indexOf(modeChoice(context, agent)) + 1) % agent.modes.length];
+    const modes = sessionModes(agent);
+    const next = modes[(modes.indexOf(modeChoice(context, agent)) + 1) % modes.length];
     context.set(MODE, next);
     showRun(container, context);
     return true;
@@ -191,4 +208,20 @@ export function sandboxChoice(container: Container, context: PanelContext): Sand
     return { error: messageOf(error) };
   }
   return isSandboxChoice(value) ? value : { error: `CHOL_SANDBOX="${value}" não existe: use local ou docker.` };
+}
+
+/**
+ * The sandbox selected, in the status line after the mode: `sandbox local`, in yellow when no run could go there
+ * (Docker missing, a wrong `CHOL_SANDBOX`). Set again, it moves after the parts already there, so it follows the mode.
+ */
+export function showSandbox(container: Container, context: PanelContext): void {
+  const choice = sandboxChoice(container, context);
+  const shown =
+    typeof choice !== 'string'
+      ? warn('indisponível')
+      : sandboxProblem(container, choice) === undefined
+        ? bold(choice)
+        : warn(choice);
+  context.status(SANDBOX, undefined);
+  context.status(SANDBOX, `${gray('sandbox')} ${shown}`);
 }

@@ -2,29 +2,24 @@ import { PLATFORM, ProcessRunnerService, THEME, WORKSPACE_ROOT, type ShellModule
 import { projectsConfig } from '@choliba/projects';
 import { sandboxConfig } from '@choliba/sandbox';
 
-import { ProviderRegistry } from '../common';
 import { agentsConfig } from './agents-config';
-import { ClaudeAgentProvider, ClaudeOllamaAgentProvider, CursorAgentProvider } from '../providers';
+import { knownProviders } from '../providers';
 import { listAgentsCommand } from './agents-list.command';
 import { agentsPanel } from './agents-panel';
-import { watchSandbox } from './agents-panel-sandbox';
+import { watchChoices } from './agents-panel-watch';
 import { runAgentCommand } from './agents-run.command';
 import { AGENT_PROVIDERS, AGENTS } from './agents.constants';
 import { AgentsService } from './agents.service';
 
 /**
- * @choliba/agents in the shell: the providers (adding one is adding its class to the list), `choliba run agent`,
+ * @choliba/agents in the shell: the providers (`knownProviders`), `choliba run agent`,
  * `choliba list agents`, and `/agents` in the panel.
  */
 export const agentsShell: ShellModule = {
   name: '@choliba/agents',
   config: [agentsConfig, projectsConfig, sandboxConfig],
   provide: (container) => {
-    container.provide(
-      AGENT_PROVIDERS,
-      () =>
-        new ProviderRegistry([new ClaudeAgentProvider(), new ClaudeOllamaAgentProvider(), new CursorAgentProvider()]),
-    );
+    container.provide(AGENT_PROVIDERS, () => knownProviders());
     container.provide(AGENTS, (c) => {
       const platform = c.get(PLATFORM);
       const agents = c.get(agentsConfig.token);
@@ -60,6 +55,6 @@ export const agentsShell: ShellModule = {
   commands: [runAgentCommand, listAgentsCommand],
   panel: agentsPanel,
   panelStart: (container, context) => {
-    watchSandbox(container, context);
+    watchChoices(container, context);
   },
 };

@@ -179,8 +179,11 @@ function fakeToolkit(failToOpen = false) {
       }
     },
     TextareaRenderable: class extends FakeNode {
+      width: number | 'auto' | `${number}%` = 'auto';
+      flexGrow: number | null | undefined;
       constructor(_context: Renderer, options: object) {
         super('textarea', options as Record<string, unknown>);
+        this.flexGrow = (options as { flexGrow?: number }).flexGrow;
       }
     },
     SelectRenderable: class extends FakeNode {
@@ -239,7 +242,8 @@ const OPTIONS = {
 function layoutOf(renderer: ReturnType<typeof fakeToolkit>['renderer']) {
   const [layout] = renderer.root.children;
   const [scroll, select, bottom] = layout?.children ?? [];
-  const [prompt, input, footer] = bottom?.children ?? [];
+  // The field's row: the prompt, the field, the hint at its end, then the footer beside them.
+  const [prompt, input, , footer] = bottom?.children ?? [];
   if (scroll === undefined || select === undefined || bottom === undefined) throw new Error('no layout');
   if (prompt === undefined || input === undefined || footer === undefined) throw new Error('no footer row');
   return { scroll, select, bottom, prompt, input, footer };
@@ -369,13 +373,16 @@ describe('openPanel', () => {
     expect(header?.built).toMatchObject({ flexDirection: 'row', gap: 2, paddingLeft: 1, paddingBottom: 1 });
     const [icon, lines] = header?.children ?? [];
     expect(icon?.built).toMatchObject({ position: 'relative', top: -0 });
-    expect(icon?.children).toHaveLength(1);
+    // Half a row lower: its first pixels in the bottom half of the first row, its last in the top half of the next.
+    expect(
+      icon?.children.map((row) => (typeof row.content === 'string' ? row.content : row.content.chunks[0]?.text)),
+    ).toEqual(['▄', '▀']);
     expect(lines?.children.map((line) => line.content)).toEqual([
       { chunks: [{ text: 'choliba 1.2.3', bold: true }] },
       { chunks: [{ text: '~/loja' }] },
     ]);
     expect(scroll?.built).toMatchObject({ border: false, title: '' });
-    expect(bottom?.children.map((child) => child.kind)).toEqual(['text', 'textarea']);
+    expect(bottom?.children.map((child) => child.kind)).toEqual(['text', 'textarea', 'text']);
     expect(footer?.content).toEqual({ chunks: [{ text: 'provider', bold: true }, { text: ' largura 60' }] });
     expect(bottom?.height).toBe(3);
   });
@@ -593,9 +600,27 @@ describe('openPanel', () => {
     expect(rows[1]?.content).toEqual({ chunks: [{ text: '  /pull' }] });
     rows[1]?.onMouseDown?.();
     expect(clicked).toEqual([1]);
+    // What Enter does shows at the end of the field's row, in gray, while the suggestions show.
+    const hint = bottom?.children[2];
+    expect([hint?.visible, hint?.content]).toEqual([false, '']);
+    // The field keeps to what is typed and its cursor, so the hint reads right after it.
+    const field = bottom?.children[1] as (FakeNode & { width: unknown; flexGrow: unknown }) | undefined;
+    panel.suggest(['❯ /projects'], undefined, 'tecle Enter para selecionar /projects');
+    expect([hint?.visible, hint?.content, field?.width, field?.flexGrow]).toEqual([
+      true,
+      { chunks: [{ text: ' ' }, { text: 'tecle Enter para selecionar /projects', fg: '#666666' }] },
+      3,
+      0,
+    ]);
 
     panel.suggest([]);
-    expect([suggestions?.visible, suggestions?.height]).toEqual([false, 0]);
+    expect([suggestions?.visible, suggestions?.height, hint?.visible, field?.width, field?.flexGrow]).toEqual([
+      false,
+      0,
+      false,
+      'auto',
+      1,
+    ]);
     rows[0]?.onMouseDown?.();
     expect(clicked).toEqual([1]);
   });
@@ -609,9 +634,18 @@ describe('openPanel', () => {
       { title: 'projeto', lines: ['site', '', 'Loja', 'local', '---', '2 tickets', 'a mais'], summary: ['site · 2'] },
       { title: 'ticket', lines: ['site-1'] },
     ]);
-    const [, projeto, ticket] = header?.children ?? [];
+    const [, slot] = header?.children ?? [];
+    const [projeto, ticket] = (header?.children ?? []).slice(1).map((each) => each.children[0]);
+    // Each card stands over a slot as tall as a collapsed card, so opening it covers what is under it, not pushes it.
+    expect(header?.built).toMatchObject({ zIndex: 1 });
+    expect(slot?.built).toMatchObject({ width: 44, height: 5, flexShrink: 0 });
     expect(projeto?.kind).toBe('scroll');
     expect(projeto?.built).toMatchObject({
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      zIndex: 2,
+      backgroundColor: '#1e1e1e',
       flexGrow: 0,
       border: true,
       title: ' projeto ',
@@ -623,6 +657,10 @@ describe('openPanel', () => {
       paddingRight: 1,
       flexShrink: 0,
     });
+    // Every card comes in collapsed; a click opens it.
+    expect([projeto?.title, projeto?.height, ticket?.height]).toEqual([' ▸ projeto ', 5, 5]);
+    projeto?.onMouseDown?.();
+    ticket?.onMouseDown?.();
     expect([projeto?.title, projeto?.height, ticket?.height]).toEqual([' ▾ projeto ', 10, 10]);
     expect(projeto?.children.map((row) => row.content)).toEqual([
       { chunks: [{ text: 'site' }] },
@@ -637,14 +675,16 @@ describe('openPanel', () => {
     expect(ticket?.children.map((row) => row.visible)).toEqual([true]);
 
     panel.cards([{ title: 'ticket', lines: ['site-2'] }]);
-    expect([projeto?.visible, ticket?.visible, header?.children.length]).toEqual([false, true, 3]);
+    // A card no longer given hides with its slot, which gives its room back.
+    expect(header?.children.slice(1).map((each) => each.visible)).toEqual([false, true]);
+    expect(header?.children.length).toBe(3);
     expect(ticket?.children[0]?.content).toEqual({ chunks: [{ text: 'site-2' }] });
 
     panel.cards([
       { title: 'ticket', lines: ['site-2'] },
       { title: 'projeto', lines: ['site'] },
     ]);
-    expect(header?.children.slice(1).map((card) => card.title)).toEqual([' ▾ ticket ', ' ▾ projeto ']);
+    expect(header?.children.slice(1).map((each) => each.children[0]?.title)).toEqual([' ▾ ticket ', ' ▾ projeto ']);
     expect(projeto?.children.map((row) => row.visible)).toEqual([true, false, false, false, false, false, false]);
 
     const plain = fakeToolkit();
@@ -664,7 +704,8 @@ describe('openPanel', () => {
         ],
       },
     ]);
-    const projeto = renderer.root.children[0]?.children[0]?.children[1];
+    const projeto = renderer.root.children[0]?.children[0]?.children[1]?.children[0];
+    projeto?.onMouseDown?.();
 
     expect(projeto?.children.slice(0, 2).map((row) => row.height)).toEqual([1, 2]);
     expect(projeto?.height).toBe(10);
@@ -679,11 +720,11 @@ describe('openPanel', () => {
         { title: 'projeto', lines: ['site'] },
         { title: 'agente', lines: ['echo'], busy: true },
       ]);
-      const [, projeto, agente] = (renderer.root.children[0]?.children[0]?.children ?? []) as (FakeNode & {
-        wrapper: FakeNode;
-      })[];
+      const [projeto, agente] = (renderer.root.children[0]?.children[0]?.children ?? [])
+        .slice(1)
+        .map((slot) => slot.children[0]) as (FakeNode & { wrapper: FakeNode })[];
       const spinner = agente?.wrapper.children[0];
-      expect([projeto?.title, agente?.title]).toEqual([' ▾ projeto ', ' ▾ agente       ']);
+      expect([projeto?.title, agente?.title]).toEqual([' ▸ projeto ', ' ▸ agente       ']);
       expect(spinner?.built).toMatchObject({ position: 'absolute', top: -1, left: 11, width: 5, zIndex: 1 });
       expect([spinner?.visible, spinner?.content]).toEqual([true, { chunks: [{ text: '▰▱▱▱▱', fg: '#e5e5e5' }] }]);
       jest.advanceTimersByTime(240);
@@ -696,7 +737,7 @@ describe('openPanel', () => {
 
       panel.cards([{ title: 'agente', lines: ['echo'] }]);
       expect([agente?.title, spinner?.visible, spinner?.content, jest.getTimerCount()]).toEqual([
-        ' ▾ agente ',
+        ' ▸ agente ',
         false,
         '',
         0,
@@ -712,25 +753,36 @@ describe('openPanel', () => {
     }
   });
 
-  it('collapses a card to its summary with Ctrl and its key or a click on it, and opens it again', async () => {
+  it('shows each card collapsed to its summary, opens it with Ctrl and its key or a click, and collapses it again', async () => {
     const { kit, renderer, press } = fakeToolkit();
     const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });
     panel.cards([
       { title: 'projeto', lines: ['site', '', 'Loja'], summary: ['site · 2', 'local', 'demais'], key: 'p' },
       { title: 'agente', lines: ['echo', 'x'], key: 'a' },
     ]);
-    const [, projeto, agente] = renderer.root.children[0]?.children[0]?.children ?? [];
+    const [projeto, agente] = (renderer.root.children[0]?.children[0]?.children ?? [])
+      .slice(1)
+      .map((slot) => slot.children[0]);
 
-    press({ name: 'p', ctrl: true });
+    press({ name: 'a', ctrl: true });
     expect([projeto?.title, projeto?.height, agente?.title, agente?.height]).toEqual([
       ' ▸ projeto ^P ',
-      4,
+      5,
       ' ▾ agente ^A ',
       10,
     ]);
     expect(projeto?.children[0]?.content).toEqual({ chunks: [{ text: 'site · 2' }] });
     expect(projeto?.children[1]?.content).toEqual({ chunks: [{ text: 'local' }] });
-    expect([projeto?.children[2]?.visible, projeto?.built['borderColor']]).toEqual([false, '#666666']);
+    expect(projeto?.children[2]?.content).toEqual({ chunks: [{ text: 'demais' }] });
+    expect(projeto?.built['borderColor']).toBe('#666666');
+    panel.cards([
+      { title: 'projeto', lines: ['site'], summary: ['site', `0 tickets · development · ${'x'.repeat(40)}`], key: 'p' },
+      { title: 'agente', lines: ['echo', 'x'], key: 'a' },
+    ]);
+    expect([projeto?.children[1]?.content, projeto?.children[1]?.height]).toEqual([
+      { chunks: [{ text: `0 tickets · development · ${'x'.repeat(12)}…` }] },
+      1,
+    ]);
     press({ name: 'a', ctrl: true });
     expect(agente?.children[0]?.content).toEqual({ chunks: [{ text: 'echo' }] });
     expect(agente?.title).toBe(' ▸ agente ^A ');

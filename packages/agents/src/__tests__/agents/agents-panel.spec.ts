@@ -88,6 +88,7 @@ function withAgents(dir: string, provider = 'auto', installed: (bin: string) => 
     converse: () => undefined,
     busy: () => undefined,
     clear: () => undefined,
+    quit: () => Promise.resolve(),
     onChange: () => undefined,
     spin: () => undefined,
   };
@@ -140,12 +141,11 @@ describe('/agents', () => {
             `${painted('magenta', 'Echo Agent')} \u001b[90m1.0.0\u001b[39m`,
             CARD_RULE,
             'Repete a tarefa recebida, usado nos testes deste pacote.',
-            CARD_RULE,
-            '\u001b[90msem projeto · claude-3-5-sonnet, gpt-4o\u001b[39m',
           ],
           [
             `${painted('magenta', 'echo')} \u001b[90m1.0.0\u001b[39m`,
             '\u001b[1m\u001b[36mexecute\u001b[39m\u001b[22m \u001b[90m·\u001b[39m \u001b[90mpadrão do cursor\u001b[39m',
+            '\u001b[90msem ticket\u001b[39m',
           ],
           'magenta',
         ],
@@ -155,28 +155,6 @@ describe('/agents', () => {
       await agents.run();
       expect(agents.fake.choices[1]?.options[0]?.current).toBe(true);
       expect(agents.shown).toHaveLength(1);
-    } finally {
-      tmp.cleanup();
-    }
-  });
-
-  it('says in the card what each agent needs to run', async () => {
-    const tmp = makeTmpDir('agents-panel');
-    try {
-      agentsFolder(tmp.path);
-      const agents = withAgents(tmp.path);
-      const needs: string[] = [];
-      for (const index of [1, 2, 3]) {
-        agents.fake.answer(index);
-        await agents.run();
-        needs.push(agents.shown.at(-1)?.[1]?.[4] ?? '');
-      }
-
-      expect(needs).toEqual([
-        '\u001b[90mprojeto · claude-3-5-sonnet\u001b[39m',
-        '\u001b[90mprojeto e ticket · claude-3-5-sonnet\u001b[39m',
-        '\u001b[90mprojeto · claude-3-5-sonnet\u001b[39m',
-      ]);
     } finally {
       tmp.cleanup();
     }

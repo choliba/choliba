@@ -37,6 +37,13 @@ describe('halfBlockArt', () => {
     ).toEqual([[{ text: '▀', fg: '#ff0000' }, { text: '▄', fg: '#0000ff' }, { text: ' ' }]]);
   });
 
+  it('starts half a row lower when asked, its first cell taking the first pixel in its bottom half', () => {
+    expect(halfBlockArt(pixels([[RED], [BLUE]]), true)).toEqual([
+      [{ text: '▄', fg: '#ff0000' }],
+      [{ text: '▀', fg: '#0000ff' }],
+    ]);
+  });
+
   it('draws an odd last row of pixels over nothing', () => {
     expect(halfBlockArt(pixels([[RED], [RED], [BLUE]]))).toEqual([
       [{ text: '▀', fg: '#ff0000', bg: '#ff0000' }],

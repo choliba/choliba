@@ -18,7 +18,7 @@ const OPAQUE_FROM = 128;
 
 /** The color of the pixel at `x`, `y`, or nothing where it is transparent or past the picture. */
 function colorAt(pixels: ArtPixels, x: number, y: number): string | undefined {
-  if (y >= pixels.height) return undefined;
+  if (y < 0 || y >= pixels.height) return undefined;
   const rgba = new DataView(pixels.data.buffer, pixels.data.byteOffset).getUint32(y * pixels.stride + x * 4);
   if ((rgba & 0xff) < OPAQUE_FROM) return undefined;
   return `#${(rgba >>> 8).toString(16).padStart(6, '0')}`;
@@ -33,11 +33,12 @@ function cell(top: string | undefined, bottom: string | undefined): ArtCell {
 
 /**
  * A picture as rows of cells, two pixels per cell, one above the other (`▀`, `▄`): each row of cells is two rows of
- * pixels. A transparent pixel gets no color, so it shows the terminal's background instead of black.
+ * pixels. A transparent pixel gets no color, so it shows the terminal's background instead of black. `halfRowDown`
+ * starts it half a row lower, from the middle of its first cell, where a border drawn in that row runs.
  */
-export function halfBlockArt(pixels: ArtPixels): ArtCell[][] {
+export function halfBlockArt(pixels: ArtPixels, halfRowDown = false): ArtCell[][] {
   const rows: ArtCell[][] = [];
-  for (let y = 0; y < pixels.height; y += 2) {
+  for (let y = halfRowDown ? -1 : 0; y < pixels.height; y += 2) {
     const row: ArtCell[] = [];
     for (let x = 0; x < pixels.width; x += 1) row.push(cell(colorAt(pixels, x, y), colorAt(pixels, x, y + 1)));
     rows.push(row);

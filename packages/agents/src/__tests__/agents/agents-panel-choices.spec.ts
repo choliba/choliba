@@ -18,6 +18,7 @@ import { sandboxConfig } from '@choliba/sandbox';
 import { agentsConfig } from '../../agents/agents-config';
 import { agentsPanel } from '../../agents/agents-panel';
 import { showRun } from '../../agents/agents-panel-state';
+import { agentsShell } from '../../agents/agents-shell';
 import { AGENT_PROVIDERS } from '../../agents/agents.constants';
 import { ClaudeAgentProvider, ClaudeOllamaAgentProvider, CursorAgentProvider } from '../../providers';
 import { makeTmpDir } from '../helpers/tmp';
@@ -256,7 +257,7 @@ describe('/mode', () => {
 
       await panel.run('agents', 0);
       expect(panel.state.statuses.get('modo')).toBe(
-        `${gray('modo')} ${bold('execute')}${gray(' · ')}${gray('plan')}${gray(' · ')}${gray('ask')} ${gray('(shift+tab alterna)')}`,
+        `${gray('modo')} ${bold('execute')}${gray(' | ')}${gray('plan')}${gray(' | ')}${gray('ask')} ${gray('(shift+tab alterna)')}`,
       );
       await panel.run('mode', 1);
       expect(panel.fake.choices[1]?.options.map((option) => [option.label, option.current])).toEqual([
@@ -278,31 +279,39 @@ describe('/mode', () => {
     }
   });
 
-  it('moves with Shift+Tab around the modes, from one listener per session, and leaves other keys alone', async () => {
+  it('moves with Shift+Tab around the modes from the start, from one listener per session, and leaves other keys alone', async () => {
     const tmp = makeTmpDir('choices');
     try {
       agentsFolder(tmp.path);
       const panel = session(tmp.path, () => true);
       expect(panel.state.press('tab', true)).toBe(false);
+      agentsShell.panelStart?.(panel.container, panel.state.context);
+
+      // With no agent yet, every mode, starting at execute.
+      expect(panel.state.statuses.get('modo')).toBe(
+        `${gray('modo')} ${bold('execute')}${gray(' | ')}${gray('plan')}${gray(' | ')}${gray('ask')} ${gray('(shift+tab alterna)')}`,
+      );
+      expect(panel.state.press('tab', true)).toBe(true);
+      expect(panel.state.values.get('modo')).toBe('plan');
       await panel.run('agents', 0);
       await panel.run('agents', 1);
 
       expect(panel.state.press('tab', true)).toBe(true);
-      expect(panel.state.values.get('modo')).toBe('plan');
-      panel.state.press('tab', true);
+      expect(panel.state.values.get('modo')).toBe('ask');
       panel.state.press('tab', true);
       expect(panel.state.values.get('modo')).toBe('execute');
       expect(panel.state.press('tab')).toBe(false);
       expect(panel.state.press('left', true)).toBe(false);
 
       panel.state.context.set('agente', 'gone');
-      expect(panel.state.press('tab', true)).toBe(false);
+      expect(panel.state.press('tab', true)).toBe(true);
+      expect(panel.state.values.get('modo')).toBe('plan');
     } finally {
       tmp.cleanup();
     }
   });
 
-  it('goes back to the default mode and model with another agent', async () => {
+  it('keeps the mode another agent takes, and goes back to its default model', async () => {
     const tmp = makeTmpDir('choices');
     try {
       agentsFolder(tmp.path);
@@ -312,7 +321,7 @@ describe('/mode', () => {
       await panel.run('model', 1);
       await panel.run('agents', 1);
 
-      expect([panel.state.values.get('modo'), panel.state.values.get('modelo')]).toEqual([undefined, undefined]);
+      expect([panel.state.values.get('modo'), panel.state.values.get('modelo')]).toEqual(['ask', undefined]);
     } finally {
       tmp.cleanup();
     }

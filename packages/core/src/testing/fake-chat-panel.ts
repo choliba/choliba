@@ -7,6 +7,8 @@ export interface FakeChatPanel {
   readonly written: string[];
   readonly said: string[];
   readonly suggested: (readonly string[])[];
+  /** The hint beside the field given with each `suggest`. */
+  readonly hints: (string | undefined)[];
   readonly headings: (readonly string[])[];
   /** Each set of cards shown in the header. */
   readonly cards: (readonly PanelCard[])[];
@@ -33,6 +35,7 @@ export function fakeChatPanel(): FakeChatPanel {
   const written: string[] = [];
   const said: string[] = [];
   const suggested: (readonly string[])[] = [];
+  const hints: (string | undefined)[] = [];
   const headings: (readonly string[])[] = [];
   const cards: (readonly PanelCard[])[] = [];
   const choices: PanelChooseRequest[] = [];
@@ -64,8 +67,9 @@ export function fakeChatPanel(): FakeChatPanel {
     onKey: (listener) => {
       keys.push(listener);
     },
-    suggest: (lines, onPick) => {
+    suggest: (lines, onPick, hint) => {
       suggested.push(lines);
+      hints.push(hint);
       picker = onPick;
     },
     fill: (text) => {
@@ -98,6 +102,7 @@ export function fakeChatPanel(): FakeChatPanel {
     written,
     said,
     suggested,
+    hints,
     headings,
     cards,
     choices,

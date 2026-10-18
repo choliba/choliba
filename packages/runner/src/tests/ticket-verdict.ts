@@ -13,6 +13,15 @@ export interface PlaywrightReport {
   readonly suites?: Parameters<typeof flattenResults>[0];
   /** Errors outside any test: a spec that does not compile or import. */
   readonly errors?: readonly { readonly message?: string }[];
+  /** When the run started, how long it took, and how many tests ended each way. */
+  readonly stats?: {
+    readonly startTime: string;
+    readonly duration: number;
+    readonly expected: number;
+    readonly unexpected: number;
+    readonly skipped: number;
+    readonly flaky: number;
+  };
 }
 
 export interface TicketCriteria {
