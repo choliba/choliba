@@ -106,4 +106,4 @@ export function openCholiba(options: CholibaOptions = {}): Choliba {
 export const choliba: Choliba = openCholiba();
 
 // Each module of `choliba` by its name, to import alone: `import { agents } from 'choliba'`.
-export const { workspace, config, agents, skills, projects } = choliba;
+export const { workspace, config, providers, agents, skills, projects } = choliba;

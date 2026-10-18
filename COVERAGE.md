@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 18/10/2026 12:27:18 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 18/10/2026 12:34:53 — não editar manualmente.
 
 ## Resumo
 
@@ -18,7 +18,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 92 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 93 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -114,11 +114,12 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/providers/cursor/cursor-cli-json.ts](packages/agents/src/providers/cursor/cursor-cli-json.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/cursor/cursor-permissions.ts](packages/agents/src/providers/cursor/cursor-permissions.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/cursor/cursor-state.ts](packages/agents/src/providers/cursor/cursor-state.ts)|100.00|100.00|100.00|100.00
+🟢|[src/providers/known-providers.ts](packages/agents/src/providers/known-providers.ts)|100.00|100.00|100.00|100.00
 
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 25 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 26 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -136,6 +137,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/help/version.ts](packages/choliba/src/help/version.ts)|100.00|100.00|100.00|100.00
 🟢|[src/library/choliba-library.ts](packages/choliba/src/library/choliba-library.ts)|100.00|100.00|100.00|100.00
 🟢|[src/library/choliba-projects.ts](packages/choliba/src/library/choliba-projects.ts)|100.00|100.00|100.00|100.00
+🟢|[src/library/choliba-providers.ts](packages/choliba/src/library/choliba-providers.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runtime/runtime.constants.ts](packages/choliba/src/runtime/runtime.constants.ts)|100.00|100.00|100.00|100.00
 🟢|[src/setup/setup.command.ts](packages/choliba/src/setup/setup.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/setup/setup.ts](packages/choliba/src/setup/setup.ts)|100.00|100.00|100.00|100.00
@@ -173,7 +175,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 68 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 69 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -191,6 +193,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/help/suggest.ts](packages/core/src/help/suggest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/wants-help.ts](packages/core/src/help/wants-help.ts)|100.00|100.00|100.00|100.00
 🟢|[src/paths/path-pattern.ts](packages/core/src/paths/path-pattern.ts)|100.00|100.00|100.00|100.00
+🟢|[src/platform/command-on-path.ts](packages/core/src/platform/command-on-path.ts)|100.00|100.00|100.00|100.00
 🟢|[src/platform/git-run.ts](packages/core/src/platform/git-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/platform/global-flags.ts](packages/core/src/platform/global-flags.ts)|100.00|100.00|100.00|100.00
 🟢|[src/platform/platform.constants.ts](packages/core/src/platform/platform.constants.ts)|100.00|100.00|100.00|100.00

@@ -1,3 +1,4 @@
+import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { agentsConfig } from '@choliba/agents';
@@ -199,6 +200,8 @@ describe('choliba', () => {
       choliba.projects,
     ]);
     expect([workspace.root, workspace.version]).toEqual([choliba.root, choliba.version]);
+    // The process's own PATH and environment.
+    expect(choliba.providers.list().map((provider) => provider.id)).toEqual(['claude', 'claude-ollama', 'cursor']);
   });
 
   it('is the facade of the process, read only when used', () => {
@@ -219,6 +222,41 @@ describe('choliba', () => {
     } finally {
       if (before === undefined) delete process.env['CHOL_AGENTS_DIR'];
       else process.env['CHOL_AGENTS_DIR'] = before;
+      workspace.cleanup();
+    }
+  });
+});
+
+describe('openCholiba — providers', () => {
+  it('lists the providers, saying which are installed and which credentials are set, never their values', () => {
+    const workspace = workspaceWith({ '.env': 'CURSOR_API_KEY=da-env\n' });
+    const bin = join(workspace.path, 'bin');
+    try {
+      mkdirSync(bin);
+      writeFileSync(join(bin, 'claude'), '');
+      chmodSync(join(bin, 'claude'), 0o755);
+      const providers = openCholiba({
+        cwd: workspace.path,
+        env: { PATH: bin, CLAUDE_CODE_OAUTH_TOKEN: 'do-ambiente', CHOL_AGENTS_PROVIDER: 'claude' },
+      }).providers;
+
+      expect(providers.list().map((provider) => [provider.id, provider.installed, provider.inAuto])).toEqual([
+        ['claude', true, true],
+        ['claude-ollama', true, false],
+        ['cursor', false, true],
+      ]);
+      expect(providers.get('claude').credentials).toEqual([
+        { name: 'CLAUDE_CODE_OAUTH_TOKEN', set: true },
+        { name: 'ANTHROPIC_API_KEY', set: false },
+        { name: 'ANTHROPIC_AUTH_TOKEN', set: false },
+      ]);
+      expect(providers.get('cursor').credentials).toContainEqual({ name: 'CURSOR_API_KEY', set: true });
+      expect(providers.get('claude-ollama')).toMatchObject({ modelPrefix: 'ollama:' });
+      expect(providers.get('claude').summary).not.toBe('');
+      expect(JSON.stringify(providers.list())).not.toContain('do-ambiente');
+      expect(providers.preferred).toBe('claude');
+      expect(() => providers.get('gpt')).toThrow('provider "gpt" não existe (existem: claude, claude-ollama, cursor)');
+    } finally {
       workspace.cleanup();
     }
   });

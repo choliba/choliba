@@ -17,6 +17,32 @@ export interface CholibaConfig {
   list(): readonly ConfigSetting[];
 }
 
+/** A provider, as a script sees it: never the values of its credentials. */
+export interface CholibaProvider {
+  /** What `--provider` calls it: `claude`, `claude-ollama`, `cursor`. */
+  readonly id: string;
+  /** Whether one of its commands is on the `PATH`. */
+  readonly installed: boolean;
+  /** Whether `auto` may pick it. */
+  readonly inAuto: boolean;
+  /** Each variable that authenticates it, and whether the environment or the `.env` sets it. */
+  readonly credentials: readonly { readonly name: string; readonly set: boolean }[];
+  /** The prefix of the models only it runs (`ollama:`), when it has one. */
+  readonly modelPrefix?: string;
+  /** What `--help` says it is. */
+  readonly summary: string;
+}
+
+/** The providers choliba knows. */
+export interface CholibaProviders {
+  /** Every provider, by id. */
+  list(): readonly CholibaProvider[];
+  /** One provider; an unknown id fails naming the ones there are. */
+  get(id: string): CholibaProvider;
+  /** `CHOL_AGENTS_PROVIDER` in effect: `auto` or a provider's id. */
+  readonly preferred: string;
+}
+
 /** The workspace's agents. */
 export interface CholibaAgents {
   /** The agents folder, absolute: `CHOL_AGENTS_DIR`, else `.choliba/agents`. */
@@ -94,6 +120,7 @@ export interface Choliba {
   readonly version: string;
   readonly workspace: CholibaWorkspace;
   readonly config: CholibaConfig;
+  readonly providers: CholibaProviders;
   readonly agents: CholibaAgents;
   readonly skills: CholibaSkills;
   readonly projects: CholibaProjects;

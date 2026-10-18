@@ -52,9 +52,19 @@ export class ProviderRegistry {
     this.providers = [...providers].sort((a, b) => a.id.localeCompare(b.id));
   }
 
+  /** Every provider, by id. */
+  list(): readonly AgentProvider[] {
+    return this.providers;
+  }
+
   /** `auto` and every provider's id: what `--provider` and the `--<id>` shortcuts take. */
   choices(): readonly string[] {
     return [AUTO, ...this.providers.map((provider) => provider.id)];
+  }
+
+  /** What `provider` is, as `--help` says it: its own summary, else how it is found. */
+  summary(provider: AgentProvider): string {
+    return provider.summary ?? commandsOf(provider);
   }
 
   /** What each `--provider` value means, listed under `--provider` in `--help`. */
@@ -64,7 +74,7 @@ export class ProviderRegistry {
       { name: AUTO, description: `O primeiro instalado, nesta ordem: ${order.join(', ')}.` },
       ...this.providers.map((provider) => ({
         name: provider.id,
-        description: provider.summary ?? commandsOf(provider),
+        description: this.summary(provider),
       })),
     ];
   }

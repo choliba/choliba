@@ -1,6 +1,14 @@
 import { resolve } from 'node:path';
 
-import { agentsConfig, listAgents, listSkills, loadAgent, resolveSkill, resolveSkills } from '@choliba/agents';
+import {
+  agentsConfig,
+  knownProviders,
+  listAgents,
+  listSkills,
+  loadAgent,
+  resolveSkill,
+  resolveSkills,
+} from '@choliba/agents';
 import { configCatalog, configSettings, type ConfigGroup } from '@choliba/config';
 import { versionLine } from '@choliba/core';
 import { LocationsService, ProjectsService, projectsConfig } from '@choliba/projects';
@@ -8,6 +16,7 @@ import { LocationsService, ProjectsService, projectsConfig } from '@choliba/proj
 import { configSourcesAt, findWorkspaceRoot } from '../config';
 import { cholibaManifest, PACKAGE_NAME } from '../help';
 import { cholibaProjects } from './choliba-projects';
+import { cholibaProviders } from './choliba-providers';
 import type {
   Choliba,
   CholibaAgents,
@@ -70,6 +79,12 @@ export function cholibaLibrary(groups: readonly ConfigGroup[], options: CholibaO
     },
     workspace,
     config,
+    providers: cholibaProviders({
+      registry: knownProviders(),
+      sources,
+      preferred: () => read(agentsConfig).provider,
+      path: () => (options.env ?? process.env)['PATH'],
+    }),
     agents,
     skills,
     projects: cholibaProjects(() => new ProjectsService(new LocationsService(read(projectsConfig)))),

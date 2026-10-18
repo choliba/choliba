@@ -6,6 +6,8 @@ export type {
   CholibaOptions,
   CholibaProject,
   CholibaProjects,
+  CholibaProvider,
+  CholibaProviders,
   CholibaSkills,
   CholibaTests,
   CholibaTickets,

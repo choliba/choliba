@@ -9,6 +9,7 @@ export {
   createCholibaShell,
   openCholiba,
   projects,
+  providers,
   skills,
   workspace,
 } from './app-shell';
@@ -19,6 +20,8 @@ export type {
   CholibaOptions,
   CholibaProject,
   CholibaProjects,
+  CholibaProvider,
+  CholibaProviders,
   CholibaSkills,
   CholibaTests,
   CholibaTickets,
