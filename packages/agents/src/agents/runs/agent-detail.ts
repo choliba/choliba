@@ -46,7 +46,10 @@ export function formatAgentDetail(command: AgentInvocation, agent: AgentDefiniti
     `name: ${agent.displayName}`,
     `version: ${agent.version}`,
     ...wrapText(agent.description, HELP_WIDTH),
-    formatYamlList('models', agent.supportedModels),
+    formatYamlList(
+      'providers',
+      agent.providers.map(({ id, models }) => `${id}: ${models.join(', ')}`),
+    ),
     formatYamlList(
       'skills',
       agent.skills.map((skill) => skill.name),

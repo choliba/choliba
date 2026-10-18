@@ -25,14 +25,16 @@ import { makeTmpDir } from '../helpers/tmp';
 
 const FIXTURES = join(__dirname, '..', 'fixtures', 'agents');
 
-/** `echo` (two models of no prefix) and `local` (one `ollama:` model), both taking every mode. */
+/** `echo` (claude and cursor) and `local` (claude and claude-ollama), both taking every mode. */
 function agentsFolder(dir: string): void {
   cpSync(join(FIXTURES, 'echo'), join(dir, 'echo'), { recursive: true });
   const echo = readFileSync(join(FIXTURES, 'echo', 'agent.yaml'), 'utf8');
   mkdirSync(join(dir, 'local'));
   writeFileSync(
     join(dir, 'local', 'agent.yaml'),
-    echo.replace('id: echo', 'id: local').replace('  - gpt-4o\n', '  - ollama:qwen3.5:4b\n'),
+    echo
+      .replace('id: echo', 'id: local')
+      .replace('  cursor:\n    models:\n      - gpt-4o\n', "  claude-ollama:\n    models:\n      - 'qwen3.5:4b'\n"),
   );
 }
 
@@ -75,7 +77,7 @@ const warn = (text: string): string => `\u001b[33m${text}\u001b[39m`;
 const noCursor = (bin: string): boolean => !['agent', 'cursor-agent', 'cursor'].includes(bin);
 
 describe('/provider', () => {
-  it('takes the provider an agent of only ollama: models asks for, over CHOL_AGENTS_PROVIDER, until /provider', async () => {
+  it('refuses a preference the agent does not declare, and offers /provider among the ones it declares', async () => {
     const tmp = makeTmpDir('choices-agent-provider');
     try {
       agentsFolder(tmp.path);
@@ -83,20 +85,22 @@ describe('/provider', () => {
       mkdirSync(join(tmp.path, 'only'));
       writeFileSync(
         join(tmp.path, 'only', 'agent.yaml'),
-        echo.replace('id: echo', 'id: only').replace('  - claude-3-5-sonnet\n  - gpt-4o\n', '  - ollama:qwen3.5:4b\n'),
+        echo
+          .replace('id: echo', 'id: only')
+          .replace(/providers:\n[\s\S]*?\n\n/, "providers:\n  claude-ollama:\n    models:\n      - 'qwen3.5:4b'\n\n"),
       );
       const panel = session(tmp.path, noCursor, 'claude');
       panel.state.context.set('agente', 'only');
-      showRun(panel.container, panel.state.context);
+      showRun(panel.container, panel.state.context, panel.fake.panel);
 
+      expect(panel.state.labels.get('provider')).toBe(warn('indisponível'));
+      expect(panel.fake.written).toContain(
+        warn('O agente only não declara o provider claude (declara: claude-ollama).'),
+      );
+      await panel.run('provider', 1);
+      expect(panel.fake.choices[0]?.options.map((option) => option.label)).toEqual(['auto', 'claude-ollama']);
       expect(panel.state.labels.get('provider')).toBe(bold('claude-ollama'));
-      await panel.run('provider', undefined);
-      expect(panel.fake.choices[0]?.options.find((option) => option.current)?.label).toBe('claude-ollama');
-
-      // A provider chosen in the session goes on winning.
-      panel.state.context.set('provider', 'claude');
-      showRun(panel.container, panel.state.context);
-      expect(panel.state.labels.get('provider')).toBe(bold('claude'));
+      expect(panel.state.labels.get('modelo')).toBe(bold('qwen3.5:4b'));
     } finally {
       tmp.cleanup();
     }
@@ -112,7 +116,7 @@ describe('/provider', () => {
       expect(panel.why('provider')).toBeUndefined();
       expect(panel.fake.choices[0]).toMatchObject({
         title: 'Escolha o provider',
-        description: 'Quem roda o agente nesta sessão. auto usa o primeiro instalado.',
+        description: 'Quem roda o agente nesta sessão, entre os que ele declara. auto usa o primeiro instalado.',
       });
       expect(panel.fake.choices[0]?.options).toEqual([
         { label: 'auto', detail: 'o primeiro instalado: claude', current: true },
@@ -125,6 +129,14 @@ describe('/provider', () => {
       const none = session(tmp.path, () => false);
       await none.run('provider', 0);
       expect(none.fake.choices[0]?.options[0]?.detail).toBe('nenhum instalado');
+      // With an agent, auto is the first installed of the providers it declares.
+      none.state.context.set('agente', 'echo');
+      await none.run('provider', undefined);
+      expect(none.fake.choices[1]?.options.map((option) => [option.label, option.detail])).toEqual([
+        ['auto', 'nenhum instalado'],
+        ['claude', 'não instalado'],
+        ['cursor', 'não instalado'],
+      ]);
     } finally {
       tmp.cleanup();
     }
@@ -150,23 +162,26 @@ describe('/provider', () => {
     }
   });
 
-  it('keeps the chosen model when the new provider runs it, and goes back to the default when not', async () => {
+  it('keeps the chosen model when the new provider declares it, and goes back to the default when not', async () => {
     const tmp = makeTmpDir('choices');
     try {
       agentsFolder(tmp.path);
-      const panel = session(tmp.path, () => true, 'claude');
+      const panel = session(tmp.path, () => true);
       await panel.run('agents', 0);
-      await panel.run('model', 2);
-      expect(panel.state.values.get('modelo')).toBe('gpt-4o');
+      // Under auto, the first provider echo declares: claude.
+      await panel.run('model', 1);
+      expect(panel.state.values.get('modelo')).toBe('claude-3-5-sonnet');
 
-      await panel.run('provider', 3);
-      expect(panel.state.values.get('modelo')).toBe('gpt-4o');
-      expect(panel.state.labels.get('provider')).toBe(bold('cursor'));
+      await panel.run('provider', 1);
+      expect(panel.state.values.get('modelo')).toBe('claude-3-5-sonnet');
+      expect(panel.state.labels.get('provider')).toBe(bold('claude'));
 
       await panel.run('provider', 2);
       expect(panel.state.values.get('modelo')).toBeUndefined();
-      expect(panel.fake.written).toContain(warn('O modelo gpt-4o não roda com claude-ollama: volta ao padrão.'));
-      expect(panel.state.labels.get('modelo')).toBe(warn('indisponível'));
+      expect(panel.fake.written).toContain(
+        warn('O modelo claude-3-5-sonnet não é de cursor no agente: volta ao padrão.'),
+      );
+      expect(panel.state.labels.get('modelo')).toBe(gray('padrão do cursor'));
     } finally {
       tmp.cleanup();
     }
@@ -184,11 +199,11 @@ describe('/model', () => {
       expect(panel.fake.choices).toEqual([]);
 
       await panel.run('agents', 0);
-      expect(panel.why('model')).toBe('O provider claude-ollama não roda nenhum modelo de echo');
+      expect(panel.why('model')).toBe('O agente echo não declara o provider claude-ollama (declara: claude, cursor).');
 
       const none = session(tmp.path, () => false);
       none.state.context.set('agente', 'echo');
-      expect(none.why('model')).toBe('Nenhum provider instalado: escolha um com /provider');
+      expect(none.why('model')).toBe('Nenhum provider que o agente echo declara está instalado: claude, cursor.');
     } finally {
       tmp.cleanup();
     }
@@ -205,11 +220,10 @@ describe('/model', () => {
 
       expect(panel.fake.choices[1]).toEqual({
         title: 'Escolha o modelo de echo',
-        description: 'Os modelos do agente que claude roda.',
+        description: 'Os modelos que o agente declara para claude.',
         options: [
           { label: 'padrão do claude', detail: 'o provider escolhe', current: true },
           { label: 'claude-3-5-sonnet', detail: '', current: false },
-          { label: 'gpt-4o', detail: '', current: false },
         ],
       });
       expect(panel.state.values.get('modelo')).toBe('claude-3-5-sonnet');
@@ -229,7 +243,7 @@ describe('/model', () => {
     }
   });
 
-  it('lists only the ollama models with a provider that runs those alone', async () => {
+  it('lists only the declared models with a provider that has none of its own', async () => {
     const tmp = makeTmpDir('choices');
     try {
       agentsFolder(tmp.path);
@@ -237,8 +251,8 @@ describe('/model', () => {
       await panel.run('agents', 1);
       await panel.run('model', 0);
 
-      expect(panel.fake.choices[1]?.options.map((option) => option.label)).toEqual(['ollama:qwen3.5:4b']);
-      expect(panel.state.labels.get('modelo')).toBe(bold('ollama:qwen3.5:4b'));
+      expect(panel.fake.choices[1]?.options.map((option) => option.label)).toEqual(['qwen3.5:4b']);
+      expect(panel.state.labels.get('modelo')).toBe(bold('qwen3.5:4b'));
     } finally {
       tmp.cleanup();
     }

@@ -1,12 +1,13 @@
 import type { McpDeclaration } from '../../../common/interfaces/agent.interface';
+import type { ProviderRequest } from '../../../common/interfaces/provider.interface';
 import type { AgentEvent, McpUse } from '../../../common/interfaces/event.interface';
 import { readAgentPermissions } from '../../../common/agent-permissions';
 import { pathPolicy } from '../../../common/path-policy';
-import { toolViolation, type ToolGuard } from '../../../agents/runs/tool-guard';
+import { toolGuard, toolViolation, type ToolGuard } from '../../../agents/runs/tool-guard';
 import { toolPolicy } from '../../../agents/runs/tool-policy';
 
-function call(name: string, mcp?: McpUse): AgentEvent {
-  return { type: 'tool-call', id: 'c1', name, summary: '', ...(mcp === undefined ? {} : { mcp }) };
+function call(name: string, mcp?: McpUse, summary = ''): AgentEvent {
+  return { type: 'tool-call', id: 'c1', name, summary, ...(mcp === undefined ? {} : { mcp }) };
 }
 
 function guard(agent: string, mcps: readonly McpDeclaration[], unenforcedTools: readonly string[] = []): ToolGuard {
@@ -86,5 +87,35 @@ describe('toolViolation', () => {
   it('lets everything else run', () => {
     expect(toolViolation(call('Read'), guard('implementer', []))).toBeUndefined();
     expect(toolViolation({ type: 'text', text: 'mcp' }, guard('implementer', []))).toBeUndefined();
+  });
+});
+
+describe('toolGuard', () => {
+  const request = {
+    agent: {
+      name: 'implementer',
+      mcps: [],
+      permissions: readAgentPermissions({ allow: { execute: { './': ['git status'] } } }),
+    },
+    mode: 'execute',
+    policy: 'edits',
+    workspaceRoot: '/repo',
+    runDir: '/repo/.cache/runs/x',
+  } as unknown as ProviderRequest;
+
+  it("checks each command against the agent's execute rules when the provider cannot limit them", () => {
+    const guard = toolGuard(request, { unenforcedTools: [], enforcesExecute: false });
+
+    expect(toolViolation(call('Bash', undefined, "/bin/bash -lc 'git status'"), guard)).toBeUndefined();
+    expect(toolViolation(call('Bash', undefined, 'rm -rf /'), guard)).toContain('rodou rm -rf /');
+    expect(toolViolation(call('Edit', undefined, 'rm -rf /'), guard)).toBeUndefined();
+  });
+
+  it('leaves the commands to a provider that limits them', () => {
+    const guard = toolGuard(request, { unenforcedTools: ['Grep'], enforcesExecute: true });
+
+    expect(guard.commands).toBeUndefined();
+    expect(toolViolation(call('Bash', undefined, 'rm -rf /'), guard)).toBeUndefined();
+    expect(toolViolation(call('Grep'), guard)).toContain('Grep');
   });
 });

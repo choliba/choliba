@@ -31,19 +31,32 @@ export abstract class AgentProvider {
    */
   readonly unenforcedTools: readonly string[] = [];
 
+  /**
+   * Whether its own permissions limit the commands the agent runs. When they cannot (Codex runs any command), choliba
+   * checks each one against `permissions.execute` and stops the run at the first outside it (`command-guard.ts`).
+   */
+  readonly enforcesExecute: boolean = true;
+
+  /**
+   * Whether it reads only the task from stdin, which then ends: the messages of the person during the run are not
+   * delivered (Codex's `exec`). One that reads messages while it runs keeps stdin open until its last answer.
+   */
+  readonly oneShotInput: boolean = false;
+
   /** Whether `auto` may pick it. A provider that runs only a model of its own (`claude-ollama`) runs only when named. */
   readonly inAuto: boolean = true;
 
   /**
-   * The prefix of the `agent.yaml#models` ids only this provider runs (`ollama:`). A provider without one runs the ids
-   * no provider prefixes.
+   * Whether a run must name its model: it has none of its own (Ollama), or its stream does not say which it ran, so
+   * choliba could not check it against what the agent declares (Codex). Without `--model`, a run asks it for the first
+   * model the agent declares for it.
    */
-  readonly modelPrefix?: string;
+  readonly needsModel: boolean = false;
 
   /** What `--help` says it is, when the command it runs does not say enough. */
   readonly summary?: string;
 
-  /** The declared id of the model its stream reports, to check against `agent.yaml#models`. */
+  /** The declared id of the model its stream reports, to check against `agent.yaml#providers.<id>.models`. */
   declaredModel(reported: string): string {
     return reported;
   }

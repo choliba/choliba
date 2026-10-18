@@ -21,12 +21,14 @@ export const ALREADY_DONE = 'o agente já terminou';
 /**
  * The input of `session`, for a provider whose `message` turns a text into the line its stdin takes, or `undefined` for
  * one that reads nothing while it runs. Each message sent is in flight until a turn ends; when none is left, stdin
- * closes, which ends a session that reads until the end of it.
+ * closes, which ends a session that reads until the end of it. A `oneShot` provider reads the task alone: stdin closes
+ * right after it, and a message is not read.
  */
 export function sessionInput(
   session: Pick<Session, 'write' | 'endInput'>,
   message: ((text: string) => string) | undefined,
   task: string,
+  oneShot = false,
 ): SessionInput {
   let inFlight = 0;
   const deliver = (text: string): boolean => {
@@ -37,13 +39,14 @@ export function sessionInput(
   return {
     begin: () => {
       deliver(task);
+      if (message !== undefined && oneShot) session.endInput();
     },
     send: (text) => {
-      if (message === undefined) return NOT_READ;
+      if (message === undefined || oneShot) return NOT_READ;
       return deliver(text) ? undefined : ALREADY_DONE;
     },
     turnEnded: () => {
-      if (message === undefined) return;
+      if (message === undefined || oneShot) return;
       inFlight = Math.max(inFlight - 1, 0);
       if (inFlight === 0) session.endInput();
     },

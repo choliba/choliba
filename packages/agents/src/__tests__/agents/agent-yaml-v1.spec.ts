@@ -6,6 +6,7 @@ import { stringify } from 'yaml';
 import { ANSI_COLORS } from '@choliba/core';
 
 import { SUPPORTED_AGENT_YAML_VERSIONS, validateAgentYamlV1 } from '../../agents/agent-validation';
+import { knownProviders } from '../../providers';
 
 const FULL = `version: 1
 
@@ -18,8 +19,10 @@ agent:
     e validação de testes end-to-end (E2E) com Playwright a partir dos critérios
     de aceite de um ticket.json.
 
-models:
-  - claude-sonnet-5
+providers:
+  claude:
+    models:
+      - claude-sonnet-5
 
 role: |
   Você escreve os testes E2E do ticket \${TICKET}.
@@ -91,7 +94,7 @@ function minimal(): Doc {
   return {
     version: 1,
     agent: { id: 'qa-e2e', name: 'QA E2E', version: '1.0.0', description: 'Escreve testes.' },
-    models: ['claude-sonnet-5'],
+    providers: { claude: { models: ['claude-sonnet-5'] } },
     role: 'Papel.',
     input: 'Entrada.',
     flow: '1. Faça.',
@@ -121,6 +124,35 @@ describe('agent.color', () => {
       properties: { agent: { properties: { color: { enum: readonly string[] } } } };
     };
     expect(schema.properties.agent.properties.color.enum).toEqual(ANSI_COLORS);
+  });
+});
+
+describe('providers', () => {
+  it('takes one or more providers choliba knows, each with one or more models, none repeated', () => {
+    const two = { claude: { models: ['claude-sonnet-5'] }, cursor: { models: ['Composer 2.5 Fast', 'Auto'] } };
+    expect(validate({ ...minimal(), providers: two })).toEqual({ valid: true, errors: [] });
+    expect(errorsOf({ ...minimal(), providers: {} })).toMatch(/providers/);
+    expect(errorsOf({ ...minimal(), providers: { gpt: { models: ['x'] } } })).toMatch(/providers/);
+    expect(errorsOf({ ...minimal(), providers: { claude: { models: [] } } })).toMatch(/models/);
+    expect(errorsOf({ ...minimal(), providers: { claude: { models: ['a', 'a'] } } })).toMatch(/models/);
+    expect(errorsOf({ ...minimal(), providers: { claude: {} } })).toMatch(/models/);
+  });
+
+  it('no longer takes the flat list of models', () => {
+    const { providers: _dropped, ...rest } = minimal();
+    expect(errorsOf({ ...rest, models: ['claude-sonnet-5'] })).toMatch(/providers[\s\S]*models|models[\s\S]*providers/);
+  });
+
+  it('names exactly the providers choliba knows', () => {
+    const schemaFile = join(__dirname, '..', '..', '..', 'schemes', 'v1', 'agent.schema.json');
+    const schema = JSON.parse(readFileSync(schemaFile, 'utf8')) as {
+      properties: { providers: { propertyNames: { enum: readonly string[] } } };
+    };
+    expect(schema.properties.providers.propertyNames.enum).toEqual(
+      knownProviders()
+        .list()
+        .map((provider) => provider.id),
+    );
   });
 });
 

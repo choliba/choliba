@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { launchFor, realDisk, type LaunchDisk } from '../../../agents/runs/sandbox-launch';
 import { ClaudeAgentProvider } from '../../../providers/claude/claude-agent.provider';
 import { ClaudeOllamaAgentProvider } from '../../../providers/claude/claude-ollama-agent.provider';
+import { CodexAgentProvider } from '../../../providers/codex/codex-agent.provider';
 import { CursorAgentProvider } from '../../../providers/cursor/cursor-agent.provider';
 import { NO_PERMISSIONS, type AgentPermissions } from '../../../common/agent-permissions';
 import type { ProviderRequest } from '../../../common/interfaces/provider.interface';
@@ -18,7 +19,7 @@ function request(permissions: Partial<AgentPermissions> = {}, more: Partial<Prov
       displayName: 'Echo',
       version: '1.0.0',
       description: 'd',
-      supportedModels: [],
+      providers: [],
       skills: [],
       mcps: [],
       policy: 'edits',
@@ -238,6 +239,63 @@ describe('launchFor', () => {
       ANTHROPIC_AUTH_TOKEN: 'ollama',
       CLAUDE_CODE_OAUTH_TOKEN: '',
     });
+  });
+
+  it("points Codex at the run's isolated home inside the local sandbox", () => {
+    const codex = {
+      adapter: new CodexAgentProvider(),
+      command: ['codex'],
+      executable: '/provider/codex',
+    };
+    const launch = launchFor(
+      {
+        sandbox: { kind: 'local' },
+        command: ['codex', 'exec'],
+        provider: codex,
+        request: request(),
+        files: [],
+        config: { HOME: '/home/test', CODEX_HOME: '/home/test/.codex' },
+      },
+      disk(),
+    );
+
+    expect(launch.env).toMatchObject({ CODEX_HOME: '/w/.cache/runs/1/.codex' });
+    expect(launch.command.slice(-2)).toEqual(['/provider/codex', 'exec']);
+  });
+
+  it("mounts Codex's npm launcher and native platform package in the local sandbox", () => {
+    const codex = {
+      adapter: new CodexAgentProvider(),
+      command: ['codex'],
+      executable: '/home/test/.bun/bin/codex',
+    };
+    const fake = {
+      ...disk(),
+      realpath: () => '/home/test/.bun/install/global/node_modules/@openai/codex/bin/codex.js',
+    };
+    const launch = launchFor(
+      {
+        sandbox: { kind: 'local' },
+        command: ['codex', 'exec'],
+        provider: codex,
+        request: request(),
+        files: [],
+        config: { HOME: '/home/test', CODEX_HOME: '/home/test/.codex' },
+      },
+      fake,
+    );
+
+    expect(launch.command).toEqual(
+      expect.arrayContaining([
+        '--ro-bind',
+        '/home/test/.bun/install/global/node_modules/@openai',
+        '/home/test/.bun/install/global/node_modules/@openai',
+      ]),
+    );
+    expect(launch.command.slice(-2)).toEqual([
+      '/home/test/.bun/install/global/node_modules/@openai/codex/bin/codex.js',
+      'exec',
+    ]);
   });
 
   it("opens the browser tools' output and the project's ticket-runs for writing, creating them first", () => {

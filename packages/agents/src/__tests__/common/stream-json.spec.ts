@@ -5,7 +5,6 @@ import {
   extractCreatePlanToolPlan,
   isSubstantiveAgentEvent,
   parseInitEvent,
-  validateExplicitModel,
   validateModelReportMissing,
   validateReportedModel,
 } from '../../common/stream-json';
@@ -63,31 +62,19 @@ describe('parseInitEvent', () => {
 describe('model guards', () => {
   const supported = ['sonnet-5', 'gpt-4o'];
 
-  it('validateExplicitModel passes when the model is listed', () => {
-    expect(validateExplicitModel('sonnet-5', supported, 'echo')).toBeUndefined();
-  });
-
-  it('validateExplicitModel passes when supported_models is empty', () => {
-    expect(validateExplicitModel('anything', [], 'echo')).toBeUndefined();
-  });
-
-  it('validateExplicitModel rejects unknown models', () => {
-    expect(validateExplicitModel('opus-9', supported, 'echo')).toContain('opus-9');
-  });
-
   it('validateReportedModel rejects unknown reported models', () => {
     expect(validateReportedModel('opus-9', supported, { providerId: 'claude', agentName: 'echo' })).toContain(
       'Stopping',
     );
   });
 
-  it('validateModelReportMissing fires when supported_models is non-empty', () => {
+  it('validateModelReportMissing fires when providers.<id>.models is non-empty', () => {
     expect(validateModelReportMissing(supported, { providerId: 'cursor', agentName: 'echo' })).toContain(
       'did not report a model',
     );
   });
 
-  it('validateModelReportMissing is silent when supported_models is empty', () => {
+  it('validateModelReportMissing is silent when providers.<id>.models is empty', () => {
     expect(validateModelReportMissing([], { providerId: 'cursor', agentName: 'echo' })).toBeUndefined();
   });
 });

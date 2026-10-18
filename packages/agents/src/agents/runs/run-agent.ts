@@ -38,6 +38,7 @@ import { watchQuestions } from './ask-watcher';
 import { sessionInput } from './session-input';
 import { toolGuard, toolViolation } from './tool-guard';
 import { writtenToolCall, writtenToolCallMessage } from './written-tool-call';
+import { declaredModels } from './run-choice';
 
 export interface RunAgentDeps {
   /**
@@ -384,16 +385,22 @@ async function followSession(
   let planMarkdown: string | undefined;
   let reportedModel: string | undefined;
   const textParts: string[] = [];
-  const supportedModels = request.providerRequest.agent.supportedModels;
+  // The model the stream reports is checked against the models the agent declares for this run's provider.
+  const supportedModels = declaredModels(request.providerRequest.agent, adapter.id);
   const explicitModel = request.providerRequest.model;
   const modelCtx = { providerId, agentName: label };
   // Set once a guard stopped the session (a model outside agent.yaml, a call to a subagent): what comes after
   // is not shown, and the run fails.
   const stopGuard = { triggered: false };
   // The sandbox decides each tool call on the policy written from the agent (its MCPs) and the provider's limits.
-  const guard = toolGuard(request.providerRequest, adapter.unenforcedTools);
+  const guard = toolGuard(request.providerRequest, adapter);
 
-  const input = sessionInput(session, adapter.inputMessage?.bind(adapter), request.providerRequest.userPrompt);
+  const input = sessionInput(
+    session,
+    adapter.inputMessage?.bind(adapter),
+    request.providerRequest.userPrompt,
+    adapter.oneShotInput,
+  );
   const stop = (message: string): void => {
     stopGuard.triggered = true;
     screen.err.write(`${message}\n`);

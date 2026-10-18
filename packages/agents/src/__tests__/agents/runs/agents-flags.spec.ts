@@ -171,7 +171,7 @@ describe('parseAgentsArgs — run', () => {
     expect(() => parseAgentsArgs(['developer', '--provider'])).toThrow(/falta um valor para --provider/);
   });
 
-  it.each(['auto', 'claude', 'cursor'] as const)('accepts --%s as shorthand for --provider %s', (name) => {
+  it.each(['auto', 'claude', 'codex', 'cursor'] as const)('accepts --%s as shorthand for --provider %s', (name) => {
     expect(parseRun(['developer', `--${name}`]).provider).toBe(name);
   });
 

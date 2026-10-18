@@ -50,6 +50,7 @@ Ele depende do [Playwright](https://playwright.dev) (os testes e o navegador que
 `playwright cli`), do [Bun](https://bun.sh) e de um provider de agente:
 
 - [Claude Code](https://claude.com/claude-code) (`claude`)
+- [Codex CLI](https://developers.openai.com/codex/cli) (`codex`)
 - [Cursor CLI](https://cursor.com/cli) (`cursor-agent`)
 
 Agentes podem usar skills e servidores MCP, instalados na pasta de trabalho.

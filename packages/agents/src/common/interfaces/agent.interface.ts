@@ -66,6 +66,13 @@ export interface McpDeclaration {
   readonly instructions?: string;
 }
 
+/** One provider an agent declares (`providers.<id>`), and the models it may use there, the first being its default. */
+export interface AgentProviderModels {
+  /** The provider's id: `claude`, `claude-ollama`, `cursor`. */
+  readonly id: string;
+  readonly models: readonly string[];
+}
+
 /**
  * One agent, loaded from `<agentsDir>/<name>/agent.yaml` (standard 1, see
  * `schemes/v1/agent.schema.json`), its whole declaration. `name` is the folder, which is also `agent.id`.
@@ -80,8 +87,8 @@ export interface AgentDefinition {
   readonly description: string;
   /** `agent.color`: the color its author chose for its `[label]`; `CHOL_COLORS` overrides it. */
   readonly color?: AnsiColor;
-  /** `models`: the models the agent may run with. */
-  readonly supportedModels: readonly string[];
+  /** `providers`: the providers the agent runs with, in the file's order, each with the models it may use there. */
+  readonly providers: readonly AgentProviderModels[];
   readonly skills: readonly SkillDeclaration[];
   /** MCP servers the agent may use (`<mcpsDir>/<name>.json`); it gets no other. */
   readonly mcps: readonly McpDeclaration[];

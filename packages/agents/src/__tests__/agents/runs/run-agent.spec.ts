@@ -79,7 +79,7 @@ function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {
     displayName: 'Echo Agent',
     version: '1.0.0',
     description: 'repeats things',
-    supportedModels: [],
+    providers: [],
     skills: [],
     mcps: [],
     policy: 'read-only',
@@ -109,6 +109,9 @@ function fakeAdapter(overrides: Partial<AgentProvider> = {}): AgentProvider {
     autoPriority: 1,
     credentials: ['FAKE_TOKEN'],
     credentialHelp: 'set FAKE_TOKEN',
+    needsModel: false,
+    enforcesExecute: true,
+    oneShotInput: false,
     unenforcedTools: [],
     inAuto: true,
     declaredModel: (model) => model,
@@ -328,12 +331,14 @@ describe('runAgent', () => {
     expect(await run(s)).toBe(128 + constants.signals.SIGTERM);
   });
 
-  it('stops the session and returns 1 when the reported model is not in agent.yaml#supported_models', async () => {
+  it("stops the session and returns 1 when the reported model is not one the agent declares for the run's provider", async () => {
     const lines = eventLines([{ type: 'init', model: 'opus-9', sessionId: 's1' }]);
     const spawnerHandle = fakeSpawner({ stdout: streamFromChunks([lines]) });
     const s = setup(spawnerHandle.spawner);
 
-    const exitCode = await run(s, undefined, { agent: fakeAgent({ supportedModels: ['sonnet-5'] }) });
+    const exitCode = await run(s, undefined, {
+      agent: fakeAgent({ providers: [{ id: 'claude', models: ['sonnet-5'] }] }),
+    });
 
     expect(exitCode).toBe(1);
     expect(s.stderr.chunks.join('')).toContain('"opus-9"');
@@ -350,18 +355,22 @@ describe('runAgent', () => {
     const spawnerHandle = fakeSpawner({ stdout: streamFromChunks([lines]) });
     const s = setup(spawnerHandle.spawner);
 
-    const exitCode = await run(s, undefined, { agent: fakeAgent({ supportedModels: ['sonnet-5'] }) });
+    const exitCode = await run(s, undefined, {
+      agent: fakeAgent({ providers: [{ id: 'claude', models: ['sonnet-5'] }] }),
+    });
 
     expect(exitCode).toBe(1);
     expect(s.stdout.chunks.join('')).not.toContain('late line');
   });
 
-  it('stops when substantive output arrives without a reported model and supported_models is non-empty', async () => {
+  it('stops when substantive output arrives without a reported model and the provider has declared models', async () => {
     const lines = eventLines([{ type: 'text', text: 'working without init' }]);
     const spawnerHandle = fakeSpawner({ stdout: streamFromChunks([lines]) });
     const s = setup(spawnerHandle.spawner);
 
-    const exitCode = await run(s, undefined, { agent: fakeAgent({ supportedModels: ['sonnet-5'] }) });
+    const exitCode = await run(s, undefined, {
+      agent: fakeAgent({ providers: [{ id: 'claude', models: ['sonnet-5'] }] }),
+    });
 
     expect(exitCode).toBe(1);
     expect(s.stderr.chunks.join('')).toContain('did not report a model');
@@ -451,7 +460,9 @@ describe('runAgent', () => {
     const spawnerHandle = fakeSpawner({ stdout: streamFromChunks([lines]) });
     const s = setup(spawnerHandle.spawner);
 
-    const exitCode = await run(s, undefined, { agent: fakeAgent({ supportedModels: ['sonnet-5'] }) });
+    const exitCode = await run(s, undefined, {
+      agent: fakeAgent({ providers: [{ id: 'claude', models: ['sonnet-5'] }] }),
+    });
 
     expect(exitCode).toBe(0);
     expect(spawnerHandle.kill).not.toHaveBeenCalled();

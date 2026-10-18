@@ -56,7 +56,7 @@ describe('choliba run agent and list agents', () => {
 
       const help = await choliba(['run', 'agent', '--help'], { cwd });
       expect(help.platform.stdout.text()).toContain('Usage:  choliba run agent AGENT [OPTIONS] [TASK...]');
-      expect(help.platform.stdout.text()).toContain('(auto, claude, claude-ollama, cursor)');
+      expect(help.platform.stdout.text()).toContain('(auto, claude, claude-ollama, codex, cursor)');
       expect(help.platform.stdout.text()).not.toContain('list');
     }));
 
@@ -127,7 +127,10 @@ describe('AgentsService.helpSpec', () => {
 
       expect(formatSuggestions(complete(spec, ['ec']))).toBe('echo');
       expect(formatSuggestions(complete(spec, ['l']))).toBe('');
-      expect(formatSuggestions(complete(spec, ['echo', '--provider', '']))).toBe('auto\nclaude\nclaude-ollama\ncursor');
+      expect(formatSuggestions(complete(spec, ['echo', '--provider', '']))).toBe('auto\nclaude\ncursor');
+      // --model: every model the agent declares, or only those of the provider already typed.
+      expect(formatSuggestions(complete(spec, ['echo', '--model', '']))).toBe('claude-3-5-sonnet\ngpt-4o');
+      expect(formatSuggestions(complete(spec, ['echo', '--provider', 'cursor', '--model', '']))).toBe('gpt-4o');
       return Promise.resolve();
     }));
 });

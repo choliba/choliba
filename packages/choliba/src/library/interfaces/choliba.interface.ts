@@ -20,7 +20,7 @@ export interface CholibaConfig {
 
 /** A provider, as a script sees it: never the values of its credentials. */
 export interface CholibaProvider {
-  /** What `--provider` calls it: `claude`, `claude-ollama`, `cursor`. */
+  /** What `--provider` calls it: `claude`, `claude-ollama`, `codex`, `cursor`. */
   readonly id: string;
   /** Whether one of its commands is on the `PATH`. */
   readonly installed: boolean;
@@ -28,8 +28,8 @@ export interface CholibaProvider {
   readonly inAuto: boolean;
   /** Each variable that authenticates it, and whether the environment or the `.env` sets it. */
   readonly credentials: readonly { readonly name: string; readonly set: boolean }[];
-  /** The prefix of the models only it runs (`ollama:`), when it has one. */
-  readonly modelPrefix?: string;
+  /** Whether it has no model of its own, so a run asks it for the first model the agent declares for it (Ollama's). */
+  readonly needsModel: boolean;
   /** What `--help` says it is. */
   readonly summary: string;
 }

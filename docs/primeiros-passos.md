@@ -18,6 +18,7 @@
 - Para rodar agentes, o CLI de um provider instalado e autenticado:
   - Provider suportados:
     [claude](https://claude.com/download)
+    [codex](https://developers.openai.com/codex/cli) (rode `codex login` depois de instalar)
     [cursor-agent](https://cursor.com/pt-BR/docs/cli/installation)
 
 ## Instalação

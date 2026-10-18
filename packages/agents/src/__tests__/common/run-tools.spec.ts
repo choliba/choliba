@@ -32,7 +32,7 @@ function fakeRequest(
     displayName: 'Echo',
     version: '1.0.0',
     description: 'repeats things',
-    supportedModels: [],
+    providers: [],
     skills: [],
     mcps: [],
     policy,

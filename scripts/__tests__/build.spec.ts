@@ -23,7 +23,9 @@ agent:
   name: Echo
   version: 1.0.0
   description: Repete a tarefa.
-models: [modelo-a]
+providers:
+  claude:
+    models: [modelo-a]
 role: Repete.
 context: [Nada.]
 input: A tarefa.
@@ -228,7 +230,7 @@ describe('the installable package', () => {
       run('bun', ['check.mjs'], app);
       expect(run('bun', ['config.ts'], app)).toBe('{"name":"from-dotenv","port":4321}\n');
       expect(run('bun', [join(app, 'choliba.ts')], join(app, '.choliba'))).toBe(
-        `raiz: ${app}\nproviders: claude, claude-ollama, cursor\nagentes em ${join(app, '.choliba', 'agents')}\n- echo 1.0.0\nskill repeat: Repete.\n`,
+        `raiz: ${app}\nproviders: claude, claude-ollama, codex, cursor\nagentes em ${join(app, '.choliba', 'agents')}\n- echo 1.0.0\nskill repeat: Repete.\n`,
       );
       run('node', [join(repo, 'node_modules/typescript/bin/tsc'), '-p', 'tsconfig.json', '--pretty', 'false'], app);
       expect(run('bun', [join(out, 'bin', 'choliba.js'), '--help'], app)).toContain('Usage:');

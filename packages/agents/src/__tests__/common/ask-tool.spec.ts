@@ -114,7 +114,7 @@ function request(declared: unknown, model?: string): ProviderRequest {
       displayName: 'PO',
       version: '1.0.0',
       description: 'd',
-      supportedModels: [],
+      providers: [],
       skills: [],
       mcps: [],
       policy: 'read-only',

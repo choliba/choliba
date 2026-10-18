@@ -5,7 +5,6 @@ import { dirname, join } from 'node:path';
 import { RUNS_DIR } from '../agent-layout';
 import { agentURL, EXCEPTION_PREFIX, type Sandbox } from '@choliba/sandbox';
 
-import { agentProvider } from '../agent-provider';
 import { invocationFromAgent, effectivePolicy } from '../invocation';
 import type { AgentDefinition } from '../../common';
 import {
@@ -23,7 +22,6 @@ import { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } fro
 import type { McpServer } from '../../common';
 import { resolveMcps } from '../../common';
 import type { ProviderRequest } from '../../common';
-import type { ResolvedProvider } from '../../common';
 import type { SkillSummary } from '../agent-skills';
 import { formatSkillsInstruction, resolveSkills } from '../agent-skills';
 import { StepFailedError, stepExitCode } from '../steps/step-actions';
@@ -38,7 +36,7 @@ import type { PreparedRun, RunAgentsCliDeps, RunArgs, RunContext, Stopped } from
 import { STOPPED, errorMessage, locationsOf, toAbsolute } from './run-context';
 
 const CHOL_AGENTS_PROVIDER = 'CHOL_AGENTS_PROVIDER';
-import { providerModel } from './provider-model';
+import { agentRunChoice } from './run-choice';
 import { LOCATION_VARS, agentTexts, withExpandedVars } from '../../common';
 import { withDefinitionDenies, withProjectDenies } from '../../common';
 
@@ -138,28 +136,6 @@ function resolveAddDirs(
     ...parsed.addDirs.map((dir) => toAbsolute(dir, deps.repoRoot)),
     ...executeDirs,
   ];
-}
-
-/** Step 5: which provider binary this run actually talks to. */
-/**
- * The provider of the run: `--provider`, else the one the agent asks for (its models' own, `agentProvider`), else
- * `CHOL_AGENTS_PROVIDER`, else `auto`. The agent's comes before the environment's, which could not run its models.
- */
-function resolveProviderChoice(
-  parsed: RunArgs,
-  agent: AgentDefinition,
-  deps: RunAgentsCliDeps,
-): { readonly resolved: ResolvedProvider; readonly fromAgent: boolean } | undefined {
-  const fromAgent = parsed.provider === undefined ? agentProvider(agent, deps.providers) : undefined;
-  try {
-    const providerPreference = deps.providers.parsePreference(
-      parsed.provider ?? fromAgent ?? deps.config[CHOL_AGENTS_PROVIDER],
-    );
-    return { resolved: deps.providers.resolve(providerPreference, deps.which), fromAgent: fromAgent !== undefined };
-  } catch (error) {
-    deps.stderr.write(`${errorMessage(error)}\n`);
-    return undefined;
-  }
 }
 
 /**
@@ -309,16 +285,18 @@ export async function prepareRun(
     return STOPPED;
   }
   const addDirs = resolveAddDirs(command, parsed, deps, executeDirs);
-  const choice = resolveProviderChoice(parsed, agent, deps);
-  if (choice === undefined) {
-    return STOPPED;
-  }
-  const { resolved, fromAgent } = choice;
-  const chosen = providerModel(resolved.adapter, parsed.model, agent.supportedModels, deps.providers);
+  // Step 5: the provider and the model of the run, from the providers the agent declares.
+  const chosen = agentRunChoice(
+    agent,
+    { provider: parsed.provider, model: parsed.model, preference: deps.config[CHOL_AGENTS_PROVIDER] },
+    deps.providers,
+    deps.which,
+  );
   if ('error' in chosen) {
     deps.stderr.write(`${chosen.error}\n`);
     return STOPPED;
   }
+  const { resolved } = chosen;
   const built = await buildProviderRequest(
     command,
     withSkills,
@@ -337,5 +315,5 @@ export async function prepareRun(
   const { project } = context;
   const withModel = { ...built.providerRequest, model: chosen.model };
   const providerRequest = project === undefined ? withModel : { ...withModel, project };
-  return { ...built, providerRequest, resolved, providerFromAgent: fromAgent, command };
+  return { ...built, providerRequest, resolved, command };
 }

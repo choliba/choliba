@@ -1,5 +1,5 @@
 # The image `CHOL_SANDBOX=docker` runs an agent's provider in: Node and the browsers of the Playwright version choliba
-# uses, Bun, Claude Code and the Cursor CLI. Nothing of the workspace is in it; choliba mounts what the agent may
+# uses, Bun, Claude Code, Codex and the Cursor CLI. Nothing of the workspace is in it; choliba mounts what the agent may
 # reach at each run. Build it from the repository root:
 #
 #   docker build -f docker/agent.Dockerfile -t choliba-agent .
@@ -20,6 +20,10 @@ RUN npx -y "playwright@${PLAYWRIGHT_VERSION}" install --with-deps chrome && npm 
 
 # Claude Code (`claude`).
 RUN npm install -g @anthropic-ai/claude-code && npm cache clean --force
+
+# Codex CLI (`codex`), pinned to the version whose JSONL stream the provider fixtures cover.
+ARG CODEX_VERSION=0.163.0
+RUN npm install -g "@openai/codex@${CODEX_VERSION}" && npm cache clean --force
 
 # The Cursor CLI (`agent`, also `cursor-agent`), pinned by version and checksum: the package of that version, checked
 # against its sha256 before it is unpacked, never the install script. Cursor publishes no checksum, so each one is the
