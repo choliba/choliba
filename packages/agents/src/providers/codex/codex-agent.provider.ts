@@ -5,8 +5,15 @@ import { prepareCodexAuthentication, runCodexHome } from './codex-auth';
 import { codexMcpArgs } from './codex-config';
 import { createCodexStreamParser } from './codex-stream';
 
+/** How Codex, which reads with the shell, reads without stopping the run (`READ_COMMANDS` of `command-guard.ts`). */
+const READ_LINE =
+  "Read, list and search files only with cat, head, tail, ls, wc, nl, grep, rg, find (never with -exec or -delete) and sed -n '<start>,<end>p'. Run any other program only as your execute permissions allow: a command outside them stops the run.";
+
 function buildArgs(request: ProviderRequest): readonly string[] {
-  const instructions = wrapInstructions(request.agent, request.skillsInstruction, runPlaceOf(request));
+  const instructions = [
+    wrapInstructions(request.agent, request.skillsInstruction, runPlaceOf(request)),
+    READ_LINE,
+  ].join('\n\n');
   const args: string[] = [
     '--dangerously-bypass-approvals-and-sandbox',
     'exec',

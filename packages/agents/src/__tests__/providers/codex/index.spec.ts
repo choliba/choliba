@@ -79,6 +79,13 @@ describe('CodexAgentProvider', () => {
     if (notice !== '') expect(input).toContain(notice);
   });
 
+  it('tells the model to read only with the commands choliba lets it run', () => {
+    const instructions =
+      codexProvider.buildArgs(request()).find((arg) => arg.startsWith('developer_instructions=')) ?? '';
+
+    expect(instructions).toContain('Read, list and search files only with cat, head, tail, ls, wc, nl, grep, rg, find');
+  });
+
   it('passes model and each additional directory only when present', () => {
     const args = codexProvider.buildArgs(request({ model: 'gpt-6.1-sol', addDirs: ['/a', '/b'] }));
 

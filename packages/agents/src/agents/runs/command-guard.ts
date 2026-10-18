@@ -47,8 +47,10 @@ function scriptOf(command: string): string {
   const body = trimmed.replace(SHELL_WRAPPER, '');
   if (body === trimmed) return trimmed;
   const quote = body[0];
-  if ((quote === "'" || quote === '"') && body.endsWith(quote) && body.length > 1) return body.slice(1, -1);
-  return body;
+  if ((quote !== "'" && quote !== '"') || !body.endsWith(quote) || body.length < 2) return body;
+  const inner = body.slice(1, -1);
+  // Inside '…', a quote is written '\''; inside "…", \" and \\.
+  return quote === "'" ? inner.replaceAll("'\\''", "'") : inner.replace(/\\(["\\$`])/g, '$1');
 }
 
 const OPERATORS: readonly string[] = ['&&', '||', ';', '|', '&', '\n'];
@@ -100,17 +102,43 @@ function cdViolation(segment: string, rules: CommandRules): string | undefined {
   return rules.closedDirs.some((closed) => isWithin(closed, dir)) ? `cd ${target}` : undefined;
 }
 
+/**
+ * The commands that only read, list or search, which any agent may run whatever its `permissions.execute`: the
+ * sandbox already mounts only the paths it may read, and a provider with no tool of its own to read (Codex) reads
+ * with them. `sed` only as `sed -n '<start>,<end>p'`.
+ */
+export const READ_COMMANDS: readonly string[] = ['cat', 'head', 'tail', 'ls', 'wc', 'nl', 'grep', 'rg', 'find', 'pwd'];
+
+/** The options that make a reading command run another program or write: `find -exec`, `rg --pre`. */
+const RUNS_OR_WRITES: Readonly<Record<string, RegExp>> = {
+  find: /(^|\s)-(exec|execdir|ok|okdir|delete|fprint|fprint0|fprintf|fls)(\s|$)/,
+  rg: /(^|\s)(--pre|--pre-glob|-z|--search-zip)(=|\s|$)/,
+};
+
+/** `sed -n '10,20p'`, `sed -n '5p'` or `sed -n "1,$p"`: the only `sed` that only reads. */
+const SED_PRINT = /^sed -n (['"]?)\d+(,(\d+|\$))?p\1(\s|$)/;
+
+/** Whether `segment` only reads: a command of `READ_COMMANDS` without an option that runs or writes. */
+function readsOnly(segment: string): boolean {
+  if (segment.startsWith('sed ')) return SED_PRINT.test(segment);
+  const program = segment.replace(/\s.*$/s, '');
+  if (!READ_COMMANDS.includes(program)) return false;
+  return !(RUNS_OR_WRITES[program]?.test(segment) ?? false);
+}
+
 function segmentViolation(segment: string, rules: CommandRules): string | undefined {
   if (segment === 'cd' || segment.startsWith('cd ')) return cdViolation(segment, rules);
   if (rules.denied.some((command) => runs(segment, command))) return segment;
+  if (readsOnly(segment)) return undefined;
   if (rules.allowed.includes(EVERY_COMMAND)) return undefined;
   return rules.allowed.some((command) => runs(segment, command)) ? undefined : segment;
 }
 
 /**
  * Why `command`, run by a provider whose own permissions cannot limit commands (Codex), breaks the agent's
- * `permissions.execute`, or `undefined` when every command in it is allowed. Strict on purpose: a substitution
- * (`$(…)`, backticks) or a command none of the rules allows stops the run, as Claude would refuse it.
+ * `permissions.execute`, or `undefined` when every command in it is allowed or only reads (`READ_COMMANDS`). Strict on
+ * purpose: a substitution (`$(…)`, backticks) or a command none of the rules allows stops the run, as Claude would
+ * refuse it.
  */
 export function commandViolation(command: string, rules: CommandRules): string | undefined {
   const script = scriptOf(command);
