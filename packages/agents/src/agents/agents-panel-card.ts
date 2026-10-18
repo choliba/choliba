@@ -8,20 +8,29 @@ export function agentPaint(container: Container, agent: AgentDefinition): (text:
   return (text) => boldAnsi(paintAnsi(color, text));
 }
 
+/** The provider and the model a run of the agent takes, as the card's footer and the header's column show them. */
+export interface AgentRunLabels {
+  readonly provider: string;
+  readonly model: string;
+}
+
 /**
- * The agent's card: its name in its color and version, and what it does; collapsed, its id and version, `run` (the mode and the model a run takes), and the `ticket` a run takes, or
- * `sem ticket`. Its spinner turns in its color.
+ * The agent's card: its name in its color and version, and what it does, with the provider and the model a run takes
+ * in its footer; collapsed, its id and version, `run` (the mode and the model a run takes), and the `ticket` a run
+ * takes, or `sem ticket`. Its spinner turns in its color.
  */
 export function agentCard(
   container: Container,
   agent: AgentDefinition,
   run: string,
+  labels: AgentRunLabels,
   ticket?: string,
 ): Omit<PanelCard, 'title'> {
   const painted = agentPaint(container, agent);
   const version = `\u001b[90m${agent.version}\u001b[39m`;
   return {
     lines: [`${painted(agent.displayName)} ${version}`, CARD_RULE, agent.description],
+    footer: [`provider ${labels.provider}`, `modelo   ${labels.model}`],
     summary: [
       `${painted(agent.id)} ${version}`,
       run,

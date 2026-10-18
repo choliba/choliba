@@ -29,6 +29,8 @@ export {
   type ConfigSetting,
   type CriterionStatus,
   type ProjectSettings,
+  type ProjectStack,
+  type ProjectStackItem,
   type ProjectSummary,
   type RetiredCriterion,
   type Runtime,

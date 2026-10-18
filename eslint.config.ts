@@ -12,6 +12,7 @@ export default defineConfig(
       '**/dist/**',
       'coverage/**',
       '.agents/**',
+      '.choliba/agents/**',
       '.choliba/skills/**',
       '.claude/**',
       '.playwright-cli/**',
