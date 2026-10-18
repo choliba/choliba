@@ -14,6 +14,7 @@ import type {
   CholibaConfig,
   CholibaOptions,
   CholibaSkills,
+  CholibaWorkspace,
 } from './interfaces/choliba.interface';
 
 /** `make`'s value, computed on the first call only. */
@@ -52,13 +53,22 @@ export function cholibaLibrary(groups: readonly ConfigGroup[], options: CholibaO
     get: (id) => loadAgent(agents.dir, id),
     skills: (id) => resolveSkills(skills.dir, agents.get(id).skills),
   };
-  return {
+  const workspace: CholibaWorkspace = {
     get root() {
       return root();
     },
     get version() {
       return versionLine(PACKAGE_NAME, cholibaManifest());
     },
+  };
+  return {
+    get root() {
+      return workspace.root;
+    },
+    get version() {
+      return workspace.version;
+    },
+    workspace,
     config,
     agents,
     skills,

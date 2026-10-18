@@ -75,12 +75,24 @@ export interface CholibaProjects {
   get(name: string): CholibaProject;
 }
 
-/** choliba read from a script: the workspace, its configuration, agents, skills and projects. Nothing is read until asked. */
-export interface Choliba {
+/** The workspace a script reads, and the choliba it runs with. */
+export interface CholibaWorkspace {
   /** The nearest folder, from `cwd` up, whose `package.json` depends on choliba. */
   readonly root: string;
   /** The version of the choliba running, as `choliba --version` shows it: `choliba 0.0.1-dev.66+ce2dc61`. */
   readonly version: string;
+}
+
+/**
+ * choliba read from a script, one module per subject: the workspace, its configuration, agents, skills and projects.
+ * Nothing is read until asked.
+ */
+export interface Choliba {
+  /** `workspace.root`, kept at the top as before. */
+  readonly root: string;
+  /** `workspace.version`, kept at the top as before. */
+  readonly version: string;
+  readonly workspace: CholibaWorkspace;
   readonly config: CholibaConfig;
   readonly agents: CholibaAgents;
   readonly skills: CholibaSkills;

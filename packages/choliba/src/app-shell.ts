@@ -104,3 +104,6 @@ export function openCholiba(options: CholibaOptions = {}): Choliba {
 
 /** choliba for a script, from the process's folder and environment, read on first use (`openCholiba()`). */
 export const choliba: Choliba = openCholiba();
+
+// Each module of `choliba` by its name, to import alone: `import { agents } from 'choliba'`.
+export const { workspace, config, agents, skills, projects } = choliba;

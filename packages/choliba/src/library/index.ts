@@ -9,4 +9,5 @@ export type {
   CholibaSkills,
   CholibaTests,
   CholibaTickets,
+  CholibaWorkspace,
 } from './interfaces/choliba.interface';
