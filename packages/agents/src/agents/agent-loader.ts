@@ -197,12 +197,9 @@ function parseMcps(mcps: AgentYamlV1['mcps']): readonly McpDeclaration[] {
   return Object.entries(mcps).map(([name, entry]) => (entry === null ? { name } : { name, ...entry }));
 }
 
-/** `providers` as the agent declares them, in the file's order, and every model of them, in the same order. */
-function declaredProviders(
-  providers: AgentYamlV1['providers'],
-): Pick<AgentDefinition, 'providers' | 'supportedModels'> {
-  const declared = Object.entries(providers).map(([id, { models }]) => ({ id, models }));
-  return { providers: declared, supportedModels: declared.flatMap(({ models }) => models) };
+/** `providers` as the agent declares them, in the file's order. */
+function declaredProviders(providers: AgentYamlV1['providers']): Pick<AgentDefinition, 'providers'> {
+  return { providers: Object.entries(providers).map(([id, { models }]) => ({ id, models })) };
 }
 
 /**

@@ -144,7 +144,7 @@ describe('/agents', () => {
           ],
           [
             `${painted('magenta', 'echo')} \u001b[90m1.0.0\u001b[39m`,
-            '\u001b[1m\u001b[36mexecute\u001b[39m\u001b[22m \u001b[90m·\u001b[39m \u001b[90mpadrão do cursor\u001b[39m',
+            '\u001b[1m\u001b[36mexecute\u001b[39m\u001b[22m \u001b[90m·\u001b[39m \u001b[90mpadrão do claude\u001b[39m',
             '\u001b[90msem ticket\u001b[39m',
           ],
           'magenta',
@@ -203,7 +203,9 @@ describe('/agents', () => {
       mkdirSync(join(tmp.path, 'local'));
       writeFileSync(
         join(tmp.path, 'local', 'agent.yaml'),
-        echo.replace('id: echo', 'id: local').replace('  - gpt-4o\n', '  - ollama:qwen3.5:4b\n'),
+        echo
+          .replace('id: echo', 'id: local')
+          .replace('  cursor:\n    models:\n      - gpt-4o\n', "  claude-ollama:\n    models:\n      - 'qwen3.5:4b'\n"),
       );
       const auto = withAgents(tmp.path, 'auto', (bin) => bin === 'claude');
       await auto.run();
@@ -218,22 +220,22 @@ describe('/agents', () => {
       expect(ollama.values.get('agente')).toBe('local');
       expect([...ollama.labels]).toEqual([
         ['provider', '\u001b[1m\u001b[36mclaude-ollama\u001b[39m\u001b[22m'],
-        ['modelo', '\u001b[1m\u001b[36mollama:qwen3.5:4b\u001b[39m\u001b[22m'],
+        ['modelo', '\u001b[1m\u001b[36mqwen3.5:4b\u001b[39m\u001b[22m'],
       ]);
 
       const foreign = withAgents(tmp.path, 'claude-ollama');
       await foreign.run();
-      expect(foreign.labels.get('modelo')).toBe('\u001b[33mindisponível\u001b[39m');
-      expect(foreign.fake.written[1]).toContain('\u001b[33mO provider claude-ollama roda um modelo declarado');
+      expect(foreign.labels.get('provider')).toBe('\u001b[33mindisponível\u001b[39m');
+      expect(foreign.fake.written[1]).toContain('\u001b[33mO agente echo não declara o provider claude-ollama');
 
       const none = withAgents(tmp.path, 'auto', () => false);
       await none.run();
       expect([...none.labels]).toEqual([
-        ['provider', '\u001b[33mnenhum instalado\u001b[39m'],
+        ['provider', '\u001b[33mindisponível\u001b[39m'],
         ['modelo', '\u001b[90m—\u001b[39m'],
       ]);
       expect(none.fake.written[1]).toBe(
-        '\u001b[33mNenhum provider instalado para auto: o agente não roda nesta máquina.\u001b[39m',
+        '\u001b[33mNenhum provider que o agente echo declara está instalado: claude, cursor.\u001b[39m',
       );
     } finally {
       tmp.cleanup();

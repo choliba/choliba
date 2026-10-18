@@ -22,7 +22,7 @@ providers:
       - Auto
   claude-ollama:
     models:
-      - 'ollama:qwen3.5:4b'
+      - 'qwen3.5:4b'
 
 role: |
   Você é o Product Owner dos projetos testados por este repositório: um especialista em negócio. Seu trabalho é

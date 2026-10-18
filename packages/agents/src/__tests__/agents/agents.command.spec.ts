@@ -127,7 +127,10 @@ describe('AgentsService.helpSpec', () => {
 
       expect(formatSuggestions(complete(spec, ['ec']))).toBe('echo');
       expect(formatSuggestions(complete(spec, ['l']))).toBe('');
-      expect(formatSuggestions(complete(spec, ['echo', '--provider', '']))).toBe('auto\nclaude\nclaude-ollama\ncursor');
+      expect(formatSuggestions(complete(spec, ['echo', '--provider', '']))).toBe('auto\nclaude\ncursor');
+      // --model: every model the agent declares, or only those of the provider already typed.
+      expect(formatSuggestions(complete(spec, ['echo', '--model', '']))).toBe('claude-3-5-sonnet\ngpt-4o');
+      expect(formatSuggestions(complete(spec, ['echo', '--provider', 'cursor', '--model', '']))).toBe('gpt-4o');
       return Promise.resolve();
     }));
 });

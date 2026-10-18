@@ -13,7 +13,6 @@ function request(overrides: Partial<ProviderRequest> = {}): ProviderRequest {
       version: '1.0.0',
       description: 'd',
       providers: [],
-      supportedModels: [],
       skills: [],
       mcps: [],
       policy: 'read-only',

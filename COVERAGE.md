@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 18/10/2026 12:46:10 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 18/10/2026 15:28:34 — não editar manualmente.
 
 ## Resumo
 
@@ -18,7 +18,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 93 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 92 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -26,7 +26,6 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/agent-layout.ts](packages/agents/src/agents/agent-layout.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agent-loader.ts](packages/agents/src/agents/agent-loader.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agent-print.ts](packages/agents/src/agents/agent-print.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/agent-provider.ts](packages/agents/src/agents/agent-provider.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agent-skills.ts](packages/agents/src/agents/agent-skills.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agent-validation.ts](packages/agents/src/agents/agent-validation.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-config.ts](packages/agents/src/agents/agents-config.ts)|100.00|100.00|100.00|100.00
@@ -55,10 +54,10 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/runs/event-render.ts](packages/agents/src/agents/runs/event-render.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/mcp-guard.ts](packages/agents/src/agents/runs/mcp-guard.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/plan-store.ts](packages/agents/src/agents/runs/plan-store.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/runs/provider-model.ts](packages/agents/src/agents/runs/provider-model.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-agent.ts](packages/agents/src/agents/runs/run-agent.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-agents.ts](packages/agents/src/agents/runs/run-agents.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-checks.ts](packages/agents/src/agents/runs/run-checks.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/run-choice.ts](packages/agents/src/agents/runs/run-choice.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-context.ts](packages/agents/src/agents/runs/run-context.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-footer.ts](packages/agents/src/agents/runs/run-footer.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-preparation.ts](packages/agents/src/agents/runs/run-preparation.ts)|100.00|100.00|100.00|100.00

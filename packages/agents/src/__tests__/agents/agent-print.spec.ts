@@ -37,7 +37,6 @@ describe('printAgentDefinition', () => {
         { id: 'claude', models: ['claude-3-5-sonnet'] },
         { id: 'cursor', models: ['gpt-4o'] },
       ],
-      supportedModels: ['claude-3-5-sonnet', 'gpt-4o'],
       skills: [{ name: 'dummy-skill' }],
       mcps: [],
       dir: join(FIXTURES, 'echo'),

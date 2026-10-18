@@ -6,13 +6,13 @@ import { agentURL, type Sandbox, strayExceptions } from '@choliba/sandbox';
 
 import { listAgents, loadAgent } from '../agent-loader';
 import { agentFlagNames } from './agents-spec';
+import { undeclaredModel } from './run-choice';
 import { resolveInvocation } from '../invocation-registry';
 import { LIST_PROGRAM_NAME, PREPARE_FLAGS, USAGE } from './agents-flags';
 import type { AgentDefinition } from '../../common';
 import type { AgentInvocation } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
 import { readPlan } from './plan-store';
-import { validateExplicitModel } from '../../common';
 import { absolutePermissions, canRead, definitionExceptionProblems, outsideExecuteDirs } from '../../common';
 import type { RunAgentsCliDeps, RunArgs } from './run-context';
 import type { RunProject } from '../../common';
@@ -74,21 +74,16 @@ export function acceptedFlagNames(
 }
 
 /**
- * Pre-flight: when `--model` is explicit, it must be one `agent.yaml#models` actually
- * declares — checked before resolving a provider or building a prompt, so a bad model never gets
- * anywhere near invoking one. An agent with no declared models (`supportedModels.length === 0`)
- * has nothing to validate against, so anything goes for it. `true` means "ok to proceed"; on
- * `false` the error (naming every supported model) has already been written to `stderr`.
+ * Pre-flight: when `--model` is explicit, one of the agent's providers must declare it — checked before resolving a
+ * provider or building a prompt, so a model the agent does not declare never gets near one. `true` means "ok to
+ * proceed"; on `false` the error, naming what the agent declares, has already been written to `stderr`.
  */
 export function checkModelSupported(parsed: RunArgs, agent: AgentDefinition, deps: RunAgentsCliDeps): boolean {
-  if (parsed.model === undefined) {
+  const model = parsed.model;
+  if (model === undefined || agent.providers.some(({ models }) => models.includes(model))) {
     return true;
   }
-  const error = validateExplicitModel(parsed.model, agent.supportedModels, agent.name);
-  if (error === undefined) {
-    return true;
-  }
-  deps.stderr.write(`${error}\n`);
+  deps.stderr.write(`${undeclaredModel(agent, model)}\n`);
   return false;
 }
 

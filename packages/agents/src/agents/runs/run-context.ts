@@ -94,8 +94,6 @@ export const STOPPED: Stopped = { exitCode: 1 };
 export interface PreparedRun {
   readonly effectiveTask: string;
   readonly resolved: ResolvedProvider;
-  /** The provider came from the agent's own models, not from `--provider` nor the environment. */
-  readonly providerFromAgent?: boolean;
   readonly providerRequest: ProviderRequest;
 }
 

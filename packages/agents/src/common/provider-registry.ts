@@ -104,13 +104,6 @@ export class ProviderRegistry {
     throw new ProviderNotFoundError(`no working binary found for ${preference} (tried: ${tried})`);
   }
 
-  /** The provider whose `modelPrefix` starts `model`, the one that runs it; `undefined` for a model of no prefix. */
-  modelOwner(model: string): AgentProvider | undefined {
-    return this.providers.find(
-      (provider) => provider.modelPrefix !== undefined && model.startsWith(provider.modelPrefix),
-    );
-  }
-
   private autoOrder(): readonly AgentProvider[] {
     return this.providers.filter((provider) => provider.inAuto).sort((a, b) => a.autoPriority - b.autoPriority);
   }

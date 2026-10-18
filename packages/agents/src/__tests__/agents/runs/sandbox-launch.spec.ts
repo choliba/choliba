@@ -19,7 +19,6 @@ function request(permissions: Partial<AgentPermissions> = {}, more: Partial<Prov
       version: '1.0.0',
       description: 'd',
       providers: [],
-      supportedModels: [],
       skills: [],
       mcps: [],
       policy: 'edits',

@@ -108,11 +108,9 @@ describe('ProviderRegistry with a provider of its own models', () => {
     expect(PROVIDERS_WITH_OLLAMA.parsePreference('claude-ollama')).toBe('claude-ollama');
   });
 
-  it('says what it is in --help, and owns the models of its prefix', () => {
+  it('says what it is in --help', () => {
     expect(PROVIDERS_WITH_OLLAMA.descriptions().find(({ name }) => name === 'claude-ollama')?.description).toBe(
       claudeOllamaProvider.summary,
     );
-    expect(PROVIDERS_WITH_OLLAMA.modelOwner('ollama:qwen3.5:4b')).toBe(claudeOllamaProvider);
-    expect(PROVIDERS_WITH_OLLAMA.modelOwner('claude-sonnet-5')).toBeUndefined();
   });
 });

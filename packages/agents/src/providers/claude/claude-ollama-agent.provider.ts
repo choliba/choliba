@@ -1,13 +1,10 @@
-import type { ProviderRequest, ProviderVariablesInput } from '../../common';
+import type { ProviderVariablesInput } from '../../common';
 import { ClaudeAgentProvider } from './claude-agent.provider';
 
 const CHOL_OLLAMA_URL = 'CHOL_OLLAMA_URL';
 
 /** Where Ollama listens when `CHOL_OLLAMA_URL` says nothing. */
 export const DEFAULT_OLLAMA_URL = 'http://localhost:11434';
-
-/** How an `agent.yaml#models` id names a model of Ollama: `ollama:qwen3.5:4b`. */
-const OLLAMA_PREFIX = 'ollama:';
 
 /**
  * The models Claude Code picks for itself (a small one for its own short tasks, and the defaults behind its aliases):
@@ -28,39 +25,27 @@ const CLAUDE_MODEL_VARIABLES: readonly string[] = [
 
 /**
  * Claude Code on a model of Ollama, which answers Claude's messages API: the same session, permissions, guards and
- * parser as `claude`, with the API at `CHOL_OLLAMA_URL` and the model one the agent declares as `ollama:<model>`. The
- * credential is Ollama's placeholder token, and Claude's own credentials are emptied so none of them reaches Ollama.
+ * parser as `claude`, with the API at `CHOL_OLLAMA_URL` and the model one the agent declares under
+ * `providers.claude-ollama`. The credential is Ollama's placeholder token, and Claude's own credentials are emptied so
+ * none of them reaches Ollama.
  */
 export class ClaudeOllamaAgentProvider extends ClaudeAgentProvider {
   override readonly id = 'claude-ollama';
-  /** Never picked by `auto`: it needs an `ollama:` model, which most agents do not declare. */
+  /** Not picked by `auto` for an agent that does not declare it: it runs only the models of Ollama an agent names. */
   override readonly autoPriority = 3;
   override readonly inAuto = false;
-  override readonly modelPrefix = OLLAMA_PREFIX;
+  /** Ollama has no model of its own: a run asks for the first one the agent declares for it. */
+  override readonly needsModel = true;
   override readonly summary =
-    'Comando `claude`, com um modelo do Ollama (`ollama:<modelo>` em agent.yaml#models) servido em CHOL_OLLAMA_URL.';
-
-  /** The model Ollama takes for a declared one (`ollama:qwen3.5:4b` → `qwen3.5:4b`). */
-  apiModel(declared: string): string {
-    return declared.startsWith(OLLAMA_PREFIX) ? declared.slice(OLLAMA_PREFIX.length) : declared;
-  }
-
-  override declaredModel(reported: string): string {
-    return `${OLLAMA_PREFIX}${reported}`;
-  }
+    'Comando `claude`, com um modelo do Ollama (declarado em agent.yaml#providers.claude-ollama) servido em CHOL_OLLAMA_URL.';
 
   override quietStderr(line: string): boolean {
     return line.startsWith(UNRECOGNIZED_MODEL);
   }
 
-  override buildArgs(request: ProviderRequest): readonly string[] {
-    if (request.model === undefined) return super.buildArgs(request);
-    return super.buildArgs({ ...request, model: this.apiModel(request.model) });
-  }
-
   override variables(input: ProviderVariablesInput): Readonly<Record<string, string>> {
     const { request, config, reachable } = input;
-    const model = this.apiModel(request.model ?? '');
+    const model = request.model ?? '';
     return {
       ...super.variables(input),
       ANTHROPIC_BASE_URL: reachable(config[CHOL_OLLAMA_URL] ?? DEFAULT_OLLAMA_URL),

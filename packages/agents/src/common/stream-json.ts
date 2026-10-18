@@ -36,20 +36,6 @@ export function parseInitEvent(doc: Record<string, unknown>): Extract<AgentEvent
   return { type: 'init', model: readModel(doc), sessionId: readSessionId(doc) };
 }
 
-export function validateExplicitModel(
-  model: string,
-  supportedModels: readonly string[],
-  agentName: string,
-): string | undefined {
-  if (supportedModels.length === 0 || supportedModels.includes(model)) {
-    return undefined;
-  }
-  return (
-    `Model "${model}" is not declared in agent.yaml#supported_models for "${agentName}". ` +
-    `Supported: ${supportedModels.join(', ')}.`
-  );
-}
-
 export interface ReportedModelContext {
   readonly providerId: string;
   readonly agentName: string;
@@ -64,7 +50,7 @@ export function validateReportedModel(
     return undefined;
   }
   return (
-    `${ctx.providerId} is using model "${model}", not declared in agent.yaml#supported_models ` +
+    `${ctx.providerId} is using model "${model}", not declared in agent.yaml#providers.${ctx.providerId}.models ` +
     `for "${ctx.agentName}". Supported: ${supportedModels.join(', ')}. Stopping.`
   );
 }
@@ -72,7 +58,7 @@ export function validateReportedModel(
 export function modelReportMissingMessage(supportedModels: readonly string[], ctx: ReportedModelContext): string {
   return (
     `${ctx.providerId} did not report a model before starting work for "${ctx.agentName}" ` +
-    `(agent.yaml#supported_models requires one of: ${supportedModels.join(', ')}). ` +
+    `(agent.yaml#providers.${ctx.providerId}.models requires one of: ${supportedModels.join(', ')}). ` +
     'Pass --model explicitly or fix the provider stream parser. Stopping.'
   );
 }

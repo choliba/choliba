@@ -11,7 +11,6 @@ function fakeAgent(permissions: AgentDefinition['permissions']): AgentDefinition
     version: '1.0.0',
     description: 'repeats things',
     providers: [],
-    supportedModels: [],
     skills: [],
     mcps: [],
     policy: 'edits',

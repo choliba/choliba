@@ -17,7 +17,8 @@ import {
   modeDescription,
   sinceDescription,
 } from './agents-flags';
-import { EXECUTION_MODES } from '../../common';
+import { AUTO, EXECUTION_MODES } from '../../common';
+import { declaredModels } from './run-choice';
 
 export interface AgentsCliSpecContext {
   /** The providers choliba found: `--provider`, `--<id>` and their completion. */
@@ -65,9 +66,14 @@ export function flagValueSuggestions(
     case '--mode':
       return values(agent.modes);
     case '--provider':
-      return values(context.providers.choices());
-    case '--model':
-      return values(agent.supportedModels);
+      return values([AUTO, ...agent.providers.map(({ id }) => id)]);
+    case '--model': {
+      // The models of the provider already typed; with none, every model the agent declares.
+      const provider = typed.get('--provider');
+      return values(
+        provider === undefined ? agent.providers.flatMap(({ models }) => models) : declaredModels(agent, provider),
+      );
+    }
     case '--since':
       return gitRefs(context);
     case '--project':

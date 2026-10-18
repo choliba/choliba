@@ -1,4 +1,4 @@
-import { agentProvider, AUTO, type AgentDefinition, type AgentProvider, type ProviderRegistry } from '@choliba/agents';
+import { agentRunChoice, type AgentDefinition, type AgentProvider, type ProviderRegistry } from '@choliba/agents';
 import type { ConfigSource } from '@choliba/config';
 import { commandOnPath, ExpectedError } from '@choliba/core';
 
@@ -29,7 +29,7 @@ function providerOf(source: ProvidersSource, provider: AgentProvider): CholibaPr
     installed: provider.binaries.some(([bin]) => commandOnPath(bin, source.path()) !== undefined),
     inAuto: provider.inAuto,
     credentials: provider.credentials.map((name) => ({ name, set: isSet(sources, name) })),
-    ...(provider.modelPrefix === undefined ? {} : { modelPrefix: provider.modelPrefix }),
+    needsModel: provider.needsModel,
     summary: source.registry.summary(provider),
   };
 }
@@ -54,17 +54,12 @@ export function cholibaProviders(source: ProvidersSource): CholibaProviders {
 }
 
 /**
- * The provider that runs `agent` with no `--provider`, as `choliba run agent` picks it: the one its models belong to,
- * else the preference, and under `auto` the first installed; `undefined` when `auto` finds none.
+ * The provider that runs `agent` with no `--provider`, as `choliba run agent` picks it among the providers the agent
+ * declares: the preference when the agent declares it, and under `auto` the first declared that is installed;
+ * `undefined` when none can run it.
  */
 export function agentRunsWith(source: ProvidersSource, agent: AgentDefinition): CholibaProvider | undefined {
-  const choice = agentProvider(agent, source.registry) ?? source.preferred();
-  if (choice !== AUTO) return cholibaProviders(source).get(choice);
-  try {
-    const { adapter } = source.registry.resolve(AUTO, (bin) => commandOnPath(bin, source.path()) ?? null);
-    return providerOf(source, adapter);
-  } catch {
-    // `resolve` fails only when no provider `auto` may pick is installed.
-    return undefined;
-  }
+  const which = (bin: string): string | null => commandOnPath(bin, source.path()) ?? null;
+  const run = agentRunChoice(agent, { preference: source.preferred() }, source.registry, which);
+  return 'error' in run ? undefined : providerOf(source, run.resolved.adapter);
 }

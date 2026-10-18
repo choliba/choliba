@@ -2,7 +2,7 @@ export * from './agent-dirs';
 export * from './agent-layout';
 export { agentsConfig } from './agents-config';
 export * from './agent-loader';
-export { agentProvider } from './agent-provider';
+export { agentRunChoice, declaredModels, type RunAsk, type RunChoice } from './runs/run-choice';
 export * from './agent-print';
 export * from './agent-skills';
 export * from './agent-validation';

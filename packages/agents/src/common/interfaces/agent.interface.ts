@@ -89,8 +89,6 @@ export interface AgentDefinition {
   readonly color?: AnsiColor;
   /** `providers`: the providers the agent runs with, in the file's order, each with the models it may use there. */
   readonly providers: readonly AgentProviderModels[];
-  /** Every model of `providers`, in order: what is checked until each check reads its provider's own list. */
-  readonly supportedModels: readonly string[];
   readonly skills: readonly SkillDeclaration[];
   /** MCP servers the agent may use (`<mcpsDir>/<name>.json`); it gets no other. */
   readonly mcps: readonly McpDeclaration[];

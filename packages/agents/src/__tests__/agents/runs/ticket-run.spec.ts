@@ -19,7 +19,6 @@ const plain: AgentDefinition = {
   version: '1.0.0',
   description: 'd',
   providers: [],
-  supportedModels: [],
   skills: [],
   mcps: [],
   policy: 'edits',

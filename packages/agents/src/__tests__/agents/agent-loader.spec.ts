@@ -71,7 +71,6 @@ describe('parseAgentYaml', () => {
       version: '1.0.0',
       description: 'd',
       providers: [{ id: 'claude', models: ['m'] }],
-      supportedModels: ['m'],
       sections: { role: 'Papel.', context: [], input: 'Entrada.', flow: '1. Faça.', output: 'Saída.', notes: [] },
       skills: [],
       mcps: [],
