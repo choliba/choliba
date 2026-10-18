@@ -4,7 +4,12 @@ import path from 'node:path';
 
 import { parseProjectStack, PROJECT_CONFIG_KEYS, ProjectsError, writeProjectConfigKey } from '../../index';
 
-const STACK = { language: 'TypeScript', frameworks: ['React 19'], libraries: ['Tailwind CSS 4'], tools: ['Vite 8'] };
+const STACK = {
+  language: { name: 'TypeScript', version: '^5.9', url: 'https://www.typescriptlang.org/' },
+  frameworks: [{ name: 'react', version: '^19.0', url: 'https://react.dev/' }],
+  libraries: [{ name: 'tailwindcss', version: '^4.1', url: '' }],
+  tools: [{ name: 'Docker', version: '', url: '' }],
+};
 
 /** A projects folder with `demo/config.json` holding `config`, removed after `fn`. */
 function withConfig(config: string, fn: (projectsDir: string, file: string) => void): void {
@@ -20,14 +25,25 @@ function withConfig(config: string, fn: (projectsDir: string, file: string) => v
 }
 
 describe('parseProjectStack', () => {
-  it('takes a language and three lists of names, each list optional', () => {
+  it('takes a language and three lists of items, each list optional, version and url empty when absent', () => {
     expect(parseProjectStack(STACK, 'config.stack')).toEqual(STACK);
-    expect(parseProjectStack({ language: 'PHP' }, 'config.stack')).toEqual({
-      language: 'PHP',
+    expect(parseProjectStack({ language: { name: 'PHP' } }, 'config.stack')).toEqual({
+      language: { name: 'PHP', version: '', url: '' },
       frameworks: [],
       libraries: [],
       tools: [],
     });
+  });
+
+  it('trims the texts of an item', () => {
+    const stack = {
+      language: { name: 'PHP' },
+      libraries: [{ name: ' aura/sqlquery ', version: ' ^2.8', url: ' https://a' }],
+    };
+
+    expect(parseProjectStack(stack, 'config.stack').libraries).toEqual([
+      { name: 'aura/sqlquery', version: '^2.8', url: 'https://a' },
+    ]);
   });
 
   it('says what is wrong, naming the field', () => {
@@ -35,14 +51,24 @@ describe('parseProjectStack', () => {
       expect(() => parseProjectStack(value, 'config.stack')).toThrow(ProjectsError);
       expect(() => parseProjectStack(value, 'config.stack')).toThrow(message);
     };
+    const php = { name: 'PHP' };
 
     fails(['TypeScript'], 'config.stack precisa ser um objeto.');
-    fails({ frameworks: [] }, 'config.stack.language é obrigatório (texto não vazio).');
-    fails({ language: ' ' }, 'config.stack.language é obrigatório (texto não vazio).');
-    fails({ language: 'PHP', tools: 'Docker' }, 'config.stack.tools precisa ser uma lista de textos não vazios.');
-    fails({ language: 'PHP', libraries: [''] }, 'config.stack.libraries precisa ser uma lista de textos não vazios.');
+    fails({ frameworks: [] }, 'config.stack.language é obrigatório.');
+    fails({ language: 'PHP' }, 'config.stack.language precisa ser um objeto { name, version, url }.');
+    fails({ language: { name: ' ' } }, 'config.stack.language.name é obrigatório (texto não vazio).');
+    fails({ language: { name: 'PHP', version: 8 } }, 'config.stack.language.version precisa ser um texto.');
     fails(
-      { language: 'PHP', versions: [] },
+      { language: { name: 'PHP', link: 'x' } },
+      'config.stack.language.link não existe (esperado: name, version, url).',
+    );
+    fails({ language: php, tools: 'Docker' }, 'config.stack.tools precisa ser uma lista.');
+    fails(
+      { language: php, libraries: [php, 'Yii'] },
+      'config.stack.libraries[1] precisa ser um objeto { name, version, url }.',
+    );
+    fails(
+      { language: php, versions: [] },
       'config.stack.versions não existe (esperado: language, frameworks, libraries, tools).',
     );
   });
@@ -50,7 +76,7 @@ describe('parseProjectStack', () => {
 
 describe('writeProjectConfigKey', () => {
   it('sets the key, keeping the other keys in their order, as JSON with two spaces', () => {
-    withConfig('{"name":"demo","stack":{"language":"Go"},"envs":[]}', (projectsDir, file) => {
+    withConfig('{"name":"demo","stack":{"language":{"name":"Go"}},"envs":[]}', (projectsDir, file) => {
       writeProjectConfigKey(projectsDir, 'demo', 'stack', STACK);
 
       expect(fs.readFileSync(file, 'utf8')).toBe(

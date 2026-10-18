@@ -189,13 +189,13 @@ describe('buildPrepare / buildAfter', () => {
         repoRoot: projects.path,
         mode: 'execute',
         exitCode: 0,
-        answer: '{"language":"PHP"}',
+        answer: '{"language":{"name":"PHP"}}',
         project: { projectsDir: projects.path, name: 'demo' },
       });
 
       expect(failures).toEqual([]);
       expect(JSON.parse(readFileSync(join(projects.path, 'demo', 'config.json'), 'utf8'))).toMatchObject({
-        stack: { language: 'PHP' },
+        stack: { language: { name: 'PHP' } },
       });
     } finally {
       projects.cleanup();

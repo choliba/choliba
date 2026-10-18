@@ -114,9 +114,9 @@ describe('loadProjectSettings', () => {
   });
 
   it('keeps an optional stack, checked, and refuses a wrong one naming the file', () => {
-    withProject({ envs: [ENV], stack: { language: 'PHP' } }, { development: {} }, (projectsDir) => {
+    withProject({ envs: [ENV], stack: { language: { name: 'PHP' } } }, { development: {} }, (projectsDir) => {
       expect(loadProjectSettings(projectsDir, 'demo').config.stack).toEqual({
-        language: 'PHP',
+        language: { name: 'PHP', version: '', url: '' },
         frameworks: [],
         libraries: [],
         tools: [],

@@ -228,7 +228,7 @@ const app = projects.get('app');
 app.dir; // '<CHOL_GLOBAL_DIR>/projects/app'
 app.settings.environment.nome; // 'local', o ambiente ativo
 app.settings.appDir; // o código da aplicação desse ambiente, absoluto
-app.settings.config.stack?.language; // 'TypeScript', quando um agente já gravou o stack
+app.settings.config.stack?.language.name; // 'TypeScript', quando um agente já gravou o stack
 app.readme; // 'Loja: Uma loja de exemplo.', o resumo do README da aplicação, ou undefined
 app.counts; // { tickets: 3, criteria: 12, criteriaWithTests: 9 }
 ```
