@@ -23,7 +23,9 @@ agent:
   name: Echo
   version: 1.0.0
   description: Repete a tarefa.
-models: [modelo-a]
+providers:
+  claude:
+    models: [modelo-a]
 role: Repete.
 context: [Nada.]
 input: A tarefa.

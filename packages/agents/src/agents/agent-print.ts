@@ -17,7 +17,7 @@ export function printAgentDefinition(agentsDir: string, name: string, stdout: Wr
     displayName: agent.displayName,
     version: agent.version,
     description: agent.description,
-    supportedModels: agent.supportedModels,
+    providers: agent.providers,
     skills: agent.skills,
     mcps: agent.mcps,
     dir: agent.dir,

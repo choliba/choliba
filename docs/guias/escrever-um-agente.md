@@ -23,7 +23,9 @@ agent:
   description: >-
     O que o agente faz, o que não faz e quando usar.
 
-models: [claude-sonnet-5]
+providers:
+  claude:
+    models: [claude-sonnet-5]
 
 role: |
   Você escreve os testes E2E do ticket `${TICKET}` do projeto `${PROJECT}`.

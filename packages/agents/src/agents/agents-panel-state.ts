@@ -4,12 +4,11 @@ import { sandboxConfig } from '@choliba/sandbox';
 import { AUTO, EXECUTION_MODES, type AgentDefinition, type AgentProvider, type ExecutionMode } from '../common';
 import { resolveAgentsDir } from './agent-dirs';
 import { loadAgent } from './agent-loader';
-import { agentProvider } from './agent-provider';
 import { agentCard } from './agents-panel-card';
 import { agentsConfig } from './agents-config';
 import { AGENT_PROVIDERS } from './agents.constants';
 import { isSandboxChoice, type SandboxChoice } from './runs/agents-flags';
-import { providerModel } from './runs/provider-model';
+import { agentRunChoice } from './runs/run-choice';
 
 /** What the panel's session keeps about a run of an agent: the context keys of each choice. */
 export const AGENT = 'agente';
@@ -74,17 +73,9 @@ export function activeAgent(container: Container, context: PanelContext): AgentD
   }
 }
 
-/**
- * The provider a run of `agent` (the active one by default) takes in the session: the one chosen with /provider, else
- * the one the agent asks for (its models' own, `agentProvider`), else `CHOL_AGENTS_PROVIDER`, as a run decides.
- */
-export function providerChoice(
-  container: Container,
-  context: PanelContext,
-  agent: AgentDefinition | undefined = activeAgent(container, context),
-): string {
-  const own = agent === undefined ? undefined : agentProvider(agent, container.get(AGENT_PROVIDERS));
-  return context.get(PROVIDER) ?? own ?? container.get(agentsConfig.token).provider;
+/** The provider the session asks for: the one chosen with /provider, else `CHOL_AGENTS_PROVIDER`. */
+export function providerChoice(container: Container, context: PanelContext): string {
+  return context.get(PROVIDER) ?? container.get(agentsConfig.token).provider;
 }
 
 /** The provider `choice` names on this machine (under `auto`, the first installed), or nothing when none is. */
@@ -96,14 +87,26 @@ export function installedProvider(container: Container, choice: string): AgentPr
   }
 }
 
-/** The model a run asks `provider` for with `chosen` (undefined: the agent's own), or why it cannot. */
-export function modelFor(
+/**
+ * The provider and the model a run of `agent` takes in the session, as `choliba run agent` picks them from the
+ * providers the agent declares (`agentRunChoice`): the session's /provider and /model unless `ask` says otherwise.
+ */
+export function sessionRun(
   container: Container,
-  provider: AgentProvider,
-  chosen: string | undefined,
+  context: PanelContext,
   agent: AgentDefinition,
-): { readonly model: string | undefined } | { readonly error: string } {
-  return providerModel(provider, chosen, agent.supportedModels, container.get(AGENT_PROVIDERS));
+  ask: { readonly provider?: string | undefined; readonly model?: string | undefined } = {},
+): ReturnType<typeof agentRunChoice> {
+  return agentRunChoice(
+    agent,
+    {
+      provider: 'provider' in ask ? ask.provider : context.get(PROVIDER),
+      model: 'model' in ask ? ask.model : context.get(MODEL),
+      preference: container.get(agentsConfig.token).provider,
+    },
+    container.get(AGENT_PROVIDERS),
+    container.get(PLATFORM).which,
+  );
 }
 
 /** The modes the session moves through: the active agent's, or every mode before one is chosen. */
@@ -141,19 +144,11 @@ function runLabels(
   context: PanelContext,
   agent: AgentDefinition,
 ): { readonly provider: string; readonly model: string; readonly problem?: string } {
-  const choice = providerChoice(container, context, agent);
-  const provider = installedProvider(container, choice);
-  if (provider === undefined) {
-    return {
-      provider: warn('nenhum instalado'),
-      model: gray('—'),
-      problem: `Nenhum provider instalado para ${choice}: o agente não roda nesta máquina.`,
-    };
-  }
-  const named = `${bold(provider.id)}${choice === AUTO ? gray(' (auto)') : ''}`;
-  const model = modelFor(container, provider, context.get(MODEL), agent);
-  if ('error' in model) return { provider: named, model: warn('indisponível'), problem: model.error };
-  return { provider: named, model: model.model === undefined ? gray(`padrão do ${provider.id}`) : bold(model.model) };
+  const run = sessionRun(container, context, agent);
+  if ('error' in run) return { provider: warn('indisponível'), model: gray('—'), problem: run.error };
+  const { id } = run.resolved.adapter;
+  const named = `${bold(id)}${providerChoice(container, context) === AUTO ? gray(' (auto)') : ''}`;
+  return { provider: named, model: run.model === undefined ? gray(`padrão do ${id}`) : bold(run.model) };
 }
 
 /**

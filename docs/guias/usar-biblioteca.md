@@ -141,7 +141,7 @@ claude.installed; // true: o comando `claude` está no PATH
 claude.inAuto; // true: o `auto` pode escolhê-lo
 claude.credentials; // [{ name: 'CLAUDE_CODE_OAUTH_TOKEN', set: true }, { name: 'ANTHROPIC_API_KEY', set: false }, …]
 
-providers.get('claude-ollama').modelPrefix; // 'ollama:'
+providers.get('claude-ollama').needsModel; // true: não tem modelo próprio, roda o que o agente declara
 ```
 
 | Membro      | Devolve                                                                        |
@@ -156,7 +156,7 @@ Cada provider tem:
 - `installed`: se algum dos comandos dele está no `PATH`;
 - `inAuto`: se o `auto` pode escolhê-lo;
 - `credentials`: cada variável que o autentica, com `set` (definida no ambiente ou no `.env`). O valor nunca aparece;
-- `modelPrefix`, só nos que rodam os modelos de um prefixo (`ollama:`);
+- `needsModel`: se ele não tem modelo próprio (o `claude-ollama`), e então a execução pede o primeiro que o agente declara para ele;
 - `summary`, o que o `--help` diz dele.
 
 ## Agentes
@@ -170,7 +170,7 @@ agents.list().filter((agent) => agent.projectRequired);
 
 const implementer = agents.get('implementer');
 implementer.version; // '1.0.3'
-implementer.supportedModels; // os modelos do agent.yaml
+implementer.providers; // [{ id: 'claude', models: ['claude-sonnet-5'] }, { id: 'cursor', models: [...] }]
 implementer.modes; // ['execute', 'plan', 'ask']
 
 agents.skills('implementer'); // [{ name: 'playwright-cli', description, path, instructions }, ...]
@@ -193,9 +193,9 @@ Cada agente é um `AgentDefinition`, o mesmo tipo que a CLI usa, exportado por `
 
 `provider(id)` segue a escolha do `choliba run agent` sem `--provider`:
 
-1. o provider dos modelos do agente, quando todos são de um prefixo (`ollama:` roda no `claude-ollama`);
-2. senão, `providers.preferred`;
-3. em `auto`, o primeiro instalado. Sem nenhum instalado, `undefined`.
+1. `providers.preferred`, quando o agente o declara;
+2. em `auto`, o primeiro provider que o agente declara e que está instalado;
+3. `undefined` quando nenhum pode rodá-lo (a preferência não é declarada, ou nenhum declarado está instalado).
 
 ## Skills
 

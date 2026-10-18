@@ -21,8 +21,10 @@ agent:
   version: 1.0.0
   description: Repete a tarefa recebida.
 
-models:
-  - modelo-a
+providers:
+  claude:
+    models:
+      - modelo-a
 
 role: |
   Você repete a tarefa.
@@ -141,7 +143,11 @@ describe('openCholiba', () => {
       const repeat = join(workspace.path, '.choliba', 'skills', 'repeat', 'SKILL.md');
 
       expect(library.agents.list().map((agent) => agent.id)).toEqual(['echo']);
-      expect(library.agents.get('echo')).toMatchObject({ id: 'echo', version: '1.0.0', supportedModels: ['modelo-a'] });
+      expect(library.agents.get('echo')).toMatchObject({
+        id: 'echo',
+        version: '1.0.0',
+        providers: [{ id: 'claude', models: ['modelo-a'] }],
+      });
       expect(() => library.agents.get('revisor')).toThrow('agent "revisor" not found');
       expect(library.agents.skills('echo')).toEqual([
         { name: 'repeat', description: 'Repete o texto.', path: repeat, instructions: 'Use sempre.' },
@@ -251,7 +257,8 @@ describe('openCholiba — providers', () => {
         { name: 'ANTHROPIC_AUTH_TOKEN', set: false },
       ]);
       expect(providers.get('cursor').credentials).toContainEqual({ name: 'CURSOR_API_KEY', set: true });
-      expect(providers.get('claude-ollama')).toMatchObject({ modelPrefix: 'ollama:' });
+      expect(providers.get('claude-ollama')).toMatchObject({ needsModel: true });
+      expect(providers.get('claude')).toMatchObject({ needsModel: false });
       expect(providers.get('claude').summary).not.toBe('');
       expect(JSON.stringify(providers.list())).not.toContain('do-ambiente');
       expect(providers.preferred).toBe('claude');
@@ -267,7 +274,10 @@ describe("openCholiba — an agent's provider and MCPs", () => {
     'permissions:',
     'mcps:\n  app:\n    tools: [abrir]\n    instructions: Use o app.\n  docs: null\n\npermissions:',
   );
-  const OLLAMA = ECHO.replace('id: echo', 'id: local').replace('  - modelo-a', "  - 'ollama:qwen3.5:4b'");
+  const OLLAMA = ECHO.replace('id: echo', 'id: local').replace(
+    'claude:\n    models:\n      - modelo-a',
+    "claude-ollama:\n    models:\n      - 'qwen3.5:4b'",
+  );
 
   /** The library of a workspace whose PATH has the `installed` commands, and `env` besides. */
   function library(installed: readonly string[], env: Readonly<Record<string, string>> = {}) {
@@ -285,14 +295,15 @@ describe("openCholiba — an agent's provider and MCPs", () => {
     return { workspace, choliba: openCholiba({ cwd: workspace.path, env: { PATH: bin, ...env } }) };
   }
 
-  it('gives the provider of its models, else the preference, else the first installed under auto', () => {
+  it('gives the provider it declares that a run takes: the preference when declared, else the first installed', () => {
     const auto = library(['claude']);
     const chosen = library([], { CHOL_AGENTS_PROVIDER: 'cursor' });
     const none = library([]);
     try {
       expect(auto.choliba.agents.provider('local')?.id).toBe('claude-ollama');
       expect(auto.choliba.agents.provider('echo')?.id).toBe('claude');
-      expect(chosen.choliba.agents.provider('echo')).toMatchObject({ id: 'cursor', installed: false });
+      // The preference counts only when the agent declares it: echo declares only claude.
+      expect(chosen.choliba.agents.provider('echo')).toBeUndefined();
       expect(none.choliba.agents.provider('echo')).toBeUndefined();
     } finally {
       for (const each of [auto, chosen, none]) each.workspace.cleanup();

@@ -69,9 +69,11 @@ export class ProviderRegistry {
 
   /** What each `--provider` value means, listed under `--provider` in `--help`. */
   descriptions(): readonly { readonly name: string; readonly description: string }[] {
-    const order = this.autoOrder().map((provider) => provider.id);
     return [
-      { name: AUTO, description: `O primeiro instalado, nesta ordem: ${order.join(', ')}.` },
+      {
+        name: AUTO,
+        description: 'O primeiro provider que o agente declara e que está instalado, na ordem do agent.yaml.',
+      },
       ...this.providers.map((provider) => ({
         name: provider.id,
         description: this.summary(provider),
@@ -102,13 +104,6 @@ export class ProviderRegistry {
     }
     const tried = candidates.map((provider) => provider.id).join(', ');
     throw new ProviderNotFoundError(`no working binary found for ${preference} (tried: ${tried})`);
-  }
-
-  /** The provider whose `modelPrefix` starts `model`, the one that runs it; `undefined` for a model of no prefix. */
-  modelOwner(model: string): AgentProvider | undefined {
-    return this.providers.find(
-      (provider) => provider.modelPrefix !== undefined && model.startsWith(provider.modelPrefix),
-    );
   }
 
   private autoOrder(): readonly AgentProvider[] {

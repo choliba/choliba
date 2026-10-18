@@ -82,7 +82,10 @@ describe('ProviderRegistry — the names and descriptions --provider shows', () 
 
   it("says auto's order and how each provider is found", () => {
     expect(PROVIDERS.descriptions()).toEqual([
-      { name: 'auto', description: 'O primeiro instalado, nesta ordem: cursor, claude.' },
+      {
+        name: 'auto',
+        description: 'O primeiro provider que o agente declara e que está instalado, na ordem do agent.yaml.',
+      },
       { name: 'claude', description: 'Comando `claude`.' },
       {
         name: 'cursor',
@@ -108,11 +111,9 @@ describe('ProviderRegistry with a provider of its own models', () => {
     expect(PROVIDERS_WITH_OLLAMA.parsePreference('claude-ollama')).toBe('claude-ollama');
   });
 
-  it('says what it is in --help, and owns the models of its prefix', () => {
+  it('says what it is in --help', () => {
     expect(PROVIDERS_WITH_OLLAMA.descriptions().find(({ name }) => name === 'claude-ollama')?.description).toBe(
       claudeOllamaProvider.summary,
     );
-    expect(PROVIDERS_WITH_OLLAMA.modelOwner('ollama:qwen3.5:4b')).toBe(claudeOllamaProvider);
-    expect(PROVIDERS_WITH_OLLAMA.modelOwner('claude-sonnet-5')).toBeUndefined();
   });
 });

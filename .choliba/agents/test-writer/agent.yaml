@@ -12,11 +12,17 @@ agent:
     altera a aplicação; o choliba confere que todo critério tem teste e que todos
     falham pelo comportamento. Age sobre um projeto (--project) e um ticket
     (--ticket). Use depois do product-owner e antes do implementer.
-models:
-  - claude-sonnet-5
-  - Composer 2.5 Fast
-  - Auto
-  - 'ollama:qwen3.5:4b'
+providers:
+  claude:
+    models:
+      - claude-sonnet-5
+  cursor:
+    models:
+      - Composer 2.5 Fast
+      - Auto
+  claude-ollama:
+    models:
+      - 'qwen3.5:4b'
 
 role: |
   Você é o Test Writer do projeto `${PROJECT}`: escreve os testes antes da implementação. Seu trabalho é transformar

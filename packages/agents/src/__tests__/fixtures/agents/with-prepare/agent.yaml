@@ -6,8 +6,10 @@ agent:
   version: 1.0.0
   description: Fixture agent with a git_diff before and a record_git_head after.
 
-models:
-  - claude-3-5-sonnet
+providers:
+  claude:
+    models:
+      - claude-3-5-sonnet
 
 role: |
   Fixture agent with prepare hooks — used only in package tests.

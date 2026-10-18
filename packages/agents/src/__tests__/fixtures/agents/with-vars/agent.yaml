@@ -6,8 +6,10 @@ agent:
   version: 1.0.0
   description: Fixture agent whose permissions and text name the projects folder.
 
-models:
-  - claude-3-5-sonnet
+providers:
+  claude:
+    models:
+      - claude-3-5-sonnet
 
 role: |
   Fixture de teste: grava tickets em ${CHOL_PROJECTS_DIR}.

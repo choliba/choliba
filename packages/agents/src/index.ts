@@ -1,5 +1,14 @@
-export type { AgentDefinition } from './common';
-export { AgentConfigError, agentProvider, isValidAgentName, listAgents, loadAgent, parseAgentYaml } from './agents';
+export type { AgentDefinition, AgentProviderModels } from './common';
+export {
+  AgentConfigError,
+  agentRunChoice,
+  declaredModels,
+  isValidAgentName,
+  listAgents,
+  loadAgent,
+  parseAgentYaml,
+} from './agents';
+export type { RunAsk, RunChoice } from './agents';
 export type { AgentInvocation } from './agents';
 export type { ExecutionMode, PermissionPolicy, PromptInput } from './common';
 export { resolveInvocation } from './agents';

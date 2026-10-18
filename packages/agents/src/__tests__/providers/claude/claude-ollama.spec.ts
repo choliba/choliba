@@ -12,7 +12,7 @@ function request(model: string | undefined): ProviderRequest {
       displayName: 'Echo',
       version: '1.0.0',
       description: 'd',
-      supportedModels: ['ollama:qwen3.5:4b'],
+      providers: [],
       skills: [],
       mcps: [],
       policy: 'read-only',
@@ -38,25 +38,24 @@ function request(model: string | undefined): ProviderRequest {
 }
 
 describe('ClaudeOllamaAgentProvider', () => {
-  it('runs only when named, and only the models of its prefix', () => {
+  it('runs only for an agent that declares it, and has no model of its own', () => {
     expect(claudeOllamaProvider.id).toBe('claude-ollama');
     expect(claudeOllamaProvider.inAuto).toBe(false);
-    expect(claudeOllamaProvider.modelPrefix).toBe('ollama:');
+    expect(claudeOllamaProvider.needsModel).toBe(true);
     expect(claudeOllamaProvider.binaries).toEqual([['claude']]);
     expect(claudeOllamaProvider.summary).toContain('CHOL_OLLAMA_URL');
   });
 
-  it("asks Claude Code for the model by Ollama's name, and reads the reported one back as declared", () => {
-    const args = claudeOllamaProvider.buildArgs(request('ollama:qwen3.5:4b'));
+  it("asks Claude Code for the model by Ollama's own name, and reads the reported one back as it is", () => {
+    const args = claudeOllamaProvider.buildArgs(request('qwen3.5:4b'));
     expect(args.at(args.indexOf('--model') + 1)).toBe('qwen3.5:4b');
     expect(claudeOllamaProvider.buildArgs(request(undefined))).not.toContain('--model');
-    expect(claudeOllamaProvider.apiModel('qwen3.5:4b')).toBe('qwen3.5:4b');
-    expect(claudeOllamaProvider.declaredModel('qwen3.5:4b')).toBe('ollama:qwen3.5:4b');
+    expect(claudeOllamaProvider.declaredModel('qwen3.5:4b')).toBe('qwen3.5:4b');
   });
 
   it("points Claude Code at Ollama, with Ollama's token and none of Claude's, every model set to the run's", () => {
     const variables = claudeOllamaProvider.variables({
-      request: request('ollama:qwen3.5:4b'),
+      request: request('qwen3.5:4b'),
       config: {},
       reachable: (url) => url,
     });

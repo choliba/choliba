@@ -34,16 +34,13 @@ export abstract class AgentProvider {
   /** Whether `auto` may pick it. A provider that runs only a model of its own (`claude-ollama`) runs only when named. */
   readonly inAuto: boolean = true;
 
-  /**
-   * The prefix of the `agent.yaml#models` ids only this provider runs (`ollama:`). A provider without one runs the ids
-   * no provider prefixes.
-   */
-  readonly modelPrefix?: string;
+  /** Whether it has no model of its own: a run asks it for the first model the agent declares for it (Ollama's). */
+  readonly needsModel: boolean = false;
 
   /** What `--help` says it is, when the command it runs does not say enough. */
   readonly summary?: string;
 
-  /** The declared id of the model its stream reports, to check against `agent.yaml#models`. */
+  /** The declared id of the model its stream reports, to check against `agent.yaml#providers.<id>.models`. */
   declaredModel(reported: string): string {
     return reported;
   }

@@ -201,8 +201,9 @@ describe('runAgentsCli — help', () => {
           '  name: Long Help',
           '  version: 1.0.0',
           '  description: "Esta descrição é propositalmente longa o suficiente para forçar quebra de linha no help do agente quando exibida no terminal estreito do CLI."',
-          'models:',
-          '  - claude-3-5-sonnet',
+          'providers:',
+          '  claude:',
+          '    models: [claude-3-5-sonnet]',
           ...SECTIONS,
         ].join('\n'),
       );
@@ -868,7 +869,7 @@ describe('runAgentsList', () => {
     expect(printed).toContain('id: with-prepare');
     expect(printed).toContain('Policy: read-only | Modo padrão: execute | Task obrigatória: sim');
     expect(printed).toContain('Policy: edits | Modo padrão: execute | Task obrigatória: não');
-    expect(printed).toContain('models:');
+    expect(printed).toContain('providers:\n  - claude: claude-3-5-sonnet\n  - cursor: gpt-4o');
     expect(printed).not.toContain('Usage:');
   });
 
@@ -930,17 +931,19 @@ describe('runAgentsCli — run', () => {
     expect(stderr.chunks.join('')).toContain('a tarefa é obrigatória');
   });
 
-  it('rejects a model that is not declared in agent.yaml#supported_models', async () => {
+  it('rejects a model the agent does not declare', async () => {
     const { deps, stderr } = harness([]);
 
     expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--model', 'nope', 'x'], deps)).toBe(1);
-    expect(stderr.chunks.join('')).toContain('not declared in agent.yaml#supported_models');
+    expect(stderr.chunks.join('')).toContain(
+      'O modelo nope não está declarado no agente echo (claude: claude-3-5-sonnet · cursor: gpt-4o).',
+    );
   });
 
   it('accepts a declared --model before spawning the provider', async () => {
     const { deps } = harness(claudeStdout(claudeSuccessLine()));
 
-    expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--model', 'gpt-4o', 'x'], deps)).toBe(0);
+    expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--model', 'claude-3-5-sonnet', 'x'], deps)).toBe(0);
   });
 
   it('runs an agent whose prepare hook comes from agent.yaml', async () => {
@@ -1080,14 +1083,13 @@ describe('runAgentsCli — run', () => {
     expect(stdout.chunks.join('')).toContain('preloaded context');
   });
 
-  it('rejects a --model not declared in agent.yaml#supported_models, before touching the provider', async () => {
+  it('rejects a --model the agent does not declare, before touching the provider', async () => {
     const { deps, stdout, stderr } = harness([]);
 
     const exitCode = await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--model', 'gpt-3', 'x'], deps);
 
     expect(exitCode).toBe(1);
-    expect(stderr.chunks.join('')).toContain('"gpt-3"');
-    expect(stderr.chunks.join('')).toContain('claude-3-5-sonnet, gpt-4o');
+    expect(stderr.chunks.join('')).toContain('O modelo gpt-3 não está declarado no agente echo');
     expect(stdout.chunks).toEqual([]);
   });
 
@@ -1095,7 +1097,9 @@ describe('runAgentsCli — run', () => {
     const { deps, stderr } = harness([], { which: whichOf([]) });
 
     expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, 'x'], deps)).toBe(1);
-    expect(stderr.chunks.join('')).toContain('no working binary found');
+    expect(stderr.chunks.join('')).toContain(
+      'Nenhum provider que o agente echo declara está instalado: claude, cursor.',
+    );
   });
 
   it('falls back to CHOL_AGENTS_PROVIDER when --provider is not given', async () => {
@@ -1436,7 +1440,9 @@ function withCustomAgent(extra: string[], run: (agentsDir: string) => Promise<vo
     '  name: Custom',
     '  version: 1.0.0',
     '  description: d',
-    'models: [claude-3-5-sonnet]',
+    'providers:',
+    '  claude:',
+    '    models: [claude-3-5-sonnet]',
     ...SECTIONS,
     ...extra,
   ];
@@ -1827,11 +1833,19 @@ describe('runAgentsCli — CHOL_SANDBOX', () => {
   });
 });
 
-describe('runAgentsCli — claude-ollama', () => {
-  function withOllamaAgent(models: readonly string[], run: (agentsDir: string) => Promise<void>): Promise<void> {
-    const tmp = makeTmpDir('cli-ollama-agent');
+describe('runAgentsCli — the providers an agent declares', () => {
+  /** An agent `local` that declares `providers`, each id with its models, in this order. */
+  function withAgent(
+    providers: Readonly<Record<string, readonly string[]>>,
+    run: (agentsDir: string) => Promise<void>,
+  ): Promise<void> {
+    const tmp = makeTmpDir('cli-providers-agent');
     const dir = join(tmp.path, 'local');
     mkdirSync(dir, { recursive: true });
+    const declared = Object.entries(providers).flatMap(([id, models]) => [
+      `  ${id}:`,
+      `    models: [${models.map((model) => JSON.stringify(model)).join(', ')}]`,
+    ]);
     const yaml = [
       'version: 1',
       'agent:',
@@ -1839,17 +1853,18 @@ describe('runAgentsCli — claude-ollama', () => {
       '  name: Local',
       '  version: 1.0.0',
       '  description: d',
-      `models: [${models.join(', ')}]`,
+      'providers:',
+      ...declared,
       ...SECTIONS,
     ];
     writeFileSync(join(dir, 'agent.yaml'), `${yaml.join('\n')}\n`);
     return run(tmp.path).finally(tmp.cleanup);
   }
 
-  const MODELS = ['claude-3-5-sonnet', '"ollama:qwen3.5:4b"'];
+  const MIXED = { claude: ['claude-3-5-sonnet'], 'claude-ollama': ['qwen3.5:4b'] };
 
-  it('asks Claude Code for the first ollama: model the agent declares, by its Ollama name', async () => {
-    await withOllamaAgent(MODELS, async (agentsDir) => {
+  it('asks claude-ollama for the first model the agent declares for it, as Ollama names it', async () => {
+    await withAgent(MIXED, async (agentsDir) => {
       const { deps, stdout } = harness([], { providers: PROVIDERS_WITH_OLLAMA });
 
       const argv = ['local', '--agents-dir', agentsDir, '--claude-ollama', '--dry-run', '--show-prompt', 'x'];
@@ -1859,61 +1874,64 @@ describe('runAgentsCli — claude-ollama', () => {
     });
   });
 
-  it('checks the model the stream reports as the ollama: one the agent declares', async () => {
-    await withOllamaAgent(MODELS, async (agentsDir) => {
-      const { deps } = harness([claudeInitLine('qwen3.5:4b'), claudeSuccessLine()], {
+  it("checks the model the stream reports against the models of the run's provider", async () => {
+    await withAgent(MIXED, async (agentsDir) => {
+      const argv = ['local', '--agents-dir', agentsDir, '--provider', 'claude-ollama', 'x'];
+      const ok = harness([claudeInitLine('qwen3.5:4b'), claudeSuccessLine()], { providers: PROVIDERS_WITH_OLLAMA });
+      expect(await runAgentsCli(argv, ok.deps)).toBe(0);
+
+      // claude-3-5-sonnet is declared, but for claude: on claude-ollama it stops the session.
+      const other = harness([claudeInitLine('claude-3-5-sonnet'), claudeSuccessLine()], {
         providers: PROVIDERS_WITH_OLLAMA,
       });
+      expect(await runAgentsCli(argv, other.deps)).toBe(1);
+      expect(other.stderr.chunks.join('')).toContain('agent.yaml#providers.claude-ollama.models');
+    });
+  });
 
-      expect(await runAgentsCli(['local', '--agents-dir', agentsDir, '--provider', 'claude-ollama', 'x'], deps)).toBe(
-        0,
+  it('runs with the first declared provider that is installed under auto, and refuses a preference it does not declare', async () => {
+    await withAgent({ 'claude-ollama': ['qwen3.5:4b'] }, async (agentsDir) => {
+      const auto = harness([], { providers: PROVIDERS_WITH_OLLAMA });
+      expect(await runAgentsCli(['local', '--agents-dir', agentsDir, '--dry-run', 'x'], auto.deps)).toBe(0);
+      expect(auto.stdout.chunks.join('')).toContain('[agente] claude-ollama · modelo qwen3.5:4b');
+
+      const preferred = harness([], { providers: PROVIDERS_WITH_OLLAMA, config: { CHOL_AGENTS_PROVIDER: 'claude' } });
+      expect(await runAgentsCli(['local', '--agents-dir', agentsDir, '--dry-run', 'x'], preferred.deps)).toBe(1);
+      expect(preferred.stderr.chunks.join('')).toContain(
+        'O agente local não declara o provider claude (declara: claude-ollama).',
       );
     });
   });
 
-  it('runs an agent of only ollama: models with claude-ollama, over CHOL_AGENTS_PROVIDER, saying why', async () => {
-    await withOllamaAgent(['"ollama:qwen3.5:4b"'], async (agentsDir) => {
-      const { deps, stdout } = harness([], {
-        providers: PROVIDERS_WITH_OLLAMA,
-        config: { CHOL_AGENTS_PROVIDER: 'claude' },
-      });
-
-      expect(await runAgentsCli(['local', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(0);
-      expect(stdout.chunks.join('')).toContain(
-        '[agente] claude-ollama (dos modelos do agente) · modelo ollama:qwen3.5:4b',
-      );
-    });
-  });
-
-  it('keeps --provider over the agent, and the usual choice for an agent of mixed models', async () => {
-    await withOllamaAgent(['"ollama:qwen3.5:4b"'], async (agentsDir) => {
+  it('runs --model on the provider that declares it, and refuses a model two providers declare', async () => {
+    await withAgent(MIXED, async (agentsDir) => {
       const { deps, stdout } = harness([], { providers: PROVIDERS_WITH_OLLAMA });
-
-      expect(await runAgentsCli(['local', '--agents-dir', agentsDir, '--claude', '--dry-run', 'x'], deps)).toBe(0);
-      expect(stdout.chunks.join('')).toContain('[agente] claude · modelo padrão do provider');
+      const argv = ['local', '--agents-dir', agentsDir, '--model', 'qwen3.5:4b', '--dry-run', 'x'];
+      expect(await runAgentsCli(argv, deps)).toBe(0);
+      expect(stdout.chunks.join('')).toContain('[agente] claude-ollama · modelo qwen3.5:4b');
     });
-    await withOllamaAgent(MODELS, async (agentsDir) => {
-      const { deps, stdout } = harness([], { providers: PROVIDERS_WITH_OLLAMA });
-
-      expect(await runAgentsCli(['local', '--agents-dir', agentsDir, '--dry-run', 'x'], deps)).toBe(0);
-      expect(stdout.chunks.join('')).toContain('[agente] claude · modelo');
-      expect(stdout.chunks.join('')).not.toContain('dos modelos do agente');
-    });
-  });
-
-  it('refuses an ollama: model on claude, and claude-ollama for an agent that declares none', async () => {
-    await withOllamaAgent(MODELS, async (agentsDir) => {
+    await withAgent({ claude: ['m'], cursor: ['m'] }, async (agentsDir) => {
       const { deps, stderr } = harness([], { providers: PROVIDERS_WITH_OLLAMA });
+      expect(await runAgentsCli(['local', '--agents-dir', agentsDir, '--model', 'm', 'x'], deps)).toBe(1);
+      expect(stderr.chunks.join('')).toContain(
+        'O modelo m está declarado em claude e cursor: diga qual com --provider.',
+      );
+    });
+  });
 
-      const argv = ['local', '--agents-dir', agentsDir, '--claude', '--model', 'ollama:qwen3.5:4b', 'x'];
+  it('refuses a model the chosen provider does not declare, and a provider the agent does not declare', async () => {
+    await withAgent(MIXED, async (agentsDir) => {
+      const { deps, stderr } = harness([], { providers: PROVIDERS_WITH_OLLAMA });
+      const argv = ['local', '--agents-dir', agentsDir, '--claude', '--model', 'qwen3.5:4b', 'x'];
       expect(await runAgentsCli(argv, deps)).toBe(1);
-      expect(stderr.chunks.join('')).toContain('é do provider claude-ollama');
+      expect(stderr.chunks.join('')).toContain('O modelo qwen3.5:4b não está entre os de claude no agente local');
     });
-    await withOllamaAgent(['claude-3-5-sonnet'], async (agentsDir) => {
+    await withAgent({ claude: ['claude-3-5-sonnet'] }, async (agentsDir) => {
       const { deps, stderr } = harness([], { providers: PROVIDERS_WITH_OLLAMA });
-
       expect(await runAgentsCli(['local', '--agents-dir', agentsDir, '--claude-ollama', 'x'], deps)).toBe(1);
-      expect(stderr.chunks.join('')).toContain('o agente não declara nenhum');
+      expect(stderr.chunks.join('')).toContain(
+        'O agente local não declara o provider claude-ollama (declara: claude).',
+      );
     });
   });
 });

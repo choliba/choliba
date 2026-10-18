@@ -38,6 +38,7 @@ import { watchQuestions } from './ask-watcher';
 import { sessionInput } from './session-input';
 import { toolGuard, toolViolation } from './tool-guard';
 import { writtenToolCall, writtenToolCallMessage } from './written-tool-call';
+import { declaredModels } from './run-choice';
 
 export interface RunAgentDeps {
   /**
@@ -384,7 +385,8 @@ async function followSession(
   let planMarkdown: string | undefined;
   let reportedModel: string | undefined;
   const textParts: string[] = [];
-  const supportedModels = request.providerRequest.agent.supportedModels;
+  // The model the stream reports is checked against the models the agent declares for this run's provider.
+  const supportedModels = declaredModels(request.providerRequest.agent, adapter.id);
   const explicitModel = request.providerRequest.model;
   const modelCtx = { providerId, agentName: label };
   // Set once a guard stopped the session (a model outside agent.yaml, a call to a subagent): what comes after

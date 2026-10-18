@@ -12,7 +12,7 @@ function request(overrides: Partial<ProviderRequest> = {}): ProviderRequest {
       displayName: 'Echo',
       version: '1.0.0',
       description: 'd',
-      supportedModels: [],
+      providers: [],
       skills: [],
       mcps: [],
       policy: 'read-only',

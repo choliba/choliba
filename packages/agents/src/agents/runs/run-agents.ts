@@ -109,7 +109,7 @@ function runDryRun(
   }
   const input: DryRunInput = {
     // Said when the agent's models chose it, so the reader sees why it is not the environment's.
-    providerId: `${resolved.adapter.id}${prepared.providerFromAgent === true ? ' (dos modelos do agente)' : ''}`,
+    providerId: resolved.adapter.id,
     command: resolved.command,
     args,
     request: providerRequest,

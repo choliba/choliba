@@ -24,7 +24,7 @@ function head(extra: Doc = {}): Doc {
   return {
     version: 1,
     agent: { id: 'x', name: 'X', version: '1.0.0', description: 'd' },
-    models: ['m'],
+    providers: { claude: { models: ['m'] } },
     ...SECTIONS,
     ...extra,
   };
@@ -70,7 +70,7 @@ describe('parseAgentYaml', () => {
       displayName: 'X',
       version: '1.0.0',
       description: 'd',
-      supportedModels: ['m'],
+      providers: [{ id: 'claude', models: ['m'] }],
       sections: { role: 'Papel.', context: [], input: 'Entrada.', flow: '1. Faça.', output: 'Saída.', notes: [] },
       skills: [],
       mcps: [],
@@ -191,11 +191,11 @@ describe('parseAgentYaml', () => {
     expect(() =>
       parse({
         agent: { id: 'x', name: 'X', version: '1.0.0', description: 'Em ${PROJECT_DIR}.' },
-        models: ['${CHOL_ROOT}'],
+        providers: { claude: { models: ['${CHOL_ROOT}'] } },
         task: { required: false, default: '${TICKET}' },
         mcps: { app: { tools: ['${PROJECT}'] } },
       }),
-    ).toThrow(/agent não aceita[\s\S]*models não aceita[\s\S]*task não aceita[\s\S]*mcps\.tools não aceita/);
+    ).toThrow(/agent não aceita[\s\S]*providers não aceita[\s\S]*task não aceita[\s\S]*mcps\.tools não aceita/);
   });
 
   it('defaults the mode to execute when allowed, else to the first allowed', () => {
@@ -300,7 +300,7 @@ describe('loadAgent', () => {
   });
 
   it('reports which keys are missing, naming the file', () => {
-    expect(() => loadAgent(FIXTURES, 'broken')).toThrow(/broken\/agent\.yaml: .*'models'/);
+    expect(() => loadAgent(FIXTURES, 'broken')).toThrow(/broken\/agent\.yaml: .*'providers'/);
   });
 
   it('reports the sections an agent.yaml lacks', () => {

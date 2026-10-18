@@ -8,81 +8,87 @@ import {
   MODE,
   modeChoice,
   MODEL,
-  modelFor,
   PROVIDER,
   providerChoice,
   SANDBOX,
   sandboxChoice,
   sandboxProblem,
+  sessionRun,
   showRun,
   warn,
 } from './agents-panel-state';
 import { AGENT_PROVIDERS } from './agents.constants';
 import { MODE_CHOICES, SANDBOX_CHOICES, type SandboxChoice } from './runs/agents-flags';
+import { declaredModels } from './runs/run-choice';
 
 /** Why a choice about the active agent cannot be made yet. */
 const NO_AGENT = 'Escolha um agente antes, com /agents';
 
-/** What each provider is on this machine: `auto` the one it would take, the others whether they are installed. */
-function providerDetail(container: Container, choice: string): string {
-  const found = installedProvider(container, choice);
-  if (choice === AUTO) return found === undefined ? 'nenhum instalado' : `o primeiro instalado: ${found.id}`;
-  return found === undefined ? 'não instalado' : 'instalado';
+/** What each provider is on this machine: `auto` the one it would take for the agent, the others whether installed. */
+function providerDetail(container: Container, context: PanelContext, choice: string): string {
+  const agent = activeAgent(container, context);
+  if (choice === AUTO) {
+    const run =
+      agent === undefined ? undefined : sessionRun(container, context, agent, { provider: AUTO, model: undefined });
+    const found =
+      run === undefined ? installedProvider(container, AUTO) : 'error' in run ? undefined : run.resolved.adapter;
+    return found === undefined ? 'nenhum instalado' : `o primeiro instalado: ${found.id}`;
+  }
+  return installedProvider(container, choice) === undefined ? 'não instalado' : 'instalado';
 }
 
-/** `/provider`: who runs the agent, for this session; `auto` takes the first installed. */
+/** What /provider offers: `auto` and the providers the active agent declares; every provider with no agent. */
+function providerChoices(container: Container, context: PanelContext): readonly string[] {
+  const agent = activeAgent(container, context);
+  return agent === undefined
+    ? container.get(AGENT_PROVIDERS).choices()
+    : [AUTO, ...agent.providers.map(({ id }) => id)];
+}
+
+/** `/provider`: who runs the agent, for this session, among those it declares; `auto` takes the first installed. */
 const providerCommand: PanelCommand = {
   name: 'provider',
   description: 'Escolhe quem roda o agente',
   run: async ({ container, panel, context }) => {
-    const choices = container.get(AGENT_PROVIDERS).choices();
+    const choices = providerChoices(container, context);
     const active = providerChoice(container, context);
     const chosen = await panel.choose({
       title: 'Escolha o provider',
-      description: 'Quem roda o agente nesta sessão. auto usa o primeiro instalado.',
+      description: 'Quem roda o agente nesta sessão, entre os que ele declara. auto usa o primeiro instalado.',
       options: choices.map((choice) => ({
         label: choice,
-        detail: providerDetail(container, choice),
+        detail: providerDetail(container, context, choice),
         current: choice === active,
       })),
     });
     const choice = chosen === undefined ? undefined : choices[chosen];
     if (choice === undefined || choice === active) return;
-    const provider = installedProvider(container, choice);
-    if (provider === undefined) {
+    if (choice !== AUTO && installedProvider(container, choice) === undefined) {
       panel.write(warn(`O provider ${choice} não está instalado nesta máquina.`));
       return;
     }
     context.set(PROVIDER, choice);
     panel.write(`Provider: ${bold(choice)}.`);
-    keepModel(container, context, provider, panel);
+    keepModel(container, context, panel);
     showRun(container, context, panel);
   },
 };
 
-/** Back to the agent's own model when the chosen one does not run on `provider`, saying so. */
-function keepModel(
-  container: Container,
-  context: PanelContext,
-  provider: AgentProvider,
-  panel: Pick<ChatPanel, 'write'>,
-): void {
+/** Back to the provider's default when the chosen model is not one the agent declares for the new provider. */
+function keepModel(container: Container, context: PanelContext, panel: Pick<ChatPanel, 'write'>): void {
   const agent = activeAgent(container, context);
   const chosen = context.get(MODEL);
   if (agent === undefined || chosen === undefined) return;
-  if (!('error' in modelFor(container, provider, chosen, agent))) return;
+  const run = sessionRun(container, context, agent, { model: undefined });
+  if ('error' in run || declaredModels(agent, run.resolved.adapter.id).includes(chosen)) return;
   context.set(MODEL, undefined);
-  panel.write(warn(`O modelo ${chosen} não roda com ${provider.id}: volta ao padrão.`));
+  panel.write(warn(`O modelo ${chosen} não é de ${run.resolved.adapter.id} no agente: volta ao padrão.`));
 }
 
-/** The models `provider` runs for `agent`: its own default first, when it picks one, then the agent's it runs. */
-function modelOptions(
-  container: Container,
-  provider: AgentProvider,
-  agent: AgentDefinition,
-): readonly (string | undefined)[] {
-  const declared = agent.supportedModels.filter((model) => !('error' in modelFor(container, provider, model, agent)));
-  return provider.modelPrefix === undefined ? [undefined, ...declared] : declared;
+/** The models `provider` runs for `agent`: its own default first, when it has one, then the ones the agent declares. */
+function modelOptions(provider: AgentProvider, agent: AgentDefinition): readonly (string | undefined)[] {
+  const declared = declaredModels(agent, provider.id);
+  return provider.needsModel ? declared : [undefined, ...declared];
 }
 
 /** The provider and the agent `/model` chooses for, or why it cannot. */
@@ -92,15 +98,11 @@ function modelSubject(
 ): { readonly provider: AgentProvider; readonly agent: AgentDefinition } | string {
   const agent = activeAgent(container, context);
   if (agent === undefined) return NO_AGENT;
-  const provider = installedProvider(container, providerChoice(container, context));
-  if (provider === undefined) return 'Nenhum provider instalado: escolha um com /provider';
-  if (modelOptions(container, provider, agent).length === 0) {
-    return `O provider ${provider.id} não roda nenhum modelo de ${agent.id}`;
-  }
-  return { provider, agent };
+  const run = sessionRun(container, context, agent, { model: undefined });
+  return 'error' in run ? run.error : { provider: run.resolved.adapter, agent };
 }
 
-/** `/model`: the model the agent asks for, among those the chosen provider runs; its default when it picks one. */
+/** `/model`: the model the agent asks for, among those it declares for the session's provider; its default too. */
 const modelCommand: PanelCommand = {
   name: 'model',
   description: 'Escolhe o modelo do agente',
@@ -112,11 +114,11 @@ const modelCommand: PanelCommand = {
     const subject = modelSubject(container, context);
     if (typeof subject === 'string') return;
     const { provider, agent } = subject;
-    const options = modelOptions(container, provider, agent);
+    const options = modelOptions(provider, agent);
     const active = context.get(MODEL);
     const chosen = await panel.choose({
       title: `Escolha o modelo de ${agent.id}`,
-      description: `Os modelos do agente que ${provider.id} roda.`,
+      description: `Os modelos que o agente declara para ${provider.id}.`,
       options: options.map((model) => ({
         label: model ?? `padrão do ${provider.id}`,
         detail: model === undefined ? 'o provider escolhe' : '',
