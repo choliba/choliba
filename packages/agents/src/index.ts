@@ -1,5 +1,5 @@
 export type { AgentDefinition } from './common';
-export { AgentConfigError, isValidAgentName, listAgents, loadAgent, parseAgentYaml } from './agents';
+export { AgentConfigError, agentProvider, isValidAgentName, listAgents, loadAgent, parseAgentYaml } from './agents';
 export type { AgentInvocation } from './agents';
 export type { ExecutionMode, PermissionPolicy, PromptInput } from './common';
 export { resolveInvocation } from './agents';
@@ -63,4 +63,4 @@ export {
   runAgentEntry,
 } from './agents';
 export type { AgentsPlatform } from './agents';
-export { ClaudeAgentProvider, CursorAgentProvider } from './providers';
+export { ClaudeAgentProvider, CursorAgentProvider, knownProviders } from './providers';

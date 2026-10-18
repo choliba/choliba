@@ -4,6 +4,7 @@ import path from 'node:path';
 import type { Writable, Theme } from '@choliba/core';
 
 import { fail } from './tests-error';
+import { readReport, reportFile } from './ticket-results';
 import {
   EXPECTATIONS,
   criterionRuns,
@@ -11,7 +12,6 @@ import {
   formatCriteriaSummary,
   verdictProblems,
   type Expectation,
-  type PlaywrightReport,
   type TicketCriteria,
 } from './ticket-verdict';
 
@@ -81,12 +81,11 @@ export interface GatedRun {
 
 export function checkGate(gate: TicketGate, run: GatedRun, output: GateOutput): number {
   const { ticketFile, reportFolder, ticket, status } = run;
-  const resultsFile = path.join(reportFolder, 'results.json');
-  if (!fs.existsSync(resultsFile)) {
-    output.stderr.write(`erro: o Playwright não gravou ${resultsFile}; nada a conferir.\n`);
+  const report = readReport(reportFolder);
+  if (report === undefined) {
+    output.stderr.write(`erro: o Playwright não gravou ${reportFile(reportFolder)}; nada a conferir.\n`);
     return 1;
   }
-  const report = JSON.parse(fs.readFileSync(resultsFile, 'utf8')) as PlaywrightReport;
   const criteria = JSON.parse(fs.readFileSync(ticketFile, 'utf8')) as TicketCriteria;
   if (gate.failuresFile !== undefined) {
     fs.mkdirSync(path.dirname(gate.failuresFile), { recursive: true });

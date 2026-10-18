@@ -1,7 +1,7 @@
 import { coreShell, createShell } from '@choliba/core';
 import { fakePlatform, VERBS_ROOT } from '@choliba/core/testing';
 
-import { AGENT_PROVIDERS, agentsShell } from '../..';
+import { AGENT_PROVIDERS, agentsShell, knownProviders } from '../..';
 import {
   AUTO,
   InvalidProviderPreferenceError,
@@ -73,6 +73,11 @@ describe('ProviderRegistry.resolve', () => {
 describe('ProviderRegistry — the names and descriptions --provider shows', () => {
   it('lists auto first, then the providers by id, whatever order they were found in', () => {
     expect(new ProviderRegistry([cursorProvider, claudeProvider]).choices()).toEqual(['auto', 'claude', 'cursor']);
+  });
+
+  it('lists the providers themselves by id, and knows the three choliba ships', () => {
+    expect(new ProviderRegistry([cursorProvider, claudeProvider]).list()).toEqual([claudeProvider, cursorProvider]);
+    expect(knownProviders().choices()).toEqual(['auto', 'claude', 'claude-ollama', 'cursor']);
   });
 
   it("says auto's order and how each provider is found", () => {
