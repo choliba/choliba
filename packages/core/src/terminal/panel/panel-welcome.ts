@@ -148,6 +148,8 @@ export interface PanelCard {
   readonly lines: readonly string[];
   /** The lines it shows while collapsed, three at most; its first line when absent. */
   readonly summary?: readonly string[];
+  /** Lines kept at the bottom of the open card, under a rule, while its other lines scroll; none when absent. */
+  readonly footer?: readonly string[];
   /** The letter that, with Ctrl, opens or collapses it (`p` for Ctrl+P), shown in its title (`^P`). */
   readonly key?: string;
   /** Its place among the cards, the lowest first (`sandbox` 1, `projeto` 2, `agente` 3); without it, after those that have one. */
@@ -251,6 +253,9 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     readonly box: Node & PanelScroll<Node>;
     readonly rows: PanelText<Styled>[];
     readonly spinner: PanelText<Styled>;
+    /** Its footer, under the lines that scroll, and the footer's rows: a rule, then its lines. */
+    readonly footer: Node & PanelBox<Node>;
+    readonly footerRows: PanelText<Styled>[];
   }
   const made = new Map<string, Card>();
   const cardOf = (shown: PanelCard): Card => {
@@ -301,8 +306,12 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     });
     spinner.visible = false;
     card.wrapper.add(spinner);
+    // On the wrapper, under the lines that scroll: the footer stays at the bottom of the open card.
+    const footer = new kit.BoxRenderable(renderer, { flexDirection: 'column', flexShrink: 0, paddingLeft: 1 });
+    footer.visible = false;
+    card.wrapper.add(footer);
     box.add(slot);
-    const built = { slot, box: card, rows, spinner };
+    const built = { slot, box: card, rows, spinner, footer, footerRows: [] };
     made.set(title, built);
     return built;
   };
@@ -356,6 +365,19 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
         row.visible = line !== undefined;
         row.content = line === undefined ? '' : styled([line === CARD_RULE ? RULE : line]);
         row.height = line === undefined ? 1 : wrappedRows(line, CARD_TEXT_WIDTH);
+      });
+      const footer = folded || each.footer === undefined ? [] : [CARD_RULE, ...each.footer];
+      while (card.footerRows.length < footer.length) {
+        const row = new kit.TextRenderable(renderer, { content: '', wrapMode: 'none', height: 1 });
+        card.footer.add(row);
+        card.footerRows.push(row);
+      }
+      card.footer.visible = footer.length > 0;
+      card.footerRows.forEach((row, index) => {
+        const line = footer[index];
+        row.visible = line !== undefined;
+        row.content =
+          line === undefined ? '' : styled([line === CARD_RULE ? RULE : truncateVisible(line, CARD_TEXT_WIDTH)]);
       });
       card.box.height = folded ? COLLAPSED_HEIGHT : CARD_HEIGHT;
     }

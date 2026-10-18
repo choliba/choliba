@@ -753,6 +753,29 @@ describe('openPanel', () => {
     }
   });
 
+  it("keeps an open card's footer under a rule, out of the lines that scroll, and hides it while collapsed", async () => {
+    const { kit, renderer, press } = fakeToolkit();
+    const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });
+    const card = (footer: readonly string[]) => ({ title: 'agente', lines: ['echo'], footer, key: 'a' });
+    panel.cards([card(['provider claude', `modelo   ${'m'.repeat(50)}`])]);
+    const agente = renderer.root.children[0]?.children[0]?.children[1]?.children[0] as
+      (FakeNode & { wrapper: FakeNode }) | undefined;
+    const footer = agente?.wrapper.children[1];
+
+    expect(footer?.visible).toBe(false);
+    press({ name: 'a', ctrl: true });
+    expect(footer?.visible).toBe(true);
+    expect(footer?.children.map((row) => row.visible)).toEqual([true, true, true]);
+    expect(footer?.children[1]?.content).toEqual({ chunks: [{ text: 'provider claude' }] });
+    expect(footer?.children[2]?.content).toEqual({ chunks: [{ text: `modelo   ${'m'.repeat(29)}…` }] });
+
+    panel.cards([card(['provider cursor'])]);
+    expect(footer?.children.map((row) => row.visible)).toEqual([true, true, false]);
+    expect(footer?.children[2]?.content).toBe('');
+    press({ name: 'a', ctrl: true });
+    expect(footer?.visible).toBe(false);
+  });
+
   it('shows each card collapsed to its summary, opens it with Ctrl and its key or a click, and collapses it again', async () => {
     const { kit, renderer, press } = fakeToolkit();
     const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });

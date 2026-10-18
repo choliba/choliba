@@ -153,8 +153,8 @@ function runLabels(
 
 /**
  * Shows what a run would take, found as `choliba run agent` finds it: the mode and the sandbox in the status line, from
- * the session's start; with an agent, the provider and the model in the header's column, and the agent's card, whose
- * collapsed summary says the mode and the model. What would stop the run shows as one word in yellow, its reason
+ * the session's start; with an agent, the provider and the model in the header's column and in the footer of the agent's card,
+ * whose collapsed summary says the mode and the model. What would stop the run shows as one word in yellow, its reason
  * written in the `panel`'s chat, so the header keeps its size.
  */
 export function showRun(container: Container, context: PanelContext, panel?: Pick<ChatPanel, 'write'>): void {
@@ -166,7 +166,8 @@ export function showRun(container: Container, context: PanelContext, panel?: Pic
   context.label(PROVIDER, labels.provider);
   context.label(MODEL, labels.model);
   if (labels.problem !== undefined) panel?.write(warn(labels.problem));
-  context.show(AGENT, agentCard(container, agent, `${bold(mode)} ${gray('·')} ${labels.model}`, context.get(TICKET)));
+  const run = `${bold(mode)} ${gray('·')} ${labels.model}`;
+  context.show(AGENT, agentCard(container, agent, run, labels, context.get(TICKET)));
 }
 
 /** The sessions whose Shift+Tab already moves the mode: the key is listened to once per session. */
