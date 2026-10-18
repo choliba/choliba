@@ -20,14 +20,16 @@ trabalho. Sem o `bwrap` no `PATH`, o comando é recusado e a mensagem diz como i
 `sudo apt install bubblewrap`).
 
 O choliba resolve o executável instalado antes de entrar no sandbox e monta somente a closure necessária, só para
-leitura: o arquivo executável do Claude Code ou a pasta da versão do Cursor CLI, que também contém o runtime e os
-arquivos JavaScript. A pasta pessoal real fica escondida por uma pasta vazia em memória; ela some no fim da execução.
+leitura: o executável do Claude Code, os pacotes `@openai/codex` e `@openai/codex-<plataforma>` usados pelo launcher
+do Codex, ou a pasta da versão do Cursor CLI, que também contém o runtime e os arquivos JavaScript. A pasta pessoal
+real fica escondida por uma pasta vazia em memória; ela some no fim da execução.
 Os caminhos liberados pelo agente que ficam abaixo dela são montados depois e continuam acessíveis.
 
-A credencial vem do `.env`: uma execução local com Claude exige `CLAUDE_CODE_OAUTH_TOKEN` (gerado por
-`claude setup-token`), `ANTHROPIC_API_KEY` ou `ANTHROPIC_AUTH_TOKEN`; com Cursor, exige `CURSOR_API_KEY`. O restante
-do ambiente configurado continua herdado, inclusive pelas instâncias de MCP que o provider inicia. O choliba não
-monta os arquivos de autenticação da pasta pessoal.
+A credencial do Claude vem do `.env`: `CLAUDE_CODE_OAUTH_TOKEN` (gerado por `claude setup-token`),
+`ANTHROPIC_API_KEY` ou `ANTHROPIC_AUTH_TOKEN`; a do Cursor é `CURSOR_API_KEY`. O Codex usa a sessão criada por
+`codex login`: antes de entrar no sandbox, o choliba copia somente `auth.json` para o `CODEX_HOME` efêmero da run.
+Configuração, histórico, plugins e skills pessoais ficam de fora. O restante do ambiente configurado continua
+herdado, inclusive pelas instâncias de MCP que o provider inicia.
 
 A rede é a da máquina. O `/run` vira uma pasta vazia, mas a configuração de nomes que mora nele (o
 `/etc/resolv.conf` do systemd-resolved, do NetworkManager ou do resolvconf aponta para lá) volta montada só para
@@ -92,15 +94,16 @@ com `OLLAMA_HOST=0.0.0.0`, ou use `CHOL_NETWORK=host`.
 
 ### Credencial
 
-A credencial do provider entra por variável de ambiente, do `.env`: `CLAUDE_CODE_OAUTH_TOKEN` (gerado por
+A credencial do Claude e do Cursor entra por variável de ambiente, do `.env`: `CLAUDE_CODE_OAUTH_TOKEN` (gerado por
 `claude setup-token`, usa a assinatura e só chama o modelo), `ANTHROPIC_API_KEY` ou `ANTHROPIC_AUTH_TOKEN`, e
-`CURSOR_API_KEY`. O agente consegue lê-la, como consegue fora do container: prefira o token, que não serve para mais
-nada.
+`CURSOR_API_KEY`. O Codex recebe no diretório da run uma cópia de `auth.json`, criada por `codex login`; o diretório
+é montado no container e apagado ao final. O agente consegue ler a credencial do provider: prefira credenciais com o
+menor alcance possível.
 
 ### Imagem
 
-A imagem traz o Node e os navegadores do Playwright da versão do choliba, o Bun, o Claude Code e o Cursor CLI, este
-numa versão fixa e baixado como pacote conferido pelo sha256, sem rodar script de instalação, e que não se atualiza
+A imagem traz o Node e os navegadores do Playwright da versão do choliba, o Bun, o Claude Code, o Codex numa versão
+fixa e o Cursor CLI, este baixado como pacote conferido pelo sha256, sem rodar script de instalação, e que não se atualiza
 durante a run (o choliba passa `--disable-auto-update` ao Cursor, também fora do container). Construa-a uma vez na
 raiz do repositório do choliba:
 

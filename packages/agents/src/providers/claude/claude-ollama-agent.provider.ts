@@ -32,7 +32,7 @@ const CLAUDE_MODEL_VARIABLES: readonly string[] = [
 export class ClaudeOllamaAgentProvider extends ClaudeAgentProvider {
   override readonly id = 'claude-ollama';
   /** Not picked by `auto` for an agent that does not declare it: it runs only the models of Ollama an agent names. */
-  override readonly autoPriority = 3;
+  override readonly autoPriority = 4;
   override readonly inAuto = false;
   /** Ollama has no model of its own: a run asks for the first one the agent declares for it. */
   override readonly needsModel = true;

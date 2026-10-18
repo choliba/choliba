@@ -3,7 +3,7 @@
 > O ciclo de um comando de agente: as três fases, o que o choliba faz sem modelo e o que fica com o provider.
 
 Um comando (`bun choliba run agent <agente> …`) passa por três fases. Nas fases 1 e 3 quem executa é o **choliba**, sem
-modelo. Na fase 2 executa o **agente**: o provider (Claude Code ou Cursor) rodando o modelo, só dentro das
+modelo. Na fase 2 executa o **agente**: o provider (Claude Code, Codex ou Cursor) rodando o modelo, só dentro das
 permissões do `agent.yaml`.
 
 **Fase 1: o choliba, antes do agente**
@@ -63,7 +63,7 @@ permissões do `agent.yaml`.
       e a resposta ficam no quadro (`? …` e `→ …`).
     - **Escrever.** Sem pergunta pendente, o que você envia vai para a sessão, e o agente lê quando termina o passo em
       que está; fica no quadro como `› …`. O Claude (e o `claude-ollama`) recebe a tarefa e as mensagens pelo stdin, e
-      a sessão termina quando o agente responde à última. O Cursor não recebe mensagens durante a execução: o campo
+      a sessão termina quando o agente responde à última. O Codex e o Cursor não recebem mensagens durante a execução: o campo
       diz isso, e uma mensagem enviada aparece como `› … (não entregue: …)`.
     - **Interromper.** O primeiro Ctrl+C só avisa no campo; o segundo, em até 2 segundos, interrompe a execução.
 
@@ -77,8 +77,8 @@ permissões do `agent.yaml`.
 
 **Fase 3: o choliba, depois do agente**
 
-12. Apaga a pasta da execução e as ferramentas da run e desfaz o que o provider preparou (os arquivos `.cursor/` do
-    Cursor), seja qual for o resultado. Com o Cursor, apaga também o que ele guardou para a pasta da execução em
+12. Apaga a pasta da execução e as ferramentas da run e desfaz o que o provider preparou (a cópia isolada da
+    autenticação do Codex e os arquivos `.cursor/` do Cursor), seja qual for o resultado. Com o Cursor, apaga também o que ele guardou para a pasta da execução em
     `~/.cursor` (`projects/` e `chats/`), que de outro modo se acumularia a cada execução.
 13. Roda o `steps.<modo>.after`: `success` ou `failure`, depois `always`.
 14. Fecha o ticket: um ticket novo que o agente não tocou é apagado; em `execute`, sobrar `CHANGE_ME` é erro.

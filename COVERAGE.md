@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 18/10/2026 15:28:34 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 18/10/2026 16:07:20 — não editar manualmente.
 
 ## Resumo
 
@@ -18,7 +18,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 92 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 97 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -48,6 +48,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/runs/agents-flags.ts](packages/agents/src/agents/runs/agents-flags.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/agents-spec.ts](packages/agents/src/agents/runs/agents-spec.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/ask-watcher.ts](packages/agents/src/agents/runs/ask-watcher.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/command-guard.ts](packages/agents/src/agents/runs/command-guard.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/definition-snapshot.ts](packages/agents/src/agents/runs/definition-snapshot.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/delegation-guard.ts](packages/agents/src/agents/runs/delegation-guard.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/dry-run.ts](packages/agents/src/agents/runs/dry-run.ts)|100.00|100.00|100.00|100.00
@@ -109,6 +110,10 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/providers/claude/claude-agent.provider.ts](packages/agents/src/providers/claude/claude-agent.provider.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/claude/claude-ollama-agent.provider.ts](packages/agents/src/providers/claude/claude-ollama-agent.provider.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/claude/claude-permissions.ts](packages/agents/src/providers/claude/claude-permissions.ts)|100.00|100.00|100.00|100.00
+🟢|[src/providers/codex/codex-agent.provider.ts](packages/agents/src/providers/codex/codex-agent.provider.ts)|100.00|100.00|100.00|100.00
+🟢|[src/providers/codex/codex-auth.ts](packages/agents/src/providers/codex/codex-auth.ts)|100.00|100.00|100.00|100.00
+🟢|[src/providers/codex/codex-config.ts](packages/agents/src/providers/codex/codex-config.ts)|100.00|100.00|100.00|100.00
+🟢|[src/providers/codex/codex-stream.ts](packages/agents/src/providers/codex/codex-stream.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/cursor/cursor-agent.provider.ts](packages/agents/src/providers/cursor/cursor-agent.provider.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/cursor/cursor-cli-json.ts](packages/agents/src/providers/cursor/cursor-cli-json.ts)|100.00|100.00|100.00|100.00
 🟢|[src/providers/cursor/cursor-permissions.ts](packages/agents/src/providers/cursor/cursor-permissions.ts)|100.00|100.00|100.00|100.00

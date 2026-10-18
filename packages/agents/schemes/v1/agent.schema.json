@@ -44,7 +44,7 @@
       "description": "Os providers com que o agente roda, na ordem de preferência, e em cada um os modelos que ele pode usar, pelo nome que aquele provider usa; o primeiro modelo é o padrão quando o provider não tem um.",
       "type": "object",
       "minProperties": 1,
-      "propertyNames": { "enum": ["claude", "claude-ollama", "cursor"] },
+      "propertyNames": { "enum": ["claude", "claude-ollama", "codex", "cursor"] },
       "additionalProperties": {
         "type": "object",
         "required": ["models"],

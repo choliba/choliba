@@ -38,7 +38,7 @@ Rode `bun choliba.ts` de qualquer subpasta. A saída é parecida com:
 
 ```text
 raiz: /home/voce/meu-workspace
-providers: claude, claude-ollama, cursor
+providers: claude, claude-ollama, codex, cursor
 agentes em /home/voce/meu-workspace/.choliba/agents
 - implementer 1.0.3
 - product-owner 1.3.2
@@ -132,7 +132,7 @@ config.list().filter((setting) => setting.origin === '.env'); // só o que veio 
 ```ts
 import { providers } from 'choliba';
 
-providers.list().map((provider) => provider.id); // ['claude', 'claude-ollama', 'cursor']
+providers.list().map((provider) => provider.id); // ['claude', 'claude-ollama', 'codex', 'cursor']
 providers.list().filter((provider) => provider.installed);
 providers.preferred; // 'auto', o CHOL_AGENTS_PROVIDER em vigor
 
@@ -142,6 +142,7 @@ claude.inAuto; // true: o `auto` pode escolhê-lo
 claude.credentials; // [{ name: 'CLAUDE_CODE_OAUTH_TOKEN', set: true }, { name: 'ANTHROPIC_API_KEY', set: false }, …]
 
 providers.get('claude-ollama').needsModel; // true: não tem modelo próprio, roda o que o agente declara
+providers.get('codex').installed; // true: o comando `codex` está no PATH
 ```
 
 | Membro      | Devolve                                                                        |

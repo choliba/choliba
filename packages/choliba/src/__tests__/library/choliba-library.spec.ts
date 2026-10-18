@@ -207,7 +207,12 @@ describe('choliba', () => {
     ]);
     expect([workspace.root, workspace.version]).toEqual([choliba.root, choliba.version]);
     // The process's own PATH and environment.
-    expect(choliba.providers.list().map((provider) => provider.id)).toEqual(['claude', 'claude-ollama', 'cursor']);
+    expect(choliba.providers.list().map((provider) => provider.id)).toEqual([
+      'claude',
+      'claude-ollama',
+      'codex',
+      'cursor',
+    ]);
   });
 
   it('is the facade of the process, read only when used', () => {
@@ -249,6 +254,7 @@ describe('openCholiba — providers', () => {
       expect(providers.list().map((provider) => [provider.id, provider.installed, provider.inAuto])).toEqual([
         ['claude', true, true],
         ['claude-ollama', true, false],
+        ['codex', false, true],
         ['cursor', false, true],
       ]);
       expect(providers.get('claude').credentials).toEqual([
@@ -262,7 +268,9 @@ describe('openCholiba — providers', () => {
       expect(providers.get('claude').summary).not.toBe('');
       expect(JSON.stringify(providers.list())).not.toContain('do-ambiente');
       expect(providers.preferred).toBe('claude');
-      expect(() => providers.get('gpt')).toThrow('provider "gpt" não existe (existem: claude, claude-ollama, cursor)');
+      expect(() => providers.get('gpt')).toThrow(
+        'provider "gpt" não existe (existem: claude, claude-ollama, codex, cursor)',
+      );
     } finally {
       workspace.cleanup();
     }

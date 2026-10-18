@@ -214,6 +214,14 @@ describe('LocalSandbox', () => {
     ).not.toThrow();
   });
 
+  it('asks no credential of a program that authenticates by a file of its own', () => {
+    const bare = new LocalSandbox({ disk: DISK, bwrap: '/usr/bin/bwrap', environment: { HOME: '/home/test' } });
+    const input = { command: ['codex'], reach: reach({ allowRead: ['/w/docs/'] }) };
+
+    expect(() => bare.plan({ ...input, program: { ...PROGRAM, credentials: [] } })).not.toThrow();
+    expect(() => bare.plan({ ...input, program: PROGRAM })).toThrow('defina a credencial');
+  });
+
   it("puts the provider's own variables over the inherited ones, and lets them be its credential", () => {
     const withoutCredential = new LocalSandbox({
       disk: DISK,
