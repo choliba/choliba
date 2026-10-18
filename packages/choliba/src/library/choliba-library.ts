@@ -30,7 +30,7 @@ function once<T>(make: () => T): () => T {
  * environment then the `.env`, the agents' loader, the projects' service), nothing new. Nothing is read until a member is used, and `root`
  * is found once.
  */
-export function cholibaApi(groups: readonly ConfigGroup[], options: CholibaOptions): Choliba {
+export function cholibaLibrary(groups: readonly ConfigGroup[], options: CholibaOptions): Choliba {
   const root = once(() => findWorkspaceRoot(options.cwd ?? process.cwd()));
   const sources = () => configSourcesAt(options.env ?? process.env, root());
   const read = <T>(group: ConfigGroup<T>): T => group.read(sources());

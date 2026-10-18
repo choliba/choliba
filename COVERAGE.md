@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 18/10/2026 10:13:40 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 18/10/2026 12:27:18 — não editar manualmente.
 
 ## Resumo
 
@@ -123,8 +123,6 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
 🟢|[src/add/add.command.ts](packages/choliba/src/add/add.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/api/choliba-api.ts](packages/choliba/src/api/choliba-api.ts)|100.00|100.00|100.00|100.00
-🟢|[src/api/choliba-projects.ts](packages/choliba/src/api/choliba-projects.ts)|100.00|100.00|100.00|100.00
 🟢|[src/app-shell.ts](packages/choliba/src/app-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/check/check.command.ts](packages/choliba/src/check/check.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/check/check.ts](packages/choliba/src/check/check.ts)|100.00|100.00|100.00|100.00
@@ -136,6 +134,8 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/help/owl-icon.ts](packages/choliba/src/help/owl-icon.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/root-spec.ts](packages/choliba/src/help/root-spec.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/version.ts](packages/choliba/src/help/version.ts)|100.00|100.00|100.00|100.00
+🟢|[src/library/choliba-library.ts](packages/choliba/src/library/choliba-library.ts)|100.00|100.00|100.00|100.00
+🟢|[src/library/choliba-projects.ts](packages/choliba/src/library/choliba-projects.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runtime/runtime.constants.ts](packages/choliba/src/runtime/runtime.constants.ts)|100.00|100.00|100.00|100.00
 🟢|[src/setup/setup.command.ts](packages/choliba/src/setup/setup.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/setup/setup.ts](packages/choliba/src/setup/setup.ts)|100.00|100.00|100.00|100.00

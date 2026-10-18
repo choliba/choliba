@@ -11,7 +11,7 @@ export type {
   CholibaSkills,
   CholibaTests,
   CholibaTickets,
-} from './api';
+} from './library';
 export type { ProjectSettings, ProjectSummary, TicketCriterion, TicketInfo } from '@choliba/projects';
 export type { AgentDefinition, SkillSummary } from '@choliba/agents';
 export type { ConfigGroup, ConfigSetting } from '@choliba/config';

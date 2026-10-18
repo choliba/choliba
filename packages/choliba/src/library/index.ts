@@ -1,4 +1,4 @@
-export { cholibaApi } from './choliba-api';
+export { cholibaLibrary } from './choliba-library';
 export type {
   Choliba,
   CholibaAgents,
