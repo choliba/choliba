@@ -17,6 +17,7 @@ import type { Sandbox } from '@choliba/sandbox';
 
 import type { ParsedAgentsArgs } from './agents-flags';
 import type { DryRunInput } from './dry-run';
+import type { RunLog } from './run-log';
 import type { AgentInvocation } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
 import type { ProviderRequest } from '../../common';
@@ -46,6 +47,8 @@ export interface RunAgentsCliDeps {
   readonly git?: GitRunner;
   /** Where each run's empty folder is made (`ProviderRequest.runDir`); defaults to `<repoRoot>/.cache/runs`. */
   readonly runsDir?: string;
+  /** Where each run's log goes, in a folder per agent (`run-log.ts`); defaults to `<repoRoot>/.cache/logs`. */
+  readonly logsDir?: string;
   /**
    * Makes sure the project's application is up for a run with `--project` (`ensureApp` of `@choliba/projects`,
    * logging to `.cache/app/`); the specs pass a fake.
@@ -112,4 +115,13 @@ export interface RunContext {
   readonly planContent: string | undefined;
   /** The command comes from `agent.yaml` (not from code), so each run derives it from its agent. */
   readonly synthesized: boolean;
+  /**
+   * The run's log (`run-log.ts`), and `stdout` and `stderr` as they were before it: the run's screen writes them,
+   * logging what it writes itself (`runAgent`). `NO_RUN_LOG` until a real run opens one, and in `--dry-run`.
+   */
+  readonly log: {
+    readonly log: RunLog;
+    readonly stdout: WritableWithColumns;
+    readonly stderr: Writable;
+  };
 }

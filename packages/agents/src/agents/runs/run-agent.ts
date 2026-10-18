@@ -3,6 +3,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import {
   DEFAULT_COLUMNS,
   exitCodeFor,
+  formatDuration,
   frameBottom,
   frameLines,
   frameTop,
@@ -39,6 +40,7 @@ import { sessionInput } from './session-input';
 import { toolGuard, toolViolation } from './tool-guard';
 import { writtenToolCall, writtenToolCallMessage } from './written-tool-call';
 import { declaredModels } from './run-choice';
+import { loggedStream, NO_RUN_LOG, type RunLog } from './run-log';
 
 export interface RunAgentDeps {
   /**
@@ -66,6 +68,8 @@ export interface RunAgentDeps {
   readonly hostedPanel?: boolean;
   /** Called with the agent's final answer when the session ends clean: the `write_files` steps after it save it. */
   readonly answered?: (answer: string) => void;
+  /** The run's log: what the screen shows, each line of the provider as it came, and the agent's time. */
+  readonly log?: RunLog;
 }
 
 /** A timer that calls `tick` every `ms`, not keeping the process alive by itself. */
@@ -320,12 +324,14 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
   const adapter = request.provider.adapter;
   const providerId = adapter.id;
   const label = request.providerRequest.agent.name;
+  // Before the screen exists, what goes wrong is written here, and logged too.
+  const stderr = loggedStream(deps.stderr, deps.log ?? NO_RUN_LOG, 'erro');
 
   let args: readonly string[];
   try {
     args = adapter.buildArgs(request.providerRequest);
   } catch (error) {
-    deps.stderr.write(`${errorMessage(error)}\n`);
+    stderr.write(`${errorMessage(error)}\n`);
     return 1;
   }
 
@@ -335,7 +341,7 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
     const command = [...request.provider.command, ...args];
     launch = request.launch?.(command) ?? { command, place: { kind: 'local' }, paths: [], skipped: [] };
     if (launch.skipped.length > 0) {
-      deps.stderr.write(`${imageFoldersNotice(launch.skipped, launch.place.kind)}\n`);
+      stderr.write(`${imageFoldersNotice(launch.skipped, launch.place.kind)}\n`);
     }
     session = deps.runner.start({
       label,
@@ -345,21 +351,25 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
       ...(adapter.inputMessage === undefined ? {} : { input: true }),
     });
   } catch (error) {
-    deps.stderr.write(`não foi possível iniciar ${providerId}: ${errorMessage(error)}\n`);
+    stderr.write(`não foi possível iniciar ${providerId}: ${errorMessage(error)}\n`);
     return 1;
   }
 
   const info: RunFooterInfo = { provider: providerId, place: launch.place, startedAt: deps.now().getTime() };
-  const screen =
+  const shown =
     deps.footer === true && deps.panel !== undefined
       ? await panelOrFooter(deps.panel, info, request, deps)
       : runScreen(info, request, deps);
+  const log = deps.log ?? NO_RUN_LOG;
+  const screen = { ...shown, out: loggedStream(shown.out, log, 'saida'), err: loggedStream(shown.err, log, 'erro') };
   let exitCode = 1;
   try {
     exitCode = await followSession(request, deps, session, screen);
     return exitCode;
   } finally {
-    screen.close(exitCode);
+    const took = formatDuration(deps.now().getTime() - info.startedAt);
+    log.write('choliba', `agente terminou: código ${String(exitCode)} · tempo do agente ${took}`);
+    shown.close(exitCode);
   }
 }
 
@@ -408,7 +418,9 @@ async function followSession(
     session.kill('SIGTERM');
   };
 
+  const log = deps.log ?? NO_RUN_LOG;
   session.subscribe((event) => {
+    log.write(event.stream === 'stderr' ? 'provider-erro' : 'provider', event.raw);
     if (event.stream === 'stderr') {
       if (adapter.quietStderr?.(event.raw) === true) return;
       // In the frame, a blank line from the provider (around its own messages) would only be an empty row.
