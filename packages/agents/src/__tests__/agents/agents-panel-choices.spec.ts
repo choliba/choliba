@@ -76,6 +76,11 @@ const warn = (text: string): string => `\u001b[33m${text}\u001b[39m`;
 /** Every binary but the cursor provider's (`agent`, `cursor-agent`, `cursor agent`). */
 const noCursor = (bin: string): boolean => !['agent', 'cursor-agent', 'cursor'].includes(bin);
 
+/** The provider the agent `id` asks for in `panel`'s session: the one chosen for it, else `CHOL_AGENTS_PROVIDER`. */
+function providerOf(panel: ReturnType<typeof session>, id: string): string {
+  return panel.state.values.get(`provider:${id}`) ?? 'auto';
+}
+
 describe('/provider', () => {
   it('refuses a preference the agent does not declare, and offers /provider among the ones it declares', async () => {
     const tmp = makeTmpDir('choices-agent-provider');
@@ -106,13 +111,17 @@ describe('/provider', () => {
     }
   });
 
-  it('lists auto and each provider, saying which are installed, the chosen one checked', async () => {
+  it("is unavailable with no agent, and lists auto and the agent's providers, saying which are installed", async () => {
     const tmp = makeTmpDir('choices');
     try {
       agentsFolder(tmp.path);
       const panel = session(tmp.path, noCursor);
-      await panel.run('provider', undefined);
+      expect(panel.why('provider')).toBe('Escolha um agente antes, com /agents');
+      await panel.run('provider', 0);
+      expect(panel.fake.choices).toEqual([]);
 
+      panel.state.context.set('agente', 'echo');
+      await panel.run('provider', undefined);
       expect(panel.why('provider')).toBeUndefined();
       expect(panel.fake.choices[0]).toMatchObject({
         title: 'Escolha o provider',
@@ -121,18 +130,13 @@ describe('/provider', () => {
       expect(panel.fake.choices[0]?.options).toEqual([
         { label: 'auto', detail: 'o primeiro instalado: claude', current: true },
         { label: 'claude', detail: 'instalado', current: false },
-        { label: 'claude-ollama', detail: 'instalado', current: false },
         { label: 'cursor', detail: 'não instalado', current: false },
       ]);
-      expect(panel.state.values.size).toBe(0);
 
       const none = session(tmp.path, () => false);
-      await none.run('provider', 0);
-      expect(none.fake.choices[0]?.options[0]?.detail).toBe('nenhum instalado');
-      // With an agent, auto is the first installed of the providers it declares.
       none.state.context.set('agente', 'echo');
       await none.run('provider', undefined);
-      expect(none.fake.choices[1]?.options.map((option) => [option.label, option.detail])).toEqual([
+      expect(none.fake.choices[0]?.options.map((option) => [option.label, option.detail])).toEqual([
         ['auto', 'nenhum instalado'],
         ['claude', 'não instalado'],
         ['cursor', 'não instalado'],
@@ -142,21 +146,27 @@ describe('/provider', () => {
     }
   });
 
-  it('takes an installed one for the session, and refuses one that is not installed', async () => {
+  it('takes an installed one for the agent alone, and refuses one that is not installed', async () => {
     const tmp = makeTmpDir('choices');
     try {
       agentsFolder(tmp.path);
       const panel = session(tmp.path, noCursor);
-      await panel.run('provider', 3);
+      panel.state.context.set('agente', 'echo');
+      await panel.run('provider', 2);
       expect(panel.fake.written).toEqual([warn('O provider cursor não está instalado nesta máquina.')]);
-      expect(panel.state.values.get('provider')).toBeUndefined();
+      expect(panel.state.values.get('provider:echo')).toBeUndefined();
 
       await panel.run('provider', 1);
-      expect(panel.state.values.get('provider')).toBe('claude');
-      expect(panel.fake.written[1]).toBe(`Provider: ${bold('claude')}.`);
-      expect(panel.state.labels.size).toBe(0);
+      expect(panel.state.values.get('provider:echo')).toBe('claude');
+      expect(panel.fake.written[1]).toBe(`Provider de echo: ${bold('claude')}.`);
       await panel.run('provider', 1);
       expect(panel.fake.written).toHaveLength(2);
+
+      // Another agent has its own: it does not take echo's.
+      panel.state.context.set('agente', 'local');
+      expect(providerOf(panel, 'local')).toBe('auto');
+      panel.state.context.set('agente', 'echo');
+      expect(providerOf(panel, 'echo')).toBe('claude');
     } finally {
       tmp.cleanup();
     }
@@ -170,14 +180,14 @@ describe('/provider', () => {
       await panel.run('agents', 0);
       // Under auto, the first provider echo declares: claude.
       await panel.run('model', 1);
-      expect(panel.state.values.get('modelo')).toBe('claude-3-5-sonnet');
+      expect(panel.state.values.get('modelo:echo')).toBe('claude-3-5-sonnet');
 
       await panel.run('provider', 1);
-      expect(panel.state.values.get('modelo')).toBe('claude-3-5-sonnet');
+      expect(panel.state.values.get('modelo:echo')).toBe('claude-3-5-sonnet');
       expect(panel.state.labels.get('provider')).toBe(bold('claude'));
 
       await panel.run('provider', 2);
-      expect(panel.state.values.get('modelo')).toBeUndefined();
+      expect(panel.state.values.get('modelo:echo')).toBeUndefined();
       expect(panel.fake.written).toContain(
         warn('O modelo claude-3-5-sonnet não é de cursor no agente: volta ao padrão.'),
       );
@@ -226,17 +236,17 @@ describe('/model', () => {
           { label: 'claude-3-5-sonnet', detail: '', current: false },
         ],
       });
-      expect(panel.state.values.get('modelo')).toBe('claude-3-5-sonnet');
+      expect(panel.state.values.get('modelo:echo')).toBe('claude-3-5-sonnet');
       expect(panel.state.labels.get('modelo')).toBe(bold('claude-3-5-sonnet'));
-      expect(panel.fake.written.at(-1)).toBe(`Modelo: ${bold('claude-3-5-sonnet')}.`);
+      expect(panel.fake.written.at(-1)).toBe(`Modelo de echo: ${bold('claude-3-5-sonnet')}.`);
 
       await panel.run('model', 1);
       await panel.run('model', 99);
       await panel.run('model', undefined);
-      expect(panel.state.values.get('modelo')).toBe('claude-3-5-sonnet');
+      expect(panel.state.values.get('modelo:echo')).toBe('claude-3-5-sonnet');
 
       await panel.run('model', 0);
-      expect(panel.state.values.get('modelo')).toBeUndefined();
+      expect(panel.state.values.get('modelo:echo')).toBeUndefined();
       expect(panel.state.labels.get('modelo')).toBe(gray('padrão do claude'));
     } finally {
       tmp.cleanup();
@@ -325,7 +335,7 @@ describe('/mode', () => {
     }
   });
 
-  it('keeps the mode another agent takes, and goes back to its default model', async () => {
+  it('keeps the mode for another agent, which has its own model, and the model chosen for the first', async () => {
     const tmp = makeTmpDir('choices');
     try {
       agentsFolder(tmp.path);
@@ -335,7 +345,12 @@ describe('/mode', () => {
       await panel.run('model', 1);
       await panel.run('agents', 1);
 
-      expect([panel.state.values.get('modo'), panel.state.values.get('modelo')]).toEqual(['ask', undefined]);
+      expect(panel.state.values.get('modo')).toBe('ask');
+      expect([panel.state.values.get('modelo:echo'), panel.state.values.get('modelo:local')]).toEqual([
+        'claude-3-5-sonnet',
+        undefined,
+      ]);
+      expect(panel.state.labels.get('modelo')).toBe(gray('padrão do claude'));
     } finally {
       tmp.cleanup();
     }

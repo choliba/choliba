@@ -4,7 +4,7 @@ import { listAgents } from './agent-loader';
 import { agentPaint } from './agents-panel-card';
 import { runChoices } from './agents-panel-choices';
 import { talkToAgent } from './agents-panel-run';
-import { AGENT, agentsDir, MODEL, showRun } from './agents-panel-state';
+import { AGENT, agentsDir, showRun } from './agents-panel-state';
 
 /** `/agents`: the active agent, chosen among the workspace's; then what is sent with no `/` is its task. */
 const agentsPanelCommand: PanelCommand = {
@@ -31,9 +31,8 @@ const agentsPanelCommand: PanelCommand = {
     if (agent === undefined || agent.id === active) return;
     context.set(AGENT, agent.id);
     panel.write(`Agente ativo: ${agentPaint(container, agent)(agent.id)}.`);
-    // Another agent has its own models: back to its default. The provider and the mode stay (a mode the agent does
-    // not take gives way to its default).
-    context.set(MODEL, undefined);
+    // Its provider and model are its own, kept if chosen before; the mode stays (a mode the agent does not take gives
+    // way to its default).
     talkToAgent(container, context);
     showRun(container, context, panel);
   },

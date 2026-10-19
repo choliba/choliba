@@ -10,12 +10,26 @@ import { AGENT_PROVIDERS } from './agents.constants';
 import { isSandboxChoice, type SandboxChoice } from './runs/agents-flags';
 import { agentRunChoice } from './runs/run-choice';
 
-/** What the panel's session keeps about a run of an agent: the context keys of each choice. */
+/**
+ * What the panel's session keeps about its runs, the context keys of each choice. `AGENT` holds the session's agents,
+ * in the order they run, their ids joined by `,`: one is a run of that agent alone. The provider and the model are
+ * each agent's own (`agentKey`); the mode and the sandbox are the session's.
+ */
 export const AGENT = 'agente';
 export const PROVIDER = 'provider';
 export const MODEL = 'modelo';
 export const MODE = 'modo';
 export const SANDBOX = 'sandbox';
+
+/** The context key of the provider or the model chosen for `agent` alone: `provider:<id>`, `modelo:<id>`. */
+export function agentKey(choice: typeof PROVIDER | typeof MODEL, agent: string): string {
+  return `${choice}:${agent}`;
+}
+
+/** The ids of the session's agents, in the order they run; none before /agents. */
+export function sessionAgentIds(context: Pick<PanelContext, 'get'>): readonly string[] {
+  return (context.get(AGENT) ?? '').split(',').filter((id) => id !== '');
+}
 
 /** The context keys `/projects` and `/tickets` of `@choliba/projects` set. */
 export const PROJECT = 'projeto';
@@ -41,8 +55,8 @@ export function sessionArgv(
     agent.id,
     ...flag('--project', context.get(PROJECT), agent.projectRequired),
     ...ticket,
-    ...flag('--provider', context.get(PROVIDER)),
-    ...flag('--model', context.get(MODEL)),
+    ...flag('--provider', context.get(agentKey(PROVIDER, agent.id))),
+    ...flag('--model', context.get(agentKey(MODEL, agent.id))),
     ...flag('--mode', context.get(MODE)),
     ...flag('--sandbox', context.get(SANDBOX)),
     task,
@@ -62,9 +76,12 @@ export function agentsDir(container: Container): string {
   );
 }
 
-/** The active agent, read again from its folder; nothing when none is chosen or it no longer loads. */
+/**
+ * The active agent, the first of the session's, read again from its folder; nothing when none is chosen or it no
+ * longer loads.
+ */
 export function activeAgent(container: Container, context: PanelContext): AgentDefinition | undefined {
-  const id = context.get(AGENT);
+  const [id] = sessionAgentIds(context);
   if (id === undefined) return undefined;
   try {
     return loadAgent(agentsDir(container), id);
@@ -73,9 +90,9 @@ export function activeAgent(container: Container, context: PanelContext): AgentD
   }
 }
 
-/** The provider the session asks for: the one chosen with /provider, else `CHOL_AGENTS_PROVIDER`. */
-export function providerChoice(container: Container, context: PanelContext): string {
-  return context.get(PROVIDER) ?? container.get(agentsConfig.token).provider;
+/** The provider `agent` asks for: the one chosen for it with /provider, else `CHOL_AGENTS_PROVIDER`. */
+export function providerChoice(container: Container, context: PanelContext, agent: AgentDefinition): string {
+  return context.get(agentKey(PROVIDER, agent.id)) ?? container.get(agentsConfig.token).provider;
 }
 
 /** The provider `choice` names on this machine (under `auto`, the first installed), or nothing when none is. */
@@ -89,7 +106,7 @@ export function installedProvider(container: Container, choice: string): AgentPr
 
 /**
  * The provider and the model a run of `agent` takes in the session, as `choliba run agent` picks them from the
- * providers the agent declares (`agentRunChoice`): the session's /provider and /model unless `ask` says otherwise.
+ * providers the agent declares (`agentRunChoice`): the /provider and /model chosen for it, unless `ask` says otherwise.
  */
 export function sessionRun(
   container: Container,
@@ -100,8 +117,8 @@ export function sessionRun(
   return agentRunChoice(
     agent,
     {
-      provider: 'provider' in ask ? ask.provider : context.get(PROVIDER),
-      model: 'model' in ask ? ask.model : context.get(MODEL),
+      provider: 'provider' in ask ? ask.provider : context.get(agentKey(PROVIDER, agent.id)),
+      model: 'model' in ask ? ask.model : context.get(agentKey(MODEL, agent.id)),
       preference: container.get(agentsConfig.token).provider,
     },
     container.get(AGENT_PROVIDERS),
@@ -147,7 +164,7 @@ function runLabels(
   const run = sessionRun(container, context, agent);
   if ('error' in run) return { provider: warn('indisponível'), model: gray('—'), problem: run.error };
   const { id } = run.resolved.adapter;
-  const named = `${bold(id)}${providerChoice(container, context) === AUTO ? gray(' (auto)') : ''}`;
+  const named = `${bold(id)}${providerChoice(container, context, agent) === AUTO ? gray(' (auto)') : ''}`;
   return { provider: named, model: run.model === undefined ? gray(`padrão do ${id}`) : bold(run.model) };
 }
 

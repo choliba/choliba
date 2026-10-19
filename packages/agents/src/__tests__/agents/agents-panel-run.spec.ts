@@ -213,8 +213,8 @@ describe('talkToAgent', () => {
 
       for (const [key, value] of [
         ['ticket', 'site-1'],
-        ['provider', 'claude'],
-        ['modelo', 'sonnet'],
+        ['provider:ticketed', 'claude'],
+        ['modelo:ticketed', 'sonnet'],
         ['modo', 'plan'],
         ['sandbox', 'docker'],
       ] as const) {
