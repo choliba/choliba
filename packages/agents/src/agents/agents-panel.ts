@@ -2,7 +2,6 @@ import { messageOf, type ChatPanel, type PanelCommand } from '@choliba/core';
 
 import type { AgentDefinition } from '../common';
 import { listAgents } from './agent-loader';
-import { agentPaint } from './agents-panel-card';
 import { runChoices } from './agents-panel-choices';
 import { RESUME_AT, resumeSequence, talkToAgent } from './agents-panel-run';
 import { AGENT, agentsDir, sessionAgentIds, showRun } from './agents-panel-state';
@@ -12,17 +11,19 @@ const NO_OTHER = 'nenhum outro';
 
 /**
  * Picks the agents after `first`, in order: each choice adds one at the end of the sequence, among those not in it
- * yet; Enter on "nenhum outro" or Esc ends it.
+ * yet, and is `picked` at once; Enter on "nenhum outro" or Esc ends it.
  */
 async function sequenceAfter(
   first: AgentDefinition,
   agents: readonly AgentDefinition[],
   panel: ChatPanel,
-): Promise<readonly AgentDefinition[]> {
+  picked: (sequence: readonly AgentDefinition[]) => void,
+): Promise<void> {
   const sequence = [first];
+  picked(sequence);
   for (;;) {
     const left = agents.filter((agent) => !sequence.includes(agent));
-    if (left.length === 0) return sequence;
+    if (left.length === 0) return;
     const chosen = await panel.choose({
       title: `Depois de ${sequence.map((agent) => agent.id).join(' >>> ')}`,
       description: 'O próximo agente da sequência, que roda quando o anterior termina e você confirma.',
@@ -32,14 +33,16 @@ async function sequenceAfter(
       ],
     });
     const next = chosen === undefined ? undefined : left[chosen - 1];
-    if (next === undefined) return sequence;
+    if (next === undefined) return;
     sequence.push(next);
+    picked(sequence);
   }
 }
 
 /**
  * `/agents`: the session's agents, chosen among the workspace's: the first, then those that run after it, in order
- * (one is a run of that agent alone); then what is sent with no `/` is the first one's task.
+ * (one is a run of that agent alone), each with its card in the header as soon as it is chosen; then what is sent with
+ * no `/` is the first one's task.
  */
 const agentsPanelCommand: PanelCommand = {
   name: 'agents',
@@ -63,17 +66,16 @@ const agentsPanelCommand: PanelCommand = {
     });
     const first = chosen === undefined ? undefined : agents[chosen];
     if (first === undefined) return;
-    const sequence = await sequenceAfter(first, agents, panel);
-    const ids = sequence.map((agent) => agent.id).join(',');
-    if (ids === context.get(AGENT)) return;
-    context.set(AGENT, ids);
-    context.set(RESUME_AT, undefined);
-    const names = sequence.map((agent) => agentPaint(container, agent)(agent.id));
-    panel.write(sequence.length === 1 ? `Agente ativo: ${names.join('')}.` : `Sequência: ${names.join(' >>> ')}.`);
+    const before = context.get(AGENT);
     // Each agent's provider and model are its own, kept if chosen before; the mode stays (a mode an agent does not
     // take gives way to its default).
     talkToAgent(container, context);
-    showRun(container, context, panel);
+    await sequenceAfter(first, agents, panel, (sequence) => {
+      context.set(AGENT, sequence.map((agent) => agent.id).join(','));
+      showRun(container, context, panel);
+    });
+    // Another sequence has nothing to resume.
+    if (context.get(AGENT) !== before) context.set(RESUME_AT, undefined);
   },
 };
 

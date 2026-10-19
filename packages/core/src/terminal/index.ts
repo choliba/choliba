@@ -8,6 +8,7 @@ export {
   loadPanelToolkit,
   openOpenTuiPanel,
   CARD_RULE,
+  cardElapsed,
   openPanel,
   pixelMap,
   type ArtColor,
@@ -26,6 +27,7 @@ export {
   type PanelQuestion,
   type PanelReply,
   type PanelToolkit,
+  type PanelVoice,
 } from './panel';
 export {
   ansiChunks,

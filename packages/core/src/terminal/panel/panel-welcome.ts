@@ -1,5 +1,5 @@
 import { paintAnsi, type AnsiColor } from '../../theme';
-import { truncateVisible } from '../frame';
+import { truncateVisible, visibleWidth } from '../frame';
 import type { PanelBox, PanelScroll, PanelText, PanelToolkit } from './interfaces/panel.interface';
 import { halfBlockArt, type ArtCell, type ArtPixels } from './panel-art';
 import { PALETTE } from './panel-palette';
@@ -158,6 +158,24 @@ export interface PanelCard {
   readonly busy?: boolean;
   /** The color of its spinner (an agent's card, the agent's color); white when absent. */
   readonly color?: AnsiColor;
+  /** Its left border in this color (an agent's card, as its lines in the conversation); gray, as the rest, when absent. */
+  readonly stripe?: AnsiColor;
+  /** Joined to the card before it by `>>>`: the next of a sequence. */
+  readonly joined?: boolean;
+  /**
+   * Its situation in words (`aguardando`, `concluído · 2m10s`), centered on its first line, above its summary; while
+   * busy, the spinner's bar and how long it has run (`since`) take its place, and its title has no spinner. A card that
+   * says its state narrows, when the header lacks room, so every card of the flow fits.
+   */
+  readonly state?: string;
+  /** When its work began, in ms since the epoch: the time a busy card with a `state` shows. */
+  readonly since?: number;
+}
+
+/** How long a card's work has run, as its state line says it: `0m41s`, `12m05s`. */
+export function cardElapsed(ms: number): string {
+  const seconds = Math.max(0, Math.floor(ms / 1000));
+  return `${String(Math.floor(seconds / 60))}m${String(seconds % 60).padStart(2, '0')}s`;
 }
 
 /** How many cells the bar of a busy card's spinner has. */
@@ -182,13 +200,40 @@ function cardTitle(marker: string, card: PanelCard, busy: boolean): string {
 /** A card's width, in columns, its border included. */
 const CARD_WIDTH = 44;
 
-/** The columns a card's text has: its width less the borders, the margins inside them and the scroll bar. */
-const CARD_TEXT_WIDTH = CARD_WIDTH - 5;
+/** The narrowest a card that says its state gets when the header lacks room. */
+const CARD_MIN_WIDTH = 20;
+
+/** The columns of text a card `width` wide has: its width less the borders, the margins inside them and the scroll bar. */
+function textWidth(width: number): number {
+  return width - 5;
+}
+
+/** What joins a card to the one before it, in gray, on its second row. */
+const JOINT = '>>>';
+
+/** The header's gap between two of its parts. */
+const HEADER_GAP = 2;
+
+/** `line` centered in `width` columns. */
+function centered(line: string, width: number): string {
+  return `${' '.repeat(Math.max(0, Math.floor((width - visibleWidth(line)) / 2)))}${line}`;
+}
+
+/** The first line of a card that says its state: the state, or while busy the spinner's bar and how long it has run. */
+function stateLine(card: PanelCard, frame: number, now: number): string | undefined {
+  if (card.state === undefined) return undefined;
+  if (card.busy !== true) return card.state;
+  const bar = paintAnsi(card.color ?? 'white', spinnerBar(frame));
+  return `${bar} ${cardElapsed(now - (card.since ?? now))}`;
+}
 
 /** A card line that is a rule across the card, in gray: what separates its parts. */
 export const CARD_RULE = '---';
 
-const RULE = `\u001b[90m${'─'.repeat(CARD_TEXT_WIDTH)}\u001b[39m`;
+/** A rule across `width` columns of a card's text, in gray. */
+function ruleOf(width: number): string {
+  return `\u001b[90m${'─'.repeat(width)}\u001b[39m`;
+}
 
 /**
  * Every open card's rows, its border included: all cards stand as tall, and what does not fit scrolls inside one. A
@@ -213,6 +258,7 @@ const CARD_BACKGROUND = '#1e1e1e';
 export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk[] }, Chunk>(
   welcome: WelcomeKit<Context, Node, Styled, Chunk>,
   header: PanelHeader,
+  columns: () => number,
 ): Header<Node> {
   const { kit, renderer, styled } = welcome;
   const box = new kit.BoxRenderable(renderer, {
@@ -225,12 +271,17 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     zIndex: 1,
   });
   // Half a row lower, the icon starts and ends where the collapsed cards' borders run, in the middle of a row.
-  if (header.icon !== undefined) box.add(artBox(welcome, halfBlockArt(header.icon, true), 0));
+  const icon = header.icon === undefined ? undefined : halfBlockArt(header.icon, true);
+  if (icon !== undefined) box.add(artBox(welcome, icon, 0));
+  // What the icon and the lines take of the header's width, its padding and their gaps included.
+  const iconWidth = icon === undefined ? 0 : Math.max(0, ...icon.map((row) => row.length)) + HEADER_GAP;
+  let headingWidth = 0;
   const column = new kit.BoxRenderable(renderer, { flexDirection: 'column' });
   box.add(column);
   // A line no longer given keeps its row, empty, so the header does not jump.
   const rows: PanelText<Styled>[] = [];
   const heading = (lines: readonly string[]): void => {
+    headingWidth = Math.max(0, ...lines.map(visibleWidth));
     lines.forEach((line, index) => {
       const row = rows[index];
       if (row !== undefined) {
@@ -256,6 +307,10 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     /** Its footer, under the lines that scroll, and the footer's rows: a rule, then its lines. */
     readonly footer: Node & PanelBox<Node>;
     readonly footerRows: PanelText<Styled>[];
+    /** Its left border in its `stripe` color, drawn over the gray one. */
+    readonly stripe: PanelText<Styled>;
+    /** The `>>>` before it, shown when it is `joined`. */
+    readonly joint: Node & PanelText<Styled>;
   }
   const made = new Map<string, Card>();
   const cardOf = (shown: PanelCard): Card => {
@@ -310,8 +365,27 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     const footer = new kit.BoxRenderable(renderer, { flexDirection: 'column', flexShrink: 0, paddingLeft: 1 });
     footer.visible = false;
     card.wrapper.add(footer);
+    // Over the left border, between its corners, in the slot: the card's own border has one color.
+    const stripe = new kit.TextRenderable(renderer, {
+      content: '',
+      wrapMode: 'none',
+      position: 'absolute',
+      top: 1,
+      left: 0,
+      width: 1,
+      zIndex: 3,
+    });
+    stripe.visible = false;
+    slot.add(stripe);
+    const joint = new kit.TextRenderable(renderer, {
+      content: styled(['', `\u001b[90m${JOINT}\u001b[39m`]),
+      wrapMode: 'none',
+      height: 2,
+    });
+    joint.visible = false;
+    box.add(joint);
     box.add(slot);
-    const built = { slot, box: card, rows, spinner, footer, footerRows: [] };
+    const built = { slot, box: card, rows, spinner, footer, footerRows: [], stripe, joint };
     made.set(title, built);
     return built;
   };
@@ -333,21 +407,52 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
         cards(current);
       }, SPIN_MS);
   };
+  /**
+   * The width of a card that says its state: the header's width, less the icon, the lines and the other cards, shared
+   * among them, between the narrowest and a card's own width.
+   */
+  const flowWidth = (shown: readonly PanelCard[]): number => {
+    const flowing = shown.filter((each) => each.state !== undefined).length;
+    const taken = shown.reduce(
+      (sum, each) =>
+        sum +
+        HEADER_GAP +
+        (each.state === undefined ? CARD_WIDTH : 0) +
+        (each.joined === true ? JOINT.length + HEADER_GAP : 0),
+      1 + iconWidth + headingWidth,
+    );
+    const share = Math.floor((columns() - taken) / Math.max(1, flowing));
+    return Math.min(CARD_WIDTH, Math.max(CARD_MIN_WIDTH, share));
+  };
   const cards = (shown: readonly PanelCard[]): void => {
     current = shown;
     spin(shown.some((each) => each.busy === true));
-    for (const [title, card] of made) card.slot.visible = shown.some((each) => each.title === title);
+    for (const [title, card] of made) {
+      card.slot.visible = shown.some((each) => each.title === title);
+      card.joint.visible = false;
+    }
+    const narrow = flowWidth(shown);
+    const now = Date.now();
     for (const each of shown) {
       const card = cardOf(each);
       // Taken out and put back, each card goes after the ones before it: the header follows the order given.
+      box.remove(card.joint);
       box.remove(card.slot);
+      box.add(card.joint);
       box.add(card.slot);
+      card.joint.visible = each.joined === true;
+      const width = each.state === undefined ? CARD_WIDTH : narrow;
+      const text = textWidth(width);
+      card.slot.width = width;
+      card.box.width = width;
       const folded = !expanded.has(each.title);
+      const state = stateLine(each, frame, now);
+      const head = state === undefined ? [] : [centered(truncateVisible(state, text), text)];
       const lines = folded
-        ? (each.summary ?? [each.lines[0] ?? ''])
+        ? [...head, ...(each.summary ?? [each.lines[0] ?? ''])]
             .slice(0, COLLAPSED_LINES)
-            .map((line) => truncateVisible(line, CARD_TEXT_WIDTH))
-        : each.lines;
+            .map((line) => truncateVisible(line, text))
+        : [...head, ...each.lines];
       // A card gets the rows its longest content asks for; what does not fit its height scrolls.
       while (card.rows.length < lines.length) {
         const row = new kit.TextRenderable(renderer, { content: '', wrapMode: 'word', height: 1 });
@@ -355,16 +460,17 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
         card.rows.push(row);
       }
       card.slot.visible = true;
-      const busy = each.busy === true;
-      card.box.title = cardTitle(folded ? '▸' : '▾', each, busy);
+      // A card that says its state turns its bar in its first line, not in its title.
+      const busy = each.busy === true && state === undefined;
+      card.box.title = truncateVisible(cardTitle(folded ? '▸' : '▾', each, busy), width - 4);
       card.spinner.visible = busy;
       card.spinner.content = busy ? styled([paintAnsi(each.color ?? 'white', spinnerBar(frame))]) : '';
       // A long line wraps between words in the card's width, its row as tall as the lines it takes.
       card.rows.forEach((row, index) => {
         const line = lines[index];
         row.visible = line !== undefined;
-        row.content = line === undefined ? '' : styled([line === CARD_RULE ? RULE : line]);
-        row.height = line === undefined ? 1 : wrappedRows(line, CARD_TEXT_WIDTH);
+        row.content = line === undefined ? '' : styled([line === CARD_RULE ? ruleOf(text) : line]);
+        row.height = line === undefined ? 1 : wrappedRows(line, text);
       });
       const footer = folded || each.footer === undefined ? [] : [CARD_RULE, ...each.footer];
       while (card.footerRows.length < footer.length) {
@@ -377,9 +483,15 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
         const line = footer[index];
         row.visible = line !== undefined;
         row.content =
-          line === undefined ? '' : styled([line === CARD_RULE ? RULE : truncateVisible(line, CARD_TEXT_WIDTH)]);
+          line === undefined ? '' : styled([line === CARD_RULE ? ruleOf(text) : truncateVisible(line, text)]);
       });
       card.box.height = folded ? COLLAPSED_HEIGHT : CARD_HEIGHT;
+      const stripe = each.stripe;
+      card.stripe.visible = stripe !== undefined;
+      const inside = card.box.height - 2;
+      card.stripe.height = inside;
+      card.stripe.content =
+        stripe === undefined ? '' : styled(Array.from({ length: inside }, () => paintAnsi(stripe, '┃')));
     }
   };
   const toggleCard = (title: string): void => {

@@ -1,17 +1,26 @@
-import { formatElapsed, type ChatPanel, type Container, type Panel, type PanelContext } from '@choliba/core';
+import {
+  cardElapsed,
+  formatElapsed,
+  type ChatPanel,
+  type Container,
+  type Panel,
+  type PanelContext,
+} from '@choliba/core';
 import { holdApp } from '@choliba/projects';
 
 import type { AgentDefinition } from '../common';
-import { loadAgent } from './agent-loader';
+import { agentVoice } from './agents-panel-card';
 import {
-  AGENT,
-  agentsDir,
+  agentKey,
   bold,
   flag,
   gray,
   PROJECT,
+  sessionAgent,
   sessionAgentIds,
   sessionArgv,
+  showRun,
+  STATE,
   TICKET,
   warn,
 } from './agents-panel-state';
@@ -76,15 +85,6 @@ interface Talk {
 /** The sessions whose conversation goes to their agents already: one per session, whichever agents it has. */
 const talks = new WeakMap<PanelContext, Talk>();
 
-/** The agent `id` of the session, read again from its folder; nothing when it no longer loads. */
-function sessionAgent(container: Container, id: string): AgentDefinition | undefined {
-  try {
-    return loadAgent(agentsDir(container), id);
-  } catch {
-    return undefined;
-  }
-}
-
 /** Asks whether to go on to `next` after an agent ended with code 0: Enter goes on, Esc stops the sequence. */
 async function goOn(next: string, panel: ChatPanel): Promise<boolean> {
   const chosen = await panel.choose({
@@ -131,7 +131,13 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     const done = (): void => {
       closeSession();
       context.busy(undefined);
-      context.spin(AGENT, false);
+      context.spin(agent.id, false);
+    };
+    // How the run went, on the agent's card: `concluído` or `falhou`, and how long it took.
+    const ended = (code: number): void => {
+      const took = cardElapsed(Date.now() - startedAt);
+      context.set(agentKey(STATE, agent.id), code === 0 ? `concluído · ${took}` : warn(`falhou · ${took}`));
+      showRun(container, context);
     };
     // Ctrl+C stops the agent's session while it is open, else the command of the step running; and the sequence.
     context.busy(() => {
@@ -139,10 +145,12 @@ export function talkToAgent(container: Container, context: PanelContext): void {
       if (inSession) stopRun?.();
       else steps.abort();
     });
+    const voice = agentVoice(container, agent);
     const hosted = (): Promise<Panel> =>
       Promise.resolve({
+        // The agent's lines, in its block: a border in its color on their left, its name first.
         write: (line) => {
-          panel.write(line);
+          panel.write(line, voice);
         },
         // How long the run has gone, always last in the status line, after the mode and the sandbox.
         refresh: () => {
@@ -161,7 +169,7 @@ export function talkToAgent(container: Container, context: PanelContext): void {
       });
     const startedAt = Date.now();
     // The agent's card turns a spinner while it runs; the chat keeps only what the run says.
-    context.spin(AGENT, true);
+    context.spin(agent.id, true);
     try {
       const code = await container.get(AGENTS).runHosted(argv, {
         panel: hosted,
@@ -174,12 +182,14 @@ export function talkToAgent(container: Container, context: PanelContext): void {
         },
       });
       done();
+      ended(code);
       const how = code === 0 ? bold('código 0') : warn(`código ${String(code)}`);
       panel.answer(`${agent.id} terminou: ${how} ${gray(`· ${duration(Date.now() - startedAt)}`)}`);
       return code;
     } catch (error) {
       // An error nothing expected ends this run in the conversation; the panel stays usable for the next one.
       done();
+      ended(1);
       panel.answer(warn(`${agent.id} parou por um erro: ${error instanceof Error ? error.message : String(error)}`));
       return 1;
     }
@@ -190,7 +200,9 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     const id = ids[at];
     if (ids.length < 2 || id === undefined) return;
     context.set(RESUME_AT, String(at));
-    panel.answer(warn(`A sequência parou em ${id}. /seguir retoma dele.`));
+    const ticket = context.get(TICKET);
+    const kept = ticket === undefined ? '' : `, com o ticket ${ticket}`;
+    panel.answer(warn(`A sequência parou em ${id}. /seguir retoma dele${kept}.`));
   };
 
   /** Runs the session's agents from the one at `from`, the first with `task` (its own default task without one). */
@@ -201,6 +213,9 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     running = true;
     interrupt.asked = false;
     context.set(RESUME_AT, undefined);
+    // The agents about to run wait again on their cards.
+    for (const id of ids.slice(from)) context.set(agentKey(STATE, id), undefined);
+    showRun(container, context);
     try {
       for (const [offset, id] of ids.slice(from).entries()) {
         const at = from + offset;

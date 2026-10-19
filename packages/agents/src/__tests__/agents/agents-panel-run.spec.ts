@@ -3,7 +3,9 @@ import { join } from 'node:path';
 
 import {
   Container,
+  PLATFORM,
   ProcessRunnerService,
+  THEME,
   ThemeService,
   WORKSPACE_ROOT,
   type Panel,
@@ -15,7 +17,7 @@ import { ProviderRegistry } from '../../common';
 import { ClaudeAgentProvider } from '../../providers';
 import { agentsConfig } from '../../agents/agents-config';
 import { resumeSequence, talkToAgent } from '../../agents/agents-panel-run';
-import { AGENTS } from '../../agents/agents.constants';
+import { AGENT_PROVIDERS, AGENTS } from '../../agents/agents.constants';
 import { AgentsService, type HostedRun } from '../../agents/agents.service';
 import { makeTmpDir } from '../helpers/tmp';
 
@@ -46,6 +48,10 @@ function conversation(dir: string, agent: string) {
   const container = new Container();
   container.provide(agentsConfig.token, () => ({ ...agentsConfig.read([]), agentsDir: dir }));
   container.provide(WORKSPACE_ROOT, () => '/');
+  const platform = fakePlatform({ which: (bin: string) => `/usr/bin/${bin}` });
+  container.provide(PLATFORM, () => platform);
+  container.provide(THEME, () => new ThemeService({}, platform.stdout, false, {}));
+  container.provide(AGENT_PROVIDERS, () => new ProviderRegistry([new ClaudeAgentProvider()]));
   const service = {
     runHosted: (argv: readonly string[], host: HostedRun) =>
       new Promise<number>((resolve, reject) => {
@@ -77,13 +83,16 @@ describe('talkToAgent', () => {
       const [run] = talk.asked;
       expect(run?.argv).toEqual(['echo', 'diga olá']);
       expect(talk.fake.written).toEqual([]);
-      expect(talk.state.spinning.has('agente')).toBe(true);
+      expect(talk.state.spinning.has('echo')).toBe(true);
 
       const options = { title: 'echo', titleColor: 'green', footer: () => ['claude · 00:01'], hint: '' };
       const panel: Panel | undefined = await run?.host.panel(options as PanelOptions);
       panel?.write('olá\n');
       panel?.refresh();
       expect(talk.fake.written.at(-1)).toBe('olá\n');
+      // The agent's lines go in its block, under its name.
+      expect(talk.fake.voices.at(-1)).toBe('echo');
+      expect(talk.state.cards.get('echo')?.state).toBe(gray('aguardando'));
       expect(talk.state.statuses.get('execução')).toMatch(/^\d{2}:\d{2}:\d{2}\.\d{3}$/);
 
       const sent: string[] = [];
@@ -106,6 +115,8 @@ describe('talkToAgent', () => {
       await talk.settle();
       expect(talk.fake.written.at(-1)).toBe(`echo terminou: ${bold('código 0')} ${gray('· 0s')}`);
       expect(talk.state.spinning.size).toBe(0);
+      // Its card says how the run went.
+      expect(talk.state.cards.get('echo')?.state).toBe('concluído · 0m00s');
 
       talk.state.send('de novo', talk.fake.panel);
       await talk.settle();
@@ -164,7 +175,7 @@ describe('talkToAgent', () => {
       expect([interrupted, second?.host.signal?.aborted]).toEqual([1, false]);
 
       panel?.close();
-      expect(talk.state.spinning.has('agente')).toBe(true);
+      expect(talk.state.spinning.has('echo')).toBe(true);
       talk.state.send('enquanto os steps rodam', talk.fake.panel);
       await talk.settle();
       expect(talk.asked).toHaveLength(2);
@@ -337,16 +348,21 @@ describe('talkToAgent', () => {
       await talk.settle();
       expect(talk.state.values.get('retomar')).toBe('0');
       expect(talk.fake.written.at(-1)).toBe(warn('A sequência parou em echo. /seguir retoma dele.'));
+      expect(talk.state.cards.get('echo')?.state).toBe(warn('falhou · 0m00s'));
 
       // Esc at the pause stops it before the next one.
       resumeSequence(talk.state.context, talk.fake.panel);
       await talk.settle();
       expect(talk.asked[1]?.argv).toEqual(['echo', '']);
       talk.fake.answerNext(undefined);
+      // The ticket the session keeps is the one /seguir resumes with.
+      talk.state.context.set('ticket', 'app-1');
       talk.asked[1]?.end(0);
       await talk.settle();
       expect(talk.state.values.get('retomar')).toBe('1');
-      expect(talk.fake.written.at(-1)).toBe(warn('A sequência parou em with-project. /seguir retoma dele.'));
+      expect(talk.fake.written.at(-1)).toBe(
+        warn('A sequência parou em with-project. /seguir retoma dele, com o ticket app-1.'),
+      );
 
       // Ctrl+C stops the run and the sequence, at the agent it stopped.
       resumeSequence(talk.state.context, talk.fake.panel);

@@ -21,8 +21,11 @@ export const MODEL = 'modelo';
 export const MODE = 'modo';
 export const SANDBOX = 'sandbox';
 
+/** The context key of how the last run of an agent went, as its card says it: `estado:<id>`. */
+export const STATE = 'estado';
+
 /** The context key of the provider or the model chosen for `agent` alone: `provider:<id>`, `modelo:<id>`. */
-export function agentKey(choice: typeof PROVIDER | typeof MODEL, agent: string): string {
+export function agentKey(choice: typeof PROVIDER | typeof MODEL | typeof STATE, agent: string): string {
   return `${choice}:${agent}`;
 }
 
@@ -82,7 +85,11 @@ export function agentsDir(container: Container): string {
  */
 export function activeAgent(container: Container, context: PanelContext): AgentDefinition | undefined {
   const [id] = sessionAgentIds(context);
-  if (id === undefined) return undefined;
+  return id === undefined ? undefined : sessionAgent(container, id);
+}
+
+/** The agent `id` of the session, read again from its folder; nothing when it no longer loads. */
+export function sessionAgent(container: Container, id: string): AgentDefinition | undefined {
   try {
     return loadAgent(agentsDir(container), id);
   } catch {
@@ -168,23 +175,33 @@ function runLabels(
   return { provider: named, model: run.model === undefined ? gray(`padrão do ${id}`) : bold(run.model) };
 }
 
+/** The agents whose cards each session shows: a card of an agent no longer in the session is taken out. */
+const carded = new WeakMap<PanelContext, readonly string[]>();
+
 /**
  * Shows what a run would take, found as `choliba run agent` finds it: the mode and the sandbox in the status line, from
- * the session's start; with an agent, the provider and the model in the header's column and in the footer of the agent's card,
- * whose collapsed summary says the mode and the model. What would stop the run shows as one word in yellow, its reason
- * written in the `panel`'s chat, so the header keeps its size.
+ * the session's start; with agents, the first one's provider and model in the header's column, and a card per agent of
+ * the session, in its order, with its own provider and model and how its last run went. What would stop a run shows as
+ * one word in yellow, its reason written in the `panel`'s chat, so the header keeps its size.
  */
 export function showRun(container: Container, context: PanelContext, panel?: Pick<ChatPanel, 'write'>): void {
   const agent = activeAgent(container, context);
   showMode(container, context, agent);
+  const ids = sessionAgentIds(context);
+  for (const gone of (carded.get(context) ?? []).filter((id) => !ids.includes(id))) context.show(gone, undefined);
+  carded.set(context, ids);
   if (agent === undefined) return;
-  const mode = modeChoice(context, agent);
-  const labels = runLabels(container, context, agent);
-  context.label(PROVIDER, labels.provider);
-  context.label(MODEL, labels.model);
-  if (labels.problem !== undefined) panel?.write(warn(labels.problem));
-  const run = `${bold(mode)} ${gray('·')} ${labels.model}`;
-  context.show(AGENT, agentCard(container, agent, run, labels, context.get(TICKET)));
+  const first = runLabels(container, context, agent);
+  context.label(PROVIDER, first.provider);
+  context.label(MODEL, first.model);
+  ids.forEach((id, at) => {
+    const each = id === agent.id ? agent : sessionAgent(container, id);
+    if (each === undefined) return;
+    const labels = each === agent ? first : runLabels(container, context, each);
+    if (labels.problem !== undefined) panel?.write(warn(labels.problem));
+    const state = context.get(agentKey(STATE, id));
+    context.show(id, agentCard(container, each, labels, { at, state }, context.get(TICKET)));
+  });
 }
 
 /** The sessions whose Shift+Tab already moves the mode: the key is listened to once per session. */

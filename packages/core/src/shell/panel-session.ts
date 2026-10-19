@@ -56,11 +56,17 @@ function sessionContext(view: ContextView): PanelContext {
   const cards = new Map<string, PanelCard>();
   const labels = new Map<string, string>();
   const statuses = new Map<string, string>();
-  const spinning = new Set<string>();
+  // The cards spinning, and since when: a card that says its state shows how long it has.
+  const spinning = new Map<string, number>();
   const showCards = (): void => {
     const place = (each: PanelCard): number => each.order ?? Number.MAX_SAFE_INTEGER;
     const sorted = [...cards.values()].sort((one, other) => place(one) - place(other));
-    view.cards(sorted.map((each) => (spinning.has(each.title) ? { ...each, busy: true } : each)));
+    view.cards(
+      sorted.map((each) => {
+        const since = spinning.get(each.title);
+        return since === undefined ? each : { ...each, busy: true, since };
+      }),
+    );
   };
   const changes: ((key: string | undefined) => void)[] = [];
   const changed = (key: string | undefined): void => {
@@ -82,8 +88,8 @@ function sessionContext(view: ContextView): PanelContext {
       showCards();
     },
     spin: (title, busy) => {
-      if (busy) spinning.add(title);
-      else spinning.delete(title);
+      if (!busy) spinning.delete(title);
+      else if (!spinning.has(title)) spinning.set(title, Date.now());
       showCards();
     },
     label: (name, value) => {

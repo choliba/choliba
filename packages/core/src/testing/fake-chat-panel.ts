@@ -5,6 +5,8 @@ export interface FakeChatPanel {
   readonly panel: ChatPanel;
   /** What was written, and what was answered: a spec reads them as one conversation. */
   readonly written: string[];
+  /** Who wrote each line of `written`: the agent's name, or nothing for choliba's own lines. */
+  readonly voices: (string | undefined)[];
   readonly said: string[];
   readonly suggested: (readonly string[])[];
   /** The hint beside the field given with each `suggest`. */
@@ -35,6 +37,7 @@ export interface FakeChatPanel {
 /** A panel that keeps what it is given and lets a spec act as the person; `choose` gives the first option. */
 export function fakeChatPanel(): FakeChatPanel {
   const written: string[] = [];
+  const voices: (string | undefined)[] = [];
   const said: string[] = [];
   const suggested: (readonly string[])[] = [];
   const hints: (string | undefined)[] = [];
@@ -51,14 +54,16 @@ export function fakeChatPanel(): FakeChatPanel {
   const filled: string[] = [];
   let closed = false;
   const panel: ChatPanel = {
-    write: (text) => {
+    write: (text, voice) => {
       written.push(text);
+      voices.push(voice?.name);
     },
     say: (text) => {
       said.push(text);
     },
     answer: (text) => {
       written.push(text);
+      voices.push(undefined);
     },
     choose: (request) => {
       choices.push(request);
@@ -87,6 +92,7 @@ export function fakeChatPanel(): FakeChatPanel {
     refresh: () => undefined,
     clear: () => {
       written.length = 0;
+      voices.length = 0;
       said.length = 0;
     },
     onInterrupt: (listener) => {
@@ -103,6 +109,7 @@ export function fakeChatPanel(): FakeChatPanel {
   return {
     panel,
     written,
+    voices,
     said,
     suggested,
     hints,

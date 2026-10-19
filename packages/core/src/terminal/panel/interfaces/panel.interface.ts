@@ -65,6 +65,7 @@ export interface PanelNode<Node> {
 export interface PanelBox<Node> extends PanelNode<Node> {
   remove(child: Node): void;
   height: number | 'auto' | `${number}%`;
+  width: number | 'auto' | `${number}%`;
   visible: boolean;
   /** The title on its top border. */
   set title(title: string | undefined);
@@ -111,6 +112,7 @@ export interface PanelScroll<Node> extends PanelNode<Node> {
   readonly scrollHeight: number;
   visible: boolean;
   height: number | 'auto' | `${number}%`;
+  width: number | 'auto' | `${number}%`;
   /** The title on its top border. */
   set title(title: string | undefined);
   /** Called when the person clicks it. */
@@ -150,8 +152,12 @@ export interface PanelBoxOptions {
   readonly zIndex?: number;
   readonly alignItems?: 'center';
   readonly justifyContent?: 'center';
-  /** A line above and below, as the field's row has, or all around. */
-  readonly border?: ('top' | 'bottom')[] | true;
+  /** A line above and below, as the field's row has, one on the left (an agent's lines), or all around. */
+  readonly border?: ('top' | 'bottom' | 'left')[] | true;
+  /** A hex color for its border; the toolkit's own when absent. */
+  readonly borderColor?: string;
+  /** `heavy` draws the border with thick lines (`┃`). */
+  readonly borderStyle?: 'heavy';
   /** The title on the top border. */
   readonly title?: string;
   readonly paddingRight?: number;

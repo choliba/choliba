@@ -81,9 +81,13 @@ describe('watchChoices, from the start of a panel session', () => {
       state.context.set('ticket', 'app-1');
 
       expect([...state.statuses.keys()]).toEqual(['modo', 'sandbox']);
-      expect(state.cards.get('agente')?.summary?.at(-1)).toBe('ticket \u001b[1mapp-1\u001b[22m');
+      expect(state.cards.get('echo')?.summary?.at(-1)).toBe('ticket \u001b[1mapp-1\u001b[22m');
       state.context.set('ticket', undefined);
-      expect(state.cards.get('agente')?.summary?.at(-1)).toBe(gray('sem ticket'));
+      expect(state.cards.get('echo')?.summary?.at(-1)).toBe(gray('sem ticket'));
+      // An agent of the sequence that no longer loads has no card.
+      state.context.set('agente', 'echo,gone');
+      state.context.set('ticket', undefined);
+      expect([...state.cards.keys()]).toEqual(['echo']);
     } finally {
       tmp.cleanup();
     }

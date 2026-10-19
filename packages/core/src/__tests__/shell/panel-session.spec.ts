@@ -186,8 +186,13 @@ describe('panelSession', () => {
     set?.show('sandbox', { lines: ['local'], order: 1 });
     expect(fake.cards.at(-1)?.map((card) => card.title)).toEqual(['sandbox', 'agente', 'projeto']);
 
+    jest.spyOn(Date, 'now').mockReturnValueOnce(1000).mockReturnValue(5000);
     set?.spin('agente', true);
     expect(fake.cards.at(-1)?.map((card) => card.busy)).toEqual([undefined, true, undefined]);
+    // Spun again while it spins, the card keeps the time it began.
+    set?.spin('agente', true);
+    expect(fake.cards.at(-1)?.[1]?.since).toBe(1000);
+    jest.restoreAllMocks();
     set?.spin('agente', false);
     expect(fake.cards.at(-1)?.[1]).toEqual({ title: 'agente', lines: ['echo'], order: 3 });
     set?.spin('agente', true);

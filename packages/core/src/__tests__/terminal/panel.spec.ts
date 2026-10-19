@@ -24,6 +24,7 @@ class FakeNode {
   readonly children: FakeNode[] = [];
   content: FakeStyled | string = '';
   height: number | 'auto' | `${number}%` = 'auto';
+  width: number | 'auto' | `${number}%` = 'auto';
   readonly scrolls: string[] = [];
   scrollHeight = 40;
   value = '';
@@ -122,6 +123,11 @@ class FakeNode {
   }
 }
 
+/** The cards' slots in a header: its boxes after the column of lines, the `>>>` between them left out. */
+function slotsOf(header: FakeNode | undefined): FakeNode[] {
+  return (header?.children ?? []).slice(1).filter((each) => each.kind === 'box');
+}
+
 /** Three by two pixels: red over blue, nothing over green, nothing over nothing. */
 const PIXELS = {
   data: new Uint8Array([255, 0, 0, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 0, 255, 0, 255, 0, 0, 0, 0]),
@@ -179,7 +185,6 @@ function fakeToolkit(failToOpen = false) {
       }
     },
     TextareaRenderable: class extends FakeNode {
-      width: number | 'auto' | `${number}%` = 'auto';
       flexGrow: number | null | undefined;
       constructor(_context: Renderer, options: object) {
         super('textarea', options as Record<string, unknown>);
@@ -440,6 +445,122 @@ describe('openPanel', () => {
     expect(other?.children[1]?.content).toEqual({ chunks: [{ text: 'uma' }] });
   });
 
+  it("writes an agent's lines in a block with a border in its color, its name first, until someone else writes", async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, OPTIONS);
+    const voice = { name: 'test-writer', color: 'green' } as const;
+    panel.write('→ Bash: bun test', voice);
+    panel.write('ok\nfeito', voice);
+    panel.answer('test-writer terminou');
+    panel.write('de novo', voice);
+    panel.write('sem voz');
+    panel.write('outra vez', voice);
+
+    const [scroll] = renderer.root.children[0]?.children ?? [];
+    const [block, , again, plain, last] = scroll?.children ?? [];
+    expect(block?.built).toMatchObject({
+      flexDirection: 'column',
+      marginTop: 1,
+      paddingLeft: 1,
+      border: ['left'],
+      borderStyle: 'heavy',
+      borderColor: '#0dbc79',
+    });
+    expect(block?.children.map((row) => row.content)).toEqual([
+      { chunks: [{ text: 'test-writer', fg: '#0dbc79', bold: true }] },
+      { chunks: [{ text: '→ Bash: bun test' }] },
+      { chunks: [{ text: 'ok' }] },
+      { chunks: [{ text: 'feito' }] },
+    ]);
+    // An answer between two writes ends the block: the next one opens another, with the name again.
+    expect(again?.children.length).toBe(2);
+    expect(plain?.content).toEqual({ chunks: [{ text: 'sem voz' }] });
+    expect(last?.children.length).toBe(2);
+
+    panel.clear();
+    panel.write('limpo', voice);
+    expect(scroll?.children.map((each) => each.children.length)).toEqual([2]);
+  });
+
+  it('joins the cards of a flow by >>>, each with its state centered, its border in its color, narrowed to fit', async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });
+    const header = renderer.root.children[0]?.children[0];
+    const flow = [
+      {
+        title: 'product-owner',
+        lines: ['po'],
+        summary: ['codex · gpt', 'ticket site-1', 'demais'],
+        state: 'concluído · 2m10s',
+        stripe: 'magenta',
+      },
+      { title: 'implementer-de-nome-longo', lines: ['im'], state: 'aguardando', joined: true, stripe: 'green' },
+    ] as const;
+    panel.cards(flow);
+    const [owner, implementer] = slotsOf(header);
+    const card = (slot: FakeNode | undefined) => slot?.children[0];
+    // With room, each card of the flow takes 24 columns of the 60.
+    expect([owner?.width, card(owner)?.width, implementer?.width]).toEqual([24, 24, 24]);
+    expect(card(owner)?.children.map((row) => row.content)).toEqual([
+      { chunks: [{ text: ' concluído · 2m10s' }] },
+      { chunks: [{ text: 'codex · gpt' }] },
+      { chunks: [{ text: 'ticket site-1' }] },
+    ]);
+    expect(card(implementer)?.title).toBe(' ▸ implementer-de-n…');
+    const [ownerJoint, , implementerJoint] = (header?.children ?? []).slice(1);
+    expect([ownerJoint?.visible, implementerJoint?.visible]).toEqual([false, true]);
+    expect(JSON.stringify(implementerJoint?.content)).toContain('>>>');
+    const stripe = owner?.children[1];
+    expect(stripe?.built).toMatchObject({ position: 'absolute', top: 1, left: 0, width: 1, zIndex: 3 });
+    expect([stripe?.visible, stripe?.height]).toEqual([true, 3]);
+    expect(stripe?.content).toEqual({
+      chunks: [
+        { text: '┃', fg: '#bc3fbc' },
+        { text: '\n' },
+        { text: '┃', fg: '#bc3fbc' },
+        { text: '\n' },
+        { text: '┃', fg: '#bc3fbc' },
+      ],
+    });
+    card(owner)?.onMouseDown?.();
+    expect([card(owner)?.children[0]?.content, stripe?.height]).toEqual([
+      { chunks: [{ text: ' concluído · 2m10s' }] },
+      8,
+    ]);
+
+    // Beside a card that keeps its width, the flow narrows down to the narrowest.
+    panel.cards([{ title: 'projeto', lines: ['site'] }, ...flow]);
+    expect(slotsOf(header).map((slot) => slot.width)).toEqual([44, 20, 20]);
+    expect(slotsOf(header)[0]?.children[1]?.visible).toBe(false);
+  });
+
+  it("turns a flow card's bar and its time in its first line while busy, with no spinner in its title", async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });
+    jest.useFakeTimers();
+    jest.setSystemTime(100_000);
+    try {
+      panel.cards([{ title: 'tester', lines: ['t'], state: 'aguardando', busy: true, since: 59_000, color: 'green' }]);
+      const [slot] = slotsOf(renderer.root.children[0]?.children[0]);
+      const card = slot?.children[0] as (FakeNode & { wrapper: FakeNode }) | undefined;
+      expect([card?.title, card?.wrapper.children[0]?.visible]).toEqual([' ▸ tester ', false]);
+      expect(card?.children[0]?.content).toEqual({
+        chunks: [{ text: ' '.repeat(14) }, { text: '▰▱▱▱▱', fg: '#0dbc79' }, { text: ' 0m41s' }],
+      });
+      jest.advanceTimersByTime(1080);
+      expect(card?.children[0]?.content).toEqual({
+        chunks: [{ text: ' '.repeat(14) }, { text: '▱▰▱▱▱', fg: '#0dbc79' }, { text: ' 0m42s' }],
+      });
+      panel.cards([{ title: 'tester', lines: ['t'], state: 'aguardando', busy: true }]);
+      expect(card?.children[0]?.content).toEqual({
+        chunks: [{ text: ' '.repeat(14) }, { text: '▱▰▱▱▱', fg: '#e5e5e5' }, { text: ' 0m00s' }],
+      });
+      panel.close();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('marks what the person said on a band of its own, after a blank row', async () => {
     const { kit, renderer } = fakeToolkit();
     const panel = await openPanel(kit, { ...OPTIONS, splash: { lines: ['Oi'] } });
@@ -634,8 +755,8 @@ describe('openPanel', () => {
       { title: 'projeto', lines: ['site', '', 'Loja', 'local', '---', '2 tickets', 'a mais'], summary: ['site · 2'] },
       { title: 'ticket', lines: ['site-1'] },
     ]);
-    const [, slot] = header?.children ?? [];
-    const [projeto, ticket] = (header?.children ?? []).slice(1).map((each) => each.children[0]);
+    const [slot] = slotsOf(header);
+    const [projeto, ticket] = slotsOf(header).map((each) => each.children[0]);
     // Each card stands over a slot as tall as a collapsed card, so opening it covers what is under it, not pushes it.
     expect(header?.built).toMatchObject({ zIndex: 1 });
     expect(slot?.built).toMatchObject({ width: 44, height: 5, flexShrink: 0 });
@@ -676,15 +797,15 @@ describe('openPanel', () => {
 
     panel.cards([{ title: 'ticket', lines: ['site-2'] }]);
     // A card no longer given hides with its slot, which gives its room back.
-    expect(header?.children.slice(1).map((each) => each.visible)).toEqual([false, true]);
-    expect(header?.children.length).toBe(3);
+    expect(slotsOf(header).map((each) => each.visible)).toEqual([false, true]);
+    expect(header?.children.length).toBe(5);
     expect(ticket?.children[0]?.content).toEqual({ chunks: [{ text: 'site-2' }] });
 
     panel.cards([
       { title: 'ticket', lines: ['site-2'] },
       { title: 'projeto', lines: ['site'] },
     ]);
-    expect(header?.children.slice(1).map((each) => each.children[0]?.title)).toEqual([' ▾ ticket ', ' ▾ projeto ']);
+    expect(slotsOf(header).map((each) => each.children[0]?.title)).toEqual([' ▾ ticket ', ' ▾ projeto ']);
     expect(projeto?.children.map((row) => row.visible)).toEqual([true, false, false, false, false, false, false]);
 
     const plain = fakeToolkit();
@@ -704,7 +825,7 @@ describe('openPanel', () => {
         ],
       },
     ]);
-    const projeto = renderer.root.children[0]?.children[0]?.children[1]?.children[0];
+    const projeto = slotsOf(renderer.root.children[0]?.children[0])[0]?.children[0];
     projeto?.onMouseDown?.();
 
     expect(projeto?.children.slice(0, 2).map((row) => row.height)).toEqual([1, 2]);
@@ -720,9 +841,9 @@ describe('openPanel', () => {
         { title: 'projeto', lines: ['site'] },
         { title: 'agente', lines: ['echo'], busy: true },
       ]);
-      const [projeto, agente] = (renderer.root.children[0]?.children[0]?.children ?? [])
-        .slice(1)
-        .map((slot) => slot.children[0]) as (FakeNode & { wrapper: FakeNode })[];
+      const [projeto, agente] = slotsOf(renderer.root.children[0]?.children[0]).map(
+        (slot) => slot.children[0],
+      ) as (FakeNode & { wrapper: FakeNode })[];
       const spinner = agente?.wrapper.children[0];
       expect([projeto?.title, agente?.title]).toEqual([' ▸ projeto ', ' ▸ agente       ']);
       expect(spinner?.built).toMatchObject({ position: 'absolute', top: -1, left: 11, width: 5, zIndex: 1 });
@@ -758,7 +879,7 @@ describe('openPanel', () => {
     const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });
     const card = (footer: readonly string[]) => ({ title: 'agente', lines: ['echo'], footer, key: 'a' });
     panel.cards([card(['provider claude', `modelo   ${'m'.repeat(50)}`])]);
-    const agente = renderer.root.children[0]?.children[0]?.children[1]?.children[0] as
+    const agente = slotsOf(renderer.root.children[0]?.children[0])[0]?.children[0] as
       (FakeNode & { wrapper: FakeNode }) | undefined;
     const footer = agente?.wrapper.children[1];
 
@@ -783,9 +904,7 @@ describe('openPanel', () => {
       { title: 'projeto', lines: ['site', '', 'Loja'], summary: ['site · 2', 'local', 'demais'], key: 'p' },
       { title: 'agente', lines: ['echo', 'x'], key: 'a' },
     ]);
-    const [projeto, agente] = (renderer.root.children[0]?.children[0]?.children ?? [])
-      .slice(1)
-      .map((slot) => slot.children[0]);
+    const [projeto, agente] = slotsOf(renderer.root.children[0]?.children[0]).map((slot) => slot.children[0]);
 
     press({ name: 'a', ctrl: true });
     expect([projeto?.title, projeto?.height, agente?.title, agente?.height]).toEqual([
