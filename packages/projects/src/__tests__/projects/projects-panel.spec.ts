@@ -124,7 +124,7 @@ describe('the panel commands of @choliba/projects', () => {
           '\u001b[90mlocalhost:5173\u001b[39m',
         ],
       ]);
-      expect(panel.fake.written[0]).toBe('Projeto ativo: \u001b[1mloja\u001b[22m.');
+      expect(panel.fake.written[0]).toBe('Projeto \u001b[1mloja\u001b[22m selecionado.');
 
       panel.values.set('ticket', 'loja-1');
       await panel.projects();
@@ -208,6 +208,7 @@ describe('the panel commands of @choliba/projects', () => {
       expect(panel.values.get('ticket')).toBe('loja-1');
       expect(panel.fake.written).toEqual([
         [
+          'Ticket \u001b[1mloja-1\u001b[22m selecionado.',
           '\u001b[1mloja-1\u001b[22m Carrinho',
           '  \u001b[32m✔\u001b[39m CA-01 Dado um produto',
           '  \u001b[90m·\u001b[39m CA-02 ',
@@ -218,7 +219,11 @@ describe('the panel commands of @choliba/projects', () => {
       panel.fake.answer(1);
       await panel.tickets();
       expect(panel.fake.written[1]).toBe(
-        ['\u001b[1mloja-2\u001b[22m', '\u001b[90m0 de 0 critérios com teste.\u001b[39m'].join('\n'),
+        [
+          'Ticket \u001b[1mloja-2\u001b[22m selecionado.',
+          '\u001b[1mloja-2\u001b[22m',
+          '\u001b[90m0 de 0 critérios com teste.\u001b[39m',
+        ].join('\n'),
       );
 
       panel.fake.answer(undefined);

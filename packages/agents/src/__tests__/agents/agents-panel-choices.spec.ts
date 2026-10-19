@@ -2,7 +2,9 @@ import { cpSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import {
+  boldAnsi,
   Container,
+  paintAnsi,
   parseColors,
   PLATFORM,
   THEME,
@@ -71,6 +73,8 @@ function session(dir: string, installed: (bin: string) => boolean, provider = 'a
   return { fake, state, run, why, container };
 }
 
+/** The provider and the model, as the header paints them: bold, in the agent's color. */
+const painted = (color: 'red' | 'green', text: string): string => boldAnsi(paintAnsi(color, text));
 const bold = (text: string): string => `\u001b[1m\u001b[36m${text}\u001b[39m\u001b[22m`;
 const gray = (text: string): string => `\u001b[90m${text}\u001b[39m`;
 const warn = (text: string): string => `\u001b[33m${text}\u001b[39m`;
@@ -106,8 +110,8 @@ describe('/provider', () => {
       );
       await panel.run('provider', 1);
       expect(panel.fake.choices[0]?.options.map((option) => option.label)).toEqual(['auto', 'claude-ollama']);
-      expect(panel.state.labels.get('provider')).toBe(bold('claude-ollama'));
-      expect(panel.state.labels.get('modelo')).toBe(bold('qwen3.5:4b'));
+      expect(panel.state.labels.get('provider')).toBe(painted('red', 'claude-ollama'));
+      expect(panel.state.labels.get('modelo')).toBe(painted('red', 'qwen3.5:4b'));
     } finally {
       tmp.cleanup();
     }
@@ -160,7 +164,7 @@ describe('/provider', () => {
 
       await panel.run('provider', 1);
       expect(panel.state.values.get('provider:echo')).toBe('claude');
-      expect(panel.fake.written[1]).toBe(`Provider de echo: ${bold('claude')}.`);
+      expect(panel.fake.written[1]).toBe(`Provider ${bold('claude')} selecionado para echo.`);
       await panel.run('provider', 1);
       expect(panel.fake.written).toHaveLength(2);
 
@@ -186,7 +190,7 @@ describe('/provider', () => {
 
       await panel.run('provider', 1);
       expect(panel.state.values.get('modelo:echo')).toBe('claude-3-5-sonnet');
-      expect(panel.state.labels.get('provider')).toBe(bold('claude'));
+      expect(panel.state.labels.get('provider')).toBe(painted('green', 'claude'));
 
       await panel.run('provider', 2);
       expect(panel.state.values.get('modelo:echo')).toBeUndefined();
@@ -239,8 +243,8 @@ describe('/model', () => {
         ],
       });
       expect(panel.state.values.get('modelo:echo')).toBe('claude-3-5-sonnet');
-      expect(panel.state.labels.get('modelo')).toBe(bold('claude-3-5-sonnet'));
-      expect(panel.fake.written.at(-1)).toBe(`Modelo de echo: ${bold('claude-3-5-sonnet')}.`);
+      expect(panel.state.labels.get('modelo')).toBe(painted('green', 'claude-3-5-sonnet'));
+      expect(panel.fake.written.at(-1)).toBe(`Modelo ${bold('claude-3-5-sonnet')} selecionado para echo.`);
 
       await panel.run('model', 1);
       await panel.run('model', 99);
@@ -264,7 +268,7 @@ describe('/model', () => {
       await panel.run('model', 0);
 
       expect(panel.fake.choices[2]?.options.map((option) => option.label)).toEqual(['qwen3.5:4b']);
-      expect(panel.state.labels.get('modelo')).toBe(bold('qwen3.5:4b'));
+      expect(panel.state.labels.get('modelo')).toBe(painted('green', 'qwen3.5:4b'));
     } finally {
       tmp.cleanup();
     }
@@ -293,7 +297,7 @@ describe('/mode', () => {
       ]);
       expect(panel.fake.choices[2]?.options[1]?.detail).toContain('Só planeja');
       expect(panel.state.values.get('modo')).toBe('plan');
-      expect(panel.fake.written.at(-1)).toBe(`Modo: ${bold('plan')}.`);
+      expect(panel.fake.written.at(-1)).toBe(`Modo ${bold('plan')} selecionado.`);
       expect(panel.state.statuses.get('modo')).toContain(bold('plan'));
 
       await panel.run('mode', 1);
@@ -377,7 +381,7 @@ describe('/sandbox', () => {
         ],
       });
       expect(panel.state.values.get('sandbox')).toBe('docker');
-      expect(panel.fake.written).toEqual([`Sandbox: ${bold('docker')}.`]);
+      expect(panel.fake.written).toEqual([`Sandbox ${bold('docker')} selecionado.`]);
 
       await panel.run('sandbox', 1);
       await panel.run('sandbox', undefined);

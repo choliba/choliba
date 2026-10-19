@@ -4,7 +4,7 @@ import { sandboxConfig } from '@choliba/sandbox';
 import { AUTO, EXECUTION_MODES, type AgentDefinition, type AgentProvider, type ExecutionMode } from '../common';
 import { resolveAgentsDir } from './agent-dirs';
 import { loadAgent } from './agent-loader';
-import { agentCard } from './agents-panel-card';
+import { agentCard, agentPaint } from './agents-panel-card';
 import { agentsConfig } from './agents-config';
 import { AGENT_PROVIDERS } from './agents.constants';
 import { isSandboxChoice, type SandboxChoice } from './runs/agents-flags';
@@ -162,7 +162,10 @@ function showMode(container: Container, context: PanelContext, agent: AgentDefin
   showSandbox(container, context);
 }
 
-/** The provider and the model a run of `agent` would take, as the header's column shows them, and what would stop it. */
+/**
+ * The provider and the model a run of `agent` would take, as the header's column and its card show them, in its color,
+ * and what would stop it.
+ */
 function runLabels(
   container: Container,
   context: PanelContext,
@@ -171,8 +174,10 @@ function runLabels(
   const run = sessionRun(container, context, agent);
   if ('error' in run) return { provider: warn('indisponível'), model: gray('—'), problem: run.error };
   const { id } = run.resolved.adapter;
-  const named = `${bold(id)}${providerChoice(container, context, agent) === AUTO ? gray(' (auto)') : ''}`;
-  return { provider: named, model: run.model === undefined ? gray(`padrão do ${id}`) : bold(run.model) };
+  // In the agent's color, as its name and its lines.
+  const painted = agentPaint(container, agent);
+  const named = `${painted(id)}${providerChoice(container, context, agent) === AUTO ? gray(' (auto)') : ''}`;
+  return { provider: named, model: run.model === undefined ? gray(`padrão do ${id}`) : painted(run.model) };
 }
 
 /** The agents whose cards each session shows: a card of an agent no longer in the session is taken out. */

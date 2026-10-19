@@ -2,6 +2,7 @@ import { messageOf, type ChatPanel, type PanelCommand } from '@choliba/core';
 
 import type { AgentDefinition } from '../common';
 import { listAgents } from './agent-loader';
+import { agentPaint } from './agents-panel-card';
 import { runChoices } from './agents-panel-choices';
 import { RESUME_AT, resumeSequence, talkToAgent } from './agents-panel-run';
 import { AGENT, agentsDir, sessionAgentIds, showRun } from './agents-panel-state';
@@ -17,10 +18,10 @@ async function sequenceAfter(
   first: AgentDefinition,
   agents: readonly AgentDefinition[],
   panel: ChatPanel,
-  picked: (sequence: readonly AgentDefinition[]) => void,
+  picked: (sequence: readonly AgentDefinition[], added: AgentDefinition) => void,
 ): Promise<void> {
   const sequence = [first];
-  picked(sequence);
+  picked(sequence, first);
   for (;;) {
     const left = agents.filter((agent) => !sequence.includes(agent));
     if (left.length === 0) return;
@@ -35,7 +36,7 @@ async function sequenceAfter(
     const next = chosen === undefined ? undefined : left[chosen - 1];
     if (next === undefined) return;
     sequence.push(next);
-    picked(sequence);
+    picked(sequence, next);
   }
 }
 
@@ -70,8 +71,9 @@ const agentsPanelCommand: PanelCommand = {
     // Each agent's provider and model are its own, kept if chosen before; the mode stays (a mode an agent does not
     // take gives way to its default).
     talkToAgent(container, context);
-    await sequenceAfter(first, agents, panel, (sequence) => {
+    await sequenceAfter(first, agents, panel, (sequence, added) => {
       context.set(AGENT, sequence.map((agent) => agent.id).join(','));
+      panel.write(`Agente ${agentPaint(container, added)(added.id)} adicionado.`);
       showRun(container, context, panel);
     });
     // Another sequence has nothing to resume.

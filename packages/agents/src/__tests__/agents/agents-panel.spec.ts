@@ -40,7 +40,7 @@ function agentsFolder(dir: string): void {
 
 /** The `/agents` command on a container whose agents folder is `dir`, with a fake panel and context. */
 /** The agent's name as the panel paints it: bold, in its color. */
-const painted = (color: 'magenta' | 'red' | 'cyan', text: string): string => boldAnsi(paintAnsi(color, text));
+const painted = (color: 'magenta' | 'red' | 'cyan' | 'green', text: string): string => boldAnsi(paintAnsi(color, text));
 
 /** The `/agents` command on a fake machine that has the binaries `installed` says, every one by default. */
 function withAgents(dir: string, provider = 'auto', installed: (bin: string) => boolean = () => true) {
@@ -147,14 +147,13 @@ describe('/agents', () => {
             'Repete a tarefa recebida, usado nos testes deste pacote.',
           ],
           [
-            '\u001b[1m\u001b[36mclaude\u001b[39m\u001b[22m\u001b[90m (auto)\u001b[39m \u001b[90m·\u001b[39m \u001b[90mpadrão do claude\u001b[39m',
+            `${painted('magenta', 'claude')}\u001b[90m (auto)\u001b[39m \u001b[90m·\u001b[39m \u001b[90mpadrão do claude\u001b[39m`,
             '\u001b[90msem ticket\u001b[39m',
           ],
           'magenta',
         ],
       ]);
-      // The card says it: nothing is written in the conversation.
-      expect(agents.fake.written).toEqual([]);
+      expect(agents.fake.written).toEqual([`Agente ${painted('magenta', 'echo')} adicionado.`]);
 
       await agents.run();
       expect(agents.fake.choices[2]?.options[0]?.current).toBe(true);
@@ -199,10 +198,13 @@ describe('/agents', () => {
       agents.fake.answerNext(0, 1, 1, 1);
       await agents.run();
       expect(agents.values.get('agente')).toBe('echo,optional,ticketed,with-project');
-      agents.fake.answerNext(0, 1, 1, 1);
-      const written = agents.fake.written.length;
-      await agents.run();
-      expect(agents.fake.written).toHaveLength(written);
+      // Each agent picked is said as it is added.
+      expect(agents.fake.written.slice(-4)).toEqual([
+        `Agente ${painted('magenta', 'echo')} adicionado.`,
+        `Agente ${painted('magenta', 'optional')} adicionado.`,
+        `Agente ${painted('cyan', 'ticketed')} adicionado.`,
+        expect.stringContaining('with-project'),
+      ]);
 
       // Esc on the next one keeps the sequence as it is.
       agents.fake.answerNext(3, undefined);
@@ -288,7 +290,7 @@ describe('/agents', () => {
       const auto = withAgents(tmp.path, 'auto', (bin) => bin === 'claude');
       await auto.run();
       expect([...auto.labels]).toEqual([
-        ['provider', '\u001b[1m\u001b[36mclaude\u001b[39m\u001b[22m\u001b[90m (auto)\u001b[39m'],
+        ['provider', `${painted('magenta', 'claude')}\u001b[90m (auto)\u001b[39m`],
         ['modelo', '\u001b[90mpadrão do claude\u001b[39m'],
       ]);
 
@@ -297,14 +299,14 @@ describe('/agents', () => {
       await ollama.run();
       expect(ollama.values.get('agente')).toBe('local');
       expect([...ollama.labels]).toEqual([
-        ['provider', '\u001b[1m\u001b[36mclaude-ollama\u001b[39m\u001b[22m'],
-        ['modelo', '\u001b[1m\u001b[36mqwen3.5:4b\u001b[39m\u001b[22m'],
+        ['provider', painted('green', 'claude-ollama')],
+        ['modelo', painted('green', 'qwen3.5:4b')],
       ]);
 
       const foreign = withAgents(tmp.path, 'claude-ollama');
       await foreign.run();
       expect(foreign.labels.get('provider')).toBe('\u001b[33mindisponível\u001b[39m');
-      expect(foreign.fake.written[0]).toContain('\u001b[33mO agente echo não declara o provider claude-ollama');
+      expect(foreign.fake.written[1]).toContain('\u001b[33mO agente echo não declara o provider claude-ollama');
 
       const none = withAgents(tmp.path, 'auto', () => false);
       await none.run();
@@ -312,7 +314,7 @@ describe('/agents', () => {
         ['provider', '\u001b[33mindisponível\u001b[39m'],
         ['modelo', '\u001b[90m—\u001b[39m'],
       ]);
-      expect(none.fake.written[0]).toBe(
+      expect(none.fake.written[1]).toBe(
         '\u001b[33mNenhum provider que o agente echo declara está instalado: claude, cursor.\u001b[39m',
       );
     } finally {

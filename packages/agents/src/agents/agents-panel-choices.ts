@@ -67,7 +67,7 @@ const providerCommand: PanelCommand = {
       return;
     }
     context.set(agentKey(PROVIDER, agent.id), choice);
-    panel.write(`Provider de ${agent.id}: ${bold(choice)}.`);
+    panel.write(`Provider ${bold(choice)} selecionado para ${agent.id}.`);
     keepModel(container, context, panel, agent);
     showRun(container, context, panel);
   },
@@ -132,7 +132,7 @@ const modelCommand: PanelCommand = {
     const model = options[chosen];
     if (model === active) return;
     context.set(agentKey(MODEL, agent.id), model);
-    panel.write(`Modelo de ${agent.id}: ${bold(model ?? `padrão do ${provider.id}`)}.`);
+    panel.write(`Modelo ${bold(model ?? `padrão do ${provider.id}`)} selecionado para ${agent.id}.`);
     showRun(container, context, panel);
   },
 };
@@ -154,7 +154,7 @@ const modeCommand: PanelCommand = {
     const mode = chosen === undefined ? undefined : agent.modes[chosen];
     if (mode === undefined || mode === active) return;
     context.set(MODE, mode);
-    panel.write(`Modo: ${bold(mode)}.`);
+    panel.write(`Modo ${bold(mode)} selecionado.`);
     showRun(container, context, panel);
   },
 };
@@ -185,7 +185,7 @@ const sandboxCommand: PanelCommand = {
       return;
     }
     context.set(SANDBOX, sandbox);
-    panel.write(`Sandbox: ${bold(sandbox)}.`);
+    panel.write(`Sandbox ${bold(sandbox)} selecionado.`);
   },
 };
 
