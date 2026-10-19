@@ -126,11 +126,20 @@ export function talkToAgent(container: Container, context: PanelContext): void {
         stderr: replies(panel, warn),
         signal: steps.signal,
       })
-      .then((code) => {
-        done();
-        const how = code === 0 ? bold('código 0') : warn(`código ${String(code)}`);
-        panel.answer(`${agent.id} terminou: ${how} ${gray(`· ${duration(Date.now() - startedAt)}`)}`);
-      });
+      .then(
+        (code) => {
+          done();
+          const how = code === 0 ? bold('código 0') : warn(`código ${String(code)}`);
+          panel.answer(`${agent.id} terminou: ${how} ${gray(`· ${duration(Date.now() - startedAt)}`)}`);
+        },
+        // An error nothing expected ends this run in the conversation; the panel stays usable for the next one.
+        (error: unknown) => {
+          done();
+          panel.answer(
+            warn(`${agent.id} parou por um erro: ${error instanceof Error ? error.message : String(error)}`),
+          );
+        },
+      );
   };
   context.converse((text, panel) => {
     if (running) sending?.(text);

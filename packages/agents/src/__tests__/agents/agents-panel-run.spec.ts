@@ -37,6 +37,7 @@ interface Asked {
   readonly argv: readonly string[];
   readonly host: HostedRun;
   readonly end: (code: number) => void;
+  readonly fail: (error: unknown) => void;
 }
 
 /** The conversation of the active `agent`, on a fake service that records each run and ends it when told. */
@@ -47,8 +48,8 @@ function conversation(dir: string, agent: string) {
   container.provide(WORKSPACE_ROOT, () => '/');
   const service = {
     runHosted: (argv: readonly string[], host: HostedRun) =>
-      new Promise<number>((resolve) => {
-        asked.push({ argv, host, end: resolve });
+      new Promise<number>((resolve, reject) => {
+        asked.push({ argv, host, end: resolve, fail: reject });
       }),
   };
   container.provide(AGENTS, () => service as unknown as AgentsService);
@@ -109,6 +110,29 @@ describe('talkToAgent', () => {
       talk.state.send('de novo', talk.fake.panel);
       await talk.settle();
       expect(talk.asked).toHaveLength(2);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('ends a run that fails with an unexpected error in the conversation, and takes the next message', async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      const talk = conversation(tmp.path, 'echo');
+      talk.state.send('faça', talk.fake.panel);
+      await talk.settle();
+      talk.asked[0]?.fail(new Error('ENOENT: no such file'));
+      await talk.settle();
+
+      expect(talk.fake.written.at(-1)).toBe(warn('echo parou por um erro: ENOENT: no such file'));
+      expect(talk.state.spinning.size).toBe(0);
+      talk.state.send('de novo', talk.fake.panel);
+      await talk.settle();
+      expect(talk.asked).toHaveLength(2);
+      talk.asked[1]?.fail('texto');
+      await talk.settle();
+      expect(talk.fake.written.at(-1)).toBe(warn('echo parou por um erro: texto'));
     } finally {
       tmp.cleanup();
     }

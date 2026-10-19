@@ -38,20 +38,30 @@ let opened = 0;
  * goes to the file at once, after the time it was written and its source, without colors:
  *
  *     2026-10-18T20:58:01.123Z [provider] {"type":"item.started",…}
+ *
+ * A log never changes a run's outcome: when its file or its folder is gone (deleted while the run goes), they are
+ * made again and the line goes on; any other failure to write is ignored.
  */
 export function openRunLog(dir: string, agent: string, header: readonly string[], now: () => Date): RunLog {
   const folder = join(dir, agent);
-  mkdirSync(folder, { recursive: true });
   opened += 1;
   const stamp = now().toISOString().replaceAll(':', '-');
   const path = join(folder, `${stamp}-${String(process.pid)}-${String(opened)}.log`);
-  appendFileSync(path, `${header.join('\n')}\n\n`);
+  const append = (content: string): void => {
+    try {
+      mkdirSync(folder, { recursive: true });
+      appendFileSync(path, content);
+    } catch {
+      // Not even made again (no room, no permission): the run goes on without this line.
+    }
+  };
+  append(`${header.join('\n')}\n\n`);
   return {
     path,
     write: (source, text) => {
       const lines = plain(text).replace(/\n$/, '').split('\n');
       const at = now().toISOString();
-      appendFileSync(path, lines.map((line) => `${at} [${source}] ${line}\n`).join(''));
+      append(lines.map((line) => `${at} [${source}] ${line}\n`).join(''));
     },
   };
 }
