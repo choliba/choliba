@@ -366,6 +366,8 @@ describe('launchFor — the browsers of Playwright', () => {
 
   it('gives a local run with a Playwright run tool the browsers, read-only, that its hidden home keeps', () => {
     expect(mounted(CONFIG)).toContainEqual(BROWSERS);
+    // Their daemon folder is written: playwright-cli keeps there the browser it left open between two commands.
+    expect(mounted(CONFIG)).toContainEqual({ path: `${BROWSERS.path}/daemon`, access: 'write', directory: true });
     expect(mounted({ ...CONFIG, PLAYWRIGHT_BROWSERS_PATH: '/data/browsers' })).toContainEqual({
       ...BROWSERS,
       path: '/data/browsers',
