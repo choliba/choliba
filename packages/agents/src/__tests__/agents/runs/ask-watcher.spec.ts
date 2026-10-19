@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { AskAnswer, AskQuestion } from '../../../common/run-tools/ask-tool';
@@ -65,6 +65,28 @@ describe('watchQuestions', () => {
       });
       stop();
       expect(timer.stopped).toEqual([true]);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('drops an answer that comes once the run ended and its folder is gone', async () => {
+    const tmp = makeTmpDir('ask-watcher');
+    try {
+      const dir = join(tmp.path, '.choliba-ask');
+      mkdirSync(dir);
+      writeFileSync(
+        join(dir, '1.question.json'),
+        JSON.stringify({ id: '1', question: 'Escopo?', options: [], multi: false }),
+      );
+      const timer = manualTimer();
+      let reply: (answer: AskAnswer) => void = () => undefined;
+      watchQuestions(dir, () => new Promise<AskAnswer>((resolve) => (reply = resolve)), timer.every);
+      timer.tick();
+      rmSync(dir, { recursive: true });
+      reply({ status: 'answered', answer: 'a busca' });
+      await flush();
+      expect(existsSync(dir)).toBe(false);
     } finally {
       tmp.cleanup();
     }

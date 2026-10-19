@@ -21,7 +21,8 @@ function readQuestion(file: string): AskQuestion | undefined {
 
 /**
  * Watches `dir` (`askExchangeDir`) every `ms` for the questions the `ask` script writes, hands each one, once, to
- * `answer`, and writes what it gives next to it, which the script is waiting for. Returns what stops watching.
+ * `answer`, and writes what it gives next to it, which the script is waiting for; an answer that comes once the run's
+ * folder is gone is dropped. Returns what stops watching.
  */
 export function watchQuestions(
   dir: string,
@@ -37,7 +38,11 @@ export function watchQuestions(
       const question = readQuestion(join(dir, name));
       if (question === undefined) continue;
       void answer(question).then((reply) => {
-        writeFileSync(join(dir, `${question.id}.answer.json`), JSON.stringify(reply));
+        try {
+          writeFileSync(join(dir, `${question.id}.answer.json`), JSON.stringify(reply));
+        } catch {
+          // The run ended, its folder gone, before the answer came: no one waits for it.
+        }
       });
     }
   });
