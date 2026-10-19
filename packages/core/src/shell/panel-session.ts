@@ -40,6 +40,7 @@ interface ContextView {
   labels(lines: readonly string[]): void;
   status(parts: readonly string[]): void;
   onKey(listener: (key: PanelKey) => boolean): void;
+  onCardMove(listener: (title: string, onto: string, panel: ChatPanel) => void): void;
   converse(handler: ((text: string, panel: ChatPanel) => void) | undefined): void;
   busy(stop: (() => void) | undefined): void;
   /** Stops what runs; the context forgets its own state after. */
@@ -56,11 +57,17 @@ function sessionContext(view: ContextView): PanelContext {
   const cards = new Map<string, PanelCard>();
   const labels = new Map<string, string>();
   const statuses = new Map<string, string>();
-  const spinning = new Set<string>();
+  // The cards spinning, and since when: a card that says its state shows how long it has.
+  const spinning = new Map<string, number>();
   const showCards = (): void => {
     const place = (each: PanelCard): number => each.order ?? Number.MAX_SAFE_INTEGER;
     const sorted = [...cards.values()].sort((one, other) => place(one) - place(other));
-    view.cards(sorted.map((each) => (spinning.has(each.title) ? { ...each, busy: true } : each)));
+    view.cards(
+      sorted.map((each) => {
+        const since = spinning.get(each.title);
+        return since === undefined ? each : { ...each, busy: true, since };
+      }),
+    );
   };
   const changes: ((key: string | undefined) => void)[] = [];
   const changed = (key: string | undefined): void => {
@@ -82,8 +89,8 @@ function sessionContext(view: ContextView): PanelContext {
       showCards();
     },
     spin: (title, busy) => {
-      if (busy) spinning.add(title);
-      else spinning.delete(title);
+      if (!busy) spinning.delete(title);
+      else if (!spinning.has(title)) spinning.set(title, Date.now());
       showCards();
     },
     label: (name, value) => {
@@ -98,6 +105,9 @@ function sessionContext(view: ContextView): PanelContext {
     },
     onKey: (listener) => {
       view.onKey(listener);
+    },
+    onCardMove: (listener) => {
+      view.onCardMove(listener);
     },
     converse: (handler) => {
       view.converse(handler);
@@ -177,6 +187,11 @@ export function panelSession(
     onKey: (listener) => {
       keyListeners.push(listener);
     },
+    onCardMove: (listener) => {
+      panel.onCardMove((title, onto) => {
+        listener(title, onto, panel);
+      });
+    },
     converse: (handler) => {
       conversation = handler;
     },
@@ -240,10 +255,12 @@ export function panelSession(
     try {
       await command.run({
         container,
+        // What a command writes is an answer; an agent's lines (a run the command started) stay in its block.
         panel: {
           ...panel,
-          write: (text) => {
-            panel.answer(text);
+          write: (text, voice) => {
+            if (voice === undefined) panel.answer(text);
+            else panel.write(text, voice);
           },
         },
         context,
@@ -256,7 +273,6 @@ export function panelSession(
     const command = shown[index];
     if (command === undefined || why(command) !== undefined) return;
     panel.fill('');
-    panel.say(`/${command.name}`);
     void run(command);
   };
   // Sending clears the field before the message comes: the highlight stays for it, and only a new word moves it back.
@@ -290,9 +306,9 @@ export function panelSession(
     filter = undefined;
     const found = word === undefined ? [] : matching(word);
     const command = commands.find((each) => each.name === word) ?? found[Math.min(choice, found.length - 1)];
-    // The band says the command that runs, not the start of it that was typed (`/`, `/p`).
-    panel.say(command === undefined ? text : `/${command.name}`);
+    // What is said goes on its band; a command is not repeated there: what it chose it says itself.
     if (word === undefined) {
+      panel.say(text);
       conversation?.(text, panel);
       return;
     }

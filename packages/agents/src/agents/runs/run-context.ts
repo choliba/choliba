@@ -62,6 +62,11 @@ export interface RunAgentsCliDeps {
   readonly signal?: AbortSignal;
   /** Takes what `--dry-run` would show, in place of printing it: a host that shows it its own way (the panel). */
   readonly preview?: (input: DryRunInput) => void;
+  /**
+   * Told the ticket of the run once it ends, when the ticket is still there (created with `--type` and filled, or given
+   * with `--ticket`): the panel makes it the session's, so the next agent of a sequence works on it.
+   */
+  readonly ticket?: (ticket: string) => void;
 }
 
 export function toAbsolute(path: string, repoRoot: string): string {

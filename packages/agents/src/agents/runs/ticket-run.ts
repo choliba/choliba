@@ -113,9 +113,9 @@ export function createPlannedTicket(target: TicketTarget | undefined): string | 
 }
 
 /**
- * After the provider: a ticket created by this run and left exactly as written (the run failed, or
- * it only planned or answered) is removed; a ticket an `execute` run finished but left with `CHANGE_ME`
- * is reported, and the run fails. Returns the exit code the run ends with.
+ * After the provider: a ticket created by this run and left exactly as written is removed, and an `execute` run that
+ * said it was done fails, its work not done (one that only planned or answered keeps its code); a ticket an `execute`
+ * run finished but left with `CHANGE_ME` is reported, and the run fails. Returns the exit code the run ends with.
  */
 export function finishTicket(
   target: TicketTarget | undefined,
@@ -130,7 +130,7 @@ export function finishTicket(
   if (createdContent !== undefined && readFileSync(target.file, 'utf8') === createdContent) {
     rmSync(target.file, { force: true });
     stderr.write(`Ticket "${target.ticket}" não foi preenchido; ${target.file} foi removido.\n`);
-    return exitCode;
+    return exitCode === 0 && mode === 'execute' ? 1 : exitCode;
   }
   if (exitCode !== 0 || mode !== 'execute') {
     return exitCode;

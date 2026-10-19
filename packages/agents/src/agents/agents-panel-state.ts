@@ -4,18 +4,51 @@ import { sandboxConfig } from '@choliba/sandbox';
 import { AUTO, EXECUTION_MODES, type AgentDefinition, type AgentProvider, type ExecutionMode } from '../common';
 import { resolveAgentsDir } from './agent-dirs';
 import { loadAgent } from './agent-loader';
-import { agentCard } from './agents-panel-card';
+import { agentCard, agentPaint } from './agents-panel-card';
 import { agentsConfig } from './agents-config';
 import { AGENT_PROVIDERS } from './agents.constants';
 import { isSandboxChoice, type SandboxChoice } from './runs/agents-flags';
 import { agentRunChoice } from './runs/run-choice';
 
-/** What the panel's session keeps about a run of an agent: the context keys of each choice. */
+/**
+ * What the panel's session keeps about its runs, the context keys of each choice. `AGENT` holds the session's agents,
+ * in the order they run, their ids joined by `,`: one is a run of that agent alone. `PROVIDER` and `MODEL` are the
+ * panel's, which /provider and /model choose; an agent may have its own, chosen as it is added (`agentKey`), which
+ * take their place for it. The mode and the sandbox are the session's.
+ */
 export const AGENT = 'agente';
 export const PROVIDER = 'provider';
 export const MODEL = 'modelo';
 export const MODE = 'modo';
 export const SANDBOX = 'sandbox';
+
+/** The context key of how the last run of an agent went, as its card says it: `estado:<id>`. */
+export const STATE = 'estado';
+
+/** The context key of the provider or the model chosen for `agent` alone: `provider:<id>`, `modelo:<id>`. */
+export function agentKey(choice: typeof PROVIDER | typeof MODEL | typeof STATE, agent: string): string {
+  return `${choice}:${agent}`;
+}
+
+/** An agent's own model that asks for its provider's default, in place of the panel's model. */
+export const PROVIDER_DEFAULT = '';
+
+/** The provider a run of `agent` asks for: the one chosen for it as it was added, else the panel's. */
+function askedProvider(context: Pick<PanelContext, 'get'>, agent: AgentDefinition): string | undefined {
+  return context.get(agentKey(PROVIDER, agent.id)) ?? context.get(PROVIDER);
+}
+
+/** The model a run of `agent` asks for: the one chosen for it (its provider's default too), else the panel's. */
+function askedModel(context: Pick<PanelContext, 'get'>, agent: AgentDefinition): string | undefined {
+  const own = context.get(agentKey(MODEL, agent.id));
+  if (own === undefined) return context.get(MODEL);
+  return own === PROVIDER_DEFAULT ? undefined : own;
+}
+
+/** The ids of the session's agents, in the order they run; none before /agents. */
+export function sessionAgentIds(context: Pick<PanelContext, 'get'>): readonly string[] {
+  return (context.get(AGENT) ?? '').split(',').filter((id) => id !== '');
+}
 
 /** The context keys `/projects` and `/tickets` of `@choliba/projects` set. */
 export const PROJECT = 'projeto';
@@ -41,8 +74,8 @@ export function sessionArgv(
     agent.id,
     ...flag('--project', context.get(PROJECT), agent.projectRequired),
     ...ticket,
-    ...flag('--provider', context.get(PROVIDER)),
-    ...flag('--model', context.get(MODEL)),
+    ...flag('--provider', askedProvider(context, agent)),
+    ...flag('--model', askedModel(context, agent)),
     ...flag('--mode', context.get(MODE)),
     ...flag('--sandbox', context.get(SANDBOX)),
     task,
@@ -62,10 +95,17 @@ export function agentsDir(container: Container): string {
   );
 }
 
-/** The active agent, read again from its folder; nothing when none is chosen or it no longer loads. */
+/**
+ * The active agent, the first of the session's, read again from its folder; nothing when none is chosen or it no
+ * longer loads.
+ */
 export function activeAgent(container: Container, context: PanelContext): AgentDefinition | undefined {
-  const id = context.get(AGENT);
-  if (id === undefined) return undefined;
+  const [id] = sessionAgentIds(context);
+  return id === undefined ? undefined : sessionAgent(container, id);
+}
+
+/** The agent `id` of the session, read again from its folder; nothing when it no longer loads. */
+export function sessionAgent(container: Container, id: string): AgentDefinition | undefined {
   try {
     return loadAgent(agentsDir(container), id);
   } catch {
@@ -73,8 +113,13 @@ export function activeAgent(container: Container, context: PanelContext): AgentD
   }
 }
 
-/** The provider the session asks for: the one chosen with /provider, else `CHOL_AGENTS_PROVIDER`. */
-export function providerChoice(container: Container, context: PanelContext): string {
+/** The provider `agent` asks for: its own, else the panel's (`panelProviderChoice`). */
+export function providerChoice(container: Container, context: PanelContext, agent: AgentDefinition): string {
+  return askedProvider(context, agent) ?? container.get(agentsConfig.token).provider;
+}
+
+/** The panel's provider: the one chosen with /provider, else `CHOL_AGENTS_PROVIDER`. */
+export function panelProviderChoice(container: Container, context: PanelContext): string {
   return context.get(PROVIDER) ?? container.get(agentsConfig.token).provider;
 }
 
@@ -89,19 +134,19 @@ export function installedProvider(container: Container, choice: string): AgentPr
 
 /**
  * The provider and the model a run of `agent` takes in the session, as `choliba run agent` picks them from the
- * providers the agent declares (`agentRunChoice`): the session's /provider and /model unless `ask` says otherwise.
+ * providers the agent declares (`agentRunChoice`): its own, else the panel's, unless `ask` names the model.
  */
 export function sessionRun(
   container: Container,
   context: PanelContext,
   agent: AgentDefinition,
-  ask: { readonly provider?: string | undefined; readonly model?: string | undefined } = {},
+  ask: { readonly model?: string | undefined } = {},
 ): ReturnType<typeof agentRunChoice> {
   return agentRunChoice(
     agent,
     {
-      provider: 'provider' in ask ? ask.provider : context.get(PROVIDER),
-      model: 'model' in ask ? ask.model : context.get(MODEL),
+      provider: askedProvider(context, agent),
+      model: 'model' in ask ? ask.model : askedModel(context, agent),
       preference: container.get(agentsConfig.token).provider,
     },
     container.get(AGENT_PROVIDERS),
@@ -138,7 +183,10 @@ function showMode(container: Container, context: PanelContext, agent: AgentDefin
   showSandbox(container, context);
 }
 
-/** The provider and the model a run of `agent` would take, as the header's column shows them, and what would stop it. */
+/**
+ * The provider and the model a run of `agent` would take, as the header's column and its card show them, in its color,
+ * and what would stop it.
+ */
 function runLabels(
   container: Container,
   context: PanelContext,
@@ -147,27 +195,52 @@ function runLabels(
   const run = sessionRun(container, context, agent);
   if ('error' in run) return { provider: warn('indisponível'), model: gray('—'), problem: run.error };
   const { id } = run.resolved.adapter;
-  const named = `${bold(id)}${providerChoice(container, context) === AUTO ? gray(' (auto)') : ''}`;
-  return { provider: named, model: run.model === undefined ? gray(`padrão do ${id}`) : bold(run.model) };
+  // In the agent's color, as its name and its lines.
+  const painted = agentPaint(container, agent);
+  const named = `${painted(id)}${providerChoice(container, context, agent) === AUTO ? gray(' (auto)') : ''}`;
+  return { provider: named, model: run.model === undefined ? gray(`padrão do ${id}`) : painted(run.model) };
 }
 
+/** The panel's provider and model, as the header's column shows them: the provider in yellow when it is not installed. */
+function panelLabels(
+  container: Container,
+  context: PanelContext,
+): { readonly provider: string; readonly model: string } {
+  const choice = panelProviderChoice(container, context);
+  const adapter = installedProvider(container, choice);
+  if (adapter === undefined) return { provider: warn(choice), model: gray('—') };
+  const model = context.get(MODEL);
+  return {
+    provider: `${bold(adapter.id)}${choice === AUTO ? gray(' (auto)') : ''}`,
+    model: model === undefined ? gray(`padrão do ${adapter.id}`) : bold(model),
+  };
+}
+
+/** The agents whose cards each session shows: a card of an agent no longer in the session is taken out. */
+const carded = new WeakMap<PanelContext, readonly string[]>();
+
 /**
- * Shows what a run would take, found as `choliba run agent` finds it: the mode and the sandbox in the status line, from
- * the session's start; with an agent, the provider and the model in the header's column and in the footer of the agent's card,
- * whose collapsed summary says the mode and the model. What would stop the run shows as one word in yellow, its reason
- * written in the `panel`'s chat, so the header keeps its size.
+ * Shows what a run would take, found as `choliba run agent` finds it: the mode and the sandbox in the status line and
+ * the panel's provider and model in the header's column, from the session's start; with agents, a card per agent of
+ * the session, in its order, with the provider and the model it takes and how its last run went. What would stop a run
+ * shows as one word in yellow, its reason written in the `panel`'s chat, so the header keeps its size.
  */
 export function showRun(container: Container, context: PanelContext, panel?: Pick<ChatPanel, 'write'>): void {
-  const agent = activeAgent(container, context);
-  showMode(container, context, agent);
-  if (agent === undefined) return;
-  const mode = modeChoice(context, agent);
-  const labels = runLabels(container, context, agent);
-  context.label(PROVIDER, labels.provider);
-  context.label(MODEL, labels.model);
-  if (labels.problem !== undefined) panel?.write(warn(labels.problem));
-  const run = `${bold(mode)} ${gray('·')} ${labels.model}`;
-  context.show(AGENT, agentCard(container, agent, run, labels, context.get(TICKET)));
+  showMode(container, context, activeAgent(container, context));
+  const shown = panelLabels(container, context);
+  context.label(PROVIDER, shown.provider);
+  context.label(MODEL, shown.model);
+  const ids = sessionAgentIds(context);
+  for (const gone of (carded.get(context) ?? []).filter((id) => !ids.includes(id))) context.show(gone, undefined);
+  carded.set(context, ids);
+  ids.forEach((id, at) => {
+    const each = sessionAgent(container, id);
+    if (each === undefined) return;
+    const labels = runLabels(container, context, each);
+    if (labels.problem !== undefined) panel?.write(warn(labels.problem));
+    const state = context.get(agentKey(STATE, id));
+    context.show(id, agentCard(container, each, labels, { at, state }, context.get(TICKET)));
+  });
 }
 
 /** The sessions whose Shift+Tab already moves the mode: the key is listened to once per session. */

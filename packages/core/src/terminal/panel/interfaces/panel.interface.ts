@@ -64,7 +64,12 @@ export interface PanelNode<Node> {
 
 export interface PanelBox<Node> extends PanelNode<Node> {
   remove(child: Node): void;
+  /** Its column on the screen, once laid out. */
+  readonly x: number;
+  /** Above its siblings that have a lower one: a card's slot, while the card is dragged over the others. */
+  zIndex: number;
   height: number | 'auto' | `${number}%`;
+  width: number | 'auto' | `${number}%`;
   visible: boolean;
   /** The title on its top border. */
   set title(title: string | undefined);
@@ -107,14 +112,28 @@ export interface PanelSelect {
   on(event: 'itemSelected', listener: () => void): unknown;
 }
 
+/** Where the mouse is, in the terminal's columns, as the toolkit says it of a press, a drag or a release. */
+export interface PanelPointer {
+  readonly x: number;
+}
+
 export interface PanelScroll<Node> extends PanelNode<Node> {
   readonly scrollHeight: number;
   visible: boolean;
   height: number | 'auto' | `${number}%`;
+  width: number | 'auto' | `${number}%`;
   /** The title on its top border. */
   set title(title: string | undefined);
   /** Called when the person clicks it. */
   set onMouseDown(listener: ((event: never) => void) | undefined);
+  /** Called when the person lets go of the mouse over it, or after dragging it: the event is a `PanelPointer`. */
+  set onMouseUp(listener: ((event: never) => void) | undefined);
+  /** Called while the person drags it, the event a `PanelPointer`. */
+  set onMouseDrag(listener: ((event: never) => void) | undefined);
+  /** Drawn this many columns away from its place, which the layout keeps: a card following the mouse. */
+  translateX: number;
+  /** Its border's color: set as hex, read back as the toolkit keeps it (an object of its own). */
+  borderColor: string | object;
   scrollBy(delta: number, unit?: 'viewport'): void;
   scrollTo(position: number): void;
   remove(child: Node): void;
@@ -150,8 +169,12 @@ export interface PanelBoxOptions {
   readonly zIndex?: number;
   readonly alignItems?: 'center';
   readonly justifyContent?: 'center';
-  /** A line above and below, as the field's row has, or all around. */
-  readonly border?: ('top' | 'bottom')[] | true;
+  /** A line above and below, as the field's row has, one on the left (an agent's lines), or all around. */
+  readonly border?: ('top' | 'bottom' | 'left')[] | true;
+  /** A hex color for its border; the toolkit's own when absent. */
+  readonly borderColor?: string;
+  /** `heavy` draws the border with thick lines (`┃`). */
+  readonly borderStyle?: 'heavy';
   /** The title on the top border. */
   readonly title?: string;
   readonly paddingRight?: number;
@@ -239,4 +262,9 @@ export interface PanelTextOptions<Styled> {
   readonly width?: number;
   /** Above what is there: a border it is placed on. */
   readonly zIndex?: number;
+  /** `false`: pressed, it starts no selection of its text (a card's line, which is dragged with its card). */
+  readonly selectable?: boolean;
+  /** Out of its place by this many columns, without the room around it changing (negative: over its neighbor). */
+  readonly marginLeft?: number;
+  readonly marginRight?: number;
 }

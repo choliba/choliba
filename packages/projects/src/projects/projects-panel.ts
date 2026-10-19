@@ -93,7 +93,7 @@ async function chooseTicket({ container, panel, context }: PanelCommandContext):
   context.set(TICKET, ticket.id);
   const card = projectCard(container.get(PROJECTS), project, context.get(DESCRIPTION) ?? '', ticket.id);
   context.show(CARD, { ...card, key: 'p', order: 2 });
-  panel.write(ticketSummary(ticket).join('\n'));
+  panel.write([`Ticket \u001b[1m${ticket.id}\u001b[22m selecionado.`, ...ticketSummary(ticket)].join('\n'));
 }
 
 /**
@@ -127,7 +127,7 @@ const projectsPanelCommand: PanelCommand = {
     context.set(DESCRIPTION, project.description);
     const card = projectCard(container.get(PROJECTS), project.name, project.description);
     context.show(CARD, { ...card, key: 'p', order: 2 });
-    panel.write(`Projeto ativo: \u001b[1m${project.name}\u001b[22m.`);
+    panel.write(`Projeto \u001b[1m${project.name}\u001b[22m selecionado.`);
     if (listTicketKeys(container.get(PROJECTS).projectsDir(), project.name).length > 0) await chooseTicket(command);
   },
 };

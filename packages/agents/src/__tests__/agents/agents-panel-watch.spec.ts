@@ -1,15 +1,18 @@
-import { cpSync } from 'node:fs';
+import { cpSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { Container, parseColors, PLATFORM, THEME, ThemeService, WORKSPACE_ROOT } from '@choliba/core';
-import { fakePanelContext, fakePlatform } from '@choliba/core/testing';
+import { fakeChatPanel, fakePanelContext, fakePlatform } from '@choliba/core/testing';
 import { sandboxConfig } from '@choliba/sandbox';
 
 import { ProviderRegistry } from '../../common';
 import { agentsConfig } from '../../agents/agents-config';
+import { agentsPanel } from '../../agents/agents-panel';
+import { talkToAgent } from '../../agents/agents-panel-run';
 import { watchChoices } from '../../agents/agents-panel-watch';
 import { agentsShell } from '../../agents/agents-shell';
-import { AGENT_PROVIDERS } from '../../agents/agents.constants';
+import { AGENT_PROVIDERS, AGENTS } from '../../agents/agents.constants';
+import type { AgentsService } from '../../agents/agents.service';
 import { ClaudeAgentProvider } from '../../providers';
 import { makeTmpDir } from '../helpers/tmp';
 
@@ -81,9 +84,73 @@ describe('watchChoices, from the start of a panel session', () => {
       state.context.set('ticket', 'app-1');
 
       expect([...state.statuses.keys()]).toEqual(['modo', 'sandbox']);
-      expect(state.cards.get('agente')?.summary?.at(-1)).toBe('ticket \u001b[1mapp-1\u001b[22m');
+      expect(state.cards.get('echo')?.summary?.at(-1)).toBe('ticket \u001b[1mapp-1\u001b[22m');
       state.context.set('ticket', undefined);
-      expect(state.cards.get('agente')?.summary?.at(-1)).toBe(gray('sem ticket'));
+      expect(state.cards.get('echo')?.summary?.at(-1)).toBe(gray('sem ticket'));
+      // An agent of the sequence that no longer loads has no card.
+      state.context.set('agente', 'echo,gone');
+      state.context.set('ticket', undefined);
+      expect([...state.cards.keys()]).toEqual(['echo']);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it("moves an agent whose card is dragged onto another's to its place, not while the agents run", async () => {
+    const tmp = makeTmpDir('watch-move');
+    try {
+      cpSync(join(FIXTURES, 'echo'), join(tmp.path, 'echo'), { recursive: true });
+      mkdirSync(join(tmp.path, 'other'));
+      const echo = readFileSync(join(FIXTURES, 'echo', 'agent.yaml'), 'utf8');
+      writeFileSync(join(tmp.path, 'other', 'agent.yaml'), echo.replace('id: echo', 'id: other'));
+      const { container, state } = session(tmp.path);
+      const fake = fakeChatPanel();
+      state.context.set('agente', 'echo,other');
+      state.context.set('retomar', '1');
+
+      state.move('other', 'echo', fake.panel);
+      expect(state.values.get('agente')).toBe('other,echo');
+      expect(state.values.get('retomar')).toBeUndefined();
+      expect(fake.written).toHaveLength(1);
+      expect(fake.written[0]).toMatch(/^Agente .*other.* movido\. Ordem: .*other.* → .*echo.*\.$/);
+      expect(state.cards.get('other')?.joined).toBe(false);
+      expect(state.cards.get('echo')?.joined).toBe(true);
+
+      // An agent no longer in the session, or one that no longer loads, keeps the order or its plain name.
+      state.move('gone', 'echo', fake.panel);
+      expect(state.values.get('agente')).toBe('other,echo');
+      state.context.set('agente', 'other,gone');
+      state.move('gone', 'other', fake.panel);
+      expect(fake.written.at(-1)).toMatch(/^Agente gone movido\. Ordem: gone → .*other.*\.$/);
+
+      // While the agents run, the order stays.
+      container.provide(
+        AGENTS,
+        () => ({ runHosted: () => new Promise<number>(() => undefined) }) as unknown as AgentsService,
+      );
+      state.context.set('agente', 'echo,other');
+      talkToAgent(container, state.context);
+      state.send('faça', fake.panel);
+      await new Promise((resolve) => setImmediate(resolve));
+      state.move('other', 'echo', fake.panel);
+      expect(state.values.get('agente')).toBe('echo,other');
+      expect(fake.written.at(-1)).toBe(warn('A ordem dos agentes não muda enquanto eles rodam.'));
+      // /resume waits for them to end.
+      const resume = agentsPanel.find((command) => command.name === 'resume');
+      expect(resume?.unavailable?.(state.context, container)).toBe(
+        'Os agentes estão rodando: espere terminar ou pare com Ctrl+C',
+      );
+      // /agents changes the one waiting, not the one running.
+      const agents = agentsPanel.find((command) => command.name === 'agents');
+      expect(agents?.unavailable?.(state.context, container)).toBeUndefined();
+      await agents?.run({ container, panel: fake.panel, context: state.context });
+      expect(fake.written.at(-1)).toBe(
+        warn('O agente echo está rodando: troque o provider e o modelo dele depois que terminar.'),
+      );
+      fake.answerNext(1, undefined, undefined);
+      await agents?.run({ container, panel: fake.panel, context: state.context });
+      expect(fake.written.at(-1)).toContain('atualizado.');
+      expect(state.values.get('agente')).toBe('echo,other');
     } finally {
       tmp.cleanup();
     }

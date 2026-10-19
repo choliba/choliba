@@ -1,12 +1,20 @@
-import type { AnsiColor } from '../../theme';
+import { paintAnsi, type AnsiColor } from '../../theme';
 import { ansiChunks, visibleWidth, type StyledChunk } from '../frame';
 
-import type { PanelKey, PanelTextareaKeyBinding, PanelToolkit } from './interfaces/panel.interface';
+import type { PanelBox, PanelKey, PanelTextareaKeyBinding, PanelToolkit } from './interfaces/panel.interface';
 import { fieldHistory } from './panel-history';
 import { PALETTE } from './panel-palette';
 import { questionDesk, type PanelQuestion, type PanelReply } from './panel-question';
 import { chooser, type PanelChoice, type PanelChooseRequest } from './panel-choose';
-import { CARD_RULE, headerBox, splashBox, type PanelCard, type PanelHeader, type PanelSplash } from './panel-welcome';
+import {
+  CARD_RULE,
+  cardElapsed,
+  headerBox,
+  splashBox,
+  type PanelCard,
+  type PanelHeader,
+  type PanelSplash,
+} from './panel-welcome';
 
 /** The band behind what the person said: a gray a little lighter than a dark terminal. */
 const SAID_BACKGROUND = '#373737';
@@ -56,7 +64,7 @@ export interface PanelOptions {
   readonly header?: PanelHeader;
 }
 
-export { CARD_RULE };
+export { CARD_RULE, cardElapsed };
 export type { PanelCard, PanelChoice, PanelChooseRequest, PanelHeader, PanelSplash };
 
 /** A run drawn in a panel of its own: the session's lines scroll in it, under them the footer. */
@@ -75,8 +83,19 @@ export interface Panel {
   close(): void;
 }
 
+/** Who wrote some lines of the conversation: an agent, by its name and its color. */
+export interface PanelVoice {
+  readonly name: string;
+  readonly color: AnsiColor;
+}
+
 /** A panel where a person talks: what they said is marked apart from the other lines, and they choose in it. */
 export interface ChatPanel extends Panel {
+  /**
+   * Lines of the session, as `Panel.write`; with `voice`, lines that agent wrote: a border in its color on their left,
+   * its name opening the block, and the lines it writes next join that block until someone else writes.
+   */
+  write(text: string, voice?: PanelVoice): void;
   /** What the person said, added at the bottom on a band of its own after a blank row: `❯` and the text. */
   say(text: string): void;
   /** A reply to the person, added at the bottom after a blank row: `●`, and the text's lines beside it. */
@@ -94,6 +113,8 @@ export interface ChatPanel extends Panel {
   fill(text: string): void;
   /** Called with each key the person presses in the field, before the field takes it; `true` keeps it from it. */
   onKey(listener: (key: PanelKey) => boolean): void;
+  /** Called when the person drags a card that can move onto another that can: `title` takes the place of `onto`. */
+  onCardMove(listener: (title: string, onto: string) => void): void;
   /** Empties the conversation: every line written, said and answered goes; the header and the field stay. */
   clear(): void;
   /** Replaces the lines of the header beside its icon; a panel with no header ignores it. */
@@ -152,7 +173,7 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
   const welcome = { kit, renderer, styled };
   const compact = options.header !== undefined;
   const layout = new kit.BoxRenderable(renderer, { flexDirection: 'column', width: '100%', height: '100%' });
-  const top = options.header === undefined ? undefined : headerBox(welcome, options.header);
+  const top = options.header === undefined ? undefined : headerBox(welcome, options.header, () => renderer.width);
   const header = top?.box;
   const scroll = new kit.ScrollBoxRenderable(renderer, {
     flexGrow: 1,
@@ -347,16 +368,40 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
   refresh();
   // What the conversation added to the scroll box, so `clear` can take it out.
   const chat: Node[] = [];
+  // The block of the agent that wrote last, which its next lines join; anything else written ends it.
+  let block: { readonly name: string; readonly box: Node & PanelBox<Node> } | undefined;
   const talk = (node: Node): void => {
+    block = undefined;
     chat.push(node);
     scroll.add(node);
   };
+  const blockOf = (voice: PanelVoice): Node & PanelBox<Node> => {
+    if (block?.name === voice.name) return block.box;
+    const box = new kit.BoxRenderable(renderer, {
+      flexDirection: 'column',
+      marginTop: 1,
+      paddingLeft: 1,
+      border: ['left'],
+      borderStyle: 'heavy',
+      borderColor: PALETTE[voice.color],
+    });
+    box.add(
+      new kit.TextRenderable(renderer, {
+        content: styled([`\u001b[1m${paintAnsi(voice.color, voice.name)}\u001b[22m`]),
+        wrapMode: 'word',
+      }),
+    );
+    talk(box);
+    block = { name: voice.name, box };
+    return box;
+  };
 
   return {
-    write: (text) => {
+    write: (text, voice) => {
       begin();
       const lines = (text.endsWith('\n') ? text.slice(0, -1) : text).split('\n');
-      for (const line of lines) talk(new kit.TextRenderable(renderer, { content: styled([line]), wrapMode: 'word' }));
+      const into = voice === undefined ? talk : (node: Node) => blockOf(voice).add(node);
+      for (const line of lines) into(new kit.TextRenderable(renderer, { content: styled([line]), wrapMode: 'word' }));
     },
     say: (text) => {
       begin();
@@ -397,6 +442,7 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
       suggestions.visible = shown.length > 0 && !picker.isOpen;
     },
     clear: () => {
+      block = undefined;
       for (const node of chat.splice(0)) scroll.remove(node);
     },
     heading: (lines) => {
@@ -404,6 +450,9 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     },
     cards: (cards) => {
       top?.cards(cards);
+    },
+    onCardMove: (listener) => {
+      top?.onMove(listener);
     },
     answer: (text) => {
       begin();
