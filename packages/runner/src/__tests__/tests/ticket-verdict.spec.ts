@@ -132,18 +132,20 @@ describe('verdictProblems', () => {
     ]);
   });
 
-  it('says each problem in one line, with the device and without the call log', () => {
+  it('says each problem in one line, with the devices it happens on and without the call log', () => {
     const goto = 'Error: page.goto: Timeout 5000ms exceeded\nCall log:\n  - navigating to "http://x/"';
     const broken = 'ReferenceError: page2 is not defined\n    at demo-2.spec.ts:3';
     const run = report([
       test('CA-01: a', 'unexpected', goto, ['chromium', 'mobile-chrome']),
       test('CA-02: b', 'unexpected', broken, ['chromium']),
+      test('CA-02: b', 'unexpected', 'Error: other', ['firefox']),
     ]);
 
+    // The same failure on every device is one line; a different one is a line of its own.
     expect(verdictProblems('green', TICKET, run)).toEqual([
-      'CA-01 [chromium]: ainda falha: a: Error: page.goto: Timeout 5000ms exceeded',
-      'CA-01 [mobile-chrome]: ainda falha: a: Error: page.goto: Timeout 5000ms exceeded',
+      'CA-01 [chromium, mobile-chrome]: ainda falha: a: Error: page.goto: Timeout 5000ms exceeded',
       'CA-02 [chromium]: ainda falha: b: ReferenceError: page2 is not defined',
+      'CA-02 [firefox]: ainda falha: b: Error: other',
     ]);
     expect(verdictProblems('red', TICKET, run)).toEqual([
       'CA-02 [chromium]: o teste quebra no próprio código, não no comportamento: ReferenceError: page2 is not defined',

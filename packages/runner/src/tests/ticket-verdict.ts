@@ -122,17 +122,21 @@ function greenProblem(test: CriterionTest, title: string): string | undefined {
   return `ainda falha: ${title}${test.error === undefined ? '' : `: ${firstLine(test.error)}`}`;
 }
 
-/** One line per problem: the criterion and the device, then what is wrong, without the call log. */
+/**
+ * One line per problem: the criterion and the devices it happens on, then what is wrong, without the call log. The
+ * same test failing the same way on every device is one line, not one per device.
+ */
 function runProblems(expectation: Expectation, run: CriterionRun): readonly string[] {
   if (run.tests.length === 0) {
     return [`${run.id}: nenhum teste (o título precisa começar com "${run.id}:")`];
   }
   const problemOf = expectation === 'red' ? redProblem : greenProblem;
-  return run.tests.flatMap((test) => {
+  const devices = new Map<string, string[]>();
+  for (const test of run.tests) {
     const problem = problemOf(test, shortTitle(test, run.id));
-    const device = test.device === undefined ? '' : ` [${test.device}]`;
-    return problem === undefined ? [] : [`${run.id}${device}: ${problem}`];
-  });
+    if (problem !== undefined) devices.set(problem, [...(devices.get(problem) ?? []), ...[test.device ?? []].flat()]);
+  }
+  return [...devices].map(([problem, on]) => `${run.id}${on.length === 0 ? '' : ` [${on.join(', ')}]`}: ${problem}`);
 }
 
 /** Whether a test failed because the page could not be reached: then red and green both say so. */
