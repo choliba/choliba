@@ -64,6 +64,10 @@ export interface PanelNode<Node> {
 
 export interface PanelBox<Node> extends PanelNode<Node> {
   remove(child: Node): void;
+  /** Its column on the screen, once laid out. */
+  readonly x: number;
+  /** Above its siblings that have a lower one: a card's slot, while the card is dragged over the others. */
+  zIndex: number;
   height: number | 'auto' | `${number}%`;
   width: number | 'auto' | `${number}%`;
   visible: boolean;
@@ -108,14 +112,9 @@ export interface PanelSelect {
   on(event: 'itemSelected', listener: () => void): unknown;
 }
 
-/** A renderable, by the one it is in: what was pressed to drag, inside the box it belongs to. */
-export interface PanelDragged {
-  readonly parent: PanelDragged | null;
-}
-
-/** What the toolkit says of a drop: what was pressed to drag (a box, or a line inside it) onto the one it fell on. */
-export interface PanelDrop {
-  readonly source?: PanelDragged;
+/** Where the mouse is, in the terminal's columns, as the toolkit says it of a press, a drag or a release. */
+export interface PanelPointer {
+  readonly x: number;
 }
 
 export interface PanelScroll<Node> extends PanelNode<Node> {
@@ -127,12 +126,14 @@ export interface PanelScroll<Node> extends PanelNode<Node> {
   set title(title: string | undefined);
   /** Called when the person clicks it. */
   set onMouseDown(listener: ((event: never) => void) | undefined);
-  /** Called when the person lets go of the mouse over it. */
+  /** Called when the person lets go of the mouse over it, or after dragging it: the event is a `PanelPointer`. */
   set onMouseUp(listener: ((event: never) => void) | undefined);
-  /** Called while the person drags it. */
+  /** Called while the person drags it, the event a `PanelPointer`. */
   set onMouseDrag(listener: ((event: never) => void) | undefined);
-  /** Called when the person lets go over it of something dragged: the event is a `PanelDrop`. */
-  set onMouseDrop(listener: ((event: never) => void) | undefined);
+  /** Drawn this many columns away from its place, which the layout keeps: a card following the mouse. */
+  translateX: number;
+  /** Its border's color: set as hex, read back as the toolkit keeps it (an object of its own). */
+  borderColor: string | object;
   scrollBy(delta: number, unit?: 'viewport'): void;
   scrollTo(position: number): void;
   remove(child: Node): void;

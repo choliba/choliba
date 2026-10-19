@@ -1,13 +1,6 @@
 import { paintAnsi, type AnsiColor } from '../../theme';
 import { truncateVisible, visibleWidth } from '../frame';
-import type {
-  PanelBox,
-  PanelDragged,
-  PanelDrop,
-  PanelScroll,
-  PanelText,
-  PanelToolkit,
-} from './interfaces/panel.interface';
+import type { PanelBox, PanelPointer, PanelScroll, PanelText, PanelToolkit } from './interfaces/panel.interface';
 import { halfBlockArt, type ArtCell, type ArtPixels } from './panel-art';
 import { PALETTE } from './panel-palette';
 import { wrappedRows } from './panel-text';
@@ -262,6 +255,14 @@ const COLLAPSED_HEIGHT = COLLAPSED_LINES + 2;
 /** The cards' border: a dim gray, so their lines read before it. */
 const CARD_BORDER = PALETTE.gray;
 
+/** The border of a card dragged with the mouse, and of the card it would drop on. */
+const DRAGGED_BORDER = PALETTE['bright-yellow'];
+const AIMED_BORDER = PALETTE.white;
+
+/** A card over its slot; the slot of a card dragged, over the other cards. */
+const CARD_Z = 2;
+const DRAGGED_Z = 1;
+
 /**
  * Behind a card, so an open one covers the conversation under it: the background of the dark theme `PALETTE` comes
  * from.
@@ -323,7 +324,9 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     readonly footerRows: PanelText<Styled>[];
     /** Its left border in its `stripe` color, drawn over the gray one. */
     readonly stripe: PanelText<Styled>;
-    /** The `>>>` before it, shown when it is `joined`. */
+    /** Its width, as the cards were last shown. */
+    width: number;
+    /** The arrow before it, shown when it is `joined`. */
     readonly joint: Node & PanelText<Styled>;
   }
   const made = new Map<string, Card>();
@@ -347,7 +350,7 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
       position: 'absolute',
       top: 0,
       left: 0,
-      zIndex: 2,
+      zIndex: CARD_Z,
       backgroundColor: CARD_BACKGROUND,
     });
     const slot = new kit.BoxRenderable(renderer, {
@@ -358,25 +361,35 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     });
     slot.add(card);
     const rows: PanelText<Styled>[] = [];
-    // A click on a card opens or collapses that card alone, as the mouse is let go: a card dragged stays as it was.
-    card.onMouseDown = () => {
-      pressed = { title, dragged: false };
+    // A click on a card opens or collapses that card alone, as the mouse is let go. A card that can move, dragged,
+    // follows the mouse over the others, its border lit, and the card under the mouse lit too: let go there, it takes
+    // that card's place.
+    card.onMouseDown = (event: PanelPointer) => {
+      pressed = { title, from: event.x, slotFrom: slot.x, dragged: false };
     };
-    card.onMouseDrag = () => {
-      if (pressed?.title === title) pressed = { title, dragged: true };
+    card.onMouseDrag = (event: PanelPointer) => {
+      if (pressed?.title !== title) return;
+      pressed = { ...pressed, dragged: true };
+      if (!movable(title)) return;
+      card.translateX = event.x - pressed.from - (slot.x - pressed.slotFrom);
+      slot.zIndex = DRAGGED_Z;
+      card.borderColor = DRAGGED_BORDER;
+      aim(cardAt(event.x, title));
     };
-    card.onMouseUp = () => {
-      if (pressed?.title === title && !pressed.dragged) toggleCard(title);
+    card.onMouseUp = (event: PanelPointer) => {
+      if (pressed?.title !== title) return;
+      const { dragged } = pressed;
       pressed = undefined;
-    };
-    // Dropped on this card, a card that can move takes its place.
-    card.onMouseDrop = (event: PanelDrop) => {
-      pressed = undefined;
-      const dragged = cardHolding(event.source);
-      const can = (name: string | undefined): boolean =>
-        current.some((each) => each.title === name && each.movable === true);
-      if (dragged === undefined || dragged === title || !can(dragged) || !can(title)) return;
-      for (const listener of moves) listener(dragged, title);
+      card.translateX = 0;
+      slot.zIndex = 0;
+      card.borderColor = CARD_BORDER;
+      aim(undefined);
+      if (!dragged) {
+        toggleCard(title);
+        return;
+      }
+      const onto = movable(title) ? cardAt(event.x, title) : undefined;
+      if (onto !== undefined) for (const listener of moves) listener(title, onto);
     };
     // The spinner is drawn over the top border, in the room its title leaves after the name: a title has one color.
     const spinner = new kit.TextRenderable(renderer, {
@@ -418,15 +431,36 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     joint.visible = false;
     box.add(joint);
     box.add(slot);
-    const built = { slot, box: card, rows, spinner, footer, footerRows: [], stripe, joint };
+    const built = { slot, box: card, rows, spinner, footer, footerRows: [], stripe, joint, width: CARD_WIDTH };
     made.set(title, built);
     return built;
   };
   // Every card comes in collapsed; the ones opened with their key or a click are kept here.
   const expanded = new Set<string>();
-  // The card pressed with the mouse, and whether it was dragged since; who hears of a card moved.
-  let pressed: { readonly title: string; readonly dragged: boolean } | undefined;
+  // The card pressed with the mouse: where, where its slot was then, and whether it was dragged since; the card a drag
+  // would drop on, lit; who hears of a card moved.
+  let pressed:
+    { readonly title: string; readonly from: number; readonly slotFrom: number; readonly dragged: boolean } | undefined;
+  let aimed: string | undefined;
   const moves: ((title: string, onto: string) => void)[] = [];
+  const movable = (title: string): boolean => current.some((each) => each.title === title && each.movable === true);
+  /** The card that can move under the column `x`, other than `dragged`. */
+  const cardAt = (x: number, dragged: string): string | undefined =>
+    current.find(({ title }) => {
+      const card = made.get(title);
+      return (
+        title !== dragged && movable(title) && card !== undefined && x >= card.slot.x && x < card.slot.x + card.width
+      );
+    })?.title;
+  /** Lights the border of the card a drag would drop on, and puts out the one before. */
+  const aim = (title: string | undefined): void => {
+    if (aimed === title) return;
+    const before = aimed === undefined ? undefined : made.get(aimed);
+    if (before !== undefined) before.box.borderColor = CARD_BORDER;
+    aimed = title;
+    const lit = title === undefined ? undefined : made.get(title);
+    if (lit !== undefined) lit.box.borderColor = AIMED_BORDER;
+  };
   let current: readonly PanelCard[] = [];
   let frame = 0;
   let spinning: ReturnType<typeof setInterval> | undefined;
@@ -480,6 +514,7 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
       const width = each.state === undefined ? CARD_WIDTH : narrow;
       const text = textWidth(width);
       card.slot.width = width;
+      card.width = width;
       card.box.width = width;
       const folded = !expanded.has(each.title);
       const state = stateLine(each, frame, now);
@@ -541,15 +576,6 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     const card = current.find((each) => each.key === key);
     if (card !== undefined) toggleCard(card.title);
     return card !== undefined;
-  };
-  /** The title of the card `node` is, or is inside of: what a drag was pressed on. */
-  const cardHolding = (node: PanelDragged | null | undefined): string | undefined => {
-    const titles = new Map<unknown, string>([...made].map(([title, each]) => [each.box, title]));
-    for (let at = node; at !== undefined && at !== null; at = at.parent) {
-      const found = titles.get(at);
-      if (found !== undefined) return found;
-    }
-    return undefined;
   };
   const onMove = (listener: (title: string, onto: string) => void): void => {
     moves.push(listener);

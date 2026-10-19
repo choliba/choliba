@@ -36,10 +36,14 @@ class FakeNode {
   selectedIndex = 0;
   virtualLineCountOverride: number | undefined;
   options: { name: string; description: string }[] = [];
-  onMouseDown: (() => void) | undefined;
-  onMouseUp: (() => void) | undefined;
-  onMouseDrag: (() => void) | undefined;
-  onMouseDrop: ((event: { readonly source?: FakeNode | undefined }) => void) | undefined;
+  onMouseDown: ((event?: { readonly x: number }) => void) | undefined;
+  onMouseUp: ((event: { readonly x: number }) => void) | undefined;
+  onMouseDrag: ((event: { readonly x: number }) => void) | undefined;
+  /** Its column on the screen: a spec lays it out by hand. */
+  x = 0;
+  translateX = 0;
+  zIndex = 0;
+  borderColor: string | object = '';
   title: string | undefined;
   private readonly listeners = new Map<string, (() => void)[]>();
 
@@ -60,11 +64,7 @@ class FakeNode {
     }
   }
 
-  /** The node it was added to: what a drag pressed on a line climbs to find its card. */
-  parent: FakeNode | null = null;
-
   add(child: FakeNode): number {
-    child.parent = this;
     this.children.push(child);
     return this.children.length;
   }
@@ -132,8 +132,8 @@ class FakeNode {
 
 /** A click on a card: the mouse pressed on it, then let go. */
 function clickCard(card: FakeNode | undefined): void {
-  card?.onMouseDown?.();
-  card?.onMouseUp?.();
+  card?.onMouseDown?.({ x: 0 });
+  card?.onMouseUp?.({ x: 0 });
 }
 
 /** The cards' slots in a header: its boxes after the column of lines, the `>>>` between them left out. */
@@ -552,36 +552,53 @@ describe('openPanel', () => {
     expect(wrapperOf(slotsOf(header)[0])?.children[2]?.visible).toBe(false);
   });
 
-  it('moves a card dragged onto another, both movable, and opens a card only on a click that dragged nothing', async () => {
+  it('drags a card that can move after the mouse, lit, onto the one under it, and opens one only on a plain click', async () => {
     const { kit, renderer } = fakeToolkit();
     const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });
     const moved: string[] = [];
     panel.onCardMove((title, onto) => moved.push(`${title} > ${onto}`));
-    panel.cards([
-      { title: 'projeto', lines: ['site'] },
-      { title: 'po', lines: ['po'], state: 'aguardando', movable: true },
-      { title: 'tw', lines: ['tw'], state: 'aguardando', movable: true, joined: true },
-    ]);
-    const [projeto, po, tw] = slotsOf(renderer.root.children[0]?.children[0]).map((slot) => slot.children[0]);
-    // Pressed on a line of po, dragged, let go on tw: po takes tw's place, and stays collapsed.
-    const line = po?.children[0];
-    po?.onMouseDown?.();
-    po?.onMouseDrag?.();
-    tw?.onMouseDrop?.({ source: line });
-    po?.onMouseUp?.();
-    expect(moved).toEqual(['po > tw']);
-    expect(po?.title).toBe(' ▸ po ');
+    const flow = (title: string) => ({ title, lines: [title], state: 'aguardando', movable: true });
+    panel.cards([{ title: 'projeto', lines: ['site'] }, flow('po'), flow('tw'), flow('im')]);
+    const slots = slotsOf(renderer.root.children[0]?.children[0]);
+    // Laid out by hand: each slot 24 columns wide (60 columns share the flow), from column 50 on.
+    slots.forEach((slot, index) => {
+      slot.x = 50 + 30 * (index - 1);
+    });
+    const [projeto, po, tw, im] = slots.map((slot) => slot.children[0]);
 
-    // Onto itself, onto a card that does not move, from one that does not, or from nothing known: no move.
-    po?.onMouseDrop?.({ source: po });
-    projeto?.onMouseDrop?.({ source: po });
-    po?.onMouseDrop?.({ source: projeto });
-    po?.onMouseDrop?.({ source: new FakeNode('text', {}) });
-    po?.onMouseDrop?.({});
-    // A drag of another card, or a mouse let go where nothing was pressed, opens nothing.
-    tw?.onMouseDrag?.();
-    tw?.onMouseUp?.();
-    expect(moved).toEqual(['po > tw']);
+    // Pressed at 55, dragged to 85 (over tw): po follows, lit, over the others, and tw is lit as the target.
+    po?.onMouseDown?.({ x: 55 });
+    po?.onMouseDrag?.({ x: 85 });
+    const poSlot = slots[1];
+    expect([po?.translateX, poSlot?.zIndex, po?.borderColor, tw?.borderColor]).toEqual([30, 1, '#f5f543', '#e5e5e5']);
+    // Over im, then over nothing that moves: the light follows, and goes out.
+    po?.onMouseDrag?.({ x: 112 });
+    expect([tw?.borderColor, im?.borderColor]).toEqual(['#666666', '#e5e5e5']);
+    po?.onMouseDrag?.({ x: 10 });
+    expect(im?.borderColor).toBe('#666666');
+    po?.onMouseDrag?.({ x: 113 });
+    // Let go over im: po takes its place, back in its own place until the cards come again, collapsed as it was.
+    po?.onMouseUp?.({ x: 113 });
+    expect(moved).toEqual(['po > im']);
+    expect([po?.translateX, poSlot?.zIndex, po?.borderColor, im?.borderColor, po?.title]).toEqual([
+      0,
+      0,
+      '#666666',
+      '#666666',
+      ' ▸ po ',
+    ]);
+
+    // Let go over itself or nothing: no move. A card that does not move is not dragged, and opens on no drag.
+    tw?.onMouseDown?.({ x: 82 });
+    tw?.onMouseDrag?.({ x: 83 });
+    tw?.onMouseUp?.({ x: 83 });
+    projeto?.onMouseDown?.({ x: 0 });
+    projeto?.onMouseDrag?.({ x: 90 });
+    projeto?.onMouseUp?.({ x: 90 });
+    expect([moved, projeto?.translateX, projeto?.title]).toEqual([['po > im'], 0, ' ▸ projeto ']);
+    // A mouse let go, or dragged, on a card not pressed does nothing.
+    tw?.onMouseDrag?.({ x: 1 });
+    tw?.onMouseUp?.({ x: 1 });
     expect(tw?.title).toBe(' ▸ tw ');
 
     const bare = await openPanel(fakeToolkit().kit, OPTIONS);
