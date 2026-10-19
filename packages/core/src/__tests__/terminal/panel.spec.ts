@@ -510,8 +510,11 @@ describe('openPanel', () => {
     const [ownerJoint, , implementerJoint] = (header?.children ?? []).slice(1);
     expect([ownerJoint?.visible, implementerJoint?.visible]).toEqual([false, true]);
     expect(JSON.stringify(implementerJoint?.content)).toContain('>>>');
-    const stripe = owner?.children[1];
-    expect(stripe?.built).toMatchObject({ position: 'absolute', top: 1, left: 0, width: 1, zIndex: 3 });
+    // On the card's wrapper, over its left border; its rows from the height set, before any layout.
+    const wrapperOf = (slot: FakeNode | undefined) =>
+      (slot?.children[0] as (FakeNode & { wrapper: FakeNode }) | undefined)?.wrapper;
+    const stripe = wrapperOf(owner)?.children[2];
+    expect(stripe?.built).toMatchObject({ position: 'absolute', top: 0, left: -1, width: 1, zIndex: 1 });
     expect([stripe?.visible, stripe?.height]).toEqual([true, 3]);
     expect(stripe?.content).toEqual({
       chunks: [
@@ -531,7 +534,7 @@ describe('openPanel', () => {
     // Beside a card that keeps its width, the flow narrows down to the narrowest.
     panel.cards([{ title: 'projeto', lines: ['site'] }, ...flow]);
     expect(slotsOf(header).map((slot) => slot.width)).toEqual([44, 20, 20]);
-    expect(slotsOf(header)[0]?.children[1]?.visible).toBe(false);
+    expect(wrapperOf(slotsOf(header)[0])?.children[2]?.visible).toBe(false);
   });
 
   it("turns a flow card's bar and its time in its first line while busy, with no spinner in its title", async () => {

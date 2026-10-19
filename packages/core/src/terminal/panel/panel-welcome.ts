@@ -365,18 +365,18 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     const footer = new kit.BoxRenderable(renderer, { flexDirection: 'column', flexShrink: 0, paddingLeft: 1 });
     footer.visible = false;
     card.wrapper.add(footer);
-    // Over the left border, between its corners, in the slot: the card's own border has one color.
+    // Over the left border, between its corners, on the wrapper as the spinner: the card's own border has one color.
     const stripe = new kit.TextRenderable(renderer, {
       content: '',
       wrapMode: 'none',
       position: 'absolute',
-      top: 1,
-      left: 0,
+      top: 0,
+      left: -1,
       width: 1,
-      zIndex: 3,
+      zIndex: 1,
     });
     stripe.visible = false;
-    slot.add(stripe);
+    card.wrapper.add(stripe);
     const joint = new kit.TextRenderable(renderer, {
       content: styled(['', `\u001b[90m${JOINT}\u001b[39m`]),
       wrapMode: 'none',
@@ -485,10 +485,12 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
         row.content =
           line === undefined ? '' : styled([line === CARD_RULE ? ruleOf(text) : truncateVisible(line, text)]);
       });
-      card.box.height = folded ? COLLAPSED_HEIGHT : CARD_HEIGHT;
+      const height = folded ? COLLAPSED_HEIGHT : CARD_HEIGHT;
+      card.box.height = height;
       const stripe = each.stripe;
       card.stripe.visible = stripe !== undefined;
-      const inside = card.box.height - 2;
+      // From the height set, not read back: the toolkit gives the one of its last layout, none for a new card.
+      const inside = height - 2;
       card.stripe.height = inside;
       card.stripe.content =
         stripe === undefined ? '' : styled(Array.from({ length: inside }, () => paintAnsi(stripe, '┃')));
