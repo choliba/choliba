@@ -12,8 +12,9 @@ import { agentRunChoice } from './runs/run-choice';
 
 /**
  * What the panel's session keeps about its runs, the context keys of each choice. `AGENT` holds the session's agents,
- * in the order they run, their ids joined by `,`: one is a run of that agent alone. The provider and the model are
- * each agent's own (`agentKey`); the mode and the sandbox are the session's.
+ * in the order they run, their ids joined by `,`: one is a run of that agent alone. `PROVIDER` and `MODEL` are the
+ * panel's, which /provider and /model choose; an agent may have its own, chosen as it is added (`agentKey`), which
+ * take their place for it. The mode and the sandbox are the session's.
  */
 export const AGENT = 'agente';
 export const PROVIDER = 'provider';
@@ -27,6 +28,21 @@ export const STATE = 'estado';
 /** The context key of the provider or the model chosen for `agent` alone: `provider:<id>`, `modelo:<id>`. */
 export function agentKey(choice: typeof PROVIDER | typeof MODEL | typeof STATE, agent: string): string {
   return `${choice}:${agent}`;
+}
+
+/** An agent's own model that asks for its provider's default, in place of the panel's model. */
+export const PROVIDER_DEFAULT = '';
+
+/** The provider a run of `agent` asks for: the one chosen for it as it was added, else the panel's. */
+function askedProvider(context: Pick<PanelContext, 'get'>, agent: AgentDefinition): string | undefined {
+  return context.get(agentKey(PROVIDER, agent.id)) ?? context.get(PROVIDER);
+}
+
+/** The model a run of `agent` asks for: the one chosen for it (its provider's default too), else the panel's. */
+function askedModel(context: Pick<PanelContext, 'get'>, agent: AgentDefinition): string | undefined {
+  const own = context.get(agentKey(MODEL, agent.id));
+  if (own === undefined) return context.get(MODEL);
+  return own === PROVIDER_DEFAULT ? undefined : own;
 }
 
 /** The ids of the session's agents, in the order they run; none before /agents. */
@@ -58,8 +74,8 @@ export function sessionArgv(
     agent.id,
     ...flag('--project', context.get(PROJECT), agent.projectRequired),
     ...ticket,
-    ...flag('--provider', context.get(agentKey(PROVIDER, agent.id))),
-    ...flag('--model', context.get(agentKey(MODEL, agent.id))),
+    ...flag('--provider', askedProvider(context, agent)),
+    ...flag('--model', askedModel(context, agent)),
     ...flag('--mode', context.get(MODE)),
     ...flag('--sandbox', context.get(SANDBOX)),
     task,
@@ -97,9 +113,14 @@ export function sessionAgent(container: Container, id: string): AgentDefinition 
   }
 }
 
-/** The provider `agent` asks for: the one chosen for it with /provider, else `CHOL_AGENTS_PROVIDER`. */
+/** The provider `agent` asks for: its own, else the panel's (`panelProviderChoice`). */
 export function providerChoice(container: Container, context: PanelContext, agent: AgentDefinition): string {
-  return context.get(agentKey(PROVIDER, agent.id)) ?? container.get(agentsConfig.token).provider;
+  return askedProvider(context, agent) ?? container.get(agentsConfig.token).provider;
+}
+
+/** The panel's provider: the one chosen with /provider, else `CHOL_AGENTS_PROVIDER`. */
+export function panelProviderChoice(container: Container, context: PanelContext): string {
+  return context.get(PROVIDER) ?? container.get(agentsConfig.token).provider;
 }
 
 /** The provider `choice` names on this machine (under `auto`, the first installed), or nothing when none is. */
@@ -113,19 +134,19 @@ export function installedProvider(container: Container, choice: string): AgentPr
 
 /**
  * The provider and the model a run of `agent` takes in the session, as `choliba run agent` picks them from the
- * providers the agent declares (`agentRunChoice`): the /provider and /model chosen for it, unless `ask` says otherwise.
+ * providers the agent declares (`agentRunChoice`): its own, else the panel's, unless `ask` names the model.
  */
 export function sessionRun(
   container: Container,
   context: PanelContext,
   agent: AgentDefinition,
-  ask: { readonly provider?: string | undefined; readonly model?: string | undefined } = {},
+  ask: { readonly model?: string | undefined } = {},
 ): ReturnType<typeof agentRunChoice> {
   return agentRunChoice(
     agent,
     {
-      provider: 'provider' in ask ? ask.provider : context.get(agentKey(PROVIDER, agent.id)),
-      model: 'model' in ask ? ask.model : context.get(agentKey(MODEL, agent.id)),
+      provider: askedProvider(context, agent),
+      model: 'model' in ask ? ask.model : askedModel(context, agent),
       preference: container.get(agentsConfig.token).provider,
     },
     container.get(AGENT_PROVIDERS),
@@ -180,29 +201,42 @@ function runLabels(
   return { provider: named, model: run.model === undefined ? gray(`padrão do ${id}`) : painted(run.model) };
 }
 
+/** The panel's provider and model, as the header's column shows them: the provider in yellow when it is not installed. */
+function panelLabels(
+  container: Container,
+  context: PanelContext,
+): { readonly provider: string; readonly model: string } {
+  const choice = panelProviderChoice(container, context);
+  const adapter = installedProvider(container, choice);
+  if (adapter === undefined) return { provider: warn(choice), model: gray('—') };
+  const model = context.get(MODEL);
+  return {
+    provider: `${bold(adapter.id)}${choice === AUTO ? gray(' (auto)') : ''}`,
+    model: model === undefined ? gray(`padrão do ${adapter.id}`) : bold(model),
+  };
+}
+
 /** The agents whose cards each session shows: a card of an agent no longer in the session is taken out. */
 const carded = new WeakMap<PanelContext, readonly string[]>();
 
 /**
- * Shows what a run would take, found as `choliba run agent` finds it: the mode and the sandbox in the status line, from
- * the session's start; with agents, the first one's provider and model in the header's column, and a card per agent of
- * the session, in its order, with its own provider and model and how its last run went. What would stop a run shows as
- * one word in yellow, its reason written in the `panel`'s chat, so the header keeps its size.
+ * Shows what a run would take, found as `choliba run agent` finds it: the mode and the sandbox in the status line and
+ * the panel's provider and model in the header's column, from the session's start; with agents, a card per agent of
+ * the session, in its order, with the provider and the model it takes and how its last run went. What would stop a run
+ * shows as one word in yellow, its reason written in the `panel`'s chat, so the header keeps its size.
  */
 export function showRun(container: Container, context: PanelContext, panel?: Pick<ChatPanel, 'write'>): void {
-  const agent = activeAgent(container, context);
-  showMode(container, context, agent);
+  showMode(container, context, activeAgent(container, context));
+  const shown = panelLabels(container, context);
+  context.label(PROVIDER, shown.provider);
+  context.label(MODEL, shown.model);
   const ids = sessionAgentIds(context);
   for (const gone of (carded.get(context) ?? []).filter((id) => !ids.includes(id))) context.show(gone, undefined);
   carded.set(context, ids);
-  if (agent === undefined) return;
-  const first = runLabels(container, context, agent);
-  context.label(PROVIDER, first.provider);
-  context.label(MODEL, first.model);
   ids.forEach((id, at) => {
-    const each = id === agent.id ? agent : sessionAgent(container, id);
+    const each = sessionAgent(container, id);
     if (each === undefined) return;
-    const labels = each === agent ? first : runLabels(container, context, each);
+    const labels = runLabels(container, context, each);
     if (labels.problem !== undefined) panel?.write(warn(labels.problem));
     const state = context.get(agentKey(STATE, id));
     context.show(id, agentCard(container, each, labels, { at, state }, context.get(TICKET)));

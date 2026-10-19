@@ -1,16 +1,19 @@
 import type { ChatPanel, Container, PanelCommand, PanelContext } from '@choliba/core';
 
 import { AUTO, type AgentDefinition, type AgentProvider } from '../common';
+import { listAgents } from './agent-loader';
 import {
   activeAgent,
   agentKey,
+  agentsDir,
   bold,
   installedProvider,
   MODE,
   modeChoice,
   MODEL,
+  panelProviderChoice,
   PROVIDER,
-  providerChoice,
+  PROVIDER_DEFAULT,
   SANDBOX,
   sandboxChoice,
   sandboxProblem,
@@ -18,45 +21,96 @@ import {
   showRun,
   warn,
 } from './agents-panel-state';
+import { AGENT_PROVIDERS } from './agents.constants';
 import { MODE_CHOICES, SANDBOX_CHOICES, type SandboxChoice } from './runs/agents-flags';
 import { declaredModels } from './runs/run-choice';
 
 /** Why a choice about the active agent cannot be made yet. */
 const NO_AGENT = 'Escolha um agente antes, com /agents';
 
-/** What each provider is on this machine: `auto` the one it would take for `agent`, the others whether installed. */
-function providerDetail(container: Container, context: PanelContext, agent: AgentDefinition, choice: string): string {
-  if (choice === AUTO) {
-    const run = sessionRun(container, context, agent, { provider: AUTO, model: undefined });
-    return 'error' in run ? 'nenhum instalado' : `o primeiro instalado: ${run.resolved.adapter.id}`;
-  }
+/** Whether `choice` is installed on this machine, as the provider lists say it. */
+function installedDetail(container: Container, choice: string): string {
   return installedProvider(container, choice) === undefined ? 'não instalado' : 'instalado';
 }
 
-/** What /provider offers for `agent`: `auto` and the providers it declares. */
-function providerChoices(agent: AgentDefinition): readonly string[] {
-  return [AUTO, ...agent.providers.map(({ id }) => id)];
+/** The models `provider` runs for `agent`: its own default first, when it has one, then the ones the agent declares. */
+function modelOptions(provider: AgentProvider, agent: AgentDefinition): readonly (string | undefined)[] {
+  const declared = declaredModels(agent, provider.id);
+  return provider.needsModel ? declared : [undefined, ...declared];
+}
+
+/** A model as the lists and the confirmations say it: its name, or `padrão do <provider>`. */
+function modelLabel(provider: AgentProvider, model: string | undefined): string {
+  return model ?? `padrão do ${provider.id}`;
+}
+
+/** Why `agent` does not enter the session: what it is not compatible with. */
+function refused(context: PanelContext, panel: Pick<ChatPanel, 'write'>, agent: AgentDefinition, why: string): false {
+  context.set(agentKey(PROVIDER, agent.id), undefined);
+  context.set(agentKey(MODEL, agent.id), undefined);
+  panel.write(warn(`O agente ${agent.id} não entra: ${why}`));
+  return false;
 }
 
 /**
- * `/provider`: who runs the agent, for this session, among those it declares; `auto` takes the first installed. Each
- * agent has its own: another agent of the session keeps the one chosen for it.
+ * The provider and the model of `agent`, chosen as it is added to the session: its provider among those it declares,
+ * then its model among those it declares for it. Esc on either leaves the panel's, which the agent must then take: one
+ * it cannot take keeps it out. `true` when it enters.
  */
+export async function chooseAgentRun(
+  container: Container,
+  context: PanelContext,
+  panel: ChatPanel,
+  agent: AgentDefinition,
+): Promise<boolean> {
+  context.set(agentKey(PROVIDER, agent.id), undefined);
+  context.set(agentKey(MODEL, agent.id), undefined);
+  const providers = agent.providers.map(({ id }) => id);
+  const chosen = await panel.choose({
+    title: `Provider de ${agent.id}`,
+    description: `Quem roda ${agent.id}, entre os que ele declara. Esc usa o do painel.`,
+    options: providers.map((id) => ({ label: id, detail: installedDetail(container, id), current: false })),
+  });
+  const provider = chosen === undefined ? undefined : providers[chosen];
+  if (provider !== undefined) {
+    if (installedProvider(container, provider) === undefined) {
+      return refused(context, panel, agent, `o provider ${provider} não está instalado nesta máquina.`);
+    }
+    context.set(agentKey(PROVIDER, agent.id), provider);
+  }
+  const run = sessionRun(container, context, agent, { model: undefined });
+  if ('error' in run) return refused(context, panel, agent, run.error);
+  const adapter = run.resolved.adapter;
+  const models = modelOptions(adapter, agent);
+  const picked = await panel.choose({
+    title: `Modelo de ${agent.id}`,
+    description: `Os modelos que ${agent.id} declara para ${adapter.id}. Esc usa o do painel.`,
+    options: models.map((model) => ({
+      label: modelLabel(adapter, model),
+      detail: model === undefined ? 'o provider escolhe' : '',
+      current: false,
+    })),
+  });
+  if (picked !== undefined && picked < models.length) {
+    context.set(agentKey(MODEL, agent.id), models[picked] ?? PROVIDER_DEFAULT);
+  }
+  const taken = sessionRun(container, context, agent);
+  return 'error' in taken ? refused(context, panel, agent, taken.error) : true;
+}
+
+/** `/provider`: the panel's provider, for the agents added with none of their own; `auto` takes the first installed. */
 const providerCommand: PanelCommand = {
   name: 'provider',
-  description: 'Escolhe quem roda o agente',
-  unavailable: (context, container) => (activeAgent(container, context) === undefined ? NO_AGENT : undefined),
+  description: 'Escolhe o provider do painel',
   run: async ({ container, panel, context }) => {
-    const agent = activeAgent(container, context);
-    if (agent === undefined) return;
-    const choices = providerChoices(agent);
-    const active = providerChoice(container, context, agent);
+    const choices = container.get(AGENT_PROVIDERS).choices();
+    const active = panelProviderChoice(container, context);
     const chosen = await panel.choose({
-      title: 'Escolha o provider',
-      description: 'Quem roda o agente nesta sessão, entre os que ele declara. auto usa o primeiro instalado.',
+      title: 'Escolha o provider do painel',
+      description: 'Quem roda os agentes que não têm um seu. auto usa o primeiro instalado.',
       options: choices.map((choice) => ({
         label: choice,
-        detail: providerDetail(container, context, agent, choice),
+        detail: choice === AUTO ? 'o primeiro instalado' : installedDetail(container, choice),
         current: choice === active,
       })),
     });
@@ -66,73 +120,68 @@ const providerCommand: PanelCommand = {
       panel.write(warn(`O provider ${choice} não está instalado nesta máquina.`));
       return;
     }
-    context.set(agentKey(PROVIDER, agent.id), choice);
-    panel.write(`Provider ${bold(choice)} selecionado para ${agent.id}.`);
-    keepModel(container, context, panel, agent);
+    context.set(PROVIDER, choice);
+    panel.write(`Provider ${bold(choice)} selecionado.`);
+    keepModel(container, context, panel);
     showRun(container, context, panel);
   },
 };
 
-/** Back to the provider's default when the model chosen for `agent` is not one it declares for the new provider. */
-function keepModel(
+/** The panel's provider, and the models /model offers for it: its default, when it has one, and the agents'. */
+function panelModels(
   container: Container,
   context: PanelContext,
-  panel: Pick<ChatPanel, 'write'>,
-  agent: AgentDefinition,
-): void {
-  const chosen = context.get(agentKey(MODEL, agent.id));
+): { readonly provider: AgentProvider; readonly models: readonly (string | undefined)[] } | string {
+  const provider = installedProvider(container, panelProviderChoice(container, context));
+  if (provider === undefined) return 'O provider do painel não está instalado: escolha outro com /provider';
+  let agents: readonly AgentDefinition[] = [];
+  try {
+    agents = listAgents(agentsDir(container));
+  } catch {
+    // No agents folder: only the provider's own default.
+  }
+  const declared = [...new Set(agents.flatMap((agent) => declaredModels(agent, provider.id)))];
+  const models = provider.needsModel ? declared : [undefined, ...declared];
+  return models.length === 0 ? `Nenhum agente declara modelos de ${provider.id}` : { provider, models };
+}
+
+/** Back to the provider's default when the panel's model is not one /model offers for the new provider. */
+function keepModel(container: Container, context: PanelContext, panel: Pick<ChatPanel, 'write'>): void {
+  const chosen = context.get(MODEL);
   if (chosen === undefined) return;
-  const run = sessionRun(container, context, agent, { model: undefined });
-  if ('error' in run || declaredModels(agent, run.resolved.adapter.id).includes(chosen)) return;
-  context.set(agentKey(MODEL, agent.id), undefined);
-  panel.write(warn(`O modelo ${chosen} não é de ${run.resolved.adapter.id} no agente: volta ao padrão.`));
+  const offered = panelModels(container, context);
+  if (typeof offered !== 'string' && offered.models.includes(chosen)) return;
+  context.set(MODEL, undefined);
+  panel.write(warn(`O modelo ${chosen} não é do novo provider: volta ao padrão.`));
 }
 
-/** The models `provider` runs for `agent`: its own default first, when it has one, then the ones the agent declares. */
-function modelOptions(provider: AgentProvider, agent: AgentDefinition): readonly (string | undefined)[] {
-  const declared = declaredModels(agent, provider.id);
-  return provider.needsModel ? declared : [undefined, ...declared];
-}
-
-/** The provider and the agent `/model` chooses for, or why it cannot. */
-function modelSubject(
-  container: Container,
-  context: PanelContext,
-): { readonly provider: AgentProvider; readonly agent: AgentDefinition } | string {
-  const agent = activeAgent(container, context);
-  if (agent === undefined) return NO_AGENT;
-  const run = sessionRun(container, context, agent, { model: undefined });
-  return 'error' in run ? run.error : { provider: run.resolved.adapter, agent };
-}
-
-/** `/model`: the model the agent asks for, among those it declares for the session's provider; its default too. */
+/** `/model`: the panel's model, among the ones the workspace's agents declare for its provider, and its default. */
 const modelCommand: PanelCommand = {
   name: 'model',
-  description: 'Escolhe o modelo do agente',
+  description: 'Escolhe o modelo do painel',
   unavailable: (context, container) => {
-    const subject = modelSubject(container, context);
-    return typeof subject === 'string' ? subject : undefined;
+    const offered = panelModels(container, context);
+    return typeof offered === 'string' ? offered : undefined;
   },
   run: async ({ container, panel, context }) => {
-    const subject = modelSubject(container, context);
-    if (typeof subject === 'string') return;
-    const { provider, agent } = subject;
-    const options = modelOptions(provider, agent);
-    const active = context.get(agentKey(MODEL, agent.id));
+    const offered = panelModels(container, context);
+    if (typeof offered === 'string') return;
+    const { provider, models } = offered;
+    const active = context.get(MODEL);
     const chosen = await panel.choose({
-      title: `Escolha o modelo de ${agent.id}`,
-      description: `Os modelos que o agente declara para ${provider.id}.`,
-      options: options.map((model) => ({
-        label: model ?? `padrão do ${provider.id}`,
+      title: 'Escolha o modelo do painel',
+      description: `Os modelos que os agentes declaram para ${provider.id}, para os que não têm um seu.`,
+      options: models.map((model) => ({
+        label: modelLabel(provider, model),
         detail: model === undefined ? 'o provider escolhe' : '',
         current: model === active,
       })),
     });
-    if (chosen === undefined || chosen >= options.length) return;
-    const model = options[chosen];
+    if (chosen === undefined || chosen >= models.length) return;
+    const model = models[chosen];
     if (model === active) return;
-    context.set(agentKey(MODEL, agent.id), model);
-    panel.write(`Modelo ${bold(model ?? `padrão do ${provider.id}`)} selecionado para ${agent.id}.`);
+    context.set(MODEL, model);
+    panel.write(`Modelo ${bold(modelLabel(provider, model))} selecionado.`);
     showRun(container, context, panel);
   },
 };

@@ -147,7 +147,7 @@ describe('/agents', () => {
             'Repete a tarefa recebida, usado nos testes deste pacote.',
           ],
           [
-            `${painted('magenta', 'claude')}\u001b[90m (auto)\u001b[39m \u001b[90m·\u001b[39m \u001b[90mpadrão do claude\u001b[39m`,
+            `${painted('magenta', 'claude')} \u001b[90m·\u001b[39m \u001b[90mpadrão do claude\u001b[39m`,
             '\u001b[90msem ticket\u001b[39m',
           ],
           'magenta',
@@ -156,7 +156,7 @@ describe('/agents', () => {
       expect(agents.fake.written).toEqual([`Agente ${painted('magenta', 'echo')} adicionado.`]);
 
       await agents.run();
-      expect(agents.fake.choices[2]?.options[0]?.current).toBe(true);
+      expect(agents.fake.choices[4]?.options[0]?.current).toBe(true);
       expect(agents.shown.map(([title]) => title)).toEqual(['echo', 'echo']);
     } finally {
       tmp.cleanup();
@@ -168,22 +168,24 @@ describe('/agents', () => {
     try {
       agentsFolder(tmp.path);
       const agents = withAgents(tmp.path);
-      // echo, then ticketed (2nd of the rest), then optional (1st of what is left), then "nenhum outro".
-      agents.fake.answerNext(0, 2, 1, 0);
+      // echo, then ticketed (2nd of the rest), then optional (1st of what is left), then "nenhum outro"; each on the
+      // panel's provider and model (Esc).
+      const esc = undefined;
+      agents.fake.answerNext(0, esc, esc, 2, esc, esc, 1, esc, esc, 0);
       await agents.run();
 
       expect(agents.values.get('agente')).toBe('echo,ticketed,optional');
-      expect(agents.fake.choices[1]).toMatchObject({
+      expect(agents.fake.choices[3]).toMatchObject({
         title: 'Depois de echo',
         description: 'O próximo agente da sequência, que roda quando o anterior termina e você confirma.',
       });
-      expect(agents.fake.choices[1]?.options.map((option) => [option.label, option.current])).toEqual([
+      expect(agents.fake.choices[3]?.options.map((option) => [option.label, option.current])).toEqual([
         ['nenhum outro', true],
         ['optional', false],
         ['ticketed', false],
         ['with-project', false],
       ]);
-      expect(agents.fake.choices[2]?.title).toBe('Depois de echo >>> ticketed');
+      expect(agents.fake.choices[6]?.title).toBe('Depois de echo >>> ticketed');
       // A card per agent, in its order, each joined to the one before and bordered in its color, shown as it is picked.
       expect(agents.placed).toEqual([
         ['echo', false, 'magenta'],
@@ -195,7 +197,7 @@ describe('/agents', () => {
       ]);
 
       // Every agent picked: no question is left to ask. The same sequence again changes nothing.
-      agents.fake.answerNext(0, 1, 1, 1);
+      agents.fake.answerNext(0, esc, esc, 1, esc, esc, 1, esc, esc, 1, esc, esc);
       await agents.run();
       expect(agents.values.get('agente')).toBe('echo,optional,ticketed,with-project');
       // Each agent picked is said as it is added.
@@ -207,7 +209,7 @@ describe('/agents', () => {
       ]);
 
       // Esc on the next one keeps the sequence as it is.
-      agents.fake.answerNext(3, undefined);
+      agents.fake.answerNext(3, esc, esc, undefined);
       agents.placed.length = 0;
       await agents.run();
       expect(agents.values.get('agente')).toBe('with-project');
@@ -287,35 +289,38 @@ describe('/agents', () => {
           .replace('id: echo', 'id: local')
           .replace('  cursor:\n    models:\n      - gpt-4o\n', "  claude-ollama:\n    models:\n      - 'qwen3.5:4b'\n"),
       );
+      // The header's column is the panel's: what an agent added with Esc takes.
       const auto = withAgents(tmp.path, 'auto', (bin) => bin === 'claude');
+      auto.fake.answerNext(0, undefined, undefined, 0);
       await auto.run();
       expect([...auto.labels]).toEqual([
-        ['provider', `${painted('magenta', 'claude')}\u001b[90m (auto)\u001b[39m`],
+        ['provider', '\u001b[1m\u001b[36mclaude\u001b[39m\u001b[22m\u001b[90m (auto)\u001b[39m'],
         ['modelo', '\u001b[90mpadrão do claude\u001b[39m'],
       ]);
 
       const ollama = withAgents(tmp.path, 'claude-ollama');
-      ollama.fake.answerNext(1, 0);
+      ollama.fake.answerNext(1, undefined, undefined, 0);
       await ollama.run();
       expect(ollama.values.get('agente')).toBe('local');
-      expect([...ollama.labels]).toEqual([
-        ['provider', painted('green', 'claude-ollama')],
-        ['modelo', painted('green', 'qwen3.5:4b')],
-      ]);
+      expect(ollama.labels.get('provider')).toBe('\u001b[1m\u001b[36mclaude-ollama\u001b[39m\u001b[22m');
+      // Its card: the first model it declares, which claude-ollama needs.
+      expect(ollama.shown.at(-1)?.[2]?.[0]).toBe(
+        `${painted('green', 'claude-ollama')} \u001b[90m·\u001b[39m ${painted('green', 'qwen3.5:4b')}`,
+      );
 
       const foreign = withAgents(tmp.path, 'claude-ollama');
+      foreign.fake.answerNext(0, undefined);
       await foreign.run();
-      expect(foreign.labels.get('provider')).toBe('\u001b[33mindisponível\u001b[39m');
-      expect(foreign.fake.written[1]).toContain('\u001b[33mO agente echo não declara o provider claude-ollama');
+      expect(foreign.values.get('agente')).toBeUndefined();
+      expect(foreign.fake.written[0]).toContain(
+        '\u001b[33mO agente echo não entra: O agente echo não declara o provider claude-ollama',
+      );
 
       const none = withAgents(tmp.path, 'auto', () => false);
+      none.fake.answerNext(0, undefined);
       await none.run();
-      expect([...none.labels]).toEqual([
-        ['provider', '\u001b[33mindisponível\u001b[39m'],
-        ['modelo', '\u001b[90m—\u001b[39m'],
-      ]);
-      expect(none.fake.written[1]).toBe(
-        '\u001b[33mNenhum provider que o agente echo declara está instalado: claude, cursor.\u001b[39m',
+      expect(none.fake.written[0]).toBe(
+        '\u001b[33mO agente echo não entra: Nenhum provider que o agente echo declara está instalado: claude, cursor.\u001b[39m',
       );
     } finally {
       tmp.cleanup();
