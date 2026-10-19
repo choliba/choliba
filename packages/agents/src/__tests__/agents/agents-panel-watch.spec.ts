@@ -135,6 +135,11 @@ describe('watchChoices, from the start of a panel session', () => {
       state.move('other', 'echo', fake.panel);
       expect(state.values.get('agente')).toBe('echo,other');
       expect(fake.written.at(-1)).toBe(warn('A ordem dos agentes não muda enquanto eles rodam.'));
+      // /resume waits for them to end.
+      const resume = agentsPanel.find((command) => command.name === 'resume');
+      expect(resume?.unavailable?.(state.context, container)).toBe(
+        'Os agentes estão rodando: espere terminar ou pare com Ctrl+C',
+      );
       // /agents changes the one waiting, not the one running.
       const agents = agentsPanel.find((command) => command.name === 'agents');
       expect(agents?.unavailable?.(state.context, container)).toBeUndefined();

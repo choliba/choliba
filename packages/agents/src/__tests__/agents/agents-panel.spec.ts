@@ -17,7 +17,8 @@ import { fakeChatPanel, fakePlatform } from '@choliba/core/testing';
 
 import { ProviderRegistry } from '../../common';
 import { ClaudeAgentProvider, ClaudeOllamaAgentProvider, CursorAgentProvider } from '../../providers';
-import { AGENT_PROVIDERS } from '../../agents/agents.constants';
+import { AGENT_PROVIDERS, AGENTS } from '../../agents/agents.constants';
+import type { AgentsService } from '../../agents/agents.service';
 
 import { agentsConfig } from '../../agents/agents-config';
 import { agentsPanel } from '../../agents/agents-panel';
@@ -232,18 +233,53 @@ describe('/agents', () => {
     }
   });
 
-  it('offers /resume only when a sequence stopped, and resumes it', async () => {
+  it('goes back with /resume to an agent of the sequence, saying something new to it or repeating its task', async () => {
     const tmp = makeTmpDir('agents-panel');
     try {
       agentsFolder(tmp.path);
       const agents = withAgents(tmp.path);
+      const ran: (readonly string[])[] = [];
+      agents.container.provide(
+        AGENTS,
+        () =>
+          ({
+            runHosted: (argv: readonly string[]) => {
+              ran.push(argv);
+              return Promise.resolve(1);
+            },
+          }) as unknown as AgentsService,
+      );
       const resume = agentsPanel.find((command) => command.name === 'resume');
-      expect(resume?.description).toBe('Retoma a sequência de agentes de onde ela parou');
-      expect(resume?.unavailable?.(agents.context, agents.container)).toBe('Nenhuma sequência parada para retomar');
+      const run = (panel = agents.fake.panel) =>
+        resume?.run({ container: agents.container, panel, context: agents.context });
+      expect(resume?.description).toBe('Volta a um agente da sequência e segue dela');
+      expect(resume?.unavailable?.(agents.context, agents.container)).toBe('Escolha os agentes antes, com /agents');
+
+      agents.context.set('agente', 'echo,optional');
       agents.context.set('retomar', '1');
       expect(resume?.unavailable?.(agents.context, agents.container)).toBeUndefined();
-      await resume?.run({ container: agents.container, panel: agents.fake.panel, context: agents.context });
-      expect(agents.fake.written).toEqual([]);
+      agents.fake.answerNext(undefined);
+      await run();
+      expect(agents.fake.choices[0]).toEqual({
+        title: 'Voltar a qual agente?',
+        description: 'A sequência roda de novo a partir dele, com o ticket da sessão.',
+        options: [
+          { label: 'echo', detail: '', current: false },
+          { label: 'optional', detail: '', current: true },
+        ],
+      });
+      expect(ran).toEqual([]);
+
+      // Esc on what to say repeats its task: echo has none, and no message started the sequence.
+      agents.fake.answerNext(0);
+      await run();
+      await new Promise((resolve) => setImmediate(resolve));
+      expect(ran.at(-1)?.at(-1)).toBe('');
+      // What is typed is said to it.
+      agents.fake.answerNext(0);
+      await run({ ...agents.fake.panel, ask: () => Promise.resolve({ status: 'answered', answer: ' só a busca ' }) });
+      await new Promise((resolve) => setImmediate(resolve));
+      expect(ran.at(-1)?.at(-1)).toBe('só a busca');
     } finally {
       tmp.cleanup();
     }

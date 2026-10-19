@@ -77,9 +77,9 @@ function duration(ms: number): string {
 /** The context key of where a stopped sequence resumes: the place, among the session's agents, of the next to run. */
 export const RESUME_AT = 'retomar';
 
-/** The conversation of a session with its agents: what /resume calls to resume a stopped sequence. */
+/** The conversation of a session with its agents: what /resume calls to run the sequence again from one of them. */
 interface Talk {
-  readonly resume: (panel: ChatPanel) => void;
+  readonly resume: (panel: ChatPanel, from: number, task: string | undefined) => void;
   readonly running: () => boolean;
   /** The agent running now, if any. */
   readonly current: () => string | undefined;
@@ -222,7 +222,8 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     running = true;
     interrupt.asked = false;
     context.set(RESUME_AT, undefined);
-    if (task !== undefined) message = task;
+    // What starts the sequence is the task of the agents after the first that have none of their own.
+    if (task !== undefined && from === 0) message = task;
     // The agents about to run wait again on their cards.
     for (const id of ids.slice(from)) context.set(agentKey(STATE, id), undefined);
     showRun(container, context);
@@ -260,11 +261,8 @@ export function talkToAgent(container: Container, context: PanelContext): void {
   talks.set(context, {
     running: () => running,
     current: () => current,
-    resume: (panel) => {
-      if (running) return;
-      const at = Number(context.get(RESUME_AT));
-      if (Number.isInteger(at)) void runFrom(at, undefined, panel);
-      else panel.answer(warn('Nenhuma sequência parada para retomar.'));
+    resume: (panel, from, task) => {
+      if (!running) void runFrom(from, task, panel);
     },
   });
   context.converse((text, panel) => {
@@ -283,9 +281,12 @@ export function sequenceRunning(context: PanelContext): boolean {
   return talks.get(context)?.running() === true;
 }
 
-/** `/resume`: resumes the session's stopped sequence from the agent where it stopped; nothing while one runs. */
-export function resumeSequence(context: PanelContext, panel: ChatPanel): void {
-  talks.get(context)?.resume(panel);
+/**
+ * `/resume`: runs the session's sequence again from its agent at `from`, with `task` for it (its own task without
+ * one), with the session's ticket; nothing while it runs.
+ */
+export function resumeSequence(context: PanelContext, panel: ChatPanel, from: number, task?: string): void {
+  talks.get(context)?.resume(panel, from, task);
 }
 
 function noop(): void {

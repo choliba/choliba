@@ -337,13 +337,11 @@ describe('talkToAgent', () => {
       agentsFolder(tmp.path);
       const talk = conversation(tmp.path, 'echo,with-project');
       talk.state.context.set('projeto', 'site');
-      resumeSequence(talk.state.context, talk.fake.panel);
-      expect(talk.fake.written.at(-1)).toBe(warn('Nenhuma sequência parada para retomar.'));
 
-      // A failure stops it at the agent that failed.
+      // A failure stops it at the agent that failed. /resume while it runs does nothing.
       talk.state.send('faça', talk.fake.panel);
       await talk.settle();
-      resumeSequence(talk.state.context, talk.fake.panel);
+      resumeSequence(talk.state.context, talk.fake.panel, 0);
       talk.asked[0]?.end(1);
       await talk.settle();
       expect(talk.state.values.get('retomar')).toBe('0');
@@ -351,7 +349,7 @@ describe('talkToAgent', () => {
       expect(talk.state.cards.get('echo')?.state).toBe(warn('falhou · 0m00s'));
 
       // Esc at the pause stops it before the next one.
-      resumeSequence(talk.state.context, talk.fake.panel);
+      resumeSequence(talk.state.context, talk.fake.panel, 0);
       await talk.settle();
       // Resumed, echo has no default task: it takes the message that started the sequence.
       expect(talk.asked[1]?.argv).toEqual(['echo', 'faça']);
@@ -366,13 +364,18 @@ describe('talkToAgent', () => {
       );
 
       // Ctrl+C stops the run and the sequence, at the agent it stopped.
-      resumeSequence(talk.state.context, talk.fake.panel);
+      resumeSequence(talk.state.context, talk.fake.panel, 1);
       await talk.settle();
       expect(talk.asked[2]?.argv[0]).toBe('with-project');
       talk.state.stop();
       talk.asked[2]?.end(0);
       await talk.settle();
       expect(talk.state.values.get('retomar')).toBe('1');
+
+      // Back to the first, with something new to say to it: it takes that, and the sequence's message stays.
+      resumeSequence(talk.state.context, talk.fake.panel, 0, 'só a busca');
+      await talk.settle();
+      expect(talk.asked[3]?.argv).toEqual(['echo', 'só a busca']);
     } finally {
       tmp.cleanup();
     }
@@ -410,7 +413,7 @@ describe('talkToAgent', () => {
         warn('A sequência parou em gone. /resume retoma dele.'),
       ]);
       const other = fakeChatPanel();
-      resumeSequence(fakePanelContext().context, other.panel);
+      resumeSequence(fakePanelContext().context, other.panel, 0);
       expect(other.written).toEqual([]);
     } finally {
       tmp.cleanup();

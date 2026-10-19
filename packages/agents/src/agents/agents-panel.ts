@@ -4,7 +4,7 @@ import type { AgentDefinition } from '../common';
 import { listAgents } from './agent-loader';
 import { agentPaint } from './agents-panel-card';
 import { chooseAgentRun, runChoices } from './agents-panel-choices';
-import { RESUME_AT, resumeSequence, runningAgent, talkToAgent } from './agents-panel-run';
+import { RESUME_AT, resumeSequence, runningAgent, sequenceRunning, talkToAgent } from './agents-panel-run';
 import { AGENT, agentsDir, sessionAgentIds, showRun, warn } from './agents-panel-state';
 
 /** The option that ends the additions, first and checked: Enter after an agent keeps the sequence as it is. */
@@ -122,15 +122,35 @@ const agentsPanelCommand: PanelCommand = {
   },
 };
 
-/** `/resume`: resumes the sequence that stopped, from the agent where it stopped. */
+/**
+ * `/resume`: goes back to an agent of the sequence (where it stopped, checked) and runs it again from there, with the
+ * session's ticket: what is typed is said to that agent, and an empty line or Esc repeats its task.
+ */
 const resumeCommand: PanelCommand = {
   name: 'resume',
-  description: 'Retoma a sequência de agentes de onde ela parou',
-  unavailable: (context) =>
-    context.get(RESUME_AT) === undefined ? 'Nenhuma sequência parada para retomar' : undefined,
-  run: ({ panel, context }) => {
-    resumeSequence(context, panel);
-    return Promise.resolve();
+  description: 'Volta a um agente da sequência e segue dela',
+  unavailable: (context) => {
+    if (sessionAgentIds(context).length === 0) return 'Escolha os agentes antes, com /agents';
+    return sequenceRunning(context) ? 'Os agentes estão rodando: espere terminar ou pare com Ctrl+C' : undefined;
+  },
+  run: async ({ container, panel, context }) => {
+    const ids = sessionAgentIds(context);
+    // Where it stopped, checked; a sequence that ended has none.
+    const stopped = Number(context.get(RESUME_AT));
+    const chosen = await panel.choose({
+      title: 'Voltar a qual agente?',
+      description: 'A sequência roda de novo a partir dele, com o ticket da sessão.',
+      options: ids.map((id, at) => ({ label: id, detail: '', current: at === stopped })),
+    });
+    if (chosen === undefined) return;
+    const reply = await panel.ask({
+      question: `O que dizer a ${String(ids[chosen])}? Vazio ou Esc repete a tarefa dele.`,
+      options: [],
+      multi: false,
+    });
+    const said = reply.status === 'answered' && typeof reply.answer === 'string' ? reply.answer.trim() : '';
+    talkToAgent(container, context);
+    resumeSequence(context, panel, chosen, said === '' ? undefined : said);
   },
 };
 
