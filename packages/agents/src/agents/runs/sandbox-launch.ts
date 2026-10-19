@@ -136,8 +136,7 @@ function browsersFolder(config: Config): string | undefined {
 /**
  * The browsers the Playwright run tools open on this machine (`playwright-trace snapshot`): the local sandbox hides the
  * home they are kept in, so their folder comes back read-only. None in a container, whose image has its own, nor
- * without a Playwright run tool or the folder. Its `daemon` folder, where `playwright-cli` keeps the browser it left
- * open between two commands, is written (`browserDaemon`).
+ * without a Playwright run tool or the folder.
  */
 function browserFolders(input: LaunchInput, disk: LaunchDisk): readonly string[] {
   if (input.sandbox.kind !== 'local' || !usesBrowser(input.request)) return [];
@@ -145,9 +144,16 @@ function browserFolders(input: LaunchInput, disk: LaunchDisk): readonly string[]
   return folder !== undefined && disk.exists(folder) ? [folder] : [];
 }
 
-/** Where `playwright-cli` keeps the state of its browser between two commands, in the browsers' folder: written. */
-function browserDaemon(input: LaunchInput, disk: LaunchDisk): readonly string[] {
-  return browserFolders(input, disk).map((folder) => join(folder, 'daemon'));
+/**
+ * Where `playwright-cli` keeps the browser it leaves open between two commands, in a local run with a Playwright run
+ * tool: `ms-playwright/daemon` and `ms-playwright/b` of the cache folder (`XDG_CACHE_HOME`, else `~/.cache`), wherever
+ * the browsers are. Written, while the browsers stay read-only.
+ */
+function browserState(input: LaunchInput): readonly string[] {
+  if (input.sandbox.kind !== 'local' || !usesBrowser(input.request)) return [];
+  const { XDG_CACHE_HOME: set, HOME: home } = input.config;
+  const cache = set !== undefined && set !== '' ? set : home === undefined ? undefined : join(home, '.cache');
+  return cache === undefined ? [] : ['daemon', 'b'].map((folder) => join(cache, 'ms-playwright', folder));
 }
 
 /**
@@ -174,7 +180,7 @@ function outputFolders(request: ProviderRequest, config: Config): readonly strin
 export function launchFor(input: LaunchInput, disk: LaunchDisk = realDisk): Launch {
   const { request, config } = input;
   const root = request.workspaceRoot;
-  const outputs = [...outputFolders(request, config), ...browserDaemon(input, disk)];
+  const outputs = [...outputFolders(request, config), ...browserState(input)];
   outputs.forEach(disk.ensureDir);
   const reach = {
     permissions: absolutePermissions(request.agent.permissions, root),

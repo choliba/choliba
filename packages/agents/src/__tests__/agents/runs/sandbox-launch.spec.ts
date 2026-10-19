@@ -366,8 +366,15 @@ describe('launchFor — the browsers of Playwright', () => {
 
   it('gives a local run with a Playwright run tool the browsers, read-only, that its hidden home keeps', () => {
     expect(mounted(CONFIG)).toContainEqual(BROWSERS);
-    // Their daemon folder is written: playwright-cli keeps there the browser it left open between two commands.
-    expect(mounted(CONFIG)).toContainEqual({ path: `${BROWSERS.path}/daemon`, access: 'write', directory: true });
+    // Where playwright-cli keeps the browser it left open between two commands is written, in the cache folder,
+    // wherever the browsers are.
+    const state = (cache: string) =>
+      ['daemon', 'b'].map((folder) => ({ path: `${cache}/ms-playwright/${folder}`, access: 'write', directory: true }));
+    const elsewhere = mounted({ ...CONFIG, PLAYWRIGHT_BROWSERS_PATH: '/data/browsers' });
+    for (const each of state('/home/test/.cache')) expect(elsewhere).toContainEqual(each);
+    const xdg = mounted({ ...CONFIG, XDG_CACHE_HOME: '/xdg' });
+    for (const each of state('/xdg')) expect(xdg).toContainEqual(each);
+    expect(mounted(CONFIG, { kind: 'local' }, request())).not.toContainEqual(state('/home/test/.cache')[0]);
     expect(mounted({ ...CONFIG, PLAYWRIGHT_BROWSERS_PATH: '/data/browsers' })).toContainEqual({
       ...BROWSERS,
       path: '/data/browsers',
@@ -382,7 +389,7 @@ describe('launchFor — the browsers of Playwright', () => {
     );
     expect(mounted(CONFIG, { kind: 'local' }, request())).not.toContainEqual(BROWSERS);
     expect(mounted({ ...CONFIG, PLAYWRIGHT_BROWSERS_PATH: '0' })).not.toContainEqual(
-      expect.objectContaining({ path: expect.stringContaining('ms-playwright') as string }),
+      expect.objectContaining({ access: 'read', path: expect.stringContaining('ms-playwright') as string }),
     );
     expect(mounted(CONFIG, { kind: 'local' }, TRACE, missing)).not.toContainEqual(BROWSERS);
     const { HOME: _home, ...homeless } = CONFIG;
