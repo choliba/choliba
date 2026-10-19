@@ -40,7 +40,8 @@ function agentsFolder(dir: string): void {
 
 /** The `/agents` command on a container whose agents folder is `dir`, with a fake panel and context. */
 /** The agent's name as the panel paints it: bold, in its color. */
-const painted = (color: 'magenta' | 'red' | 'cyan' | 'green', text: string): string => boldAnsi(paintAnsi(color, text));
+const painted = (color: 'magenta' | 'red' | 'cyan' | 'green' | 'yellow', text: string): string =>
+  boldAnsi(paintAnsi(color, text));
 
 /** The `/agents` command on a fake machine that has the binaries `installed` says, every one by default. */
 function withAgents(dir: string, provider = 'auto', installed: (bin: string) => boolean = () => true) {
@@ -116,21 +117,21 @@ function withAgents(dir: string, provider = 'auto', installed: (bin: string) => 
 }
 
 describe('/agents', () => {
-  it('chooses the active agent among the folder, marking the current one, and shows its card', async () => {
+  it('adds the agent chosen, marking the ones in the sequence, and shows its card', async () => {
     const tmp = makeTmpDir('agents-panel');
     try {
       agentsFolder(tmp.path);
       const agents = withAgents(tmp.path);
       expect([agents.command.name, agents.command.description]).toEqual([
         'agents',
-        'Escolhe o agente que vai trabalhar, ou vários em sequência',
+        'Acrescenta agentes à sequência, ou troca o provider e o modelo de um',
       ]);
       expect(agents.command.unavailable?.(agents.context, agents.container)).toBeUndefined();
 
       await agents.run();
       expect(agents.fake.choices[0]).toMatchObject({
         title: 'Escolha o agente',
-        description: 'O agente que vai trabalhar no projeto e no ticket ativos; depois, os que seguem.',
+        description: 'Um agente da sequência (marcado) troca o provider e o modelo; outro entra no fim dela.',
       });
       expect(agents.fake.choices[0]?.options.map((option) => [option.label, option.current])).toEqual([
         ['echo', false],
@@ -156,15 +157,23 @@ describe('/agents', () => {
       ]);
       expect(agents.fake.written).toEqual([`Agente ${painted('magenta', 'echo')} adicionado.`]);
 
+      // Chosen again, it is in the sequence: it chooses its provider and its model again, and stays where it is.
       await agents.run();
       expect(agents.fake.choices[4]?.options[0]?.current).toBe(true);
+      expect(agents.fake.choices[5]?.title).toBe('Provider de echo');
+      expect(agents.values.get('agente')).toBe('echo');
+      expect(agents.fake.written.at(-1)).toBe(`Agente ${painted('magenta', 'echo')} atualizado.`);
       expect(agents.shown.map(([title]) => title)).toEqual(['echo', 'echo']);
+      // Another one is added at the end; Esc on the next question ends the additions.
+      agents.fake.answerNext(1, undefined, undefined, undefined);
+      await agents.run();
+      expect(agents.values.get('agente')).toBe('echo,optional');
     } finally {
       tmp.cleanup();
     }
   });
 
-  it('builds a sequence: the first agent, then each next one in order, until "nenhum outro" or Esc', async () => {
+  it('builds a sequence one agent after another, adds to its end, and never starts it over', async () => {
     const tmp = makeTmpDir('agents-panel');
     try {
       agentsFolder(tmp.path);
@@ -186,7 +195,7 @@ describe('/agents', () => {
         ['ticketed', false],
         ['with-project', false],
       ]);
-      expect(agents.fake.choices[6]?.title).toBe('Depois de echo >>> ticketed');
+      expect(agents.fake.choices[6]?.title).toBe('Depois de echo → ticketed');
       // A card per agent, in its order, each joined to the one before and bordered in its color, shown as it is picked.
       expect(agents.placed).toEqual([
         ['echo', false, 'magenta'],
@@ -197,30 +206,27 @@ describe('/agents', () => {
         ['optional', true, 'magenta'],
       ]);
 
-      // Every agent picked: no question is left to ask. The same sequence again changes nothing.
-      agents.fake.answerNext(0, esc, esc, 1, esc, esc, 1, esc, esc, 1, esc, esc);
-      await agents.run();
-      expect(agents.values.get('agente')).toBe('echo,optional,ticketed,with-project');
-      // Each agent picked is said as it is added.
-      expect(agents.fake.written.slice(-4)).toEqual([
-        `Agente ${painted('magenta', 'echo')} adicionado.`,
-        `Agente ${painted('magenta', 'optional')} adicionado.`,
-        `Agente ${painted('cyan', 'ticketed')} adicionado.`,
-        expect.stringContaining('with-project'),
-      ]);
-
-      // Esc on the next one keeps the sequence as it is.
-      agents.fake.answerNext(3, esc, esc, undefined);
+      // Another /agents adds at the end; with every agent in it, nothing is left to ask after.
       agents.placed.length = 0;
+      agents.fake.answerNext(3, esc, esc);
       await agents.run();
-      expect(agents.values.get('agente')).toBe('with-project');
-      // The cards of the agents no longer in the session are taken out.
-      expect(agents.placed).toEqual([
-        ['echo', undefined, undefined],
-        ['optional', undefined, undefined],
-        ['ticketed', undefined, undefined],
-        ['with-project', false, expect.any(String)],
+      expect(agents.values.get('agente')).toBe('echo,ticketed,optional,with-project');
+      expect(agents.fake.written.at(-1)).toBe(`Agente ${painted('yellow', 'with-project')} adicionado.`);
+      expect(agents.placed.map(([title, joined]) => [title, joined])).toEqual([
+        ['echo', false],
+        ['ticketed', true],
+        ['optional', true],
+        ['with-project', true],
       ]);
+      // One in it, chosen again, changes its provider and its model: the sequence stays.
+      agents.fake.answerNext(2, esc, esc);
+      await agents.run();
+      expect(agents.values.get('agente')).toBe('echo,ticketed,optional,with-project');
+      expect(agents.fake.written.at(-1)).toBe(`Agente ${painted('cyan', 'ticketed')} atualizado.`);
+      // Esc on the list changes nothing.
+      agents.fake.answerNext(undefined);
+      await agents.run();
+      expect(agents.values.get('agente')).toBe('echo,ticketed,optional,with-project');
     } finally {
       tmp.cleanup();
     }

@@ -176,6 +176,30 @@ describe('/agents, the provider and the model of each agent', () => {
   });
 });
 
+describe('/agents, changing an agent of the sequence', () => {
+  it('keeps the provider and the model it had when the new ones cannot run it', async () => {
+    const tmp = makeTmpDir('choices');
+    try {
+      agentsFolder(tmp.path);
+      const panel = session(tmp.path, noCursor);
+      await panel.add(0, 0, 1, 0);
+      expect(panel.state.values.get('provider:echo')).toBe('claude');
+      // echo again, on cursor, which is not installed: it stays on claude, with its model.
+      await panel.add(0, 1);
+      expect(panel.fake.written.at(-1)).toBe(
+        warn('O agente echo fica como estava: o provider cursor não está instalado nesta máquina.'),
+      );
+      expect([panel.state.values.get('provider:echo'), panel.state.values.get('modelo:echo')]).toEqual([
+        'claude',
+        'claude-3-5-sonnet',
+      ]);
+      expect(panel.state.values.get('agente')).toBe('echo');
+    } finally {
+      tmp.cleanup();
+    }
+  });
+});
+
 describe('/provider', () => {
   it("is the panel's: auto and every provider, saying which are installed, shown in the header from the start", async () => {
     const tmp = makeTmpDir('choices');

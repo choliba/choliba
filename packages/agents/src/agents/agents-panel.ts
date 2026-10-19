@@ -1,32 +1,73 @@
-import { messageOf, type ChatPanel, type PanelCommand } from '@choliba/core';
+import { messageOf, type ChatPanel, type Container, type PanelCommand, type PanelContext } from '@choliba/core';
 
 import type { AgentDefinition } from '../common';
 import { listAgents } from './agent-loader';
 import { agentPaint } from './agents-panel-card';
 import { chooseAgentRun, runChoices } from './agents-panel-choices';
-import { RESUME_AT, resumeSequence, sequenceRunning, talkToAgent } from './agents-panel-run';
-import { AGENT, agentsDir, sessionAgentIds, showRun } from './agents-panel-state';
+import { RESUME_AT, resumeSequence, runningAgent, talkToAgent } from './agents-panel-run';
+import { AGENT, agentsDir, sessionAgentIds, showRun, warn } from './agents-panel-state';
 
-/** The option that ends the sequence, first and checked: Enter after the first agent keeps it alone. */
+/** The option that ends the additions, first and checked: Enter after an agent keeps the sequence as it is. */
 const NO_OTHER = 'nenhum outro';
 
+/** An agent's name in its color, as the panel says it. */
+function named(container: Container, agent: AgentDefinition): string {
+  return agentPaint(container, agent)(agent.id);
+}
+
 /**
- * Picks the agents after `first`, in order: each choice is `added` at the end of the sequence, among those not in it
- * yet, when it takes the place (`added` gives `true`); Enter on "nenhum outro" or Esc ends it.
+ * Adds `agent` at the end of the session's sequence, once it has chosen its provider and its model; one that cannot
+ * take them stays out, saying why.
  */
-async function sequenceAfter(
-  first: AgentDefinition,
-  agents: readonly AgentDefinition[],
+async function addAgent(
+  container: Container,
+  context: PanelContext,
   panel: ChatPanel,
-  added: (sequence: readonly AgentDefinition[], agent: AgentDefinition) => Promise<boolean>,
+  agent: AgentDefinition,
 ): Promise<void> {
-  const sequence = [first];
-  if (!(await added(sequence, first))) return;
+  const refused = await chooseAgentRun(container, context, panel, agent);
+  if (refused !== undefined) {
+    panel.write(warn(`O agente ${agent.id} não entra: ${refused}`));
+    return;
+  }
+  context.set(AGENT, [...sessionAgentIds(context), agent.id].join(','));
+  panel.write(`Agente ${named(container, agent)} adicionado.`);
+  showRun(container, context, panel);
+}
+
+/** Changes the provider and the model of `agent`, in the sequence already: not while it runs. */
+async function changeAgent(
+  container: Container,
+  context: PanelContext,
+  panel: ChatPanel,
+  agent: AgentDefinition,
+): Promise<void> {
+  if (runningAgent(context) === agent.id) {
+    panel.write(warn(`O agente ${agent.id} está rodando: troque o provider e o modelo dele depois que terminar.`));
+    return;
+  }
+  const refused = await chooseAgentRun(container, context, panel, agent);
+  if (refused !== undefined) {
+    panel.write(warn(`O agente ${agent.id} fica como estava: ${refused}`));
+    return;
+  }
+  panel.write(`Agente ${named(container, agent)} atualizado.`);
+  showRun(container, context, panel);
+}
+
+/** Asks for the agents to add after the sequence, one at a time, until "nenhum outro" or Esc. */
+async function addMore(
+  container: Container,
+  context: PanelContext,
+  panel: ChatPanel,
+  agents: readonly AgentDefinition[],
+): Promise<void> {
   for (;;) {
-    const left = agents.filter((agent) => !sequence.includes(agent));
-    if (left.length === 0) return;
+    const sequence = sessionAgentIds(context);
+    const left = agents.filter((agent) => !sequence.includes(agent.id));
+    if (sequence.length === 0 || left.length === 0) return;
     const chosen = await panel.choose({
-      title: `Depois de ${sequence.map((agent) => agent.id).join(' >>> ')}`,
+      title: `Depois de ${sequence.join(' → ')}`,
       description: 'O próximo agente da sequência, que roda quando o anterior termina e você confirma.',
       options: [
         { label: NO_OTHER, detail: 'a sequência fica como está', current: true },
@@ -35,22 +76,20 @@ async function sequenceAfter(
     });
     const next = chosen === undefined ? undefined : left[chosen - 1];
     if (next === undefined) return;
-    sequence.push(next);
-    if (!(await added(sequence, next))) sequence.pop();
+    await addAgent(container, context, panel, next);
   }
 }
 
 /**
- * `/agents`: the session's agents, chosen among the workspace's: the first, then those that run after it, in order
- * (one is a run of that agent alone). Each one picked chooses its provider and its model, or takes the panel's, and
- * enters with its card in the header as soon as it can run; then what is sent with no `/` is the first one's task.
+ * `/agents`: the session's agents, among the workspace's, which it never starts over (/clear does). One already in the
+ * sequence (checked) chooses its provider and its model again, unless it runs now; another is added at its end, after
+ * choosing them, and then the ones after it, in order. Each one enters with its card in the header as soon as it can
+ * run, even while the sequence goes; what is sent with no `/` is the first one's task.
  */
 const agentsPanelCommand: PanelCommand = {
   name: 'agents',
-  description: 'Escolhe o agente que vai trabalhar, ou vários em sequência',
-  unavailable: (context, container) => {
-    // The cards of the agents that run stay, and so does their order, until they end.
-    if (sequenceRunning(context)) return 'Os agentes estão rodando: espere terminar ou pare com Ctrl+C';
+  description: 'Acrescenta agentes à sequência, ou troca o provider e o modelo de um',
+  unavailable: (_context, container) => {
     try {
       return listAgents(agentsDir(container)).length === 0
         ? 'Nenhum agente na pasta de agentes. Traga um com `choliba add`'
@@ -61,28 +100,25 @@ const agentsPanelCommand: PanelCommand = {
   },
   run: async ({ container, panel, context }) => {
     const agents = listAgents(agentsDir(container));
-    const [active] = sessionAgentIds(context);
+    const sequence = sessionAgentIds(context);
     const chosen = await panel.choose({
       title: 'Escolha o agente',
-      description: 'O agente que vai trabalhar no projeto e no ticket ativos; depois, os que seguem.',
-      options: agents.map((agent) => ({ label: agent.id, detail: agent.description, current: agent.id === active })),
+      description: 'Um agente da sequência (marcado) troca o provider e o modelo; outro entra no fim dela.',
+      options: agents.map((agent) => ({
+        label: agent.id,
+        detail: agent.description,
+        current: sequence.includes(agent.id),
+      })),
     });
-    const first = chosen === undefined ? undefined : agents[chosen];
-    if (first === undefined) return;
-    const before = context.get(AGENT);
-    // Each agent's provider and model are its own, kept if chosen before; the mode stays (a mode an agent does not
-    // take gives way to its default).
+    const agent = chosen === undefined ? undefined : agents[chosen];
+    if (agent === undefined) return;
     talkToAgent(container, context);
-    // Each agent picked chooses its provider and its model, then enters, with its card, or stays out.
-    await sequenceAfter(first, agents, panel, async (sequence, agent) => {
-      if (!(await chooseAgentRun(container, context, panel, agent))) return false;
-      context.set(AGENT, sequence.map((each) => each.id).join(','));
-      panel.write(`Agente ${agentPaint(container, agent)(agent.id)} adicionado.`);
-      showRun(container, context, panel);
-      return true;
-    });
-    // Another sequence has nothing to resume.
-    if (context.get(AGENT) !== before) context.set(RESUME_AT, undefined);
+    if (sequence.includes(agent.id)) {
+      await changeAgent(container, context, panel, agent);
+      return;
+    }
+    await addAgent(container, context, panel, agent);
+    await addMore(container, context, panel, agents);
   },
 };
 

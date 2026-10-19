@@ -44,27 +44,27 @@ function modelLabel(provider: AgentProvider, model: string | undefined): string 
   return model ?? `padrão do ${provider.id}`;
 }
 
-/** Why `agent` does not enter the session: what it is not compatible with. */
-function refused(context: PanelContext, panel: Pick<ChatPanel, 'write'>, agent: AgentDefinition, why: string): false {
-  context.set(agentKey(PROVIDER, agent.id), undefined);
-  context.set(agentKey(MODEL, agent.id), undefined);
-  panel.write(warn(`O agente ${agent.id} não entra: ${why}`));
-  return false;
-}
-
 /**
- * The provider and the model of `agent`, chosen as it is added to the session: its provider among those it declares,
- * then its model among those it declares for it. Esc on either leaves the panel's, which the agent must then take: one
- * it cannot take keeps it out. `true` when it enters.
+ * The provider and the model of `agent`, chosen as it is added to the session or changed in it: its provider among
+ * those it declares, then its model among those it declares for it. Esc on either leaves the panel's, which the agent
+ * must then take. What it cannot take is said back, and the agent keeps the provider and the model it had; nothing
+ * when it takes the ones chosen.
  */
 export async function chooseAgentRun(
   container: Container,
   context: PanelContext,
   panel: ChatPanel,
   agent: AgentDefinition,
-): Promise<boolean> {
-  context.set(agentKey(PROVIDER, agent.id), undefined);
-  context.set(agentKey(MODEL, agent.id), undefined);
+): Promise<string | undefined> {
+  const keys = [agentKey(PROVIDER, agent.id), agentKey(MODEL, agent.id)] as const;
+  const had = keys.map((key) => context.get(key));
+  const refused = (why: string): string => {
+    keys.forEach((key, index) => {
+      context.set(key, had[index]);
+    });
+    return why;
+  };
+  for (const key of keys) context.set(key, undefined);
   const providers = agent.providers.map(({ id }) => id);
   const chosen = await panel.choose({
     title: `Provider de ${agent.id}`,
@@ -74,12 +74,12 @@ export async function chooseAgentRun(
   const provider = chosen === undefined ? undefined : providers[chosen];
   if (provider !== undefined) {
     if (installedProvider(container, provider) === undefined) {
-      return refused(context, panel, agent, `o provider ${provider} não está instalado nesta máquina.`);
+      return refused(`o provider ${provider} não está instalado nesta máquina.`);
     }
-    context.set(agentKey(PROVIDER, agent.id), provider);
+    context.set(keys[0], provider);
   }
   const run = sessionRun(container, context, agent, { model: undefined });
-  if ('error' in run) return refused(context, panel, agent, run.error);
+  if ('error' in run) return refused(run.error);
   const adapter = run.resolved.adapter;
   const models = modelOptions(adapter, agent);
   const picked = await panel.choose({
@@ -91,11 +91,9 @@ export async function chooseAgentRun(
       current: false,
     })),
   });
-  if (picked !== undefined && picked < models.length) {
-    context.set(agentKey(MODEL, agent.id), models[picked] ?? PROVIDER_DEFAULT);
-  }
+  if (picked !== undefined && picked < models.length) context.set(keys[1], models[picked] ?? PROVIDER_DEFAULT);
   const taken = sessionRun(container, context, agent);
-  return 'error' in taken ? refused(context, panel, agent, taken.error) : true;
+  return 'error' in taken ? refused(taken.error) : undefined;
 }
 
 /** `/provider`: the panel's provider, for the agents added with none of their own; `auto` takes the first installed. */

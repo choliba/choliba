@@ -377,6 +377,24 @@ describe('talkToAgent', () => {
     }
   });
 
+  it('runs at the end of the sequence an agent added while it goes', async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      const talk = conversation(tmp.path, 'echo');
+      talk.state.send('faça', talk.fake.panel);
+      await talk.settle();
+      talk.state.context.set('projeto', 'app');
+      talk.state.context.set('agente', 'echo,with-project');
+      talk.asked[0]?.end(0);
+      await talk.settle();
+      expect(talk.fake.choices.at(-1)?.title).toBe('Seguir para with-project?');
+      expect(talk.asked[1]?.argv[0]).toBe('with-project');
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
   it('stops a sequence at an agent that no longer loads, and does nothing to resume on a session without one', async () => {
     const tmp = makeTmpDir('panel-run');
     try {

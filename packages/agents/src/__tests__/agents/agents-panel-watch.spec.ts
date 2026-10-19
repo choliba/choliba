@@ -135,11 +135,17 @@ describe('watchChoices, from the start of a panel session', () => {
       state.move('other', 'echo', fake.panel);
       expect(state.values.get('agente')).toBe('echo,other');
       expect(fake.written.at(-1)).toBe(warn('A ordem dos agentes não muda enquanto eles rodam.'));
-      // Nor does /agents take another sequence: the agent running keeps its card.
+      // /agents changes the one waiting, not the one running.
       const agents = agentsPanel.find((command) => command.name === 'agents');
-      expect(agents?.unavailable?.(state.context, container)).toBe(
-        'Os agentes estão rodando: espere terminar ou pare com Ctrl+C',
+      expect(agents?.unavailable?.(state.context, container)).toBeUndefined();
+      await agents?.run({ container, panel: fake.panel, context: state.context });
+      expect(fake.written.at(-1)).toBe(
+        warn('O agente echo está rodando: troque o provider e o modelo dele depois que terminar.'),
       );
+      fake.answerNext(1, undefined, undefined);
+      await agents?.run({ container, panel: fake.panel, context: state.context });
+      expect(fake.written.at(-1)).toContain('atualizado.');
+      expect(state.values.get('agente')).toBe('echo,other');
     } finally {
       tmp.cleanup();
     }

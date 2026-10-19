@@ -81,6 +81,8 @@ export const RESUME_AT = 'retomar';
 interface Talk {
   readonly resume: (panel: ChatPanel) => void;
   readonly running: () => boolean;
+  /** The agent running now, if any. */
+  readonly current: () => string | undefined;
 }
 
 /** The sessions whose conversation goes to their agents already: one per session, whichever agents it has. */
@@ -108,6 +110,8 @@ export function talkToAgent(container: Container, context: PanelContext): void {
   if (talks.has(context)) return;
   let sending: ((text: string) => void) | undefined;
   let running = false;
+  // The agent of the sequence running now.
+  let current: string | undefined;
   // Set by Ctrl+C: the sequence stops after the run it stopped. Read through a call, as Ctrl+C sets it meanwhile.
   const interrupt = { asked: false };
   const interrupted = (): boolean => interrupt.asked;
@@ -217,34 +221,39 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     // The agents about to run wait again on their cards.
     for (const id of ids.slice(from)) context.set(agentKey(STATE, id), undefined);
     showRun(container, context);
+    // The session's agents are read again at each step: one added while the sequence goes runs at its end.
+    const agentAt = (at: number): string | undefined => sessionAgentIds(context)[at];
     try {
-      for (const [offset, id] of ids.slice(from).entries()) {
-        const at = from + offset;
+      for (let at = from, id = agentAt(at); id !== undefined; at += 1, id = agentAt(at)) {
         const agent = sessionAgent(container, id);
         if (agent === undefined) {
           panel.answer(warn(`O agente ${id} não carrega mais: veja com choliba check.`));
-          stopped(ids, at, panel);
+          stopped(sessionAgentIds(context), at, panel);
           return;
         }
+        current = id;
         const code = await runOne(agent, at === from && task !== undefined ? task : (agent.defaultTask ?? ''), panel);
+        current = undefined;
         if (code !== 0 || interrupted()) {
-          stopped(ids, at, panel);
+          stopped(sessionAgentIds(context), at, panel);
           return;
         }
-        const next = ids[at + 1];
+        const next = agentAt(at + 1);
         if (next !== undefined && !(await goOn(next, panel))) {
-          stopped(ids, at + 1, panel);
+          stopped(sessionAgentIds(context), at + 1, panel);
           return;
         }
       }
     } finally {
       running = false;
+      current = undefined;
       letGo();
     }
   };
 
   talks.set(context, {
     running: () => running,
+    current: () => current,
     resume: (panel) => {
       if (running) return;
       const at = Number(context.get(RESUME_AT));
@@ -256,6 +265,11 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     if (running) sending?.(text);
     else void runFrom(0, text, panel);
   });
+}
+
+/** The agent of the session running now, if any. */
+export function runningAgent(context: PanelContext): string | undefined {
+  return talks.get(context)?.current();
 }
 
 /** Whether the session's agents run now: a sequence going, or one agent. */
