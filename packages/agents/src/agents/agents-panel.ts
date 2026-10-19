@@ -1,15 +1,49 @@
-import { messageOf, type PanelCommand } from '@choliba/core';
+import { messageOf, type ChatPanel, type PanelCommand } from '@choliba/core';
 
+import type { AgentDefinition } from '../common';
 import { listAgents } from './agent-loader';
 import { agentPaint } from './agents-panel-card';
 import { runChoices } from './agents-panel-choices';
-import { talkToAgent } from './agents-panel-run';
-import { AGENT, agentsDir, showRun } from './agents-panel-state';
+import { RESUME_AT, resumeSequence, talkToAgent } from './agents-panel-run';
+import { AGENT, agentsDir, sessionAgentIds, showRun } from './agents-panel-state';
 
-/** `/agents`: the active agent, chosen among the workspace's; then what is sent with no `/` is its task. */
+/** The option that ends the sequence, first and checked: Enter after the first agent keeps it alone. */
+const NO_OTHER = 'nenhum outro';
+
+/**
+ * Picks the agents after `first`, in order: each choice adds one at the end of the sequence, among those not in it
+ * yet; Enter on "nenhum outro" or Esc ends it.
+ */
+async function sequenceAfter(
+  first: AgentDefinition,
+  agents: readonly AgentDefinition[],
+  panel: ChatPanel,
+): Promise<readonly AgentDefinition[]> {
+  const sequence = [first];
+  for (;;) {
+    const left = agents.filter((agent) => !sequence.includes(agent));
+    if (left.length === 0) return sequence;
+    const chosen = await panel.choose({
+      title: `Depois de ${sequence.map((agent) => agent.id).join(' >>> ')}`,
+      description: 'O próximo agente da sequência, que roda quando o anterior termina e você confirma.',
+      options: [
+        { label: NO_OTHER, detail: 'a sequência fica como está', current: true },
+        ...left.map((agent) => ({ label: agent.id, detail: agent.description, current: false })),
+      ],
+    });
+    const next = chosen === undefined ? undefined : left[chosen - 1];
+    if (next === undefined) return sequence;
+    sequence.push(next);
+  }
+}
+
+/**
+ * `/agents`: the session's agents, chosen among the workspace's: the first, then those that run after it, in order
+ * (one is a run of that agent alone); then what is sent with no `/` is the first one's task.
+ */
 const agentsPanelCommand: PanelCommand = {
   name: 'agents',
-  description: 'Escolhe o agente que vai trabalhar',
+  description: 'Escolhe o agente que vai trabalhar, ou vários em sequência',
   unavailable: (_context, container) => {
     try {
       return listAgents(agentsDir(container)).length === 0
@@ -21,22 +55,39 @@ const agentsPanelCommand: PanelCommand = {
   },
   run: async ({ container, panel, context }) => {
     const agents = listAgents(agentsDir(container));
-    const active = context.get(AGENT);
+    const [active] = sessionAgentIds(context);
     const chosen = await panel.choose({
       title: 'Escolha o agente',
-      description: 'O agente que vai trabalhar no projeto e no ticket ativos.',
+      description: 'O agente que vai trabalhar no projeto e no ticket ativos; depois, os que seguem.',
       options: agents.map((agent) => ({ label: agent.id, detail: agent.description, current: agent.id === active })),
     });
-    const agent = chosen === undefined ? undefined : agents[chosen];
-    if (agent === undefined || agent.id === active) return;
-    context.set(AGENT, agent.id);
-    panel.write(`Agente ativo: ${agentPaint(container, agent)(agent.id)}.`);
-    // Its provider and model are its own, kept if chosen before; the mode stays (a mode the agent does not take gives
-    // way to its default).
+    const first = chosen === undefined ? undefined : agents[chosen];
+    if (first === undefined) return;
+    const sequence = await sequenceAfter(first, agents, panel);
+    const ids = sequence.map((agent) => agent.id).join(',');
+    if (ids === context.get(AGENT)) return;
+    context.set(AGENT, ids);
+    context.set(RESUME_AT, undefined);
+    const names = sequence.map((agent) => agentPaint(container, agent)(agent.id));
+    panel.write(sequence.length === 1 ? `Agente ativo: ${names.join('')}.` : `Sequência: ${names.join(' >>> ')}.`);
+    // Each agent's provider and model are its own, kept if chosen before; the mode stays (a mode an agent does not
+    // take gives way to its default).
     talkToAgent(container, context);
     showRun(container, context, panel);
   },
 };
 
+/** `/seguir`: resumes the sequence that stopped, from the agent where it stopped. */
+const resumeCommand: PanelCommand = {
+  name: 'seguir',
+  description: 'Retoma a sequência de agentes de onde ela parou',
+  unavailable: (context) =>
+    context.get(RESUME_AT) === undefined ? 'Nenhuma sequência parada para retomar' : undefined,
+  run: ({ panel, context }) => {
+    resumeSequence(context, panel);
+    return Promise.resolve();
+  },
+};
+
 /** What @choliba/agents brings to `choliba panel`. */
-export const agentsPanel: readonly PanelCommand[] = [agentsPanelCommand, ...runChoices];
+export const agentsPanel: readonly PanelCommand[] = [agentsPanelCommand, resumeCommand, ...runChoices];

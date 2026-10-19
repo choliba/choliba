@@ -494,14 +494,35 @@ describe('runAgentsCli — tickets', () => {
   it('creates the ticket for the run and removes it when the run leaves it untouched', async () => {
     await withProjects((projectsDir) =>
       withTicketAgent(async (agentsDir) => {
+        const told: string[] = [];
         const { deps, stderr } = harness(claudeStdout(claudeSuccessLine()), {
           config: { CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: projectsDir },
+          ticket: (ticket) => told.push(ticket),
         });
 
         expect(await runAgentsCli(argv(agentsDir, '--type', 'story', 'x'), deps)).toBe(0);
         const file = join(projectsDir, 'ready', 'tickets', '1.json');
         expect(stderr.chunks.join('')).toContain(`Ticket "ready-1" não foi preenchido; ${file} foi removido.`);
         expect(existsSync(file)).toBe(false);
+        // A ticket the run removed is no one's to work on.
+        expect(told).toEqual([]);
+      }),
+    );
+  });
+
+  it('tells its host the ticket it leaves, for the next agent of a sequence', async () => {
+    await withProjects((projectsDir) =>
+      withTicketAgent(async (agentsDir) => {
+        mkdirSync(join(projectsDir, 'ready', 'tickets'), { recursive: true });
+        writeFileSync(join(projectsDir, 'ready', 'tickets', '7.json'), '{}');
+        const told: string[] = [];
+        const { deps } = harness(claudeStdout(claudeSuccessLine()), {
+          config: { CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: projectsDir },
+          ticket: (ticket) => told.push(ticket),
+        });
+
+        expect(await runAgentsCli(argv(agentsDir, '--ticket', 'ready-7', '--mode', 'ask', 'x'), deps)).toBe(0);
+        expect(told).toEqual(['ready-7']);
       }),
     );
   });

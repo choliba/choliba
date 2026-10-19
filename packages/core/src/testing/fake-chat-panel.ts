@@ -17,8 +17,10 @@ export interface FakeChatPanel {
   readonly filled: string[];
   /** The person clicks the suggestion at `index`. */
   click(index: number): void;
-  /** What the next `choose` gives: an index, or nothing as Esc. */
+  /** What every `choose` gives from now on: an index, or nothing as Esc. */
   answer(index: number | undefined): void;
+  /** What the next `choose`s give, in order, before the answer of `answer` again. */
+  answerNext(...indices: (number | undefined)[]): void;
   /** The person sends `text` from the field. */
   send(text: string): void;
   /** The person types `text` in the field. */
@@ -44,6 +46,7 @@ export function fakeChatPanel(): FakeChatPanel {
   const keys: ((key: PanelKey) => boolean)[] = [];
   const interrupts: (() => void)[] = [];
   let answer: number | undefined = 0;
+  const next: (number | undefined)[] = [];
   let picker: ((index: number) => void) | undefined;
   const filled: string[] = [];
   let closed = false;
@@ -59,7 +62,7 @@ export function fakeChatPanel(): FakeChatPanel {
     },
     choose: (request) => {
       choices.push(request);
-      return Promise.resolve(answer);
+      return Promise.resolve(next.length > 0 ? next.shift() : answer);
     },
     onTyping: (listener) => {
       typing.push(listener);
@@ -112,6 +115,9 @@ export function fakeChatPanel(): FakeChatPanel {
     },
     answer: (index) => {
       answer = index;
+    },
+    answerNext: (...indices) => {
+      next.push(...indices);
     },
     send: (text) => {
       messages.forEach((listener) => {

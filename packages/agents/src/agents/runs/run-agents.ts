@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { formatDuration, formatHelp, openOpenTuiPanel, type CommandSpec } from '@choliba/core';
@@ -481,7 +482,9 @@ async function runPrepared(
   );
   const changes = definitionChanges(before, definitionSnapshot(directories));
   const guarded = changes.length === 0 ? exitCode : definitionChangeExit(changes, deps);
-  return finishTicket(ticketTarget, createdContent, context.mode, guarded, deps.stderr);
+  const finished = finishTicket(ticketTarget, createdContent, context.mode, guarded, deps.stderr);
+  if (ticketTarget !== undefined && existsSync(ticketTarget.file)) deps.ticket?.(ticketTarget.ticket);
+  return finished;
 }
 
 export async function runAgentsCli(argv: readonly string[], deps: RunAgentsCliDeps): Promise<number> {

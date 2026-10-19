@@ -1,7 +1,20 @@
 import { formatElapsed, type ChatPanel, type Container, type Panel, type PanelContext } from '@choliba/core';
+import { holdApp } from '@choliba/projects';
 
 import type { AgentDefinition } from '../common';
-import { activeAgent, AGENT, bold, flag, gray, PROJECT, sessionArgv, TICKET, warn } from './agents-panel-state';
+import { loadAgent } from './agent-loader';
+import {
+  AGENT,
+  agentsDir,
+  bold,
+  flag,
+  gray,
+  PROJECT,
+  sessionAgentIds,
+  sessionArgv,
+  TICKET,
+  warn,
+} from './agents-panel-state';
 import { AGENTS } from './agents.constants';
 
 /** The status line's part while an agent runs. */
@@ -52,29 +65,60 @@ function duration(ms: number): string {
   return seconds < 60 ? `${String(seconds)}s` : `${String(Math.floor(seconds / 60))}m${String(seconds % 60)}s`;
 }
 
-/** The sessions whose conversation goes to the active agent already: one per session, whichever agent is active. */
-const talking = new WeakSet<PanelContext>();
+/** The context key of where a stopped sequence resumes: the place, among the session's agents, of the next to run. */
+export const RESUME_AT = 'retomar';
+
+/** The conversation of a session with its agents: what /seguir calls to resume a stopped sequence. */
+interface Talk {
+  readonly resume: (panel: ChatPanel) => void;
+}
+
+/** The sessions whose conversation goes to their agents already: one per session, whichever agents it has. */
+const talks = new WeakMap<PanelContext, Talk>();
+
+/** The agent `id` of the session, read again from its folder; nothing when it no longer loads. */
+function sessionAgent(container: Container, id: string): AgentDefinition | undefined {
+  try {
+    return loadAgent(agentsDir(container), id);
+  } catch {
+    return undefined;
+  }
+}
+
+/** Asks whether to go on to `next` after an agent ended with code 0: Enter goes on, Esc stops the sequence. */
+async function goOn(next: string, panel: ChatPanel): Promise<boolean> {
+  const chosen = await panel.choose({
+    title: `Seguir para ${next}?`,
+    description: 'Enter segue; Esc para a sequência, que /seguir retoma.',
+    options: [{ label: 'seguir', detail: next, current: true }],
+  });
+  return chosen === 0;
+}
 
 /**
- * Makes what is sent with no `/` the task of the active agent: it runs as `choliba run agent` would, in the session's
- * panel, with the session's choices. While it runs, what is sent goes to it, its questions are asked in the field, the
- * agent's card turns a spinner and the status line says how long it has gone, and Ctrl+C twice or /clear stop it.
+ * Makes what is sent with no `/` the task of the session's agents: they run in order, as `choliba run agent` would, in
+ * the session's panel, each with its own provider and model; the first takes what was sent, the others their own
+ * default task, and the ticket a run leaves is the next one's. Between two agents the panel asks to go on. A run that
+ * fails, an Esc or Ctrl+C stops the sequence where it was, and /seguir resumes it from there. While an agent runs, what
+ * is sent goes to it, its questions are asked in the field, its card turns a spinner and the status line says how long
+ * it has gone; the project's application stays up from the first agent to the last.
  */
 export function talkToAgent(container: Container, context: PanelContext): void {
-  if (talking.has(context)) return;
-  talking.add(context);
+  if (talks.has(context)) return;
   let sending: ((text: string) => void) | undefined;
   let running = false;
-  const start = async (text: string, panel: ChatPanel): Promise<void> => {
-    const agent = activeAgent(container, context);
-    if (agent === undefined) return;
-    const argv = await runArgv(context, agent, text, panel);
-    if (argv === undefined) return;
+  // Set by Ctrl+C: the sequence stops after the run it stopped. Read through a call, as Ctrl+C sets it meanwhile.
+  const interrupt = { asked: false };
+  const interrupted = (): boolean => interrupt.asked;
+
+  /** One run of `agent` with `task`: its exit code, or nothing when it did not start (a question left with Esc). */
+  const runOne = async (agent: AgentDefinition, task: string, panel: ChatPanel): Promise<number | undefined> => {
+    const argv = await runArgv(context, agent, task, panel);
+    if (argv === undefined) return undefined;
     if (typeof argv === 'string') {
       panel.answer(warn(argv));
-      return;
+      return undefined;
     }
-    running = true;
     let stopRun: (() => void) | undefined;
     let inSession = false;
     const steps = new AbortController();
@@ -86,12 +130,12 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     };
     const done = (): void => {
       closeSession();
-      running = false;
       context.busy(undefined);
       context.spin(AGENT, false);
     };
-    // Ctrl+C stops the agent's session while it is open, else the command of the step running.
+    // Ctrl+C stops the agent's session while it is open, else the command of the step running; and the sequence.
     context.busy(() => {
+      interrupt.asked = true;
       if (inSession) stopRun?.();
       else steps.abort();
     });
@@ -118,33 +162,92 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     const startedAt = Date.now();
     // The agent's card turns a spinner while it runs; the chat keeps only what the run says.
     context.spin(AGENT, true);
-    await container
-      .get(AGENTS)
-      .runHosted(argv, {
+    try {
+      const code = await container.get(AGENTS).runHosted(argv, {
         panel: hosted,
         stdout: replies(panel, (line) => line),
         stderr: replies(panel, warn),
         signal: steps.signal,
-      })
-      .then(
-        (code) => {
-          done();
-          const how = code === 0 ? bold('código 0') : warn(`código ${String(code)}`);
-          panel.answer(`${agent.id} terminou: ${how} ${gray(`· ${duration(Date.now() - startedAt)}`)}`);
+        // The ticket the run leaves is the session's: the next agent works on it.
+        ticket: (ticket) => {
+          context.set(TICKET, ticket);
         },
-        // An error nothing expected ends this run in the conversation; the panel stays usable for the next one.
-        (error: unknown) => {
-          done();
-          panel.answer(
-            warn(`${agent.id} parou por um erro: ${error instanceof Error ? error.message : String(error)}`),
-          );
-        },
-      );
+      });
+      done();
+      const how = code === 0 ? bold('código 0') : warn(`código ${String(code)}`);
+      panel.answer(`${agent.id} terminou: ${how} ${gray(`· ${duration(Date.now() - startedAt)}`)}`);
+      return code;
+    } catch (error) {
+      // An error nothing expected ends this run in the conversation; the panel stays usable for the next one.
+      done();
+      panel.answer(warn(`${agent.id} parou por um erro: ${error instanceof Error ? error.message : String(error)}`));
+      return 1;
+    }
   };
+
+  /** Where the sequence stopped: kept for /seguir and said, when the session has more than one agent. */
+  const stopped = (ids: readonly string[], at: number, panel: ChatPanel): void => {
+    const id = ids[at];
+    if (ids.length < 2 || id === undefined) return;
+    context.set(RESUME_AT, String(at));
+    panel.answer(warn(`A sequência parou em ${id}. /seguir retoma dele.`));
+  };
+
+  /** Runs the session's agents from the one at `from`, the first with `task` (its own default task without one). */
+  const runFrom = async (from: number, task: string | undefined, panel: ChatPanel): Promise<void> => {
+    const ids = sessionAgentIds(context);
+    const project = context.get(PROJECT);
+    const letGo = ids.length > 1 && project !== undefined ? holdApp(project) : noop;
+    running = true;
+    interrupt.asked = false;
+    context.set(RESUME_AT, undefined);
+    try {
+      for (const [offset, id] of ids.slice(from).entries()) {
+        const at = from + offset;
+        const agent = sessionAgent(container, id);
+        if (agent === undefined) {
+          panel.answer(warn(`O agente ${id} não carrega mais: veja com choliba check.`));
+          stopped(ids, at, panel);
+          return;
+        }
+        const code = await runOne(agent, at === from && task !== undefined ? task : (agent.defaultTask ?? ''), panel);
+        if (code !== 0 || interrupted()) {
+          stopped(ids, at, panel);
+          return;
+        }
+        const next = ids[at + 1];
+        if (next !== undefined && !(await goOn(next, panel))) {
+          stopped(ids, at + 1, panel);
+          return;
+        }
+      }
+    } finally {
+      running = false;
+      letGo();
+    }
+  };
+
+  talks.set(context, {
+    resume: (panel) => {
+      if (running) return;
+      const at = Number(context.get(RESUME_AT));
+      if (Number.isInteger(at)) void runFrom(at, undefined, panel);
+      else panel.answer(warn('Nenhuma sequência parada para retomar.'));
+    },
+  });
   context.converse((text, panel) => {
     if (running) sending?.(text);
-    else void start(text, panel);
+    else void runFrom(0, text, panel);
   });
+}
+
+/** `/seguir`: resumes the session's stopped sequence from the agent where it stopped; nothing while one runs. */
+export function resumeSequence(context: PanelContext, panel: ChatPanel): void {
+  talks.get(context)?.resume(panel);
+}
+
+function noop(): void {
+  // Nothing held: a single agent, or no project.
 }
 
 /** Where a run's own lines go (what it says before and after its session): answers in the chat, `paint`ed. */

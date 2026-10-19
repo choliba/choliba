@@ -61,8 +61,10 @@ function session(dir: string, installed: (bin: string) => boolean, provider = 'a
     if (found === undefined) throw new Error(name);
     return found;
   };
+  // /agents asks for the agent, then for the next one: "nenhum outro" (0) keeps it alone.
   const run = (name: string, answer: number | undefined): Promise<void> => {
     fake.answer(answer);
+    if (name === 'agents') fake.answerNext(answer, 0);
     return command(name).run({ container, panel: fake.panel, context: state.context });
   };
   const why = (name: string): string | undefined => command(name).unavailable?.(state.context, container);
@@ -228,7 +230,7 @@ describe('/model', () => {
       expect(panel.why('model')).toBeUndefined();
       await panel.run('model', 1);
 
-      expect(panel.fake.choices[1]).toEqual({
+      expect(panel.fake.choices[2]).toEqual({
         title: 'Escolha o modelo de echo',
         description: 'Os modelos que o agente declara para claude.',
         options: [
@@ -261,7 +263,7 @@ describe('/model', () => {
       await panel.run('agents', 1);
       await panel.run('model', 0);
 
-      expect(panel.fake.choices[1]?.options.map((option) => option.label)).toEqual(['qwen3.5:4b']);
+      expect(panel.fake.choices[2]?.options.map((option) => option.label)).toEqual(['qwen3.5:4b']);
       expect(panel.state.labels.get('modelo')).toBe(bold('qwen3.5:4b'));
     } finally {
       tmp.cleanup();
@@ -284,12 +286,12 @@ describe('/mode', () => {
         `${gray('modo')} ${bold('execute')}${gray(' | ')}${gray('plan')}${gray(' | ')}${gray('ask')} ${gray('(shift+tab alterna)')}`,
       );
       await panel.run('mode', 1);
-      expect(panel.fake.choices[1]?.options.map((option) => [option.label, option.current])).toEqual([
+      expect(panel.fake.choices[2]?.options.map((option) => [option.label, option.current])).toEqual([
         ['execute', true],
         ['plan', false],
         ['ask', false],
       ]);
-      expect(panel.fake.choices[1]?.options[1]?.detail).toContain('Só planeja');
+      expect(panel.fake.choices[2]?.options[1]?.detail).toContain('Só planeja');
       expect(panel.state.values.get('modo')).toBe('plan');
       expect(panel.fake.written.at(-1)).toBe(`Modo: ${bold('plan')}.`);
       expect(panel.state.statuses.get('modo')).toContain(bold('plan'));

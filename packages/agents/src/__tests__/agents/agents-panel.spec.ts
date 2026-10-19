@@ -40,7 +40,7 @@ function agentsFolder(dir: string): void {
 
 /** The `/agents` command on a container whose agents folder is `dir`, with a fake panel and context. */
 /** The agent's name as the panel paints it: bold, in its color. */
-const painted = (color: 'magenta' | 'red', text: string): string => boldAnsi(paintAnsi(color, text));
+const painted = (color: 'magenta' | 'red' | 'cyan', text: string): string => boldAnsi(paintAnsi(color, text));
 
 /** The `/agents` command on a fake machine that has the binaries `installed` says, every one by default. */
 function withAgents(dir: string, provider = 'auto', installed: (bin: string) => boolean = () => true) {
@@ -118,14 +118,14 @@ describe('/agents', () => {
       const agents = withAgents(tmp.path);
       expect([agents.command.name, agents.command.description]).toEqual([
         'agents',
-        'Escolhe o agente que vai trabalhar',
+        'Escolhe o agente que vai trabalhar, ou vários em sequência',
       ]);
       expect(agents.command.unavailable?.(agents.context, agents.container)).toBeUndefined();
 
       await agents.run();
       expect(agents.fake.choices[0]).toMatchObject({
         title: 'Escolha o agente',
-        description: 'O agente que vai trabalhar no projeto e no ticket ativos.',
+        description: 'O agente que vai trabalhar no projeto e no ticket ativos; depois, os que seguem.',
       });
       expect(agents.fake.choices[0]?.options.map((option) => [option.label, option.current])).toEqual([
         ['echo', false],
@@ -153,8 +153,68 @@ describe('/agents', () => {
       expect(agents.fake.written).toEqual([`Agente ativo: ${painted('magenta', 'echo')}.`]);
 
       await agents.run();
-      expect(agents.fake.choices[1]?.options[0]?.current).toBe(true);
+      expect(agents.fake.choices[2]?.options[0]?.current).toBe(true);
       expect(agents.shown).toHaveLength(1);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('builds a sequence: the first agent, then each next one in order, until "nenhum outro" or Esc', async () => {
+    const tmp = makeTmpDir('agents-panel');
+    try {
+      agentsFolder(tmp.path);
+      const agents = withAgents(tmp.path);
+      // echo, then ticketed (2nd of the rest), then optional (1st of what is left), then "nenhum outro".
+      agents.fake.answerNext(0, 2, 1, 0);
+      await agents.run();
+
+      expect(agents.values.get('agente')).toBe('echo,ticketed,optional');
+      expect(agents.fake.choices[1]).toMatchObject({
+        title: 'Depois de echo',
+        description: 'O próximo agente da sequência, que roda quando o anterior termina e você confirma.',
+      });
+      expect(agents.fake.choices[1]?.options.map((option) => [option.label, option.current])).toEqual([
+        ['nenhum outro', true],
+        ['optional', false],
+        ['ticketed', false],
+        ['with-project', false],
+      ]);
+      expect(agents.fake.choices[2]?.title).toBe('Depois de echo >>> ticketed');
+      expect(agents.fake.written.at(-1)).toBe(
+        `Sequência: ${painted('magenta', 'echo')} >>> ${painted('cyan', 'ticketed')} >>> ${painted('magenta', 'optional')}.`,
+      );
+
+      // Every agent picked: no question is left to ask. The same sequence again changes nothing.
+      agents.fake.answerNext(0, 1, 1, 1);
+      await agents.run();
+      expect(agents.values.get('agente')).toBe('echo,optional,ticketed,with-project');
+      agents.fake.answerNext(0, 1, 1, 1);
+      const written = agents.fake.written.length;
+      await agents.run();
+      expect(agents.fake.written).toHaveLength(written);
+
+      // Esc on the next one keeps the sequence as it is.
+      agents.fake.answerNext(3, undefined);
+      await agents.run();
+      expect(agents.values.get('agente')).toBe('with-project');
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('offers /seguir only when a sequence stopped, and resumes it', async () => {
+    const tmp = makeTmpDir('agents-panel');
+    try {
+      agentsFolder(tmp.path);
+      const agents = withAgents(tmp.path);
+      const resume = agentsPanel.find((command) => command.name === 'seguir');
+      expect(resume?.description).toBe('Retoma a sequência de agentes de onde ela parou');
+      expect(resume?.unavailable?.(agents.context, agents.container)).toBe('Nenhuma sequência parada para retomar');
+      agents.context.set('retomar', '1');
+      expect(resume?.unavailable?.(agents.context, agents.container)).toBeUndefined();
+      await resume?.run({ container: agents.container, panel: agents.fake.panel, context: agents.context });
+      expect(agents.fake.written).toEqual([]);
     } finally {
       tmp.cleanup();
     }
@@ -215,7 +275,7 @@ describe('/agents', () => {
       ]);
 
       const ollama = withAgents(tmp.path, 'claude-ollama');
-      ollama.fake.answer(1);
+      ollama.fake.answerNext(1, 0);
       await ollama.run();
       expect(ollama.values.get('agente')).toBe('local');
       expect([...ollama.labels]).toEqual([
