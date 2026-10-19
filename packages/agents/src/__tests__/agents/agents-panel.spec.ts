@@ -225,12 +225,12 @@ describe('/agents', () => {
     }
   });
 
-  it('offers /seguir only when a sequence stopped, and resumes it', async () => {
+  it('offers /resume only when a sequence stopped, and resumes it', async () => {
     const tmp = makeTmpDir('agents-panel');
     try {
       agentsFolder(tmp.path);
       const agents = withAgents(tmp.path);
-      const resume = agentsPanel.find((command) => command.name === 'seguir');
+      const resume = agentsPanel.find((command) => command.name === 'resume');
       expect(resume?.description).toBe('Retoma a sequência de agentes de onde ela parou');
       expect(resume?.unavailable?.(agents.context, agents.container)).toBe('Nenhuma sequência parada para retomar');
       agents.context.set('retomar', '1');

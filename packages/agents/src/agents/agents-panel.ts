@@ -84,9 +84,9 @@ const agentsPanelCommand: PanelCommand = {
   },
 };
 
-/** `/seguir`: resumes the sequence that stopped, from the agent where it stopped. */
+/** `/resume`: resumes the sequence that stopped, from the agent where it stopped. */
 const resumeCommand: PanelCommand = {
-  name: 'seguir',
+  name: 'resume',
   description: 'Retoma a sequência de agentes de onde ela parou',
   unavailable: (context) =>
     context.get(RESUME_AT) === undefined ? 'Nenhuma sequência parada para retomar' : undefined,

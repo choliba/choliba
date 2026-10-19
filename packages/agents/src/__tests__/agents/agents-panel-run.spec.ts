@@ -318,7 +318,7 @@ describe('talkToAgent', () => {
       await talk.settle();
       expect(talk.fake.choices.at(-1)).toEqual({
         title: 'Seguir para with-project?',
-        description: 'Enter segue; Esc para a sequência, que /seguir retoma.',
+        description: 'Enter segue; Esc para a sequência, que /resume retoma.',
         options: [{ label: 'seguir', detail: 'with-project', current: true }],
       });
       expect(talk.asked[1]?.argv).toEqual(['with-project', '--project', 'site', 'Trabalhe no projeto.']);
@@ -331,7 +331,7 @@ describe('talkToAgent', () => {
     }
   });
 
-  it('stops a sequence on a failure, an Esc or Ctrl+C, and /seguir resumes it from where it stopped', async () => {
+  it('stops a sequence on a failure, an Esc or Ctrl+C, and /resume resumes it from where it stopped', async () => {
     const tmp = makeTmpDir('panel-run');
     try {
       agentsFolder(tmp.path);
@@ -347,7 +347,7 @@ describe('talkToAgent', () => {
       talk.asked[0]?.end(1);
       await talk.settle();
       expect(talk.state.values.get('retomar')).toBe('0');
-      expect(talk.fake.written.at(-1)).toBe(warn('A sequência parou em echo. /seguir retoma dele.'));
+      expect(talk.fake.written.at(-1)).toBe(warn('A sequência parou em echo. /resume retoma dele.'));
       expect(talk.state.cards.get('echo')?.state).toBe(warn('falhou · 0m00s'));
 
       // Esc at the pause stops it before the next one.
@@ -355,13 +355,13 @@ describe('talkToAgent', () => {
       await talk.settle();
       expect(talk.asked[1]?.argv).toEqual(['echo', '']);
       talk.fake.answerNext(undefined);
-      // The ticket the session keeps is the one /seguir resumes with.
+      // The ticket the session keeps is the one /resume resumes with.
       talk.state.context.set('ticket', 'app-1');
       talk.asked[1]?.end(0);
       await talk.settle();
       expect(talk.state.values.get('retomar')).toBe('1');
       expect(talk.fake.written.at(-1)).toBe(
-        warn('A sequência parou em with-project. /seguir retoma dele, com o ticket app-1.'),
+        warn('A sequência parou em with-project. /resume retoma dele, com o ticket app-1.'),
       );
 
       // Ctrl+C stops the run and the sequence, at the agent it stopped.
@@ -388,7 +388,7 @@ describe('talkToAgent', () => {
       expect(talk.state.values.get('retomar')).toBe('0');
       expect(talk.fake.written).toEqual([
         warn('O agente gone não carrega mais: veja com choliba check.'),
-        warn('A sequência parou em gone. /seguir retoma dele.'),
+        warn('A sequência parou em gone. /resume retoma dele.'),
       ]);
       const other = fakeChatPanel();
       resumeSequence(fakePanelContext().context, other.panel);

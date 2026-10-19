@@ -77,7 +77,7 @@ function duration(ms: number): string {
 /** The context key of where a stopped sequence resumes: the place, among the session's agents, of the next to run. */
 export const RESUME_AT = 'retomar';
 
-/** The conversation of a session with its agents: what /seguir calls to resume a stopped sequence. */
+/** The conversation of a session with its agents: what /resume calls to resume a stopped sequence. */
 interface Talk {
   readonly resume: (panel: ChatPanel) => void;
 }
@@ -89,7 +89,7 @@ const talks = new WeakMap<PanelContext, Talk>();
 async function goOn(next: string, panel: ChatPanel): Promise<boolean> {
   const chosen = await panel.choose({
     title: `Seguir para ${next}?`,
-    description: 'Enter segue; Esc para a sequência, que /seguir retoma.',
+    description: 'Enter segue; Esc para a sequência, que /resume retoma.',
     options: [{ label: 'seguir', detail: next, current: true }],
   });
   return chosen === 0;
@@ -99,7 +99,7 @@ async function goOn(next: string, panel: ChatPanel): Promise<boolean> {
  * Makes what is sent with no `/` the task of the session's agents: they run in order, as `choliba run agent` would, in
  * the session's panel, each with its own provider and model; the first takes what was sent, the others their own
  * default task, and the ticket a run leaves is the next one's. Between two agents the panel asks to go on. A run that
- * fails, an Esc or Ctrl+C stops the sequence where it was, and /seguir resumes it from there. While an agent runs, what
+ * fails, an Esc or Ctrl+C stops the sequence where it was, and /resume resumes it from there. While an agent runs, what
  * is sent goes to it, its questions are asked in the field, its card turns a spinner and the status line says how long
  * it has gone; the project's application stays up from the first agent to the last.
  */
@@ -195,14 +195,14 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     }
   };
 
-  /** Where the sequence stopped: kept for /seguir and said, when the session has more than one agent. */
+  /** Where the sequence stopped: kept for /resume and said, when the session has more than one agent. */
   const stopped = (ids: readonly string[], at: number, panel: ChatPanel): void => {
     const id = ids[at];
     if (ids.length < 2 || id === undefined) return;
     context.set(RESUME_AT, String(at));
     const ticket = context.get(TICKET);
     const kept = ticket === undefined ? '' : `, com o ticket ${ticket}`;
-    panel.answer(warn(`A sequência parou em ${id}. /seguir retoma dele${kept}.`));
+    panel.answer(warn(`A sequência parou em ${id}. /resume retoma dele${kept}.`));
   };
 
   /** Runs the session's agents from the one at `from`, the first with `task` (its own default task without one). */
@@ -256,7 +256,7 @@ export function talkToAgent(container: Container, context: PanelContext): void {
   });
 }
 
-/** `/seguir`: resumes the session's stopped sequence from the agent where it stopped; nothing while one runs. */
+/** `/resume`: resumes the session's stopped sequence from the agent where it stopped; nothing while one runs. */
 export function resumeSequence(context: PanelContext, panel: ChatPanel): void {
   talks.get(context)?.resume(panel);
 }
