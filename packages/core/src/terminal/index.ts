@@ -2,6 +2,7 @@ export { printBox, type BoxOptions } from './box';
 export { CircularBuffer } from './circular-buffer';
 export { exitCodeFor } from './exit-code';
 export { formatDuration } from './format-duration';
+export { logStamp, NO_LOG, openLogFile, type LogFile } from './log-file';
 export { DEFAULT_SPINNER_FRAMES, LiveRegion, type LiveRow } from './live-region';
 export { DEFAULT_COLUMNS, formatElapsed, StatusFooter } from './status-footer';
 export {

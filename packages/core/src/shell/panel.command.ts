@@ -3,7 +3,9 @@ import { openOpenTuiPanel, visibleWidth, type ArtPixels, type ChatPanel, type Pa
 import { token, type Container } from './container';
 import { PANEL_COMMANDS, PANEL_STARTS, PLATFORM } from './create-shell';
 import type { PanelCommand, ShellCommand } from './interfaces/shell.interface';
+import { loggedPanel, openPanelLog } from './panel-log';
 import { panelSession, type PanelSession } from './panel-session';
+import { WORKSPACE_ROOT } from './shell.constants';
 
 /** Opens a panel, or gives nothing where it cannot (`openOpenTuiPanel`); a spec puts a fake one in its place. */
 export const PANEL_OPENER = token<(options: PanelOptions) => Promise<ChatPanel | undefined>>('PanelOpener');
@@ -104,7 +106,7 @@ export const panelCommand: ShellCommand = {
       `\u001b[1m\u001b[32m${version ?? 'choliba'}\u001b[39m\u001b[22m`,
       `\u001b[90m${shortPath(cwd, home)}\u001b[39m`,
     ];
-    const panel =
+    const opened =
       container.get(PLATFORM).stdout.isTTY === true
         ? await container.get(PANEL_OPENER)({
             title: version ?? 'choliba',
@@ -122,10 +124,19 @@ export const panelCommand: ShellCommand = {
             },
           })
         : undefined;
-    if (panel === undefined) {
+    if (opened === undefined) {
       io.fail('erro: o painel precisa de um terminal interativo.');
       return;
     }
+    // The session's log, in the workspace's .cache/logs/painel: all that goes through the panel, as it goes.
+    const panel = loggedPanel(
+      opened,
+      openPanelLog(
+        container.get(WORKSPACE_ROOT),
+        [`choliba painel ${version ?? ''}`.trimEnd(), `pasta: ${cwd}`],
+        container.get(PLATFORM).clock,
+      ),
+    );
     await new Promise<void>((resolve) => {
       const leave = (): void => {
         panel.close();
