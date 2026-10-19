@@ -23,7 +23,10 @@ O choliba resolve o executável instalado antes de entrar no sandbox e monta som
 leitura: o executável do Claude Code, os pacotes `@openai/codex` e `@openai/codex-<plataforma>` usados pelo launcher
 do Codex, ou a pasta da versão do Cursor CLI, que também contém o runtime e os arquivos JavaScript. A pasta pessoal
 real fica escondida por uma pasta vazia em memória; ela some no fim da execução.
-Os caminhos liberados pelo agente que ficam abaixo dela são montados depois e continuam acessíveis.
+Os caminhos liberados pelo agente que ficam abaixo dela são montados depois e continuam acessíveis. Com uma
+ferramenta da run do Playwright (`playwright-cli`, `playwright-trace`), a pasta dos navegadores do Playwright
+(`PLAYWRIGHT_BROWSERS_PATH`, ou `~/.cache/ms-playwright`) também volta, só para leitura: sem ela, o
+`playwright-trace snapshot` não acha o navegador.
 
 A credencial do Claude vem do `.env`: `CLAUDE_CODE_OAUTH_TOKEN` (gerado por `claude setup-token`),
 `ANTHROPIC_API_KEY` ou `ANTHROPIC_AUTH_TOKEN`; a do Cursor é `CURSOR_API_KEY`. O Codex usa a sessão criada por

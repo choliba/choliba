@@ -349,6 +349,45 @@ describe('launchFor — CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR', () => {
   });
 });
 
+describe('launchFor — the browsers of Playwright', () => {
+  const TRACE = request({ allowTools: [{ tool: 'playwright-trace', subcommands: ['*'] }] });
+  const BROWSERS = { path: '/home/test/.cache/ms-playwright', access: 'read', directory: true };
+
+  /** The folders a launch mounts for `config`, in `sandbox`, for `forRequest`, on `fake`. */
+  function mounted(
+    config: Readonly<Record<string, string>>,
+    sandbox: Parameters<typeof launchFor>[0]['sandbox'] = { kind: 'local' },
+    forRequest: ProviderRequest = TRACE,
+    fake: LaunchDisk = disk(),
+  ): readonly unknown[] {
+    return launchFor({ sandbox, command: ['claude'], provider: PROVIDER, request: forRequest, files: [], config }, fake)
+      .paths;
+  }
+
+  it('gives a local run with a Playwright run tool the browsers, read-only, that its hidden home keeps', () => {
+    expect(mounted(CONFIG)).toContainEqual(BROWSERS);
+    expect(mounted({ ...CONFIG, PLAYWRIGHT_BROWSERS_PATH: '/data/browsers' })).toContainEqual({
+      ...BROWSERS,
+      path: '/data/browsers',
+    });
+  });
+
+  it('gives none in a container, without a Playwright run tool, with the browsers in node_modules or not there', () => {
+    const missing = { ...disk(), exists: (path: string) => !path.includes('ms-playwright') };
+
+    expect(mounted(CONFIG, { kind: 'docker', image: 'choliba-agent', network: 'isolated' })).not.toContainEqual(
+      expect.objectContaining({ path: BROWSERS.path }),
+    );
+    expect(mounted(CONFIG, { kind: 'local' }, request())).not.toContainEqual(BROWSERS);
+    expect(mounted({ ...CONFIG, PLAYWRIGHT_BROWSERS_PATH: '0' })).not.toContainEqual(
+      expect.objectContaining({ path: expect.stringContaining('ms-playwright') as string }),
+    );
+    expect(mounted(CONFIG, { kind: 'local' }, TRACE, missing)).not.toContainEqual(BROWSERS);
+    const { HOME: _home, ...homeless } = CONFIG;
+    expect(() => mounted(homeless)).toThrow('HOME');
+  });
+});
+
 describe('realDisk', () => {
   it('reads the disk, the owner of a path, and makes folders', () => {
     const tmp = makeTmpDir('real-disk');
