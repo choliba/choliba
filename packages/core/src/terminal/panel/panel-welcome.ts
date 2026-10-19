@@ -1,6 +1,13 @@
 import { paintAnsi, type AnsiColor } from '../../theme';
 import { truncateVisible, visibleWidth } from '../frame';
-import type { PanelBox, PanelScroll, PanelText, PanelToolkit } from './interfaces/panel.interface';
+import type {
+  PanelBox,
+  PanelDragged,
+  PanelDrop,
+  PanelScroll,
+  PanelText,
+  PanelToolkit,
+} from './interfaces/panel.interface';
 import { halfBlockArt, type ArtCell, type ArtPixels } from './panel-art';
 import { PALETTE } from './panel-palette';
 import { wrappedRows } from './panel-text';
@@ -138,6 +145,8 @@ export interface Header<Node> {
   cards(cards: readonly PanelCard[]): void;
   /** Opens or collapses the card whose key is `key` (Ctrl+`key`): `true` when a card has it. Open at first. */
   toggleKey(key: string): boolean;
+  /** Called when a card that can move is dropped on another that can: it takes that one's place. */
+  onMove(listener: (title: string, onto: string) => void): void;
   /** Stops the spinners: the panel is closing. */
   stop(): void;
 }
@@ -170,6 +179,8 @@ export interface PanelCard {
   readonly state?: string;
   /** When its work began, in ms since the epoch: the time a busy card with a `state` shows. */
   readonly since?: number;
+  /** It can be dragged with the mouse onto another card that can, to take its place. */
+  readonly movable?: boolean;
 }
 
 /** How long a card's work has run, as its state line says it: `0m41s`, `12m05s`. */
@@ -208,8 +219,11 @@ function textWidth(width: number): number {
   return width - 5;
 }
 
-/** What joins a card to the one before it, in gray, on its second row. */
-const JOINT = '>>>';
+/** What joins a card to the one before it, in gray, on its second row: an arrow from one border to the other. */
+const JOINT = '──────▶';
+
+/** The columns the arrow takes of the header's gaps on each side of it, so it touches both borders. */
+const JOINT_OVERLAP = 2;
 
 /** The header's gap between two of its parts. */
 const HEADER_GAP = 2;
@@ -344,9 +358,25 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     });
     slot.add(card);
     const rows: PanelText<Styled>[] = [];
-    // A click on a card opens or collapses that card alone.
+    // A click on a card opens or collapses that card alone, as the mouse is let go: a card dragged stays as it was.
     card.onMouseDown = () => {
-      toggleCard(title);
+      pressed = { title, dragged: false };
+    };
+    card.onMouseDrag = () => {
+      if (pressed?.title === title) pressed = { title, dragged: true };
+    };
+    card.onMouseUp = () => {
+      if (pressed?.title === title && !pressed.dragged) toggleCard(title);
+      pressed = undefined;
+    };
+    // Dropped on this card, a card that can move takes its place.
+    card.onMouseDrop = (event: PanelDrop) => {
+      pressed = undefined;
+      const dragged = cardHolding(event.source);
+      const can = (name: string | undefined): boolean =>
+        current.some((each) => each.title === name && each.movable === true);
+      if (dragged === undefined || dragged === title || !can(dragged) || !can(title)) return;
+      for (const listener of moves) listener(dragged, title);
     };
     // The spinner is drawn over the top border, in the room its title leaves after the name: a title has one color.
     const spinner = new kit.TextRenderable(renderer, {
@@ -380,6 +410,9 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     const joint = new kit.TextRenderable(renderer, {
       content: styled(['', `\u001b[90m${JOINT}\u001b[39m`]),
       wrapMode: 'none',
+      width: JOINT.length,
+      marginLeft: -JOINT_OVERLAP,
+      marginRight: -JOINT_OVERLAP,
       height: 2,
     });
     joint.visible = false;
@@ -391,6 +424,9 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
   };
   // Every card comes in collapsed; the ones opened with their key or a click are kept here.
   const expanded = new Set<string>();
+  // The card pressed with the mouse, and whether it was dragged since; who hears of a card moved.
+  let pressed: { readonly title: string; readonly dragged: boolean } | undefined;
+  const moves: ((title: string, onto: string) => void)[] = [];
   let current: readonly PanelCard[] = [];
   let frame = 0;
   let spinning: ReturnType<typeof setInterval> | undefined;
@@ -418,7 +454,7 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
         sum +
         HEADER_GAP +
         (each.state === undefined ? CARD_WIDTH : 0) +
-        (each.joined === true ? JOINT.length + HEADER_GAP : 0),
+        (each.joined === true ? JOINT.length - 2 * JOINT_OVERLAP + HEADER_GAP : 0),
       1 + iconWidth + headingWidth,
     );
     const share = Math.floor((columns() - taken) / Math.max(1, flowing));
@@ -455,7 +491,8 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
         : [...head, ...each.lines];
       // A card gets the rows its longest content asks for; what does not fit its height scrolls.
       while (card.rows.length < lines.length) {
-        const row = new kit.TextRenderable(renderer, { content: '', wrapMode: 'word', height: 1 });
+        // Not selectable: pressed, a card's line starts a drag of the card, not a selection of its text.
+        const row = new kit.TextRenderable(renderer, { content: '', wrapMode: 'word', height: 1, selectable: false });
         card.box.add(row);
         card.rows.push(row);
       }
@@ -474,7 +511,7 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
       });
       const footer = folded || each.footer === undefined ? [] : [CARD_RULE, ...each.footer];
       while (card.footerRows.length < footer.length) {
-        const row = new kit.TextRenderable(renderer, { content: '', wrapMode: 'none', height: 1 });
+        const row = new kit.TextRenderable(renderer, { content: '', wrapMode: 'none', height: 1, selectable: false });
         card.footer.add(row);
         card.footerRows.push(row);
       }
@@ -505,5 +542,17 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
     if (card !== undefined) toggleCard(card.title);
     return card !== undefined;
   };
-  return { box, heading, cards, toggleKey, stop };
+  /** The title of the card `node` is, or is inside of: what a drag was pressed on. */
+  const cardHolding = (node: PanelDragged | null | undefined): string | undefined => {
+    const titles = new Map<unknown, string>([...made].map(([title, each]) => [each.box, title]));
+    for (let at = node; at !== undefined && at !== null; at = at.parent) {
+      const found = titles.get(at);
+      if (found !== undefined) return found;
+    }
+    return undefined;
+  };
+  const onMove = (listener: (title: string, onto: string) => void): void => {
+    moves.push(listener);
+  };
+  return { box, heading, cards, toggleKey, onMove, stop };
 }

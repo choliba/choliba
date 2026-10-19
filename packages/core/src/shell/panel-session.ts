@@ -40,6 +40,7 @@ interface ContextView {
   labels(lines: readonly string[]): void;
   status(parts: readonly string[]): void;
   onKey(listener: (key: PanelKey) => boolean): void;
+  onCardMove(listener: (title: string, onto: string, panel: ChatPanel) => void): void;
   converse(handler: ((text: string, panel: ChatPanel) => void) | undefined): void;
   busy(stop: (() => void) | undefined): void;
   /** Stops what runs; the context forgets its own state after. */
@@ -104,6 +105,9 @@ function sessionContext(view: ContextView): PanelContext {
     },
     onKey: (listener) => {
       view.onKey(listener);
+    },
+    onCardMove: (listener) => {
+      view.onCardMove(listener);
     },
     converse: (handler) => {
       view.converse(handler);
@@ -182,6 +186,11 @@ export function panelSession(
     },
     onKey: (listener) => {
       keyListeners.push(listener);
+    },
+    onCardMove: (listener) => {
+      panel.onCardMove((title, onto) => {
+        listener(title, onto, panel);
+      });
     },
     converse: (handler) => {
       conversation = handler;

@@ -195,6 +195,14 @@ describe('panelSession', () => {
     expect(fake.cards.at(-1)?.[1]?.since).toBe(1000);
     jest.restoreAllMocks();
     set?.spin('agente', false);
+    // A card dragged onto another reaches who listens, with the session's panel to answer in.
+    const moved: string[] = [];
+    set?.onCardMove((title, onto, panel) => {
+      moved.push(`${title} > ${onto}`);
+      panel.answer('movido');
+    });
+    fake.move('agente', 'projeto');
+    expect([moved, fake.written.at(-1)]).toEqual([['agente > projeto'], 'movido']);
     expect(fake.cards.at(-1)?.[1]).toEqual({ title: 'agente', lines: ['echo'], order: 3 });
     set?.spin('agente', true);
     set?.clear();

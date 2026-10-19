@@ -70,6 +70,7 @@ export function agentCard(
     state: place.state ?? '\u001b[90maguardando\u001b[39m',
     order: AGENT_ORDER + place.at / 100,
     joined: place.at > 0,
+    movable: true,
     color,
     stripe: color,
   };

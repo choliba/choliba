@@ -108,6 +108,16 @@ export interface PanelSelect {
   on(event: 'itemSelected', listener: () => void): unknown;
 }
 
+/** A renderable, by the one it is in: what was pressed to drag, inside the box it belongs to. */
+export interface PanelDragged {
+  readonly parent: PanelDragged | null;
+}
+
+/** What the toolkit says of a drop: what was pressed to drag (a box, or a line inside it) onto the one it fell on. */
+export interface PanelDrop {
+  readonly source?: PanelDragged;
+}
+
 export interface PanelScroll<Node> extends PanelNode<Node> {
   readonly scrollHeight: number;
   visible: boolean;
@@ -117,6 +127,12 @@ export interface PanelScroll<Node> extends PanelNode<Node> {
   set title(title: string | undefined);
   /** Called when the person clicks it. */
   set onMouseDown(listener: ((event: never) => void) | undefined);
+  /** Called when the person lets go of the mouse over it. */
+  set onMouseUp(listener: ((event: never) => void) | undefined);
+  /** Called while the person drags it. */
+  set onMouseDrag(listener: ((event: never) => void) | undefined);
+  /** Called when the person lets go over it of something dragged: the event is a `PanelDrop`. */
+  set onMouseDrop(listener: ((event: never) => void) | undefined);
   scrollBy(delta: number, unit?: 'viewport'): void;
   scrollTo(position: number): void;
   remove(child: Node): void;
@@ -245,4 +261,9 @@ export interface PanelTextOptions<Styled> {
   readonly width?: number;
   /** Above what is there: a border it is placed on. */
   readonly zIndex?: number;
+  /** `false`: pressed, it starts no selection of its text (a card's line, which is dragged with its card). */
+  readonly selectable?: boolean;
+  /** Out of its place by this many columns, without the room around it changing (negative: over its neighbor). */
+  readonly marginLeft?: number;
+  readonly marginRight?: number;
 }

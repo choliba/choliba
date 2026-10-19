@@ -113,6 +113,8 @@ export interface ChatPanel extends Panel {
   fill(text: string): void;
   /** Called with each key the person presses in the field, before the field takes it; `true` keeps it from it. */
   onKey(listener: (key: PanelKey) => boolean): void;
+  /** Called when the person drags a card that can move onto another that can: `title` takes the place of `onto`. */
+  onCardMove(listener: (title: string, onto: string) => void): void;
   /** Empties the conversation: every line written, said and answered goes; the header and the field stay. */
   clear(): void;
   /** Replaces the lines of the header beside its icon; a panel with no header ignores it. */
@@ -448,6 +450,9 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     },
     cards: (cards) => {
       top?.cards(cards);
+    },
+    onCardMove: (listener) => {
+      top?.onMove(listener);
     },
     answer: (text) => {
       begin();

@@ -80,6 +80,7 @@ export const RESUME_AT = 'retomar';
 /** The conversation of a session with its agents: what /resume calls to resume a stopped sequence. */
 interface Talk {
   readonly resume: (panel: ChatPanel) => void;
+  readonly running: () => boolean;
 }
 
 /** The sessions whose conversation goes to their agents already: one per session, whichever agents it has. */
@@ -243,6 +244,7 @@ export function talkToAgent(container: Container, context: PanelContext): void {
   };
 
   talks.set(context, {
+    running: () => running,
     resume: (panel) => {
       if (running) return;
       const at = Number(context.get(RESUME_AT));
@@ -254,6 +256,11 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     if (running) sending?.(text);
     else void runFrom(0, text, panel);
   });
+}
+
+/** Whether the session's agents run now: a sequence going, or one agent. */
+export function sequenceRunning(context: PanelContext): boolean {
+  return talks.get(context)?.running() === true;
 }
 
 /** `/resume`: resumes the session's stopped sequence from the agent where it stopped; nothing while one runs. */

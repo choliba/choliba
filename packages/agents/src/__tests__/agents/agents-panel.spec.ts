@@ -88,6 +88,7 @@ function withAgents(dir: string, provider = 'auto', installed: (bin: string) => 
     onKey: (listener) => {
       keyListeners.push(listener);
     },
+    onCardMove: () => undefined,
     converse: () => undefined,
     busy: () => undefined,
     clear: () => undefined,

@@ -29,6 +29,8 @@ export interface FakeChatPanel {
   type(text: string): void;
   /** The person presses `name` in the field: `true` when a listener took it. */
   press(name: string): boolean;
+  /** The person drags the card `title` onto the card `onto`. */
+  move(title: string, onto: string): void;
   /** The person presses Ctrl+C twice. */
   interrupt(): void;
   readonly closed: () => boolean;
@@ -48,6 +50,7 @@ export function fakeChatPanel(): FakeChatPanel {
   const typing: ((text: string) => void)[] = [];
   const keys: ((key: PanelKey) => boolean)[] = [];
   const interrupts: (() => void)[] = [];
+  const moves: ((title: string, onto: string) => void)[] = [];
   let answer: number | undefined = 0;
   const next: (number | undefined)[] = [];
   let picker: ((index: number) => void) | undefined;
@@ -74,6 +77,9 @@ export function fakeChatPanel(): FakeChatPanel {
     },
     onKey: (listener) => {
       keys.push(listener);
+    },
+    onCardMove: (listener) => {
+      moves.push(listener);
     },
     suggest: (lines, onPick, hint) => {
       suggested.push(lines);
@@ -137,6 +143,9 @@ export function fakeChatPanel(): FakeChatPanel {
       });
     },
     press: (name) => keys.some((listener) => listener({ name, ctrl: false })),
+    move: (title, onto) => {
+      for (const listener of moves) listener(title, onto);
+    },
     interrupt: () => {
       interrupts.forEach((listener) => {
         listener();

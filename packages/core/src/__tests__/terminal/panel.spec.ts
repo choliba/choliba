@@ -37,6 +37,9 @@ class FakeNode {
   virtualLineCountOverride: number | undefined;
   options: { name: string; description: string }[] = [];
   onMouseDown: (() => void) | undefined;
+  onMouseUp: (() => void) | undefined;
+  onMouseDrag: (() => void) | undefined;
+  onMouseDrop: ((event: { readonly source?: FakeNode | undefined }) => void) | undefined;
   title: string | undefined;
   private readonly listeners = new Map<string, (() => void)[]>();
 
@@ -57,7 +60,11 @@ class FakeNode {
     }
   }
 
+  /** The node it was added to: what a drag pressed on a line climbs to find its card. */
+  parent: FakeNode | null = null;
+
   add(child: FakeNode): number {
+    child.parent = this;
     this.children.push(child);
     return this.children.length;
   }
@@ -121,6 +128,12 @@ class FakeNode {
       listener();
     });
   }
+}
+
+/** A click on a card: the mouse pressed on it, then let go. */
+function clickCard(card: FakeNode | undefined): void {
+  card?.onMouseDown?.();
+  card?.onMouseUp?.();
 }
 
 /** The cards' slots in a header: its boxes after the column of lines, the `>>>` between them left out. */
@@ -509,7 +522,9 @@ describe('openPanel', () => {
     expect(card(implementer)?.title).toBe(' ▸ implementer-de-n…');
     const [ownerJoint, , implementerJoint] = (header?.children ?? []).slice(1);
     expect([ownerJoint?.visible, implementerJoint?.visible]).toEqual([false, true]);
-    expect(JSON.stringify(implementerJoint?.content)).toContain('>>>');
+    // An arrow from one card's border to the other's, over the gaps on its sides.
+    expect(JSON.stringify(implementerJoint?.content)).toContain('──────▶');
+    expect(implementerJoint?.built).toMatchObject({ width: 7, marginLeft: -2, marginRight: -2 });
     // On the card's wrapper, over its left border; its rows from the height set, before any layout.
     const wrapperOf = (slot: FakeNode | undefined) =>
       (slot?.children[0] as (FakeNode & { wrapper: FakeNode }) | undefined)?.wrapper;
@@ -525,7 +540,7 @@ describe('openPanel', () => {
         { text: '┃', fg: '#bc3fbc' },
       ],
     });
-    card(owner)?.onMouseDown?.();
+    clickCard(card(owner));
     expect([card(owner)?.children[0]?.content, stripe?.height]).toEqual([
       { chunks: [{ text: ' concluído · 2m10s' }] },
       8,
@@ -535,6 +550,42 @@ describe('openPanel', () => {
     panel.cards([{ title: 'projeto', lines: ['site'] }, ...flow]);
     expect(slotsOf(header).map((slot) => slot.width)).toEqual([44, 20, 20]);
     expect(wrapperOf(slotsOf(header)[0])?.children[2]?.visible).toBe(false);
+  });
+
+  it('moves a card dragged onto another, both movable, and opens a card only on a click that dragged nothing', async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });
+    const moved: string[] = [];
+    panel.onCardMove((title, onto) => moved.push(`${title} > ${onto}`));
+    panel.cards([
+      { title: 'projeto', lines: ['site'] },
+      { title: 'po', lines: ['po'], state: 'aguardando', movable: true },
+      { title: 'tw', lines: ['tw'], state: 'aguardando', movable: true, joined: true },
+    ]);
+    const [projeto, po, tw] = slotsOf(renderer.root.children[0]?.children[0]).map((slot) => slot.children[0]);
+    // Pressed on a line of po, dragged, let go on tw: po takes tw's place, and stays collapsed.
+    const line = po?.children[0];
+    po?.onMouseDown?.();
+    po?.onMouseDrag?.();
+    tw?.onMouseDrop?.({ source: line });
+    po?.onMouseUp?.();
+    expect(moved).toEqual(['po > tw']);
+    expect(po?.title).toBe(' ▸ po ');
+
+    // Onto itself, onto a card that does not move, from one that does not, or from nothing known: no move.
+    po?.onMouseDrop?.({ source: po });
+    projeto?.onMouseDrop?.({ source: po });
+    po?.onMouseDrop?.({ source: projeto });
+    po?.onMouseDrop?.({ source: new FakeNode('text', {}) });
+    po?.onMouseDrop?.({});
+    // A drag of another card, or a mouse let go where nothing was pressed, opens nothing.
+    tw?.onMouseDrag?.();
+    tw?.onMouseUp?.();
+    expect(moved).toEqual(['po > tw']);
+    expect(tw?.title).toBe(' ▸ tw ');
+
+    const bare = await openPanel(fakeToolkit().kit, OPTIONS);
+    bare.onCardMove(() => undefined);
   });
 
   it("turns a flow card's bar and its time in its first line while busy, with no spinner in its title", async () => {
@@ -783,8 +834,8 @@ describe('openPanel', () => {
     });
     // Every card comes in collapsed; a click opens it.
     expect([projeto?.title, projeto?.height, ticket?.height]).toEqual([' ▸ projeto ', 5, 5]);
-    projeto?.onMouseDown?.();
-    ticket?.onMouseDown?.();
+    clickCard(projeto);
+    clickCard(ticket);
     expect([projeto?.title, projeto?.height, ticket?.height]).toEqual([' ▾ projeto ', 10, 10]);
     expect(projeto?.children.map((row) => row.content)).toEqual([
       { chunks: [{ text: 'site' }] },
@@ -829,7 +880,7 @@ describe('openPanel', () => {
       },
     ]);
     const projeto = slotsOf(renderer.root.children[0]?.children[0])[0]?.children[0];
-    projeto?.onMouseDown?.();
+    clickCard(projeto);
 
     expect(projeto?.children.slice(0, 2).map((row) => row.height)).toEqual([1, 2]);
     expect(projeto?.height).toBe(10);
@@ -932,7 +983,7 @@ describe('openPanel', () => {
     expect(agente?.children[0]?.content).toEqual({ chunks: [{ text: 'echo' }] });
     expect(agente?.title).toBe(' ▸ agente ^A ');
 
-    projeto?.onMouseDown?.();
+    clickCard(projeto);
     expect([projeto?.title, projeto?.height, agente?.title]).toEqual([' ▾ projeto ^P ', 10, ' ▸ agente ^A ']);
     press({ name: 'p', ctrl: false });
     press({ name: 'x', ctrl: true });
