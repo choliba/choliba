@@ -56,7 +56,8 @@ describe('panelSession', () => {
     await settle();
 
     expect(ran).toEqual(['tickets', 'projects', 'projects']);
-    expect(fake.said).toEqual(['/tickets', '/projects', '/projects']);
+    // The commands run with no band of what was said: what each chose it says itself.
+    expect(fake.said).toEqual([]);
     expect(fake.choices).toEqual([]);
   });
 
@@ -262,7 +263,7 @@ describe('panelSession', () => {
     fake.click(0);
     await settle();
     expect(fake.filled).toEqual(['/pull', '']);
-    expect(fake.said).toEqual(['/tickets']);
+    expect(fake.said).toEqual([]);
     expect(ran).toEqual(['tickets']);
     fake.click(5);
     expect(ran).toEqual(['tickets']);

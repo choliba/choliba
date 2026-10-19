@@ -262,7 +262,6 @@ export function panelSession(
     const command = shown[index];
     if (command === undefined || why(command) !== undefined) return;
     panel.fill('');
-    panel.say(`/${command.name}`);
     void run(command);
   };
   // Sending clears the field before the message comes: the highlight stays for it, and only a new word moves it back.
@@ -296,9 +295,9 @@ export function panelSession(
     filter = undefined;
     const found = word === undefined ? [] : matching(word);
     const command = commands.find((each) => each.name === word) ?? found[Math.min(choice, found.length - 1)];
-    // The band says the command that runs, not the start of it that was typed (`/`, `/p`).
-    panel.say(command === undefined ? text : `/${command.name}`);
+    // What is said goes on its band; a command is not repeated there: what it chose it says itself.
     if (word === undefined) {
+      panel.say(text);
       conversation?.(text, panel);
       return;
     }

@@ -153,7 +153,8 @@ describe('choliba panel', () => {
     await settle();
     expect(stopped).toBe(2);
     expect(fake.written).toEqual(['nenhum']);
-    expect(fake.said).toEqual(['/agente']);
+    // A command is not repeated on the band of what was said.
+    expect(fake.said).toEqual([]);
 
     fake.interrupt();
     expect(await code).toBe(0);
