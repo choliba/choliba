@@ -353,7 +353,8 @@ describe('talkToAgent', () => {
       // Esc at the pause stops it before the next one.
       resumeSequence(talk.state.context, talk.fake.panel);
       await talk.settle();
-      expect(talk.asked[1]?.argv).toEqual(['echo', '']);
+      // Resumed, echo has no default task: it takes the message that started the sequence.
+      expect(talk.asked[1]?.argv).toEqual(['echo', 'faça']);
       talk.fake.answerNext(undefined);
       // The ticket the session keeps is the one /resume resumes with.
       talk.state.context.set('ticket', 'app-1');

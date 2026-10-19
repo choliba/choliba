@@ -101,7 +101,7 @@ async function goOn(next: string, panel: ChatPanel): Promise<boolean> {
 /**
  * Makes what is sent with no `/` the task of the session's agents: they run in order, as `choliba run agent` would, in
  * the session's panel, each with its own provider and model; the first takes what was sent, the others their own
- * default task, and the ticket a run leaves is the next one's. Between two agents the panel asks to go on. A run that
+ * default task, or what was sent when they have none, and the ticket a run leaves is the next one's. Between two agents the panel asks to go on. A run that
  * fails, an Esc or Ctrl+C stops the sequence where it was, and /resume resumes it from there. While an agent runs, what
  * is sent goes to it, its questions are asked in the field, its card turns a spinner and the status line says how long
  * it has gone; the project's application stays up from the first agent to the last.
@@ -110,8 +110,9 @@ export function talkToAgent(container: Container, context: PanelContext): void {
   if (talks.has(context)) return;
   let sending: ((text: string) => void) | undefined;
   let running = false;
-  // The agent of the sequence running now.
+  // The agent of the sequence running now; the message that started it, the task of the agents with no default one.
   let current: string | undefined;
+  let message = '';
   // Set by Ctrl+C: the sequence stops after the run it stopped. Read through a call, as Ctrl+C sets it meanwhile.
   const interrupt = { asked: false };
   const interrupted = (): boolean => interrupt.asked;
@@ -210,7 +211,10 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     panel.answer(warn(`A sequência parou em ${id}. /resume retoma dele${kept}.`));
   };
 
-  /** Runs the session's agents from the one at `from`, the first with `task` (its own default task without one). */
+  /**
+   * Runs the session's agents from the one at `from`, the first with `task`; the others, and the first without it,
+   * with their default task, else the message that started the sequence.
+   */
   const runFrom = async (from: number, task: string | undefined, panel: ChatPanel): Promise<void> => {
     const ids = sessionAgentIds(context);
     const project = context.get(PROJECT);
@@ -218,6 +222,7 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     running = true;
     interrupt.asked = false;
     context.set(RESUME_AT, undefined);
+    if (task !== undefined) message = task;
     // The agents about to run wait again on their cards.
     for (const id of ids.slice(from)) context.set(agentKey(STATE, id), undefined);
     showRun(container, context);
@@ -232,7 +237,8 @@ export function talkToAgent(container: Container, context: PanelContext): void {
           return;
         }
         current = id;
-        const code = await runOne(agent, at === from && task !== undefined ? task : (agent.defaultTask ?? ''), panel);
+        const own = at === from ? task : undefined;
+        const code = await runOne(agent, own ?? agent.defaultTask ?? message, panel);
         current = undefined;
         if (code !== 0 || interrupted()) {
           stopped(sessionAgentIds(context), at, panel);
