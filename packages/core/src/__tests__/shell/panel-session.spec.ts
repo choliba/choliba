@@ -46,6 +46,25 @@ describe('panelSession', () => {
     expect(fake.suggested).toEqual([[]]);
   });
 
+  it("answers what a command writes, and keeps an agent's lines, which a run it started writes, in its block", async () => {
+    const fake = fakeChatPanel();
+    const writer: PanelCommand = {
+      name: 'roda',
+      description: 'Roda um agente',
+      run: ({ panel }) => {
+        panel.write('Agente echo adicionado.');
+        panel.write('→ Bash: ls', { name: 'echo', color: 'green' });
+        return Promise.resolve();
+      },
+    };
+    panelSession(new Container(), fake.panel, [writer], HEADING);
+    fake.send('/roda');
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(fake.written).toEqual(['Agente echo adicionado.', '→ Bash: ls']);
+    expect(fake.voices).toEqual([undefined, 'echo']);
+  });
+
   it('runs the command named whole, or the first that starts with what was sent', async () => {
     const { fake, ran, settle } = session();
     fake.send('/tickets');
@@ -56,7 +75,8 @@ describe('panelSession', () => {
     await settle();
 
     expect(ran).toEqual(['tickets', 'projects', 'projects']);
-    expect(fake.said).toEqual(['/tickets', '/projects', '/projects']);
+    // The commands run with no band of what was said: what each chose it says itself.
+    expect(fake.said).toEqual([]);
     expect(fake.choices).toEqual([]);
   });
 
@@ -186,9 +206,22 @@ describe('panelSession', () => {
     set?.show('sandbox', { lines: ['local'], order: 1 });
     expect(fake.cards.at(-1)?.map((card) => card.title)).toEqual(['sandbox', 'agente', 'projeto']);
 
+    jest.spyOn(Date, 'now').mockReturnValueOnce(1000).mockReturnValue(5000);
     set?.spin('agente', true);
     expect(fake.cards.at(-1)?.map((card) => card.busy)).toEqual([undefined, true, undefined]);
+    // Spun again while it spins, the card keeps the time it began.
+    set?.spin('agente', true);
+    expect(fake.cards.at(-1)?.[1]?.since).toBe(1000);
+    jest.restoreAllMocks();
     set?.spin('agente', false);
+    // A card dragged onto another reaches who listens, with the session's panel to answer in.
+    const moved: string[] = [];
+    set?.onCardMove((title, onto, panel) => {
+      moved.push(`${title} > ${onto}`);
+      panel.answer('movido');
+    });
+    fake.move('agente', 'projeto');
+    expect([moved, fake.written.at(-1)]).toEqual([['agente > projeto'], 'movido']);
     expect(fake.cards.at(-1)?.[1]).toEqual({ title: 'agente', lines: ['echo'], order: 3 });
     set?.spin('agente', true);
     set?.clear();
@@ -257,7 +290,7 @@ describe('panelSession', () => {
     fake.click(0);
     await settle();
     expect(fake.filled).toEqual(['/pull', '']);
-    expect(fake.said).toEqual(['/tickets']);
+    expect(fake.said).toEqual([]);
     expect(ran).toEqual(['tickets']);
     fake.click(5);
     expect(ran).toEqual(['tickets']);

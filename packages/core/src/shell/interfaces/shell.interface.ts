@@ -110,6 +110,11 @@ export interface PanelContext {
   /** Called with each key pressed in the field while no list is open under it; `true` keeps it from the field. */
   onKey(listener: (key: PanelKey) => boolean): void;
   /**
+   * Called when the person drags a card that can move onto another that can: `title` takes the place of `onto`; `panel`
+   * is the session's, to answer in.
+   */
+  onCardMove(listener: (title: string, onto: string, panel: ChatPanel) => void): void;
+  /**
    * Who gets what is sent with no `/`, once it is said: `panel` is the session's own, whose `write` adds lines as they
    * are. Undefined: what is sent is only said.
    */

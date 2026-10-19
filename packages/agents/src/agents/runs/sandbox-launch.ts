@@ -145,6 +145,18 @@ function browserFolders(input: LaunchInput, disk: LaunchDisk): readonly string[]
 }
 
 /**
+ * Where `playwright-cli` keeps the browser it leaves open between two commands, in a local run with a Playwright run
+ * tool: `ms-playwright/daemon` and `ms-playwright/b` of the cache folder (`XDG_CACHE_HOME`, else `~/.cache`), wherever
+ * the browsers are. Written, while the browsers stay read-only.
+ */
+function browserState(input: LaunchInput): readonly string[] {
+  if (input.sandbox.kind !== 'local' || !usesBrowser(input.request)) return [];
+  const { XDG_CACHE_HOME: set, HOME: home } = input.config;
+  const cache = set !== undefined && set !== '' ? set : home === undefined ? undefined : join(home, '.cache');
+  return cache === undefined ? [] : ['daemon', 'b'].map((folder) => join(cache, 'ms-playwright', folder));
+}
+
+/**
  * Where the session's own commands write, outside the agent's permissions: the Playwright run tools' output folder,
  * when the agent has one of them, and the project's `ticket-runs/` (`choliba run tests` keeps its reports there). Created
  * first, so the container opens these folders and not the ones around them.
@@ -168,7 +180,7 @@ function outputFolders(request: ProviderRequest, config: Config): readonly strin
 export function launchFor(input: LaunchInput, disk: LaunchDisk = realDisk): Launch {
   const { request, config } = input;
   const root = request.workspaceRoot;
-  const outputs = outputFolders(request, config);
+  const outputs = [...outputFolders(request, config), ...browserState(input)];
   outputs.forEach(disk.ensureDir);
   const reach = {
     permissions: absolutePermissions(request.agent.permissions, root),

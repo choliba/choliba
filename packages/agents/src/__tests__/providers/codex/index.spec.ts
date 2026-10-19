@@ -120,6 +120,18 @@ describe('CodexAgentProvider', () => {
 
   it('hides Codex stdin progress and keeps other diagnostics', () => {
     expect(codexProvider.quietStderr('Reading additional input from stdin...')).toBe(true);
+    // Its background work's errors go to the log only; any other error is shown.
+    expect(
+      codexProvider.quietStderr(
+        '2026-10-19T07:33:51.481987Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out',
+      ),
+    ).toBe(true);
+    expect(
+      codexProvider.quietStderr(
+        '2026-10-19T07:33:56.547523Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed',
+      ),
+    ).toBe(true);
+    expect(codexProvider.quietStderr('2026-10-19T07:33:56.547523Z ERROR codex_core::exec: falhou')).toBe(false);
     expect(codexProvider.quietStderr('network error')).toBe(false);
   });
 });

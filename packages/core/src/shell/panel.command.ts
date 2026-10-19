@@ -3,7 +3,9 @@ import { openOpenTuiPanel, visibleWidth, type ArtPixels, type ChatPanel, type Pa
 import { token, type Container } from './container';
 import { PANEL_COMMANDS, PANEL_STARTS, PLATFORM } from './create-shell';
 import type { PanelCommand, ShellCommand } from './interfaces/shell.interface';
+import { loggedPanel, openPanelLog } from './panel-log';
 import { panelSession, type PanelSession } from './panel-session';
+import { WORKSPACE_ROOT } from './shell.constants';
 
 /** Opens a panel, or gives nothing where it cannot (`openOpenTuiPanel`); a spec puts a fake one in its place. */
 export const PANEL_OPENER = token<(options: PanelOptions) => Promise<ChatPanel | undefined>>('PanelOpener');
@@ -62,20 +64,44 @@ export const PANEL_SPEC: CommandSpec = {
     'Abre o painel interativo do choliba no terminal: as boas-vindas com o logo e, depois do Enter, um campo cujo ' +
     'texto aparece na caixa.',
   examples: [{ description: 'Abre o painel', command: 'choliba panel' }],
-  details:
-    'O painel abre com as boas-vindas: Enter mostra o campo, e Esc sai. No campo, `/` lista os comandos do painel ' +
-    '(`/projects` escolhe o projeto e já pergunta o ticket, `/tickets` troca o ticket, `/agents` o agente), e o que eles escolhem aparece no ' +
-    'cabeçalho, em quadros que entram recolhidos e que o Ctrl+P (projeto), o Ctrl+A (agente) ou um clique abrem, por cima da conversa, e recolhem. Desde o início, ' +
-    'a linha de status mostra o modo, que o Shift+Tab alterna, e o sandbox onde o provider roda (o de CHOL_SANDBOX), ' +
-    'que `/sandbox` troca para a sessão. Com o agente, o modo fica entre os que ele aceita, e o cabeçalho e o rodapé do ' +
-    'quadro do agente mostram o provider e o modelo que uma execução usaria; `/provider`, `/model` e `/mode` os escolhem para a sessão. ' +
-    'Enquanto o agente roda, a linha de status mostra também há quanto tempo. Uma mensagem sem `/` é a tarefa ' +
-    'do agente: ele roda no painel com essas escolhas (sem ticket, um agente de tickets pergunta o tipo do ticket ' +
-    'novo que a execução cria), o que se envia enquanto roda vai para ele, e as perguntas ' +
-    'dele aparecem no campo. Ctrl+C duas vezes para a execução; sem nada rodando, sai do painel. `/quit` sai do painel depois de parar a ' +
-    'execução e esperar que ela termine, para nenhum processo ficar rodando. `/clear` para o ' +
-    'que roda e limpa o contexto (projeto, ticket e agente) e a conversa. ' +
-    'Precisa de um terminal interativo.',
+  details: [
+    'O painel abre com as boas-vindas: Enter mostra o campo, e Esc sai. No campo, `/` lista os comandos do painel. ' +
+      'Um comando não se repete na conversa: o que ele escolhe, ele diz (`Projeto loja selecionado.`, ' +
+      '`Agente test-writer adicionado.`). `/projects` escolhe o projeto e já pergunta o ticket, e `/tickets` troca o ' +
+      'ticket.',
+    'O que os comandos escolhem aparece no cabeçalho, em quadros que entram recolhidos e que o Ctrl+P (projeto) ou um ' +
+      'clique abrem, por cima da conversa, e recolhem. Cada agente da sequência tem o seu quadro, ligado ao anterior ' +
+      'por uma seta, com a borda esquerda na cor do agente: a primeira linha diz `aguardando`, `concluído` ou ' +
+      '`falhou` com o tempo, e enquanto ele roda, uma barra e há quanto tempo; as outras, o provider e o modelo que ' +
+      'ele usa e o ticket. Arrastar o quadro de um agente com o mouse e soltar sobre o de outro o põe no lugar dele, ' +
+      'menos enquanto os agentes rodam. Sem espaço no cabeçalho, os quadros dos agentes estreitam.',
+    '`/agents` acrescenta um agente ao fim da sequência: ele escolhe o provider, entre os que o agente declara, e ' +
+      'depois o modelo, entre os que ele declara para esse provider; Esc em qualquer dos dois usa o do painel, e um ' +
+      'agente que não pode rodar com eles não entra, e o painel diz por quê. Depois, `/agents` pergunta pelo ' +
+      'próximo. Escolher um agente que já está na sequência troca só o provider e o modelo dele, menos o que roda ' +
+      'agora. `/agents` nunca recomeça a sequência (`/clear` recomeça) e funciona enquanto ela roda: um agente ' +
+      'acrescentado roda no fim, e um que espera roda com o que foi escolhido para ele.',
+    'A coluna do cabeçalho mostra o provider e o modelo do painel, os dos agentes que não escolheram os seus: ' +
+      '`/provider` os escolhe entre `auto` e todos os providers, e `/model` entre o padrão do provider e os modelos ' +
+      'que os agentes declaram para ele. A linha de status mostra o modo, que o Shift+Tab alterna e `/mode` escolhe ' +
+      'entre os que o primeiro agente aceita, o sandbox onde o provider roda (o de CHOL_SANDBOX), que `/sandbox` ' +
+      'troca para a sessão, e, enquanto um agente roda, há quanto tempo.',
+    'Uma mensagem sem `/` é a tarefa do primeiro agente. Os seguintes rodam com a sua tarefa padrão, ou com a ' +
+      'mensagem quando não têm uma, e o ticket que um deixa é o do próximo (sem ticket, um agente de tickets pergunta ' +
+      'o tipo do ticket novo que a execução cria). Entre dois agentes, o painel pergunta se segue: Enter segue, e Esc ' +
+      'para a sequência. Ela também para quando um agente falha, quando o Ctrl+C o interrompe e quando uma execução em ' +
+      '`execute` deixa intacto o ticket que criou. `/resume` volta a qualquer agente da sequência, parada ou já ' +
+      'terminada: escolhido o agente, o que se digita é dito a ele (vazio ou Esc repete a tarefa dele), e a sequência ' +
+      'roda de novo a partir dele, com o ticket da sessão.',
+    'Enquanto um agente roda, o que se envia vai para ele, e as perguntas dele aparecem no campo. As linhas de cada ' +
+      'agente aparecem num bloco com a borda na cor dele e o nome no começo; as do choliba, com `●`. Ctrl+C duas ' +
+      'vezes para a execução; sem nada rodando, sai do painel. `/quit` sai do painel depois de parar a execução e ' +
+      'esperar que ela termine, para nenhum processo ficar rodando. `/clear` para o que roda e limpa o contexto ' +
+      '(projeto, ticket e agentes) e a conversa.',
+    'Cada sessão grava `.cache/logs/painel/<data e hora>.log`, sem cores: o que se envia, os comandos, as escolhas, as ' +
+      'perguntas e respostas, o que o choliba responde e as linhas de cada agente, que tem também o seu log de ' +
+      'execução em `.cache/logs/<agente>/`. Precisa de um terminal interativo.',
+  ].join('\n\n'),
   flags: [{ name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true }],
 };
 
@@ -104,7 +130,7 @@ export const panelCommand: ShellCommand = {
       `\u001b[1m\u001b[32m${version ?? 'choliba'}\u001b[39m\u001b[22m`,
       `\u001b[90m${shortPath(cwd, home)}\u001b[39m`,
     ];
-    const panel =
+    const opened =
       container.get(PLATFORM).stdout.isTTY === true
         ? await container.get(PANEL_OPENER)({
             title: version ?? 'choliba',
@@ -122,10 +148,19 @@ export const panelCommand: ShellCommand = {
             },
           })
         : undefined;
-    if (panel === undefined) {
+    if (opened === undefined) {
       io.fail('erro: o painel precisa de um terminal interativo.');
       return;
     }
+    // The session's log, in the workspace's .cache/logs/painel: all that goes through the panel, as it goes.
+    const panel = loggedPanel(
+      opened,
+      openPanelLog(
+        container.get(WORKSPACE_ROOT),
+        [`choliba painel ${version ?? ''}`.trimEnd(), `pasta: ${cwd}`],
+        container.get(PLATFORM).clock,
+      ),
+    );
     await new Promise<void>((resolve) => {
       const leave = (): void => {
         panel.close();

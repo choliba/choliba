@@ -11,6 +11,8 @@ export interface FakePanelContext {
   readonly statuses: Map<string, string>;
   /** The titles of the cards whose spinner turns. */
   readonly spinning: Set<string>;
+  /** The person drags the card `title` onto the card `onto`, in `panel`. */
+  move(title: string, onto: string, panel: ChatPanel): void;
   /** The person presses `name` (with Shift when `shift`): `true` when a listener took it. */
   press(name: string, shift?: boolean): boolean;
   /** The person sends `text` with no `/` in `panel`: `true` when a conversation took it. */
@@ -28,6 +30,7 @@ export function fakePanelContext(): FakePanelContext {
   const labels = new Map<string, string>();
   const statuses = new Map<string, string>();
   const spinning = new Set<string>();
+  const moves: ((title: string, onto: string, panel: ChatPanel) => void)[] = [];
   const keys: ((key: PanelKey) => boolean)[] = [];
   const changes: ((key: string | undefined) => void)[] = [];
   let conversation: ((text: string, panel: ChatPanel) => void) | undefined;
@@ -67,6 +70,9 @@ export function fakePanelContext(): FakePanelContext {
     onKey: (listener) => {
       keys.push(listener);
     },
+    onCardMove: (listener) => {
+      moves.push(listener);
+    },
     converse: (handler) => {
       conversation = handler;
     },
@@ -92,6 +98,9 @@ export function fakePanelContext(): FakePanelContext {
     labels,
     statuses,
     spinning,
+    move: (title, onto, panel) => {
+      for (const listener of moves) listener(title, onto, panel);
+    },
     press: (name, shift = false) => keys.some((listener) => listener({ name, ctrl: false, shift })),
     send: (text, panel) => {
       conversation?.(text, panel);

@@ -50,6 +50,9 @@ function codexRuntime(executable: string): string {
  * `permissions.execute` (`enforcesExecute`); and its stream does not say the model, so a run always names one
  * (`needsModel`). It authenticates with the session of `codex login`, copied to the run's `CODEX_HOME`.
  */
+/** A log line of codex's background work: `<time> ERROR codex_models_manager::…` or `<time> ERROR rmcp::…`. */
+const BACKGROUND_ERROR = /^\S+Z\s+(?:ERROR|WARN)\s+(?:codex_models_manager|rmcp)::/;
+
 export class CodexAgentProvider extends AgentProvider {
   readonly id = 'codex';
   readonly binaries: readonly (readonly [string, ...string[]])[] = [['codex']];
@@ -78,8 +81,12 @@ export class CodexAgentProvider extends AgentProvider {
     return `${text}\n`;
   }
 
+  /**
+   * What codex writes to stderr that says nothing of the run, kept in its log only: that it reads the input, and the
+   * errors of its background work, refreshing its list of models and reaching the MCP of its plugins.
+   */
   override quietStderr(line: string): boolean {
-    return line.trim() === 'Reading additional input from stdin...';
+    return line.trim() === 'Reading additional input from stdin...' || BACKGROUND_ERROR.test(line);
   }
 
   createParser(): StreamParser {

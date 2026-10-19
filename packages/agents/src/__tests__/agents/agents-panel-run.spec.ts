@@ -3,7 +3,9 @@ import { join } from 'node:path';
 
 import {
   Container,
+  PLATFORM,
   ProcessRunnerService,
+  THEME,
   ThemeService,
   WORKSPACE_ROOT,
   type Panel,
@@ -14,8 +16,8 @@ import { BufferWritable, fakeChatPanel, fakePanelContext, fakePlatform } from '@
 import { ProviderRegistry } from '../../common';
 import { ClaudeAgentProvider } from '../../providers';
 import { agentsConfig } from '../../agents/agents-config';
-import { talkToAgent } from '../../agents/agents-panel-run';
-import { AGENTS } from '../../agents/agents.constants';
+import { resumeSequence, talkToAgent } from '../../agents/agents-panel-run';
+import { AGENT_PROVIDERS, AGENTS } from '../../agents/agents.constants';
 import { AgentsService, type HostedRun } from '../../agents/agents.service';
 import { makeTmpDir } from '../helpers/tmp';
 
@@ -37,6 +39,7 @@ interface Asked {
   readonly argv: readonly string[];
   readonly host: HostedRun;
   readonly end: (code: number) => void;
+  readonly fail: (error: unknown) => void;
 }
 
 /** The conversation of the active `agent`, on a fake service that records each run and ends it when told. */
@@ -45,10 +48,14 @@ function conversation(dir: string, agent: string) {
   const container = new Container();
   container.provide(agentsConfig.token, () => ({ ...agentsConfig.read([]), agentsDir: dir }));
   container.provide(WORKSPACE_ROOT, () => '/');
+  const platform = fakePlatform({ which: (bin: string) => `/usr/bin/${bin}` });
+  container.provide(PLATFORM, () => platform);
+  container.provide(THEME, () => new ThemeService({}, platform.stdout, false, {}));
+  container.provide(AGENT_PROVIDERS, () => new ProviderRegistry([new ClaudeAgentProvider()]));
   const service = {
     runHosted: (argv: readonly string[], host: HostedRun) =>
-      new Promise<number>((resolve) => {
-        asked.push({ argv, host, end: resolve });
+      new Promise<number>((resolve, reject) => {
+        asked.push({ argv, host, end: resolve, fail: reject });
       }),
   };
   container.provide(AGENTS, () => service as unknown as AgentsService);
@@ -76,13 +83,16 @@ describe('talkToAgent', () => {
       const [run] = talk.asked;
       expect(run?.argv).toEqual(['echo', 'diga olá']);
       expect(talk.fake.written).toEqual([]);
-      expect(talk.state.spinning.has('agente')).toBe(true);
+      expect(talk.state.spinning.has('echo')).toBe(true);
 
       const options = { title: 'echo', titleColor: 'green', footer: () => ['claude · 00:01'], hint: '' };
       const panel: Panel | undefined = await run?.host.panel(options as PanelOptions);
       panel?.write('olá\n');
       panel?.refresh();
       expect(talk.fake.written.at(-1)).toBe('olá\n');
+      // The agent's lines go in its block, under its name.
+      expect(talk.fake.voices.at(-1)).toBe('echo');
+      expect(talk.state.cards.get('echo')?.state).toBe(gray('aguardando'));
       expect(talk.state.statuses.get('execução')).toMatch(/^\d{2}:\d{2}:\d{2}\.\d{3}$/);
 
       const sent: string[] = [];
@@ -105,10 +115,35 @@ describe('talkToAgent', () => {
       await talk.settle();
       expect(talk.fake.written.at(-1)).toBe(`echo terminou: ${bold('código 0')} ${gray('· 0s')}`);
       expect(talk.state.spinning.size).toBe(0);
+      // Its card says how the run went.
+      expect(talk.state.cards.get('echo')?.state).toBe('concluído · 0m00s');
 
       talk.state.send('de novo', talk.fake.panel);
       await talk.settle();
       expect(talk.asked).toHaveLength(2);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('ends a run that fails with an unexpected error in the conversation, and takes the next message', async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      const talk = conversation(tmp.path, 'echo');
+      talk.state.send('faça', talk.fake.panel);
+      await talk.settle();
+      talk.asked[0]?.fail(new Error('ENOENT: no such file'));
+      await talk.settle();
+
+      expect(talk.fake.written.at(-1)).toBe(warn('echo parou por um erro: ENOENT: no such file'));
+      expect(talk.state.spinning.size).toBe(0);
+      talk.state.send('de novo', talk.fake.panel);
+      await talk.settle();
+      expect(talk.asked).toHaveLength(2);
+      talk.asked[1]?.fail('texto');
+      await talk.settle();
+      expect(talk.fake.written.at(-1)).toBe(warn('echo parou por um erro: texto'));
     } finally {
       tmp.cleanup();
     }
@@ -140,7 +175,7 @@ describe('talkToAgent', () => {
       expect([interrupted, second?.host.signal?.aborted]).toEqual([1, false]);
 
       panel?.close();
-      expect(talk.state.spinning.has('agente')).toBe(true);
+      expect(talk.state.spinning.has('echo')).toBe(true);
       talk.state.send('enquanto os steps rodam', talk.fake.panel);
       await talk.settle();
       expect(talk.asked).toHaveLength(2);
@@ -189,8 +224,8 @@ describe('talkToAgent', () => {
 
       for (const [key, value] of [
         ['ticket', 'site-1'],
-        ['provider', 'claude'],
-        ['modelo', 'sonnet'],
+        ['provider:ticketed', 'claude'],
+        ['modelo:ticketed', 'sonnet'],
         ['modo', 'plan'],
         ['sandbox', 'docker'],
       ] as const) {
@@ -266,7 +301,126 @@ describe('talkToAgent', () => {
     }
   });
 
-  it('does nothing with no active agent', async () => {
+  it('runs the agents of a sequence in order, the first with the message, the next with its own task', async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      const talk = conversation(tmp.path, 'echo,with-project');
+      talk.state.context.set('projeto', 'site');
+      talk.state.send('faça', talk.fake.panel);
+      await talk.settle();
+      expect(talk.asked[0]?.argv).toEqual(['echo', 'faça']);
+
+      // The ticket a run leaves is the session's.
+      talk.asked[0]?.host.ticket?.('site-3');
+      expect(talk.state.values.get('ticket')).toBe('site-3');
+      talk.asked[0]?.end(0);
+      await talk.settle();
+      expect(talk.fake.choices.at(-1)).toEqual({
+        title: 'Seguir para with-project?',
+        description: 'Enter segue; Esc para a sequência, que /resume retoma.',
+        options: [{ label: 'seguir', detail: 'with-project', current: true }],
+      });
+      expect(talk.asked[1]?.argv).toEqual(['with-project', '--project', 'site', 'Trabalhe no projeto.']);
+      talk.asked[1]?.end(0);
+      await talk.settle();
+      expect(talk.state.values.has('retomar')).toBe(false);
+      expect(talk.fake.written.at(-1)).toBe(`with-project terminou: ${bold('código 0')} ${gray('· 0s')}`);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('stops a sequence on a failure, an Esc or Ctrl+C, and /resume resumes it from where it stopped', async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      const talk = conversation(tmp.path, 'echo,with-project');
+      talk.state.context.set('projeto', 'site');
+
+      // A failure stops it at the agent that failed. /resume while it runs does nothing.
+      talk.state.send('faça', talk.fake.panel);
+      await talk.settle();
+      resumeSequence(talk.state.context, talk.fake.panel, 0);
+      talk.asked[0]?.end(1);
+      await talk.settle();
+      expect(talk.state.values.get('retomar')).toBe('0');
+      expect(talk.fake.written.at(-1)).toBe(warn('A sequência parou em echo. /resume retoma dele.'));
+      expect(talk.state.cards.get('echo')?.state).toBe(warn('falhou · 0m00s'));
+
+      // Esc at the pause stops it before the next one.
+      resumeSequence(talk.state.context, talk.fake.panel, 0);
+      await talk.settle();
+      // Resumed, echo has no default task: it takes the message that started the sequence.
+      expect(talk.asked[1]?.argv).toEqual(['echo', 'faça']);
+      talk.fake.answerNext(undefined);
+      // The ticket the session keeps is the one /resume resumes with.
+      talk.state.context.set('ticket', 'app-1');
+      talk.asked[1]?.end(0);
+      await talk.settle();
+      expect(talk.state.values.get('retomar')).toBe('1');
+      expect(talk.fake.written.at(-1)).toBe(
+        warn('A sequência parou em with-project. /resume retoma dele, com o ticket app-1.'),
+      );
+
+      // Ctrl+C stops the run and the sequence, at the agent it stopped.
+      resumeSequence(talk.state.context, talk.fake.panel, 1);
+      await talk.settle();
+      expect(talk.asked[2]?.argv[0]).toBe('with-project');
+      talk.state.stop();
+      talk.asked[2]?.end(0);
+      await talk.settle();
+      expect(talk.state.values.get('retomar')).toBe('1');
+
+      // Back to the first, with something new to say to it: it takes that, and the sequence's message stays.
+      resumeSequence(talk.state.context, talk.fake.panel, 0, 'só a busca');
+      await talk.settle();
+      expect(talk.asked[3]?.argv).toEqual(['echo', 'só a busca']);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('runs at the end of the sequence an agent added while it goes', async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      const talk = conversation(tmp.path, 'echo');
+      talk.state.send('faça', talk.fake.panel);
+      await talk.settle();
+      talk.state.context.set('projeto', 'app');
+      talk.state.context.set('agente', 'echo,with-project');
+      talk.asked[0]?.end(0);
+      await talk.settle();
+      expect(talk.fake.choices.at(-1)?.title).toBe('Seguir para with-project?');
+      expect(talk.asked[1]?.argv[0]).toBe('with-project');
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('stops a sequence at an agent that no longer loads, and does nothing to resume on a session without one', async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      const talk = conversation(tmp.path, 'gone,echo');
+      talk.state.send('faça', talk.fake.panel);
+      await talk.settle();
+
+      expect(talk.state.values.get('retomar')).toBe('0');
+      expect(talk.fake.written).toEqual([
+        warn('O agente gone não carrega mais: veja com choliba check.'),
+        warn('A sequência parou em gone. /resume retoma dele.'),
+      ]);
+      const other = fakeChatPanel();
+      resumeSequence(fakePanelContext().context, other.panel, 0);
+      expect(other.written).toEqual([]);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('runs nothing for an agent that no longer loads, and says so', async () => {
     const tmp = makeTmpDir('panel-run');
     try {
       agentsFolder(tmp.path);
@@ -274,7 +428,10 @@ describe('talkToAgent', () => {
       talk.state.send('faça', talk.fake.panel);
       await talk.settle();
 
-      expect([talk.asked, talk.fake.written]).toEqual([[], []]);
+      expect([talk.asked, talk.fake.written]).toEqual([
+        [],
+        [warn('O agente gone não carrega mais: veja com choliba check.')],
+      ]);
     } finally {
       tmp.cleanup();
     }
@@ -313,6 +470,10 @@ describe('AgentsService.runHosted', () => {
       const signal = new AbortController().signal;
       expect(
         await service.runHosted(['nada'], { panel: () => Promise.resolve(undefined), stdout, stderr, signal }),
+      ).toBe(1);
+      const ticket = (): void => undefined;
+      expect(
+        await service.runHosted(['nada'], { panel: () => Promise.resolve(undefined), stdout, stderr, ticket }),
       ).toBe(1);
       expect(opened).toEqual([]);
       expect(platform.stdout.text()).toBe('');

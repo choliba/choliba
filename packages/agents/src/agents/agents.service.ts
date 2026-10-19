@@ -26,6 +26,8 @@ export interface HostedRun {
   readonly stderr: Writable;
   /** Stops the command of the step running before or after the agent (Ctrl+C in the host's panel). */
   readonly signal?: AbortSignal;
+  /** Told the run's ticket when it ends and the ticket is still there (`RunAgentsCliDeps.ticket`). */
+  readonly ticket?: (ticket: string) => void;
 }
 
 /** `choliba run agent` and `choliba list agents`: the workspace's agents, run through a provider. */
@@ -56,6 +58,7 @@ export class AgentsService {
       panel: host.panel,
       hostedPanel: true,
       ...(host.signal === undefined ? {} : { signal: host.signal }),
+      ...(host.ticket === undefined ? {} : { ticket: host.ticket }),
     });
   }
 

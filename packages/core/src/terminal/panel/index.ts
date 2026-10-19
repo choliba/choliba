@@ -20,6 +20,7 @@ export type {
 } from './interfaces/panel.interface';
 export {
   CARD_RULE,
+  cardElapsed,
   openPanel,
   type ChatPanel,
   type Panel,
@@ -29,6 +30,7 @@ export {
   type PanelHeader,
   type PanelOptions,
   type PanelSplash,
+  type PanelVoice,
 } from './panel';
 export { questionDesk, type PanelQuestion, type PanelReply, type QuestionDesk } from './panel-question';
 export { pixelMap, type ArtColor, type ArtPixels } from './panel-art';

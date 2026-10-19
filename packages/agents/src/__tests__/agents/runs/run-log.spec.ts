@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { loggedStream, NO_RUN_LOG, openRunLog } from '../../../agents/runs/run-log';
@@ -29,6 +29,36 @@ describe('openRunLog', () => {
         ].join('\n'),
       );
       expect(openRunLog(tmp.path, 'echo', [], NOW).path).not.toBe(log.path);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+});
+
+describe('openRunLog — a log that goes missing', () => {
+  it('makes its folder and file again when they are deleted while the run goes', () => {
+    const tmp = makeTmpDir('run-log-gone');
+    try {
+      const log = openRunLog(tmp.path, 'echo', ['cabeçalho'], NOW);
+      rmSync(join(tmp.path, 'echo'), { recursive: true, force: true });
+      log.write('choliba', 'fim: código 0');
+
+      expect(readFileSync(log.path, 'utf8')).toBe('2026-10-18T20:58:01.123Z [choliba] fim: código 0\n');
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('never throws when it cannot be written at all', () => {
+    const tmp = makeTmpDir('run-log-blocked');
+    try {
+      // A file where its folder would be: neither the folder nor the log can be made.
+      writeFileSync(join(tmp.path, 'echo'), 'não é pasta');
+      const log = openRunLog(tmp.path, 'echo', ['cabeçalho'], NOW);
+
+      expect(() => {
+        log.write('erro', 'linha');
+      }).not.toThrow();
     } finally {
       tmp.cleanup();
     }
