@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 18/10/2026 19:22:08 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 18/10/2026 21:53:36 — não editar manualmente.
 
 ## Resumo
 
@@ -257,7 +257,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 31 arquivos</summary>
+<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 32 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -275,6 +275,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/projects/project-app-ensure.ts](packages/projects/src/projects/project-app-ensure.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project-app-launch.ts](packages/projects/src/projects/project-app-launch.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project-app-prepare.ts](packages/projects/src/projects/project-app-prepare.ts)|100.00|100.00|100.00|100.00
+🟢|[src/projects/project-app-share.ts](packages/projects/src/projects/project-app-share.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project-readme.ts](packages/projects/src/projects/project-readme.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project-settings.ts](packages/projects/src/projects/project-settings.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project-stack.ts](packages/projects/src/projects/project-stack.ts)|100.00|100.00|100.00|100.00
