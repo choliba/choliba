@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 18/10/2026 21:53:36 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 18/10/2026 22:59:52 — não editar manualmente.
 
 ## Resumo
 
@@ -180,7 +180,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 69 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 71 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -207,6 +207,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/shell/container.ts](packages/core/src/shell/container.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/core-shell.ts](packages/core/src/shell/core-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/create-shell.ts](packages/core/src/shell/create-shell.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/panel-log.ts](packages/core/src/shell/panel-log.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/panel-session.ts](packages/core/src/shell/panel-session.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/panel.command.ts](packages/core/src/shell/panel.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/root-run.ts](packages/core/src/shell/root-run.ts)|100.00|100.00|100.00|100.00
@@ -224,6 +225,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/terminal/frame/ansi-text.ts](packages/core/src/terminal/frame/ansi-text.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/frame/frame.ts](packages/core/src/terminal/frame/frame.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/live-region.ts](packages/core/src/terminal/live-region.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/log-file.ts](packages/core/src/terminal/log-file.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/panel/panel-art.ts](packages/core/src/terminal/panel/panel-art.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/panel/panel-choose.ts](packages/core/src/terminal/panel/panel-choose.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/panel/panel-history.ts](packages/core/src/terminal/panel/panel-history.ts)|100.00|100.00|100.00|100.00
