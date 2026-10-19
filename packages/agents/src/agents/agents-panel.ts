@@ -4,7 +4,7 @@ import type { AgentDefinition } from '../common';
 import { listAgents } from './agent-loader';
 import { agentPaint } from './agents-panel-card';
 import { chooseAgentRun, runChoices } from './agents-panel-choices';
-import { RESUME_AT, resumeSequence, talkToAgent } from './agents-panel-run';
+import { RESUME_AT, resumeSequence, sequenceRunning, talkToAgent } from './agents-panel-run';
 import { AGENT, agentsDir, sessionAgentIds, showRun } from './agents-panel-state';
 
 /** The option that ends the sequence, first and checked: Enter after the first agent keeps it alone. */
@@ -48,7 +48,9 @@ async function sequenceAfter(
 const agentsPanelCommand: PanelCommand = {
   name: 'agents',
   description: 'Escolhe o agente que vai trabalhar, ou vários em sequência',
-  unavailable: (_context, container) => {
+  unavailable: (context, container) => {
+    // The cards of the agents that run stay, and so does their order, until they end.
+    if (sequenceRunning(context)) return 'Os agentes estão rodando: espere terminar ou pare com Ctrl+C';
     try {
       return listAgents(agentsDir(container)).length === 0
         ? 'Nenhum agente na pasta de agentes. Traga um com `choliba add`'

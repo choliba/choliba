@@ -7,6 +7,7 @@ import { sandboxConfig } from '@choliba/sandbox';
 
 import { ProviderRegistry } from '../../common';
 import { agentsConfig } from '../../agents/agents-config';
+import { agentsPanel } from '../../agents/agents-panel';
 import { talkToAgent } from '../../agents/agents-panel-run';
 import { watchChoices } from '../../agents/agents-panel-watch';
 import { agentsShell } from '../../agents/agents-shell';
@@ -134,6 +135,11 @@ describe('watchChoices, from the start of a panel session', () => {
       state.move('other', 'echo', fake.panel);
       expect(state.values.get('agente')).toBe('echo,other');
       expect(fake.written.at(-1)).toBe(warn('A ordem dos agentes não muda enquanto eles rodam.'));
+      // Nor does /agents take another sequence: the agent running keeps its card.
+      const agents = agentsPanel.find((command) => command.name === 'agents');
+      expect(agents?.unavailable?.(state.context, container)).toBe(
+        'Os agentes estão rodando: espere terminar ou pare com Ctrl+C',
+      );
     } finally {
       tmp.cleanup();
     }
