@@ -46,6 +46,25 @@ describe('panelSession', () => {
     expect(fake.suggested).toEqual([[]]);
   });
 
+  it("answers what a command writes, and keeps an agent's lines, which a run it started writes, in its block", async () => {
+    const fake = fakeChatPanel();
+    const writer: PanelCommand = {
+      name: 'roda',
+      description: 'Roda um agente',
+      run: ({ panel }) => {
+        panel.write('Agente echo adicionado.');
+        panel.write('→ Bash: ls', { name: 'echo', color: 'green' });
+        return Promise.resolve();
+      },
+    };
+    panelSession(new Container(), fake.panel, [writer], HEADING);
+    fake.send('/roda');
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(fake.written).toEqual(['Agente echo adicionado.', '→ Bash: ls']);
+    expect(fake.voices).toEqual([undefined, 'echo']);
+  });
+
   it('runs the command named whole, or the first that starts with what was sent', async () => {
     const { fake, ran, settle } = session();
     fake.send('/tickets');

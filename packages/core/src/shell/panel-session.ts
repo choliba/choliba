@@ -255,10 +255,12 @@ export function panelSession(
     try {
       await command.run({
         container,
+        // What a command writes is an answer; an agent's lines (a run the command started) stay in its block.
         panel: {
           ...panel,
-          write: (text) => {
-            panel.answer(text);
+          write: (text, voice) => {
+            if (voice === undefined) panel.answer(text);
+            else panel.write(text, voice);
           },
         },
         context,
