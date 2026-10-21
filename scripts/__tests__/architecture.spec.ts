@@ -1,0 +1,119 @@
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import {
+  EXPORTS_FILE,
+  entryExports,
+  exportsText,
+  GRAPH_FILE,
+  graphText,
+  packageEntries,
+  packageGraph,
+  undeclaredEdges,
+} from '../libs/architecture';
+
+const ROOT = join(__dirname, '..', '..');
+const UPDATE = 'Se a mudança é de propósito, rode `bun run arch:update` e mande as listas no PR.';
+
+describe('the architecture of the packages', () => {
+  it('imports between packages only as the checked-in graph says', () => {
+    const graph = packageGraph(ROOT);
+
+    expect({ graph: graphText(graph), how: UPDATE }).toEqual({
+      graph: readFileSync(join(ROOT, GRAPH_FILE), 'utf8'),
+      how: UPDATE,
+    });
+    expect(undeclaredEdges(graph)).toEqual([]);
+  });
+
+  it('exports from each entry only the names the checked-in list has', () => {
+    const listed: unknown = JSON.parse(readFileSync(join(ROOT, EXPORTS_FILE), 'utf8'));
+
+    expect({ exports: entryExports(ROOT), how: UPDATE }).toEqual({ exports: listed, how: UPDATE });
+  }, 30_000);
+});
+
+/** A repository with `packages/<dir>/` per entry of `packages`, each a package.json and its files. */
+function withRepo(
+  packages: Readonly<Record<string, { manifest: object; files: Readonly<Record<string, string>> }>>,
+  check: (root: string) => void,
+): void {
+  const root = mkdtempSync(join(tmpdir(), 'architecture-'));
+  try {
+    writeFileSync(join(root, 'tsconfig.base.json'), JSON.stringify({ compilerOptions: { strict: true } }));
+    for (const [dir, { manifest, files }] of Object.entries(packages)) {
+      const base = join(root, 'packages', dir);
+      mkdirSync(base, { recursive: true });
+      writeFileSync(join(base, 'package.json'), JSON.stringify(manifest));
+      for (const [file, text] of Object.entries(files)) {
+        mkdirSync(join(base, file, '..'), { recursive: true });
+        writeFileSync(join(base, file), text);
+      }
+    }
+    check(root);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+describe('packageGraph and entryExports', () => {
+  it('read the imports of production code only, and say what package.json leaves out or adds', () => {
+    withRepo(
+      {
+        a: {
+          manifest: {
+            name: '@choliba/a',
+            dependencies: { '@choliba/c': 'workspace:*' },
+            exports: { '.': './src/index.ts' },
+          },
+          files: {
+            'src/index.ts': "export { b } from '@choliba/b';\nexport type { X } from './x';\n",
+            'src/x.ts': "export interface X { readonly y: number }\nexport const self = import('@choliba/a');\n",
+            'src/__tests__/a.spec.ts': "import { c } from '@choliba/c';\n",
+            'shared/env.ts': "import '@choliba/b/testing';\n",
+          },
+        },
+        b: {
+          manifest: { name: '@choliba/b', exports: { '.': './src/index.ts' } },
+          files: { 'src/index.ts': 'export const b = 1;\n' },
+        },
+      },
+      (root) => {
+        const graph = packageGraph(root);
+
+        expect(graph).toEqual({
+          '@choliba/a': { imports: ['@choliba/b'], declared: ['@choliba/c'] },
+          '@choliba/b': { imports: [], declared: [] },
+        });
+        expect(undeclaredEdges(graph)).toEqual([
+          '@choliba/a importa @choliba/b, que o package.json não declara',
+          '@choliba/a declara @choliba/c, que não importa',
+        ]);
+        expect(graphText(graph)).toBe('@choliba/a → @choliba/b\n');
+      },
+    );
+  });
+
+  it('list the names each entry exports, the app with no "." entry by its src/index.ts', () => {
+    withRepo(
+      {
+        app: {
+          manifest: { name: 'choliba', exports: { './eslint': './src/eslint.ts', './package.json': './package.json' } },
+          files: {
+            'src/index.ts': 'export const run = 1;\nexport type Kind = string;\n',
+            'src/eslint.ts': 'export default {};\n',
+          },
+        },
+      },
+      (root) => {
+        expect(packageEntries(root)).toEqual({
+          choliba: join(root, 'packages', 'app', 'src', 'index.ts'),
+          'choliba/eslint': join(root, 'packages', 'app', 'src', 'eslint.ts'),
+        });
+        expect(entryExports(root)).toEqual({ choliba: ['Kind', 'run'], 'choliba/eslint': ['default'] });
+        expect(exportsText({ b: ['y'], a: ['x'] })).toBe('{\n  "a": [\n    "x"\n  ],\n  "b": [\n    "y"\n  ]\n}\n');
+      },
+    );
+  });
+});
