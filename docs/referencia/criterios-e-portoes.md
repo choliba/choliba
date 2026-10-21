@@ -37,6 +37,11 @@ eles mostram. É assim que os agentes `test-writer` e `implementer` garantem o T
   confere e o põe no prompt no seu `steps.<modo>.before` (veja
   [Ciclo de execução de um agente](ciclo-de-execucao-agente.md)).
 
+Os testes de um ticket são os que os critérios dele referenciam (`criterios[].testes`) ou, antes de algum passar, o
+spec com o nome dele (`tests/<ticket>.spec.ts`). Sem nenhum dos dois, o portão falha logo, dizendo que o ticket não
+tem spec, em vez de rodar os testes do projeto inteiro, que não dizem nada sobre o ticket. Sem `--expect` e sem
+`--failures`, o mesmo ticket roda o projeto inteiro, com um aviso.
+
 ## Quando um ticket substitui outro
 
 Um ticket novo pode tornar errado o que um ticket antigo pede: o antigo exige o link "Blog", o novo o tira. Os testes

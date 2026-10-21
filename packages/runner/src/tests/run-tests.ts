@@ -213,11 +213,16 @@ function canonicalTicket(projectsDir: string, target: TestsTarget): string {
   return fullTicket(project, resolveCanonicalSuffix(projectsDir, project, stripProjectPrefix(project, rawTicket)));
 }
 
-/** What a single ticket runs: the specs it references, else its own spec, else (with a warning) the whole project. */
+/**
+ * What a single ticket runs: the specs it references, else its own spec, else (with a warning) the whole project. A
+ * gated run (`--expect`, `--failures`) of a ticket with no spec fails instead: the project's tests say nothing about
+ * the ticket.
+ */
 function ticketTargets(
   context: RunContext,
   project: string,
   ticket: string,
+  gate: TicketGate,
 ): { targets: string[]; wholeProject: boolean } {
   const projectsDir = context.locations.CHOL_PROJECTS_DIR;
   let specs: string[] = [];
@@ -234,6 +239,12 @@ function ticketTargets(
   const ownSpec = path.join(testsFolder, `${ticket}.spec.ts`);
   if (fs.existsSync(ownSpec)) {
     return { targets: [ownSpec], wholeProject: false };
+  }
+  if (hasGate(gate)) {
+    fail(
+      `erro: o ticket "${ticket}" não tem spec (${ownSpec}) nem teste referenciado, então não há o que conferir. ` +
+        'Escreva o spec do ticket (é o que o test-writer grava) e rode de novo.',
+    );
   }
   context.stderr.write(`aviso: ticket "${ticket}" ainda não tem teste referenciado — rodando o projeto inteiro.\n`);
   return { targets: [projectDir(projectsDir, project)], wholeProject: true };
@@ -350,7 +361,7 @@ async function runTarget(
     );
   }
   if (ticket) {
-    return runOnce(context, { ...once, ...ticketTargets(context, project, ticket) });
+    return runOnce(context, { ...once, ...ticketTargets(context, project, ticket, gate) });
   }
   const tickets = listTicketSuffixes(ticketsFolderPath(projectsDir, project)).map((suffix) =>
     fullTicket(project, suffix),
