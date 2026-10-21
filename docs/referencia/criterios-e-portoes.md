@@ -18,7 +18,9 @@ continuam qualquer um deles:
 ```
 
 Não existe `Ou`: um resultado com "ou" são dois comportamentos, e cada um vira um critério. Uma execução que deixa um
-critério fora desse formato (ou com `CHANGE_ME`) falha, dizendo qual frase corrigir.
+critério fora desse formato (ou com `CHANGE_ME`) falha, dizendo qual frase corrigir. O ticket também guarda o modelo do
+tipo dele (`templates/ticket/<tipo>.json`): um campo que falta, como o `testes` de um critério, ou de outro tipo (um
+texto onde o modelo tem uma lista) faz a execução falhar, dizendo o caminho do campo.
 
 ## Portões dos testes de um ticket
 

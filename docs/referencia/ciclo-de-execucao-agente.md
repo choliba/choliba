@@ -81,7 +81,8 @@ permissões do `agent.yaml`.
     autenticação do Codex e os arquivos `.cursor/` do Cursor), seja qual for o resultado. Com o Cursor, apaga também o que ele guardou para a pasta da execução em
     `~/.cursor` (`projects/` e `chats/`), que de outro modo se acumularia a cada execução.
 13. Roda o `steps.<modo>.after`: `success` ou `failure`, depois `always`.
-14. Fecha o ticket: um ticket novo que o agente não tocou é apagado; em `execute`, sobrar `CHANGE_ME` é erro.
+14. Fecha o ticket: um ticket novo que o agente não tocou é apagado; em `execute`, sobrar `CHANGE_ME`, faltar um campo
+    do modelo do tipo do ticket (`criterios[].testes`, por exemplo) ou um critério sair do Gherkin é erro.
 15. Derruba a aplicação, se foi ele quem a subiu no passo 4.
 
 **O log da execução.** Toda execução, menos `--dry-run`, grava um log em `.cache/logs/<agente>/<data e hora>.log`, e a

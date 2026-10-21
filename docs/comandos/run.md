@@ -92,7 +92,7 @@ Sem --dry-run, faria nesta ordem:
  5. [CLI]    plan.after.success (se o agente sair com 0): nada
              plan.after.failure (se o agente falhar): nada
              plan.after.always: nada
- 6. [CLI]    fecha o ticket: apaga um ticket novo que o agente não preencheu; em execute, falha se sobrar CHANGE_ME
+ 6. [CLI]    fecha o ticket: apaga um ticket novo que o agente não preencheu; em execute, falha com CHANGE_ME ou fora do modelo
 ```
 
 Com `--show-prompt` (só junto de `--dry-run`), a saída segue com os dois prompts completos, a linha de comando
