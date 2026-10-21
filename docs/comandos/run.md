@@ -85,14 +85,14 @@ Sem --dry-run, faria nesta ordem:
              se falhar: para aqui, o agente não roda
  3. [CLI]    plan.before 2/2 — read_files: tag=falhas_red files=.cache/test-writer/app-1/red.md
              se falhar: para aqui, o agente não roda
- 4. [agente] cursor · modelo padrão do provider · modo plan · na pasta .cache/runs/<id>
+ 4. [agente] cursor · modelo Composer 2.5 Fast · modo plan · na pasta .cache/runs/<id>
              skills: playwright-trace · MCPs: nenhum
              prompt de sistema: 8053 bytes · prompt do usuário: 218 bytes (--show-prompt mostra os dois)
              comando: agent -p <prompt> --trust --disable-auto-update --output-format stream-json …
  5. [CLI]    plan.after.success (se o agente sair com 0): nada
              plan.after.failure (se o agente falhar): nada
              plan.after.always: nada
- 6. [CLI]    fecha o ticket: apaga um ticket novo que o agente não preencheu; em execute, falha se sobrar CHANGE_ME
+ 6. [CLI]    fecha o ticket: apaga um ticket novo que o agente não preencheu; em execute, falha com CHANGE_ME ou fora do modelo
 ```
 
 Com `--show-prompt` (só junto de `--dry-run`), a saída segue com os dois prompts completos, a linha de comando

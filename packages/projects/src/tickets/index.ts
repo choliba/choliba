@@ -35,6 +35,7 @@ export {
 } from './ticket-template';
 export { readTicket, readTickets, type TicketCriterion, type TicketInfo } from './ticket-info';
 export { criteriaProblems, ticketCriteriaProblems } from './ticket-criteria';
+export { ticketShapeProblems } from './ticket-shape';
 export {
   formatRetired,
   fullyRetiredTickets,

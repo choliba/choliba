@@ -3,6 +3,9 @@ import path from 'node:path';
 /** Where the Playwright config reads the workspace root from, since it runs in a process of its own. */
 export const WORKSPACE_ENV = 'CHOLIBA_WORKSPACE';
 
+/** Which project the Playwright config loads: given by `run tests`, which knows it, instead of guessed from the paths. */
+export const PROJECT_ENV = 'CHOLIBA_PROJECT';
+
 /**
  * `NODE_PATH` with the `node_modules` that `@playwright/test` resolves from, seen from the runner, in
  * front of `current`. A spec imports `@playwright/test`, but a project's folder (CHOL_PROJECTS_DIR may be

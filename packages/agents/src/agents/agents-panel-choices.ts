@@ -11,9 +11,9 @@ import {
   MODE,
   modeChoice,
   MODEL,
+  PANEL_MODEL_DEFAULT,
   panelProviderChoice,
   PROVIDER,
-  PROVIDER_DEFAULT,
   SANDBOX,
   sandboxChoice,
   sandboxProblem,
@@ -31,17 +31,6 @@ const NO_AGENT = 'Escolha um agente antes, com /agents';
 /** Whether `choice` is installed on this machine, as the provider lists say it. */
 function installedDetail(container: Container, choice: string): string {
   return installedProvider(container, choice) === undefined ? 'não instalado' : 'instalado';
-}
-
-/** The models `provider` runs for `agent`: its own default first, when it has one, then the ones the agent declares. */
-function modelOptions(provider: AgentProvider, agent: AgentDefinition): readonly (string | undefined)[] {
-  const declared = declaredModels(agent, provider.id);
-  return provider.needsModel ? declared : [undefined, ...declared];
-}
-
-/** A model as the lists and the confirmations say it: its name, or `padrão do <provider>`. */
-function modelLabel(provider: AgentProvider, model: string | undefined): string {
-  return model ?? `padrão do ${provider.id}`;
 }
 
 /**
@@ -81,17 +70,14 @@ export async function chooseAgentRun(
   const run = sessionRun(container, context, agent, { model: undefined });
   if ('error' in run) return refused(run.error);
   const adapter = run.resolved.adapter;
-  const models = modelOptions(adapter, agent);
+  // Only the ones it declares: the run refuses any other model, the provider's own default included.
+  const models = declaredModels(agent, adapter.id);
   const picked = await panel.choose({
     title: `Modelo de ${agent.id}`,
     description: `Os modelos que ${agent.id} declara para ${adapter.id}. Esc usa o do painel.`,
-    options: models.map((model) => ({
-      label: modelLabel(adapter, model),
-      detail: model === undefined ? 'o provider escolhe' : '',
-      current: false,
-    })),
+    options: models.map((model) => ({ label: model, detail: '', current: false })),
   });
-  if (picked !== undefined && picked < models.length) context.set(keys[1], models[picked] ?? PROVIDER_DEFAULT);
+  if (picked !== undefined) context.set(keys[1], models[picked]);
   const taken = sessionRun(container, context, agent);
   return 'error' in taken ? refused(taken.error) : undefined;
 }
@@ -153,6 +139,11 @@ function keepModel(container: Container, context: PanelContext, panel: Pick<Chat
   panel.write(warn(`O modelo ${chosen} não é do novo provider: volta ao padrão.`));
 }
 
+/** The panel's model as `/model` lists and confirms it. */
+function panelModelLabel(model: string | undefined): string {
+  return model ?? PANEL_MODEL_DEFAULT;
+}
+
 /** `/model`: the panel's model, among the ones the workspace's agents declare for its provider, and its default. */
 const modelCommand: PanelCommand = {
   name: 'model',
@@ -170,8 +161,8 @@ const modelCommand: PanelCommand = {
       title: 'Escolha o modelo do painel',
       description: `Os modelos que os agentes declaram para ${provider.id}, para os que não têm um seu.`,
       options: models.map((model) => ({
-        label: modelLabel(provider, model),
-        detail: model === undefined ? 'o provider escolhe' : '',
+        label: panelModelLabel(model),
+        detail: model === undefined ? 'o primeiro que ele declara' : '',
         current: model === active,
       })),
     });
@@ -179,7 +170,7 @@ const modelCommand: PanelCommand = {
     const model = models[chosen];
     if (model === active) return;
     context.set(MODEL, model);
-    panel.write(`Modelo ${bold(modelLabel(provider, model))} selecionado.`);
+    panel.write(`Modelo ${bold(panelModelLabel(model))} selecionado.`);
     showRun(container, context, panel);
   },
 };

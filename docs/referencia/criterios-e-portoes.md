@@ -18,7 +18,9 @@ continuam qualquer um deles:
 ```
 
 Não existe `Ou`: um resultado com "ou" são dois comportamentos, e cada um vira um critério. Uma execução que deixa um
-critério fora desse formato (ou com `CHANGE_ME`) falha, dizendo qual frase corrigir.
+critério fora desse formato (ou com `CHANGE_ME`) falha, dizendo qual frase corrigir. O ticket também guarda o modelo do
+tipo dele (`templates/ticket/<tipo>.json`): um campo que falta, como o `testes` de um critério, ou de outro tipo (um
+texto onde o modelo tem uma lista) faz a execução falhar, dizendo o caminho do campo.
 
 ## Portões dos testes de um ticket
 
@@ -34,6 +36,11 @@ eles mostram. É assim que os agentes `test-writer` e `implementer` garantem o T
   os já atendidos. O `test-writer` grava esse arquivo no seu `steps.execute.after.success`, e o `implementer` o
   confere e o põe no prompt no seu `steps.<modo>.before` (veja
   [Ciclo de execução de um agente](ciclo-de-execucao-agente.md)).
+
+Os testes de um ticket são os que os critérios dele referenciam (`criterios[].testes`) ou, antes de algum passar, o
+spec com o nome dele (`tests/<ticket>.spec.ts`). Sem nenhum dos dois, o portão falha logo, dizendo que o ticket não
+tem spec, em vez de rodar os testes do projeto inteiro, que não dizem nada sobre o ticket. Sem `--expect` e sem
+`--failures`, o mesmo ticket roda o projeto inteiro, com um aviso.
 
 ## Quando um ticket substitui outro
 

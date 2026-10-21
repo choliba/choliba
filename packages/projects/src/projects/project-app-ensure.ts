@@ -1,9 +1,9 @@
-import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { configJsonPath } from '../paths';
 import type { ProjectSettings } from './project-settings';
 import { answers, launchApp, type LaunchedApp } from './project-app-launch';
+import { logTail } from './project-app-log';
 import { AppError, prepareApp, type SetupSpawn } from './project-app-prepare';
 
 /** The application of a run: `stop` stops it when choliba started it, and does nothing otherwise. */
@@ -15,7 +15,7 @@ export interface RunningApp {
 
 export interface EnsureAppDeps {
   readonly projectsDir: string;
-  /** Where the application's log goes: `<logDir>/<project>.log`. */
+  /** Where the application's logs go: its server's in `<logDir>/<project>.log`, its setup's in `<project>.setup.log`. */
   readonly logDir: string;
   readonly env: NodeJS.ProcessEnv;
   readonly stderr: { write(chunk: string): unknown };
@@ -30,18 +30,11 @@ export interface EnsureAppDeps {
 
 const TIMEOUT_MS = 180_000;
 const POLL_MS = 500;
-const LOG_TAIL_LINES = 15;
 
 const sleepFor = (ms: number): Promise<void> =>
   new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
-
-function logTail(logFile: string): string {
-  if (!existsSync(logFile)) return '';
-  const lines = readFileSync(logFile, 'utf8').trimEnd().split('\n').slice(-LOG_TAIL_LINES);
-  return lines.join('\n') === '' ? '' : `\n${lines.map((line) => `  ${line}`).join('\n')}`;
-}
 
 /** Waits for `baseURL` to answer; throws when the server ends first or the time runs out. */
 async function waitUntilUp(settings: ProjectSettings, app: LaunchedApp, logFile: string, deps: EnsureAppDeps) {
@@ -72,7 +65,7 @@ async function waitUntilUp(settings: ProjectSettings, app: LaunchedApp, logFile:
  * down and the environment has no `start`.
  */
 export async function ensureApp(settings: ProjectSettings, deps: EnsureAppDeps): Promise<RunningApp> {
-  await prepareApp(settings, deps);
+  await prepareApp(settings, { ...deps, logFile: join(deps.logDir, `${settings.project}.setup.log`) });
   const { baseURL, start, nome } = settings.environment;
   if (await (deps.isUp ?? answers)(baseURL)) {
     return { started: false, stop: () => undefined };

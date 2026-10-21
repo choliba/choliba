@@ -94,8 +94,8 @@ describe('/agents, the provider and the model of each agent', () => {
     try {
       agentsFolder(tmp.path);
       const panel = session(tmp.path, noCursor);
-      // echo, on claude, with claude-3-5-sonnet; then local, on the panel's provider, with its default.
-      await panel.add(0, 0, 1, 1, undefined, 0, 0);
+      // echo, on claude, with claude-3-5-sonnet; then local, on the panel's provider, with the model it declares.
+      await panel.add(0, 0, 0, 1, undefined, 0, 0);
 
       expect(panel.fake.choices[1]).toEqual({
         title: 'Provider de echo',
@@ -108,24 +108,21 @@ describe('/agents, the provider and the model of each agent', () => {
       expect(panel.fake.choices[2]).toEqual({
         title: 'Modelo de echo',
         description: 'Os modelos que echo declara para claude. Esc usa o do painel.',
-        options: [
-          { label: 'padrão do claude', detail: 'o provider escolhe', current: false },
-          { label: 'claude-3-5-sonnet', detail: '', current: false },
-        ],
+        options: [{ label: 'claude-3-5-sonnet', detail: '', current: false }],
       });
       expect(panel.state.values.get('agente')).toBe('echo,local');
       expect([...panel.state.values].filter(([key]) => key.includes(':'))).toEqual([
         ['provider:echo', 'claude'],
         ['modelo:echo', 'claude-3-5-sonnet'],
-        ['modelo:local', ''],
+        ['modelo:local', 'claude-3-5-sonnet'],
       ]);
       expect(panel.state.cards.get('echo')?.summary?.[0]).toBe(
         `${painted('green', 'claude')} ${gray('·')} ${painted('green', 'claude-3-5-sonnet')}`,
       );
-      // local asks for its provider's default, whatever the panel's model.
+      // local keeps the model chosen for it, whatever the panel's model.
       await panel.run('model', 1);
       const local = loadAgent(tmp.path, 'local');
-      expect(sessionArgv(panel.state.context, local, [], 'x')).toEqual(['local', 'x']);
+      expect(sessionArgv(panel.state.context, local, [], 'x')).toEqual(['local', '--model', 'claude-3-5-sonnet', 'x']);
       expect(panel.fake.written.slice(0, 2)).toEqual([
         `Agente ${painted('green', 'echo')} adicionado.`,
         `Agente ${painted('green', 'local')} adicionado.`,
@@ -182,7 +179,7 @@ describe('/agents, changing an agent of the sequence', () => {
     try {
       agentsFolder(tmp.path);
       const panel = session(tmp.path, noCursor);
-      await panel.add(0, 0, 1, 0);
+      await panel.add(0, 0, 0, 0);
       expect(panel.state.values.get('provider:echo')).toBe('claude');
       // echo again, on cursor, which is not installed: it stays on claude, with its model.
       await panel.add(0, 1);
@@ -210,7 +207,7 @@ describe('/provider', () => {
       showRun(panel.container, panel.state.context);
       expect([...panel.state.labels]).toEqual([
         ['provider', `${bold('claude')}${gray(' (auto)')}`],
-        ['modelo', gray('padrão do claude')],
+        ['modelo', gray('padrão de cada agente')],
       ]);
       await panel.run('provider', undefined);
       expect(panel.fake.choices[0]).toEqual({
@@ -265,7 +262,7 @@ describe('/provider', () => {
 });
 
 describe('/model', () => {
-  it("is the panel's: the provider's default and the models the agents declare for it", async () => {
+  it("is the panel's: each agent's first model by default, and the models the agents declare for it", async () => {
     const tmp = makeTmpDir('choices');
     try {
       agentsFolder(tmp.path);
@@ -277,7 +274,7 @@ describe('/model', () => {
         title: 'Escolha o modelo do painel',
         description: 'Os modelos que os agentes declaram para claude, para os que não têm um seu.',
         options: [
-          { label: 'padrão do claude', detail: 'o provider escolhe', current: true },
+          { label: 'padrão de cada agente', detail: 'o primeiro que ele declara', current: true },
           { label: 'claude-3-5-sonnet', detail: '', current: false },
         ],
       });
@@ -292,7 +289,7 @@ describe('/model', () => {
 
       await panel.run('model', 0);
       expect(panel.state.values.get('modelo')).toBeUndefined();
-      expect(panel.state.labels.get('modelo')).toBe(gray('padrão do claude'));
+      expect(panel.state.labels.get('modelo')).toBe(gray('padrão de cada agente'));
 
       const ollama = session(tmp.path, () => true, 'claude-ollama');
       await ollama.run('model', 0);
@@ -393,7 +390,7 @@ describe('/mode', () => {
     try {
       agentsFolder(tmp.path);
       const panel = session(tmp.path, () => true, 'claude');
-      await panel.add(0, undefined, 1, 0);
+      await panel.add(0, undefined, 0, 0);
       await panel.run('mode', 2);
       await panel.add(1, undefined, undefined, 0);
 
@@ -402,7 +399,7 @@ describe('/mode', () => {
         'claude-3-5-sonnet',
         undefined,
       ]);
-      expect(panel.state.labels.get('modelo')).toBe(gray('padrão do claude'));
+      expect(panel.state.labels.get('modelo')).toBe(gray('padrão de cada agente'));
     } finally {
       tmp.cleanup();
     }

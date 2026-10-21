@@ -592,6 +592,18 @@ describe('runAgent', () => {
     expect(s.stderr.chunks.join('')).not.toContain('modelo desconhecido');
   });
 
+  it('writes a stderr line as the provider makes it readable', async () => {
+    const s = setup(fakeSpawner({ stderr: streamFromChunks(['interno: x\n', 'a raw error line\n']) }).spawner, {
+      readableStderr: (line) => (line.startsWith('interno:') ? '✗ ferramenta recusou: x' : line),
+    });
+
+    await run(s);
+
+    expect(s.stderr.chunks.join('')).toContain('✗ ferramenta recusou: x\n');
+    expect(s.stderr.chunks.join('')).toContain('a raw error line');
+    expect(s.stderr.chunks.join('')).not.toContain('interno:');
+  });
+
   it('reports a stream failure and still resolves, instead of hanging', async () => {
     const s = setup(fakeSpawner({ stdout: erroringStream(new Error('boom')) }).spawner);
 
@@ -839,30 +851,34 @@ describe('runAgent — footer', () => {
     launch?: RunAgentRequest['launch'],
     stderr: readonly string[] = [],
     fakeTimer = true,
+    model?: string,
   ): Promise<{ code: number; out: string; err: string; intervals: number[]; stopped: number }> {
     const s = setup(fakeSpawner({ stdout: streamFromChunks([lines]), stderr: streamFromChunks([...stderr]) }).spawner);
     let seconds = 0;
     const intervals: number[] = [];
     let stopped = 0;
-    const code = await runAgent(s.request(launch === undefined ? {} : { launch }), {
-      runner: s.runner,
-      stdout: s.stdout,
-      stderr: s.stderr,
-      signals: s.signals,
-      now: () => new Date(Date.UTC(2026, 0, 1, 0, 0, seconds++)),
-      footer: true,
-      ...(fakeTimer
-        ? {
-            every: (ms: number, tick: () => void) => {
-              intervals.push(ms);
-              tick();
-              return () => {
-                stopped += 1;
-              };
-            },
-          }
-        : {}),
-    });
+    const code = await runAgent(
+      s.request(launch === undefined ? {} : { launch }, model === undefined ? {} : { model }),
+      {
+        runner: s.runner,
+        stdout: s.stdout,
+        stderr: s.stderr,
+        signals: s.signals,
+        now: () => new Date(Date.UTC(2026, 0, 1, 0, 0, seconds++)),
+        footer: true,
+        ...(fakeTimer
+          ? {
+              every: (ms: number, tick: () => void) => {
+                intervals.push(ms);
+                tick();
+                return () => {
+                  stopped += 1;
+                };
+              },
+            }
+          : {}),
+      },
+    );
     return { code, out: s.stdout.chunks.join(''), err: s.stderr.chunks.join(''), intervals, stopped };
   }
 
@@ -906,6 +922,19 @@ describe('runAgent — footer', () => {
     expect(run.code).toBe(1);
     expect(run.err).toMatch(/^│ aviso do provider +│\n$/);
     expect(run.out).toMatch(/claude · — · local · decorrido 00:00:0\d\.000 · código 1\n$/);
+  });
+
+  it('shows the model asked of the provider when its stream never says which it runs', async () => {
+    const run = await withFooter(
+      eventLines([{ type: 'done', isError: false, text: 'ok' }]),
+      undefined,
+      [],
+      false,
+      'gpt-6.1-sol',
+    );
+
+    expect(run.code).toBe(0);
+    expect(run.out).toMatch(/claude · gpt-6\.1-sol · local · decorrido 00:00:0\d\.000 · código 0\n$/);
   });
 });
 

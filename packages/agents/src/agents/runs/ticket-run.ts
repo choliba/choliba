@@ -8,6 +8,7 @@ import {
   ticketCriteriaProblems,
   ticketJsonPath,
   ticketPlaceholders,
+  ticketShapeProblems,
   ticketTemplatesDir,
 } from '@choliba/projects';
 
@@ -115,7 +116,8 @@ export function createPlannedTicket(target: TicketTarget | undefined): string | 
 /**
  * After the provider: a ticket created by this run and left exactly as written is removed, and an `execute` run that
  * said it was done fails, its work not done (one that only planned or answered keeps its code); a ticket an `execute`
- * run finished but left with `CHANGE_ME` is reported, and the run fails. Returns the exit code the run ends with.
+ * run finished but left with `CHANGE_ME`, out of its type's template or with a criterion out of the Gherkin form is
+ * reported, and the run fails. Returns the exit code the run ends with.
  */
 export function finishTicket(
   target: TicketTarget | undefined,
@@ -140,15 +142,14 @@ export function finishTicket(
     stderr.write(`Ticket "${target.ticket}" ainda tem CHANGE_ME em: ${pending.join(', ')} (${target.file}).\n`);
     return 1;
   }
-  const problems = ticketCriteriaProblems(target.file);
+  // The Gherkin form is checked once the ticket keeps its template's shape: a `descricao` that is not a list says so once.
+  const shape = ticketShapeProblems(target.file, ticketTemplatesDir());
+  const problems = shape.length > 0 ? shape : ticketCriteriaProblems(target.file);
   if (problems.length === 0) {
     return exitCode;
   }
   stderr.write(
-    [
-      `Ticket "${target.ticket}" tem critérios fora do formato (${target.file}):`,
-      ...problems.map((problem) => `  ${problem}`),
-    ]
+    [`Ticket "${target.ticket}" está fora do formato (${target.file}):`, ...problems.map((problem) => `  ${problem}`)]
       .join('\n')
       .concat('\n'),
   );

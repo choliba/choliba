@@ -184,6 +184,30 @@ describe('runTests', () => {
     });
   });
 
+  it('tells Playwright which project it runs, so a project named inside another is not mistaken for it', async () => {
+    await withProject(async (projectsDir, cwd) => {
+      writeProject(projectsDir, 'site');
+      writeProject(projectsDir, 'site-choliba', [{ suffix: '1', specs: ['site-choliba-1.spec.ts'] }]);
+      const envs: NodeJS.ProcessEnv[] = [];
+
+      const result = await runTests({
+        ...TEST_ROOTS,
+        argv: ['site-choliba:1'],
+        cwd,
+        env: { CHOL_TICKET_RUNS: projectsDir },
+        stdinIsTTY: false,
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: projectsDir }),
+        spawnPlaywright: (_args, env) => {
+          envs.push(env);
+          return 0;
+        },
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(envs[0]?.['CHOLIBA_PROJECT']).toBe('site-choliba');
+    });
+  });
+
   it('runs the whole project when the ticket has no referenced specs', async () => {
     await withProject(async (projectsDir, cwd) => {
       writeProject(projectsDir, 'demo', [{ suffix: 'T-01' }]);
@@ -202,6 +226,31 @@ describe('runTests', () => {
       });
 
       expect(calls[0]?.[1]).toBe(path.join(projectsDir, 'demo'));
+    });
+  });
+
+  it('fails a gated run of a ticket with no spec, instead of running the whole project', async () => {
+    await withProject(async (projectsDir, cwd) => {
+      writeProject(projectsDir, 'demo', [{ suffix: 'T-01' }]);
+      const spawnPlaywright = jest.fn(() => 0);
+      const ownSpec = path.join(projectsDir, 'demo', 'tests', 'demo-T-01.spec.ts');
+
+      for (const gate of [['--expect', 'red'], ['--expect=green'], ['--failures', 'red.md']]) {
+        await expect(
+          runTests({
+            ...TEST_ROOTS,
+            argv: ['demo:T-01', ...gate],
+            cwd,
+            stdinIsTTY: false,
+            loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: projectsDir }),
+            spawnPlaywright,
+          }),
+        ).rejects.toThrow(
+          `erro: o ticket "demo-T-01" não tem spec (${ownSpec}) nem teste referenciado, então não há o que conferir. ` +
+            'Escreva o spec do ticket (é o que o test-writer grava) e rode de novo.',
+        );
+      }
+      expect(spawnPlaywright).not.toHaveBeenCalled();
     });
   });
 

@@ -9,7 +9,7 @@ export interface RunFooterInfo {
   readonly place: SandboxPlace;
   /** When the session started, in ms (`Date#getTime`). */
   readonly startedAt: number;
-  /** The model the provider reported in its `init` event (`Auto`, `claude-sonnet-5-5`); absent until then. */
+  /** The model asked of the provider, then the one it reports in its `init` event (`Auto`); absent with neither. */
   readonly model?: string;
 }
 

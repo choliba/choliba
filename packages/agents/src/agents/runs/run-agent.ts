@@ -355,7 +355,14 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
     return 1;
   }
 
-  const info: RunFooterInfo = { provider: providerId, place: launch.place, startedAt: deps.now().getTime() };
+  // The model asked of the provider, until it reports the one it runs: a provider that never says (codex) keeps it.
+  const asked = request.providerRequest.model;
+  const info: RunFooterInfo = {
+    provider: providerId,
+    place: launch.place,
+    startedAt: deps.now().getTime(),
+    ...(asked === undefined ? {} : { model: asked }),
+  };
   const shown =
     deps.footer === true && deps.panel !== undefined
       ? await panelOrFooter(deps.panel, info, request, deps)
@@ -423,8 +430,9 @@ async function followSession(
     log.write(event.stream === 'stderr' ? 'provider-erro' : 'provider', event.raw);
     if (event.stream === 'stderr') {
       if (adapter.quietStderr?.(event.raw) === true) return;
+      const readable = adapter.readableStderr?.(event.raw) ?? event.raw;
       // In the frame, a blank line from the provider (around its own messages) would only be an empty row.
-      if (!screen.framed || event.raw.trim() !== '') screen.err.write(`${event.raw}\n`);
+      if (!screen.framed || readable.trim() !== '') screen.err.write(`${readable}\n`);
       return;
     }
     for (const agentEvent of parser.parseLine(event.raw)) {

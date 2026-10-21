@@ -21,6 +21,7 @@ import {
   ticketSuffix,
   type ProjectLocations,
   type ProjectSettings,
+  type SetupStdio,
   APP_PREPARED_ENV,
   formatRetired,
   fullyRetiredTickets,
@@ -31,7 +32,7 @@ import { workspaceLocations } from '../../shared/workspace-config';
 
 import { fillTicketTests } from './fill-ticket-tests';
 import { checkGate, hasGate, takeGateFlags, type TicketGate } from './tests-gate';
-import { playwrightNodePath, WORKSPACE_ENV } from './playwright-env';
+import { playwrightNodePath, PROJECT_ENV, WORKSPACE_ENV } from './playwright-env';
 import { parseTestsTarget, type TestsTarget } from './tests-target';
 import { guardRetiredTicket, retiredOf } from './tests-retired';
 import { fail } from './tests-error';
@@ -47,7 +48,7 @@ export type SpawnPlaywright = (args: string[], env: NodeJS.ProcessEnv, cwd: stri
 export type SpawnSyncFn = (
   command: string,
   args: readonly string[],
-  options: { cwd: string; env: NodeJS.ProcessEnv; stdio: 'inherit'; shell?: true },
+  options: { cwd: string; env: NodeJS.ProcessEnv; stdio: 'inherit' | SetupStdio; shell?: true },
 ) => { status: number | null };
 
 export interface RunTestsOptions {
@@ -213,11 +214,16 @@ function canonicalTicket(projectsDir: string, target: TestsTarget): string {
   return fullTicket(project, resolveCanonicalSuffix(projectsDir, project, stripProjectPrefix(project, rawTicket)));
 }
 
-/** What a single ticket runs: the specs it references, else its own spec, else (with a warning) the whole project. */
+/**
+ * What a single ticket runs: the specs it references, else its own spec, else (with a warning) the whole project. A
+ * gated run (`--expect`, `--failures`) of a ticket with no spec fails instead: the project's tests say nothing about
+ * the ticket.
+ */
 function ticketTargets(
   context: RunContext,
   project: string,
   ticket: string,
+  gate: TicketGate,
 ): { targets: string[]; wholeProject: boolean } {
   const projectsDir = context.locations.CHOL_PROJECTS_DIR;
   let specs: string[] = [];
@@ -234,6 +240,12 @@ function ticketTargets(
   const ownSpec = path.join(testsFolder, `${ticket}.spec.ts`);
   if (fs.existsSync(ownSpec)) {
     return { targets: [ownSpec], wholeProject: false };
+  }
+  if (hasGate(gate)) {
+    fail(
+      `erro: o ticket "${ticket}" não tem spec (${ownSpec}) nem teste referenciado, então não há o que conferir. ` +
+        'Escreva o spec do ticket (é o que o test-writer grava) e rode de novo.',
+    );
   }
   context.stderr.write(`aviso: ticket "${ticket}" ainda não tem teste referenciado — rodando o projeto inteiro.\n`);
   return { targets: [projectDir(projectsDir, project)], wholeProject: true };
@@ -253,7 +265,7 @@ async function runOnce(
 ): Promise<number> {
   const { project, ticket, targets, extras, gate } = run;
   const projectsDir = context.locations.CHOL_PROJECTS_DIR;
-  const runEnv = { ...context.env, QA_TICKET: ticket, TERM_COLS: terminalColumns() };
+  const runEnv = { ...context.env, [PROJECT_ENV]: project, QA_TICKET: ticket, TERM_COLS: terminalColumns() };
   const reportFolder = resolveReportFolder(resolveTicketRunsRoot(context.locations), project, ticket || undefined);
   // A report left by an earlier run must not pass for this one's.
   if (hasGate(gate)) fs.rmSync(path.join(reportFolder, 'results.json'), { force: true });
@@ -313,7 +325,13 @@ async function runTarget(
   }
   const ticket = canonicalTicket(projectsDir, target);
   try {
-    await prepareApp(settings, { projectsDir, env: context.env, stderr: context.stderr, spawn: context.spawnSyncFn });
+    await prepareApp(settings, {
+      projectsDir,
+      env: context.env,
+      stderr: context.stderr,
+      spawn: context.spawnSyncFn,
+      logFile: path.join(context.options.monorepoRoot, '.cache', 'app', `${project}.setup.log`),
+    });
   } catch (err) {
     fail(`erro: ${(err as Error).message}`);
   }
@@ -350,7 +368,7 @@ async function runTarget(
     );
   }
   if (ticket) {
-    return runOnce(context, { ...once, ...ticketTargets(context, project, ticket) });
+    return runOnce(context, { ...once, ...ticketTargets(context, project, ticket, gate) });
   }
   const tickets = listTicketSuffixes(ticketsFolderPath(projectsDir, project)).map((suffix) =>
     fullTicket(project, suffix),

@@ -50,6 +50,35 @@ describe('launchApp', () => {
   });
 });
 
+describe('launchApp, stopped by choliba', () => {
+  it('notes in the log that choliba stopped it, before what the server says as it ends', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'launch-app-'));
+    try {
+      const log = join(dir, 'app.log');
+      const app = launchApp(
+        "echo up; trap 'echo exited with code 143; exit 143' TERM; while :; do sleep 0.05; done",
+        dir,
+        log,
+        process.env,
+      );
+      await until(() => readFileSync(log, 'utf8') === 'up\n');
+
+      app.stop();
+      await until(() => app.exitCode() !== undefined);
+
+      const text = readFileSync(log, 'utf8');
+      const note = text.indexOf(
+        '\n[choliba] aplicação encerrada pelo choliba ao fim da execução (SIGTERM; código 143 é esse fim)\n',
+      );
+      expect(text.startsWith('up\n')).toBe(true);
+      expect(note).toBeGreaterThan(0);
+      expect(text.indexOf('exited with code 143')).toBeGreaterThan(note);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
 describe('launchApp, when the server does not cooperate', () => {
   it('kills a server that ignores SIGTERM once the grace time is over', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'launch-app-'));

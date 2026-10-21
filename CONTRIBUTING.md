@@ -7,8 +7,8 @@ Perguntas, bugs e sugestões vão para as [issues](https://github.com/choliba/ch
 - commits no [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/);
 - `bun run check` verde (tipos, lint, formatação e testes) e cobertura igual ou maior que a do `develop`; no CI,
   esses gates e o build da documentação rodam em jobs paralelos, reunidos pelo status obrigatório `check`;
-- o CI roda `bun pm scan` e barra CVE de severidade alta ou crítica, exceto `CVE-2026-53571` (vite 5) e
-  `CVE-2026-93687` (braces 3.0.3), que ainda não têm release corrigida;
+- o CI roda `bun pm scan` e barra CVE de severidade alta ou crítica, exceto `CVE-2026-53571` e `CVE-2026-112942`
+  (vite 5, do vitepress) e `CVE-2026-93687` (braces 3.0.3), que ainda não têm release corrigida;
 - nenhuma informação de agente ou LLM em commit, PR ou branch (sem `Co-authored-by`).
 
 O `develop` só aceita merge squash; o release é um PR de `develop` para `master`, com merge commit.

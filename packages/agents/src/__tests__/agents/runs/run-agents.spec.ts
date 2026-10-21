@@ -1025,7 +1025,7 @@ describe('runAgentsCli — run', () => {
     expect(log).toMatch(
       /^choliba run agent echo 1\.0\.0\nmodo: execute\nprojeto: —\nticket: —\nsandbox: local\ntarefa: /,
     );
-    expect(log).toContain('[choliba] provider claude · modelo padrão do provider');
+    expect(log).toContain('[choliba] provider claude · modelo claude-3-5-sonnet');
     expect(log).toContain(`[provider] ${claudeInitLine()}`);
     expect(log).toMatch(/\[choliba\] agente terminou: código 0 · tempo do agente \d/);
     expect(log).toMatch(/\[choliba\] fim: código 0 · tempo total \d+(\.\d)?m?s\n$/);
@@ -1191,7 +1191,7 @@ describe('runAgentsCli — run', () => {
       expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', 'a task'], deps)).toBe(0);
       const text = stdout.chunks.join('');
       expect(text.startsWith('Sem --dry-run, faria nesta ordem:\n')).toBe(true);
-      expect(text).toContain(' 2. [agente] claude · modelo padrão do provider · modo execute');
+      expect(text).toContain(' 2. [agente] claude · modelo claude-3-5-sonnet · modo execute');
       expect(text).toContain('comando: claude -p --input-format stream-json');
       expect(text).not.toContain(COMMAND_LINE_TITLE);
       expect(spawnerHandle.spawnCalls).toEqual([]);

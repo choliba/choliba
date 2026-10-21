@@ -36,6 +36,21 @@ const plain: AgentDefinition = {
 
 const agent: AgentDefinition = { ...plain, name: 'po', ticketTypes: ['bug'] };
 
+/** A filled `story` ticket, as its template shapes it, with `criterion`'s fields over the one criterion's. */
+function storyTicket(criterion: Readonly<Record<string, unknown>>): string {
+  const base = { id: 'CA-01', descricao: ['Dado x', 'Quando y', 'Então z'], testes: [] };
+  return JSON.stringify({
+    ticket: 'red-1',
+    tipo: 'story',
+    projeto: 'red',
+    titulo: 'ok',
+    contexto: 'ok',
+    evidencias: [],
+    substitui: [],
+    criterios: [{ ...base, ...criterion }],
+  });
+}
+
 describe('ticketVars', () => {
   it('gives TICKET and TICKET_FILE, or nothing without a ticket', () => {
     expect(ticketVars({ ticket: 'red-1', file: '/p/1.json' })).toEqual({ TICKET: 'red-1', TICKET_FILE: '/p/1.json' });
@@ -130,14 +145,37 @@ describe('finishTicket', () => {
   });
 
   it('fails an execute run that left a criterion out of the Gherkin form, naming it', () => {
-    withTicket('{"titulo":"ok","criterios":[{"descricao":"Dado x, Quando y, Então z"}]}', (file) => {
+    withTicket(storyTicket({ descricao: ['Quando y', 'Então z'] }), (file) => {
       const stderr = fakeWritable();
 
       expect(finishTicket({ ticket: 'red-1', file }, undefined, 'execute', 0, stderr)).toBe(1);
       expect(stderr.chunks.join('')).toBe(
         [
-          `Ticket "red-1" tem critérios fora do formato (${file}):`,
-          '  criterios[0].descricao: deve ser uma lista de frases (Dado…, Quando…, Então…), não um texto',
+          `Ticket "red-1" está fora do formato (${file}):`,
+          '  criterios[0].descricao[0]: a primeira frase começa com "Dado" ("Quando y")',
+          '',
+        ].join('\n'),
+      );
+    });
+  });
+
+  it("fails an execute run that left the ticket out of its type's template, naming each field", () => {
+    withTicket(storyTicket({ testes: undefined }), (file) => {
+      const stderr = fakeWritable();
+
+      expect(finishTicket({ ticket: 'red-1', file }, undefined, 'execute', 0, stderr)).toBe(1);
+      expect(stderr.chunks.join('')).toBe(
+        [`Ticket "red-1" está fora do formato (${file}):`, '  criterios[0].testes: falta', ''].join('\n'),
+      );
+    });
+    withTicket(storyTicket({ descricao: 'Dado x, Quando y, Então z' }), (file) => {
+      const stderr = fakeWritable();
+
+      expect(finishTicket({ ticket: 'red-1', file }, undefined, 'execute', 0, stderr)).toBe(1);
+      expect(stderr.chunks.join('')).toBe(
+        [
+          `Ticket "red-1" está fora do formato (${file}):`,
+          '  criterios[0].descricao: deve ser uma lista, não um texto',
           '',
         ].join('\n'),
       );
@@ -152,7 +190,7 @@ describe('finishTicket', () => {
       expect(stderr.chunks).toEqual([]);
       expect(readFileSync(file, 'utf8')).toBe('{"titulo":"CHANGE_ME"}');
     });
-    withTicket('{"titulo":"ok","criterios":[{"descricao":["Dado x","Quando y","Então z"]}]}', (file) => {
+    withTicket(storyTicket({}), (file) => {
       expect(finishTicket({ ticket: 'red-1', file }, undefined, 'execute', 0, fakeWritable())).toBe(0);
     });
   });
