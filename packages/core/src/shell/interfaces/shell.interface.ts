@@ -1,8 +1,8 @@
 import type { ConfigGroup } from '@choliba/config';
+import type { Container } from '@choliba/kernel';
 
 import type { CommandEntry, CommandExample, RootSpec } from '../../help';
 import type { ChatPanel, PanelCard, PanelKey } from '../../terminal';
-import type { Container } from '../container';
 import type { ShellIo } from '../shell-io';
 
 /**

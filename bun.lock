@@ -78,9 +78,14 @@
       "version": "0.0.0",
       "dependencies": {
         "@choliba/config": "workspace:*",
+        "@choliba/kernel": "workspace:*",
         "@opentui/core": "0.5.14",
         "yaml": "^2.8.1",
       },
+    },
+    "packages/kernel": {
+      "name": "@choliba/kernel",
+      "version": "0.0.0",
     },
     "packages/projects": {
       "name": "@choliba/projects",
@@ -234,6 +239,8 @@
     "@choliba/config": ["@choliba/config@workspace:packages/config"],
 
     "@choliba/core": ["@choliba/core@workspace:packages/core"],
+
+    "@choliba/kernel": ["@choliba/kernel@workspace:packages/kernel"],
 
     "@choliba/projects": ["@choliba/projects@workspace:packages/projects"],
 

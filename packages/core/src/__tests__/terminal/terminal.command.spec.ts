@@ -1,8 +1,9 @@
+import type { ProcessSpawner } from '@choliba/kernel';
+
 import { coreShell } from '../../shell';
 import { BufferWritable, fakePlatform, FakeSignals, runShell, VERBS_ROOT, type FakePlatform } from '../../testing';
 
 import { formatLine } from '../../terminal/formatter';
-import type { ProcessSpawner } from '../../platform';
 import { exitCodeFor } from '../../terminal/exit-code';
 import { erroringStream, fakeSpawner, streamFromChunks, throwingSpawner } from './helpers/fake-spawner';
 

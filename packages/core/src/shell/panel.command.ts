@@ -1,6 +1,7 @@
+import { token, type Container } from '@choliba/kernel';
+
 import type { CommandSpec } from '../help';
 import { openOpenTuiPanel, visibleWidth, type ArtPixels, type ChatPanel, type PanelOptions } from '../terminal';
-import { token, type Container } from './container';
 import { PANEL_COMMANDS, PANEL_STARTS, PLATFORM } from './create-shell';
 import type { PanelCommand, ShellCommand } from './interfaces/shell.interface';
 import { loggedPanel, openPanelLog } from './panel-log';

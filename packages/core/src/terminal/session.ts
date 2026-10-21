@@ -1,7 +1,8 @@
+import type { ProcessInput } from '@choliba/kernel';
+
 import { CircularBuffer } from './circular-buffer';
 import type { Listener } from './event-emitter';
 import { TypedEventEmitter } from './event-emitter';
-import type { ProcessInput } from '../platform';
 import type {
   SessionEvents,
   SessionExitEvent,

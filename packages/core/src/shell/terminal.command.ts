@@ -1,5 +1,6 @@
+import { token, type Container } from '@choliba/kernel';
+
 import { parseRunArgs, ProcessRunnerService, TerminalService } from '../terminal';
-import { token, type Container } from './container';
 import { PLATFORM } from './create-shell';
 import type { ShellCommand } from './interfaces/shell.interface';
 import type { CommandSpec } from '../help';

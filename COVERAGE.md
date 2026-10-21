@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 21/10/2026 06:57:37 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 21/10/2026 07:58:49 — não editar manualmente.
 
 ## Resumo
 
@@ -11,6 +11,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 🟢|[packages/choliba](packages/choliba)|100.00|100.00|100.00|100.00
 🟢|[packages/config](packages/config)|100.00|100.00|100.00|100.00
 🟢|[packages/core](packages/core)|100.00|100.00|100.00|100.00
+🟢|[packages/kernel](packages/kernel)|100.00|100.00|100.00|100.00
 🟢|[packages/projects](packages/projects)|100.00|100.00|100.00|100.00
 🟢|[packages/runner](packages/runner)|100.00|100.00|100.00|100.00
 🟢|[packages/sandbox](packages/sandbox)|100.00|100.00|100.00|100.00
@@ -181,14 +182,11 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 71 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 57 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
 🟢|[src/cli/message-of.ts](packages/core/src/cli/message-of.ts)|100.00|100.00|100.00|100.00
-🟢|[src/common/expected-error.ts](packages/core/src/common/expected-error.ts)|100.00|100.00|100.00|100.00
-🟢|[src/config/package-version.ts](packages/core/src/config/package-version.ts)|100.00|100.00|100.00|100.00
-🟢|[src/config/resources.ts](packages/core/src/config/resources.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/command-page.ts](packages/core/src/help/command-page.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/complete.ts](packages/core/src/help/complete.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/completion-bash.ts](packages/core/src/help/completion-bash.ts)|100.00|100.00|100.00|100.00
@@ -198,14 +196,6 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/help/shell-completion.ts](packages/core/src/help/shell-completion.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/suggest.ts](packages/core/src/help/suggest.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/wants-help.ts](packages/core/src/help/wants-help.ts)|100.00|100.00|100.00|100.00
-🟢|[src/paths/path-pattern.ts](packages/core/src/paths/path-pattern.ts)|100.00|100.00|100.00|100.00
-🟢|[src/platform/command-on-path.ts](packages/core/src/platform/command-on-path.ts)|100.00|100.00|100.00|100.00
-🟢|[src/platform/git-run.ts](packages/core/src/platform/git-run.ts)|100.00|100.00|100.00|100.00
-🟢|[src/platform/global-flags.ts](packages/core/src/platform/global-flags.ts)|100.00|100.00|100.00|100.00
-🟢|[src/platform/platform.constants.ts](packages/core/src/platform/platform.constants.ts)|100.00|100.00|100.00|100.00
-🟢|[src/platform/raw-args.ts](packages/core/src/platform/raw-args.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runtime/runtime.constants.ts](packages/core/src/runtime/runtime.constants.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shell/container.ts](packages/core/src/shell/container.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/core-shell.ts](packages/core/src/shell/core-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/create-shell.ts](packages/core/src/shell/create-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/panel-log.ts](packages/core/src/shell/panel-log.ts)|100.00|100.00|100.00|100.00
@@ -246,16 +236,35 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/terminal/table/table.ts](packages/core/src/terminal/table/table.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/terminal.service.ts](packages/core/src/terminal/terminal.service.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/writable.ts](packages/core/src/terminal/writable.ts)|100.00|100.00|100.00|100.00
-🟢|[src/testing/buffer-writable.ts](packages/core/src/testing/buffer-writable.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/fake-chat-panel.ts](packages/core/src/testing/fake-chat-panel.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/fake-panel-context.ts](packages/core/src/testing/fake-panel-context.ts)|100.00|100.00|100.00|100.00
-🟢|[src/testing/fake-platform.ts](packages/core/src/testing/fake-platform.ts)|100.00|100.00|100.00|100.00
-🟢|[src/testing/fake-signals.ts](packages/core/src/testing/fake-signals.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/run-shell.ts](packages/core/src/testing/run-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/theme/ansi.ts](packages/core/src/theme/ansi.ts)|100.00|100.00|100.00|100.00
 🟢|[src/theme/resolve-theme.ts](packages/core/src/theme/resolve-theme.ts)|100.00|100.00|100.00|100.00
 🟢|[src/theme/theme-defaults.ts](packages/core/src/theme/theme-defaults.ts)|100.00|100.00|100.00|100.00
 🟢|[src/theme/theme.service.ts](packages/core/src/theme/theme.service.ts)|100.00|100.00|100.00|100.00
+
+</details>
+
+<details>
+<summary>🟢 <b>packages/kernel</b> — 100.00% das linhas, 14 arquivos</summary>
+
+Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
+--|--|--|--|--|--
+🟢|[src/common/expected-error.ts](packages/kernel/src/common/expected-error.ts)|100.00|100.00|100.00|100.00
+🟢|[src/config/package-version.ts](packages/kernel/src/config/package-version.ts)|100.00|100.00|100.00|100.00
+🟢|[src/config/resources.ts](packages/kernel/src/config/resources.ts)|100.00|100.00|100.00|100.00
+🟢|[src/container/container.ts](packages/kernel/src/container/container.ts)|100.00|100.00|100.00|100.00
+🟢|[src/paths/path-pattern.ts](packages/kernel/src/paths/path-pattern.ts)|100.00|100.00|100.00|100.00
+🟢|[src/platform/command-on-path.ts](packages/kernel/src/platform/command-on-path.ts)|100.00|100.00|100.00|100.00
+🟢|[src/platform/git-run.ts](packages/kernel/src/platform/git-run.ts)|100.00|100.00|100.00|100.00
+🟢|[src/platform/global-flags.ts](packages/kernel/src/platform/global-flags.ts)|100.00|100.00|100.00|100.00
+🟢|[src/platform/platform.constants.ts](packages/kernel/src/platform/platform.constants.ts)|100.00|100.00|100.00|100.00
+🟢|[src/platform/raw-args.ts](packages/kernel/src/platform/raw-args.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runtime/runtime.constants.ts](packages/kernel/src/runtime/runtime.constants.ts)|100.00|100.00|100.00|100.00
+🟢|[src/testing/buffer-writable.ts](packages/kernel/src/testing/buffer-writable.ts)|100.00|100.00|100.00|100.00
+🟢|[src/testing/fake-platform.ts](packages/kernel/src/testing/fake-platform.ts)|100.00|100.00|100.00|100.00
+🟢|[src/testing/fake-signals.ts](packages/kernel/src/testing/fake-signals.ts)|100.00|100.00|100.00|100.00
 
 </details>
 

@@ -1,4 +1,6 @@
-import { Container, type PanelCommand, type PanelCommandContext } from '../../shell';
+import { Container } from '@choliba/kernel';
+
+import { type PanelCommand, type PanelCommandContext } from '../../shell';
 import { panelSession } from '../../shell/panel-session';
 import { fakeChatPanel } from '../../testing';
 

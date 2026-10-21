@@ -1,4 +1,3 @@
-export { Container, token, type Factory, type Token } from './container';
 export { CONFIG_CATALOG, createShell, PANEL_COMMANDS, PANEL_STARTS, PLATFORM, type Shell } from './create-shell';
 export type {
   PanelCommand,
