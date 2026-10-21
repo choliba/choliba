@@ -3,17 +3,16 @@ import {
   frameBottom,
   frameLines,
   frameTop,
-  StatusFooter,
+  createLineRunScreen,
   type Panel,
   type PanelOptions,
-  type Theme,
   type Writable,
   type WritableWithColumns,
+  oneLine,
+  summaryLine,
 } from '@choliba/core';
 
 import type { RunFooterInfo, RunScreen } from '../interfaces/run-footer.interface';
-import { footerLines, oneLine, providerContext, summaryLine } from './run-footer';
-import { formatProviderLine } from './event-render';
 import { everySecond, type RunAgentRequest } from './run-agent';
 
 export const FOOTER_REFRESH_MS = 50;
@@ -38,8 +37,7 @@ export function createRunScreen(
   request: RunAgentRequest,
   deps: RunScreenDeps,
 ): RunScreen | Promise<RunScreen> {
-  if (!deps.footer) return plainScreen(info, request.theme, deps);
-  if (deps.panel === undefined) return footerScreen(info, request, deps);
+  if (!deps.footer || deps.panel === undefined) return lineScreen(info, request, deps);
   const { name, color } = request.providerRequest.agent;
   const now = (): number => deps.now().getTime();
   const current = reportedInfo(info);
@@ -54,61 +52,23 @@ export function createRunScreen(
           : 'Enter envia · Ctrl+J cria uma linha',
     })
     .then((panel) =>
-      panel === undefined ? footerScreen(info, request, deps) : panelScreen(panel, current, request, deps),
+      panel === undefined ? lineScreen(info, request, deps) : panelScreen(panel, current, request, deps),
     );
 }
 
-function plainScreen(info: RunFooterInfo, theme: Theme, deps: RunScreenDeps): RunScreen {
-  deps.stdout.write(`${formatProviderLine(info.provider, theme)}${providerContext(info)}\n`);
-  return {
-    framed: false,
-    out: deps.stdout,
-    err: deps.stderr,
-    model: noop,
-    onInterrupt: noop,
-    onMessage: noop,
-    answer: unanswered,
-    close: noop,
-  };
-}
-
-function footerScreen(info: RunFooterInfo, request: RunAgentRequest, deps: RunScreenDeps): RunScreen {
-  const { theme } = request;
-  const { name, color } = request.providerRequest.agent;
-  const now = (): number => deps.now().getTime();
-  const width = (): number => screenWidth(deps.stdout);
-  let model: string | undefined;
-  const current = (): RunFooterInfo => (model === undefined ? info : { ...info, model });
-  deps.stdout.write(`\n${frameTop(name, width(), (text) => theme.paint('agents', name, text, color))}\n`);
-  const footer = new StatusFooter(deps.stdout, (columns) => footerLines(current(), now(), columns, theme));
-  const framed = (stream: Writable): Writable => {
-    const above = footer.writer(stream);
-    return {
-      write: (text) => {
-        above.write(`${frameLines(text, width()).join('\n')}\n`);
-      },
-    };
-  };
-  const stop = (deps.every ?? everySecond)(FOOTER_REFRESH_MS, () => {
-    footer.draw();
+function lineScreen(info: RunFooterInfo, request: RunAgentRequest, deps: RunScreenDeps): RunScreen {
+  const line = createLineRunScreen({
+    info,
+    name: request.providerRequest.agent.name,
+    color: request.providerRequest.agent.color,
+    theme: request.theme,
+    stdout: deps.stdout,
+    stderr: deps.stderr,
+    now: deps.now,
+    footer: deps.footer,
+    every: deps.every ?? everySecond,
   });
-  footer.draw();
-  return {
-    framed: true,
-    out: framed(deps.stdout),
-    err: framed(deps.stderr),
-    model: (reported) => {
-      model = reported;
-    },
-    onInterrupt: noop,
-    onMessage: noop,
-    answer: unanswered,
-    close: (exitCode) => {
-      stop();
-      footer.close();
-      deps.stdout.write(`${frameBottom(width())}\n${summaryLine(current(), now(), exitCode)}\n`);
-    },
-  };
+  return { ...line, answer: unanswered };
 }
 
 function panelScreen(panel: Panel, current: ReportedInfo, request: RunAgentRequest, deps: RunScreenDeps): RunScreen {
@@ -175,8 +135,4 @@ export function screenWidth(stdout: WritableWithColumns): number {
 
 function unanswered(): Promise<{ status: 'unavailable' }> {
   return Promise.resolve({ status: 'unavailable' });
-}
-
-function noop(): void {
-  // Nothing to restore.
 }

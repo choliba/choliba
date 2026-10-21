@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { formatDuration, formatHelp, openOpenTuiPanel, type CommandSpec } from '@choliba/core';
+import { formatDuration, formatHelp, openOpenTuiPanel, wantsFooter, type CommandSpec } from '@choliba/core';
 import { AppError, ensureApp, shareApp, type ProjectSettings, type RunningApp } from '@choliba/projects';
 import { readSandbox, type Sandbox, type SandboxConfigError } from '@choliba/sandbox';
 
@@ -22,7 +22,6 @@ import { formatDryRun, modelText, type DryRunInput } from './dry-run';
 import { runAgent } from './run-agent';
 import { createRunScreen } from './run-screen';
 import { loggedStream, NO_RUN_LOG, openRunLog, type RunLog } from './run-log';
-import { wantsFooter } from './run-footer';
 import { planRunTools, type PlannedFile } from '../../common';
 import { CHOL_ROOT } from '../../common';
 import { containerReachProblem } from './app-reach';

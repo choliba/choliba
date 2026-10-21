@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 21/10/2026 14:28:52 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 21/10/2026 14:56:28 — não editar manualmente.
 
 ## Resumo
 
@@ -23,7 +23,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 99 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 98 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -65,7 +65,6 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/runs/run-checks.ts](packages/agents/src/agents/runs/run-checks.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-choice.ts](packages/agents/src/agents/runs/run-choice.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-context.ts](packages/agents/src/agents/runs/run-context.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/runs/run-footer.ts](packages/agents/src/agents/runs/run-footer.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-log.ts](packages/agents/src/agents/runs/run-log.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-preparation.ts](packages/agents/src/agents/runs/run-preparation.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-screen.ts](packages/agents/src/agents/runs/run-screen.ts)|100.00|100.00|100.00|100.00
@@ -321,7 +320,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/shell</b> — 100.00% das linhas, 44 arquivos</summary>
+<summary>🟢 <b>packages/shell</b> — 100.00% das linhas, 46 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -355,6 +354,8 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/terminal/live-region.ts](packages/shell/src/terminal/live-region.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/log-file.ts](packages/shell/src/terminal/log-file.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/process-runner.service.ts](packages/shell/src/terminal/process-runner.service.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/run-footer.ts](packages/shell/src/terminal/run-footer.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/run-line-screen.ts](packages/shell/src/terminal/run-line-screen.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/session.ts](packages/shell/src/terminal/session.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/spawn.ts](packages/shell/src/terminal/spawn.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/status-footer.ts](packages/shell/src/terminal/status-footer.ts)|100.00|100.00|100.00|100.00
