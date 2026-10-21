@@ -1,4 +1,4 @@
-import { halfBlockArt, pixelMap } from '../../terminal/panel/panel-art';
+import { halfBlockArt, pixelMap } from '../../panel/panel-art';
 
 /** RGBA pixels of `rows`, each pixel `[r, g, b, a]`, with `padding` bytes at the end of every row. */
 function pixels(rows: readonly (readonly (readonly number[])[])[], padding = 0) {

@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 21/10/2026 08:34:30 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 21/10/2026 09:00:17 — não editar manualmente.
 
 ## Resumo
 
@@ -16,6 +16,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 🟢|[packages/runner](packages/runner)|100.00|100.00|100.00|100.00
 🟢|[packages/sandbox](packages/sandbox)|100.00|100.00|100.00|100.00
 🟢|[packages/shell](packages/shell)|100.00|100.00|100.00|100.00
+🟢|[packages/tui](packages/tui)|100.00|100.00|100.00|100.00
 🟢|[packages/workspace](packages/workspace)|100.00|100.00|100.00|100.00
 
 ## Por pacote
@@ -182,25 +183,11 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 15 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 1 arquivo</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
 🟢|[src/shell/core-shell.ts](packages/core/src/shell/core-shell.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shell/panel-log.ts](packages/core/src/shell/panel-log.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shell/panel-session.ts](packages/core/src/shell/panel-session.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shell/panel.command.ts](packages/core/src/shell/panel.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/panel/panel-art.ts](packages/core/src/terminal/panel/panel-art.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/panel/panel-choose.ts](packages/core/src/terminal/panel/panel-choose.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/panel/panel-history.ts](packages/core/src/terminal/panel/panel-history.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/panel/panel-palette.ts](packages/core/src/terminal/panel/panel-palette.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/panel/panel-question.ts](packages/core/src/terminal/panel/panel-question.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/panel/panel-text.ts](packages/core/src/terminal/panel/panel-text.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/panel/panel-toolkit.ts](packages/core/src/terminal/panel/panel-toolkit.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/panel/panel-welcome.ts](packages/core/src/terminal/panel/panel-welcome.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/panel/panel.ts](packages/core/src/terminal/panel/panel.ts)|100.00|100.00|100.00|100.00
-🟢|[src/testing/fake-chat-panel.ts](packages/core/src/testing/fake-chat-panel.ts)|100.00|100.00|100.00|100.00
-🟢|[src/testing/fake-panel-context.ts](packages/core/src/testing/fake-panel-context.ts)|100.00|100.00|100.00|100.00
 
 </details>
 
@@ -362,6 +349,29 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/theme/resolve-theme.ts](packages/shell/src/theme/resolve-theme.ts)|100.00|100.00|100.00|100.00
 🟢|[src/theme/theme-defaults.ts](packages/shell/src/theme/theme-defaults.ts)|100.00|100.00|100.00|100.00
 🟢|[src/theme/theme.service.ts](packages/shell/src/theme/theme.service.ts)|100.00|100.00|100.00|100.00
+
+</details>
+
+<details>
+<summary>🟢 <b>packages/tui</b> — 100.00% das linhas, 15 arquivos</summary>
+
+Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
+--|--|--|--|--|--
+🟢|[src/panel/panel-art.ts](packages/tui/src/panel/panel-art.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/panel-choose.ts](packages/tui/src/panel/panel-choose.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/panel-history.ts](packages/tui/src/panel/panel-history.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/panel-palette.ts](packages/tui/src/panel/panel-palette.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/panel-question.ts](packages/tui/src/panel/panel-question.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/panel-text.ts](packages/tui/src/panel/panel-text.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/panel-toolkit.ts](packages/tui/src/panel/panel-toolkit.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/panel-welcome.ts](packages/tui/src/panel/panel-welcome.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/panel.ts](packages/tui/src/panel/panel.ts)|100.00|100.00|100.00|100.00
+🟢|[src/session/panel-log.ts](packages/tui/src/session/panel-log.ts)|100.00|100.00|100.00|100.00
+🟢|[src/session/panel-session.ts](packages/tui/src/session/panel-session.ts)|100.00|100.00|100.00|100.00
+🟢|[src/session/panel.command.ts](packages/tui/src/session/panel.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/session/tui-shell.ts](packages/tui/src/session/tui-shell.ts)|100.00|100.00|100.00|100.00
+🟢|[src/testing/fake-chat-panel.ts](packages/tui/src/testing/fake-chat-panel.ts)|100.00|100.00|100.00|100.00
+🟢|[src/testing/fake-panel-context.ts](packages/tui/src/testing/fake-panel-context.ts)|100.00|100.00|100.00|100.00
 
 </details>
 

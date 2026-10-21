@@ -4,9 +4,9 @@ import type {
   PanelRendererConfig,
   PanelSelection,
   PanelToolkit,
-} from '../../terminal/panel/interfaces/panel.interface';
-import { loadPanelToolkit, openOpenTuiPanel, openPanelWith } from '../../terminal/panel/panel-toolkit';
-import { openPanel } from '../../terminal/panel/panel';
+} from '../../panel/interfaces/panel.interface';
+import { loadPanelToolkit, openOpenTuiPanel, openPanelWith } from '../../panel/panel-toolkit';
+import { openPanel } from '../../panel/panel';
 
 interface FakeChunk {
   readonly text: string;

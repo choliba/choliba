@@ -1,6 +1,6 @@
 import type { LogFile } from '@choliba/shell';
 
-import { loggedPanel } from '../../shell/panel-log';
+import { loggedPanel } from '../../session/panel-log';
 import { fakeChatPanel } from '../../testing';
 
 /** A log that keeps its lines in memory: `[source] text`. */

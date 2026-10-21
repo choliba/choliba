@@ -81,8 +81,7 @@
       "dependencies": {
         "@choliba/kernel": "workspace:*",
         "@choliba/shell": "workspace:*",
-        "@opentui/core": "0.5.14",
-        "yaml": "^2.8.1",
+        "@choliba/tui": "workspace:*",
       },
     },
     "packages/kernel": {
@@ -124,6 +123,16 @@
       "dependencies": {
         "@choliba/config": "workspace:*",
         "@choliba/kernel": "workspace:*",
+      },
+    },
+    "packages/tui": {
+      "name": "@choliba/tui",
+      "version": "0.0.0",
+      "dependencies": {
+        "@choliba/kernel": "workspace:*",
+        "@choliba/shell": "workspace:*",
+        "@choliba/workspace": "workspace:*",
+        "@opentui/core": "0.5.14",
       },
     },
     "packages/workspace": {
@@ -268,6 +277,8 @@
     "@choliba/sandbox": ["@choliba/sandbox@workspace:packages/sandbox"],
 
     "@choliba/shell": ["@choliba/shell@workspace:packages/shell"],
+
+    "@choliba/tui": ["@choliba/tui@workspace:packages/tui"],
 
     "@choliba/workspace": ["@choliba/workspace@workspace:packages/workspace"],
 
