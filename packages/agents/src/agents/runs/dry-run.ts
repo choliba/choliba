@@ -209,7 +209,7 @@ export function formatDryRun(input: DryRunInput): string {
         {
           who: 'CLI',
           lines: [
-            'fecha o ticket: apaga um ticket novo que o agente não preencheu; em execute, falha se sobrar CHANGE_ME',
+            'fecha o ticket: apaga um ticket novo que o agente não preencheu; em execute, falha com CHANGE_ME ou fora do modelo',
           ],
         },
       ]
