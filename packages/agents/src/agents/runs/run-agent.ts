@@ -355,7 +355,14 @@ async function runSession(request: RunAgentRequest, deps: RunAgentDeps): Promise
     return 1;
   }
 
-  const info: RunFooterInfo = { provider: providerId, place: launch.place, startedAt: deps.now().getTime() };
+  // The model asked of the provider, until it reports the one it runs: a provider that never says (codex) keeps it.
+  const asked = request.providerRequest.model;
+  const info: RunFooterInfo = {
+    provider: providerId,
+    place: launch.place,
+    startedAt: deps.now().getTime(),
+    ...(asked === undefined ? {} : { model: asked }),
+  };
   const shown =
     deps.footer === true && deps.panel !== undefined
       ? await panelOrFooter(deps.panel, info, request, deps)
