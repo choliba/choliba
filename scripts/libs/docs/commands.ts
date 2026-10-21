@@ -1,7 +1,7 @@
 // The command reference of the documentation (docs/comandos/), written from each command's spec: the same spec that
 // gives its --help and its completion, so the page and the help never say different things.
 
-import type { CommandEntry, CommandSpec, FlagSpec } from '../../../packages/core/src/help';
+import type { CommandEntry, CommandSpec, FlagSpec } from '../../../packages/shell/src/help';
 
 /** One command of the reference: its words (`run agent`), its one-line description and its spec. */
 export interface DocCommand {

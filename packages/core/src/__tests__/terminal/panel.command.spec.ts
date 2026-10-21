@@ -1,16 +1,8 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { WORKSPACE_ROOT, type ChatPanel, type PanelOptions, type ShellModule } from '@choliba/shell';
 
-import {
-  coreShell,
-  PANEL_ICON,
-  PANEL_LOGO,
-  PANEL_OPENER,
-  PANEL_VERSION,
-  WORKSPACE_ROOT,
-  type ShellModule,
-} from '../../shell';
-import type { ChatPanel, PanelOptions } from '../../terminal';
+import { coreShell, PANEL_ICON, PANEL_LOGO, PANEL_OPENER, PANEL_VERSION } from '../../shell';
 import {
   BufferWritable,
   fakeChatPanel as fakePanel,

@@ -1,5 +1,6 @@
+import { fakePlatform } from '@choliba/kernel/testing';
+
 import { ShellIo } from '../..';
-import { fakePlatform } from '../../testing';
 
 describe('ShellIo', () => {
   it('gives the arguments after the command path, as typed', () => {

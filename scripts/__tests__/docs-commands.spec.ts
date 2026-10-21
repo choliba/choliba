@@ -1,4 +1,4 @@
-import type { CommandEntry } from '../../packages/core/src/help';
+import type { CommandEntry } from '../../packages/shell/src/help';
 
 import {
   commandPage,

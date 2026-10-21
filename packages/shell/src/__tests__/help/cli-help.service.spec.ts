@@ -1,6 +1,7 @@
+import { fakePlatform } from '@choliba/kernel/testing';
+
 import { complete, describe as describeLine, formatSuggestions, wantsHelp, type CommandSpec } from '../../help';
 import { ShellIo } from '../../shell';
-import { fakePlatform } from '../../testing';
 
 const SPEC: CommandSpec = {
   usage: 'demo COMMAND',

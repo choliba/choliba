@@ -1,19 +1,6 @@
-import type { PanelBox, PanelKey, PanelText, PanelToolkit } from './interfaces/panel.interface';
+import { type PanelChoice, type PanelChooseRequest, type PanelKey } from '@choliba/shell';
+import type { PanelBox, PanelText, PanelToolkit } from './interfaces/panel.interface';
 import { wrapWords } from './panel-text';
-
-/** One option of a choice: its label, a detail beside it, and whether it is the one in effect now (`✔`). */
-export interface PanelChoice {
-  readonly label: string;
-  readonly detail?: string;
-  readonly current?: boolean;
-}
-
-/** What `choose` asks: a title, a sentence on what the choice is for, and the options. */
-export interface PanelChooseRequest {
-  readonly title: string;
-  readonly description: string;
-  readonly options: readonly PanelChoice[];
-}
 
 /** The chooser of a panel: its box, how a choice is asked in it, and the keys it takes while one is open. */
 export interface Chooser<Node> {

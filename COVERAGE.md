@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 21/10/2026 08:15:40 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 21/10/2026 08:34:30 — não editar manualmente.
 
 ## Resumo
 
@@ -15,6 +15,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 🟢|[packages/projects](packages/projects)|100.00|100.00|100.00|100.00
 🟢|[packages/runner](packages/runner)|100.00|100.00|100.00|100.00
 🟢|[packages/sandbox](packages/sandbox)|100.00|100.00|100.00|100.00
+🟢|[packages/shell](packages/shell)|100.00|100.00|100.00|100.00
 🟢|[packages/workspace](packages/workspace)|100.00|100.00|100.00|100.00
 
 ## Por pacote
@@ -181,41 +182,14 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 57 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 15 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
-🟢|[src/cli/message-of.ts](packages/core/src/cli/message-of.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/command-page.ts](packages/core/src/help/command-page.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/complete.ts](packages/core/src/help/complete.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/completion-bash.ts](packages/core/src/help/completion-bash.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/entry-help.ts](packages/core/src/help/entry-help.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/format-help.ts](packages/core/src/help/format-help.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/scripts-help.ts](packages/core/src/help/scripts-help.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/shell-completion.ts](packages/core/src/help/shell-completion.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/suggest.ts](packages/core/src/help/suggest.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/wants-help.ts](packages/core/src/help/wants-help.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/core-shell.ts](packages/core/src/shell/core-shell.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shell/create-shell.ts](packages/core/src/shell/create-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/panel-log.ts](packages/core/src/shell/panel-log.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/panel-session.ts](packages/core/src/shell/panel-session.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/panel.command.ts](packages/core/src/shell/panel.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shell/root-run.ts](packages/core/src/shell/root-run.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shell/shell-io.ts](packages/core/src/shell/shell-io.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shell/shell.constants.ts](packages/core/src/shell/shell.constants.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shell/terminal.command.ts](packages/core/src/shell/terminal.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/box.ts](packages/core/src/terminal/box.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/circular-buffer.ts](packages/core/src/terminal/circular-buffer.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/dto/run.dto.ts](packages/core/src/terminal/dto/run.dto.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/event-emitter.ts](packages/core/src/terminal/event-emitter.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/exit-code.ts](packages/core/src/terminal/exit-code.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/format-duration.ts](packages/core/src/terminal/format-duration.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/formatter.ts](packages/core/src/terminal/formatter.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/frame/ansi-chunks.ts](packages/core/src/terminal/frame/ansi-chunks.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/frame/ansi-text.ts](packages/core/src/terminal/frame/ansi-text.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/frame/frame.ts](packages/core/src/terminal/frame/frame.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/live-region.ts](packages/core/src/terminal/live-region.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/log-file.ts](packages/core/src/terminal/log-file.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/panel/panel-art.ts](packages/core/src/terminal/panel/panel-art.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/panel/panel-choose.ts](packages/core/src/terminal/panel/panel-choose.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/panel/panel-history.ts](packages/core/src/terminal/panel/panel-history.ts)|100.00|100.00|100.00|100.00
@@ -225,23 +199,8 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/terminal/panel/panel-toolkit.ts](packages/core/src/terminal/panel/panel-toolkit.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/panel/panel-welcome.ts](packages/core/src/terminal/panel/panel-welcome.ts)|100.00|100.00|100.00|100.00
 🟢|[src/terminal/panel/panel.ts](packages/core/src/terminal/panel/panel.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/process-runner.service.ts](packages/core/src/terminal/process-runner.service.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/session.ts](packages/core/src/terminal/session.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/spawn.ts](packages/core/src/terminal/spawn.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/status-footer.ts](packages/core/src/terminal/status-footer.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/stream-lines.ts](packages/core/src/terminal/stream-lines.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/table/table-cell.ts](packages/core/src/terminal/table/table-cell.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/table/table-layout.ts](packages/core/src/terminal/table/table-layout.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/table/table.ts](packages/core/src/terminal/table/table.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/terminal.service.ts](packages/core/src/terminal/terminal.service.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/writable.ts](packages/core/src/terminal/writable.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/fake-chat-panel.ts](packages/core/src/testing/fake-chat-panel.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/fake-panel-context.ts](packages/core/src/testing/fake-panel-context.ts)|100.00|100.00|100.00|100.00
-🟢|[src/testing/run-shell.ts](packages/core/src/testing/run-shell.ts)|100.00|100.00|100.00|100.00
-🟢|[src/theme/ansi.ts](packages/core/src/theme/ansi.ts)|100.00|100.00|100.00|100.00
-🟢|[src/theme/resolve-theme.ts](packages/core/src/theme/resolve-theme.ts)|100.00|100.00|100.00|100.00
-🟢|[src/theme/theme-defaults.ts](packages/core/src/theme/theme-defaults.ts)|100.00|100.00|100.00|100.00
-🟢|[src/theme/theme.service.ts](packages/core/src/theme/theme.service.ts)|100.00|100.00|100.00|100.00
 
 </details>
 
@@ -351,6 +310,58 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/sandbox/mounts/container-mounts.ts](packages/sandbox/src/sandbox/mounts/container-mounts.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/sandbox-config.ts](packages/sandbox/src/sandbox/sandbox-config.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/sandbox.ts](packages/sandbox/src/sandbox/sandbox.ts)|100.00|100.00|100.00|100.00
+
+</details>
+
+<details>
+<summary>🟢 <b>packages/shell</b> — 100.00% das linhas, 44 arquivos</summary>
+
+Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
+--|--|--|--|--|--
+🟢|[src/cli/message-of.ts](packages/shell/src/cli/message-of.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/command-page.ts](packages/shell/src/help/command-page.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/complete.ts](packages/shell/src/help/complete.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/completion-bash.ts](packages/shell/src/help/completion-bash.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/entry-help.ts](packages/shell/src/help/entry-help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/format-help.ts](packages/shell/src/help/format-help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/scripts-help.ts](packages/shell/src/help/scripts-help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/shell-completion.ts](packages/shell/src/help/shell-completion.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/suggest.ts](packages/shell/src/help/suggest.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/wants-help.ts](packages/shell/src/help/wants-help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/card.ts](packages/shell/src/panel/card.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/base-shell.ts](packages/shell/src/shell/base-shell.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/create-shell.ts](packages/shell/src/shell/create-shell.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/root-run.ts](packages/shell/src/shell/root-run.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/shell-io.ts](packages/shell/src/shell/shell-io.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/shell.constants.ts](packages/shell/src/shell/shell.constants.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/terminal.command.ts](packages/shell/src/shell/terminal.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/box.ts](packages/shell/src/terminal/box.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/circular-buffer.ts](packages/shell/src/terminal/circular-buffer.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/dto/run.dto.ts](packages/shell/src/terminal/dto/run.dto.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/event-emitter.ts](packages/shell/src/terminal/event-emitter.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/exit-code.ts](packages/shell/src/terminal/exit-code.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/format-duration.ts](packages/shell/src/terminal/format-duration.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/formatter.ts](packages/shell/src/terminal/formatter.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/frame/ansi-chunks.ts](packages/shell/src/terminal/frame/ansi-chunks.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/frame/ansi-text.ts](packages/shell/src/terminal/frame/ansi-text.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/frame/frame.ts](packages/shell/src/terminal/frame/frame.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/live-region.ts](packages/shell/src/terminal/live-region.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/log-file.ts](packages/shell/src/terminal/log-file.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/process-runner.service.ts](packages/shell/src/terminal/process-runner.service.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/session.ts](packages/shell/src/terminal/session.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/spawn.ts](packages/shell/src/terminal/spawn.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/status-footer.ts](packages/shell/src/terminal/status-footer.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/stream-lines.ts](packages/shell/src/terminal/stream-lines.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/table/table-cell.ts](packages/shell/src/terminal/table/table-cell.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/table/table-layout.ts](packages/shell/src/terminal/table/table-layout.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/table/table.ts](packages/shell/src/terminal/table/table.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/terminal.service.ts](packages/shell/src/terminal/terminal.service.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/writable.ts](packages/shell/src/terminal/writable.ts)|100.00|100.00|100.00|100.00
+🟢|[src/testing/run-shell.ts](packages/shell/src/testing/run-shell.ts)|100.00|100.00|100.00|100.00
+🟢|[src/theme/ansi.ts](packages/shell/src/theme/ansi.ts)|100.00|100.00|100.00|100.00
+🟢|[src/theme/resolve-theme.ts](packages/shell/src/theme/resolve-theme.ts)|100.00|100.00|100.00|100.00
+🟢|[src/theme/theme-defaults.ts](packages/shell/src/theme/theme-defaults.ts)|100.00|100.00|100.00|100.00
+🟢|[src/theme/theme.service.ts](packages/shell/src/theme/theme.service.ts)|100.00|100.00|100.00|100.00
 
 </details>
 

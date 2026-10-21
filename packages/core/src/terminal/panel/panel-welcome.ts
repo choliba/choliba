@@ -1,7 +1,16 @@
-import { paintAnsi, type AnsiColor } from '../../theme';
-import { truncateVisible, visibleWidth } from '../frame';
+import {
+  CARD_RULE,
+  cardElapsed,
+  paintAnsi,
+  truncateVisible,
+  visibleWidth,
+  type PanelCard,
+  type PanelHeader,
+  type PanelSplash,
+} from '@choliba/shell';
+
 import type { PanelBox, PanelPointer, PanelScroll, PanelText, PanelToolkit } from './interfaces/panel.interface';
-import { halfBlockArt, type ArtCell, type ArtPixels } from './panel-art';
+import { halfBlockArt, type ArtCell } from './panel-art';
 import { PALETTE } from './panel-palette';
 import { wrappedRows } from './panel-text';
 
@@ -10,30 +19,6 @@ const SPLASH_IMAGE_ROWS = 15;
 
 /** How many rows the welcome image is drawn above its place, so it rises without moving the lines under it. */
 const SPLASH_IMAGE_LIFT = 3;
-
-/** A welcome in the center of the empty panel: an image above some lines, both optional. */
-export interface PanelSplash {
-  /**
-   * An image file (PNG, JPEG, WebP or GIF), drawn in half blocks with the terminal's background where it is
-   * transparent; one that does not load is left out.
-   */
-  readonly image?: string;
-  /** Lines under the image, with their escape codes, each centered; an empty one is a blank row between two. */
-  readonly lines: readonly string[];
-  /** A short note in the bottom right corner: the version, for instance. */
-  readonly note?: string;
-}
-
-/** A header above the lines: a small icon on the left of some lines. */
-export interface PanelHeader {
-  /**
-   * The icon's pixels, drawn in half blocks as they are, two per cell: at a header's size a picture drawn pixel by
-   * pixel (`pixelMap`) reads better than a large one reduced.
-   */
-  readonly icon?: ArtPixels;
-  /** Lines on the right of the image, with their escape codes. */
-  readonly lines: readonly string[];
-}
 
 /** The panel's toolkit and renderer, and how it turns lines with escape codes into its styled text. */
 export interface WelcomeKit<Context, Node, Styled extends { readonly chunks: Chunk[] }, Chunk> {
@@ -144,44 +129,6 @@ export interface Header<Node> {
   stop(): void;
 }
 
-/** A card of the header: a box titled `title`, with `lines` in it, a long one wrapped between words and `---` a rule. */
-export interface PanelCard {
-  readonly title: string;
-  readonly lines: readonly string[];
-  /** The lines it shows while collapsed, three at most; its first line when absent. */
-  readonly summary?: readonly string[];
-  /** Lines kept at the bottom of the open card, under a rule, while its other lines scroll; none when absent. */
-  readonly footer?: readonly string[];
-  /** The letter that, with Ctrl, opens or collapses it (`p` for Ctrl+P), shown in its title (`^P`). */
-  readonly key?: string;
-  /** Its place among the cards, the lowest first (`sandbox` 1, `projeto` 2, `agente` 3); without it, after those that have one. */
-  readonly order?: number;
-  /** Its work is running: a spinner turns in its title until it is not. */
-  readonly busy?: boolean;
-  /** The color of its spinner (an agent's card, the agent's color); white when absent. */
-  readonly color?: AnsiColor;
-  /** Its left border in this color (an agent's card, as its lines in the conversation); gray, as the rest, when absent. */
-  readonly stripe?: AnsiColor;
-  /** Joined to the card before it by `>>>`: the next of a sequence. */
-  readonly joined?: boolean;
-  /**
-   * Its situation in words (`aguardando`, `concluído · 2m10s`), centered on its first line, above its summary; while
-   * busy, the spinner's bar and how long it has run (`since`) take its place, and its title has no spinner. A card that
-   * says its state narrows, when the header lacks room, so every card of the flow fits.
-   */
-  readonly state?: string;
-  /** When its work began, in ms since the epoch: the time a busy card with a `state` shows. */
-  readonly since?: number;
-  /** It can be dragged with the mouse onto another card that can, to take its place. */
-  readonly movable?: boolean;
-}
-
-/** How long a card's work has run, as its state line says it: `0m41s`, `12m05s`. */
-export function cardElapsed(ms: number): string {
-  const seconds = Math.max(0, Math.floor(ms / 1000));
-  return `${String(Math.floor(seconds / 60))}m${String(seconds % 60).padStart(2, '0')}s`;
-}
-
 /** How many cells the bar of a busy card's spinner has. */
 const SPINNER_CELLS = 5;
 
@@ -233,9 +180,6 @@ function stateLine(card: PanelCard, frame: number, now: number): string | undefi
   const bar = paintAnsi(card.color ?? 'white', spinnerBar(frame));
   return `${bar} ${cardElapsed(now - (card.since ?? now))}`;
 }
-
-/** A card line that is a rule across the card, in gray: what separates its parts. */
-export const CARD_RULE = '---';
 
 /** A rule across `width` columns of a card's text, in gray. */
 function ruleOf(width: number): string {

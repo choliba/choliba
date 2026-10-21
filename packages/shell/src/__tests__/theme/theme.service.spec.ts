@@ -1,5 +1,6 @@
+import { BufferWritable, fakePlatform, type FakePlatform } from '@choliba/kernel/testing';
+
 import { parseColors, ThemeService } from '../../theme';
-import { BufferWritable, fakePlatform, type FakePlatform } from '../../testing';
 
 function themeFor(platform: FakePlatform, colors?: string): ThemeService {
   return new ThemeService(platform.env, platform.stdout, platform.noColorFlag, parseColors(colors));

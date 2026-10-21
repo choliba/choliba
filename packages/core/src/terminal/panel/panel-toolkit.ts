@@ -1,7 +1,8 @@
+import { type ChatPanel, type PanelOptions } from '@choliba/shell';
 import type { RenderContext, Renderable, StyledText, TextChunk } from '@opentui/core';
 
 import type { PanelToolkit } from './interfaces/panel.interface';
-import { openPanel, type ChatPanel, type PanelOptions } from './panel';
+import { openPanel } from './panel';
 
 /** The panel's toolkit as OpenTUI gives it. */
 export type OpenTuiToolkit = PanelToolkit<RenderContext, Renderable, StyledText, TextChunk>;

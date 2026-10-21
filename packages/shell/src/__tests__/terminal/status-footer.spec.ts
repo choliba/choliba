@@ -1,4 +1,4 @@
-import { BufferWritable } from '../../testing';
+import { BufferWritable } from '@choliba/kernel/testing';
 import { formatElapsed, StatusFooter } from '../../terminal';
 
 const ERASE_TWO = '\r\x1B[2A\x1B[0J';

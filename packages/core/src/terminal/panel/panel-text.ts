@@ -1,4 +1,4 @@
-import { ansiChunks } from '../frame';
+import { ansiChunks } from '@choliba/shell';
 
 /** `text` in lines of at most `width` characters, broken between words; a word longer than `width` stays whole. */
 export function wrapWords(text: string, width: number): string[] {

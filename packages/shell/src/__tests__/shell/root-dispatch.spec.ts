@@ -1,5 +1,7 @@
+import { fakePlatform } from '@choliba/kernel/testing';
+
 import { createShell, type CommandEntry, type ShellModule, type ShellRoot } from '../..';
-import { fakePlatform, VERBS_ROOT } from '../../testing';
+import { VERBS_ROOT } from '../../testing';
 
 const ROOT: ShellRoot = {
   spec: { usage: 'demo COMMAND [ARGS]', description: 'Uma CLI de exemplo.' },

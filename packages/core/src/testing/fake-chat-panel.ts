@@ -1,4 +1,4 @@
-import type { ChatPanel, PanelCard, PanelChooseRequest, PanelKey } from '../terminal';
+import type { ChatPanel, PanelCard, PanelChooseRequest, PanelKey } from '@choliba/shell';
 
 /** A `ChatPanel` for specs: what was written, said, suggested and asked, and the person's side of it. */
 export interface FakeChatPanel {
