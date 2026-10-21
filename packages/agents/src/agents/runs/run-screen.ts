@@ -1,15 +1,12 @@
 import {
   DEFAULT_COLUMNS,
-  frameBottom,
-  frameLines,
-  frameTop,
   createLineRunScreen,
+  createPanelRunScreen,
   type Panel,
   type PanelOptions,
   type Writable,
   type WritableWithColumns,
   oneLine,
-  summaryLine,
 } from '@choliba/core';
 
 import type { RunFooterInfo, RunScreen } from '../interfaces/run-footer.interface';
@@ -52,7 +49,22 @@ export function createRunScreen(
           : 'Enter envia · Ctrl+J cria uma linha',
     })
     .then((panel) =>
-      panel === undefined ? lineScreen(info, request, deps) : panelScreen(panel, current, request, deps),
+      panel === undefined
+        ? lineScreen(info, request, deps)
+        : createPanelRunScreen({
+            panel,
+            currentInfo: () => current.info(),
+            reportModel: (model) => {
+              current.report(model);
+            },
+            name,
+            color,
+            theme: request.theme,
+            stdout: deps.stdout,
+            now: deps.now,
+            every: deps.every ?? everySecond,
+            hostedPanel: deps.hostedPanel,
+          }),
     );
 }
 
@@ -69,53 +81,6 @@ function lineScreen(info: RunFooterInfo, request: RunAgentRequest, deps: RunScre
     every: deps.every ?? everySecond,
   });
   return { ...line, answer: unanswered };
-}
-
-function panelScreen(panel: Panel, current: ReportedInfo, request: RunAgentRequest, deps: RunScreenDeps): RunScreen {
-  const { theme } = request;
-  const { name, color } = request.providerRequest.agent;
-  const now = (): number => deps.now().getTime();
-  const width = (): number => screenWidth(deps.stdout);
-  const transcript: string[] = [];
-  const shown: Writable = {
-    write: (text) => {
-      transcript.push(text);
-      panel.write(text);
-    },
-  };
-  const stop = (deps.every ?? everySecond)(FOOTER_REFRESH_MS, () => {
-    panel.refresh();
-  });
-  return {
-    framed: true,
-    out: shown,
-    err: shown,
-    model: (reported) => {
-      current.report(reported);
-    },
-    onInterrupt: (listener) => {
-      panel.onInterrupt(listener);
-    },
-    onMessage: (listener) => {
-      panel.onMessage(listener);
-    },
-    answer: async (question) => {
-      shown.write(`? ${question.question}\n`);
-      const reply = await panel.ask(question);
-      shown.write(`→ ${reply.status === 'skipped' ? '(sem resposta)' : [reply.answer].flat().join(', ')}\n`);
-      return reply;
-    },
-    close: (exitCode) => {
-      stop();
-      panel.close();
-      if (deps.hostedPanel) return;
-      const top = frameTop(name, width(), (text) => theme.paint('agents', name, text, color));
-      const lines = frameLines(transcript.join(''), width());
-      deps.stdout.write(
-        `\n${[top, ...lines, frameBottom(width())].join('\n')}\n${summaryLine(current.info(), now(), exitCode)}\n`,
-      );
-    },
-  };
 }
 
 function reportedInfo(info: RunFooterInfo): ReportedInfo {

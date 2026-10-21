@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 21/10/2026 14:56:28 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 21/10/2026 15:19:34 — não editar manualmente.
 
 ## Resumo
 
@@ -374,7 +374,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/tui</b> — 100.00% das linhas, 15 arquivos</summary>
+<summary>🟢 <b>packages/tui</b> — 100.00% das linhas, 16 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -387,6 +387,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/panel/panel-toolkit.ts](packages/tui/src/panel/panel-toolkit.ts)|100.00|100.00|100.00|100.00
 🟢|[src/panel/panel-welcome.ts](packages/tui/src/panel/panel-welcome.ts)|100.00|100.00|100.00|100.00
 🟢|[src/panel/panel.ts](packages/tui/src/panel/panel.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/run-screen.ts](packages/tui/src/panel/run-screen.ts)|100.00|100.00|100.00|100.00
 🟢|[src/session/panel-log.ts](packages/tui/src/session/panel-log.ts)|100.00|100.00|100.00|100.00
 🟢|[src/session/panel-session.ts](packages/tui/src/session/panel-session.ts)|100.00|100.00|100.00|100.00
 🟢|[src/session/panel.command.ts](packages/tui/src/session/panel.command.ts)|100.00|100.00|100.00|100.00

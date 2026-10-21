@@ -5,10 +5,13 @@ export {
   openOpenTuiPanel,
   openPanel,
   openPanelWith,
+  createPanelRunScreen,
   pixelMap,
   type ArtColor,
   type OpenTuiToolkit,
   type PanelToolkit,
+  type PanelRunScreen,
+  type PanelRunScreenOptions,
 } from './panel';
 export {
   clearPanelCommand,
