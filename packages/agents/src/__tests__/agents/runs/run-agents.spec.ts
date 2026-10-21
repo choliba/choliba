@@ -145,6 +145,8 @@ function harness(stdoutLines: readonly string[], overrides: Partial<RunAgentsCli
     logsDir: LOGS,
     // The application of a project run counts as up: the specs that care pass their own.
     ensureApp: () => Promise.resolve({ started: false, stop: () => undefined }),
+    // No container reaches anything here: the specs of the docker check pass their own.
+    appReach: { dockerHost: () => undefined, reaches: () => Promise.resolve(true) },
     ...overrides,
     // The fixture agents' skills live next to them; a test may still point elsewhere.
     config: {
@@ -1860,6 +1862,59 @@ describe('runAgentsCli — CHOL_SANDBOX', () => {
       } finally {
         agents.cleanup();
       }
+    });
+  });
+
+  it('stops before the agent when the container would not reach an application up on localhost only', async () => {
+    await withProjects(async (projectsDir) => {
+      const local = join(projectsDir, 'local');
+      mkdirSync(local);
+      writeFileSync(
+        join(local, 'config.json'),
+        JSON.stringify({ name: 'Local', envs: [{ nome: 'qa', baseURL: 'http://localhost:3000', appDir: 'app' }] }),
+      );
+      writeFileSync(join(local, '.env.json'), JSON.stringify({ qa: {} }));
+      const asked: string[] = [];
+      const stop = jest.fn();
+      const run = (network: string, answers: boolean) => {
+        const { deps, stderr } = harness([claudeSuccessLine()], {
+          which: whichOf(['claude', 'docker']),
+          config: {
+            CHOL_GLOBAL_DIR: '/g',
+            CHOL_PROJECTS_DIR: projectsDir,
+            CHOL_SANDBOX: 'docker',
+            CHOL_NETWORK: network,
+          },
+          ensureApp: () => Promise.resolve({ started: true, stop }),
+          appReach: {
+            dockerHost: () => '172.17.0.1',
+            reaches: (url) => {
+              asked.push(url);
+              return Promise.resolve(answers);
+            },
+          },
+        });
+        return {
+          code: runAgentsCli(['with-project', '--agents-dir', FIXTURES, '--project', 'local', 'x'], deps),
+          stderr,
+        };
+      };
+
+      const refused = run('isolated', false);
+      expect(await refused.code).toBe(1);
+      expect(refused.stderr.chunks.join('')).toContain(
+        '✗ a aplicação responde em http://localhost:3000, mas não pela interface do Docker (http://172.17.0.1:3000), ' +
+          'por onde o agente, no container, a acessa (http://host.docker.internal:3000). Suba-a ouvindo em todas as ' +
+          'interfaces (no Vite, --host) ou use CHOL_NETWORK=host.\n  O agente não foi executado.\n',
+      );
+      expect(stop).toHaveBeenCalledTimes(1);
+      expect(asked).toEqual(['http://172.17.0.1:3000']);
+
+      // On the host network the container reaches localhost: nothing to check, the run goes on to the provider.
+      const onHost = run('host', false);
+      await onHost.code;
+      expect(onHost.stderr.chunks.join('')).not.toContain('O agente não foi executado');
+      expect(asked).toHaveLength(1);
     });
   });
 

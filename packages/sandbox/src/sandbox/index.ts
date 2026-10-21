@@ -12,6 +12,7 @@ export type {
 } from './interfaces/sandbox-backend.interface';
 export type { Sandbox, SandboxBackendContext, SandboxNetwork } from './interfaces/sandbox.interface';
 export { containerMounts, CONTAINER_HOME, IMAGE_FOLDERS, isImagePath } from './mounts/container-mounts';
+export { dockerHostAddress } from './docker/docker-host';
 export { dockerRunArgs } from './docker/docker-run';
 export { containerName, DockerSandbox } from './docker/docker-sandbox';
 export { bwrapOnPath } from './local/bwrap-on-path';

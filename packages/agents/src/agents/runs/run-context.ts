@@ -18,6 +18,7 @@ import type { Sandbox } from '@choliba/sandbox';
 import type { ParsedAgentsArgs } from './agents-flags';
 import type { DryRunInput } from './dry-run';
 import type { RunLog } from './run-log';
+import type { AppReachDeps } from './app-reach';
 import type { AgentInvocation } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
 import type { ProviderRequest } from '../../common';
@@ -54,6 +55,8 @@ export interface RunAgentsCliDeps {
    * logging to `.cache/app/`); the specs pass a fake.
    */
   readonly ensureApp?: (settings: ProjectSettings) => Promise<RunningApp>;
+  /** Whether a container reaches the application (`containerReachProblem`); this machine's own, by default. */
+  readonly appReach?: AppReachDeps;
   /** Opens the panel a run is drawn in on a terminal; `openOpenTuiPanel` when absent. */
   readonly panel?: (options: PanelOptions) => Promise<Panel | undefined>;
   /** `true` when `panel` lends a host's open panel, which keeps the conversation: no frame is printed at the end. */

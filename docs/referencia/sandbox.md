@@ -80,6 +80,11 @@ ele suba. As regras do provider continuam valendo dentro do container.
   confere a aplicação por elas e entrega ao agente o mesmo endereço com `host.docker.internal` no lugar de
   `localhost`, `127.0.0.1`, `[::1]` e `0.0.0.0`, nome que ele registra no container. O `--dry-run` mostra os dois
   endereços.
+- **A aplicação precisa aceitar conexões pela interface do Docker.** Uma que ouve só em `127.0.0.1` (o padrão do
+  Vite) responde na máquina, mas não no container. No Linux, antes do agente, o choliba confere a aplicação pelo
+  endereço da interface do Docker (o da `docker0`) e, se ela não responde, para ali, dizendo o motivo: suba-a ouvindo
+  em todas as interfaces (no Vite, `--host`) ou use `CHOL_NETWORK=host`. No Docker Desktop, que alcança o
+  `localhost` da máquina, não há o que conferir.
 - **Um MCP com `command`** que chama um serviço da máquina por variável de ambiente não é traduzido: use
   `host.docker.internal` nele. O serviço precisa aceitar conexões pela interface do Docker, não somente por
   `127.0.0.1`.
