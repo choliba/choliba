@@ -23,7 +23,14 @@ export {
 } from './project-stack';
 export { isDeviceOn } from './project-devices';
 export { findReadme, readText, readmeSummary } from './project-readme';
-export { APP_PREPARED_ENV, AppError, prepareApp, type PrepareAppContext, type SetupSpawn } from './project-app-prepare';
+export {
+  APP_PREPARED_ENV,
+  AppError,
+  prepareApp,
+  type PrepareAppContext,
+  type SetupSpawn,
+  type SetupStdio,
+} from './project-app-prepare';
 export { ensureApp, type EnsureAppDeps, type RunningApp } from './project-app-ensure';
 export { holdApp, shareApp } from './project-app-share';
 export { answers, launchApp, type LaunchedApp } from './project-app-launch';
