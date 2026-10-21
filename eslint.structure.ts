@@ -16,10 +16,8 @@ type Layer = (typeof LAYERS)[number];
 /** The folders of `src/` of each package that follows the standard, by layer (`common` is always `common/`). */
 const STRUCTURE: Readonly<Record<string, Partial<Record<Exclude<Layer, 'common'>, readonly string[]>>>> = {
   config: { domain: ['formats', 'sources', 'groups'] },
-  core: {
-    domain: ['paths'],
-    module: ['platform', 'config', 'help', 'cli', 'theme', 'runtime', 'shell', 'terminal', 'testing'],
-  },
+  kernel: { domain: ['paths'], module: ['platform', 'config', 'runtime', 'container'] },
+  core: { module: ['help', 'cli', 'theme', 'shell', 'terminal'] },
   projects: { domain: ['paths'], module: ['locations', 'tickets', 'projects'] },
   runner: { module: ['tests'] },
   sandbox: { domain: ['sandbox'] },
@@ -34,7 +32,11 @@ const KEBAB = '+([a-z0-9])*(-+([a-z0-9]))';
 
 /** Every folder of `src/` the standard knows, as an element of its layer, with its package captured. */
 function elements(): Record<string, unknown>[] {
-  const known: Record<string, unknown>[] = [];
+  // First, as the first matching descriptor wins: a package's `testing/` is an entry of its own (`@choliba/<pkg>/testing`,
+  // the fakes of its specs), which another package's code may import as it imports `.`.
+  const known: Record<string, unknown>[] = [
+    { type: 'entry', pattern: 'packages/*/src/testing', partialMatch: false, capture: ['pkg'] },
+  ];
   for (const [pkg, layers] of Object.entries(STRUCTURE)) {
     const folders: readonly (readonly [Layer, string])[] = [
       ['common', 'common'],

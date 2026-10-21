@@ -1,4 +1,5 @@
-import type { WritableWithColumns } from '../../platform';
+import type { WritableWithColumns } from '@choliba/kernel';
+
 import { defaultStderr, defaultStdout, isStdoutTty, writeStderr, writeStdout } from '../../terminal/writable';
 
 describe('writable helpers', () => {

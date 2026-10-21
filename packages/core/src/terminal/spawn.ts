@@ -12,7 +12,7 @@
  * excluded from the coverage ratchet as a thin wiring entrypoint.
  */
 
-import type { ProcessSpawner, SpawnCommandOptions, SpawnedProcess } from '../platform';
+import type { ProcessSpawner, SpawnCommandOptions, SpawnedProcess } from '@choliba/kernel';
 
 /** The slice of `Bun.spawn` this factory calls. Named without the `Bun` global so every package can typecheck it. */
 export type BunSpawnFn = (

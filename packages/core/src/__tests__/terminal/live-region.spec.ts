@@ -1,5 +1,6 @@
+import type { WritableWithColumns } from '@choliba/kernel';
+
 import { LiveRegion } from '../../terminal/live-region';
-import type { WritableWithColumns } from '../../platform';
 import { defaultStdout } from '../../terminal/writable';
 
 describe('LiveRegion', () => {

@@ -27,7 +27,7 @@ const packageDir = join(import.meta.dir, '..');
 const packagesDir = join(packageDir, '..');
 const repoRoot = join(packagesDir, '..');
 const entriesDir = join(packageDir, 'scripts', 'entries');
-const BUNDLED = ['agents', 'config', 'core', 'projects', 'runner', 'sandbox'];
+const BUNDLED = ['agents', 'config', 'core', 'kernel', 'projects', 'runner', 'sandbox'];
 
 /** Set from the loaded file before its imports, so a lookup during import sees this package, not the build machine. */
 const SHIPPED_DIR = 'globalThis.__CHOLIBA_SHIPPED_DIR__ = decodeURIComponent(new URL(".", import.meta.url).pathname);';
@@ -132,6 +132,15 @@ const SPECIFIERS: readonly (readonly [string, string])[] = [
   ['@choliba/sandbox', 'choliba/sandbox'],
 ];
 
+/**
+ * The packages bundled in but given no subpath (the restructure keeps internal packages out of the public paths): a
+ * declaration that imports one reaches its declarations by a relative path inside `types/`. Longer specifiers first.
+ */
+const INTERNAL: readonly (readonly [string, string])[] = [
+  ['@choliba/kernel/testing', join('kernel', 'src', 'testing', 'index.d.ts')],
+  ['@choliba/kernel', join('kernel', 'src', 'index.d.ts')],
+];
+
 function manifest(dir: string): Manifest {
   return JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')) as Manifest;
 }
@@ -217,6 +226,7 @@ function emitPackage(name: string, outDir: string, include: readonly string[]): 
 
 function emitDeclarations(outDir: string): void {
   emitPackage('config', outDir, ['src']);
+  emitPackage('kernel', outDir, ['src']);
   emitPackage('core', outDir, ['src']);
   emitPackage('agents', outDir, ['src']);
   emitPackage('projects', outDir, ['src']);
@@ -253,16 +263,31 @@ function jsSpecifier(file: string, specifier: string): string {
   return `${specifier}.js`;
 }
 
+/**
+ * Every relative specifier of the declaration `file` as `nodenext` resolves it: in `from '…'` and in the `import("…")`
+ * types the compiler writes for an inferred type, `..` and `.` alone included.
+ */
 function rewriteRelative(source: string, file: string): string {
-  return source.replaceAll(/from (['"])(\.\.?\/[^'"]+)\1/g, (_match, quote: string, specifier: string) => {
-    return `from ${quote}${jsSpecifier(file, specifier)}${quote}`;
-  });
+  return source.replaceAll(
+    /(from |import\()(['"])(\.\.?(?:\/[^'"]*)?)\2/g,
+    (_match, before: string, quote: string, specifier: string) => {
+      return `${before}${quote}${jsSpecifier(file, specifier)}${quote}`;
+    },
+  );
+}
+
+/** An internal package's specifier in the declaration `file` as the relative path to its declarations. */
+function rewriteInternal(source: string, file: string, outDir: string): string {
+  return INTERNAL.reduce((text, [from, declaration]) => {
+    const to = declarationSpecifier(file, join(outDir, 'types', declaration));
+    return text.replaceAll(`'${from}'`, `'${to}'`).replaceAll(`"${from}"`, `"${to}"`);
+  }, source);
 }
 
 function rewriteDeclarations(outDir: string): void {
   for (const file of declarationFiles(join(outDir, 'types'))) {
-    const rewritten = rewriteRelative(rewriteSpecifiers(readFileSync(file, 'utf8')), file);
-    writeFileSync(file, rewritten);
+    const internal = rewriteInternal(readFileSync(file, 'utf8'), file, outDir);
+    writeFileSync(file, rewriteRelative(rewriteSpecifiers(internal), file));
   }
 }
 

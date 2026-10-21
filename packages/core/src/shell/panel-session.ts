@@ -1,6 +1,7 @@
+import type { Container } from '@choliba/kernel';
+
 import { messageOf } from '../cli';
 import type { ChatPanel, PanelCard, PanelKey } from '../terminal';
-import type { Container } from './container';
 import type { PanelCommand, PanelContext } from './interfaces/shell.interface';
 
 /** What the panel says to a `/word` no command starts with. */

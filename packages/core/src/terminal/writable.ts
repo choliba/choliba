@@ -1,6 +1,6 @@
-import type { Writable, WritableWithColumns } from '../platform';
+import type { Writable, WritableWithColumns } from '@choliba/kernel';
 
-export type { Writable, WritableWithColumns } from '../platform';
+export type { Writable, WritableWithColumns } from '@choliba/kernel';
 
 export const defaultStdout: WritableWithColumns = process.stdout;
 export const defaultStderr: WritableWithColumns = process.stderr;

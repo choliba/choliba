@@ -1,10 +1,8 @@
 import { configCatalog, type ConfigCatalog, type ConfigGroup, type ConfigSource } from '@choliba/config';
+import { Container, ExpectedError, token, type Platform } from '@choliba/kernel';
 
 import { messageOf } from '../cli';
-import { ExpectedError } from '../common';
 import { unknownWordMessage, type CommandEntry, type CommandSpec } from '../help';
-import type { Platform } from '../platform';
-import { Container, token } from './container';
 import type { PanelCommand, ShellCommand, ShellModule, ShellRoot, ShellVerb } from './interfaces/shell.interface';
 import { programOf, rootAction, rootOf, unknownCommand } from './root-run';
 import { ShellIo } from './shell-io';

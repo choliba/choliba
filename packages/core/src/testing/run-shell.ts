@@ -1,5 +1,4 @@
-import type { Platform } from '../platform';
-import { createShell, PLATFORM, type ShellModule, type Token, WORKSPACE_ROOT } from '../shell';
+import { createShell, PLATFORM, type ShellModule, WORKSPACE_ROOT } from '../shell';
 import type { ShellOverride } from './interfaces/shell-override.interface';
 
 /** Makes `key` give `value` in the shell `runShell` builds: the spec's fake in place of a package's service. */
@@ -51,3 +50,4 @@ export const VERBS_ROOT: ShellModule = {
 import { join } from 'node:path';
 
 import { envSource, fileSource } from '@choliba/config';
+import type { Platform, Token } from '@choliba/kernel';

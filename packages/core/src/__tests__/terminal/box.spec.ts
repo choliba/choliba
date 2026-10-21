@@ -1,5 +1,6 @@
+import type { WritableWithColumns } from '@choliba/kernel';
+
 import { printBox } from '../../terminal/box';
-import type { WritableWithColumns } from '../../platform';
 import { defaultStdout } from '../../terminal/writable';
 
 describe('printBox', () => {

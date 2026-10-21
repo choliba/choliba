@@ -1,4 +1,5 @@
-import type { Environment, WritableWithColumns } from '../platform';
+import type { Environment, WritableWithColumns } from '@choliba/kernel';
+
 import type { AnsiColor } from './ansi';
 import type { Theme, ThemeRole } from './interfaces/theme.interface';
 import { buildTheme, colorEnabled, type ThemeChoices } from './resolve-theme';

@@ -1,4 +1,5 @@
-import { token } from './container';
+import { token } from '@choliba/kernel';
+
 import type { ThemeService } from '../theme';
 import type { ThemeChoices } from '../theme';
 

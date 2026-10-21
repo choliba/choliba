@@ -1,5 +1,6 @@
+import { rawArgsAfter, type Writable } from '@choliba/kernel';
+
 import { formatHelp, wantsHelp, type CommandSpec } from '../help';
-import { rawArgsAfter, type Writable } from '../platform';
 
 /** Where a shell command reads its arguments and writes: the command line, stdout and stderr. */
 export interface ShellStreams {

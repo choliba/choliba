@@ -1,4 +1,5 @@
-import { ExpectedError } from '../common';
+import { ExpectedError } from '@choliba/kernel';
+
 import { ANSI_COLORS, colorForLabel, isAnsiColor, paintAnsi, type AnsiColor } from './ansi';
 import type { ColorSettings, Theme, ThemeRole, ThemeTable } from './interfaces/theme.interface';
 import { DEFAULT_THEME, THEME_ROLES } from './theme-defaults';
