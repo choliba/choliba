@@ -184,6 +184,30 @@ describe('runTests', () => {
     });
   });
 
+  it('tells Playwright which project it runs, so a project named inside another is not mistaken for it', async () => {
+    await withProject(async (projectsDir, cwd) => {
+      writeProject(projectsDir, 'site');
+      writeProject(projectsDir, 'site-choliba', [{ suffix: '1', specs: ['site-choliba-1.spec.ts'] }]);
+      const envs: NodeJS.ProcessEnv[] = [];
+
+      const result = await runTests({
+        ...TEST_ROOTS,
+        argv: ['site-choliba:1'],
+        cwd,
+        env: { CHOL_TICKET_RUNS: projectsDir },
+        stdinIsTTY: false,
+        loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: projectsDir, CHOL_TICKET_RUNS: projectsDir }),
+        spawnPlaywright: (_args, env) => {
+          envs.push(env);
+          return 0;
+        },
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(envs[0]?.['CHOLIBA_PROJECT']).toBe('site-choliba');
+    });
+  });
+
   it('runs the whole project when the ticket has no referenced specs', async () => {
     await withProject(async (projectsDir, cwd) => {
       writeProject(projectsDir, 'demo', [{ suffix: 'T-01' }]);

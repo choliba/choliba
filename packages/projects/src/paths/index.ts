@@ -38,6 +38,7 @@ export {
   projectEnvFile,
   projectExists,
   projectHookFile,
+  projectOfArgument,
   projectTestsFolder,
   type ProjectHook,
 } from './project-paths';
