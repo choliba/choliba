@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 
 import { logStamp, openLogFile, textPieces, type ChatPanel, type LogFile, type PanelReply } from '@choliba/shell';
+import { LOGS_DIR } from '@choliba/workspace';
 
 /** The first word of a suggestion's line, as it reads: the command clicked (`/projects`). */
 function commandOf(line: string): string {
@@ -81,5 +82,5 @@ export function loggedPanel(panel: ChatPanel, log: LogFile): ChatPanel {
 
 /** Opens the log of a panel session, in `<root>/.cache/logs/painel/<date and time>.log`, with `header` first. */
 export function openPanelLog(root: string, header: readonly string[], now: () => Date): LogFile {
-  return openLogFile(join(root, '.cache', 'logs', 'painel', `${logStamp(now())}.log`), header, now);
+  return openLogFile(join(root, LOGS_DIR, 'painel', `${logStamp(now())}.log`), header, now);
 }

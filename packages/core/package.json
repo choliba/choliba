@@ -13,7 +13,6 @@
   "dependencies": {
     "@choliba/kernel": "workspace:*",
     "@choliba/shell": "workspace:*",
-    "@opentui/core": "0.5.14",
-    "yaml": "^2.8.1"
+    "@choliba/tui": "workspace:*"
   }
 }

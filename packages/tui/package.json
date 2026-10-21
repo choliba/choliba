@@ -1,0 +1,19 @@
+{
+  "name": "@choliba/tui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@choliba/kernel": "workspace:*",
+    "@choliba/shell": "workspace:*",
+    "@choliba/workspace": "workspace:*",
+    "@opentui/core": "0.5.14"
+  }
+}

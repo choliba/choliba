@@ -1,7 +1,7 @@
 import { Container } from '@choliba/kernel';
 
 import { type PanelCommand, type PanelCommandContext } from '@choliba/shell';
-import { panelSession } from '../../shell/panel-session';
+import { panelSession } from '../../session/panel-session';
 import { fakeChatPanel } from '../../testing';
 
 const HEADING = ['choliba 1.2.3', '~/loja'];

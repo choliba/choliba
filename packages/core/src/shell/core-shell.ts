@@ -1,18 +1,13 @@
 import { baseShell, type ShellModule } from '@choliba/shell';
+import { clearPanelCommand, quitPanelCommand, tuiShell } from '@choliba/tui';
 
-import { clearPanelCommand, panelCommand, providePanel, quitPanelCommand } from './panel.command';
-
-/**
- * What @choliba/core gives the shell: the shell's own (the theme, `terminal run`) and the panel: `panel`, `/clear` and
- * `/quit`.
- */
+/** What @choliba/core gives the shell: the shell's own (the theme, `terminal run`) and the panel's (`panel`, `/clear`, `/quit`). */
 export const coreShell: ShellModule = {
-  ...baseShell,
   name: '@choliba/core',
   provide: (container) => {
     baseShell.provide?.(container);
-    providePanel(container);
+    tuiShell.provide?.(container);
   },
-  commands: [...baseShell.commands, panelCommand],
+  commands: [...baseShell.commands, ...tuiShell.commands],
   panel: [clearPanelCommand, quitPanelCommand],
 };

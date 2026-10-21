@@ -1,18 +1,11 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { WORKSPACE_ROOT, type ChatPanel, type PanelOptions, type ShellModule } from '@choliba/shell';
+import { baseShell, WORKSPACE_ROOT, type ChatPanel, type PanelOptions, type ShellModule } from '@choliba/shell';
 
-import { coreShell, PANEL_ICON, PANEL_LOGO, PANEL_OPENER, PANEL_VERSION } from '../../shell';
-import {
-  BufferWritable,
-  fakeChatPanel as fakePanel,
-  fakePlatform,
-  replace,
-  runShell,
-  VERBS_ROOT,
-  type FakePlatform,
-  type ShellOverride,
-} from '../../testing';
+import { PANEL_ICON, PANEL_LOGO, PANEL_OPENER, PANEL_VERSION, tuiShell } from '../../index';
+import { fakeChatPanel as fakePanel } from '../../testing';
+import { BufferWritable, fakePlatform, type FakePlatform } from '@choliba/kernel/testing';
+import { replace, runShell, VERBS_ROOT, type ShellOverride } from '@choliba/shell/testing';
 import { makeTmpDir } from '../helpers/tmp';
 
 /** Where the panel's session logs go in these specs: a folder of their own, not the fake workspace. */
@@ -39,7 +32,7 @@ function terminal(args: readonly string[] = [], cwd = '/home/ana/loja'): FakePla
 describe('choliba panel', () => {
   it('closes the panel with /quit, with code 0', async () => {
     const fake = fakePanel();
-    const code = runPanel([coreShell, VERBS_ROOT], terminal(), [
+    const code = runPanel([baseShell, tuiShell, VERBS_ROOT], terminal(), [
       replace(PANEL_OPENER, () => Promise.resolve(fake.panel)),
     ]);
     await new Promise((resolve) => setImmediate(resolve));
@@ -68,7 +61,7 @@ describe('choliba panel', () => {
       };
       return Promise.resolve(fake.panel);
     };
-    const code = runPanel([coreShell, starter, VERBS_ROOT], terminal(), [replace(PANEL_OPENER, opener)]);
+    const code = runPanel([baseShell, tuiShell, starter, VERBS_ROOT], terminal(), [replace(PANEL_OPENER, opener)]);
     await new Promise((resolve) => setImmediate(resolve));
 
     expect(refreshes).toBeGreaterThan(0);
@@ -88,7 +81,7 @@ describe('choliba panel', () => {
     };
     const platform = terminal();
     const root = makeTmpDir('panel-log');
-    const code = runPanel([coreShell, VERBS_ROOT], platform, [
+    const code = runPanel([baseShell, tuiShell, VERBS_ROOT], platform, [
       replace(PANEL_OPENER, opener),
       replace(PANEL_LOGO, '/assets/logo.webp'),
       replace(PANEL_VERSION, 'choliba 1.2.3'),
@@ -173,7 +166,7 @@ describe('choliba panel', () => {
       ],
     };
     const settle = () => new Promise((resolve) => setImmediate(resolve));
-    const code = runPanel([coreShell, runner, VERBS_ROOT], terminal(), [
+    const code = runPanel([baseShell, tuiShell, runner, VERBS_ROOT], terminal(), [
       replace(PANEL_OPENER, () => Promise.resolve(fake.panel)),
     ]);
     await settle();
@@ -216,7 +209,7 @@ describe('choliba panel', () => {
       ],
     };
     const settle = () => new Promise((resolve) => setImmediate(resolve));
-    const code = runPanel([coreShell, moder, VERBS_ROOT], terminal(), [
+    const code = runPanel([baseShell, tuiShell, moder, VERBS_ROOT], terminal(), [
       replace(PANEL_OPENER, (options: PanelOptions) => {
         opened.push(options);
         return Promise.resolve(fake.panel);
@@ -236,7 +229,7 @@ describe('choliba panel', () => {
   it('welcomes with no image when the app gives none', async () => {
     const fake = fakePanel();
     const opened: PanelOptions[] = [];
-    const code = runPanel([coreShell, VERBS_ROOT], terminal(), [
+    const code = runPanel([baseShell, tuiShell, VERBS_ROOT], terminal(), [
       replace(PANEL_OPENER, (options: PanelOptions) => {
         opened.push(options);
         return Promise.resolve(fake.panel);
@@ -269,7 +262,7 @@ describe('choliba panel', () => {
         env: home === undefined ? {} : { HOME: home },
         stdout: new BufferWritable(true),
       });
-      const code = runPanel([coreShell, VERBS_ROOT], platform, [
+      const code = runPanel([baseShell, tuiShell, VERBS_ROOT], platform, [
         replace(PANEL_OPENER, (options: PanelOptions) => {
           opened.push(options);
           return Promise.resolve(fake.panel);
@@ -288,7 +281,7 @@ describe('choliba panel', () => {
     const platform = fakePlatform({ argv: ['panel'] });
 
     expect(
-      await runPanel([coreShell, VERBS_ROOT], platform, [
+      await runPanel([baseShell, tuiShell, VERBS_ROOT], platform, [
         replace(PANEL_OPENER, (options: PanelOptions) => {
           opened.push(options);
           return Promise.resolve(undefined);
@@ -303,26 +296,28 @@ describe('choliba panel', () => {
     const platform = terminal();
 
     expect(
-      await runPanel([coreShell, VERBS_ROOT], platform, [replace(PANEL_OPENER, () => Promise.resolve(undefined))]),
+      await runPanel([baseShell, tuiShell, VERBS_ROOT], platform, [
+        replace(PANEL_OPENER, () => Promise.resolve(undefined)),
+      ]),
     ).toBe(1);
     expect(platform.stderr.text()).toBe('erro: o painel precisa de um terminal interativo.\n');
   });
 
   it('shows its help, and refuses arguments', async () => {
     const help = terminal(['--help']);
-    expect(await runPanel([coreShell, VERBS_ROOT], help)).toBe(0);
+    expect(await runPanel([baseShell, tuiShell, VERBS_ROOT], help)).toBe(0);
     expect(help.stdout.text()).toContain('Usage:  choliba panel');
     expect(help.stdout.text()).toContain('Abre o painel:');
 
     const extra = terminal(['agora']);
-    expect(await runPanel([coreShell, VERBS_ROOT], extra)).toBe(1);
+    expect(await runPanel([baseShell, tuiShell, VERBS_ROOT], extra)).toBe(1);
     expect(extra.stderr.text()).toContain('argumento a mais: agora.');
   });
 
   it('is in the root help', async () => {
     const platform = fakePlatform({ argv: ['--help'] });
 
-    expect(await runPanel([coreShell, VERBS_ROOT], platform)).toBe(0);
+    expect(await runPanel([baseShell, tuiShell, VERBS_ROOT], platform)).toBe(0);
     expect(platform.stdout.text()).toMatch(/panel +Abre o painel interativo do choliba no terminal\./);
   });
 });

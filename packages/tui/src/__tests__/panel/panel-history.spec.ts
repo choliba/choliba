@@ -1,4 +1,4 @@
-import { fieldHistory } from '../../terminal/panel/panel-history';
+import { fieldHistory } from '../../panel/panel-history';
 
 describe('fieldHistory', () => {
   it('goes back from the last message on an empty field, stops at the first, and empties the field past the last', () => {

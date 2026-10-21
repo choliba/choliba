@@ -13,7 +13,7 @@ import {
   type ShellCommand,
 } from '@choliba/shell';
 
-import { openOpenTuiPanel } from '../terminal';
+import { openOpenTuiPanel } from '../panel';
 import { loggedPanel, openPanelLog } from './panel-log';
 import { panelSession, type PanelSession } from './panel-session';
 
