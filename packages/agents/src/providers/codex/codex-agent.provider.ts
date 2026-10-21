@@ -53,6 +53,9 @@ function codexRuntime(executable: string): string {
 /** A log line of codex's background work: `<time> ERROR codex_models_manager::…` or `<time> ERROR rmcp::…`. */
 const BACKGROUND_ERROR = /^\S+Z\s+(?:ERROR|WARN)\s+(?:codex_models_manager|rmcp)::/;
 
+/** A tool call codex refused before running it (a patch that does not apply), as its internal log says it. */
+const REFUSED_TOOL = /^\S+Z\s+ERROR\s+codex_core::tools::router:\s+error=(.+)$/;
+
 export class CodexAgentProvider extends AgentProvider {
   readonly id = 'codex';
   readonly binaries: readonly (readonly [string, ...string[]])[] = [['codex']];
@@ -87,6 +90,15 @@ export class CodexAgentProvider extends AgentProvider {
    */
   override quietStderr(line: string): boolean {
     return line.trim() === 'Reading additional input from stdin...' || BACKGROUND_ERROR.test(line);
+  }
+
+  /**
+   * A tool call codex refused (its stream says nothing of it) as a tool failure, `✗ ferramenta recusou: …`, instead of
+   * the line of its internal log; the model usually tries again on its own.
+   */
+  override readableStderr(line: string): string {
+    const refused = REFUSED_TOOL.exec(line);
+    return refused === null ? line : `✗ ferramenta recusou: ${String(refused[1])}`;
   }
 
   createParser(): StreamParser {

@@ -134,6 +134,20 @@ describe('CodexAgentProvider', () => {
     expect(codexProvider.quietStderr('2026-10-19T07:33:56.547523Z ERROR codex_core::exec: falhou')).toBe(false);
     expect(codexProvider.quietStderr('network error')).toBe(false);
   });
+
+  it('says a tool call codex refused as a tool failure, instead of the line of its internal log', () => {
+    expect(
+      codexProvider.readableStderr(
+        '2026-10-19T12:47:55.922729Z ERROR codex_core::tools::router: error=apply_patch verification failed: invalid patch: multiple operations target /app/src/App.tsx',
+      ),
+    ).toBe(
+      '✗ ferramenta recusou: apply_patch verification failed: invalid patch: multiple operations target /app/src/App.tsx',
+    );
+    expect(codexProvider.readableStderr('2026-10-19T07:33:56.547523Z ERROR codex_core::exec: falhou')).toBe(
+      '2026-10-19T07:33:56.547523Z ERROR codex_core::exec: falhou',
+    );
+    expect(codexProvider.readableStderr('network error')).toBe('network error');
+  });
 });
 
 describe('Codex authentication', () => {

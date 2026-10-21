@@ -592,6 +592,18 @@ describe('runAgent', () => {
     expect(s.stderr.chunks.join('')).not.toContain('modelo desconhecido');
   });
 
+  it('writes a stderr line as the provider makes it readable', async () => {
+    const s = setup(fakeSpawner({ stderr: streamFromChunks(['interno: x\n', 'a raw error line\n']) }).spawner, {
+      readableStderr: (line) => (line.startsWith('interno:') ? '✗ ferramenta recusou: x' : line),
+    });
+
+    await run(s);
+
+    expect(s.stderr.chunks.join('')).toContain('✗ ferramenta recusou: x\n');
+    expect(s.stderr.chunks.join('')).toContain('a raw error line');
+    expect(s.stderr.chunks.join('')).not.toContain('interno:');
+  });
+
   it('reports a stream failure and still resolves, instead of hanging', async () => {
     const s = setup(fakeSpawner({ stdout: erroringStream(new Error('boom')) }).spawner);
 
