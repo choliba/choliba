@@ -19,6 +19,7 @@ export type {
 } from './interfaces/panel.interface';
 export { openPanel } from './panel';
 export { createPanelRunScreen, type PanelRunScreen, type PanelRunScreenOptions } from './run-screen';
+export { projectsPanel } from './projects-panel';
 export { questionDesk, type QuestionDesk } from './panel-question';
 export { pixelMap, type ArtColor } from './panel-art';
 export { loadPanelToolkit, openOpenTuiPanel, openPanelWith, type OpenTuiToolkit } from './panel-toolkit';

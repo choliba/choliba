@@ -1,9 +1,12 @@
-import { CARD_RULE, type PanelCommand, type PanelCommandContext } from '@choliba/core';
-
-import { listTicketKeys, readTickets, type TicketInfo } from '../tickets';
-import { loadProjectSettings } from './project-settings';
-import { PROJECTS } from './projects.constants';
-import type { ProjectsService } from './projects.service';
+import {
+  listTicketKeys,
+  loadProjectSettings,
+  PROJECTS,
+  readTickets,
+  type ProjectsService,
+  type TicketInfo,
+} from '@choliba/projects';
+import { CARD_RULE, type PanelCommand, type PanelCommandContext } from '@choliba/shell';
 
 /** The context keys these commands set, as the panel's header shows them. */
 const PROJECT = 'projeto';
@@ -146,5 +149,5 @@ const ticketsPanelCommand: PanelCommand = {
   run: chooseTicket,
 };
 
-/** What @choliba/projects brings to `choliba panel`. */
+/** The project and ticket commands the TUI brings to `choliba panel`. */
 export const projectsPanel: readonly PanelCommand[] = [projectsPanelCommand, ticketsPanelCommand];

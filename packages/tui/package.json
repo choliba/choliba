@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@choliba/kernel": "workspace:*",
+    "@choliba/projects": "workspace:*",
     "@choliba/shell": "workspace:*",
     "@choliba/workspace": "workspace:*",
     "@opentui/core": "0.5.14"

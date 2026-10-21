@@ -7,6 +7,7 @@ export {
   openPanelWith,
   createPanelRunScreen,
   pixelMap,
+  projectsPanel,
   type ArtColor,
   type OpenTuiToolkit,
   type PanelToolkit,
