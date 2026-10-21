@@ -6,8 +6,11 @@ import checkFile from 'eslint-plugin-check-file';
 import { importX } from 'eslint-plugin-import-x';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 
-/** The layers of a package's `src/`, from the bottom: a folder imports only folders of the layers below it. */
-const LAYERS = ['common', 'domain', 'orchestration', 'module'] as const;
+/**
+ * The layers of a package's `src/`, from the bottom: a folder imports only folders of the layers below it. `ports` are
+ * the interfaces a package asks of the outside (the engine's), over its domain and under what uses them.
+ */
+const LAYERS = ['common', 'domain', 'ports', 'orchestration', 'module'] as const;
 type Layer = (typeof LAYERS)[number];
 
 /** The folders of `src/` of each package that follows the standard, by layer (`common` is always `common/`). */
@@ -124,29 +127,6 @@ export function structureConfig(): Linter.Config[] {
       rules: {
         'check-file/filename-naming-convention': ['error', { '**/*.ts': KEBAB }, { ignoreMiddleExtensions: false }],
         'check-file/folder-naming-convention': ['error', { 'packages/runner/{shared,reporters}/**/': 'KEBAB_CASE' }],
-      },
-    },
-  ];
-}
-
-/** Docker sandbox details stay behind the neutral exports of `common/sandbox/index.ts`. */
-export function sandboxBackendConfig(): Linter.Config[] {
-  return [
-    {
-      files: ['packages/agents/src/**/*.ts'],
-      ignores: ['packages/agents/src/common/sandbox/**', 'packages/agents/src/**/__tests__/**'],
-      rules: {
-        'no-restricted-imports': [
-          'error',
-          {
-            patterns: [
-              {
-                regex: 'common/sandbox/(container-mounts|docker-run|docker-sandbox)(\\.ts)?$',
-                message: 'Importe a interface neutra por common/sandbox/index.ts.',
-              },
-            ],
-          },
-        ],
       },
     },
   ];
