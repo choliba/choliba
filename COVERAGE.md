@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 21/10/2026 06:38:44 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 21/10/2026 06:57:37 — não editar manualmente.
 
 ## Resumo
 
@@ -18,7 +18,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 98 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 99 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -47,6 +47,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/runs/agent-detail.ts](packages/agents/src/agents/runs/agent-detail.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/agents-flags.ts](packages/agents/src/agents/runs/agents-flags.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/agents-spec.ts](packages/agents/src/agents/runs/agents-spec.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/app-reach.ts](packages/agents/src/agents/runs/app-reach.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/ask-watcher.ts](packages/agents/src/agents/runs/ask-watcher.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/command-guard.ts](packages/agents/src/agents/runs/command-guard.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/definition-snapshot.ts](packages/agents/src/agents/runs/definition-snapshot.ts)|100.00|100.00|100.00|100.00
@@ -327,7 +328,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/sandbox</b> — 100.00% das linhas, 13 arquivos</summary>
+<summary>🟢 <b>packages/sandbox</b> — 100.00% das linhas, 14 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -335,6 +336,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/common/paths.ts](packages/sandbox/src/common/paths.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/resolve-denies.ts](packages/sandbox/src/common/resolve-denies.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/rule-effect.ts](packages/sandbox/src/common/rule-effect.ts)|100.00|100.00|100.00|100.00
+🟢|[src/sandbox/docker/docker-host.ts](packages/sandbox/src/sandbox/docker/docker-host.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/docker/docker-run.ts](packages/sandbox/src/sandbox/docker/docker-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/docker/docker-sandbox.ts](packages/sandbox/src/sandbox/docker/docker-sandbox.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/local/bwrap-command.ts](packages/sandbox/src/sandbox/local/bwrap-command.ts)|100.00|100.00|100.00|100.00

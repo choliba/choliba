@@ -24,6 +24,7 @@ import { loggedStream, NO_RUN_LOG, openRunLog, type RunLog } from './run-log';
 import { wantsFooter } from './run-footer';
 import { planRunTools, type PlannedFile } from '../../common';
 import { CHOL_ROOT } from '../../common';
+import { containerReachProblem } from './app-reach';
 import { launchFor, realDisk, type Launch, type LaunchDisk } from './sandbox-launch';
 import {
   acceptedFlagNames,
@@ -351,6 +352,15 @@ async function runCommand(parsed: RunArgs, given: RunAgentsCliDeps): Promise<num
   const progress = logged === undefined ? runContext.deps.stderr : loggedStream(logged.stderr, logged.log, 'choliba');
   const app = parsed.dryRun ? NO_APP : await appFor(projectRun.settings, runContext.deps, progress);
   if (app === undefined) {
+    return closeRunLog(logged, 1);
+  }
+  const unreachable =
+    projectRun.settings === undefined || parsed.dryRun
+      ? undefined
+      : await containerReachProblem(projectRun.settings.environment.baseURL, sandbox, deps.appReach);
+  if (unreachable !== undefined) {
+    app.stop();
+    runContext.deps.stderr.write(`✗ ${unreachable}\n  O agente não foi executado.\n`);
     return closeRunLog(logged, 1);
   }
   try {
