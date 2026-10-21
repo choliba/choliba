@@ -31,7 +31,7 @@ import { workspaceLocations } from '../../shared/workspace-config';
 
 import { fillTicketTests } from './fill-ticket-tests';
 import { checkGate, hasGate, takeGateFlags, type TicketGate } from './tests-gate';
-import { playwrightNodePath, WORKSPACE_ENV } from './playwright-env';
+import { playwrightNodePath, PROJECT_ENV, WORKSPACE_ENV } from './playwright-env';
 import { parseTestsTarget, type TestsTarget } from './tests-target';
 import { guardRetiredTicket, retiredOf } from './tests-retired';
 import { fail } from './tests-error';
@@ -253,7 +253,7 @@ async function runOnce(
 ): Promise<number> {
   const { project, ticket, targets, extras, gate } = run;
   const projectsDir = context.locations.CHOL_PROJECTS_DIR;
-  const runEnv = { ...context.env, QA_TICKET: ticket, TERM_COLS: terminalColumns() };
+  const runEnv = { ...context.env, [PROJECT_ENV]: project, QA_TICKET: ticket, TERM_COLS: terminalColumns() };
   const reportFolder = resolveReportFolder(resolveTicketRunsRoot(context.locations), project, ticket || undefined);
   // A report left by an earlier run must not pass for this one's.
   if (hasGate(gate)) fs.rmSync(path.join(reportFolder, 'results.json'), { force: true });

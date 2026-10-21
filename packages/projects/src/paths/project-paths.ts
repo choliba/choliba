@@ -82,3 +82,24 @@ export function listProjectNames(projectsDir: string): string[] {
     .map((d) => d.name)
     .sort((a, b) => a.localeCompare(b));
 }
+
+/**
+ * The project a command-line argument names, never by a part of a name (`site` is not in `site-choliba/…`): the first
+ * folder under `projectsDir` of the path the argument resolves to from `cwd`; else, for a relative argument, a segment
+ * of it that is one of `projects`. An absolute path outside `projectsDir` names none.
+ */
+export function projectOfArgument(
+  projectsDir: string,
+  projects: readonly string[],
+  argument: string,
+  cwd: string,
+): string | undefined {
+  const inside = path.relative(projectsDir, path.resolve(cwd, argument));
+  if (inside !== '' && !inside.startsWith('..') && !path.isAbsolute(inside)) {
+    const first = inside.split(path.sep)[0];
+    return projects.find((name) => name === first);
+  }
+  if (path.isAbsolute(argument)) return undefined;
+  const segments = argument.split(/[\\/]/);
+  return projects.find((name) => segments.includes(name));
+}
