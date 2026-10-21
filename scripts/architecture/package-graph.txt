@@ -5,6 +5,7 @@
 @choliba/agents → @choliba/workspace
 @choliba/core → @choliba/kernel
 @choliba/core → @choliba/shell
+@choliba/core → @choliba/tui
 @choliba/projects → @choliba/core
 @choliba/projects → @choliba/workspace
 @choliba/runner → @choliba/config
@@ -15,6 +16,9 @@
 @choliba/sandbox → @choliba/core
 @choliba/shell → @choliba/config
 @choliba/shell → @choliba/kernel
+@choliba/tui → @choliba/kernel
+@choliba/tui → @choliba/shell
+@choliba/tui → @choliba/workspace
 @choliba/workspace → @choliba/config
 @choliba/workspace → @choliba/kernel
 choliba → @choliba/agents
