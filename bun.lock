@@ -34,6 +34,7 @@
       "dependencies": {
         "@choliba/config": "workspace:*",
         "@choliba/core": "workspace:*",
+        "@choliba/domain": "workspace:*",
         "@choliba/projects": "workspace:*",
         "@choliba/sandbox": "workspace:*",
         "@choliba/workspace": "workspace:*",
@@ -82,6 +83,15 @@
         "@choliba/kernel": "workspace:*",
         "@choliba/shell": "workspace:*",
         "@choliba/tui": "workspace:*",
+      },
+    },
+    "packages/domain": {
+      "name": "@choliba/domain",
+      "version": "0.0.0",
+      "dependencies": {
+        "@choliba/kernel": "workspace:*",
+        "ajv": "^8.20.0",
+        "yaml": "^2.8.1",
       },
     },
     "packages/kernel": {
@@ -267,6 +277,8 @@
     "@choliba/config": ["@choliba/config@workspace:packages/config"],
 
     "@choliba/core": ["@choliba/core@workspace:packages/core"],
+
+    "@choliba/domain": ["@choliba/domain@workspace:packages/domain"],
 
     "@choliba/kernel": ["@choliba/kernel@workspace:packages/kernel"],
 
