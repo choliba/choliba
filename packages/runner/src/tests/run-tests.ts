@@ -21,6 +21,7 @@ import {
   ticketSuffix,
   type ProjectLocations,
   type ProjectSettings,
+  type SetupStdio,
   APP_PREPARED_ENV,
   formatRetired,
   fullyRetiredTickets,
@@ -47,7 +48,7 @@ export type SpawnPlaywright = (args: string[], env: NodeJS.ProcessEnv, cwd: stri
 export type SpawnSyncFn = (
   command: string,
   args: readonly string[],
-  options: { cwd: string; env: NodeJS.ProcessEnv; stdio: 'inherit'; shell?: true },
+  options: { cwd: string; env: NodeJS.ProcessEnv; stdio: 'inherit' | SetupStdio; shell?: true },
 ) => { status: number | null };
 
 export interface RunTestsOptions {
@@ -324,7 +325,13 @@ async function runTarget(
   }
   const ticket = canonicalTicket(projectsDir, target);
   try {
-    await prepareApp(settings, { projectsDir, env: context.env, stderr: context.stderr, spawn: context.spawnSyncFn });
+    await prepareApp(settings, {
+      projectsDir,
+      env: context.env,
+      stderr: context.stderr,
+      spawn: context.spawnSyncFn,
+      logFile: path.join(context.options.monorepoRoot, '.cache', 'app', `${project}.setup.log`),
+    });
   } catch (err) {
     fail(`erro: ${(err as Error).message}`);
   }

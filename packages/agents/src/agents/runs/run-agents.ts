@@ -347,7 +347,9 @@ async function runCommand(parsed: RunArgs, given: RunAgentsCliDeps): Promise<num
   const runContext = logged === undefined ? context : { ...context, deps: logged.deps, log: logged.run };
   // The application is up before anything that may use it: the `before` steps (tests) and the agent. `--dry-run`
   // only says it would be.
-  const app = parsed.dryRun ? NO_APP : await appFor(projectRun.settings, runContext.deps);
+  // What the application's setup and start say is progress, logged as choliba's; only a failure is an error.
+  const progress = logged === undefined ? runContext.deps.stderr : loggedStream(logged.stderr, logged.log, 'choliba');
+  const app = parsed.dryRun ? NO_APP : await appFor(projectRun.settings, runContext.deps, progress);
   if (app === undefined) {
     return closeRunLog(logged, 1);
   }
@@ -411,9 +413,14 @@ const NO_APP: RunningApp = { started: false, stop: () => undefined };
 
 /**
  * The application of a run with `--project` (`ensureApp`): its setup run, and up at its `baseURL`, started by
- * choliba when it was not. `undefined` when it could not be, with the reason on `stderr`: the agent does not run.
+ * choliba when it was not, saying so on `progress`. `undefined` when it could not be, with the reason on `stderr`: the
+ * agent does not run.
  */
-async function appFor(settings: ProjectSettings | undefined, deps: RunAgentsCliDeps): Promise<RunningApp | undefined> {
+async function appFor(
+  settings: ProjectSettings | undefined,
+  deps: RunAgentsCliDeps,
+  progress: RunAgentsCliDeps['stderr'],
+): Promise<RunningApp | undefined> {
   if (settings === undefined) {
     return NO_APP;
   }
@@ -424,7 +431,7 @@ async function appFor(settings: ProjectSettings | undefined, deps: RunAgentsCliD
         projectsDir: projectsDir(deps),
         logDir: join(deps.repoRoot, '.cache', 'app'),
         env: process.env,
-        stderr: deps.stderr,
+        stderr: progress,
         spawn: spawnToEnd,
       }));
   try {
