@@ -1,5 +1,14 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -137,16 +146,8 @@ function run(command: string, args: readonly string[], cwd: string, env?: NodeJS
   }
 }
 
-const PACKAGE_DIRS = [
-  '',
-  'packages/choliba',
-  'packages/config',
-  'packages/core',
-  'packages/agents',
-  'packages/projects',
-  'packages/runner',
-  'packages/sandbox',
-];
+/** The root and every package, where Bun may have installed a dependency of the bundled packages. */
+const PACKAGE_DIRS = ['', ...readdirSync(join(repo, 'packages')).map((name) => join('packages', name))];
 
 function installedPackage(name: string): string {
   const found = PACKAGE_DIRS.map((pkg) => join(repo, pkg, 'node_modules', name)).find((path) => existsSync(path));
