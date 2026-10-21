@@ -229,6 +229,31 @@ describe('runTests', () => {
     });
   });
 
+  it('fails a gated run of a ticket with no spec, instead of running the whole project', async () => {
+    await withProject(async (projectsDir, cwd) => {
+      writeProject(projectsDir, 'demo', [{ suffix: 'T-01' }]);
+      const spawnPlaywright = jest.fn(() => 0);
+      const ownSpec = path.join(projectsDir, 'demo', 'tests', 'demo-T-01.spec.ts');
+
+      for (const gate of [['--expect', 'red'], ['--expect=green'], ['--failures', 'red.md']]) {
+        await expect(
+          runTests({
+            ...TEST_ROOTS,
+            argv: ['demo:T-01', ...gate],
+            cwd,
+            stdinIsTTY: false,
+            loadConfig: () => ({ CHOL_GLOBAL_DIR: '/g', CHOL_PROJECTS_DIR: projectsDir }),
+            spawnPlaywright,
+          }),
+        ).rejects.toThrow(
+          `erro: o ticket "demo-T-01" não tem spec (${ownSpec}) nem teste referenciado, então não há o que conferir. ` +
+            'Escreva o spec do ticket (é o que o test-writer grava) e rode de novo.',
+        );
+      }
+      expect(spawnPlaywright).not.toHaveBeenCalled();
+    });
+  });
+
   it('expands multi-ticket selectors sequentially', async () => {
     await withProject(async (projectsDir, cwd) => {
       writeProject(projectsDir, 'demo', [
