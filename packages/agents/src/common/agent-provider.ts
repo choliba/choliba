@@ -70,6 +70,9 @@ export abstract class AgentProvider {
   /** Whether a line of its stderr says nothing to whoever runs it, and is left out of the screen. */
   quietStderr?(line: string): boolean;
 
+  /** A line of its stderr as whoever runs it reads it, when the provider's own words would not do; the line itself else. */
+  readableStderr?(line: string): string;
+
   /** Variables it sets for itself, over what the session inherits: where its API is, which token it sends. */
   variables?(input: ProviderVariablesInput): Readonly<Record<string, string>>;
 
