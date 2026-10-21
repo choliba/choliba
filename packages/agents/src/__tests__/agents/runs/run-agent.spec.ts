@@ -20,7 +20,9 @@ import type { AgentProvider } from '../../../common/agent-provider';
 import type { PlanContentContext, ProviderRequest } from '../../../common/interfaces/provider.interface';
 import type { ResolvedProvider } from '../../../common/provider-registry';
 import type { RunAgentDeps, RunAgentRequest } from '../../../agents/runs/run-agent';
-import { everySecond, FOOTER_REFRESH_MS, runAgent, screenWidth } from '../../../agents/runs/run-agent';
+import type { RunFooterInfo } from '../../../agents/interfaces/run-footer.interface';
+import { everySecond, runAgent } from '../../../agents/runs/run-agent';
+import { createRunScreen, FOOTER_REFRESH_MS, screenWidth, type RunScreenDeps } from '../../../agents/runs/run-screen';
 import { erroringStream, fakeSpawner, streamFromChunks, throwingSpawner } from '../../helpers/fake-spawner';
 import { makeTmpDir } from '../../helpers/tmp';
 import { NO_PERMISSIONS, readAgentPermissions } from '../../../common/agent-permissions';
@@ -200,6 +202,14 @@ async function run(
     stderr: setupResult.stderr,
     signals: setupResult.signals,
     now: () => new Date('2026-01-01T00:00:00.000Z'),
+    screen: (info, request) =>
+      createRunScreen(info, request, {
+        stdout: setupResult.stdout,
+        stderr: setupResult.stderr,
+        now: () => new Date('2026-01-01T00:00:00.000Z'),
+        footer: false,
+        hostedPanel: false,
+      }),
   });
 }
 
@@ -287,6 +297,14 @@ describe('runAgent', () => {
       signals: s.signals,
       now: () => new Date(0),
       answered: (answer: string) => answers.push(answer),
+      screen: (info: RunFooterInfo, request: RunAgentRequest) =>
+        createRunScreen(info, request, {
+          stdout: s.stdout,
+          stderr: s.stderr,
+          now: () => new Date(0),
+          footer: false,
+          hostedPanel: false,
+        }),
     });
     const clean = setup(
       fakeSpawner({ stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'a análise' }])]) })
@@ -640,7 +658,21 @@ describe('runAgent', () => {
         plansDir: '/plans',
         theme: buildTheme({}, false),
       },
-      { runner, stdout, stderr, signals: source, now: () => new Date() },
+      {
+        runner,
+        stdout,
+        stderr,
+        signals: source,
+        now: () => new Date(),
+        screen: (info, request) =>
+          createRunScreen(info, request, {
+            stdout,
+            stderr,
+            now: () => new Date(),
+            footer: false,
+            hostedPanel: false,
+          }),
+      },
     );
 
     trigger('SIGINT');
@@ -865,7 +897,25 @@ describe('runAgent — footer', () => {
         stderr: s.stderr,
         signals: s.signals,
         now: () => new Date(Date.UTC(2026, 0, 1, 0, 0, seconds++)),
-        footer: true,
+        screen: (info, request) =>
+          createRunScreen(info, request, {
+            stdout: s.stdout,
+            stderr: s.stderr,
+            now: () => new Date(Date.UTC(2026, 0, 1, 0, 0, seconds++)),
+            footer: true,
+            hostedPanel: false,
+            ...(fakeTimer
+              ? {
+                  every: (ms: number, tick: () => void) => {
+                    intervals.push(ms);
+                    tick();
+                    return () => {
+                      stopped += 1;
+                    };
+                  },
+                }
+              : {}),
+          }),
         ...(fakeTimer
           ? {
               every: (ms: number, tick: () => void) => {
@@ -971,7 +1021,7 @@ describe('runAgent — panel', () => {
   }
 
   /** The run's dependencies with `panel`; the spec's own timer, unless `realTimer` keeps `everySecond`'s. */
-  function deps(s: Setup, panel: RunAgentDeps['panel'], realTimer = false): RunAgentDeps {
+  function deps(s: Setup, panel: RunScreenDeps['panel'], realTimer = false): RunAgentDeps {
     const timer = {
       every: (_ms: number, tick: () => void) => {
         tick();
@@ -984,9 +1034,17 @@ describe('runAgent — panel', () => {
       stderr: s.stderr,
       signals: s.signals,
       now: () => new Date(Date.UTC(2026, 0, 1)),
-      footer: true,
       ...(realTimer ? {} : timer),
-      ...(panel === undefined ? {} : { panel }),
+      screen: (info, request, hostedPanel) =>
+        createRunScreen(info, request, {
+          stdout: s.stdout,
+          stderr: s.stderr,
+          now: () => new Date(Date.UTC(2026, 0, 1)),
+          footer: true,
+          hostedPanel,
+          ...(realTimer ? {} : timer),
+          ...(panel === undefined ? {} : { panel }),
+        }),
     };
   }
 
@@ -1185,7 +1243,19 @@ describe('runAgent — panel', () => {
       };
     };
 
-    await runAgent(request, { ...deps(s, undefined), footer: false, every });
+    await runAgent(request, {
+      ...deps(s, undefined),
+      every,
+      screen: (info, req) =>
+        createRunScreen(info, req, {
+          stdout: s.stdout,
+          stderr: s.stderr,
+          now: () => new Date(Date.UTC(2026, 0, 1)),
+          footer: false,
+          hostedPanel: false,
+          every,
+        }),
+    });
 
     expect(JSON.parse(answered)).toEqual({ status: 'unavailable' });
   });
