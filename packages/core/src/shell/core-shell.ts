@@ -10,4 +10,7 @@ export const coreShell: ShellModule = {
   },
   commands: [...baseShell.commands, ...tuiShell.commands],
   panel: tuiShell.panel ?? [],
+  panelStart: (container, context) => {
+    tuiShell.panelStart?.(container, context);
+  },
 };

@@ -1,11 +1,22 @@
-import { messageOf, type ChatPanel, type Container, type PanelCommand, type PanelContext } from '@choliba/core';
+import {
+  AGENT,
+  RESUME_AT,
+  agentPaint,
+  agentsDir,
+  listAgents,
+  resumeSequence,
+  runningAgent,
+  sequenceRunning,
+  sessionAgentIds,
+  showRun,
+  talkToAgent,
+  warn,
+  type AgentDefinition,
+} from '@choliba/agents';
+import type { Container } from '@choliba/kernel';
+import { messageOf, type ChatPanel, type PanelCommand, type PanelContext } from '@choliba/shell';
 
-import type { AgentDefinition } from '../common';
-import { listAgents } from './agent-loader';
-import { agentPaint } from './agents-panel-card';
 import { chooseAgentRun, runChoices } from './agents-panel-choices';
-import { RESUME_AT, resumeSequence, runningAgent, sequenceRunning, talkToAgent } from './agents-panel-run';
-import { AGENT, agentsDir, sessionAgentIds, showRun, warn } from './agents-panel-state';
 
 /** The option that ends the additions, first and checked: Enter after an agent keeps the sequence as it is. */
 const NO_OTHER = 'nenhum outro';
@@ -154,5 +165,5 @@ const resumeCommand: PanelCommand = {
   },
 };
 
-/** What @choliba/agents brings to `choliba panel`. */
+/** The agent commands the TUI brings to `choliba panel`. */
 export const agentsPanel: readonly PanelCommand[] = [agentsPanelCommand, resumeCommand, ...runChoices];

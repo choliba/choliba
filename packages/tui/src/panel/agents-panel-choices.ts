@@ -1,8 +1,6 @@
-import type { ChatPanel, Container, PanelCommand, PanelContext } from '@choliba/core';
-
-import { AUTO, type AgentDefinition, type AgentProvider } from '../common';
-import { listAgents } from './agent-loader';
 import {
+  AGENT_PROVIDERS,
+  AUTO,
   activeAgent,
   agentKey,
   agentsDir,
@@ -20,10 +18,16 @@ import {
   sessionRun,
   showRun,
   warn,
-} from './agents-panel-state';
-import { AGENT_PROVIDERS } from './agents.constants';
-import { MODE_CHOICES, SANDBOX_CHOICES, type SandboxChoice } from './runs/agents-flags';
-import { declaredModels } from './runs/run-choice';
+  declaredModels,
+  listAgents,
+  MODE_CHOICES,
+  SANDBOX_CHOICES,
+  type AgentDefinition,
+  type AgentProvider,
+  type SandboxChoice,
+} from '@choliba/agents';
+import type { Container } from '@choliba/kernel';
+import type { ChatPanel, PanelCommand, PanelContext } from '@choliba/shell';
 
 /** Why a choice about the active agent cannot be made yet. */
 const NO_AGENT = 'Escolha um agente antes, com /agents';

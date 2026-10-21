@@ -1,6 +1,7 @@
 // The panel: OpenTUI drawing the contract of @choliba/shell (a chat, its field, its cards and choices), and `choliba
 // panel`, its session, its log and the panel commands every app has (`/clear`, `/quit`).
 export {
+  agentsPanel,
   loadPanelToolkit,
   openOpenTuiPanel,
   openPanel,
@@ -8,6 +9,7 @@ export {
   createPanelRunScreen,
   pixelMap,
   projectsPanel,
+  watchChoices,
   type ArtColor,
   type OpenTuiToolkit,
   type PanelToolkit,
