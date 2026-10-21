@@ -36,6 +36,7 @@
         "@choliba/core": "workspace:*",
         "@choliba/projects": "workspace:*",
         "@choliba/sandbox": "workspace:*",
+        "@choliba/workspace": "workspace:*",
         "@playwright/test": "1.63.0",
         "ajv": "^8.20.0",
         "yaml": "^2.8.1",
@@ -57,6 +58,7 @@
         "@choliba/projects": "workspace:*",
         "@choliba/runner": "workspace:*",
         "@choliba/sandbox": "workspace:*",
+        "@choliba/workspace": "workspace:*",
         "@eslint/js": "^10.0.1",
         "@playwright/test": "1.63.0",
         "@types/bun": "^1.4.2",
@@ -91,8 +93,8 @@
       "name": "@choliba/projects",
       "version": "0.0.0",
       "dependencies": {
-        "@choliba/config": "workspace:*",
         "@choliba/core": "workspace:*",
+        "@choliba/workspace": "workspace:*",
       },
     },
     "packages/runner": {
@@ -102,6 +104,7 @@
         "@choliba/config": "workspace:*",
         "@choliba/core": "workspace:*",
         "@choliba/projects": "workspace:*",
+        "@choliba/workspace": "workspace:*",
       },
       "devDependencies": {
         "@playwright/test": "1.63.0",
@@ -113,6 +116,14 @@
       "dependencies": {
         "@choliba/config": "workspace:*",
         "@choliba/core": "workspace:*",
+      },
+    },
+    "packages/workspace": {
+      "name": "@choliba/workspace",
+      "version": "0.0.0",
+      "dependencies": {
+        "@choliba/config": "workspace:*",
+        "@choliba/kernel": "workspace:*",
       },
     },
   },
@@ -247,6 +258,8 @@
     "@choliba/runner": ["@choliba/runner@workspace:packages/runner"],
 
     "@choliba/sandbox": ["@choliba/sandbox@workspace:packages/sandbox"],
+
+    "@choliba/workspace": ["@choliba/workspace@workspace:packages/workspace"],
 
     "@docsearch/css": ["@docsearch/css@3.8.2", "", {}, "sha512-y05ayQFyUmCXze79+56v/4HpycYF3uFqB78pLPrSV5ZKAlDuIAAJNhaRi8tTdRNXh05yxX/TyNnzD6LwSM89vQ=="],
 

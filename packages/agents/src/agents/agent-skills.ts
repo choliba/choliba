@@ -6,7 +6,7 @@ import { parse as parseYaml } from 'yaml';
 import type { SkillDeclaration } from '../common';
 import { asString, isRecord } from '../common';
 import { ExpectedError } from '@choliba/core';
-import { SKILL_FILE } from './agent-layout';
+import { SKILL_FILE } from '@choliba/workspace';
 
 /** One skill an agent declares; the agent reads the skill itself from `path`. */
 export interface SkillSummary {

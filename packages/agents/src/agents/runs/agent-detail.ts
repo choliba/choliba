@@ -5,7 +5,7 @@ import { invocationFromAgent } from '../invocation';
 import type { ParsedListArgs } from './agents-flags';
 import type { AgentDefinition } from '../../common';
 import type { AgentInvocation } from '../interfaces/invocation.interface';
-import { resolveAgentsDir } from '../agent-dirs';
+import { resolveAgentsDir } from '@choliba/workspace';
 import type { RunAgentsCliDeps } from './run-context';
 
 const HELP_WIDTH = 80;

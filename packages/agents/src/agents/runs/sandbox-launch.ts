@@ -26,7 +26,7 @@ import {
 } from '../../common';
 import { CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR } from '../../common';
 import { locationsOf } from './run-context';
-import { definedConfig } from '../agent-dirs';
+import { definedConfig } from '../defined-config';
 
 type Config = Readonly<Record<string, string | undefined>>;
 

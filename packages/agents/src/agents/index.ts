@@ -1,5 +1,20 @@
-export * from './agent-dirs';
-export * from './agent-layout';
+export { definedConfig } from './defined-config';
+export {
+  AGENT_FILE,
+  AGENTS_SUBDIR,
+  CACHE_DIR,
+  CHOLIBA_DIR,
+  DEFAULT_AGENTS_DIR,
+  DEFAULT_MCPS_DIR,
+  DEFAULT_SKILLS_DIR,
+  MCPS_SUBDIR,
+  resolveAgentsDir,
+  resolveMcpsDir,
+  resolveSkillsDir,
+  RUNS_DIR,
+  SKILL_FILE,
+  SKILLS_SUBDIR,
+} from '@choliba/workspace';
 export { agentsConfig } from './agents-config';
 export * from './agent-loader';
 export { agentRunChoice, declaredModels, type RunAsk, type RunChoice } from './runs/run-choice';

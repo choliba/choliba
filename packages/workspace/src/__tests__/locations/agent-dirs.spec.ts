@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '../../agents/agent-dirs';
+import { resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '../../index';
 
 describe('workspace dirs', () => {
   it('default to .choliba/agents, .choliba/skills and .choliba/mcps, the layout choliba setup makes', () => {
@@ -14,9 +14,5 @@ describe('workspace dirs', () => {
     expect(resolveAgentsDir(undefined, { CHOL_AGENTS_DIR: '/x' }, '/w')).toBe('/x');
     expect(resolveSkillsDir({ CHOL_SKILLS_DIR: 'sk' }, '/w')).toBe(join('/w', 'sk'));
     expect(resolveMcpsDir({ CHOL_MCPS_DIR: '/m' }, '/w')).toBe('/m');
-  });
-
-  it('keep only the config entries that have a value', () => {
-    expect(definedConfig({ A: 'a', B: undefined })).toEqual({ A: 'a' });
   });
 });

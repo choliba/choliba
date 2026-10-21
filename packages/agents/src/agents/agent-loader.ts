@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
 import { isAnsiColor, ExpectedError } from '@choliba/core';
-import { AGENT_FILE } from './agent-layout';
+import { AGENT_FILE } from '@choliba/workspace';
 
 import type {
   AgentAfterSteps,

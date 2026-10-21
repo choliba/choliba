@@ -14,4 +14,4 @@ export {
   PACKAGE_FILE,
   PRETTIERIGNORE_FILE,
   PRETTIERRC_FILE,
-} from './workspace-layout';
+} from '@choliba/workspace';
