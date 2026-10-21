@@ -50,6 +50,11 @@ const LONG_ARG_BYTES = 200;
 
 const INDENT = ' '.repeat(13);
 
+/** The model of a run as the dry run and the run's log say it: its name, or the provider's default when it has none. */
+export function modelText(model: string | undefined): string {
+  return model ?? 'padrão do provider';
+}
+
 function bytes(text: string): number {
   return Buffer.byteLength(text, 'utf8');
 }
@@ -111,7 +116,7 @@ function agentEntry(input: DryRunInput, systemPrompt: string): Entry {
   return {
     who: 'agente',
     lines: [
-      `${input.providerId} · modelo ${request.model ?? 'padrão do provider'} · modo ${request.mode} · na pasta ${request.runDir}`,
+      `${input.providerId} · modelo ${modelText(request.model)} · modo ${request.mode} · na pasta ${request.runDir}`,
       `skills: ${listOr(
         request.agent.skills.map((skill) => skill.name),
         'nenhuma',

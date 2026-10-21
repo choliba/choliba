@@ -18,7 +18,7 @@ import type { ResolvedProvider } from '../../common';
 import { formatStepFailure, stepExitCode } from '../steps/step-actions';
 import { spawnToEnd } from '../steps/step-spawn';
 import { formatAgentDetail, runList } from './agent-detail';
-import { formatDryRun, type DryRunInput } from './dry-run';
+import { formatDryRun, modelText, type DryRunInput } from './dry-run';
 import { runAgent } from './run-agent';
 import { loggedStream, NO_RUN_LOG, openRunLog, type RunLog } from './run-log';
 import { wantsFooter } from './run-footer';
@@ -224,7 +224,7 @@ async function runAndRecord(
   const toolFiles = planRunTools(providerRequest, deps.config);
   const files = [...toolFiles, ...(resolved.adapter.previewWorkspace?.(providerRequest) ?? [])];
   let answer: string | undefined;
-  log.log.write('choliba', `provider ${resolved.adapter.id} · modelo ${providerRequest.model ?? 'padrão do provider'}`);
+  log.log.write('choliba', `provider ${resolved.adapter.id} · modelo ${modelText(providerRequest.model)}`);
   const exitCode = await runAgent(
     {
       provider: resolved,

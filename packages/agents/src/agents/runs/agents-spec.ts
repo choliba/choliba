@@ -260,7 +260,7 @@ Sem --dry-run, faria nesta ordem:
              se falhar: para aqui, o agente não roda
  3. [CLI]    plan.before 2/2 — read_files: tag=falhas_red files=.cache/test-writer/app-1/red.md
              se falhar: para aqui, o agente não roda
- 4. [agente] cursor · modelo padrão do provider · modo plan · na pasta .cache/runs/<id>
+ 4. [agente] cursor · modelo Composer 2.5 Fast · modo plan · na pasta .cache/runs/<id>
              skills: playwright-trace · MCPs: nenhum
              prompt de sistema: 8053 bytes · prompt do usuário: 218 bytes (--show-prompt mostra os dois)
              comando: agent -p <prompt> --trust --disable-auto-update --output-format stream-json …

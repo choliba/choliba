@@ -3,8 +3,8 @@ import { AUTO, type AgentDefinition, type ProviderRegistry, type ResolvedProvide
 /** The provider and the model a run takes, as the agent's `providers` allow. */
 export interface RunChoice {
   readonly resolved: ResolvedProvider;
-  /** The model asked of the provider; `undefined` lets the provider use its own default. */
-  readonly model: string | undefined;
+  /** The model asked of the provider, one the agent declares for it. */
+  readonly model: string;
 }
 
 /** What a run asks for: `--provider`, `--model`, and `CHOL_AGENTS_PROVIDER`. */
@@ -93,20 +93,20 @@ function chosenProvider(
   return id === AUTO ? firstInstalled(agent, registry, which) : declaredProvider(agent, id, registry, which);
 }
 
-/** The model asked of `resolved`: `--model`, which it must declare, else its first one when it has no default. */
-function chosenModel(
-  agent: AgentDefinition,
-  resolved: ResolvedProvider,
-  model: string | undefined,
-): Choice<string | undefined> {
-  const { id, needsModel } = resolved.adapter;
+/**
+ * The model asked of `resolved`: `--model`, which it must declare, else the first one it declares. Never the
+ * provider's own default, which the run would refuse as a model the agent does not declare.
+ */
+function chosenModel(agent: AgentDefinition, resolved: ResolvedProvider, model: string | undefined): Choice<string> {
+  const { id } = resolved.adapter;
   const models = declaredModels(agent, id);
   if (model !== undefined) {
     return models.includes(model)
       ? model
       : { error: `O modelo ${model} não está entre os de ${id} no agente ${agent.id} (${models.join(', ')}).` };
   }
-  return needsModel ? models[0] : undefined;
+  const [first] = models;
+  return first ?? { error: `O agente ${agent.id} não declara nenhum modelo para ${id}.` };
 }
 
 /**
@@ -115,8 +115,7 @@ function chosenModel(
  * - `--provider`, which the agent must declare; else the provider that declares `--model` (two declaring it is
  *   refused, asking for `--provider`); else `CHOL_AGENTS_PROVIDER`, which the agent must declare, and under `auto` the
  *   first declared provider that is installed;
- * - `--model`, which that provider must declare; else the provider's own default, or its first declared model when it
- *   has none (`needsModel`).
+ * - `--model`, which that provider must declare; else its first declared model.
  *
  * What cannot run is said in Portuguese, naming what the agent declares.
  */
