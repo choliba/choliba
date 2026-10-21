@@ -32,6 +32,12 @@ describe('the architecture of the packages', () => {
 
     expect({ exports: entryExports(ROOT), how: UPDATE }).toEqual({ exports: listed, how: UPDATE });
   }, 30_000);
+
+  it('keeps panel and terminal drawing out of the agent run', () => {
+    const run = readFileSync(join(ROOT, 'packages/agents/src/agents/runs/run-agent.ts'), 'utf8');
+
+    expect(run).not.toMatch(/openPanel|panel\.write|frameTop|frameLines|frameBottom|summaryLine/);
+  });
 });
 
 /** A repository with `packages/<dir>/` per entry of `packages`, each a package.json and its files. */
