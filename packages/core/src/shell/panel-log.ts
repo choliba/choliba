@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import { logStamp, openLogFile, textPieces, type ChatPanel, type LogFile, type PanelReply } from '../terminal';
+import { logStamp, openLogFile, textPieces, type ChatPanel, type LogFile, type PanelReply } from '@choliba/shell';
 
 /** The first word of a suggestion's line, as it reads: the command clicked (`/projects`). */
 function commandOf(line: string): string {

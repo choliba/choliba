@@ -1,6 +1,6 @@
+import { type PanelKey } from '@choliba/shell';
 import type {
   PanelFieldEvent,
-  PanelKey,
   PanelRendererConfig,
   PanelSelection,
   PanelToolkit,

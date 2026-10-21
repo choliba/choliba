@@ -1,3 +1,4 @@
+import { type PanelKey } from '@choliba/shell';
 /**
  * The slice of `@opentui/core` the panel uses, by shape: the real module satisfies it, and a spec passes a fake one
  * (the module is native and does not load under Node, where the specs run). The parameters are the module's own types:
@@ -43,14 +44,6 @@ export interface PanelRenderer<Node> {
 /** The text dragged over with the mouse. */
 export interface PanelSelection {
   getSelectedText(): string;
-}
-
-export interface PanelKey {
-  readonly name: string;
-  readonly ctrl: boolean;
-  readonly shift?: boolean;
-  /** Keeps the key from the focused field. */
-  preventDefault?(): void;
 }
 
 /** The toolkit's content and submit events carry no data in the installed API. */

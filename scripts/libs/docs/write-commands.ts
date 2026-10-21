@@ -8,8 +8,8 @@ import { format, resolveConfig } from 'prettier';
 
 import { createCholibaShell } from '../../../packages/choliba/src/app-shell';
 import type { Runtime } from '../../../packages/choliba/src/runtime';
-import { TERMINAL_RUN_SPEC } from '../../../packages/core/src/shell';
-import { fakePlatform } from '../../../packages/core/src/testing';
+import { TERMINAL_RUN_SPEC } from '../../../packages/shell/src/shell';
+import { fakePlatform } from '../../../packages/kernel/src/testing';
 import {
   commandPage,
   groupOf,

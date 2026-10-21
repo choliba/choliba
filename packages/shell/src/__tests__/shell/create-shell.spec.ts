@@ -1,18 +1,16 @@
 import { defineConfig, type ConfigSource } from '@choliba/config';
 
+import { ExpectedError, token, type Token } from '@choliba/kernel';
+import { fakePlatform } from '@choliba/kernel/testing';
 import {
   CONFIG_CATALOG,
   createShell,
   PANEL_COMMANDS,
   PANEL_STARTS,
-  ExpectedError,
   PLATFORM,
-  token,
   type CommandEntry,
   type ShellModule,
-  type Token,
 } from '../..';
-import { fakePlatform } from '../../testing';
 
 const GREETING = token<string>('greeting');
 

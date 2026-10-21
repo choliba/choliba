@@ -1,4 +1,6 @@
-import { coreShell, createShell, openOpenTuiPanel, PANEL_OPENER, THEME } from '../..';
+import { createShell, THEME } from '@choliba/shell';
+
+import { coreShell, openOpenTuiPanel, PANEL_OPENER } from '../..';
 import { BufferWritable, fakePlatform, VERBS_ROOT } from '../../testing';
 
 describe('coreShell', () => {

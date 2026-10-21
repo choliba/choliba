@@ -1,20 +1,20 @@
-import { paintAnsi, type AnsiColor } from '../../theme';
-import { ansiChunks, visibleWidth, type StyledChunk } from '../frame';
+import {
+  ansiChunks,
+  paintAnsi,
+  visibleWidth,
+  type ChatPanel,
+  type PanelKey,
+  type PanelOptions,
+  type PanelVoice,
+  type StyledChunk,
+} from '@choliba/shell';
 
-import type { PanelBox, PanelKey, PanelTextareaKeyBinding, PanelToolkit } from './interfaces/panel.interface';
+import type { PanelBox, PanelTextareaKeyBinding, PanelToolkit } from './interfaces/panel.interface';
 import { fieldHistory } from './panel-history';
 import { PALETTE } from './panel-palette';
-import { questionDesk, type PanelQuestion, type PanelReply } from './panel-question';
-import { chooser, type PanelChoice, type PanelChooseRequest } from './panel-choose';
-import {
-  CARD_RULE,
-  cardElapsed,
-  headerBox,
-  splashBox,
-  type PanelCard,
-  type PanelHeader,
-  type PanelSplash,
-} from './panel-welcome';
+import { questionDesk } from './panel-question';
+import { chooser } from './panel-choose';
+import { headerBox, splashBox } from './panel-welcome';
 
 /** The band behind what the person said: a gray a little lighter than a dark terminal. */
 const SAID_BACKGROUND = '#373737';
@@ -43,88 +43,6 @@ const TEXTAREA_KEYS: PanelTextareaKeyBinding[] = [
   { name: 'linefeed', action: 'newline' },
   { name: 'linefeed', shift: true, action: 'newline' },
 ];
-
-export interface PanelOptions {
-  /** The title of the panel: for a run, the agent. */
-  readonly title: string;
-  readonly titleColor: AnsiColor;
-  /** The footer's line in a width, with its escape codes: on the right of the field, or under it with a header. */
-  readonly footer: (width: number) => readonly string[];
-  /** What the field says while no question is pending. */
-  readonly hint: string;
-  /**
-   * A welcome in the center of the panel, with no box nor field: Enter (or the first line written) closes it and shows
-   * them; Esc calls the interrupt listeners at once. Absent, the panel opens with the field.
-   */
-  readonly splash?: PanelSplash;
-  /**
-   * A header above the lines, which then take the whole width with no border, and the footer as a status line under
-   * the field. Absent, the lines are in a box titled with `title`, and the footer on the right of the field.
-   */
-  readonly header?: PanelHeader;
-}
-
-export { CARD_RULE, cardElapsed };
-export type { PanelCard, PanelChoice, PanelChooseRequest, PanelHeader, PanelSplash };
-
-/** A run drawn in a panel of its own: the session's lines scroll in it, under them the footer. */
-export interface Panel {
-  /** Lines of the session, with their escape codes: each one is added at the bottom. */
-  write(text: string): void;
-  /** Draws the footer again, as it is now. */
-  refresh(): void;
-  /** Called when the person presses Ctrl+C, which the panel's keyboard takes before the terminal makes a signal. */
-  onInterrupt(listener: () => void): void;
-  /** Asks `question` in the field and gives the answer; questions asked together wait their turn. */
-  ask(question: PanelQuestion): Promise<PanelReply>;
-  /** Called with what the person typed and sent in the field while no question was pending. */
-  onMessage(listener: (text: string) => void): void;
-  /** Gives the terminal back as it was; the panel's lines are the caller's to print. */
-  close(): void;
-}
-
-/** Who wrote some lines of the conversation: an agent, by its name and its color. */
-export interface PanelVoice {
-  readonly name: string;
-  readonly color: AnsiColor;
-}
-
-/** A panel where a person talks: what they said is marked apart from the other lines, and they choose in it. */
-export interface ChatPanel extends Panel {
-  /**
-   * Lines of the session, as `Panel.write`; with `voice`, lines that agent wrote: a border in its color on their left,
-   * its name opening the block, and the lines it writes next join that block until someone else writes.
-   */
-  write(text: string, voice?: PanelVoice): void;
-  /** What the person said, added at the bottom on a band of its own after a blank row: `❯` and the text. */
-  say(text: string): void;
-  /** A reply to the person, added at the bottom after a blank row: `●`, and the text's lines beside it. */
-  answer(text: string): void;
-  /** Asks the person to choose, in place of the field: the index chosen with Enter, or nothing on Esc. */
-  choose(request: PanelChooseRequest): Promise<number | undefined>;
-  /** Called with what is in the field each time it changes. */
-  onTyping(listener: (text: string) => void): void;
-  /**
-   * Lines shown under the field, with their escape codes, while the person types, each a row `onPick` gets the
-   * index of when clicked, and `hint` at the end of the field's row, in gray (what Enter does); none hides them.
-   */
-  suggest(lines: readonly string[], onPick?: (index: number) => void, hint?: string): void;
-  /** Puts `text` in the field, in place of what was there. */
-  fill(text: string): void;
-  /** Called with each key the person presses in the field, before the field takes it; `true` keeps it from it. */
-  onKey(listener: (key: PanelKey) => boolean): void;
-  /** Called when the person drags a card that can move onto another that can: `title` takes the place of `onto`. */
-  onCardMove(listener: (title: string, onto: string) => void): void;
-  /** Empties the conversation: every line written, said and answered goes; the header and the field stay. */
-  clear(): void;
-  /** Replaces the lines of the header beside its icon; a panel with no header ignores it. */
-  heading(lines: readonly string[]): void;
-  /**
-   * Shows these cards in the header, on the right of its lines; Ctrl and a card's key, or a click on it, collapses it to
-   * its summary and opens it again. A panel with no header ignores it.
-   */
-  cards(cards: readonly PanelCard[]): void;
-}
 
 /** What a key does to the panel: scroll it a page, to the start or to the end, or interrupt the run. */
 function keyAction(key: PanelKey): 'page-up' | 'page-down' | 'top' | 'bottom' | 'interrupt' | undefined {

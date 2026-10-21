@@ -1,5 +1,4 @@
-import type { PanelContext } from '../shell';
-import type { ChatPanel, PanelCard, PanelKey } from '../terminal';
+import type { ChatPanel, PanelCard, PanelContext, PanelKey } from '@choliba/shell';
 
 /** A `PanelContext` for specs: its values, and what it shows, as plain maps, and the keys it would get. */
 export interface FakePanelContext {

@@ -1,4 +1,4 @@
-import type { AnsiColor } from '../../theme';
+import type { AnsiColor } from '@choliba/shell';
 
 /**
  * The 16 colors as the panel paints them. A terminal paints its own palette; the panel draws its cells itself, so it

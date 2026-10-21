@@ -1,12 +1,21 @@
 import { token, type Container } from '@choliba/kernel';
+import {
+  PANEL_COMMANDS,
+  PANEL_STARTS,
+  PLATFORM,
+  visibleWidth,
+  WORKSPACE_ROOT,
+  type ArtPixels,
+  type ChatPanel,
+  type CommandSpec,
+  type PanelCommand,
+  type PanelOptions,
+  type ShellCommand,
+} from '@choliba/shell';
 
-import type { CommandSpec } from '../help';
-import { openOpenTuiPanel, visibleWidth, type ArtPixels, type ChatPanel, type PanelOptions } from '../terminal';
-import { PANEL_COMMANDS, PANEL_STARTS, PLATFORM } from './create-shell';
-import type { PanelCommand, ShellCommand } from './interfaces/shell.interface';
+import { openOpenTuiPanel } from '../terminal';
 import { loggedPanel, openPanelLog } from './panel-log';
 import { panelSession, type PanelSession } from './panel-session';
-import { WORKSPACE_ROOT } from './shell.constants';
 
 /** Opens a panel, or gives nothing where it cannot (`openOpenTuiPanel`); a spec puts a fake one in its place. */
 export const PANEL_OPENER = token<(options: PanelOptions) => Promise<ChatPanel | undefined>>('PanelOpener');

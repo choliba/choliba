@@ -1,5 +1,7 @@
-import { token, type ShellModule } from '../..';
-import { fakePlatform, replace, runShell } from '../../testing';
+import { token } from '@choliba/kernel';
+import { fakePlatform } from '@choliba/kernel/testing';
+import { type ShellModule } from '../..';
+import { replace, runShell } from '../../testing';
 
 const CLOCK_TEXT = token<string>('clock text');
 

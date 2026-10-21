@@ -1,11 +1,4 @@
-/** RGBA pixels, row after row: `stride` bytes per row, 4 per pixel, alpha not premultiplied. */
-export interface ArtPixels {
-  readonly data: Uint8Array;
-  readonly width: number;
-  readonly height: number;
-  readonly stride: number;
-}
-
+import { type ArtPixels } from '@choliba/shell';
 /** One cell of a picture in half blocks: its character, and the colors (`#rrggbb`) it is drawn with. */
 export interface ArtCell {
   readonly text: string;

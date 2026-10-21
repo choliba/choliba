@@ -27,7 +27,7 @@ const packageDir = join(import.meta.dir, '..');
 const packagesDir = join(packageDir, '..');
 const repoRoot = join(packagesDir, '..');
 const entriesDir = join(packageDir, 'scripts', 'entries');
-const BUNDLED = ['agents', 'config', 'core', 'kernel', 'projects', 'runner', 'sandbox', 'workspace'];
+const BUNDLED = ['agents', 'config', 'core', 'kernel', 'projects', 'runner', 'sandbox', 'shell', 'workspace'];
 
 /** Set from the loaded file before its imports, so a lookup during import sees this package, not the build machine. */
 const SHIPPED_DIR = 'globalThis.__CHOLIBA_SHIPPED_DIR__ = decodeURIComponent(new URL(".", import.meta.url).pathname);';
@@ -140,6 +140,8 @@ const INTERNAL: readonly (readonly [string, string])[] = [
   ['@choliba/kernel/testing', join('kernel', 'src', 'testing', 'index.d.ts')],
   ['@choliba/kernel', join('kernel', 'src', 'index.d.ts')],
   ['@choliba/workspace', join('workspace', 'src', 'index.d.ts')],
+  ['@choliba/shell/testing', join('shell', 'src', 'testing', 'index.d.ts')],
+  ['@choliba/shell', join('shell', 'src', 'index.d.ts')],
 ];
 
 function manifest(dir: string): Manifest {
@@ -229,6 +231,7 @@ function emitDeclarations(outDir: string): void {
   emitPackage('config', outDir, ['src']);
   emitPackage('kernel', outDir, ['src']);
   emitPackage('workspace', outDir, ['src']);
+  emitPackage('shell', outDir, ['src']);
   emitPackage('core', outDir, ['src']);
   emitPackage('agents', outDir, ['src']);
   emitPackage('projects', outDir, ['src']);

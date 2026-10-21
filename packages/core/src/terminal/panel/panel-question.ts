@@ -1,15 +1,5 @@
-import type { PanelInput, PanelKey, PanelSelect } from './interfaces/panel.interface';
-
-/** A question for the person, asked in the panel's field: words, one of `options`, or several when `multi`. */
-export interface PanelQuestion {
-  readonly question: string;
-  readonly options: readonly string[];
-  readonly multi: boolean;
-}
-
-/** The person's answer, or `skipped` when they pressed Esc. */
-export type PanelReply =
-  { readonly status: 'answered'; readonly answer: string | readonly string[] } | { readonly status: 'skipped' };
+import { type PanelKey, type PanelQuestion, type PanelReply } from '@choliba/shell';
+import type { PanelInput, PanelSelect } from './interfaces/panel.interface';
 
 /** What the panel's field does: answer the questions asked in it, one at a time, or send what is typed. */
 export interface QuestionDesk {
