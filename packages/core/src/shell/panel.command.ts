@@ -82,8 +82,8 @@ export const PANEL_SPEC: CommandSpec = {
       'agora. `/agents` nunca recomeça a sequência (`/clear` recomeça) e funciona enquanto ela roda: um agente ' +
       'acrescentado roda no fim, e um que espera roda com o que foi escolhido para ele.',
     'A coluna do cabeçalho mostra o provider e o modelo do painel, os dos agentes que não escolheram os seus: ' +
-      '`/provider` os escolhe entre `auto` e todos os providers, e `/model` entre o padrão do provider e os modelos ' +
-      'que os agentes declaram para ele. A linha de status mostra o modo, que o Shift+Tab alterna e `/mode` escolhe ' +
+      '`/provider` os escolhe entre `auto` e todos os providers, e `/model` entre os modelos que os agentes declaram ' +
+      'para ele e o padrão, em que cada agente roda o primeiro modelo que declara. A linha de status mostra o modo, que o Shift+Tab alterna e `/mode` escolhe ' +
       'entre os que o primeiro agente aceita, o sandbox onde o provider roda (o de CHOL_SANDBOX), que `/sandbox` ' +
       'troca para a sessão, e, enquanto um agente roda, há quanto tempo.',
     'Uma mensagem sem `/` é a tarefa do primeiro agente. Os seguintes rodam com a sua tarefa padrão, ou com a ' +

@@ -24,12 +24,18 @@ function pick(declared: AgentDefinition, ask: Parameters<typeof agentRunChoice>[
 }
 
 describe('agentRunChoice', () => {
-  it('runs the first declared provider that is installed under auto, its default model or its first declared one', () => {
-    expect(pick(MIXED, { preference: 'auto' })).toEqual({ provider: 'claude', model: undefined });
-    expect(pick(MIXED, {})).toEqual({ provider: 'claude', model: undefined });
+  it('runs the first declared provider that is installed under auto, with the first model it declares for it', () => {
+    expect(pick(MIXED, { preference: 'auto' })).toEqual({ provider: 'claude', model: 'claude-sonnet-5' });
+    expect(pick(MIXED, {})).toEqual({ provider: 'claude', model: 'claude-sonnet-5' });
     expect(pick(agent([{ id: 'claude-ollama', models: ['qwen3.5:4b'] }]), {})).toEqual({
       provider: 'claude-ollama',
       model: 'qwen3.5:4b',
+    });
+  });
+
+  it("never asks the provider's own default, which the run would refuse", () => {
+    expect(pick(agent([{ id: 'claude', models: [] }]), {})).toEqual({
+      error: 'O agente local não declara nenhum modelo para claude.',
     });
   });
 

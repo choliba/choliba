@@ -30,19 +30,17 @@ export function agentKey(choice: typeof PROVIDER | typeof MODEL | typeof STATE, 
   return `${choice}:${agent}`;
 }
 
-/** An agent's own model that asks for its provider's default, in place of the panel's model. */
-export const PROVIDER_DEFAULT = '';
+/** The panel's model when none is chosen: each agent runs the first model it declares. */
+export const PANEL_MODEL_DEFAULT = 'padrão de cada agente';
 
 /** The provider a run of `agent` asks for: the one chosen for it as it was added, else the panel's. */
 function askedProvider(context: Pick<PanelContext, 'get'>, agent: AgentDefinition): string | undefined {
   return context.get(agentKey(PROVIDER, agent.id)) ?? context.get(PROVIDER);
 }
 
-/** The model a run of `agent` asks for: the one chosen for it (its provider's default too), else the panel's. */
+/** The model a run of `agent` asks for: the one chosen for it, else the panel's. */
 function askedModel(context: Pick<PanelContext, 'get'>, agent: AgentDefinition): string | undefined {
-  const own = context.get(agentKey(MODEL, agent.id));
-  if (own === undefined) return context.get(MODEL);
-  return own === PROVIDER_DEFAULT ? undefined : own;
+  return context.get(agentKey(MODEL, agent.id)) ?? context.get(MODEL);
 }
 
 /** The ids of the session's agents, in the order they run; none before /agents. */
@@ -198,7 +196,7 @@ function runLabels(
   // In the agent's color, as its name and its lines.
   const painted = agentPaint(container, agent);
   const named = `${painted(id)}${providerChoice(container, context, agent) === AUTO ? gray(' (auto)') : ''}`;
-  return { provider: named, model: run.model === undefined ? gray(`padrão do ${id}`) : painted(run.model) };
+  return { provider: named, model: painted(run.model) };
 }
 
 /** The panel's provider and model, as the header's column shows them: the provider in yellow when it is not installed. */
@@ -212,7 +210,7 @@ function panelLabels(
   const model = context.get(MODEL);
   return {
     provider: `${bold(adapter.id)}${choice === AUTO ? gray(' (auto)') : ''}`,
-    model: model === undefined ? gray(`padrão do ${adapter.id}`) : bold(model),
+    model: model === undefined ? gray(PANEL_MODEL_DEFAULT) : bold(model),
   };
 }
 

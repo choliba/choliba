@@ -150,7 +150,7 @@ describe('/agents', () => {
             'Repete a tarefa recebida, usado nos testes deste pacote.',
           ],
           [
-            `${painted('magenta', 'claude')} \u001b[90m·\u001b[39m \u001b[90mpadrão do claude\u001b[39m`,
+            `${painted('magenta', 'claude')} \u001b[90m·\u001b[39m ${painted('magenta', 'claude-3-5-sonnet')}`,
             '\u001b[90msem ticket\u001b[39m',
           ],
           'magenta',
@@ -338,7 +338,7 @@ describe('/agents', () => {
       await auto.run();
       expect([...auto.labels]).toEqual([
         ['provider', '\u001b[1m\u001b[36mclaude\u001b[39m\u001b[22m\u001b[90m (auto)\u001b[39m'],
-        ['modelo', '\u001b[90mpadrão do claude\u001b[39m'],
+        ['modelo', '\u001b[90mpadrão de cada agente\u001b[39m'],
       ]);
 
       const ollama = withAgents(tmp.path, 'claude-ollama');
