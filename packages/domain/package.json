@@ -1,0 +1,17 @@
+{
+  "name": "@choliba/domain",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@choliba/kernel": "workspace:*",
+    "ajv": "^8.20.0",
+    "yaml": "^2.8.1"
+  }
+}

@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 21/10/2026 09:00:17 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 21/10/2026 12:08:17 — não editar manualmente.
 
 ## Resumo
 
@@ -11,6 +11,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 🟢|[packages/choliba](packages/choliba)|100.00|100.00|100.00|100.00
 🟢|[packages/config](packages/config)|100.00|100.00|100.00|100.00
 🟢|[packages/core](packages/core)|100.00|100.00|100.00|100.00
+🟢|[packages/domain](packages/domain)|100.00|100.00|100.00|100.00
 🟢|[packages/kernel](packages/kernel)|100.00|100.00|100.00|100.00
 🟢|[packages/projects](packages/projects)|100.00|100.00|100.00|100.00
 🟢|[packages/runner](packages/runner)|100.00|100.00|100.00|100.00
@@ -188,6 +189,24 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
 🟢|[src/shell/core-shell.ts](packages/core/src/shell/core-shell.ts)|100.00|100.00|100.00|100.00
+
+</details>
+
+<details>
+<summary>🟢 <b>packages/domain</b> — 100.00% das linhas, 10 arquivos</summary>
+
+Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
+--|--|--|--|--|--
+🟢|[src/agent/agent-loader.ts](packages/domain/src/agent/agent-loader.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agent/agent-mcps.ts](packages/domain/src/agent/agent-mcps.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agent/agent-validation.ts](packages/domain/src/agent/agent-validation.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agent/agent-vars.ts](packages/domain/src/agent/agent-vars.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/execution.ts](packages/domain/src/common/execution.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/values.ts](packages/domain/src/common/values.ts)|100.00|100.00|100.00|100.00
+🟢|[src/permissions/agent-permissions.ts](packages/domain/src/permissions/agent-permissions.ts)|100.00|100.00|100.00|100.00
+🟢|[src/permissions/definition-denies.ts](packages/domain/src/permissions/definition-denies.ts)|100.00|100.00|100.00|100.00
+🟢|[src/permissions/path-policy.ts](packages/domain/src/permissions/path-policy.ts)|100.00|100.00|100.00|100.00
+🟢|[src/permissions/permission-paths.ts](packages/domain/src/permissions/permission-paths.ts)|100.00|100.00|100.00|100.00
 
 </details>
 

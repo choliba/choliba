@@ -1,0 +1,409 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://choliba.internal/schemas/v1/agent.yaml.schema.json",
+  "title": "agent.yaml (padrão 1)",
+  "description": "Padrão 1 do .choliba/agents/<id>/agent.yaml, a declaração completa do agente — validado por validateAgentYamlV1 em packages/agents/src/agent-validation.ts. Regras que o schema não expressa ficam no código: version é a primeira chave, agent.id é igual ao nome da pasta, modes.default e cada modo de steps estão em modes.allow, e cada ${VAR} é do catálogo e vale onde está.",
+  "type": "object",
+  "required": ["version", "agent", "providers", "role", "input", "flow", "output"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "description": "Versão do padrão do agent.yaml. Primeira chave do arquivo.", "const": 1 },
+    "agent": {
+      "description": "Identidade do agente.",
+      "type": "object",
+      "required": ["id", "name", "version", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Identificador do agente e nome do comando (choliba <id>); igual ao nome da pasta .choliba/agents/<id>/.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "name": {
+          "description": "Nome exibido, em uma linha.",
+          "type": "string",
+          "pattern": "^[^\\n]*\\S[^\\n]*$"
+        },
+        "version": {
+          "description": "Versão do agente, semver MAJOR.MINOR.PATCH.",
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+        },
+        "description": {
+          "description": "O que faz, o que não faz e quando usar (aparece na ajuda).",
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "color": {
+          "description": "Cor do rótulo [agente] no terminal. CHOL_COLORS (agents.<id>=<cor>) no .env de quem usa ganha desta.",
+          "enum": ["red", "green", "yellow", "blue", "magenta", "cyan", "white", "gray", "bright-red", "bright-green", "bright-yellow", "bright-blue", "bright-magenta", "bright-cyan"]
+        }
+      }
+    },
+    "providers": {
+      "description": "Os providers com que o agente roda, na ordem de preferência, e em cada um os modelos que ele pode usar, pelo nome que aquele provider usa; o primeiro modelo é o padrão quando o provider não tem um.",
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "enum": ["claude", "claude-ollama", "codex", "cursor"] },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["models"],
+        "additionalProperties": false,
+        "properties": {
+          "models": {
+            "description": "Os modelos deste provider, pelo nome que ele usa (claude-sonnet-5, Composer 2.5 Fast, qwen3.5:4b).",
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "$ref": "#/definitions/text" }
+          }
+        }
+      }
+    },
+    "role": {
+      "description": "Quem o agente é e o que faz; entra no prompt como <system_role>.",
+      "$ref": "#/definitions/text"
+    },
+    "context": {
+      "description": "O que o agente precisa saber antes de começar; cada item entra no prompt dentro de <context>.",
+      "$ref": "#/definitions/texts"
+    },
+    "input": {
+      "description": "O que o agente recebe e as regras sobre isso; entra no prompt como <input_contract>.",
+      "$ref": "#/definitions/text"
+    },
+    "flow": {
+      "description": "Os passos do trabalho; entra no prompt como <execution_flow>.",
+      "$ref": "#/definitions/text"
+    },
+    "output": {
+      "description": "O que o agente entrega; entra no prompt como <output_contract>.",
+      "$ref": "#/definitions/text"
+    },
+    "notes": {
+      "description": "Observações; cada item entra no prompt dentro de <notes>.",
+      "$ref": "#/definitions/texts"
+    },
+    "skills": {
+      "description": "Skills que o agente recebe: pastas em .choliba/skills/ (ou CHOL_SKILLS_DIR) com SKILL.md. Lista de nomes, ou mapa nome -> null / { instructions } (como este agente usa a skill; entra no prompt só com a skill).",
+      "oneOf": [
+        { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/name" } },
+        {
+          "type": "object",
+          "propertyNames": { "$ref": "#/definitions/name" },
+          "additionalProperties": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "required": ["instructions"],
+                "additionalProperties": false,
+                "properties": { "instructions": { "$ref": "#/definitions/text" } }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "mcps": {
+      "description": "Servidores MCP liberados, por .choliba/mcps/<nome>.json (ou CHOL_MCPS_DIR). Lista de nomes (todas as tools) ou mapa nome -> null (todas) / { tools?, instructions? } (só essas tools; como este agente usa o servidor, que entra no prompt só com ele).",
+      "oneOf": [
+        { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/name" } },
+        {
+          "type": "object",
+          "propertyNames": { "$ref": "#/definitions/name" },
+          "additionalProperties": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "tools": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": { "$ref": "#/definitions/text" }
+                  },
+                  "instructions": { "$ref": "#/definitions/text" }
+                },
+                "minProperties": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "permissions": {
+      "description": "O que o agente pode fazer e onde. O que não está em allow é negado; deny prevalece sobre allow, menos no que exception tira dele.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "read": { "$ref": "#/definitions/allowPaths" },
+            "write": { "$ref": "#/definitions/allowPaths" },
+            "delete": {
+              "description": "Caminhos que pode apagar (mesmo formato de read/write).",
+              "$ref": "#/definitions/allowPaths"
+            },
+            "execute": {
+              "description": "Diretório -> comandos (prefixos com argumentos) que pode executar ali.",
+              "type": "object",
+              "propertyNames": { "$ref": "#/definitions/text" },
+              "additionalProperties": { "$ref": "#/definitions/commands" }
+            },
+            "tools": {
+              "description": "Ferramentas da run -> subcomandos que pode usar (['*'] = todos). O choliba cria o script de cada uma ao lado da pasta da run e o prompt traz o caminho.",
+              "$ref": "#/definitions/runTools"
+            }
+          }
+        },
+        "deny": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "read": { "$ref": "#/definitions/paths" },
+            "write": { "$ref": "#/definitions/paths" },
+            "delete": {
+              "description": "Caminhos que não pode apagar (mesmo formato de read/write).",
+              "$ref": "#/definitions/paths"
+            },
+            "execute": {
+              "description": "Diretório -> comandos bloqueados ali; ['*'] = nada executa ali.",
+              "type": "object",
+              "propertyNames": { "$ref": "#/definitions/text" },
+              "additionalProperties": { "oneOf": [{ "const": ["*"] }, { "$ref": "#/definitions/commands" }] }
+            },
+            "tools": {
+              "description": "Ferramentas da run -> subcomandos bloqueados; ['*'] = a ferramenta inteira.",
+              "$ref": "#/definitions/runTools"
+            }
+          }
+        },
+        "exception": {
+          "description": "Caminhos que saem de um deny da mesma ação, como no .gitignore. Não liberam nada sozinhos: o caminho ainda precisa de allow.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "read": { "$ref": "#/definitions/allowPaths" },
+            "write": { "$ref": "#/definitions/allowPaths" },
+            "delete": { "$ref": "#/definitions/allowPaths" }
+          }
+        }
+      }
+    },
+    "modes": {
+      "description": "Modos em que o agente pode rodar e o usado quando a linha de comando não diz.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/mode" }
+        },
+        "default": {
+          "description": "Um dos modos de modes.allow (conferido pelo validateAgentYamlV1).",
+          "$ref": "#/definitions/mode"
+        }
+      }
+    },
+    "task": {
+      "description": "A tarefa: o texto da linha de comando que entra no prompt.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "required": { "type": "boolean" }, "default": { "$ref": "#/definitions/text" } },
+      "if": { "required": ["required"], "properties": { "required": { "const": false } } },
+      "then": { "required": ["default"], "properties": { "default": { "$ref": "#/definitions/text" } } }
+    },
+    "ticket_types": {
+      "description": "Tipos de ticket com que o agente trabalha (templates em packages/projects/templates/ticket/); com allow_without_ticket: false (padrão) exige --type ou --ticket, e portanto --project.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["story", "bug", "improvement", "task"] }
+    },
+    "allow_without_ticket": {
+      "description": "Se true, a run pode seguir sem --type/--ticket. Com ticket_types, o ticket fica opcional; sem ticket_types, deixa explícito que o agente não usa ticket. Se o YAML usa ${TICKET}/${TICKET_FILE}, ainda é preciso passar ticket na run (senão a expansão falha).",
+      "type": "boolean"
+    },
+    "steps": {
+      "description": "Ações do CLI por modo, em ordem: <ação>: [args]. before roda antes do agente e para tudo na primeira falha; after roda sempre depois dele: success (agente saiu com 0) ou failure, e depois always. Um modo sem steps não roda nada.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "execute": { "$ref": "#/definitions/modeSteps" },
+        "plan": { "$ref": "#/definitions/modeSteps" },
+        "ask": { "$ref": "#/definitions/modeSteps" }
+      }
+    }
+  },
+  "definitions": {
+    "text": { "type": "string", "pattern": "\\S" },
+    "name": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$" },
+    "mode": { "enum": ["execute", "plan", "ask"] },
+    "paths": {
+      "description": "Caminhos: absolutos, relativos a ${CHOL_ROOT} ou com ${VAR}; sem glob = o item e tudo abaixo dele. Começando com ! = forma antiga de exception: tira o caminho de um deny da mesma lista.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/definitions/text" }
+    },
+    "allowPaths": {
+      "description": "Caminhos: absolutos, relativos a ${CHOL_ROOT} ou com ${VAR}; sem glob = o item e tudo abaixo dele. Sem ! no começo.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "$ref": "#/definitions/text", "pattern": "^[^!]" }
+    },
+    "runTools": {
+      "type": "object",
+      "propertyNames": { "enum": ["playwright-cli", "playwright-trace", "ask"] },
+      "additionalProperties": {
+        "oneOf": [
+          { "const": ["*"] },
+          {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "allOf": [{ "$ref": "#/definitions/text" }, { "not": { "const": "*" } }] }
+          }
+        ]
+      }
+    },
+    "commands": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "allOf": [{ "$ref": "#/definitions/text" }, { "not": { "const": "*" } }] }
+    },
+    "args": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "texts": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/text" } },
+    "maxSize": {
+      "description": "O tamanho máximo do que o step põe no prompt: um número, em bytes, ou com B, KB ou MB (40KB). Padrão: 100KB.",
+      "oneOf": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "string", "pattern": "^\\s*\\d+\\s*([Bb]|[Kk][Bb]|[Mm][Bb])?\\s*$" }
+      ]
+    },
+    "searchFiles": {
+      "description": "Põe no prompt um resumo de cada pasta: as pastas até 2 níveis e quantos arquivos há de cada extensão; com files, grava ali a lista completa do que achou.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag", "dirs"],
+      "properties": {
+        "tag": { "type": "string", "minLength": 1 },
+        "dirs": { "$ref": "#/definitions/args" },
+        "pattern": { "description": "O que achar: padrões de caminho (formato do gitignore, docs/referencia/padroes-de-caminho.md).", "$ref": "#/definitions/args" },
+        "ignore": { "description": "O que pular: padrões de caminho (formato do gitignore, docs/referencia/padroes-de-caminho.md), somados a node_modules, vendor, dist, build, .git e .cache.", "$ref": "#/definitions/args" },
+        "max_depth": {
+          "description": "Quantos níveis a busca desce em cada pasta de dirs (1: só o que ela tem); sem ele, todos. O resumo avisa quando cortou.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "files": { "$ref": "#/definitions/args" },
+        "max_size": { "$ref": "#/definitions/maxSize" }
+      }
+    },
+    "readFiles": {
+      "description": "Põe no prompt o conteúdo dos arquivos: os de files, os que pattern acha em dirs, ou os que pattern escolhe da lista em source.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag"],
+      "oneOf": [
+        {
+          "required": ["files"],
+          "not": { "anyOf": [{ "required": ["dirs"] }, { "required": ["source"] }, { "required": ["pattern"] }] }
+        },
+        {
+          "required": ["dirs", "pattern"],
+          "not": { "anyOf": [{ "required": ["files"] }, { "required": ["source"] }] }
+        },
+        {
+          "required": ["source", "pattern"],
+          "not": { "anyOf": [{ "required": ["files"] }, { "required": ["dirs"] }] }
+        }
+      ],
+      "properties": {
+        "tag": { "type": "string", "minLength": 1 },
+        "files": { "$ref": "#/definitions/args" },
+        "dirs": { "$ref": "#/definitions/args" },
+        "source": { "type": "string", "minLength": 1 },
+        "pattern": { "description": "O que achar: padrões de caminho (formato do gitignore, docs/referencia/padroes-de-caminho.md).", "$ref": "#/definitions/args" },
+        "ignore": { "description": "O que pular: padrões de caminho (formato do gitignore, docs/referencia/padroes-de-caminho.md), somados a node_modules, vendor, dist, build, .git e .cache.", "$ref": "#/definitions/args" },
+        "max_size": { "$ref": "#/definitions/maxSize" }
+      }
+    },
+    "writeFiles": {
+      "description": "Grava a resposta final do agente em cada arquivo.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["files"],
+      "properties": { "files": { "$ref": "#/definitions/args" } }
+    },
+    "writeConfig": {
+      "description": "Grava a resposta final do agente, um JSON, na chave key do config.json do projeto da execução (--project), conferida pela regra da chave; as outras chaves ficam como estão.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key"],
+      "properties": { "key": { "enum": ["stack"] } }
+    },
+    "beforeSteps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "minProperties": 1,
+        "maxProperties": 1,
+        "additionalProperties": false,
+        "properties": {
+          "run": { "$ref": "#/definitions/args" },
+          "git_diff": {
+            "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "minItems": 2, "maxItems": 4 }]
+          },
+          "search_files": { "$ref": "#/definitions/searchFiles" },
+          "read_files": { "$ref": "#/definitions/readFiles" }
+        }
+      }
+    },
+    "afterSteps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "minProperties": 1,
+        "maxProperties": 1,
+        "additionalProperties": false,
+        "properties": {
+          "run": { "$ref": "#/definitions/args" },
+          "record_git_head": { "allOf": [{ "$ref": "#/definitions/args" }, { "type": "array", "maxItems": 1 }] },
+          "write_files": { "$ref": "#/definitions/writeFiles" },
+          "write_config": { "$ref": "#/definitions/writeConfig" }
+        }
+      }
+    },
+    "modeSteps": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "before": { "$ref": "#/definitions/beforeSteps" },
+        "after": {
+          "description": "Lista (= always) ou { success?, failure?, always? }.",
+          "oneOf": [
+            { "$ref": "#/definitions/afterSteps" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "properties": {
+                "success": { "$ref": "#/definitions/afterSteps" },
+                "failure": { "$ref": "#/definitions/afterSteps" },
+                "always": { "$ref": "#/definitions/afterSteps" }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

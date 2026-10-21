@@ -12,6 +12,7 @@
   "dependencies": {
     "@choliba/config": "workspace:*",
     "@choliba/core": "workspace:*",
+    "@choliba/domain": "workspace:*",
     "@choliba/projects": "workspace:*",
     "@choliba/sandbox": "workspace:*",
     "@choliba/workspace": "workspace:*",
