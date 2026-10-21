@@ -71,10 +71,10 @@ derruba no fim. Uma aplicação que já responde é usada como está, e o `start
 ## Navegadores
 
 `devices` liga ou desliga os quatro que o runner conhece: `chromium` (Desktop Chrome), `firefox` (Desktop Firefox),
-`webkit` (Desktop Safari) e `mobile-chrome` (Pixel 7). Um navegador roda salvo quando o valor é `false`. Sem
-`devices`, os quatro rodam.
+`webkit` (Desktop Safari) e `mobile-chrome` (Pixel 7). Roda só o navegador cujo valor é `true`: um que não aparece
+fica desligado. Sem `devices`, os quatro rodam. Um projeto novo traz os quatro, só com o `chromium` ligado.
 
-Um ticket ainda pode religar um navegador que o projeto desligou, com `devices` no ticket ou num critério.
+Um ticket ainda pode ligar um navegador que o projeto deixa desligado, com `devices` no ticket ou num critério.
 
 ## `stack`
 
