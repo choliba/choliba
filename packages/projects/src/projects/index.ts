@@ -21,6 +21,7 @@ export {
   type ProjectStack,
   type ProjectStackItem,
 } from './project-stack';
+export { isDeviceOn } from './project-devices';
 export { findReadme, readText, readmeSummary } from './project-readme';
 export { APP_PREPARED_ENV, AppError, prepareApp, type PrepareAppContext, type SetupSpawn } from './project-app-prepare';
 export { ensureApp, type EnsureAppDeps, type RunningApp } from './project-app-ensure';

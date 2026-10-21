@@ -122,9 +122,7 @@ if (ticket && targetProject) {
 
 function isDeviceEnabled(name: string): boolean {
   if (!targetProject) return true;
-  if (targetProjectConfig?.devices?.[name] !== false) return true;
-  if (ticketJson?.devices?.[name] === true) return true;
-  return ticketJson?.criterios?.some((c) => c.devices?.[name] === true) ?? false;
+  return projects.isDeviceOn(name, targetProjectConfig?.devices, ticketJson);
 }
 
 const ENABLED_DEVICES = DEVICE_NAMES.filter(isDeviceEnabled);

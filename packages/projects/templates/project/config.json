@@ -10,6 +10,9 @@
     }
   ],
   "devices": {
-    "chromium": true
+    "chromium": true,
+    "firefox": false,
+    "webkit": false,
+    "mobile-chrome": false
   }
 }
