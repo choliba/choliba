@@ -30,6 +30,7 @@
     "git:clean": "bun run scripts/git-clean.ts",
     "bench:startup": "bun run scripts/bench-startup.ts",
     "release:notes": "bun run scripts/release-notes.ts",
+    "arch:update": "bun run scripts/architecture.ts",
     "docs:dev": "bun run docs:pages && vitepress dev docs",
     "docs:build": "bun run docs:pages && vitepress build docs",
     "docs:preview": "vitepress preview docs",

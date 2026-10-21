@@ -1,8 +1,3 @@
-export { BufferWritable } from './buffer-writable';
-export { fakeChatPanel, type FakeChatPanel } from './fake-chat-panel';
-export { fakePanelContext, type FakePanelContext } from './fake-panel-context';
-export { FAKE_NOW, fakePlatform } from './fake-platform';
-export { FakeSignals } from './fake-signals';
-export type { FakePlatform } from './interfaces/fake-platform.interface';
-export type { ShellOverride } from './interfaces/shell-override.interface';
-export { replace, runShell, VERBS_ROOT } from './run-shell';
+export { BufferWritable, FAKE_NOW, fakePlatform, FakeSignals, type FakePlatform } from '@choliba/kernel/testing';
+export { replace, runShell, VERBS_ROOT, type ShellOverride } from '@choliba/shell/testing';
+export { fakeChatPanel, fakePanelContext, type FakeChatPanel, type FakePanelContext } from '@choliba/tui/testing';

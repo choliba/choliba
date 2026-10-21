@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { boldAnsi, paintAnsi, rawArgsAfter, visibleWidth, wrapVisible } from '../../index';
 import { BufferWritable, FakeSignals, fakePlatform, runShell } from '../../testing';
-import { fakeSpawner, streamFromChunks } from '../terminal/helpers/fake-spawner';
+import { fakeSpawner, streamFromChunks } from '../helpers/fake-spawner';
 import { ajudaDeServir, sugestoes } from './ajuda';
 import { lerLinha } from './linha';
 import { olaModule } from './ola';

@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 21/10/2026 06:38:44 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 21/10/2026 15:19:34 — não editar manualmente.
 
 ## Resumo
 
@@ -11,9 +11,14 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 🟢|[packages/choliba](packages/choliba)|100.00|100.00|100.00|100.00
 🟢|[packages/config](packages/config)|100.00|100.00|100.00|100.00
 🟢|[packages/core](packages/core)|100.00|100.00|100.00|100.00
+🟢|[packages/domain](packages/domain)|100.00|100.00|100.00|100.00
+🟢|[packages/kernel](packages/kernel)|100.00|100.00|100.00|100.00
 🟢|[packages/projects](packages/projects)|100.00|100.00|100.00|100.00
 🟢|[packages/runner](packages/runner)|100.00|100.00|100.00|100.00
 🟢|[packages/sandbox](packages/sandbox)|100.00|100.00|100.00|100.00
+🟢|[packages/shell](packages/shell)|100.00|100.00|100.00|100.00
+🟢|[packages/tui](packages/tui)|100.00|100.00|100.00|100.00
+🟢|[packages/workspace](packages/workspace)|100.00|100.00|100.00|100.00
 
 ## Por pacote
 
@@ -22,8 +27,6 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
-🟢|[src/agents/agent-dirs.ts](packages/agents/src/agents/agent-dirs.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/agent-layout.ts](packages/agents/src/agents/agent-layout.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agent-loader.ts](packages/agents/src/agents/agent-loader.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agent-print.ts](packages/agents/src/agents/agent-print.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agent-skills.ts](packages/agents/src/agents/agent-skills.ts)|100.00|100.00|100.00|100.00
@@ -40,6 +43,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/agents-shell.ts](packages/agents/src/agents/agents-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents.constants.ts](packages/agents/src/agents/agents.constants.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents.service.ts](packages/agents/src/agents/agents.service.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/defined-config.ts](packages/agents/src/agents/defined-config.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/install/install-source.ts](packages/agents/src/agents/install/install-source.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/install/install.ts](packages/agents/src/agents/install/install.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/invocation-registry.ts](packages/agents/src/agents/invocation-registry.ts)|100.00|100.00|100.00|100.00
@@ -47,6 +51,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/runs/agent-detail.ts](packages/agents/src/agents/runs/agent-detail.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/agents-flags.ts](packages/agents/src/agents/runs/agents-flags.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/agents-spec.ts](packages/agents/src/agents/runs/agents-spec.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/app-reach.ts](packages/agents/src/agents/runs/app-reach.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/ask-watcher.ts](packages/agents/src/agents/runs/ask-watcher.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/command-guard.ts](packages/agents/src/agents/runs/command-guard.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/definition-snapshot.ts](packages/agents/src/agents/runs/definition-snapshot.ts)|100.00|100.00|100.00|100.00
@@ -60,9 +65,9 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/runs/run-checks.ts](packages/agents/src/agents/runs/run-checks.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-choice.ts](packages/agents/src/agents/runs/run-choice.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-context.ts](packages/agents/src/agents/runs/run-context.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/runs/run-footer.ts](packages/agents/src/agents/runs/run-footer.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-log.ts](packages/agents/src/agents/runs/run-log.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-preparation.ts](packages/agents/src/agents/runs/run-preparation.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/run-screen.ts](packages/agents/src/agents/runs/run-screen.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/sandbox-launch.ts](packages/agents/src/agents/runs/sandbox-launch.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/session-input.ts](packages/agents/src/agents/runs/session-input.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/spec-context.ts](packages/agents/src/agents/runs/spec-context.ts)|100.00|100.00|100.00|100.00
@@ -124,7 +129,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 26 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 25 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -135,7 +140,6 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/config/config-list.command.ts](packages/choliba/src/config/config-list.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/config-set.command.ts](packages/choliba/src/config/config-set.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/config-sources.ts](packages/choliba/src/config/config-sources.ts)|100.00|100.00|100.00|100.00
-🟢|[src/config/workspace-layout.ts](packages/choliba/src/config/workspace-layout.ts)|100.00|100.00|100.00|100.00
 🟢|[src/config/workspace.ts](packages/choliba/src/config/workspace.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/owl-icon.ts](packages/choliba/src/help/owl-icon.ts)|100.00|100.00|100.00|100.00
 🟢|[src/help/root-spec.ts](packages/choliba/src/help/root-spec.ts)|100.00|100.00|100.00|100.00
@@ -180,86 +184,56 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 71 arquivos</summary>
+<summary>🟢 <b>packages/core</b> — 100.00% das linhas, 1 arquivo</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
-🟢|[src/cli/message-of.ts](packages/core/src/cli/message-of.ts)|100.00|100.00|100.00|100.00
-🟢|[src/common/expected-error.ts](packages/core/src/common/expected-error.ts)|100.00|100.00|100.00|100.00
-🟢|[src/config/package-version.ts](packages/core/src/config/package-version.ts)|100.00|100.00|100.00|100.00
-🟢|[src/config/resources.ts](packages/core/src/config/resources.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/command-page.ts](packages/core/src/help/command-page.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/complete.ts](packages/core/src/help/complete.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/completion-bash.ts](packages/core/src/help/completion-bash.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/entry-help.ts](packages/core/src/help/entry-help.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/format-help.ts](packages/core/src/help/format-help.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/scripts-help.ts](packages/core/src/help/scripts-help.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/shell-completion.ts](packages/core/src/help/shell-completion.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/suggest.ts](packages/core/src/help/suggest.ts)|100.00|100.00|100.00|100.00
-🟢|[src/help/wants-help.ts](packages/core/src/help/wants-help.ts)|100.00|100.00|100.00|100.00
-🟢|[src/paths/path-pattern.ts](packages/core/src/paths/path-pattern.ts)|100.00|100.00|100.00|100.00
-🟢|[src/platform/command-on-path.ts](packages/core/src/platform/command-on-path.ts)|100.00|100.00|100.00|100.00
-🟢|[src/platform/git-run.ts](packages/core/src/platform/git-run.ts)|100.00|100.00|100.00|100.00
-🟢|[src/platform/global-flags.ts](packages/core/src/platform/global-flags.ts)|100.00|100.00|100.00|100.00
-🟢|[src/platform/platform.constants.ts](packages/core/src/platform/platform.constants.ts)|100.00|100.00|100.00|100.00
-🟢|[src/platform/raw-args.ts](packages/core/src/platform/raw-args.ts)|100.00|100.00|100.00|100.00
-🟢|[src/runtime/runtime.constants.ts](packages/core/src/runtime/runtime.constants.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shell/container.ts](packages/core/src/shell/container.ts)|100.00|100.00|100.00|100.00
 🟢|[src/shell/core-shell.ts](packages/core/src/shell/core-shell.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shell/create-shell.ts](packages/core/src/shell/create-shell.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shell/panel-log.ts](packages/core/src/shell/panel-log.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shell/panel-session.ts](packages/core/src/shell/panel-session.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shell/panel.command.ts](packages/core/src/shell/panel.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shell/root-run.ts](packages/core/src/shell/root-run.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shell/shell-io.ts](packages/core/src/shell/shell-io.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shell/shell.constants.ts](packages/core/src/shell/shell.constants.ts)|100.00|100.00|100.00|100.00
-🟢|[src/shell/terminal.command.ts](packages/core/src/shell/terminal.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/box.ts](packages/core/src/terminal/box.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/circular-buffer.ts](packages/core/src/terminal/circular-buffer.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/dto/run.dto.ts](packages/core/src/terminal/dto/run.dto.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/event-emitter.ts](packages/core/src/terminal/event-emitter.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/exit-code.ts](packages/core/src/terminal/exit-code.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/format-duration.ts](packages/core/src/terminal/format-duration.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/formatter.ts](packages/core/src/terminal/formatter.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/frame/ansi-chunks.ts](packages/core/src/terminal/frame/ansi-chunks.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/frame/ansi-text.ts](packages/core/src/terminal/frame/ansi-text.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/frame/frame.ts](packages/core/src/terminal/frame/frame.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/live-region.ts](packages/core/src/terminal/live-region.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/log-file.ts](packages/core/src/terminal/log-file.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/panel/panel-art.ts](packages/core/src/terminal/panel/panel-art.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/panel/panel-choose.ts](packages/core/src/terminal/panel/panel-choose.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/panel/panel-history.ts](packages/core/src/terminal/panel/panel-history.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/panel/panel-palette.ts](packages/core/src/terminal/panel/panel-palette.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/panel/panel-question.ts](packages/core/src/terminal/panel/panel-question.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/panel/panel-text.ts](packages/core/src/terminal/panel/panel-text.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/panel/panel-toolkit.ts](packages/core/src/terminal/panel/panel-toolkit.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/panel/panel-welcome.ts](packages/core/src/terminal/panel/panel-welcome.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/panel/panel.ts](packages/core/src/terminal/panel/panel.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/process-runner.service.ts](packages/core/src/terminal/process-runner.service.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/session.ts](packages/core/src/terminal/session.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/spawn.ts](packages/core/src/terminal/spawn.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/status-footer.ts](packages/core/src/terminal/status-footer.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/stream-lines.ts](packages/core/src/terminal/stream-lines.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/table/table-cell.ts](packages/core/src/terminal/table/table-cell.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/table/table-layout.ts](packages/core/src/terminal/table/table-layout.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/table/table.ts](packages/core/src/terminal/table/table.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/terminal.service.ts](packages/core/src/terminal/terminal.service.ts)|100.00|100.00|100.00|100.00
-🟢|[src/terminal/writable.ts](packages/core/src/terminal/writable.ts)|100.00|100.00|100.00|100.00
-🟢|[src/testing/buffer-writable.ts](packages/core/src/testing/buffer-writable.ts)|100.00|100.00|100.00|100.00
-🟢|[src/testing/fake-chat-panel.ts](packages/core/src/testing/fake-chat-panel.ts)|100.00|100.00|100.00|100.00
-🟢|[src/testing/fake-panel-context.ts](packages/core/src/testing/fake-panel-context.ts)|100.00|100.00|100.00|100.00
-🟢|[src/testing/fake-platform.ts](packages/core/src/testing/fake-platform.ts)|100.00|100.00|100.00|100.00
-🟢|[src/testing/fake-signals.ts](packages/core/src/testing/fake-signals.ts)|100.00|100.00|100.00|100.00
-🟢|[src/testing/run-shell.ts](packages/core/src/testing/run-shell.ts)|100.00|100.00|100.00|100.00
-🟢|[src/theme/ansi.ts](packages/core/src/theme/ansi.ts)|100.00|100.00|100.00|100.00
-🟢|[src/theme/resolve-theme.ts](packages/core/src/theme/resolve-theme.ts)|100.00|100.00|100.00|100.00
-🟢|[src/theme/theme-defaults.ts](packages/core/src/theme/theme-defaults.ts)|100.00|100.00|100.00|100.00
-🟢|[src/theme/theme.service.ts](packages/core/src/theme/theme.service.ts)|100.00|100.00|100.00|100.00
 
 </details>
 
 <details>
-<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 35 arquivos</summary>
+<summary>🟢 <b>packages/domain</b> — 100.00% das linhas, 10 arquivos</summary>
+
+Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
+--|--|--|--|--|--
+🟢|[src/agent/agent-loader.ts](packages/domain/src/agent/agent-loader.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agent/agent-mcps.ts](packages/domain/src/agent/agent-mcps.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agent/agent-validation.ts](packages/domain/src/agent/agent-validation.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agent/agent-vars.ts](packages/domain/src/agent/agent-vars.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/execution.ts](packages/domain/src/common/execution.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/values.ts](packages/domain/src/common/values.ts)|100.00|100.00|100.00|100.00
+🟢|[src/permissions/agent-permissions.ts](packages/domain/src/permissions/agent-permissions.ts)|100.00|100.00|100.00|100.00
+🟢|[src/permissions/definition-denies.ts](packages/domain/src/permissions/definition-denies.ts)|100.00|100.00|100.00|100.00
+🟢|[src/permissions/path-policy.ts](packages/domain/src/permissions/path-policy.ts)|100.00|100.00|100.00|100.00
+🟢|[src/permissions/permission-paths.ts](packages/domain/src/permissions/permission-paths.ts)|100.00|100.00|100.00|100.00
+
+</details>
+
+<details>
+<summary>🟢 <b>packages/kernel</b> — 100.00% das linhas, 14 arquivos</summary>
+
+Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
+--|--|--|--|--|--
+🟢|[src/common/expected-error.ts](packages/kernel/src/common/expected-error.ts)|100.00|100.00|100.00|100.00
+🟢|[src/config/package-version.ts](packages/kernel/src/config/package-version.ts)|100.00|100.00|100.00|100.00
+🟢|[src/config/resources.ts](packages/kernel/src/config/resources.ts)|100.00|100.00|100.00|100.00
+🟢|[src/container/container.ts](packages/kernel/src/container/container.ts)|100.00|100.00|100.00|100.00
+🟢|[src/paths/path-pattern.ts](packages/kernel/src/paths/path-pattern.ts)|100.00|100.00|100.00|100.00
+🟢|[src/platform/command-on-path.ts](packages/kernel/src/platform/command-on-path.ts)|100.00|100.00|100.00|100.00
+🟢|[src/platform/git-run.ts](packages/kernel/src/platform/git-run.ts)|100.00|100.00|100.00|100.00
+🟢|[src/platform/global-flags.ts](packages/kernel/src/platform/global-flags.ts)|100.00|100.00|100.00|100.00
+🟢|[src/platform/platform.constants.ts](packages/kernel/src/platform/platform.constants.ts)|100.00|100.00|100.00|100.00
+🟢|[src/platform/raw-args.ts](packages/kernel/src/platform/raw-args.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runtime/runtime.constants.ts](packages/kernel/src/runtime/runtime.constants.ts)|100.00|100.00|100.00|100.00
+🟢|[src/testing/buffer-writable.ts](packages/kernel/src/testing/buffer-writable.ts)|100.00|100.00|100.00|100.00
+🟢|[src/testing/fake-platform.ts](packages/kernel/src/testing/fake-platform.ts)|100.00|100.00|100.00|100.00
+🟢|[src/testing/fake-signals.ts](packages/kernel/src/testing/fake-signals.ts)|100.00|100.00|100.00|100.00
+
+</details>
+
+<details>
+<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 32 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -268,10 +242,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/common/placeholder.ts](packages/projects/src/common/placeholder.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/projects-cli.ts](packages/projects/src/common/projects-cli.ts)|100.00|100.00|100.00|100.00
 🟢|[src/locations/locations.service.ts](packages/projects/src/locations/locations.service.ts)|100.00|100.00|100.00|100.00
-🟢|[src/paths/locations.ts](packages/projects/src/paths/locations.ts)|100.00|100.00|100.00|100.00
-🟢|[src/paths/project-layout.ts](packages/projects/src/paths/project-layout.ts)|100.00|100.00|100.00|100.00
 🟢|[src/paths/project-paths.ts](packages/projects/src/paths/project-paths.ts)|100.00|100.00|100.00|100.00
-🟢|[src/paths/projects-config.ts](packages/projects/src/paths/projects-config.ts)|100.00|100.00|100.00|100.00
 🟢|[src/paths/results.ts](packages/projects/src/paths/results.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/new-project.ts](packages/projects/src/projects/new-project.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project-app-ensure.ts](packages/projects/src/projects/project-app-ensure.ts)|100.00|100.00|100.00|100.00
@@ -327,7 +298,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/sandbox</b> — 100.00% das linhas, 13 arquivos</summary>
+<summary>🟢 <b>packages/sandbox</b> — 100.00% das linhas, 14 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -335,6 +306,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/common/paths.ts](packages/sandbox/src/common/paths.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/resolve-denies.ts](packages/sandbox/src/common/resolve-denies.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/rule-effect.ts](packages/sandbox/src/common/rule-effect.ts)|100.00|100.00|100.00|100.00
+🟢|[src/sandbox/docker/docker-host.ts](packages/sandbox/src/sandbox/docker/docker-host.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/docker/docker-run.ts](packages/sandbox/src/sandbox/docker/docker-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/docker/docker-sandbox.ts](packages/sandbox/src/sandbox/docker/docker-sandbox.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/local/bwrap-command.ts](packages/sandbox/src/sandbox/local/bwrap-command.ts)|100.00|100.00|100.00|100.00
@@ -344,5 +316,97 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/sandbox/mounts/container-mounts.ts](packages/sandbox/src/sandbox/mounts/container-mounts.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/sandbox-config.ts](packages/sandbox/src/sandbox/sandbox-config.ts)|100.00|100.00|100.00|100.00
 🟢|[src/sandbox/sandbox.ts](packages/sandbox/src/sandbox/sandbox.ts)|100.00|100.00|100.00|100.00
+
+</details>
+
+<details>
+<summary>🟢 <b>packages/shell</b> — 100.00% das linhas, 46 arquivos</summary>
+
+Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
+--|--|--|--|--|--
+🟢|[src/cli/message-of.ts](packages/shell/src/cli/message-of.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/command-page.ts](packages/shell/src/help/command-page.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/complete.ts](packages/shell/src/help/complete.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/completion-bash.ts](packages/shell/src/help/completion-bash.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/entry-help.ts](packages/shell/src/help/entry-help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/format-help.ts](packages/shell/src/help/format-help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/scripts-help.ts](packages/shell/src/help/scripts-help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/shell-completion.ts](packages/shell/src/help/shell-completion.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/suggest.ts](packages/shell/src/help/suggest.ts)|100.00|100.00|100.00|100.00
+🟢|[src/help/wants-help.ts](packages/shell/src/help/wants-help.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/card.ts](packages/shell/src/panel/card.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/base-shell.ts](packages/shell/src/shell/base-shell.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/create-shell.ts](packages/shell/src/shell/create-shell.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/root-run.ts](packages/shell/src/shell/root-run.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/shell-io.ts](packages/shell/src/shell/shell-io.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/shell.constants.ts](packages/shell/src/shell/shell.constants.ts)|100.00|100.00|100.00|100.00
+🟢|[src/shell/terminal.command.ts](packages/shell/src/shell/terminal.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/box.ts](packages/shell/src/terminal/box.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/circular-buffer.ts](packages/shell/src/terminal/circular-buffer.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/dto/run.dto.ts](packages/shell/src/terminal/dto/run.dto.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/event-emitter.ts](packages/shell/src/terminal/event-emitter.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/exit-code.ts](packages/shell/src/terminal/exit-code.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/format-duration.ts](packages/shell/src/terminal/format-duration.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/formatter.ts](packages/shell/src/terminal/formatter.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/frame/ansi-chunks.ts](packages/shell/src/terminal/frame/ansi-chunks.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/frame/ansi-text.ts](packages/shell/src/terminal/frame/ansi-text.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/frame/frame.ts](packages/shell/src/terminal/frame/frame.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/live-region.ts](packages/shell/src/terminal/live-region.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/log-file.ts](packages/shell/src/terminal/log-file.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/process-runner.service.ts](packages/shell/src/terminal/process-runner.service.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/run-footer.ts](packages/shell/src/terminal/run-footer.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/run-line-screen.ts](packages/shell/src/terminal/run-line-screen.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/session.ts](packages/shell/src/terminal/session.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/spawn.ts](packages/shell/src/terminal/spawn.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/status-footer.ts](packages/shell/src/terminal/status-footer.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/stream-lines.ts](packages/shell/src/terminal/stream-lines.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/table/table-cell.ts](packages/shell/src/terminal/table/table-cell.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/table/table-layout.ts](packages/shell/src/terminal/table/table-layout.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/table/table.ts](packages/shell/src/terminal/table/table.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/terminal.service.ts](packages/shell/src/terminal/terminal.service.ts)|100.00|100.00|100.00|100.00
+🟢|[src/terminal/writable.ts](packages/shell/src/terminal/writable.ts)|100.00|100.00|100.00|100.00
+🟢|[src/testing/run-shell.ts](packages/shell/src/testing/run-shell.ts)|100.00|100.00|100.00|100.00
+🟢|[src/theme/ansi.ts](packages/shell/src/theme/ansi.ts)|100.00|100.00|100.00|100.00
+🟢|[src/theme/resolve-theme.ts](packages/shell/src/theme/resolve-theme.ts)|100.00|100.00|100.00|100.00
+🟢|[src/theme/theme-defaults.ts](packages/shell/src/theme/theme-defaults.ts)|100.00|100.00|100.00|100.00
+🟢|[src/theme/theme.service.ts](packages/shell/src/theme/theme.service.ts)|100.00|100.00|100.00|100.00
+
+</details>
+
+<details>
+<summary>🟢 <b>packages/tui</b> — 100.00% das linhas, 16 arquivos</summary>
+
+Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
+--|--|--|--|--|--
+🟢|[src/panel/panel-art.ts](packages/tui/src/panel/panel-art.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/panel-choose.ts](packages/tui/src/panel/panel-choose.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/panel-history.ts](packages/tui/src/panel/panel-history.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/panel-palette.ts](packages/tui/src/panel/panel-palette.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/panel-question.ts](packages/tui/src/panel/panel-question.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/panel-text.ts](packages/tui/src/panel/panel-text.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/panel-toolkit.ts](packages/tui/src/panel/panel-toolkit.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/panel-welcome.ts](packages/tui/src/panel/panel-welcome.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/panel.ts](packages/tui/src/panel/panel.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/run-screen.ts](packages/tui/src/panel/run-screen.ts)|100.00|100.00|100.00|100.00
+🟢|[src/session/panel-log.ts](packages/tui/src/session/panel-log.ts)|100.00|100.00|100.00|100.00
+🟢|[src/session/panel-session.ts](packages/tui/src/session/panel-session.ts)|100.00|100.00|100.00|100.00
+🟢|[src/session/panel.command.ts](packages/tui/src/session/panel.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/session/tui-shell.ts](packages/tui/src/session/tui-shell.ts)|100.00|100.00|100.00|100.00
+🟢|[src/testing/fake-chat-panel.ts](packages/tui/src/testing/fake-chat-panel.ts)|100.00|100.00|100.00|100.00
+🟢|[src/testing/fake-panel-context.ts](packages/tui/src/testing/fake-panel-context.ts)|100.00|100.00|100.00|100.00
+
+</details>
+
+<details>
+<summary>🟢 <b>packages/workspace</b> — 100.00% das linhas, 6 arquivos</summary>
+
+Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
+--|--|--|--|--|--
+🟢|[src/layout/agent-layout.ts](packages/workspace/src/layout/agent-layout.ts)|100.00|100.00|100.00|100.00
+🟢|[src/layout/project-layout.ts](packages/workspace/src/layout/project-layout.ts)|100.00|100.00|100.00|100.00
+🟢|[src/layout/workspace-layout.ts](packages/workspace/src/layout/workspace-layout.ts)|100.00|100.00|100.00|100.00
+🟢|[src/locations/agent-dirs.ts](packages/workspace/src/locations/agent-dirs.ts)|100.00|100.00|100.00|100.00
+🟢|[src/locations/project-locations.ts](packages/workspace/src/locations/project-locations.ts)|100.00|100.00|100.00|100.00
+🟢|[src/locations/projects-config.ts](packages/workspace/src/locations/projects-config.ts)|100.00|100.00|100.00|100.00
 
 </details>

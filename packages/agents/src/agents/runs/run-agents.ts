@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { formatDuration, formatHelp, openOpenTuiPanel, type CommandSpec } from '@choliba/core';
+import { formatDuration, formatHelp, openOpenTuiPanel, wantsFooter, type CommandSpec } from '@choliba/core';
 import { AppError, ensureApp, shareApp, type ProjectSettings, type RunningApp } from '@choliba/projects';
 import { readSandbox, type Sandbox, type SandboxConfigError } from '@choliba/sandbox';
 
@@ -12,7 +12,7 @@ import { parseAgentsArgs, parseListArgs, unknownFlagMessage } from './agents-fla
 import type { AgentDefinition } from '../../common';
 import type { AgentInvocation } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
-import { resolveAgentsDir } from '../agent-dirs';
+import { APP_LOGS_DIR, LOGS_DIR, resolveAgentsDir } from '@choliba/workspace';
 import type { ProviderRequest } from '../../common';
 import type { ResolvedProvider } from '../../common';
 import { formatStepFailure, stepExitCode } from '../steps/step-actions';
@@ -20,10 +20,11 @@ import { spawnToEnd } from '../steps/step-spawn';
 import { formatAgentDetail, runList } from './agent-detail';
 import { formatDryRun, modelText, type DryRunInput } from './dry-run';
 import { runAgent } from './run-agent';
+import { createRunScreen } from './run-screen';
 import { loggedStream, NO_RUN_LOG, openRunLog, type RunLog } from './run-log';
-import { wantsFooter } from './run-footer';
 import { planRunTools, type PlannedFile } from '../../common';
 import { CHOL_ROOT } from '../../common';
+import { containerReachProblem } from './app-reach';
 import { launchFor, realDisk, type Launch, type LaunchDisk } from './sandbox-launch';
 import {
   acceptedFlagNames,
@@ -252,8 +253,15 @@ async function runAndRecord(
       log: log.log,
       signals: deps.signals,
       now: deps.now,
-      footer: wantsFooter(deps.stdout, deps.config),
-      panel: deps.panel ?? openOpenTuiPanel,
+      screen: (info, request, hostedPanel) =>
+        createRunScreen(info, request, {
+          stdout: log.stdout,
+          stderr: log.stderr,
+          now: deps.now,
+          footer: wantsFooter(deps.stdout, deps.config),
+          panel: deps.panel ?? openOpenTuiPanel,
+          hostedPanel,
+        }),
       hostedPanel: deps.hostedPanel === true,
       answered: (text) => {
         answer = text;
@@ -353,6 +361,15 @@ async function runCommand(parsed: RunArgs, given: RunAgentsCliDeps): Promise<num
   if (app === undefined) {
     return closeRunLog(logged, 1);
   }
+  const unreachable =
+    projectRun.settings === undefined || parsed.dryRun
+      ? undefined
+      : await containerReachProblem(projectRun.settings.environment.baseURL, sandbox, deps.appReach);
+  if (unreachable !== undefined) {
+    app.stop();
+    runContext.deps.stderr.write(`✗ ${unreachable}\n  O agente não foi executado.\n`);
+    return closeRunLog(logged, 1);
+  }
   try {
     const exitCode = await runPrepared(runContext, command, agent, ticketTarget, projectRun.settings, sandbox);
     return closeRunLog(logged, exitCode);
@@ -385,7 +402,7 @@ function runLogHeader(context: RunContext, agent: AgentDefinition): readonly str
 /** Opens the log of the run, in `.cache/logs/<agent>/`, and gives the deps whose `stdout` and `stderr` write to it. */
 function withRunLog(context: RunContext, agent: AgentDefinition): LoggedRun {
   const { deps } = context;
-  const dir = deps.logsDir ?? join(deps.repoRoot, '.cache', 'logs');
+  const dir = deps.logsDir ?? join(deps.repoRoot, LOGS_DIR);
   const log = openRunLog(dir, agent.name, runLogHeader(context, agent), deps.now);
   return {
     log,
@@ -429,7 +446,7 @@ async function appFor(
     ((project: ProjectSettings) =>
       ensureApp(project, {
         projectsDir: projectsDir(deps),
-        logDir: join(deps.repoRoot, '.cache', 'app'),
+        logDir: join(deps.repoRoot, APP_LOGS_DIR),
         env: process.env,
         stderr: progress,
         spawn: spawnToEnd,

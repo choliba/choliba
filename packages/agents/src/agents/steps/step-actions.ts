@@ -1,7 +1,7 @@
 import { closeSync, mkdirSync, openSync, readFileSync, rmSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
-import { CACHE_DIR } from '../agent-layout';
+import { CACHE_DIR } from '@choliba/workspace';
 
 import type { AgentStep } from '../../common';
 import { READ_FILES_FIELDS, READ_FILES_USAGE, readFiles } from './step-read-files';

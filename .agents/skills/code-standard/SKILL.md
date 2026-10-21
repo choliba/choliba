@@ -43,6 +43,7 @@ rejected):
 | --- | --- |
 | `common/` | what two or more folders **of this package** share and no domain owns (what several packages share is `@choliba/core`) |
 | domain | folders of pure functions about one subject (`paths/`, `steps/`) |
+| ports | interfaces a package asks of the outside, over its domain (the engine's provider and screen) |
 | orchestration | folders of pure functions that combine domains (`runs/`) |
 | module | folders that expose a service, a command or a token: the package's `ShellModule` lives in one of them |
 | entries | the files right in `src/`: `index.ts` and, in the app, `main.ts` |
@@ -108,6 +109,11 @@ standard, with its folders by layer. For those packages `bun run lint` fails on:
 
 A new package is added to `STRUCTURE` (`common` is implicit) in its first commit, then `bun run check`. Specs
 (`src/__tests__/`) are not checked.
+
+Between packages, `scripts/__tests__/architecture.spec.ts` holds the code to two checked-in lists in
+`scripts/architecture/`: the package graph (`A → B`, A imports B, from production code and matching each
+package.json) and the names each entry exports. A change to either on purpose is `bun run arch:update`, and the new
+lists go in the same pull request, where the diff shows it.
 
 ## Where the packages stand
 

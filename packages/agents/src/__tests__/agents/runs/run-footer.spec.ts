@@ -1,7 +1,14 @@
-import { buildTheme } from '@choliba/core';
+import {
+  buildTheme,
+  createLineRunScreen,
+  footerLines,
+  oneLine,
+  providerContext,
+  summaryLine,
+  wantsFooter,
+} from '@choliba/core';
 
 import type { RunFooterInfo } from '../../../agents/interfaces/run-footer.interface';
-import { footerLines, providerContext, summaryLine, wantsFooter } from '../../../agents/runs/run-footer';
 
 const DOCKER: RunFooterInfo = {
   provider: 'cursor',
@@ -13,6 +20,10 @@ const LOCAL: RunFooterInfo = { provider: 'claude', place: { kind: 'local' }, sta
 const PLAIN = buildTheme({}, false);
 
 describe('footerLines', () => {
+  it('shows the missing model on the compact line', () => {
+    expect(oneLine(LOCAL, 0, 80)).toBe('claude · — · local · 00:00:00.000');
+  });
+
   it('closes the frame, then draws the table with column rules: the titles, the run and its time', () => {
     expect(footerLines(DOCKER, 102_317, 120, PLAIN)).toEqual([
       `└${'─'.repeat(118)}┘`,
@@ -68,5 +79,26 @@ describe('wantsFooter', () => {
     expect(wantsFooter({ write: () => undefined, isTTY: true }, {})).toBe(true);
     expect(wantsFooter({ write: () => undefined, isTTY: true }, { TERM: 'dumb' })).toBe(false);
     expect(wantsFooter({ write: () => undefined }, {})).toBe(false);
+  });
+});
+
+describe('createLineRunScreen', () => {
+  it('uses a positive terminal width for the footer frame', () => {
+    const chunks: string[] = [];
+    const screen = createLineRunScreen({
+      info: LOCAL,
+      name: 'echo',
+      color: undefined,
+      theme: PLAIN,
+      stdout: { columns: 80, write: (text) => chunks.push(text) },
+      stderr: { write: () => undefined },
+      now: () => new Date(0),
+      footer: true,
+      every: () => () => undefined,
+    });
+
+    screen.close(0);
+
+    expect(chunks.join('')).toContain('┌─ echo ─');
   });
 });

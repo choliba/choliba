@@ -27,6 +27,7 @@ import {
   fullyRetiredTickets,
   prepareApp,
 } from '@choliba/projects';
+import { APP_LOGS_DIR } from '@choliba/workspace';
 
 import { workspaceLocations } from '../../shared/workspace-config';
 
@@ -330,7 +331,7 @@ async function runTarget(
       env: context.env,
       stderr: context.stderr,
       spawn: context.spawnSyncFn,
-      logFile: path.join(context.options.monorepoRoot, '.cache', 'app', `${project}.setup.log`),
+      logFile: path.join(context.options.monorepoRoot, APP_LOGS_DIR, `${project}.setup.log`),
     });
   } catch (err) {
     fail(`erro: ${(err as Error).message}`);

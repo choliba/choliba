@@ -34,8 +34,10 @@
       "dependencies": {
         "@choliba/config": "workspace:*",
         "@choliba/core": "workspace:*",
+        "@choliba/domain": "workspace:*",
         "@choliba/projects": "workspace:*",
         "@choliba/sandbox": "workspace:*",
+        "@choliba/workspace": "workspace:*",
         "@playwright/test": "1.63.0",
         "ajv": "^8.20.0",
         "yaml": "^2.8.1",
@@ -57,6 +59,7 @@
         "@choliba/projects": "workspace:*",
         "@choliba/runner": "workspace:*",
         "@choliba/sandbox": "workspace:*",
+        "@choliba/workspace": "workspace:*",
         "@eslint/js": "^10.0.1",
         "@playwright/test": "1.63.0",
         "@types/bun": "^1.4.2",
@@ -77,17 +80,30 @@
       "name": "@choliba/core",
       "version": "0.0.0",
       "dependencies": {
-        "@choliba/config": "workspace:*",
-        "@opentui/core": "0.5.14",
+        "@choliba/kernel": "workspace:*",
+        "@choliba/shell": "workspace:*",
+        "@choliba/tui": "workspace:*",
+      },
+    },
+    "packages/domain": {
+      "name": "@choliba/domain",
+      "version": "0.0.0",
+      "dependencies": {
+        "@choliba/kernel": "workspace:*",
+        "ajv": "^8.20.0",
         "yaml": "^2.8.1",
       },
+    },
+    "packages/kernel": {
+      "name": "@choliba/kernel",
+      "version": "0.0.0",
     },
     "packages/projects": {
       "name": "@choliba/projects",
       "version": "0.0.0",
       "dependencies": {
-        "@choliba/config": "workspace:*",
         "@choliba/core": "workspace:*",
+        "@choliba/workspace": "workspace:*",
       },
     },
     "packages/runner": {
@@ -97,6 +113,7 @@
         "@choliba/config": "workspace:*",
         "@choliba/core": "workspace:*",
         "@choliba/projects": "workspace:*",
+        "@choliba/workspace": "workspace:*",
       },
       "devDependencies": {
         "@playwright/test": "1.63.0",
@@ -108,6 +125,32 @@
       "dependencies": {
         "@choliba/config": "workspace:*",
         "@choliba/core": "workspace:*",
+      },
+    },
+    "packages/shell": {
+      "name": "@choliba/shell",
+      "version": "0.0.0",
+      "dependencies": {
+        "@choliba/config": "workspace:*",
+        "@choliba/kernel": "workspace:*",
+      },
+    },
+    "packages/tui": {
+      "name": "@choliba/tui",
+      "version": "0.0.0",
+      "dependencies": {
+        "@choliba/kernel": "workspace:*",
+        "@choliba/shell": "workspace:*",
+        "@choliba/workspace": "workspace:*",
+        "@opentui/core": "0.5.14",
+      },
+    },
+    "packages/workspace": {
+      "name": "@choliba/workspace",
+      "version": "0.0.0",
+      "dependencies": {
+        "@choliba/config": "workspace:*",
+        "@choliba/kernel": "workspace:*",
       },
     },
   },
@@ -235,11 +278,21 @@
 
     "@choliba/core": ["@choliba/core@workspace:packages/core"],
 
+    "@choliba/domain": ["@choliba/domain@workspace:packages/domain"],
+
+    "@choliba/kernel": ["@choliba/kernel@workspace:packages/kernel"],
+
     "@choliba/projects": ["@choliba/projects@workspace:packages/projects"],
 
     "@choliba/runner": ["@choliba/runner@workspace:packages/runner"],
 
     "@choliba/sandbox": ["@choliba/sandbox@workspace:packages/sandbox"],
+
+    "@choliba/shell": ["@choliba/shell@workspace:packages/shell"],
+
+    "@choliba/tui": ["@choliba/tui@workspace:packages/tui"],
+
+    "@choliba/workspace": ["@choliba/workspace@workspace:packages/workspace"],
 
     "@docsearch/css": ["@docsearch/css@3.8.2", "", {}, "sha512-y05ayQFyUmCXze79+56v/4HpycYF3uFqB78pLPrSV5ZKAlDuIAAJNhaRi8tTdRNXh05yxX/TyNnzD6LwSM89vQ=="],
 

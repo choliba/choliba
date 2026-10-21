@@ -1,25 +1,13 @@
-import { ThemeService } from '../theme';
-import { PLATFORM } from './create-shell';
-import type { ShellModule } from './interfaces/shell.interface';
-import { THEME, THEME_CHOICES } from './shell.constants';
-import { clearPanelCommand, panelCommand, providePanel, quitPanelCommand } from './panel.command';
-import { provideTerminal, terminalCommand } from './terminal.command';
+import { baseShell, type ShellModule } from '@choliba/shell';
+import { clearPanelCommand, quitPanelCommand, tuiShell } from '@choliba/tui';
 
-/**
- * What @choliba/core gives the shell: the configuration, the theme, `terminal run`, `panel`, `list config` and `set config`, built
- * from the platform.
- */
+/** What @choliba/core gives the shell: the shell's own (the theme, `terminal run`) and the panel's (`panel`, `/clear`, `/quit`). */
 export const coreShell: ShellModule = {
   name: '@choliba/core',
   provide: (container) => {
-    container.provide(THEME, (current) => {
-      const { env, stdout, noColorFlag } = current.get(PLATFORM);
-      const choices = current.has(THEME_CHOICES) ? current.get(THEME_CHOICES) : {};
-      return new ThemeService(env, stdout, noColorFlag, choices);
-    });
-    provideTerminal(container);
-    providePanel(container);
+    baseShell.provide?.(container);
+    tuiShell.provide?.(container);
   },
-  commands: [terminalCommand, panelCommand],
+  commands: [...baseShell.commands, ...tuiShell.commands],
   panel: [clearPanelCommand, quitPanelCommand],
 };

@@ -1,0 +1,79 @@
+import type { Writable, WritableWithColumns } from '@choliba/kernel';
+import type { AnsiColor, Panel, PanelQuestion, PanelReply, RunPresentationInfo, Theme } from '@choliba/shell';
+import { frameBottom, frameLines, frameTop, summaryLine } from '@choliba/shell';
+
+export interface PanelRunScreen {
+  readonly framed: true;
+  readonly out: Writable;
+  readonly err: Writable;
+  model(name: string): void;
+  onInterrupt(listener: () => void): void;
+  onMessage(listener: (text: string) => void): void;
+  answer(question: PanelQuestion): Promise<PanelReply>;
+  close(exitCode: number): void;
+}
+
+export interface PanelRunScreenOptions {
+  readonly panel: Panel;
+  readonly currentInfo: () => RunPresentationInfo;
+  readonly reportModel: (name: string) => void;
+  readonly name: string;
+  readonly color: AnsiColor | undefined;
+  readonly theme: Theme;
+  readonly stdout: WritableWithColumns;
+  readonly now: () => Date;
+  readonly every: (ms: number, tick: () => void) => () => void;
+  readonly hostedPanel: boolean;
+}
+
+export function createPanelRunScreen(options: PanelRunScreenOptions): PanelRunScreen {
+  const now = (): number => options.now().getTime();
+  const width = (): number => terminalWidth(options.stdout);
+  const transcript: string[] = [];
+  const shown: Writable = {
+    write: (text) => {
+      transcript.push(text);
+      options.panel.write(text);
+    },
+  };
+  const stop = options.every(50, () => {
+    options.panel.refresh();
+  });
+  return {
+    framed: true,
+    out: shown,
+    err: shown,
+    model: (name) => {
+      options.reportModel(name);
+    },
+    onInterrupt: (listener) => {
+      options.panel.onInterrupt(listener);
+    },
+    onMessage: (listener) => {
+      options.panel.onMessage(listener);
+    },
+    answer: async (question) => {
+      shown.write(`? ${question.question}\n`);
+      const reply = await options.panel.ask(question);
+      shown.write(`→ ${reply.status === 'skipped' ? '(sem resposta)' : [reply.answer].flat().join(', ')}\n`);
+      return reply;
+    },
+    close: (exitCode) => {
+      stop();
+      options.panel.close();
+      if (options.hostedPanel) return;
+      const top = frameTop(options.name, width(), (text) =>
+        options.theme.paint('agents', options.name, text, options.color),
+      );
+      const lines = frameLines(transcript.join(''), width());
+      options.stdout.write(
+        `\n${[top, ...lines, frameBottom(width())].join('\n')}\n${summaryLine(options.currentInfo(), now(), exitCode)}\n`,
+      );
+    },
+  };
+}
+
+function terminalWidth(stdout: WritableWithColumns): number {
+  const columns = stdout.columns ?? 0;
+  return columns > 0 ? columns : 120;
+}

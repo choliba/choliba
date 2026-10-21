@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { PROJECT_CONFIG_FILE, PROJECT_ENV_EXAMPLE_FILE, PROJECT_ENV_FILE, TESTS_SUBDIR } from './project-layout';
+import { PROJECT_CONFIG_FILE, PROJECT_ENV_EXAMPLE_FILE, PROJECT_ENV_FILE, TESTS_SUBDIR } from '@choliba/workspace';
 
 import { ProjectsError } from '../common';
 

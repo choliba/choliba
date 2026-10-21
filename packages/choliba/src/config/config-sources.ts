@@ -4,7 +4,7 @@ import { envSource, fileSource, type ConfigSource } from '@choliba/config';
 import type { Platform } from '@choliba/core';
 
 import { findWorkspaceRoot } from './workspace';
-import { ENV_FILE } from './workspace-layout';
+import { ENV_FILE } from '@choliba/workspace';
 
 type Env = Readonly<Record<string, string | undefined>>;
 

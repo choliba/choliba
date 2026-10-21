@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { type GitRunResult, type GitRunner, createSpawnGitRunner } from '@choliba/core';
-import { CACHE_DIR } from '../agent-layout';
+import { CACHE_DIR } from '@choliba/workspace';
 
 export const DEFAULT_DIFF_BASE = 'develop';
 export const DEFAULT_DIFF_EXCLUDES = ['trash', 'plans', CACHE_DIR] as const;
