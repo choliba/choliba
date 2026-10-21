@@ -9,6 +9,7 @@ export {
   openOpenTuiPanel,
   openPanel,
   openPanelWith,
+  createPanelRunScreen,
   PANEL_ICON,
   PANEL_LOGO,
   PANEL_OPENER,
@@ -18,5 +19,7 @@ export {
   type ArtColor,
   type OpenTuiToolkit,
   type PanelToolkit,
+  type PanelRunScreen,
+  type PanelRunScreenOptions,
 } from '@choliba/tui';
 export * from './shell';

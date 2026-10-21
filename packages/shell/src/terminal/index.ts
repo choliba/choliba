@@ -56,3 +56,7 @@ export type {
   StreamName,
 } from './interfaces/terminal.interface';
 export { TerminalService } from './terminal.service';
+export { footerLines, footerTable, oneLine, providerContext, summaryLine, wantsFooter } from './run-footer';
+export type { RunPresentationInfo } from './run-footer';
+export { createLineRunScreen } from './run-line-screen';
+export type { LineRunScreen, LineRunScreenOptions } from './run-line-screen';
