@@ -14,6 +14,7 @@
     "@choliba/core": "workspace:*",
     "@choliba/projects": "workspace:*",
     "@choliba/sandbox": "workspace:*",
+    "@choliba/workspace": "workspace:*",
     "@playwright/test": "1.63.0",
     "ajv": "^8.20.0",
     "yaml": "^2.8.1"

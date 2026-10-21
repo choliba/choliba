@@ -1,4 +1,4 @@
-import * as layout from '../../agents/agent-layout';
+import * as layout from '../../layout/agent-layout';
 
 describe('agent layout', () => {
   it('names the agents folders and files of a workspace', () => {

@@ -1,9 +1,11 @@
-import * as layout from '../../config/workspace-layout';
+import * as layout from '../../layout/workspace-layout';
 
 describe('workspace layout', () => {
   it('names the folders and files at the workspace root', () => {
     expect(layout).toEqual({
       APP_DIR: 'app',
+      LOGS_DIR: '.cache/logs',
+      APP_LOGS_DIR: '.cache/app',
       ARTIFACTS_DIR: '.cache/choliba',
       ENV_FILE: '.env',
       PACKAGE_FILE: 'package.json',

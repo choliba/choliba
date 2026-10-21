@@ -1,8 +1,11 @@
 import { isAbsolute, join } from 'node:path';
 
-import { DEFAULT_AGENTS_DIR, DEFAULT_MCPS_DIR, DEFAULT_SKILLS_DIR } from './agent-layout';
+import { DEFAULT_AGENTS_DIR, DEFAULT_MCPS_DIR, DEFAULT_SKILLS_DIR } from '../layout';
 
-import { CHOL_AGENTS_DIR, CHOL_MCPS_DIR, CHOL_SKILLS_DIR } from '../common';
+/** The variables that move the agents, the skills and the MCP servers out of `.choliba/`. */
+export const CHOL_AGENTS_DIR = 'CHOL_AGENTS_DIR';
+export const CHOL_SKILLS_DIR = 'CHOL_SKILLS_DIR';
+export const CHOL_MCPS_DIR = 'CHOL_MCPS_DIR';
 
 type Config = Readonly<Record<string, string | undefined>>;
 
@@ -27,11 +30,4 @@ export function resolveSkillsDir(config: Config, root: string): string {
 /** Where `agent.yaml#mcps` are looked up: `CHOL_MCPS_DIR`, else `.choliba/mcps`. */
 export function resolveMcpsDir(config: Config, root: string): string {
   return configuredOrDefault(root, config[CHOL_MCPS_DIR], DEFAULT_MCPS_DIR);
-}
-
-/** The config entries that have a value: what `${NAME}` in an MCP server's JSON may use. */
-export function definedConfig(config: Config): Readonly<Record<string, string>> {
-  return Object.fromEntries(
-    Object.entries(config).filter((entry): entry is [string, string] => entry[1] !== undefined),
-  );
 }

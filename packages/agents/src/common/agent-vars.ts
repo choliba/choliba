@@ -1,10 +1,12 @@
+import { CHOL_AGENTS_DIR, CHOL_MCPS_DIR, CHOL_SKILLS_DIR } from '@choliba/workspace';
+
 import type { AgentDefinition, AgentModeSteps, AgentSections, AgentStep } from './interfaces/agent.interface';
 import type { ExecutionMode } from './interfaces/execution.interface';
 import { mapPermissions } from './agent-permissions';
+
+export { CHOL_AGENTS_DIR, CHOL_MCPS_DIR, CHOL_SKILLS_DIR };
+
 export const CHOL_ROOT = 'CHOL_ROOT';
-export const CHOL_AGENTS_DIR = 'CHOL_AGENTS_DIR';
-export const CHOL_SKILLS_DIR = 'CHOL_SKILLS_DIR';
-export const CHOL_MCPS_DIR = 'CHOL_MCPS_DIR';
 export const CHOL_GLOBAL_DIR = 'CHOL_GLOBAL_DIR';
 export const CHOL_PROJECTS_DIR = 'CHOL_PROJECTS_DIR';
 export const CHOL_TICKET_RUNS = 'CHOL_TICKET_RUNS';

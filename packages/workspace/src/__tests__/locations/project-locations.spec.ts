@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import { PROJECTS_SUBDIR } from '../../paths';
+import { PROJECTS_SUBDIR } from '../../index';
 
 import { applyLocations, CHOL_GLOBAL_DIR, CHOL_PROJECTS_DIR, CHOL_TICKET_RUNS, resolveProjectsDir } from '../../index';
 

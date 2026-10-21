@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import { CACHE_DIR } from '@choliba/agents';
+import { CACHE_DIR } from './agent-layout';
 
 /**
  * The names of the workspace's own folders and files, in one place: what `choliba setup` creates and what the app
@@ -9,6 +9,12 @@ import { CACHE_DIR } from '@choliba/agents';
 
 /** Where the applications under test live (`app/<app>/`). */
 export const APP_DIR = 'app';
+
+/** The logs: one per agent run in `<LOGS_DIR>/<agent>/`, and the panel's sessions in `<LOGS_DIR>/painel/`. */
+export const LOGS_DIR = join(CACHE_DIR, 'logs');
+
+/** The logs of the projects' applications: `<project>.log` (the server) and `<project>.setup.log`. */
+export const APP_LOGS_DIR = join(CACHE_DIR, 'app');
 
 /** The runs' artifacts (a new workspace's `CHOL_GLOBAL_DIR`). */
 export const ARTIFACTS_DIR = join(CACHE_DIR, 'choliba');

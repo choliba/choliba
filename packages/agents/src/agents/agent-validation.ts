@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import Ajv, { type ErrorObject } from 'ajv';
 import { parse as parseYaml } from 'yaml';
 import { findResource } from '@choliba/core';
-import { AGENT_FILE } from './agent-layout';
+import { AGENT_FILE } from '@choliba/workspace';
 
 /**
  * Split out of `agent-loader.ts` (which needs these to make `loadAgent` fail for real on a

@@ -17,6 +17,7 @@ type Layer = (typeof LAYERS)[number];
 const STRUCTURE: Readonly<Record<string, Partial<Record<Exclude<Layer, 'common'>, readonly string[]>>>> = {
   config: { domain: ['formats', 'sources', 'groups'] },
   kernel: { domain: ['paths'], module: ['platform', 'config', 'runtime', 'container'] },
+  workspace: { domain: ['layout'], module: ['locations'] },
   core: { module: ['help', 'cli', 'theme', 'shell', 'terminal'] },
   projects: { domain: ['paths'], module: ['locations', 'tickets', 'projects'] },
   runner: { module: ['tests'] },

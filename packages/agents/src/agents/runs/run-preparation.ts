@@ -2,7 +2,7 @@
 
 import { dirname, join } from 'node:path';
 
-import { RUNS_DIR } from '../agent-layout';
+import { RUNS_DIR } from '@choliba/workspace';
 import { agentURL, EXCEPTION_PREFIX, type Sandbox } from '@choliba/sandbox';
 
 import { invocationFromAgent, effectivePolicy } from '../invocation';
@@ -18,7 +18,8 @@ import {
 } from '../../common';
 import type { AgentInvocation, CommandPrepareInput } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
-import { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '../agent-dirs';
+import { resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '@choliba/workspace';
+import { definedConfig } from '../defined-config';
 import type { McpServer } from '../../common';
 import { resolveMcps } from '../../common';
 import type { ProviderRequest } from '../../common';

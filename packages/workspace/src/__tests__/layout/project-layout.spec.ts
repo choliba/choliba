@@ -1,4 +1,4 @@
-import * as layout from '../../paths/project-layout';
+import * as layout from '../../layout/project-layout';
 
 describe('project layout', () => {
   it('names the folders and files of the projects', () => {

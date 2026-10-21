@@ -8,7 +8,7 @@ export {
   LocationsError,
   resolveProjectsDir,
   type ProjectLocations,
-} from './locations';
+} from '@choliba/workspace';
 export {
   PROJECTS_SUBDIR,
   PROJECT_CONFIG_FILE,
@@ -17,8 +17,8 @@ export {
   TESTS_SUBDIR,
   TICKETS_SUBDIR,
   TICKET_RUNS_SUBDIR,
-} from './project-layout';
-export { projectsConfig } from './projects-config';
+} from '@choliba/workspace';
+export { projectsConfig } from '@choliba/workspace';
 export {
   REPORT_FOLDER,
   TEST_RESULTS_FOLDER,

@@ -12,7 +12,7 @@ import { parseAgentsArgs, parseListArgs, unknownFlagMessage } from './agents-fla
 import type { AgentDefinition } from '../../common';
 import type { AgentInvocation } from '../interfaces/invocation.interface';
 import type { ExecutionMode } from '../../common';
-import { resolveAgentsDir } from '../agent-dirs';
+import { APP_LOGS_DIR, LOGS_DIR, resolveAgentsDir } from '@choliba/workspace';
 import type { ProviderRequest } from '../../common';
 import type { ResolvedProvider } from '../../common';
 import { formatStepFailure, stepExitCode } from '../steps/step-actions';
@@ -395,7 +395,7 @@ function runLogHeader(context: RunContext, agent: AgentDefinition): readonly str
 /** Opens the log of the run, in `.cache/logs/<agent>/`, and gives the deps whose `stdout` and `stderr` write to it. */
 function withRunLog(context: RunContext, agent: AgentDefinition): LoggedRun {
   const { deps } = context;
-  const dir = deps.logsDir ?? join(deps.repoRoot, '.cache', 'logs');
+  const dir = deps.logsDir ?? join(deps.repoRoot, LOGS_DIR);
   const log = openRunLog(dir, agent.name, runLogHeader(context, agent), deps.now);
   return {
     log,
@@ -439,7 +439,7 @@ async function appFor(
     ((project: ProjectSettings) =>
       ensureApp(project, {
         projectsDir: projectsDir(deps),
-        logDir: join(deps.repoRoot, '.cache', 'app'),
+        logDir: join(deps.repoRoot, APP_LOGS_DIR),
         env: process.env,
         stderr: progress,
         spawn: spawnToEnd,

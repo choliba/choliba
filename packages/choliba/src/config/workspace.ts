@@ -3,7 +3,7 @@ import { dirname, join, resolve } from 'node:path';
 
 import { ExpectedError } from '@choliba/core';
 
-import { PACKAGE_FILE } from './workspace-layout';
+import { PACKAGE_FILE } from '@choliba/workspace';
 
 const PACKAGE_NAME = 'choliba';
 

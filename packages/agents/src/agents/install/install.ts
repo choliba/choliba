@@ -7,7 +7,7 @@ import { skillDescription } from '../agent-skills';
 
 import { fetchSource, type FetchedSource, type SourceDeps } from './install-source';
 import { ExpectedError } from '@choliba/core';
-import { AGENTS_SUBDIR, AGENT_FILE, CHOLIBA_DIR, MCPS_SUBDIR, SKILLS_SUBDIR, SKILL_FILE } from '../agent-layout';
+import { AGENTS_SUBDIR, AGENT_FILE, CHOLIBA_DIR, MCPS_SUBDIR, SKILLS_SUBDIR, SKILL_FILE } from '@choliba/workspace';
 import { unknownWordMessage } from '@choliba/core';
 
 /** What `choliba add` installs, named as the report shows it. */
