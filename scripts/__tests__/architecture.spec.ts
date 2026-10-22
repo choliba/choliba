@@ -148,6 +148,10 @@ describe('packageGraph and entryExports', () => {
           files: {
             'src/index.ts': 'export const run = 1;\nexport type Kind = string;\n',
             'src/eslint.ts': 'export default {};\n',
+            'scripts/entries/core.ts': 'export const createShell = () => 0;\n',
+            'scripts/entries/core/testing.ts': 'export const fakePlatform = () => 0;\n',
+            'scripts/entries/agents.ts': 'export const loadAgent = () => 0;\n',
+            'scripts/entries/projects.ts': 'export const readTicket = () => 0;\n',
           },
         },
       },
@@ -155,9 +159,20 @@ describe('packageGraph and entryExports', () => {
         expect(packageEntries(root)).toEqual({
           choliba: join(root, 'packages', 'app', 'src', 'index.ts'),
           'choliba/eslint': join(root, 'packages', 'app', 'src', 'eslint.ts'),
+          'choliba/core': join(root, 'packages', 'app', 'scripts/entries/core.ts'),
+          'choliba/core/testing': join(root, 'packages', 'app', 'scripts/entries/core/testing.ts'),
+          'choliba/agents': join(root, 'packages', 'app', 'scripts/entries/agents.ts'),
+          'choliba/projects': join(root, 'packages', 'app', 'scripts/entries/projects.ts'),
         });
-        expect(entryExports(root)).toEqual({ choliba: ['Kind', 'run'], 'choliba/eslint': ['default'] });
-        expect(exportsText({ b: ['y'], a: ['x'] })).toBe('{\n  "a": [\n    "x"\n  ],\n  "b": [\n    "y"\n  ]\n}\n');
+        expect(entryExports(root)).toEqual({
+          choliba: ['Kind', 'run'],
+          'choliba/eslint': ['default'],
+          'choliba/core': ['createShell'],
+          'choliba/core/testing': ['fakePlatform'],
+          'choliba/agents': ['loadAgent'],
+          'choliba/projects': ['readTicket'],
+        });
+        expect(exportsText({ b: ['y', 'z'], a: ['x', 'z'] })).toBe('{\n  "a": ["x", "z"],\n  "b": ["y", "z"]\n}\n');
       },
     );
   });

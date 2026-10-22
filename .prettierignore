@@ -10,6 +10,8 @@ bun.lock
 .playwright-cli
 docs/.vitepress/cache
 docs/.vitepress/dist
+# Generated architecture baseline; compact arrays keep export-list diffs readable.
+scripts/architecture/entry-exports.json
 # Verificação do Google Search Console: o arquivo fica idêntico ao que o Google gera (sem quebra de linha no fim)
 docs/public/google*.html
 # Corpo de uma release de verdade, como o GitHub o guarda: o spec das novidades lê o formato original

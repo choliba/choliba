@@ -735,30 +735,20 @@ describe('agora', () => {
 **Como usar.** `const signals = new FakeSignals()`, passado em `fakePlatform({ signals })`; depois,
 `signals.emit('SIGINT')` avisa quem se inscreveu.
 
-## O que ainda não é independente
+## Limites da fachada
 
-Tudo o que `choliba/core` exporta é público. A tabela diz o que já funciona fora do choliba e o que ainda depende
-dele, com o motivo e para onde vai.
+Tudo o que `choliba/core` exporta é público. Os subcaminhos publicam a montagem de uma CLI, a plataforma, a ajuda, o
+terminal, as cores e os falsos de teste descritos nesta página. Eles não reexportam ferramentas específicas do app
+`choliba` que ainda existem nos pacotes internos.
 
-| Export                                                                                                 | Estado       | Motivo                                                                                       | Destino previsto                               |
-| ------------------------------------------------------------------------------------------------------ | ------------ | -------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| `Container`, `token`, `ShellIo`, tipos dos comandos                                                    | independente | —                                                                                            | —                                              |
-| `createShell`                                                                                          | acoplado     | o erro inesperado manda reportar no repositório do choliba e lê `CHOL_DEBUG`                 | mensagem e variável definidas pela raiz da CLI |
-| `coreShell`, `THEME`, `THEME_CHOICES`, `WORKSPACE_ROOT`                                                | independente | o app fornece as escolhas do tema e a raiz da sua pasta de trabalho                          | —                                              |
-| `TERMINAL_RUN_SPEC`                                                                                    | acoplado     | o uso é `choliba terminal run`                                                               | nome do programa vindo da raiz                 |
-| `RUNTIME`                                                                                              | acoplado     | o tipo `Runtime` é do app `choliba`                                                          | o token vai para o app                         |
-| `RootOptions`, `messageOf`, `ExpectedError`                                                            | independente | —                                                                                            | —                                              |
-| `takeGlobalFlags`, `rawArgsAfter`, `createSpawnGitRunner`, tokens da plataforma                        | independente | não há uma fábrica da plataforma real: cada CLI a monta, como no `main.ts` acima             | —                                              |
-| `CommandSpec`, `formatHelp`, `formatRows`, `complete`, `describe`, `entryHelp`                         | independente | —                                                                                            | —                                              |
-| `DOCS_URL`, `commandPage`, `commandWords`                                                              | acoplado     | apontam para o site e as páginas de comando do choliba                                       | o site do choliba, fora do `core`              |
-| `COMPLETION_BASH`, `installShellCompletion` e afins                                                    | acoplado     | o script de autocomplete é do comando `choliba`                                              | o autocomplete do app                          |
-| `scriptsHelpSpec`, `readPackageScripts` e afins                                                        | acoplado     | descrevem os scripts `bun chol:*` deste repositório                                          | o ferramental do repositório                   |
-| `ProcessRunnerService`, `Session`, `Table`, quadro, `LiveRegion`, `StatusFooter`, painel, `formatLine` | independente | —                                                                                            | —                                              |
-| `printBox`, `defaultStdout`, `writeStdout`                                                             | independente | sem um destino, escrevem no `process.stdout`, não na plataforma (`printBox` aceita `stream`) | a plataforma como destino padrão               |
-| `paintAnsi`, `boldAnsi`, `ANSI_COLORS`, `colorEnabled`, `colorForLabel`                                | independente | —                                                                                            | —                                              |
-| `DEFAULT_THEME`, `THEME_ROLES`, `buildTheme`, `parseColors`, `ThemeService`                            | acoplado     | as cores padrão citam os providers e os agentes do choliba                                   | tema registrado pelos pacotes                  |
-| `findResource`, `locateResource`, `resourceStarts`; `findManifest`, `versionLine`                      | acoplado     | acham os arquivos e a versão do pacote `choliba` instalado                                   | o app `choliba`                                |
-| `fakePlatform`, `BufferWritable`, `FakeSignals`, `runShell`, `replace`                                 | independente | —                                                                                            | —                                              |
-| `VERBS_ROOT`                                                                                           | acoplado     | uma raiz com os verbos do choliba, para testar os pacotes dele                               | os testes de cada pacote                       |
+| Export interno fora dos subcaminhos públicos                                      | Onde usar                                                                                 |
+| --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `TERMINAL_RUN_SPEC`, `RUNTIME`                                                    | Só na composição da CLI `choliba`; não há substituto público                              |
+| `DOCS_URL`, `commandPage`, `commandWords`                                         | A ajuda e a documentação da CLI `choliba`                                                 |
+| `COMPLETION_BASH`, `installShellCompletion` e afins                               | O comando de autocomplete da CLI `choliba`                                                |
+| `scriptsHelpSpec`, `readPackageScripts` e afins                                   | O ferramental de desenvolvimento deste repositório                                        |
+| `DEFAULT_THEME`, `THEME_ROLES`, `buildTheme`, `parseColors`, `ThemeService`       | Cada app registra o próprio tema; use `THEME`, `THEME_CHOICES` e as funções ANSI expostas |
+| `findResource`, `locateResource`, `resourceStarts`, `findManifest`, `versionLine` | A composição interna do app instalado                                                     |
+| `VERBS_ROOT`                                                                      | Testes de biblioteca passam os módulos diretamente a `runShell`                           |
 
 <!-- #endregion guia -->

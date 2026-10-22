@@ -30,6 +30,14 @@ interface Manifest {
  */
 const OUTSIDE_SRC = ['playwright.config.ts', 'shared', 'reporters', join('scripts', 'entries')];
 
+/** The app entries that become curated public subpaths in the installable package. */
+const APP_FACADES: readonly (readonly [string, string])[] = [
+  ['choliba/core', join('scripts', 'entries', 'core.ts')],
+  ['choliba/core/testing', join('scripts', 'entries', 'core', 'testing.ts')],
+  ['choliba/agents', join('scripts', 'entries', 'agents.ts')],
+  ['choliba/projects', join('scripts', 'entries', 'projects.ts')],
+];
+
 /** A specifier of another package of the repository, in an import, an export or a dynamic import. */
 const SPECIFIER = /(?:from\s+|import\s*\(\s*|import\s+)['"](@choliba\/[a-z-]+|choliba)(?:\/[^'"]*)?['"]/g;
 
@@ -79,7 +87,7 @@ export function packageGraph(root: string): PackageGraph {
   return graph;
 }
 
-/** Each entry of the packages of `root` (`exports` of its package.json, `src/index.ts` for the app) and its file. */
+/** Package entries and the app's curated public facades, by specifier and source file. */
 export function packageEntries(root: string): Readonly<Record<string, string>> {
   const entries: Record<string, string> = {};
   for (const dir of packageDirs(root)) {
@@ -89,6 +97,12 @@ export function packageEntries(root: string): Readonly<Record<string, string>> {
     for (const [subpath, file] of Object.entries(exported)) {
       if (!file.endsWith('.ts')) continue;
       entries[subpath === '.' ? manifest.name : `${manifest.name}/${subpath.slice(2)}`] = join(dir, file);
+    }
+    if (manifest.name === 'choliba') {
+      for (const [specifier, file] of APP_FACADES) {
+        const entry = join(dir, file);
+        if (existsSync(entry)) entries[specifier] = entry;
+      }
     }
   }
   return entries;
@@ -150,6 +164,9 @@ export function graphText(graph: PackageGraph): string {
 
 /** What each entry exports as the checked-in list writes it: JSON, entries and names sorted. */
 export function exportsText(exports: EntryExports): string {
-  const sorted = Object.fromEntries(Object.entries(exports).sort(([a], [b]) => a.localeCompare(b)));
-  return `${JSON.stringify(sorted, null, 2)}\n`;
+  const sorted = Object.fromEntries(Object.entries(exports).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+  const lines = Object.entries(sorted).map(
+    ([specifier, names]) => `  ${JSON.stringify(specifier)}: [${names.map((name) => JSON.stringify(name)).join(', ')}]`,
+  );
+  return `{\n${lines.join(',\n')}\n}\n`;
 }
