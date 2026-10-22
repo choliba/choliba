@@ -13,8 +13,11 @@ describe('the package root', () => {
       '@choliba/core',
       '@choliba/tui',
       '@choliba/agents',
+      'choliba-agents-commands',
       '@choliba/projects',
+      'choliba-projects-commands',
       '@choliba/runner',
+      'choliba-tests-commands',
     ]);
     expect(cholibaShell(runtime).name).toBe('choliba');
     expect(createCholibaShell(fakePlatform(), runtime).container.get(RUNTIME)).toBe(runtime);

@@ -6,6 +6,7 @@ import { coreShell, formatSuggestions } from '@choliba/core';
 import { fakePlatform, runShell, VERBS_ROOT } from '@choliba/core/testing';
 
 import { projectsShell } from '../../projects/projects-shell';
+import { projectsCommandsShell } from '../../../../choliba/src/commands/projects';
 import { projectCompletions } from '../../tickets';
 
 interface Workspace {
@@ -66,7 +67,7 @@ interface Run {
 /** `choliba <args…>` from `cwd`. */
 async function choliba(args: readonly string[], cwd: string): Promise<Run> {
   const platform = fakePlatform({ argv: [...args], cwd });
-  const exitCode = await runShell([coreShell, projectsShell, VERBS_ROOT], platform);
+  const exitCode = await runShell([coreShell, projectsShell, projectsCommandsShell, VERBS_ROOT], platform);
   return { exitCode, out: platform.stdout.text(), err: platform.stderr.text() };
 }
 

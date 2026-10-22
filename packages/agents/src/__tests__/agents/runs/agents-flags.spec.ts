@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import type { ParsedRunArgs } from '../../../agents/runs/agents-flags';
 import {
   AgentsArgsError,
@@ -6,10 +8,19 @@ import {
   runFlagDefinitions,
   USAGE,
 } from '../../../agents/runs/agents-flags';
+import {
+  agentFlagNames,
+  loadAgent,
+  modeDescription,
+  PROJECT_FLAGS,
+  sinceDescription,
+  TICKET_FLAGS,
+} from '../../../index';
 import { PROVIDERS } from '../../helpers/providers';
 
 const parseAgentsArgs = (argv: readonly string[]): ReturnType<typeof parseWith> => parseWith(argv, PROVIDERS);
 const RUN_FLAGS = runFlagDefinitions(PROVIDERS);
+const FIXTURES = join(__dirname, '..', '..', 'fixtures', 'agents');
 
 /** Narrows `ParsedAgentsArgs` to its `run` case, for the `describe` block that only exercises that shape. */
 function parseRun(argv: readonly string[]): ParsedRunArgs {
@@ -19,6 +30,24 @@ function parseRun(argv: readonly string[]): ParsedRunArgs {
   }
   return parsed;
 }
+
+describe('agents CLI flag exports', () => {
+  it('keeps the descriptions and agent-specific flag groups available', () => {
+    expect(modeDescription('plan')).toBe('Modo de execução (padrão: plan):');
+    expect(sinceDescription('develop')).toContain('(padrão: develop)');
+    expect(PROJECT_FLAGS).toEqual(['--project']);
+    expect(TICKET_FLAGS).toEqual(['--type', '--ticket']);
+  });
+
+  it('lists the accepted flags and aliases for an agent', () => {
+    const names = agentFlagNames(loadAgent(FIXTURES, 'echo'), PROVIDERS);
+
+    expect(names).toContain('--dry-run');
+    expect(names).toContain('--help');
+    expect(names).toContain('-h');
+    expect(names).not.toContain('--project');
+  });
+});
 
 describe('parseAgentsArgs — help', () => {
   it.each([[[]], [['help']], [['--help']], [['-h']]])('recognizes %j as help', (argv) => {

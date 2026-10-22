@@ -1,6 +1,5 @@
 import type { CommandSpec } from '@choliba/core';
-
-import { EXPECTATIONS } from './ticket-verdict';
+import { EXPECTATIONS } from '@choliba/runner';
 
 /**
  * `choliba run tests`, as `--help` shows it and completion walks: this CLI's own arguments (the projects

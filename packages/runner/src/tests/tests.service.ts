@@ -1,10 +1,6 @@
-import type { CommandSpec, Platform, ThemeService } from '@choliba/core';
-import { projectLocations, type projectsConfig } from '@choliba/workspace';
-
-import { listProjectNames, listTicketSuffixes, ticketsFolderPath } from '../app';
+import type { Platform, ThemeService } from '@choliba/core';
 
 import { runTests, type RunTestsOptions } from './run-tests';
-import { testsCliSpec } from './tests-spec';
 
 /** The parts of a run specs replace: how Playwright starts, the report prompt, and whether stdin is a terminal. */
 export type TestsHooks = Pick<
@@ -19,8 +15,7 @@ export type TestsPlatform = Pick<Platform, 'env' | 'stdout' | 'stderr'>;
 export class TestsService {
   constructor(
     private readonly workspaceRoot: () => string,
-    private readonly config: ReturnType<typeof projectsConfig.read>,
-    /** The folder with the runner's Playwright config: looked for only when the tests run, not for the help. */
+    /** The folder with the runner's Playwright config, looked for only when the tests run. */
     private readonly runnerRoot: () => string,
     private readonly platform: TestsPlatform,
     private readonly hooks: TestsHooks,
@@ -44,22 +39,5 @@ export class TestsService {
       ...this.hooks,
     });
     return result.exitCode;
-  }
-
-  /** `--help` and completion: the projects, and after `project:` its tickets, read from disk on every call. */
-  helpSpec(): CommandSpec {
-    return testsCliSpec(
-      () => this.fromProjects(listProjectNames),
-      (project) => this.fromProjects((projectsDir) => listTicketSuffixes(ticketsFolderPath(projectsDir, project))),
-    );
-  }
-
-  /** What completion reads from CHOL_PROJECTS_DIR; nothing when the workspace's locations cannot be read. */
-  private fromProjects(read: (projectsDir: string) => readonly string[]): readonly string[] {
-    try {
-      return read(projectLocations(this.config).CHOL_PROJECTS_DIR);
-    } catch {
-      return [];
-    }
   }
 }

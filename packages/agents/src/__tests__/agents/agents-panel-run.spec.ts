@@ -483,6 +483,30 @@ describe('AgentsService.runHosted', () => {
   });
 });
 
+describe('AgentsService without app help handlers', () => {
+  it('still validates run and list arguments when no help renderer is supplied', async () => {
+    const tmp = makeTmpDir('agents-help');
+    try {
+      agentsFolder(tmp.path);
+      const platform = fakePlatform();
+      const service = new AgentsService(
+        () => tmp.path,
+        { CHOL_AGENTS_DIR: tmp.path },
+        new ProviderRegistry([]),
+        new ProcessRunnerService({ spawner: platform.spawn }),
+        new ThemeService({}, platform.stdout, false, {}),
+        platform,
+      );
+
+      expect(await service.run(['echo', '--project', 'demo'])).toBe(1);
+      expect(service.list(['--not-a-flag'])).toBe(1);
+      expect(platform.stderr.text()).toContain('opção desconhecida: --project');
+    } finally {
+      tmp.cleanup();
+    }
+  });
+});
+
 describe('AgentsService.preview', () => {
   it('gives what --dry-run would show as data, or what it says when the command line would not run', async () => {
     const tmp = makeTmpDir('panel-run');

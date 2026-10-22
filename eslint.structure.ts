@@ -28,7 +28,7 @@ const STRUCTURE: Readonly<Record<string, Partial<Record<Exclude<Layer, 'common'>
   sandbox: { domain: ['sandbox'] },
   providers: { module: ['claude', 'codex', 'cursor', 'registry'] },
   agents: { module: ['agents', 'providers'] },
-  choliba: { domain: ['help', 'runtime'], module: ['check', 'config', 'library', 'setup', 'tooling'] },
+  choliba: { domain: ['help', 'runtime'], module: ['check', 'commands', 'config', 'library', 'setup', 'tooling'] },
 };
 
 /** File-name suffixes still in use: a service, a provider, a dto, a command and injection-token constants. */

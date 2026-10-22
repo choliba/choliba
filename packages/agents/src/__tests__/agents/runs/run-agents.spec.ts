@@ -7,6 +7,7 @@ import {
   buildTheme,
   complete,
   describe as describeSpec,
+  formatHelp,
   formatSuggestions,
   ProcessRunnerService,
   type GitRunner,
@@ -16,6 +17,7 @@ import {
 import type { ProjectSettings } from '@choliba/projects';
 import * as projects from '@choliba/projects';
 import { AppError } from '@choliba/runner';
+import { formatAgentDetail, listAgents, resolveAgentsDir, type AgentsCliSpecContext } from '../../../index';
 
 import * as gitDiff from '../../../../../engine/src/steps/git-working-tree-diff';
 
@@ -23,9 +25,11 @@ import { defineInvocation } from '../../../agents/invocation';
 import { StepFailedError } from '../../../../../engine/src/steps/step-actions';
 import { readPlan } from '../../../agents/runs/plan-store';
 import type { RunAgentsCliDeps } from '../../../agents/runs/run-context';
-import { agentsHelpSpec, runAgentsCli, runAgentsList } from '../../../agents/runs/run-agents';
+import { runAgentsCli, runAgentsList } from '../../../agents/runs/run-agents';
 import { COMMAND_LINE_TITLE } from '../../../agents/runs/dry-run';
 
+import { agentCommandSpec, agentsCliSpec, listAgentsSpec } from '../../../../../choliba/src/commands/agents';
+import { specContext } from '../../../agents/runs/spec-context';
 import { PROVIDERS, PROVIDERS_WITH_OLLAMA } from '../../helpers/providers';
 import { fakeSpawner, streamFromChunks } from '../../helpers/fake-spawner';
 import { makeTmpDir } from '../../helpers/tmp';
@@ -109,15 +113,21 @@ function dryRunArgv(writable: Writable & { chunks: string[] }): readonly string[
 
 /** What `choliba __complete agents <words…>` prints: one suggestion per line, nothing when there is none. */
 async function completeWords(words: readonly string[], deps: RunAgentsCliDeps): Promise<number> {
-  const output = formatSuggestions(complete(agentsHelpSpec(deps), words));
+  const output = formatSuggestions(complete(agentsCommandSpec(deps), words));
   if (output !== '') deps.stdout.write(`${output}\n`);
   return Promise.resolve(0);
 }
 
 /** What `choliba __describe agents <words…>` prints. */
 async function describeWords(words: readonly string[], deps: RunAgentsCliDeps): Promise<number> {
-  deps.stdout.write(`${describeSpec(agentsHelpSpec(deps), words)}\n`);
+  deps.stdout.write(`${describeSpec(agentsCommandSpec(deps), words)}\n`);
   return Promise.resolve(0);
+}
+
+function agentsCommandSpec(deps: RunAgentsCliDeps) {
+  const agentsDir = resolveAgentsDir(undefined, deps.config, deps.repoRoot);
+  const context: AgentsCliSpecContext = specContext(listAgents(agentsDir), deps);
+  return agentsCliSpec(context);
 }
 
 interface Harness {
@@ -131,7 +141,7 @@ function harness(stdoutLines: readonly string[], overrides: Partial<RunAgentsCli
   const stderr = fakeWritable();
   const runner = new ProcessRunnerService({ spawner: fakeSpawner({ stdout: streamFromChunks(stdoutLines) }).spawner });
 
-  const deps: RunAgentsCliDeps = {
+  const base: RunAgentsCliDeps = {
     runner,
     which: whichOf(['claude']),
     providers: PROVIDERS,
@@ -156,6 +166,23 @@ function harness(stdoutLines: readonly string[], overrides: Partial<RunAgentsCli
       CURSOR_API_KEY: 'test-token',
       CHOL_SKILLS_DIR: SKILLS,
       ...overrides.config,
+    },
+  };
+  const deps: RunAgentsCliDeps = {
+    ...base,
+    help: {
+      agents: () => {
+        stdout.write(`${formatHelp(agentsCommandSpec(base))}\n`);
+      },
+      agent: (command, agent) => {
+        const context = specContext([agent], base);
+        stdout.write(`${formatHelp(agentCommandSpec(agent, context, formatAgentDetail(command, agent)))}\n`);
+      },
+    },
+    listHelp: {
+      list: () => {
+        stdout.write(`${formatHelp(listAgentsSpec({ providers: base.providers }))}\n`);
+      },
     },
   };
   return { deps, stdout, stderr };

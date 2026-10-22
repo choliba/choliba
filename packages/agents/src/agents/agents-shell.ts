@@ -3,14 +3,12 @@ import { projectsConfig } from '@choliba/projects';
 import { sandboxConfig } from '@choliba/sandbox';
 
 import { agentsConfig } from './agents-config';
-import { listAgentsCommand } from './agents-list.command';
-import { runAgentCommand } from './agents-run.command';
 import { AGENT_PROVIDERS, AGENTS } from './agents.constants';
 import { AgentsService } from './agents.service';
 
 /**
- * @choliba/agents in the shell: `choliba run agent` and `choliba list agents`. The app
- * registers the providers (`AGENT_PROVIDERS`).
+ * @choliba/agents' configuration and service registrations. The app owns the CLI commands and registers the providers
+ * (`AGENT_PROVIDERS`).
  */
 export const agentsShell: ShellModule = {
   name: '@choliba/agents',
@@ -48,5 +46,5 @@ export const agentsShell: ShellModule = {
       );
     });
   },
-  commands: [runAgentCommand, listAgentsCommand],
+  commands: [],
 };

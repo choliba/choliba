@@ -1,7 +1,12 @@
 import type { CommandEntry, CommandSpec, Container, ShellCommand } from '@choliba/core';
-
-import { AGENT_PROVIDERS, AGENTS } from './agents.constants';
-import { runAgentReferenceSpec } from './runs/agents-spec';
+import {
+  AGENT_PROVIDERS,
+  AGENTS,
+  formatAgentDetail,
+  type AgentsCliSpecContext,
+  type AgentsRunHelpHandlers,
+} from '@choliba/agents';
+import { agentCommandSpec, agentsCliSpec, runAgentReferenceSpec } from './agents-spec';
 
 /** How `choliba run --help` lists `agent`. */
 const RUN_ENTRY: Omit<CommandEntry, 'spec'> = {
@@ -10,10 +15,7 @@ const RUN_ENTRY: Omit<CommandEntry, 'spec'> = {
   group: 'Commands',
 };
 
-/**
- * `run agent`, with the spec it builds from the workspace now (the agents on disk, their flags and values), or, when
- * there is no workspace to read, `reference`: every flag a run takes.
- */
+/** `run agent`, with its workspace spec, or the reference spec when there is no workspace to read. */
 export function runAgentEntry(helpSpec: () => CommandSpec, reference: () => CommandSpec): CommandEntry {
   try {
     return { ...RUN_ENTRY, spec: helpSpec() };
@@ -25,12 +27,24 @@ export function runAgentEntry(helpSpec: () => CommandSpec, reference: () => Comm
 /** `run agent` as the workspace has it, or, without one, every flag. */
 function entryIn(container: Container): CommandEntry {
   return runAgentEntry(
-    () => container.get(AGENTS).helpSpec(),
+    () => agentsCliSpec(container.get(AGENTS).helpContext()),
     () => runAgentReferenceSpec({ providers: container.get(AGENT_PROVIDERS) }),
   );
 }
 
-/** `choliba run agent <agent> [OPTIONS] [TASK...]`: its flags as typed; `--help` outside a workspace, every flag. */
+function helpHandlers(container: Container, showHelp: (spec: CommandSpec) => void): AgentsRunHelpHandlers {
+  return {
+    agents: () => {
+      showHelp(entryIn(container).spec);
+    },
+    agent: (command, agent) => {
+      const context: AgentsCliSpecContext = container.get(AGENTS).helpContext([agent]);
+      showHelp(agentCommandSpec(agent, context, formatAgentDetail(command, agent)));
+    },
+  };
+}
+
+/** `choliba run agent <agent> [OPTIONS] [TASK...]`: its flags as typed. */
 export const runAgentCommand: ShellCommand = {
   verb: 'run',
   name: 'agent',
@@ -41,6 +55,13 @@ export const runAgentCommand: ShellCommand = {
       io.printHelp(entryIn(container).spec);
       return;
     }
-    io.exit(await container.get(AGENTS).run(args));
+    io.exit(
+      await container.get(AGENTS).run(
+        args,
+        helpHandlers(container, (spec) => {
+          io.printHelp(spec);
+        }),
+      ),
+    );
   },
 };

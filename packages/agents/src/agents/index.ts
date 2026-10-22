@@ -28,7 +28,6 @@ export * from './invocation';
 export * from './invocation-registry';
 export * from './runs/agent-detail';
 export * from './runs/agents-flags';
-export * from './runs/agents-spec';
 export { SUBAGENT_TOOLS, delegationMessage } from '@choliba/engine';
 export * from './runs/dry-run';
 export * from './runs/event-render';
@@ -40,6 +39,8 @@ export * from './runs/run-checks';
 export * from './runs/run-context';
 export * from './runs/run-preparation';
 export * from './runs/spec-context';
+export { EXECUTION_MODES } from '../common';
+export { agentFlagNames, agentRunFlags } from './runs/agent-run-flags';
 export * from './runs/ticket-run';
 export * from './runs/tool-failure';
 export {
@@ -116,8 +117,6 @@ export type {
   StepSpawnResult,
 } from '@choliba/engine';
 export { agentsShell } from './agents-shell';
-export { listAgentsCommand } from './agents-list.command';
-export { runAgentCommand, runAgentEntry } from './agents-run.command';
 export { AGENT_PROVIDERS, AGENTS } from './agents.constants';
 export { AgentsService, type AgentsPlatform } from './agents.service';
 export {

@@ -1,13 +1,11 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { formatDuration, formatHelp, openOpenTuiPanel, wantsFooter, type CommandSpec } from '@choliba/core';
+import { formatDuration, openOpenTuiPanel, wantsFooter } from '@choliba/core';
 import type { ProjectSettings } from '@choliba/projects';
 import { AppError, ensureApp, shareApp, type RunningApp } from '@choliba/runner';
 import { readSandbox, type Sandbox, type SandboxConfigError } from '@choliba/sandbox';
 
-import { listAgents } from '../agent-loader';
-import { agentCommandSpec, agentsCliSpec, listAgentsSpec } from './agents-spec';
 import type { AgentsArgsError, ParsedAgentsArgs, ParsedListArgs } from './agents-flags';
 import { parseAgentsArgs, parseListArgs, unknownFlagMessage } from './agents-flags';
 import type { AgentDefinition } from '../../common';
@@ -17,7 +15,7 @@ import { APP_LOGS_DIR, LOGS_DIR, resolveAgentsDir } from '@choliba/workspace';
 import type { ProviderRequest } from '../../common';
 import type { ResolvedProvider } from '../../common';
 import { runAfter, spawnToEnd } from '@choliba/engine';
-import { formatAgentDetail, runList } from './agent-detail';
+import { runList } from './agent-detail';
 import { formatDryRun, modelText, type DryRunInput } from './dry-run';
 import { runAgent } from './run-agent';
 import { createRunScreen } from './run-screen';
@@ -39,31 +37,10 @@ import type { PreparedRun, RunAgentsCliDeps, RunArgs, RunContext } from './run-c
 import { errorMessage, projectsDir } from './run-context';
 import { definitionChangeReport, definitionChanges, definitionSnapshot } from './definition-snapshot';
 import { definitionDirectories, prepareRun } from './run-preparation';
-import { specContext } from './spec-context';
 import type { TicketTarget } from './ticket-run';
 import { createPlannedTicket, finishTicket, ticketVars } from './ticket-run';
 
 export type { RunAgentsCliDeps } from './run-context';
-
-/** `--help`/`-h` after a command name — usage, the agent's detail block, then its options. */
-function formatAgentHelp(command: AgentInvocation, agent: AgentDefinition, deps: RunAgentsCliDeps): string {
-  return formatHelp(agentCommandSpec(agent, specContext([], deps), formatAgentDetail(command, agent)));
-}
-
-/** Global `--help`, listing the agents found in the default agents dir right now. */
-function runHelp(deps: RunAgentsCliDeps): number {
-  deps.stdout.write(`${formatHelp(agentsHelpSpec(deps))}\n`);
-  return 0;
-}
-
-/**
- * `--help` and completion of `choliba run agent`: its commands, the agents found on disk right now and their
- * flags, with the projects, tickets and git refs their values complete to.
- */
-export function agentsHelpSpec(deps: RunAgentsCliDeps): CommandSpec {
-  const agents = listAgents(resolveAgentsDir(undefined, deps.config, deps.repoRoot));
-  return agentsCliSpec(specContext(agents, deps));
-}
 
 /**
  * `--dry-run`: what this command line would do without it, in order (`formatDryRun`). Nothing runs
@@ -289,7 +266,7 @@ async function runCommand(parsed: RunArgs, given: RunAgentsCliDeps): Promise<num
   // resolved above, nothing hardcoded per agent. No task/provider/mode validation needed past
   // this point, so it's checked before any of that.
   if (parsed.help) {
-    deps.stdout.write(`${formatAgentHelp(command, agent, deps)}\n`);
+    deps.help?.agent(command, agent);
     return 0;
   }
 
@@ -504,7 +481,8 @@ export async function runAgentsCli(argv: readonly string[], deps: RunAgentsCliDe
   }
 
   if (parsed.kind === 'help') {
-    return runHelp(deps);
+    deps.help?.agents();
+    return 0;
   }
   return runCommand(parsed, deps);
 }
@@ -519,13 +497,8 @@ export function runAgentsList(argv: readonly string[], deps: RunAgentsCliDeps): 
     return 1;
   }
   if (parsed.kind === 'help') {
-    deps.stdout.write(`${formatHelp(listAgentsHelpSpec(deps))}\n`);
+    deps.listHelp?.list();
     return 0;
   }
   return runList(parsed, deps);
-}
-
-/** `--help` of `choliba list agents`. */
-export function listAgentsHelpSpec(deps: RunAgentsCliDeps): CommandSpec {
-  return listAgentsSpec({ providers: deps.providers });
 }

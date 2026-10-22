@@ -1,6 +1,6 @@
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 
 import {
   EXPORTS_FILE,
@@ -55,6 +55,18 @@ describe('the architecture of the packages', () => {
 
     expect(commands).toEqual([]);
     expect(shells).not.toContainEqual(expect.stringMatching(/\bpanel(?:Start)?:/));
+  });
+
+  it('keeps CLI commands and their specs in the app', () => {
+    const packages = ['agents', 'projects', 'runner'];
+    const sources = packages.flatMap((name) => productionFiles(join(ROOT, 'packages', name, 'src')));
+    const commandSpecs = new Set(['agents-spec.ts', 'projects-spec.ts', 'tests-spec.ts']);
+    const outsideApp = sources.filter((file) => {
+      const name = basename(file);
+      return name.endsWith('.command.ts') || commandSpecs.has(name);
+    });
+
+    expect(outsideApp).toEqual([]);
   });
 });
 
