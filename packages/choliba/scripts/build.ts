@@ -32,6 +32,7 @@ const BUNDLED = [
   'config',
   'core',
   'domain',
+  'engine',
   'kernel',
   'projects',
   'runner',
@@ -150,6 +151,7 @@ const SPECIFIERS: readonly (readonly [string, string])[] = [
  */
 const INTERNAL: readonly (readonly [string, string])[] = [
   ['@choliba/domain', join('domain', 'src', 'index.d.ts')],
+  ['@choliba/engine', join('engine', 'src', 'index.d.ts')],
   ['@choliba/kernel/testing', join('kernel', 'src', 'testing', 'index.d.ts')],
   ['@choliba/kernel', join('kernel', 'src', 'index.d.ts')],
   ['@choliba/workspace', join('workspace', 'src', 'index.d.ts')],
@@ -246,6 +248,7 @@ function emitDeclarations(outDir: string): void {
   emitPackage('config', outDir, ['src']);
   emitPackage('kernel', outDir, ['src']);
   emitPackage('domain', outDir, ['src']);
+  emitPackage('engine', outDir, ['src']);
   emitPackage('workspace', outDir, ['src']);
   emitPackage('shell', outDir, ['src']);
   emitPackage('tui', outDir, ['src']);
