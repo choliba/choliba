@@ -1,3 +1,4 @@
+export { definedConfig } from './defined-config';
 export { runToolPath, runToolShortcuts } from './run-tool-path';
 export {
   DELETE,
