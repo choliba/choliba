@@ -1,6 +1,8 @@
 import { extname } from 'node:path';
 
-import { untrustedBlock, type AgentStep } from '../../common';
+import type { AgentStep } from '@choliba/domain';
+
+import { untrustedBlock } from '../prompt';
 import { listField, textField, type FieldSpec } from './step-fields';
 import { searchFolder, type FolderTree } from './step-search';
 import { saveListing } from './step-listing';

@@ -42,16 +42,79 @@ export * from './runs/run-preparation';
 export * from './runs/spec-context';
 export * from './runs/ticket-run';
 export * from './runs/tool-failure';
-export * from './steps/git-state';
-export * from './steps/git-working-tree-diff';
-export * from './steps/index-diff';
-export * from './steps/step-actions';
-export * from './steps/step-read-files';
-export * from './steps/step-search-files';
-export * from './steps/step-write-files';
-export * from './steps/step-constants';
-export * from './steps/step-registry';
-export * from './steps/working-tree-diff';
+export {
+  ACTIONS,
+  DEFAULT_DIFF_BASE,
+  DEFAULT_IGNORE,
+  DEFAULT_MAX_SIZE,
+  GIT_DIFF_USAGE,
+  READ_FILES_FIELDS,
+  READ_FILES_USAGE,
+  SEARCH_FILES_FIELDS,
+  SEARCH_FILES_USAGE,
+  SINCE_PENDING,
+  StepFailedError,
+  WRITE_CONFIG_FIELDS,
+  WRITE_CONFIG_USAGE,
+  WRITE_FILES_FIELDS,
+  WRITE_FILES_USAGE,
+  answerContent,
+  answerJson,
+  buildAfter,
+  buildPrepare,
+  buildWorkingTreeDiffPrompt,
+  checkSectionSize,
+  checkStep,
+  describeStep,
+  diffBaseOf,
+  findAction,
+  folderSummary,
+  formatFilesSection,
+  formatListing,
+  formatSize,
+  formatStepFailure,
+  getWorkingTreeDiff,
+  indexDiff,
+  loadListing,
+  matchingPaths,
+  parseDiffBlock,
+  parseGitDiffArgs,
+  parseListing,
+  parseMaxSize,
+  pendingSinceHint,
+  previewBeforeSteps,
+  readFiles,
+  readGitState,
+  recordGitHead,
+  removeDiffFile,
+  resolveDiffBase,
+  runAfterSteps,
+  runBeforeSteps,
+  runGitDiff,
+  saveListing,
+  searchFiles,
+  searchFolder,
+  spawnToEnd,
+  stepExitCode,
+  writeConfig,
+  writeDiffFile,
+  writeFiles,
+} from '@choliba/engine';
+export type {
+  AgentAction,
+  CommandAfterInput,
+  CommandPrepareInput,
+  CommandPrepareResult,
+  DiffBaseConfig,
+  FieldSpec,
+  FolderTree,
+  StepContext,
+  StepFailure,
+  StepPhase,
+  StepProject,
+  StepSpawn,
+  StepSpawnResult,
+} from '@choliba/engine';
 export { agentsShell } from './agents-shell';
 export { listAgentsCommand } from './agents-list.command';
 export { runAgentCommand, runAgentEntry } from './agents-run.command';

@@ -1,6 +1,6 @@
-import { pathPatternError } from '@choliba/core';
+import { pathPatternError } from '@choliba/kernel';
 
-import type { AgentStep } from '../../common';
+import type { AgentStep } from '@choliba/domain';
 
 import { parseMaxSize } from './step-size';
 

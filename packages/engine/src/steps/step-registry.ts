@@ -1,7 +1,12 @@
-import type { AgentDefinition, AgentModeSteps, AgentStep } from '../../common';
-import { EXECUTION_MODES } from '../../common';
-import type { CommandAfterInput, CommandPrepareInput, CommandPrepareResult } from '../interfaces/invocation.interface';
-import { expandExitCode } from '../../common';
+import {
+  EXECUTION_MODES,
+  expandExitCode,
+  type AgentDefinition,
+  type AgentModeSteps,
+  type AgentStep,
+} from '@choliba/domain';
+
+import type { CommandAfterInput, CommandPrepareInput, CommandPrepareResult } from './step-input';
 import { type StepFailure, previewBeforeSteps, runAfterSteps, runBeforeSteps } from './step-actions';
 import { parseGitDiffArgs } from './working-tree-diff';
 

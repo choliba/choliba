@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { createSpawnGitRunner, type GitRunner } from '@choliba/core';
+import { createSpawnGitRunner, type GitRunner } from '@choliba/kernel';
 
 import { SINCE_PENDING } from './step-constants';
 

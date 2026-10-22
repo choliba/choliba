@@ -1,7 +1,7 @@
 import type { AgentDefinition } from '../common';
 import type { AgentInvocation } from './interfaces/invocation.interface';
 import type { ExecutionMode, PermissionPolicy } from '../common';
-import { buildAfter, buildPrepare } from './steps/step-registry';
+import { buildAfter, buildPrepare } from '@choliba/engine';
 
 export type InvocationSpec = Pick<AgentInvocation, 'name' | 'agent' | 'description'> &
   Partial<Omit<AgentInvocation, 'name' | 'agent' | 'description'>>;

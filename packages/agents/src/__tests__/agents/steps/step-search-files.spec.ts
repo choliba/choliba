@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { AgentStep } from '../../../common';
-import { folderSummary, searchFiles } from '../../../agents/steps/step-search-files';
+import { folderSummary, searchFiles } from '../../../../../engine/src/steps/step-search-files';
 import { makeTmpDir } from '../../helpers/tmp';
 
 /** A `search_files` step with these named fields. */

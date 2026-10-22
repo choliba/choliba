@@ -1,4 +1,4 @@
-import { indexDiff, parseDiffBlock } from '../../../agents/steps/index-diff';
+import { indexDiff, parseDiffBlock } from '../../../../../engine/src/steps/index-diff';
 
 const SAMPLE = `diff --git a/packages/foo.ts b/packages/foo.ts
 index 111..222 100644

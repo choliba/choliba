@@ -1,9 +1,9 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync, writeSync } from 'node:fs';
 import { join } from 'node:path';
 
-import * as gitDiff from '../../../agents/steps/git-working-tree-diff';
+import * as gitDiff from '../../../../../engine/src/steps/git-working-tree-diff';
 
-import type { StepFailure, StepSpawn } from '../../../agents/steps/step-actions';
+import type { StepFailure, StepSpawn } from '../../../../../engine/src/steps/step-actions';
 import {
   ACTIONS,
   StepFailedError,
@@ -15,8 +15,8 @@ import {
   runAfterSteps,
   runBeforeSteps,
   stepExitCode,
-} from '../../../agents/steps/step-actions';
-import { readGitState } from '../../../agents/steps/git-state';
+} from '../../../../../engine/src/steps/step-actions';
+import { readGitState } from '../../../../../engine/src/steps/git-state';
 import { makeTmpGitRepo } from '../../helpers/git-repo';
 import { makeTmpDir } from '../../helpers/tmp';
 

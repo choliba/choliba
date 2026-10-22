@@ -1,5 +1,5 @@
 import { EXECUTION_MODES, type ExecutionMode } from '../../common';
-import { SINCE_PENDING } from '../steps/step-constants';
+import { SINCE_PENDING } from '@choliba/engine';
 import type { ProviderRegistry } from '../../common';
 import { ExpectedError, unknownWordMessage } from '@choliba/core';
 

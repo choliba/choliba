@@ -1,7 +1,7 @@
 import { chmodSync, mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { DEFAULT_IGNORE, searchFolder } from '../../../agents/steps/step-search';
+import { DEFAULT_IGNORE, searchFolder } from '../../../../../engine/src/steps/step-search';
 import { makeTmpDir } from '../../helpers/tmp';
 
 describe('searchFolder', () => {
