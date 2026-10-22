@@ -27,3 +27,4 @@ export { createPlannedTicket, finishTicket, resolveTicketTarget, ticketVars, Tic
 export type { TicketArgs, TicketTarget } from './ticket-run';
 export { formatPlanTimestamp, planBasename, readPlan, resolvePlanPath, slugify, writePlan } from './plan-store';
 export type { WritePlanOptions } from './plan-store';
+export type { DryRunInput } from './dry-run';

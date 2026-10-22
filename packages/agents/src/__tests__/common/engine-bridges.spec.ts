@@ -17,6 +17,7 @@ import * as ticketRun from '../../agents/runs/ticket-run';
 import * as planStore from '../../agents/runs/plan-store';
 import * as install from '../../agents/install/install';
 import * as installSource from '../../agents/install/install-source';
+import * as dryRun from '../../agents/runs/dry-run';
 
 describe('@choliba/agents engine bridges', () => {
   it('keeps the provider contract available from its old module', () => {
@@ -76,5 +77,11 @@ describe('@choliba/agents engine bridges', () => {
     expect(install.formatInstall).toBe(engine.formatInstall);
     expect(install.InstallError).toBe(engine.InstallError);
     expect(installSource.fetchSource).toBe(engine.fetchSource);
+  });
+
+  it('keeps the dry-run data available from its old module', () => {
+    expect(Object.values(dryRun)).not.toContain(undefined);
+    expect(typeof dryRun.formatDryRun).toBe('function');
+    expect(typeof dryRun.modelText).toBe('function');
   });
 });
