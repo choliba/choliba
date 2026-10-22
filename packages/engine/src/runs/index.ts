@@ -23,3 +23,7 @@ export { agentRunChoice, declaredModels, undeclaredModel } from './run-choice';
 export type { RunAsk, RunChoice } from './run-choice';
 export { STOPPED, errorMessage, locationsOf, projectsDir, toAbsolute } from './run-context';
 export type { PreparedRun, PrepareRunDeps, RunContext, RunRequest, Stopped } from './run-context';
+export { createPlannedTicket, finishTicket, resolveTicketTarget, ticketVars, TicketRunError } from './ticket-run';
+export type { TicketArgs, TicketTarget } from './ticket-run';
+export { formatPlanTimestamp, planBasename, readPlan, resolvePlanPath, slugify, writePlan } from './plan-store';
+export type { WritePlanOptions } from './plan-store';

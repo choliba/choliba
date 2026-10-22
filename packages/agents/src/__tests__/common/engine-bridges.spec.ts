@@ -13,6 +13,8 @@ import * as definedConfig from '../../agents/defined-config';
 import * as invocation from '../../agents/invocation';
 import * as runChoice from '../../agents/runs/run-choice';
 import * as runPreparation from '../../agents/runs/run-preparation';
+import * as ticketRun from '../../agents/runs/ticket-run';
+import * as planStore from '../../agents/runs/plan-store';
 
 describe('@choliba/agents engine bridges', () => {
   it('keeps the provider contract available from its old module', () => {
@@ -58,5 +60,14 @@ describe('@choliba/agents engine bridges', () => {
     expect(runChoice.agentRunChoice).toBe(engine.agentRunChoice);
     expect(runPreparation.prepareRun).toBe(engine.prepareRun);
     expect(runProject.withProjectDenies).toBe(engine.withProjectDenies);
+  });
+
+  it('keeps the ticket and plans available from their old modules', () => {
+    expect(Object.values(ticketRun)).not.toContain(undefined);
+    expect(Object.values(planStore)).not.toContain(undefined);
+    expect(ticketRun.resolveTicketTarget).toBe(engine.resolveTicketTarget);
+    expect(ticketRun.finishTicket).toBe(engine.finishTicket);
+    expect(planStore.writePlan).toBe(engine.writePlan);
+    expect(planStore.readPlan).toBe(engine.readPlan);
   });
 });
