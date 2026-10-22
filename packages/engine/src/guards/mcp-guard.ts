@@ -1,5 +1,6 @@
-import type { McpDeclaration } from '../../common';
-import type { AgentEvent, McpUse } from '../../common';
+import type { McpDeclaration } from '@choliba/domain';
+
+import type { AgentEvent, McpUse } from '../ports';
 
 /** Any tool whose name speaks of MCP, for a call its provider's parser did not classify. */
 const MCP_NAME = /mcp/i;

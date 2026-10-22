@@ -1,6 +1,6 @@
 import type { PermissionContext, PermissionObject, PermissionRequest } from '@choliba/sandbox';
 
-import type { AgentEvent, ProviderRequest } from '../../common';
+import type { AgentEvent, ProviderRequest } from '../ports';
 import { mcpUseOf } from './mcp-guard';
 
 type ToolCall = Extract<AgentEvent, { type: 'tool-call' }>;

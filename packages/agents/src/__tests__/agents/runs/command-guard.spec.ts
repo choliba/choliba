@@ -1,6 +1,6 @@
 import type { AgentDefinition, ProviderRequest } from '../../../common';
 import { readAgentPermissions } from '../../../common/agent-permissions';
-import { commandRules, commandViolation, type CommandRules } from '../../../agents/runs/command-guard';
+import { commandRules, commandViolation, type CommandRules } from '../../../../../engine/src/guards/command-guard';
 import { NO_MODE_STEPS, fakeSections } from '../../helpers/agent';
 
 function request(permissions: unknown): ProviderRequest {

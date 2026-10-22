@@ -2,15 +2,15 @@ import { isAbsolute, join } from 'node:path';
 
 import { isWithin, withoutTrailingSlash } from '@choliba/sandbox';
 
-import {
-  absolutePermissions,
-  allowedCommands,
-  blocksEveryCommand,
-  EVERY_COMMAND,
-  runToolCommands,
-  runToolsOf,
-  type ProviderRequest,
-} from '../../common';
+import { EVERY_COMMAND, absolutePermissions, allowedCommands, blocksEveryCommand } from '@choliba/domain';
+
+import { activeRunTools, runToolCommands, type ActiveRunTool } from '../common';
+import type { ProviderRequest } from '../ports';
+
+/** The run tools of what a provider runs. */
+export function runToolsOf(request: ProviderRequest): readonly ActiveRunTool[] {
+  return activeRunTools(request.agent.permissions, request.runDir, request.policy);
+}
 
 /** The commands an agent may run, for a provider whose own permissions cannot limit them. */
 export interface CommandRules {

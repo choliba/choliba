@@ -1,12 +1,8 @@
 import { decide, type PermissionContext, type PermissionPolicy, type ToolPolicy } from '@choliba/sandbox';
 
-import {
-  pathPolicy,
-  type AgentEvent,
-  type AgentProvider,
-  type McpDeclaration,
-  type ProviderRequest,
-} from '../../common';
+import { pathPolicy, type McpDeclaration } from '@choliba/domain';
+
+import type { AgentEvent, AgentProvider, ProviderRequest } from '../ports';
 import { commandRules, commandViolation, type CommandRules } from './command-guard';
 import { SUBAGENT_TOOLS, delegationMessage } from './delegation-guard';
 import { discoveryViolation, mcpCallMessage } from './mcp-guard';

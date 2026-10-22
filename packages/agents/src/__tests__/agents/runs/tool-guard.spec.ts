@@ -3,8 +3,8 @@ import type { ProviderRequest } from '../../../common/interfaces/provider.interf
 import type { AgentEvent, McpUse } from '../../../common/interfaces/event.interface';
 import { readAgentPermissions } from '../../../common/agent-permissions';
 import { pathPolicy } from '../../../common/path-policy';
-import { toolGuard, toolViolation, type ToolGuard } from '../../../agents/runs/tool-guard';
-import { toolPolicy } from '../../../agents/runs/tool-policy';
+import { toolGuard, toolViolation, type ToolGuard } from '../../../../../engine/src/guards/tool-guard';
+import { toolPolicy } from '../../../../../engine/src/guards/tool-policy';
 
 function call(name: string, mcp?: McpUse, summary = ''): AgentEvent {
   return { type: 'tool-call', id: 'c1', name, summary, ...(mcp === undefined ? {} : { mcp }) };
