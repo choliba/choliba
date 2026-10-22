@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
-import { listProjectNames, projectHookFile, readAppliedLocations, type ProjectHook } from '@choliba/projects';
+import { readAppliedLocations } from '@choliba/workspace';
+
+import { listProjectNames, projectHookFile, type ProjectHook } from '../src/app';
 
 type HookFunction = () => Promise<void> | void;
 

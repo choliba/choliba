@@ -1,14 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import {
-  fullTicket,
-  resolveReportFolder,
-  resolveTicketRunsRoot,
-  ticketJsonPath,
-  ticketSuffix,
-  type ProjectLocations,
-} from '@choliba/projects';
+import type { ProjectLocations } from '@choliba/workspace';
+
+import { fullTicket, resolveReportFolder, resolveTicketRunsRoot, ticketJsonPath, ticketSuffix } from '../app';
 import { writeStderr, writeStdout, type Writable } from '@choliba/core';
 
 import { flattenResults, isRealFailure } from './playwright-results';

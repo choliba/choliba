@@ -37,6 +37,7 @@
         "@choliba/domain": "workspace:*",
         "@choliba/engine": "workspace:*",
         "@choliba/projects": "workspace:*",
+        "@choliba/runner": "workspace:*",
         "@choliba/sandbox": "workspace:*",
         "@choliba/workspace": "workspace:*",
         "@playwright/test": "1.63.0",
@@ -129,7 +130,6 @@
         "@choliba/config": "workspace:*",
         "@choliba/core": "workspace:*",
         "@choliba/domain": "workspace:*",
-        "@choliba/projects": "workspace:*",
         "@choliba/workspace": "workspace:*",
       },
       "devDependencies": {

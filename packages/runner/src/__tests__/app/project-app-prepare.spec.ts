@@ -2,9 +2,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import type { ProjectSettings } from '../../projects/project-settings';
+import type { ProjectSettings } from '@choliba/domain';
 
-import { APP_PREPARED_ENV, AppError, prepareApp, type SetupSpawn } from '../../projects/project-app-prepare';
+import { APP_PREPARED_ENV, AppError, prepareApp, type SetupSpawn } from '../../app/project-app-prepare';
 
 function settingsWith(setup?: readonly string[]): ProjectSettings {
   const environment = {

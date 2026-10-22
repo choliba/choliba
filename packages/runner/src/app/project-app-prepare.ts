@@ -1,15 +1,21 @@
 import { appendFileSync } from 'node:fs';
+import { join } from 'node:path';
 
-import { configJsonPath } from '../paths';
+import { ExpectedError } from '@choliba/core';
+import type { ProjectSettings } from '@choliba/domain';
+import { PROJECT_CONFIG_FILE } from '@choliba/workspace';
+
 import { freshLog, logTail, withAppendLog } from './project-app-log';
-import type { ProjectSettings } from './project-settings';
-import { ProjectsError } from '../common';
 
 /** Set for the runs of a batch once their project's application was prepared, so it is prepared only once. */
 export const APP_PREPARED_ENV = 'CHOL_APP_PREPARED';
 
 /** The project's application could not be prepared or started; the message says why and where to fix it. */
-export class AppError extends ProjectsError {}
+export class AppError extends ExpectedError {}
+
+function configJsonPath(projectsDir: string, project: string): string {
+  return join(projectsDir, project, PROJECT_CONFIG_FILE);
+}
 
 /** Where a setup command writes: to the log, its input closed (`['ignore', log, log]`). */
 export type SetupStdio = ['ignore', number, number];

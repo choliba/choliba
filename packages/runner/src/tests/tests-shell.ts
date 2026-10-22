@@ -1,5 +1,5 @@
 import { PLATFORM, THEME, WORKSPACE_ROOT, type ShellModule } from '@choliba/core';
-import { projectsConfig } from '@choliba/projects';
+import { projectsConfig } from '@choliba/workspace';
 
 import { findRunnerRoot } from './runner-root';
 import { testsCommand } from './tests.command';

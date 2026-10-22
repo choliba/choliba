@@ -24,7 +24,7 @@ const STRUCTURE: Readonly<Record<string, Partial<Record<Exclude<Layer, 'common'>
   tui: { module: ['panel', 'session'] },
   core: { module: ['shell'] },
   projects: { domain: ['paths'], module: ['locations', 'tickets', 'projects'] },
-  runner: { module: ['tests'] },
+  runner: { module: ['tests', 'app'] },
   sandbox: { domain: ['sandbox'] },
   agents: { module: ['agents', 'providers'] },
   choliba: { domain: ['help', 'runtime'], module: ['check', 'config', 'library', 'setup', 'tooling'] },

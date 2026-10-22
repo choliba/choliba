@@ -13,8 +13,9 @@ import {
   type SignalSource,
   type Writable,
 } from '@choliba/core';
-import { AppError, type ProjectSettings } from '@choliba/projects';
+import type { ProjectSettings } from '@choliba/projects';
 import * as projects from '@choliba/projects';
+import { AppError } from '@choliba/runner';
 
 import * as gitDiff from '../../../../../engine/src/steps/git-working-tree-diff';
 

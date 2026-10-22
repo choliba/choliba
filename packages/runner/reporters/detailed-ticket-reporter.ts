@@ -11,7 +11,7 @@ import {
   writeStdout,
   type Theme,
 } from '@choliba/core';
-import { readAppliedLocations } from '@choliba/projects';
+import { readAppliedLocations } from '@choliba/workspace';
 import type { FullConfig, Reporter, TestCase, TestResult } from '@playwright/test/reporter';
 
 import { WORKSPACE_ENV } from '../src/tests/playwright-env';

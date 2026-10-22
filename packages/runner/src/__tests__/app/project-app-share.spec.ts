@@ -1,6 +1,7 @@
-import { holdApp, shareApp } from '../../projects/project-app-share';
-import type { RunningApp } from '../../projects/project-app-ensure';
-import type { ProjectSettings } from '../../projects/project-settings';
+import type { ProjectSettings } from '@choliba/domain';
+
+import type { RunningApp } from '../../app/project-app-ensure';
+import { holdApp, shareApp } from '../../app/project-app-share';
 
 /** The settings of `project`; only its name matters to sharing. */
 function settings(project: string): ProjectSettings {

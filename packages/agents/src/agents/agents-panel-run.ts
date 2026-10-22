@@ -6,7 +6,7 @@ import {
   type Panel,
   type PanelContext,
 } from '@choliba/core';
-import { holdApp } from '@choliba/projects';
+import { holdApp } from '@choliba/runner';
 
 import type { AgentDefinition } from '../common';
 import { agentVoice } from './agents-panel-card';

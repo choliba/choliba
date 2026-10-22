@@ -1,11 +1,7 @@
 import type { CommandSpec, Platform, ThemeService } from '@choliba/core';
-import {
-  listProjectNames,
-  listTicketSuffixes,
-  projectLocations,
-  ticketsFolderPath,
-  type projectsConfig,
-} from '@choliba/projects';
+import { projectLocations, type projectsConfig } from '@choliba/workspace';
+
+import { listProjectNames, listTicketSuffixes, ticketsFolderPath } from '../app';
 
 import { runTests, type RunTestsOptions } from './run-tests';
 import { testsCliSpec } from './tests-spec';

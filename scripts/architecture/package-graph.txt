@@ -3,6 +3,7 @@
 @choliba/agents → @choliba/domain
 @choliba/agents → @choliba/engine
 @choliba/agents → @choliba/projects
+@choliba/agents → @choliba/runner
 @choliba/agents → @choliba/sandbox
 @choliba/agents → @choliba/workspace
 @choliba/core → @choliba/kernel
@@ -20,7 +21,6 @@
 @choliba/runner → @choliba/config
 @choliba/runner → @choliba/core
 @choliba/runner → @choliba/domain
-@choliba/runner → @choliba/projects
 @choliba/runner → @choliba/workspace
 @choliba/sandbox → @choliba/config
 @choliba/sandbox → @choliba/core

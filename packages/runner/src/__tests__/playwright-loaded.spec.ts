@@ -113,7 +113,9 @@ describe('what Playwright loads', () => {
 
   it('reaches the packages it uses, so the walk is real', () => {
     const reached = [...graph.keys()].map((file) => relative(PACKAGES, file));
-    expect(reached).toEqual(expect.arrayContaining(['projects/src/index.ts', 'kernel/src/config/index.ts']));
+    expect(reached).toEqual(
+      expect.arrayContaining(['domain/src/index.ts', 'workspace/src/index.ts', 'kernel/src/config/index.ts']),
+    );
   });
 
   it('uses no decorator, directly or through an import', () => {

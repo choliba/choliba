@@ -1,4 +1,5 @@
-import type { ProjectSettings } from './project-settings';
+import type { ProjectSettings } from '@choliba/domain';
+
 import type { RunningApp } from './project-app-ensure';
 
 /** A project's application in this process: what made it up, and how many runs use it. */
