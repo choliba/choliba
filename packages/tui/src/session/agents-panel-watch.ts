@@ -1,9 +1,8 @@
-import type { ChatPanel, Container, PanelContext } from '@choliba/core';
-
-import { agentPaint } from './agents-panel-card';
-import { RESUME_AT, sequenceRunning } from './agents-panel-run';
 import {
   AGENT,
+  RESUME_AT,
+  agentPaint,
+  agentsConfig,
   listenModeKey,
   SANDBOX,
   sessionAgent,
@@ -12,7 +11,10 @@ import {
   showSandbox,
   TICKET,
   warn,
-} from './agents-panel-state';
+  sequenceRunning,
+} from '@choliba/agents';
+import type { Container } from '@choliba/kernel';
+import type { ChatPanel, PanelContext } from '@choliba/shell';
 
 /** The sessions whose status line and agent card follow their choices already. */
 const watching = new WeakSet<PanelContext>();
@@ -48,6 +50,7 @@ function moveAgent(container: Container, context: PanelContext, id: string, onto
  * sequence.
  */
 export function watchChoices(container: Container, context: PanelContext): void {
+  if (!container.has(agentsConfig.token)) return;
   showRun(container, context);
   listenModeKey(container, context);
   if (watching.has(context)) return;

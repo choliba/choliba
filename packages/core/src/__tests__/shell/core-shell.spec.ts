@@ -1,6 +1,6 @@
 import { createShell, THEME } from '@choliba/shell';
 
-import { coreShell, openOpenTuiPanel, PANEL_OPENER } from '../..';
+import { coreShell } from '../..';
 import { BufferWritable, fakePlatform, VERBS_ROOT } from '../../testing';
 
 describe('coreShell', () => {
@@ -16,11 +16,7 @@ describe('coreShell', () => {
     ).toBe(false);
   });
 
-  it('opens the panel on OpenTUI', () => {
-    expect(createShell(fakePlatform(), [coreShell, VERBS_ROOT]).container.get(PANEL_OPENER)).toBe(openOpenTuiPanel);
-  });
-
-  it('runs the hidden terminal command and the panel', () => {
-    expect(coreShell.commands.map((command) => command.name)).toEqual(['terminal', 'panel']);
+  it('runs the hidden terminal command', () => {
+    expect(coreShell.commands.map((command) => command.name)).toEqual(['terminal']);
   });
 });

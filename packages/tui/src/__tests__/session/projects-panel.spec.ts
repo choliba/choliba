@@ -2,13 +2,12 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { Container, type PanelContext } from '@choliba/core';
-import { fakeChatPanel } from '@choliba/core/testing';
+import { Container } from '@choliba/kernel';
+import { PROJECTS, ProjectsService, type LocationsService } from '@choliba/projects';
+import type { PanelContext } from '@choliba/shell';
 
-import { projectsPanel } from '../../projects/projects-panel';
-import { PROJECTS } from '../../projects/projects.constants';
-import { ProjectsService } from '../../projects/projects.service';
-import type { LocationsService } from '../../locations';
+import { projectsPanel } from '../../session/projects-panel';
+import { fakeChatPanel } from '../../testing';
 
 /** A projects folder with `projects` (name → its files), and the panel's commands on it. */
 function withProjects(projects: Readonly<Record<string, Readonly<Record<string, string>>>>) {
@@ -80,7 +79,7 @@ const LOJA = {
   'tickets/2.json': '{}',
 };
 
-describe('the panel commands of @choliba/projects', () => {
+describe('the project panel commands of @choliba/tui', () => {
   it('names /projects and /tickets', () => {
     expect(projectsPanel.map((command) => [command.name, command.description])).toEqual([
       ['projects', 'Escolhe o projeto em que o painel age'],

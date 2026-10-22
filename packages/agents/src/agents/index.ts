@@ -57,4 +57,36 @@ export { listAgentsCommand } from './agents-list.command';
 export { runAgentCommand, runAgentEntry } from './agents-run.command';
 export { AGENT_PROVIDERS, AGENTS } from './agents.constants';
 export { AgentsService, type AgentsPlatform } from './agents.service';
-export { agentsPanel } from './agents-panel';
+export {
+  AGENT,
+  MODE,
+  MODEL,
+  PANEL_MODEL_DEFAULT,
+  PROJECT,
+  PROVIDER,
+  SANDBOX,
+  STATE,
+  TICKET,
+  activeAgent,
+  agentKey,
+  agentsDir,
+  bold,
+  flag,
+  gray,
+  installedProvider,
+  listenModeKey,
+  modeChoice,
+  panelProviderChoice,
+  providerChoice,
+  sandboxChoice,
+  sandboxProblem,
+  sessionAgent,
+  sessionAgentIds,
+  sessionArgv,
+  sessionRun,
+  showRun,
+  showSandbox,
+  warn,
+} from './agents-panel-state';
+export { RESUME_AT, resumeSequence, runningAgent, sequenceRunning, talkToAgent } from './agents-panel-run';
+export { agentCard, agentPaint, agentVoice, type AgentCardPlace, type AgentRunLabels } from './agents-panel-card';

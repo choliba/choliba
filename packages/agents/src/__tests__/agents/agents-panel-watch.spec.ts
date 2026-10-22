@@ -4,13 +4,11 @@ import { join } from 'node:path';
 import { Container, parseColors, PLATFORM, THEME, ThemeService, WORKSPACE_ROOT } from '@choliba/core';
 import { fakeChatPanel, fakePanelContext, fakePlatform } from '@choliba/core/testing';
 import { sandboxConfig } from '@choliba/sandbox';
+import { agentsPanel, tuiShell, watchChoices } from '@choliba/tui';
 
 import { ProviderRegistry } from '../../common';
 import { agentsConfig } from '../../agents/agents-config';
-import { agentsPanel } from '../../agents/agents-panel';
 import { talkToAgent } from '../../agents/agents-panel-run';
-import { watchChoices } from '../../agents/agents-panel-watch';
-import { agentsShell } from '../../agents/agents-shell';
 import { AGENT_PROVIDERS, AGENTS } from '../../agents/agents.constants';
 import type { AgentsService } from '../../agents/agents.service';
 import { ClaudeAgentProvider } from '../../providers';
@@ -36,7 +34,7 @@ function session(dir: string, sandbox = 'local', docker = true) {
   container.provide(THEME, () => new ThemeService({}, platform.stdout, false, parseColors('')));
   container.provide(AGENT_PROVIDERS, () => new ProviderRegistry([new ClaudeAgentProvider()]));
   const state = fakePanelContext();
-  agentsShell.panelStart?.(container, state.context);
+  tuiShell.panelStart?.(container, state.context);
   return { container, state };
 }
 

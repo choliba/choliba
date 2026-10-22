@@ -11,6 +11,7 @@ describe('the package root', () => {
     expect(process.exitCode).toBeUndefined();
     expect(CHOLIBA_SHELL.map((module) => module.name)).toEqual([
       '@choliba/core',
+      '@choliba/tui',
       '@choliba/agents',
       '@choliba/projects',
       '@choliba/runner',

@@ -5,15 +5,13 @@ import { sandboxConfig } from '@choliba/sandbox';
 import { agentsConfig } from './agents-config';
 import { knownProviders } from '../providers';
 import { listAgentsCommand } from './agents-list.command';
-import { agentsPanel } from './agents-panel';
-import { watchChoices } from './agents-panel-watch';
 import { runAgentCommand } from './agents-run.command';
 import { AGENT_PROVIDERS, AGENTS } from './agents.constants';
 import { AgentsService } from './agents.service';
 
 /**
  * @choliba/agents in the shell: the providers (`knownProviders`), `choliba run agent`,
- * `choliba list agents`, and `/agents` in the panel.
+ * and `choliba list agents`.
  */
 export const agentsShell: ShellModule = {
   name: '@choliba/agents',
@@ -53,8 +51,4 @@ export const agentsShell: ShellModule = {
     });
   },
   commands: [runAgentCommand, listAgentsCommand],
-  panel: agentsPanel,
-  panelStart: (container, context) => {
-    watchChoices(container, context);
-  },
 };

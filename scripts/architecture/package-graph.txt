@@ -18,7 +18,9 @@
 @choliba/sandbox → @choliba/core
 @choliba/shell → @choliba/config
 @choliba/shell → @choliba/kernel
+@choliba/tui → @choliba/agents
 @choliba/tui → @choliba/kernel
+@choliba/tui → @choliba/projects
 @choliba/tui → @choliba/shell
 @choliba/tui → @choliba/workspace
 @choliba/workspace → @choliba/config
@@ -29,4 +31,5 @@ choliba → @choliba/core
 choliba → @choliba/projects
 choliba → @choliba/runner
 choliba → @choliba/sandbox
+choliba → @choliba/tui
 choliba → @choliba/workspace

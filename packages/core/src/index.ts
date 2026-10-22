@@ -21,5 +21,5 @@ export {
   type PanelToolkit,
   type PanelRunScreen,
   type PanelRunScreenOptions,
-} from '@choliba/tui';
+} from '@choliba/tui/panel';
 export * from './shell';
