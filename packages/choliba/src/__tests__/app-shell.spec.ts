@@ -17,6 +17,7 @@ describe('the choliba shell', () => {
       '@choliba/agents',
       'choliba-agents-commands',
       '@choliba/projects',
+      'choliba-projects-commands',
       '@choliba/runner',
     ]);
   });

@@ -23,9 +23,7 @@ export {
 } from './project-stack';
 export { isDeviceOn } from './project-devices';
 export { findReadme, readText, readmeSummary } from './project-readme';
-export { listProjectsCommand } from './projects-list.command';
-export { newProjectCommand } from './projects-new.command';
+export { parseNewProjectArgs, resolveNewProject, type NewProject, type NewProjectInput } from './new-project';
 export { PROJECTS } from './projects.constants';
 export { ProjectsService, type ProjectSummary, type ProjectTickets } from './projects.service';
-export { listProjectsSpec, newProjectSpec } from './projects-spec';
 export { projectsShell } from './projects-shell';

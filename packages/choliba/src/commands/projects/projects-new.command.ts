@@ -1,20 +1,22 @@
 import { messageOf, PLATFORM, type Ask, type CommandEntry, type ShellCommand, type ShellIo } from '@choliba/core';
+import {
+  parseNewProjectArgs,
+  resolveNewProject,
+  PROJECTS,
+  UsageError,
+  type CreatedProject,
+  type NewProject,
+  type ProjectsService,
+} from '@choliba/projects';
 
-import { programOf, UsageError } from '../common';
-import { parseNewProjectArgs, resolveNewProject, type NewProject } from './new-project';
-import type { CreatedProject } from './project';
-import { PROJECTS } from './projects.constants';
-import type { ProjectsService } from './projects.service';
 import { newProjectSpec } from './projects-spec';
 
 const PATH: readonly string[] = ['new', 'project'];
 
-/** The fields of `config.json` the project still has to fill in, as the report names them. */
 function stillMissing(project: NewProject): readonly string[] {
   return [...(project.appDir === undefined ? ['appDir'] : []), ...(project.baseUrl === undefined ? ['baseURL'] : [])];
 }
 
-/** Where the description came from, or why it stayed empty; nothing without an application folder. */
 function describeCreated(created: CreatedProject, appDir: string | undefined): readonly string[] {
   if (appDir === undefined) return [];
   if (created.description !== undefined) {
@@ -36,10 +38,6 @@ function report(project: NewProject, dir: string, created: CreatedProject): stri
   ].join('\n');
 }
 
-/**
- * `choliba new project [NOME] [--app-dir DIR] [--base-url URL] [--no-input]`: a test project from the template.
- * Everything is optional; on a terminal, `ask` asks for what is missing.
- */
 export async function runProjectsNew(
   io: ShellIo,
   projects: ProjectsService,
@@ -56,12 +54,11 @@ export async function runProjectsNew(
     const { dir, created } = projects.create(project);
     io.write(`${report(project, dir, created)}\n`);
   } catch (error) {
-    if (error instanceof UsageError) io.usageError(error.message, programOf(PATH));
+    if (error instanceof UsageError) io.usageError(error.message, 'choliba new project');
     else io.fail(messageOf(error));
   }
 }
 
-/** How `choliba new --help` lists `project`. */
 const NEW_ENTRY: CommandEntry = {
   name: 'project',
   description: 'Cria um projeto a partir do modelo; o que faltar é perguntado no terminal',
@@ -69,7 +66,6 @@ const NEW_ENTRY: CommandEntry = {
   spec: newProjectSpec(),
 };
 
-/** `choliba new project [NOME] [--app-dir DIR] [--base-url URL] [--no-input]`. */
 export const newProjectCommand: ShellCommand = {
   verb: 'new',
   name: 'project',

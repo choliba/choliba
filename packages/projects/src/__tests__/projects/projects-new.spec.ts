@@ -6,7 +6,7 @@ import { complete, coreShell, FILES_MARKER, formatSuggestions, type Ask } from '
 import { fakePlatform, runShell, VERBS_ROOT } from '@choliba/core/testing';
 
 import { projectsShell } from '../../projects/projects-shell';
-import { newProjectSpec } from '../../projects/projects-spec';
+import { newProjectSpec, projectsCommandsShell } from '../../../../choliba/src/commands/projects';
 
 interface Workspace {
   readonly root: string;
@@ -52,7 +52,7 @@ async function projectsNew(
     cwd: root,
     ...(ask === undefined ? {} : { ask }),
   });
-  const code = await runShell([coreShell, projectsShell, VERBS_ROOT], platform);
+  const code = await runShell([coreShell, projectsShell, projectsCommandsShell, VERBS_ROOT], platform);
   return { code, out: platform.stdout.text(), err: platform.stderr.text() };
 }
 
