@@ -1,4 +1,4 @@
-import { listProjectNames, projectOfArgument } from '@choliba/projects';
+import { listProjectNames, projectOfArgument } from '../src/app';
 
 function pathArgs(): string[] {
   const argv = process.argv.slice(2);

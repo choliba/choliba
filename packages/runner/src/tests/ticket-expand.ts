@@ -1,12 +1,6 @@
 import fs from 'node:fs';
 
-import {
-  canonicalizeSuffix,
-  fullTicket,
-  listTicketSuffixes,
-  ticketFilePath,
-  ticketsFolderPath,
-} from '@choliba/projects';
+import { canonicalizeSuffix, fullTicket, listTicketSuffixes, ticketFilePath, ticketsFolderPath } from '../app';
 
 export function trim(value: string): string {
   return value.trim();

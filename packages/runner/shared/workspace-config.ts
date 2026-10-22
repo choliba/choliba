@@ -1,7 +1,7 @@
 import path from 'node:path';
 
 import { envSource, fileSource, type ConfigSource } from '@choliba/config';
-import { projectLocations, projectsConfig, type ProjectLocations } from '@choliba/projects';
+import { projectLocations, projectsConfig, type ProjectLocations } from '@choliba/workspace';
 
 /** The process environment first, then the workspace's `.env`. */
 export function workspaceSources(

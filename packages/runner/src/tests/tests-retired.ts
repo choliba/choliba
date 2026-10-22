@@ -1,4 +1,4 @@
-import { formatRetired, retiredCriteria, type RetiredCriterion } from '@choliba/projects';
+import { formatRetired, retiredCriteria, type RetiredCriterion } from '../app';
 
 import { fail } from './tests-error';
 
