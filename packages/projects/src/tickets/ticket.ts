@@ -1,9 +1,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
+
+import { fullTicket, ticketSuffix } from '@choliba/domain';
+
 import { ProjectsError, readJsonFile } from '../common';
 import { type ProjectLocations, REPORT_FOLDER, TEST_RESULTS_FOLDER } from '../paths';
 import { assertProjectExists, projectDir } from '../paths';
 import { TICKETS_SUBDIR, TICKET_RUNS_SUBDIR } from '../paths';
+
+export { fullTicket, ticketSuffix };
 
 /** The part of a ticket JSON this package reads: which spec tests cover each acceptance criterion. */
 export interface TicketJson {
@@ -11,16 +16,6 @@ export interface TicketJson {
 }
 
 const TICKET_EXTENSION = '.json';
-
-export function ticketSuffix(project: string, ticket: string): string {
-  const prefix = `${project}-`;
-  return ticket.startsWith(prefix) ? ticket.slice(prefix.length) : ticket;
-}
-
-export function fullTicket(project: string, ticketOrSuffix: string): string {
-  const prefix = `${project}-`;
-  return ticketOrSuffix.startsWith(prefix) ? ticketOrSuffix : `${prefix}${ticketOrSuffix}`;
-}
 
 export function parseTarget(target: string): { project: string; rawTicket: string } {
   const [project, rawTicket] = target.split(':');
