@@ -128,6 +128,12 @@ describe('runnerShell', () => {
 
     expect(fs.existsSync(path.join(container.get(RUNNER_ROOT), 'playwright.config.ts'))).toBe(true);
   });
+
+  it('provides empty default hooks for the tests service', () => {
+    const { container } = createShell(fakePlatform(), [coreShell, runnerShell, VERBS_ROOT]);
+
+    expect(container.get(TESTS_HOOKS)).toEqual({});
+  });
 });
 
 describe('testsCommandSpec — completion and description', () => {
