@@ -12,3 +12,10 @@ export type {
 } from './provider.interface';
 export type { RunProject } from './run-project';
 export type { AskAnswer, AskQuestion, RunScreen } from './run-screen.interface';
+export type {
+  RunProcess,
+  RunProcessExit,
+  RunProcessLine,
+  RunProcessOptions,
+  RunProcessRunner,
+} from './run-process.interface';
