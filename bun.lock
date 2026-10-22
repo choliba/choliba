@@ -60,6 +60,7 @@
         "@choliba/projects": "workspace:*",
         "@choliba/runner": "workspace:*",
         "@choliba/sandbox": "workspace:*",
+        "@choliba/tui": "workspace:*",
         "@choliba/workspace": "workspace:*",
         "@eslint/js": "^10.0.1",
         "@playwright/test": "1.63.0",

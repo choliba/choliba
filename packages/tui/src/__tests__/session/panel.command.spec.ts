@@ -1,8 +1,15 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { baseShell, WORKSPACE_ROOT, type ChatPanel, type PanelOptions, type ShellModule } from '@choliba/shell';
+import {
+  baseShell,
+  createShell,
+  WORKSPACE_ROOT,
+  type ChatPanel,
+  type PanelOptions,
+  type ShellModule,
+} from '@choliba/shell';
 
-import { PANEL_ICON, PANEL_LOGO, PANEL_OPENER, PANEL_VERSION, tuiShell } from '../../index';
+import { openOpenTuiPanel, PANEL_ICON, PANEL_LOGO, PANEL_OPENER, PANEL_VERSION, tuiShell } from '../../index';
 import { fakeChatPanel as fakePanel } from '../../testing';
 import { BufferWritable, fakePlatform, type FakePlatform } from '@choliba/kernel/testing';
 import { replace, runShell, VERBS_ROOT, type ShellOverride } from '@choliba/shell/testing';
@@ -30,6 +37,10 @@ function terminal(args: readonly string[] = [], cwd = '/home/ana/loja'): FakePla
 }
 
 describe('choliba panel', () => {
+  it('opens the panel on OpenTUI when the app does not replace the opener', () => {
+    expect(createShell(fakePlatform(), [tuiShell, VERBS_ROOT]).container.get(PANEL_OPENER)).toBe(openOpenTuiPanel);
+  });
+
   it('closes the panel with /quit, with code 0', async () => {
     const fake = fakePanel();
     const code = runPanel([baseShell, tuiShell, VERBS_ROOT], terminal(), [

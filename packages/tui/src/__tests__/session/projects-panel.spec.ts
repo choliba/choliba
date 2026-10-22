@@ -6,7 +6,7 @@ import { Container } from '@choliba/kernel';
 import { PROJECTS, ProjectsService, type LocationsService } from '@choliba/projects';
 import type { PanelContext } from '@choliba/shell';
 
-import { projectsPanel } from '../../panel/projects-panel';
+import { projectsPanel } from '../../session/projects-panel';
 import { fakeChatPanel } from '../../testing';
 
 /** A projects folder with `projects` (name → its files), and the panel's commands on it. */

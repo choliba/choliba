@@ -2,6 +2,7 @@ import {
   AGENT,
   RESUME_AT,
   agentPaint,
+  agentsConfig,
   listenModeKey,
   SANDBOX,
   sessionAgent,
@@ -49,6 +50,7 @@ function moveAgent(container: Container, context: PanelContext, id: string, onto
  * sequence.
  */
 export function watchChoices(container: Container, context: PanelContext): void {
+  if (!container.has(agentsConfig.token)) return;
   showRun(container, context);
   listenModeKey(container, context);
   if (watching.has(context)) return;

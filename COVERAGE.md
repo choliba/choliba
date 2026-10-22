@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 21/10/2026 15:19:34 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 22/10/2026 08:51:01 — não editar manualmente.
 
 ## Resumo
 
@@ -23,7 +23,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 98 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 95 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -34,11 +34,8 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/agents-config.ts](packages/agents/src/agents/agents-config.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-list.command.ts](packages/agents/src/agents/agents-list.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-panel-card.ts](packages/agents/src/agents/agents-panel-card.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/agents-panel-choices.ts](packages/agents/src/agents/agents-panel-choices.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-panel-run.ts](packages/agents/src/agents/agents-panel-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-panel-state.ts](packages/agents/src/agents/agents-panel-state.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/agents-panel-watch.ts](packages/agents/src/agents/agents-panel-watch.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/agents-panel.ts](packages/agents/src/agents/agents-panel.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-run.command.ts](packages/agents/src/agents/agents-run.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents-shell.ts](packages/agents/src/agents/agents-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents.constants.ts](packages/agents/src/agents/agents.constants.ts)|100.00|100.00|100.00|100.00
@@ -233,7 +230,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 32 arquivos</summary>
+<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 31 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -257,7 +254,6 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/projects/project.ts](packages/projects/src/projects/project.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects-list.command.ts](packages/projects/src/projects/projects-list.command.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects-new.command.ts](packages/projects/src/projects/projects-new.command.ts)|100.00|100.00|100.00|100.00
-🟢|[src/projects/projects-panel.ts](packages/projects/src/projects/projects-panel.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects-shell.ts](packages/projects/src/projects/projects-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects-spec.ts](packages/projects/src/projects/projects-spec.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/projects.constants.ts](packages/projects/src/projects/projects.constants.ts)|100.00|100.00|100.00|100.00
@@ -374,13 +370,14 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/tui</b> — 100.00% das linhas, 16 arquivos</summary>
+<summary>🟢 <b>packages/tui</b> — 100.00% das linhas, 21 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
 🟢|[src/panel/panel-art.ts](packages/tui/src/panel/panel-art.ts)|100.00|100.00|100.00|100.00
 🟢|[src/panel/panel-choose.ts](packages/tui/src/panel/panel-choose.ts)|100.00|100.00|100.00|100.00
 🟢|[src/panel/panel-history.ts](packages/tui/src/panel/panel-history.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/panel-keys.ts](packages/tui/src/panel/panel-keys.ts)|100.00|100.00|100.00|100.00
 🟢|[src/panel/panel-palette.ts](packages/tui/src/panel/panel-palette.ts)|100.00|100.00|100.00|100.00
 🟢|[src/panel/panel-question.ts](packages/tui/src/panel/panel-question.ts)|100.00|100.00|100.00|100.00
 🟢|[src/panel/panel-text.ts](packages/tui/src/panel/panel-text.ts)|100.00|100.00|100.00|100.00
@@ -388,9 +385,13 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/panel/panel-welcome.ts](packages/tui/src/panel/panel-welcome.ts)|100.00|100.00|100.00|100.00
 🟢|[src/panel/panel.ts](packages/tui/src/panel/panel.ts)|100.00|100.00|100.00|100.00
 🟢|[src/panel/run-screen.ts](packages/tui/src/panel/run-screen.ts)|100.00|100.00|100.00|100.00
+🟢|[src/session/agents-panel-choices.ts](packages/tui/src/session/agents-panel-choices.ts)|100.00|100.00|100.00|100.00
+🟢|[src/session/agents-panel-watch.ts](packages/tui/src/session/agents-panel-watch.ts)|100.00|100.00|100.00|100.00
+🟢|[src/session/agents-panel.ts](packages/tui/src/session/agents-panel.ts)|100.00|100.00|100.00|100.00
 🟢|[src/session/panel-log.ts](packages/tui/src/session/panel-log.ts)|100.00|100.00|100.00|100.00
 🟢|[src/session/panel-session.ts](packages/tui/src/session/panel-session.ts)|100.00|100.00|100.00|100.00
 🟢|[src/session/panel.command.ts](packages/tui/src/session/panel.command.ts)|100.00|100.00|100.00|100.00
+🟢|[src/session/projects-panel.ts](packages/tui/src/session/projects-panel.ts)|100.00|100.00|100.00|100.00
 🟢|[src/session/tui-shell.ts](packages/tui/src/session/tui-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/fake-chat-panel.ts](packages/tui/src/testing/fake-chat-panel.ts)|100.00|100.00|100.00|100.00
 🟢|[src/testing/fake-panel-context.ts](packages/tui/src/testing/fake-panel-context.ts)|100.00|100.00|100.00|100.00

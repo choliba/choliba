@@ -13,6 +13,7 @@ describe('the choliba shell', () => {
   it('lists every package once, in a fixed order', () => {
     expect(CHOLIBA_SHELL.map((module) => module.name)).toEqual([
       '@choliba/core',
+      '@choliba/tui',
       '@choliba/agents',
       '@choliba/projects',
       '@choliba/runner',

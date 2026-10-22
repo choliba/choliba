@@ -18,10 +18,8 @@ export type {
   PanelToolkit,
 } from './interfaces/panel.interface';
 export { openPanel } from './panel';
-export { agentsPanel } from './agents-panel';
-export { watchChoices } from './agents-panel-watch';
+export { PANEL_ICON, PANEL_LOGO, PANEL_OPENER, PANEL_SPEC, PANEL_VERSION } from './panel-keys';
 export { createPanelRunScreen, type PanelRunScreen, type PanelRunScreenOptions } from './run-screen';
-export { projectsPanel } from './projects-panel';
 export { questionDesk, type QuestionDesk } from './panel-question';
 export { pixelMap, type ArtColor } from './panel-art';
 export { loadPanelToolkit, openOpenTuiPanel, openPanelWith, type OpenTuiToolkit } from './panel-toolkit';
