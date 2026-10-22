@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 22/10/2026 09:22:43 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 22/10/2026 10:39:58 — não editar manualmente.
 
 ## Resumo
 
@@ -24,7 +24,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 72 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 74 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -54,12 +54,14 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/runs/definition-snapshot.ts](packages/agents/src/agents/runs/definition-snapshot.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/dry-run.ts](packages/agents/src/agents/runs/dry-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/event-render.ts](packages/agents/src/agents/runs/event-render.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/parse-agents-args.ts](packages/agents/src/agents/runs/parse-agents-args.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/plan-store.ts](packages/agents/src/agents/runs/plan-store.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-agent.ts](packages/agents/src/agents/runs/run-agent.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-agents.ts](packages/agents/src/agents/runs/run-agents.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-checks.ts](packages/agents/src/agents/runs/run-checks.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-choice.ts](packages/agents/src/agents/runs/run-choice.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-context.ts](packages/agents/src/agents/runs/run-context.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/runs/run-flag-definitions.ts](packages/agents/src/agents/runs/run-flag-definitions.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-log.ts](packages/agents/src/agents/runs/run-log.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-preparation.ts](packages/agents/src/agents/runs/run-preparation.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/runs/run-screen.ts](packages/agents/src/agents/runs/run-screen.ts)|100.00|100.00|100.00|100.00
@@ -186,10 +188,11 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/engine</b> — 100.00% das linhas, 30 arquivos</summary>
+<summary>🟢 <b>packages/engine</b> — 100.00% das linhas, 46 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
+🟢|[src/common/defined-config.ts](packages/engine/src/common/defined-config.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-tool-path.ts](packages/engine/src/common/run-tool-path.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-tools.ts](packages/engine/src/common/run-tools.ts)|100.00|100.00|100.00|100.00
 🟢|[src/guards/command-guard.ts](packages/engine/src/guards/command-guard.ts)|100.00|100.00|100.00|100.00
@@ -199,11 +202,26 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/guards/tool-policy.ts](packages/engine/src/guards/tool-policy.ts)|100.00|100.00|100.00|100.00
 🟢|[src/guards/tool-request.ts](packages/engine/src/guards/tool-request.ts)|100.00|100.00|100.00|100.00
 🟢|[src/guards/unenforced-tool-guard.ts](packages/engine/src/guards/unenforced-tool-guard.ts)|100.00|100.00|100.00|100.00
+🟢|[src/install/install-source.ts](packages/engine/src/install/install-source.ts)|100.00|100.00|100.00|100.00
+🟢|[src/install/install.ts](packages/engine/src/install/install.ts)|100.00|100.00|100.00|100.00
 🟢|[src/ports/agent-provider.ts](packages/engine/src/ports/agent-provider.ts)|100.00|100.00|100.00|100.00
+🟢|[src/ports/provider-registry.ts](packages/engine/src/ports/provider-registry.ts)|100.00|100.00|100.00|100.00
 🟢|[src/ports/run-place.ts](packages/engine/src/ports/run-place.ts)|100.00|100.00|100.00|100.00
 🟢|[src/prompt/message-blocks.ts](packages/engine/src/prompt/message-blocks.ts)|100.00|100.00|100.00|100.00
 🟢|[src/prompt/project.ts](packages/engine/src/prompt/project.ts)|100.00|100.00|100.00|100.00
 🟢|[src/prompt/prompt.ts](packages/engine/src/prompt/prompt.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/agent-skills.ts](packages/engine/src/runs/agent-skills.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/invocation.ts](packages/engine/src/runs/invocation.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/location-vars.ts](packages/engine/src/runs/location-vars.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/plan-store.ts](packages/engine/src/runs/plan-store.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/prepare-checks.ts](packages/engine/src/runs/prepare-checks.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/prepare-request.ts](packages/engine/src/runs/prepare-request.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/prepare-run.ts](packages/engine/src/runs/prepare-run.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/project-denies.ts](packages/engine/src/runs/project-denies.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/resolve-mcps.ts](packages/engine/src/runs/resolve-mcps.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/run-choice.ts](packages/engine/src/runs/run-choice.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/run-context.ts](packages/engine/src/runs/run-context.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/ticket-run.ts](packages/engine/src/runs/ticket-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/steps/git-state.ts](packages/engine/src/steps/git-state.ts)|100.00|100.00|100.00|100.00
 🟢|[src/steps/git-working-tree-diff.ts](packages/engine/src/steps/git-working-tree-diff.ts)|100.00|100.00|100.00|100.00
 🟢|[src/steps/index-diff.ts](packages/engine/src/steps/index-diff.ts)|100.00|100.00|100.00|100.00

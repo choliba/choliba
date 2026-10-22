@@ -106,6 +106,7 @@
         "@choliba/projects": "workspace:*",
         "@choliba/sandbox": "workspace:*",
         "@choliba/workspace": "workspace:*",
+        "yaml": "^2.8.1",
       },
     },
     "packages/kernel": {
