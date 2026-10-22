@@ -34,6 +34,7 @@ export type { RenderOptions } from './agents';
 export { runAgent } from './agents';
 export type { RunAgentDeps, RunAgentRequest } from './agents';
 export { runAgentsCli, type RunAgentsCliDeps } from './agents';
+export { runAgentReferenceSpec } from './agents';
 export { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from './agents';
 export {
   AGENTS_SUBDIR,
@@ -61,16 +62,7 @@ export {
   type InstallDeps,
   type InstallTargets,
 } from './agents';
-export {
-  agentsConfig,
-  AGENT_PROVIDERS,
-  AGENTS,
-  AgentsService,
-  agentsShell,
-  listAgentsCommand,
-  runAgentCommand,
-  runAgentEntry,
-} from './agents';
+export { agentsConfig, AGENT_PROVIDERS, AGENTS, AgentsService, agentsShell } from './agents';
 export type { AgentsPlatform } from './agents';
 export {
   AGENT,

@@ -6,7 +6,8 @@ import { envSource, fileSource } from '@choliba/config';
 import { complete, coreShell, createShell, formatSuggestions } from '@choliba/core';
 import { BufferWritable, fakePlatform, runShell, VERBS_ROOT, type FakePlatform } from '@choliba/core/testing';
 
-import { AGENTS, agentsShell, runAgentEntry } from '../..';
+import { AGENTS, agentsShell } from '../..';
+import { agentsCommandsShell, runAgentEntry } from '../../../../choliba/src/commands/agents';
 import { fakeSpawner, streamFromChunks } from '../helpers/fake-spawner';
 import { knownProvidersShell } from '../helpers/providers-shell';
 
@@ -41,7 +42,10 @@ async function choliba(
   platform: Partial<FakePlatform>,
 ): Promise<{ code: number; platform: FakePlatform }> {
   const run = fakePlatform({ argv: [...args], ...platform });
-  return { code: await runShell([coreShell, knownProvidersShell, agentsShell, VERBS_ROOT], run), platform: run };
+  return {
+    code: await runShell([coreShell, knownProvidersShell, agentsShell, agentsCommandsShell, VERBS_ROOT], run),
+    platform: run,
+  };
 }
 
 describe('choliba run agent and list agents', () => {
@@ -120,7 +124,7 @@ describe('AgentsService.helpSpec', () => {
       const platform = fakePlatform({ cwd });
       const spec = createShell(
         platform,
-        [coreShell, knownProvidersShell, agentsShell, VERBS_ROOT],
+        [coreShell, knownProvidersShell, agentsShell, agentsCommandsShell, VERBS_ROOT],
         [envSource(platform.env), fileSource(join(cwd, '.env'))],
       )
         .container.get(AGENTS)

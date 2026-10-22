@@ -1,7 +1,5 @@
 import type { CommandEntry, CommandSpec, Container, ShellCommand } from '@choliba/core';
-
-import { AGENT_PROVIDERS, AGENTS } from './agents.constants';
-import { runAgentReferenceSpec } from './runs/agents-spec';
+import { AGENT_PROVIDERS, AGENTS, runAgentReferenceSpec } from '@choliba/agents';
 
 /** How `choliba run --help` lists `agent`. */
 const RUN_ENTRY: Omit<CommandEntry, 'spec'> = {
@@ -10,10 +8,7 @@ const RUN_ENTRY: Omit<CommandEntry, 'spec'> = {
   group: 'Commands',
 };
 
-/**
- * `run agent`, with the spec it builds from the workspace now (the agents on disk, their flags and values), or, when
- * there is no workspace to read, `reference`: every flag a run takes.
- */
+/** `run agent`, with its workspace spec, or the reference spec when there is no workspace to read. */
 export function runAgentEntry(helpSpec: () => CommandSpec, reference: () => CommandSpec): CommandEntry {
   try {
     return { ...RUN_ENTRY, spec: helpSpec() };
@@ -30,7 +25,7 @@ function entryIn(container: Container): CommandEntry {
   );
 }
 
-/** `choliba run agent <agent> [OPTIONS] [TASK...]`: its flags as typed; `--help` outside a workspace, every flag. */
+/** `choliba run agent <agent> [OPTIONS] [TASK...]`: its flags as typed. */
 export const runAgentCommand: ShellCommand = {
   verb: 'run',
   name: 'agent',

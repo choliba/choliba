@@ -1,6 +1,5 @@
 import type { CommandEntry, ShellCommand } from '@choliba/core';
-
-import { AGENTS } from './agents.constants';
+import { AGENTS } from '@choliba/agents';
 
 /** How `choliba list --help` lists `agents`. */
 const LIST_ENTRY: Omit<CommandEntry, 'spec'> = {

@@ -24,6 +24,7 @@ import { runnerShell } from '@choliba/runner';
 import { tuiShell } from '@choliba/tui';
 
 import { addCommand } from './add';
+import { agentsCommandsShell } from './commands/agents';
 import {
   cholibaLibrary,
   type Choliba,
@@ -93,7 +94,14 @@ export function cholibaShell(runtime: Runtime): ShellModule {
  * The packages' commands in the shell, in a fixed order. A package adds a command to its own module, never here, so
  * moving commands of different packages to the shell never touches the same file.
  */
-export const CHOLIBA_SHELL: readonly ShellModule[] = [coreShell, tuiShell, agentsShell, projectsShell, runnerShell];
+export const CHOLIBA_SHELL: readonly ShellModule[] = [
+  coreShell,
+  tuiShell,
+  agentsShell,
+  agentsCommandsShell,
+  projectsShell,
+  runnerShell,
+];
 
 /** The shell of choliba on `platform` and `runtime`. */
 export function createCholibaShell(
