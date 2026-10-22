@@ -15,6 +15,8 @@ import * as runChoice from '../../agents/runs/run-choice';
 import * as runPreparation from '../../agents/runs/run-preparation';
 import * as ticketRun from '../../agents/runs/ticket-run';
 import * as planStore from '../../agents/runs/plan-store';
+import * as install from '../../agents/install/install';
+import * as installSource from '../../agents/install/install-source';
 
 describe('@choliba/agents engine bridges', () => {
   it('keeps the provider contract available from its old module', () => {
@@ -62,12 +64,17 @@ describe('@choliba/agents engine bridges', () => {
     expect(runProject.withProjectDenies).toBe(engine.withProjectDenies);
   });
 
-  it('keeps the ticket and plans available from their old modules', () => {
+  it('keeps the ticket, plans and install available from their old modules', () => {
     expect(Object.values(ticketRun)).not.toContain(undefined);
     expect(Object.values(planStore)).not.toContain(undefined);
+    expect(Object.values(install)).not.toContain(undefined);
+    expect(Object.values(installSource)).not.toContain(undefined);
     expect(ticketRun.resolveTicketTarget).toBe(engine.resolveTicketTarget);
     expect(ticketRun.finishTicket).toBe(engine.finishTicket);
     expect(planStore.writePlan).toBe(engine.writePlan);
     expect(planStore.readPlan).toBe(engine.readPlan);
+    expect(install.formatInstall).toBe(engine.formatInstall);
+    expect(install.InstallError).toBe(engine.InstallError);
+    expect(installSource.fetchSource).toBe(engine.fetchSource);
   });
 });
