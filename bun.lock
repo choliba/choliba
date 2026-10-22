@@ -118,6 +118,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@choliba/core": "workspace:*",
+        "@choliba/domain": "workspace:*",
         "@choliba/workspace": "workspace:*",
       },
     },
