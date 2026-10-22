@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 22/10/2026 10:39:58 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 22/10/2026 11:33:44 — não editar manualmente.
 
 ## Resumo
 
@@ -170,7 +170,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/domain</b> — 100.00% das linhas, 10 arquivos</summary>
+<summary>🟢 <b>packages/domain</b> — 100.00% das linhas, 21 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -179,11 +179,22 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agent/agent-validation.ts](packages/domain/src/agent/agent-validation.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agent/agent-vars.ts](packages/domain/src/agent/agent-vars.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/execution.ts](packages/domain/src/common/execution.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/placeholder.ts](packages/domain/src/common/placeholder.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/values.ts](packages/domain/src/common/values.ts)|100.00|100.00|100.00|100.00
 🟢|[src/permissions/agent-permissions.ts](packages/domain/src/permissions/agent-permissions.ts)|100.00|100.00|100.00|100.00
 🟢|[src/permissions/definition-denies.ts](packages/domain/src/permissions/definition-denies.ts)|100.00|100.00|100.00|100.00
 🟢|[src/permissions/path-policy.ts](packages/domain/src/permissions/path-policy.ts)|100.00|100.00|100.00|100.00
 🟢|[src/permissions/permission-paths.ts](packages/domain/src/permissions/permission-paths.ts)|100.00|100.00|100.00|100.00
+🟢|[src/project/project-devices.ts](packages/domain/src/project/project-devices.ts)|100.00|100.00|100.00|100.00
+🟢|[src/project/project-settings.ts](packages/domain/src/project/project-settings.ts)|100.00|100.00|100.00|100.00
+🟢|[src/project/project-stack.ts](packages/domain/src/project/project-stack.ts)|100.00|100.00|100.00|100.00
+🟢|[src/ticket/ticket-criteria.ts](packages/domain/src/ticket/ticket-criteria.ts)|100.00|100.00|100.00|100.00
+🟢|[src/ticket/ticket-name.ts](packages/domain/src/ticket/ticket-name.ts)|100.00|100.00|100.00|100.00
+🟢|[src/ticket/ticket-shape.ts](packages/domain/src/ticket/ticket-shape.ts)|100.00|100.00|100.00|100.00
+🟢|[src/ticket/ticket-superseded.ts](packages/domain/src/ticket/ticket-superseded.ts)|100.00|100.00|100.00|100.00
+🟢|[src/ticket/ticket-template.ts](packages/domain/src/ticket/ticket-template.ts)|100.00|100.00|100.00|100.00
+🟢|[src/verdict/playwright-results.ts](packages/domain/src/verdict/playwright-results.ts)|100.00|100.00|100.00|100.00
+🟢|[src/verdict/ticket-verdict.ts](packages/domain/src/verdict/ticket-verdict.ts)|100.00|100.00|100.00|100.00
 
 </details>
 

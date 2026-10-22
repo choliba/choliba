@@ -15,9 +15,11 @@
 @choliba/engine → @choliba/sandbox
 @choliba/engine → @choliba/workspace
 @choliba/projects → @choliba/core
+@choliba/projects → @choliba/domain
 @choliba/projects → @choliba/workspace
 @choliba/runner → @choliba/config
 @choliba/runner → @choliba/core
+@choliba/runner → @choliba/domain
 @choliba/runner → @choliba/projects
 @choliba/runner → @choliba/workspace
 @choliba/sandbox → @choliba/config
