@@ -1,11 +1,14 @@
 import { statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import {
+  ClaudeAgentProvider,
+  ClaudeOllamaAgentProvider,
+  CodexAgentProvider,
+  CursorAgentProvider,
+} from '@choliba/providers';
+
 import { launchFor, realDisk, type LaunchDisk } from '../../../agents/runs/sandbox-launch';
-import { ClaudeAgentProvider } from '../../../providers/claude/claude-agent.provider';
-import { ClaudeOllamaAgentProvider } from '../../../providers/claude/claude-ollama-agent.provider';
-import { CodexAgentProvider } from '../../../providers/codex/codex-agent.provider';
-import { CursorAgentProvider } from '../../../providers/cursor/cursor-agent.provider';
 import { NO_PERMISSIONS, type AgentPermissions } from '../../../common/agent-permissions';
 import type { ProviderRequest } from '../../../common/interfaces/provider.interface';
 import { NO_MODE_STEPS, fakeSections } from '../../helpers/agent';

@@ -5,6 +5,8 @@ import type { Writable, Theme } from '@choliba/core';
 
 import { fail } from './tests-error';
 import { readReport, reportFile } from './ticket-results';
+import { greenStatusProblem } from '@choliba/domain';
+
 import {
   EXPECTATIONS,
   criterionRuns,
@@ -94,7 +96,7 @@ export function checkGate(gate: TicketGate, run: GatedRun, output: GateOutput): 
   if (gate.expectation === undefined) return status;
   const problems = [
     ...verdictProblems(gate.expectation, criteria, report),
-    ...(gate.expectation === 'green' && status !== 0 ? [`o Playwright terminou com ${String(status)}`] : []),
+    ...(gate.expectation === 'green' ? [greenStatusProblem(status) ?? []].flat() : []),
   ];
   if (problems.length === 0) {
     if (gate.expectation === 'red') {

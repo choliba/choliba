@@ -14,6 +14,7 @@ import {
   type PanelContext,
 } from '@choliba/core';
 import { fakeChatPanel, fakePlatform } from '@choliba/core/testing';
+import { agentsPanel } from '@choliba/tui';
 
 import { ProviderRegistry } from '../../common';
 import { ClaudeAgentProvider, ClaudeOllamaAgentProvider, CursorAgentProvider } from '../../providers';
@@ -21,7 +22,6 @@ import { AGENT_PROVIDERS, AGENTS } from '../../agents/agents.constants';
 import type { AgentsService } from '../../agents/agents.service';
 
 import { agentsConfig } from '../../agents/agents-config';
-import { agentsPanel } from '../../agents/agents-panel';
 import { makeTmpDir } from '../helpers/tmp';
 
 const FIXTURES = join(__dirname, '..', 'fixtures', 'agents');

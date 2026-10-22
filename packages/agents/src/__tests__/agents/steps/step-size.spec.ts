@@ -1,4 +1,9 @@
-import { checkSectionSize, DEFAULT_MAX_SIZE, formatSize, parseMaxSize } from '../../../agents/steps/step-size';
+import {
+  checkSectionSize,
+  DEFAULT_MAX_SIZE,
+  formatSize,
+  parseMaxSize,
+} from '../../../../../engine/src/steps/step-size';
 
 describe('parseMaxSize', () => {
   it('reads bytes with B, KB or MB in any case, bytes with no unit, and the default when absent', () => {

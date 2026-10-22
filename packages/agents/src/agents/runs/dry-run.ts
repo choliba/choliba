@@ -1,49 +1,18 @@
-import type { ProjectEnvironment } from '@choliba/projects';
-import type { SandboxPath } from '@choliba/sandbox';
+import { describeStep, runPlaceOf, wrapInstructions, type DryRunInput } from '@choliba/engine';
 
-import type { AgentStep, McpDeclaration } from '../../common';
-import { describeStep } from '../steps/step-actions';
-import { runPlaceOf, wrapInstructions } from '../../common';
-import type { PlannedFile, ProviderRequest } from '../../common';
-
-/** What `--dry-run` shows: everything a real run of this command line would do, in order. */
-export interface DryRunInput {
-  readonly providerId: string;
-  /** The provider's binary (`claude`, `cursor agent`...), and the arguments after it. */
-  readonly command: readonly string[];
-  readonly args: readonly string[];
-  readonly request: ProviderRequest;
-  /** Where `--type` would create the ticket; `undefined` without `--type`. */
-  readonly newTicket: string | undefined;
-  /** Whether the run has a ticket, which the CLI checks once the agent is done. */
-  readonly hasTicket: boolean;
-  /** `--show-prompt`: the prompts and the command line in full, and the files the provider would write. */
-  readonly showPrompt: boolean;
-  readonly workspaceFiles: readonly PlannedFile[];
-  /** The project's application, which the CLI prepares and starts before anything else (`--project`). */
-  readonly app?: Pick<ProjectEnvironment, 'baseURL' | 'setup' | 'start'>;
-  /** `CHOL_SANDBOX=docker`: the image the provider runs in and what the container mounts. */
-  readonly container?: {
-    readonly image: string;
-    /** `CHOL_NETWORK`: the container's network. */
-    readonly network: 'isolated' | 'host';
-    readonly mounts: readonly SandboxPath[];
-    /** What the agent may reach that the image keeps as its own (`isImagePath`). */
-    readonly skipped: readonly string[];
-  };
-  /** `CHOL_SANDBOX=local`: what `bwrap` mounts. */
-  readonly local?: {
-    readonly mounts: readonly SandboxPath[];
-    /** What the agent may reach that stays the system's, so not mounted on its own. */
-    readonly skipped: readonly string[];
-  };
-}
+export type { DryRunInput } from '@choliba/engine';
 
 /** One numbered entry: who does it (the CLI or the agent) and what, one line each. */
 interface Entry {
   readonly who: 'CLI' | 'agente';
   readonly lines: readonly [string, ...string[]];
 }
+
+type AgentRequest = DryRunInput['request'];
+type AgentMcps = AgentRequest['agent']['mcps'];
+type ModeSteps = AgentRequest['agent']['steps'][AgentRequest['mode']];
+type Mounts = NonNullable<DryRunInput['container']>['mounts'];
+type PathAccess = Mounts[number]['access'];
 
 /** An argument longer than this is shown by its size instead (the prompts, a JSON config). */
 const LONG_ARG_BYTES = 200;
@@ -59,7 +28,7 @@ function bytes(text: string): number {
   return Buffer.byteLength(text, 'utf8');
 }
 
-function beforeEntries(steps: readonly AgentStep[], prefix: string): readonly Entry[] {
+function beforeEntries(steps: ModeSteps['before'], prefix: string): readonly Entry[] {
   if (steps.length === 0) {
     return [{ who: 'CLI', lines: [`${prefix}: nada`] }];
   }
@@ -73,7 +42,7 @@ function beforeEntries(steps: readonly AgentStep[], prefix: string): readonly En
 }
 
 /** One block of `after`: its title, then each step on a line of its own, or `nada`. */
-function afterLines(title: string, steps: readonly AgentStep[]): readonly [string, ...string[]] {
+function afterLines(title: string, steps: ModeSteps['after']['success']): readonly [string, ...string[]] {
   if (steps.length === 0) {
     return [`${title}: nada`];
   }
@@ -83,7 +52,7 @@ function afterLines(title: string, steps: readonly AgentStep[]): readonly [strin
   ];
 }
 
-function mcpSummary(mcp: McpDeclaration): string {
+function mcpSummary(mcp: AgentMcps[number]): string {
   return mcp.tools === undefined ? `${mcp.name} (todas as tools)` : `${mcp.name} (${String(mcp.tools.length)} tools)`;
 }
 
@@ -130,7 +99,7 @@ function agentEntry(input: DryRunInput, systemPrompt: string): Entry {
 }
 
 /** How `--dry-run` and the panel's sandbox card name what a path is to the agent. */
-export const ACCESS_LABEL: Readonly<Record<SandboxPath['access'], string>> = {
+export const ACCESS_LABEL: Readonly<Record<PathAccess, string>> = {
   read: 'leitura',
   write: 'escrita',
   hidden: 'oculto ',
@@ -156,7 +125,7 @@ function localLines(local: DryRunInput['local']): readonly string[] {
   ];
 }
 
-function mountLines(mounts: readonly SandboxPath[]): readonly string[] {
+function mountLines(mounts: Mounts): readonly string[] {
   return mounts.map((mount) => `  ${ACCESS_LABEL[mount.access]} ${mount.path}`);
 }
 
@@ -174,12 +143,6 @@ function section(title: string, body: string): string {
   return `── ${title} ──\n${body.trimEnd()}`;
 }
 
-/**
- * `--dry-run`: what the command line would do without it, in order — the `before` steps, the
- * ticket it would create, the agent (provider, model, mode, skills, MCPs, prompt sizes, command
- * line), the `after` steps and the ticket check. Nothing is run or written. With `--show-prompt`,
- * the prompts and the command line in full, and the files the provider would write, follow.
- */
 /** What the CLI does with the project's application before the run: its setup, then making sure it is up. */
 function appEntries(app: DryRunInput['app'], agentBaseURL: string | undefined): readonly Entry[] {
   if (app === undefined) return [];
@@ -197,6 +160,12 @@ function appEntries(app: DryRunInput['app'], agentBaseURL: string | undefined): 
   return [{ who: 'CLI', lines }];
 }
 
+/**
+ * `--dry-run`: what the command line would do without it, in order — the `before` steps, the
+ * ticket it would create, the agent (provider, model, mode, skills, MCPs, prompt sizes, command
+ * line), the `after` steps and the ticket check. Nothing is run or written. With `--show-prompt`,
+ * the prompts and the command line in full, and the files the provider would write, follow.
+ */
 export function formatDryRun(input: DryRunInput): string {
   const { request } = input;
   const { mode } = request;

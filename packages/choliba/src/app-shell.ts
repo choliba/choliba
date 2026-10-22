@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 
-import { agentsShell } from '@choliba/agents';
+import { AGENT_PROVIDERS, agentsShell } from '@choliba/agents';
+import { knownProviders } from '@choliba/providers';
 import { defineConfig, type ConfigGroup } from '@choliba/config';
 import {
   coreShell,
@@ -20,6 +21,7 @@ import {
 } from '@choliba/core';
 import { projectsShell } from '@choliba/projects';
 import { runnerShell } from '@choliba/runner';
+import { tuiShell } from '@choliba/tui';
 
 import { addCommand } from './add';
 import {
@@ -65,6 +67,7 @@ export function cholibaShell(runtime: Runtime): ShellModule {
       verbs: CHOLIBA_VERBS,
     },
     provide: (container) => {
+      container.provide(AGENT_PROVIDERS, () => knownProviders());
       container.provide(RUNTIME, () => runtime);
       container.provide(PANEL_LOGO, () => findResource(join('assets', 'choliba-logo.png'), __dirname));
       container.provide(PANEL_ICON, () => OWL_ICON);
@@ -90,7 +93,7 @@ export function cholibaShell(runtime: Runtime): ShellModule {
  * The packages' commands in the shell, in a fixed order. A package adds a command to its own module, never here, so
  * moving commands of different packages to the shell never touches the same file.
  */
-export const CHOLIBA_SHELL: readonly ShellModule[] = [coreShell, agentsShell, projectsShell, runnerShell];
+export const CHOLIBA_SHELL: readonly ShellModule[] = [coreShell, tuiShell, agentsShell, projectsShell, runnerShell];
 
 /** The shell of choliba on `platform` and `runtime`. */
 export function createCholibaShell(

@@ -1,7 +1,10 @@
-import { ClaudeAgentProvider } from '../../providers/claude/claude-agent.provider';
-import { ClaudeOllamaAgentProvider } from '../../providers/claude/claude-ollama-agent.provider';
-import { CodexAgentProvider } from '../../providers/codex/codex-agent.provider';
-import { CursorAgentProvider } from '../../providers/cursor/cursor-agent.provider';
+import {
+  ClaudeAgentProvider,
+  ClaudeOllamaAgentProvider,
+  CodexAgentProvider,
+  CursorAgentProvider,
+} from '@choliba/providers';
+
 import { ProviderRegistry } from '../../common/provider-registry';
 
 export const claudeProvider = new ClaudeAgentProvider();

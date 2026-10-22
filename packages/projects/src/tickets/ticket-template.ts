@@ -2,10 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { findResource } from '@choliba/core';
+import { parseTicketTemplate, placeholderPaths, unknownTicketTypeMessage, type TicketTemplate } from '@choliba/domain';
 
-import { ProjectsError, readJsonFile } from '../common';
-import { PLACEHOLDER_VALUE } from '../common';
+import { ProjectsError, readJsonFile, wrapProjects } from '../common';
 import { fullTicket, listTicketSuffixes, resolveTicketsFolder, ticketFilePath } from './ticket';
+
+export type { TicketTemplate };
 
 const TEMPLATE_EXTENSION = '.json';
 
@@ -51,30 +53,14 @@ export interface NewTicketOptions {
   readonly environment?: string;
 }
 
-/** One `templates/ticket/<type>.json`: what the type is for, and the fields a new ticket of it starts with. */
-export interface TicketTemplate {
-  readonly description: string;
-  readonly fields: Readonly<Record<string, unknown>>;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 /** The template of `type`; an unknown type lists the available ones, a malformed template names its file. */
 export function readTicketTemplate(templatesDir: string, type: string): TicketTemplate {
   const types = listTicketTypes(templatesDir);
   if (!types.includes(type)) {
-    throw new ProjectsError(`Tipo de ticket "${type}" não existe (disponíveis: ${types.join(', ')}).`);
+    throw new ProjectsError(unknownTicketTypeMessage(type, types));
   }
   const file = path.join(templatesDir, `${type}${TEMPLATE_EXTENSION}`);
-  const template = readJsonFile(file);
-  const description = isRecord(template) ? template['description'] : undefined;
-  const fields = isRecord(template) ? template['fields'] : undefined;
-  if (typeof description !== 'string' || description.trim() === '' || !isRecord(fields)) {
-    throw new ProjectsError(`${file}: o template precisa de "description" (texto) e "fields" (objeto).`);
-  }
-  return { description, fields };
+  return wrapProjects(() => parseTicketTemplate(readJsonFile(file), file));
 }
 
 /** Each ticket type with what it is for, in the order of `listTicketTypes`. */
@@ -125,21 +111,6 @@ export function createTicket(
   fs.mkdirSync(path.dirname(planned.path), { recursive: true });
   fs.writeFileSync(planned.path, planned.content, { flag: 'wx' });
   return planned;
-}
-
-function placeholderPaths(value: unknown, where: string): string[] {
-  if (typeof value === 'string') {
-    return value.includes(PLACEHOLDER_VALUE) ? [where] : [];
-  }
-  if (Array.isArray(value)) {
-    return value.flatMap((item: unknown, index) => placeholderPaths(item, `${where}[${String(index)}]`));
-  }
-  if (typeof value === 'object' && value !== null) {
-    return Object.entries(value).flatMap(([key, item]) =>
-      placeholderPaths(item, where === '' ? key : `${where}.${key}`),
-    );
-  }
-  return [];
 }
 
 /**

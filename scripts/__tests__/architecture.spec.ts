@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -33,12 +33,39 @@ describe('the architecture of the packages', () => {
     expect({ exports: entryExports(ROOT), how: UPDATE }).toEqual({ exports: listed, how: UPDATE });
   }, 30_000);
 
+  it('forbids the engine from importing a provider', () => {
+    const graph = packageGraph(ROOT);
+
+    expect(graph['@choliba/engine']?.imports ?? []).not.toContain('@choliba/providers');
+  });
+
   it('keeps panel and terminal drawing out of the agent run', () => {
     const run = readFileSync(join(ROOT, 'packages/agents/src/agents/runs/run-agent.ts'), 'utf8');
 
     expect(run).not.toMatch(/openPanel|panel\.write|frameTop|frameLines|frameBottom|summaryLine/);
   });
+
+  it('keeps panel commands and their registration in tui', () => {
+    const packages = ['agents', 'projects'];
+    const sources = packages.flatMap((name) => productionFiles(join(ROOT, 'packages', name, 'src')));
+    const commands = sources.filter((file) => readFileSync(file, 'utf8').includes('PanelCommand'));
+    const shells = packages.map((name) =>
+      readFileSync(join(ROOT, 'packages', name, 'src', name, `${name}-shell.ts`), 'utf8'),
+    );
+
+    expect(commands).toEqual([]);
+    expect(shells).not.toContainEqual(expect.stringMatching(/\bpanel(?:Start)?:/));
+  });
 });
+
+/** Production TypeScript files below `path`, without specs. */
+function productionFiles(path: string): string[] {
+  return readdirSync(path, { withFileTypes: true }).flatMap((entry) => {
+    const file = join(path, entry.name);
+    if (entry.isDirectory()) return entry.name === '__tests__' ? [] : productionFiles(file);
+    return entry.name.endsWith('.ts') && !entry.name.endsWith('.spec.ts') ? [file] : [];
+  });
+}
 
 /** A repository with `packages/<dir>/` per entry of `packages`, each a package.json and its files. */
 function withRepo(

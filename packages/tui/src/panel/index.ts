@@ -18,6 +18,7 @@ export type {
   PanelToolkit,
 } from './interfaces/panel.interface';
 export { openPanel } from './panel';
+export { PANEL_ICON, PANEL_LOGO, PANEL_OPENER, PANEL_SPEC, PANEL_VERSION } from './panel-keys';
 export { createPanelRunScreen, type PanelRunScreen, type PanelRunScreenOptions } from './run-screen';
 export { questionDesk, type QuestionDesk } from './panel-question';
 export { pixelMap, type ArtColor } from './panel-art';

@@ -15,7 +15,7 @@ jest.mock('node:readline/promises', () => ({
   },
 }));
 
-import * as projects from '@choliba/projects';
+import * as projects from '../../app';
 import * as terminalOutput from '@choliba/core';
 
 import { installSilentTerminal } from '../helpers/silent-terminal';

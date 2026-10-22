@@ -13,7 +13,10 @@
     "@choliba/config": "workspace:*",
     "@choliba/core": "workspace:*",
     "@choliba/domain": "workspace:*",
+    "@choliba/engine": "workspace:*",
     "@choliba/projects": "workspace:*",
+    "@choliba/providers": "workspace:*",
+    "@choliba/runner": "workspace:*",
     "@choliba/sandbox": "workspace:*",
     "@choliba/workspace": "workspace:*",
     "@playwright/test": "1.63.0",
@@ -21,6 +24,7 @@
     "yaml": "^2.8.1"
   },
   "devDependencies": {
+    "@choliba/tui": "workspace:*",
     "@types/bun": "^1.4.2"
   }
 }

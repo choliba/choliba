@@ -1,9 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { applyLocations } from '@choliba/projects';
-import * as projects from '@choliba/projects';
+import { isDeviceOn } from '@choliba/domain';
+import { applyLocations } from '@choliba/workspace';
 import { defineConfig, devices, type PlaywrightTestConfig } from '@playwright/test';
+import * as projects from './src/app';
 
 import type { PlaywrightProjectConfig } from './shared/env';
 import { getTargetProject } from './shared/project-scope';
@@ -122,7 +123,7 @@ if (ticket && targetProject) {
 
 function isDeviceEnabled(name: string): boolean {
   if (!targetProject) return true;
-  return projects.isDeviceOn(name, targetProjectConfig?.devices, ticketJson);
+  return isDeviceOn(name, targetProjectConfig?.devices, ticketJson);
 }
 
 const ENABLED_DEVICES = DEVICE_NAMES.filter(isDeviceEnabled);

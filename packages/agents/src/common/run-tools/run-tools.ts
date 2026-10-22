@@ -1,16 +1,29 @@
 import { chmodSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 
 export const CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR = 'CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR';
 import { denyExceptions, isException } from '@choliba/sandbox';
+import {
+  DELETE,
+  activeRunTools,
+  runToolCommands,
+  runToolLines,
+  runToolsOf,
+  shortcutPath,
+  type ActiveRunTool,
+  type PlannedFile,
+  type ProviderRequest,
+  type RunToolCommands,
+  type RunToolName,
+} from '@choliba/engine';
 
-import type { PermissionPolicy } from '../interfaces/execution.interface';
-import type { PlannedFile, ProviderRequest } from '../interfaces/provider.interface';
-import { type AgentPermissions, absolutePermissions, EVERY_COMMAND, type RunPlace } from '../agent-permissions';
+import { type AgentPermissions, absolutePermissions } from '../agent-permissions';
 import { askExchangeDir, askScript } from './ask-tool';
 import { deleteScript } from './delete-tool';
 import { DEFAULT_PLAYWRIGHT_OUTPUT_DIR, playwrightScript } from './playwright-tool';
-import { runToolPath, runToolShortcuts } from './run-tool-path';
+
+export { DELETE, activeRunTools, runToolCommands, runToolLines, runToolsOf, shortcutPath };
+export type { ActiveRunTool, RunToolCommands, RunToolName };
 
 /** What a run tool's script is written from. */
 interface ScriptContext {
@@ -22,33 +35,21 @@ interface ScriptContext {
   readonly config: Readonly<Record<string, string | undefined>>;
 }
 
-interface RunToolSpec {
-  /** What the prompt says it is for. */
-  readonly purpose: string;
-  /** How it is called, after its path. */
-  readonly usage: string;
+interface RunToolScript {
   readonly script: (context: ScriptContext) => string;
 }
-
-const DELETE = 'delete';
 
 /** Where the Playwright run tools write: `CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR`, or `.cache/playwright-cli`. */
 function playwrightOutputDir(config: ScriptContext['config']): string {
   return config[CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR] ?? DEFAULT_PLAYWRIGHT_OUTPUT_DIR;
 }
 
-/** The run tools there are: `delete`, and the ones `permissions.allow.tools` may name. */
-type RunToolName = typeof DELETE | 'playwright-cli' | 'playwright-trace' | 'ask';
-
 /**
- * Every run tool: the scripts choliba writes next to a run folder for the agent, and the only way the
- * agent reaches what they do. `delete` comes from `permissions.allow.delete`; the others from
- * `permissions.allow.tools`, which takes only these names (the schema checks it).
+ * Every run tool's script: choliba writes it next to a run folder for the agent. The names, purposes and
+ * paths live in `@choliba/engine`.
  */
-const RUN_TOOLS: Readonly<Record<RunToolName, RunToolSpec>> = {
+const RUN_TOOL_SCRIPTS: Readonly<Record<RunToolName, RunToolScript>> = {
   [DELETE]: {
-    purpose: 'removes files and folders under the paths you may delete; it is the only way to delete',
-    usage: '<path…>',
     script: ({ permissions }) =>
       deleteScript(
         permissions.allowDelete,
@@ -57,112 +58,17 @@ const RUN_TOOLS: Readonly<Record<RunToolName, RunToolSpec>> = {
       ),
   },
   'playwright-cli': {
-    purpose: 'the browser (playwright cli)',
-    usage: '<command> [args]',
     script: ({ workspaceRoot, config }) =>
       playwrightScript({ command: 'cli', workspaceRoot, outputDir: playwrightOutputDir(config) }),
   },
   'playwright-trace': {
-    purpose: 'reads the trace.zip of a failed test (playwright trace)',
-    usage: '<command> [args]',
     script: ({ workspaceRoot, config }) =>
       playwrightScript({ command: 'trace', workspaceRoot, outputDir: playwrightOutputDir(config) }),
   },
   ask: {
-    purpose:
-      'asks the person running you a question and prints the answer; the only way to ask: a question written in your ' +
-      'answer reaches nobody, the run ends with it. Only for a decision you cannot find out yourself, ' +
-      'with the choices in --options when there are some (--multi when more than one may be chosen). The person may ' +
-      'take minutes: run it with the longest timeout your shell allows. Exit 2 means no answer: go on with an ' +
-      'assumption you state',
-    usage: '"<question>" [--options a,b,c] [--multi]',
     script: ({ runDir }) => askScript(askExchangeDir(runDir)),
   },
 };
-
-/** A run tool this run has, where its script goes and what it may be called with. */
-export interface ActiveRunTool {
-  readonly name: RunToolName;
-  readonly path: string;
-  /** The subcommands it may run; `undefined` is any. */
-  readonly allowed: readonly string[] | undefined;
-  readonly denied: readonly string[];
-}
-
-function subcommandsOf(rules: AgentPermissions['denyTools'], tool: string): readonly string[] {
-  return rules.filter((rule) => rule.tool === tool).flatMap((rule) => rule.subcommands);
-}
-
-function isRunToolName(name: string): name is RunToolName {
-  return name in RUN_TOOLS;
-}
-
-function declaredTool(permissions: AgentPermissions, runDir: string, tool: RunToolName): ActiveRunTool | undefined {
-  const allowed = subcommandsOf(permissions.allowTools, tool);
-  const denied = subcommandsOf(permissions.denyTools, tool);
-  if (denied.includes(EVERY_COMMAND)) {
-    return undefined;
-  }
-  return {
-    name: tool,
-    path: runToolPath(runDir, tool),
-    allowed: allowed.includes(EVERY_COMMAND) ? undefined : allowed,
-    denied,
-  };
-}
-
-/**
- * The run tools of a run: `delete` when `allow.delete` lists a path and the run may change files, plus every
- * tool `allow.tools` names, unless `deny.tools` takes all of it (`['*']`).
- */
-export function activeRunTools(
-  permissions: AgentPermissions,
-  runDir: string,
-  policy: PermissionPolicy,
-): readonly ActiveRunTool[] {
-  const deletes: readonly ActiveRunTool[] =
-    permissions.allowDelete.length > 0 && policy !== 'read-only'
-      ? [{ name: DELETE, path: runToolPath(runDir, DELETE), allowed: undefined, denied: [] }]
-      : [];
-  const declared = [...new Set(permissions.allowTools.map((rule) => rule.tool))]
-    .filter(isRunToolName)
-    .map((tool) => declaredTool(permissions, runDir, tool))
-    .filter((tool) => tool !== undefined);
-  return [...deletes, ...declared];
-}
-
-/** The run tools of what a provider runs. */
-export function runToolsOf(request: ProviderRequest): readonly ActiveRunTool[] {
-  return activeRunTools(request.agent.permissions, request.runDir, request.policy);
-}
-
-/** What the provider enforces for the run tools: the command prefixes allowed and denied, and the scripts nobody may write. */
-export interface RunToolCommands {
-  readonly allow: readonly string[];
-  readonly deny: readonly string[];
-  readonly scripts: readonly string[];
-}
-
-/** The shortcut of `tool`: the file named after it in the shortcuts folder of its run (`<run>.bin/ask`). */
-function shortcutPath(tool: ActiveRunTool): string {
-  const runDir = tool.path.slice(0, -(tool.name.length + 1));
-  return join(runToolShortcuts(runDir), tool.name);
-}
-
-/** The commands `tool` is run with: its full path and, through its shortcut, its name alone. */
-function commandsOf(tool: ActiveRunTool): readonly string[] {
-  return [tool.path, tool.name];
-}
-
-export function runToolCommands(tools: readonly ActiveRunTool[]): RunToolCommands {
-  return {
-    allow: tools.flatMap((tool) =>
-      commandsOf(tool).flatMap((command) => tool.allowed?.map((sub) => `${command} ${sub}`) ?? [command]),
-    ),
-    deny: tools.flatMap((tool) => commandsOf(tool).flatMap((command) => tool.denied.map((sub) => `${command} ${sub}`))),
-    scripts: tools.flatMap((tool) => [tool.path, shortcutPath(tool)]),
-  };
-}
 
 /** The scripts of the run tools of `request`, writing nothing (`--dry-run --show-prompt` shows them). */
 export function planRunTools(
@@ -176,7 +82,7 @@ export function planRunTools(
     config,
   };
   return runToolsOf(request).flatMap((tool) => [
-    { path: tool.path, content: RUN_TOOLS[tool.name].script(context) },
+    { path: tool.path, content: RUN_TOOL_SCRIPTS[tool.name].script(context) },
     { path: shortcutPath(tool), content: shortcutScript(tool.path) },
   ]);
 }
@@ -206,33 +112,4 @@ export function applyRunTools(files: readonly PlannedFile[]): () => void {
     }
     for (const folder of made) rmSync(folder, { recursive: true, force: true });
   };
-}
-
-function scope(tool: ActiveRunTool): string {
-  const only = tool.allowed === undefined ? [] : [`only: ${tool.allowed.join(', ')}`];
-  const not = tool.denied.length === 0 ? [] : [`not: ${tool.denied.join(', ')}`];
-  return [...only, ...not].map((part) => ` (${part})`).join('');
-}
-
-function toolLine(tool: ActiveRunTool): string {
-  const spec = RUN_TOOLS[tool.name];
-  return `- \`${tool.path} ${spec.usage}\`: ${spec.purpose}${scope(tool)}`;
-}
-
-/**
- * The run tools in words, for `formatPermissions`: each one's full path, how it is called and what for. Empty
- * without a run place, since the paths are only known there.
- */
-export function runToolLines(permissions: AgentPermissions, place?: RunPlace): readonly string[] {
-  if (place === undefined) {
-    return [];
-  }
-  const tools = activeRunTools(permissions, place.runDir, place.policy ?? 'edits');
-  if (tools.length === 0) {
-    return [];
-  }
-  return [
-    'Tools: run each by its full path, exactly as shown, from where you are (never cd); nothing else does what they do:',
-    ...tools.map(toolLine),
-  ];
 }

@@ -1,9 +1,9 @@
 import { envSource } from '@choliba/config';
+import { DEFAULT_OLLAMA_URL } from '@choliba/providers';
 
 import { agentsConfig } from '../../agents/agents-config';
 import { AUTO } from '../../common/provider-registry';
 import { DEFAULT_PLAYWRIGHT_OUTPUT_DIR } from '../../common/run-tools/playwright-tool';
-import { DEFAULT_OLLAMA_URL } from '../../providers/claude/claude-ollama-agent.provider';
 import { PROVIDERS_WITH_OLLAMA } from '../helpers/providers';
 
 describe('agentsConfig', () => {

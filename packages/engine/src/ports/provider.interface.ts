@@ -1,0 +1,60 @@
+import type { AgentDefinition, ExecutionMode, McpServer, PermissionPolicy } from '@choliba/domain';
+
+import type { AgentEvent } from './event.interface';
+import type { RunProject } from './run-project';
+
+export interface ProviderRequest {
+  readonly agent: AgentDefinition;
+  readonly mode: ExecutionMode;
+  /** Already the *effective* policy (see `effectivePolicy`): read-only whenever `mode !== 'execute'`. */
+  readonly policy: PermissionPolicy;
+  /** The full prompt body (mode notice + saved plan + task), already assembled by `buildUserPrompt`. */
+  readonly userPrompt: string;
+  readonly workspaceRoot: string;
+  /**
+   * Where the provider runs: an empty folder inside the workspace (`.cache/runs/<id>/`), created before
+   * the session and removed after it. Both providers let the agent read and write freely in the folder
+   * they run in, so running in an empty one leaves `permissions` as the only thing that grants access;
+   * being inside the workspace, `bun choliba ...` still finds it from there.
+   */
+  readonly runDir: string;
+  readonly addDirs: readonly string[];
+  readonly model: string | undefined;
+  /** The order to use the agent's skills (`formatSkillsInstruction`), put atop its instructions; absent when it lists none. */
+  readonly skillsInstruction?: string;
+  /** The MCP servers the agent lists (`agent.yaml#mcps`), already resolved; the session gets these and no other. */
+  readonly mcpServers?: readonly McpServer[];
+  /** The project the run works on (`--project`), named in the prompt (`formatProject`); absent without one. */
+  readonly project?: RunProject;
+}
+
+/** What a provider's own variables are made from: the run, the workspace's configuration, and how the agent reaches a URL. */
+export interface ProviderVariablesInput {
+  readonly request: ProviderRequest;
+  readonly config: Readonly<Record<string, string | undefined>>;
+  /** A URL of this machine as the provider reaches it from where it runs (`agentURL`). */
+  readonly reachable: (url: string) => string;
+}
+
+/**
+ * Stateful by design: a provider's tool-result events reference a tool-call by id
+ * (`tool_use_id`), so a parser instance tracks id → name across the lines of one run.
+ * `createParser()` returns a fresh one per spawned process.
+ */
+export interface StreamParser {
+  parseLine(line: string): readonly AgentEvent[];
+  /** True once a stream `init` event carried a non-empty model (see `stream-json.ts`). */
+  readonly sawInitWithModel: boolean;
+}
+
+export interface PlanContentContext {
+  readonly planMarkdown: string | undefined;
+  readonly doneEvent: Extract<AgentEvent, { type: 'done' }> | undefined;
+  readonly textParts: readonly string[];
+}
+
+/** A file a provider would write for a run, and what it would hold. */
+export interface PlannedFile {
+  readonly path: string;
+  readonly content: string;
+}

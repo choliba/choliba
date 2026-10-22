@@ -4,11 +4,18 @@ import { spawnSync } from 'node:child_process';
 import readline from 'node:readline/promises';
 
 import { writeStderr, writeStdout, type Theme, type Writable } from '@choliba/core';
+import type { ProjectLocations } from '@choliba/workspace';
+import { APP_LOGS_DIR } from '@choliba/workspace';
+
 import {
+  APP_PREPARED_ENV,
+  formatRetired,
   fullTicket,
+  fullyRetiredTickets,
   listProjectNames,
   listTicketSuffixes,
   loadProjectSettings,
+  prepareApp,
   projectDir,
   projectTestsFolder,
   REPORT_FOLDER,
@@ -19,15 +26,9 @@ import {
   ticketJsonPath,
   ticketsFolderPath,
   ticketSuffix,
-  type ProjectLocations,
   type ProjectSettings,
   type SetupStdio,
-  APP_PREPARED_ENV,
-  formatRetired,
-  fullyRetiredTickets,
-  prepareApp,
-} from '@choliba/projects';
-import { APP_LOGS_DIR } from '@choliba/workspace';
+} from '../app';
 
 import { workspaceLocations } from '../../shared/workspace-config';
 

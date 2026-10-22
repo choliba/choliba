@@ -1,4 +1,4 @@
-import { SUBAGENT_TOOLS, delegationMessage } from '../../../agents/runs/delegation-guard';
+import { SUBAGENT_TOOLS, delegationMessage } from '../../../../../engine/src/guards/delegation-guard';
 
 describe('SUBAGENT_TOOLS', () => {
   it('names the subagent tools: Agent in Claude Code, Task in Cursor', () => {

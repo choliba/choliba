@@ -13,15 +13,14 @@ import {
   type PanelCommand,
 } from '@choliba/core';
 import { fakeChatPanel, fakePanelContext, fakePlatform } from '@choliba/core/testing';
+import { agentsPanel, tuiShell } from '@choliba/tui';
 
 import { ProviderRegistry } from '../../common';
 import { sandboxConfig } from '@choliba/sandbox';
 
 import { agentsConfig } from '../../agents/agents-config';
-import { agentsPanel } from '../../agents/agents-panel';
 import { loadAgent } from '../../agents/agent-loader';
 import { sessionArgv, showRun } from '../../agents/agents-panel-state';
-import { agentsShell } from '../../agents/agents-shell';
 import { AGENT_PROVIDERS } from '../../agents/agents.constants';
 import { ClaudeAgentProvider, ClaudeOllamaAgentProvider, CursorAgentProvider } from '../../providers';
 import { makeTmpDir } from '../helpers/tmp';
@@ -359,7 +358,7 @@ describe('/mode', () => {
       agentsFolder(tmp.path);
       const panel = session(tmp.path, () => true);
       expect(panel.state.press('tab', true)).toBe(false);
-      agentsShell.panelStart?.(panel.container, panel.state.context);
+      tuiShell.panelStart?.(panel.container, panel.state.context);
 
       // With no agent yet, every mode, starting at execute.
       expect(panel.state.statuses.get('modo')).toBe(

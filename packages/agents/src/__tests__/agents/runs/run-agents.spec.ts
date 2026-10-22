@@ -13,13 +13,14 @@ import {
   type SignalSource,
   type Writable,
 } from '@choliba/core';
-import { AppError, type ProjectSettings } from '@choliba/projects';
+import type { ProjectSettings } from '@choliba/projects';
 import * as projects from '@choliba/projects';
+import { AppError } from '@choliba/runner';
 
-import * as gitDiff from '../../../agents/steps/git-working-tree-diff';
+import * as gitDiff from '../../../../../engine/src/steps/git-working-tree-diff';
 
 import { defineInvocation } from '../../../agents/invocation';
-import { StepFailedError } from '../../../agents/steps/step-actions';
+import { StepFailedError } from '../../../../../engine/src/steps/step-actions';
 import { readPlan } from '../../../agents/runs/plan-store';
 import type { RunAgentsCliDeps } from '../../../agents/runs/run-context';
 import { agentsHelpSpec, runAgentsCli, runAgentsList } from '../../../agents/runs/run-agents';

@@ -1,6 +1,6 @@
 import Ajv, { type ErrorObject } from 'ajv';
 import { parse as parseYaml } from 'yaml';
-import agentYamlV1Schema from './schemes/v1/agent.schema.json';
+import agentYamlV1Schema from './schemes/v1/agent.schema.json' with { type: 'json' };
 
 export interface ValidationResult {
   readonly valid: boolean;

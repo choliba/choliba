@@ -2,7 +2,8 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { formatDuration, formatHelp, openOpenTuiPanel, wantsFooter, type CommandSpec } from '@choliba/core';
-import { AppError, ensureApp, shareApp, type ProjectSettings, type RunningApp } from '@choliba/projects';
+import type { ProjectSettings } from '@choliba/projects';
+import { AppError, ensureApp, shareApp, type RunningApp } from '@choliba/runner';
 import { readSandbox, type Sandbox, type SandboxConfigError } from '@choliba/sandbox';
 
 import { listAgents } from '../agent-loader';
@@ -15,8 +16,8 @@ import type { ExecutionMode } from '../../common';
 import { APP_LOGS_DIR, LOGS_DIR, resolveAgentsDir } from '@choliba/workspace';
 import type { ProviderRequest } from '../../common';
 import type { ResolvedProvider } from '../../common';
-import { formatStepFailure, stepExitCode } from '../steps/step-actions';
-import { spawnToEnd } from '../steps/step-spawn';
+import { formatStepFailure, stepExitCode } from '@choliba/engine';
+import { spawnToEnd } from '@choliba/engine';
 import { formatAgentDetail, runList } from './agent-detail';
 import { formatDryRun, modelText, type DryRunInput } from './dry-run';
 import { runAgent } from './run-agent';

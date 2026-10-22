@@ -1,23 +1,9 @@
 import { join } from 'node:path';
 
+export type { AskAnswer, AskQuestion } from '@choliba/engine';
+
 /** How long the `ask` script waits for an answer before telling the agent to go on without one: 25 minutes. */
 export const ASK_TIMEOUT_MS = 25 * 60 * 1000;
-
-/** A question the agent asks through the `ask` run tool, as its script writes it. */
-export interface AskQuestion {
-  readonly id: string;
-  readonly question: string;
-  /** The choices, when the agent gave some; none is a question answered in words. */
-  readonly options: readonly string[];
-  /** Whether more than one of the `options` may be chosen. */
-  readonly multi: boolean;
-}
-
-/** What the screen answers: the person's answer, or why there is none. */
-export type AskAnswer =
-  | { readonly status: 'answered'; readonly answer: string | readonly string[] }
-  | { readonly status: 'skipped' }
-  | { readonly status: 'unavailable' };
 
 /**
  * Where the `ask` script and the screen exchange questions and answers: a folder inside the run folder, which both

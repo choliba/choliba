@@ -1,15 +1,8 @@
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-import {
-  agentsConfig,
-  knownProviders,
-  listAgents,
-  listSkills,
-  loadAgent,
-  resolveSkill,
-  resolveSkills,
-} from '@choliba/agents';
+import { agentsConfig, listAgents, listSkills, loadAgent, resolveSkill, resolveSkills } from '@choliba/agents';
+import { knownProviders } from '@choliba/providers';
 import { configCatalog, configSettings, type ConfigGroup } from '@choliba/config';
 import { versionLine } from '@choliba/core';
 import { LocationsService, ProjectsService, projectsConfig } from '@choliba/projects';
