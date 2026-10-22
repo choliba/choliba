@@ -15,6 +15,7 @@
     "@choliba/domain": "workspace:*",
     "@choliba/engine": "workspace:*",
     "@choliba/projects": "workspace:*",
+    "@choliba/providers": "workspace:*",
     "@choliba/runner": "workspace:*",
     "@choliba/sandbox": "workspace:*",
     "@choliba/workspace": "workspace:*",

@@ -1,0 +1,4 @@
+{"type":"system","subtype":"init","model":"Composer 2.5 Fast","session_id":"fixture-session"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Analyzing the repository."}]}}
+{"type":"tool_call","subtype":"started","call_id":"tool_fixture","tool_call":{"createPlanToolCall":{"args":{"plan":"## Documentation update plan\n\n### docs/01-agentes.md\n- Update binary name to `agents`.\n\n### Without changes\n- Editor config only."}}}}
+{"type":"result","subtype":"success","is_error":false,"result":"Analyzing the repository.\nCreating the documentation update plan.\n"}

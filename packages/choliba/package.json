@@ -16,6 +16,7 @@
     "@choliba/config": "workspace:*",
     "@choliba/core": "workspace:*",
     "@choliba/projects": "workspace:*",
+    "@choliba/providers": "workspace:*",
     "@choliba/runner": "workspace:*",
     "@choliba/sandbox": "workspace:*",
     "@choliba/tui": "workspace:*",

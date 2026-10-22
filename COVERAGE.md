@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 22/10/2026 12:35:27 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 22/10/2026 13:07:44 — não editar manualmente.
 
 ## Resumo
 
@@ -15,6 +15,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 🟢|[packages/engine](packages/engine)|100.00|100.00|100.00|100.00
 🟢|[packages/kernel](packages/kernel)|100.00|100.00|100.00|100.00
 🟢|[packages/projects](packages/projects)|100.00|100.00|100.00|100.00
+🟢|[packages/providers](packages/providers)|100.00|100.00|100.00|100.00
 🟢|[packages/runner](packages/runner)|100.00|100.00|100.00|100.00
 🟢|[packages/sandbox](packages/sandbox)|100.00|100.00|100.00|100.00
 🟢|[packages/shell](packages/shell)|100.00|100.00|100.00|100.00
@@ -24,7 +25,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 74 arquivos</summary>
+<summary>🟢 <b>packages/agents</b> — 100.00% das linhas, 59 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -75,10 +76,8 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/common/agent-permissions.ts](packages/agents/src/common/agent-permissions.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/agent-provider.ts](packages/agents/src/common/agent-provider.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/agent-vars.ts](packages/agents/src/common/agent-vars.ts)|100.00|100.00|100.00|100.00
-🟢|[src/common/cursor-tool-calls.ts](packages/agents/src/common/cursor-tool-calls.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/definition-denies.ts](packages/agents/src/common/definition-denies.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/json.ts](packages/agents/src/common/json.ts)|100.00|100.00|100.00|100.00
-🟢|[src/common/mcp-use.ts](packages/agents/src/common/mcp-use.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/message-blocks.ts](packages/agents/src/common/message-blocks.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/path-policy.ts](packages/agents/src/common/path-policy.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/prompt.ts](packages/agents/src/common/prompt.ts)|100.00|100.00|100.00|100.00
@@ -89,19 +88,6 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/common/run-tools/playwright-tool.ts](packages/agents/src/common/run-tools/playwright-tool.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-tools/run-tool-path.ts](packages/agents/src/common/run-tools/run-tool-path.ts)|100.00|100.00|100.00|100.00
 🟢|[src/common/run-tools/run-tools.ts](packages/agents/src/common/run-tools/run-tools.ts)|100.00|100.00|100.00|100.00
-🟢|[src/common/stream-json.ts](packages/agents/src/common/stream-json.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/claude/claude-agent.provider.ts](packages/agents/src/providers/claude/claude-agent.provider.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/claude/claude-ollama-agent.provider.ts](packages/agents/src/providers/claude/claude-ollama-agent.provider.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/claude/claude-permissions.ts](packages/agents/src/providers/claude/claude-permissions.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/codex/codex-agent.provider.ts](packages/agents/src/providers/codex/codex-agent.provider.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/codex/codex-auth.ts](packages/agents/src/providers/codex/codex-auth.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/codex/codex-config.ts](packages/agents/src/providers/codex/codex-config.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/codex/codex-stream.ts](packages/agents/src/providers/codex/codex-stream.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/cursor/cursor-agent.provider.ts](packages/agents/src/providers/cursor/cursor-agent.provider.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/cursor/cursor-cli-json.ts](packages/agents/src/providers/cursor/cursor-cli-json.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/cursor/cursor-permissions.ts](packages/agents/src/providers/cursor/cursor-permissions.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/cursor/cursor-state.ts](packages/agents/src/providers/cursor/cursor-state.ts)|100.00|100.00|100.00|100.00
-🟢|[src/providers/known-providers.ts](packages/agents/src/providers/known-providers.ts)|100.00|100.00|100.00|100.00
 
 </details>
 
@@ -305,6 +291,31 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/tickets/ticket-template.ts](packages/projects/src/tickets/ticket-template.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tickets/ticket.ts](packages/projects/src/tickets/ticket.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tickets/tickets-spec.ts](packages/projects/src/tickets/tickets-spec.ts)|100.00|100.00|100.00|100.00
+
+</details>
+
+<details>
+<summary>🟢 <b>packages/providers</b> — 100.00% das linhas, 17 arquivos</summary>
+
+Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
+--|--|--|--|--|--
+🟢|[src/claude/claude-agent.provider.ts](packages/providers/src/claude/claude-agent.provider.ts)|100.00|100.00|100.00|100.00
+🟢|[src/claude/claude-ollama-agent.provider.ts](packages/providers/src/claude/claude-ollama-agent.provider.ts)|100.00|100.00|100.00|100.00
+🟢|[src/claude/claude-permissions.ts](packages/providers/src/claude/claude-permissions.ts)|100.00|100.00|100.00|100.00
+🟢|[src/codex/codex-agent.provider.ts](packages/providers/src/codex/codex-agent.provider.ts)|100.00|100.00|100.00|100.00
+🟢|[src/codex/codex-auth.ts](packages/providers/src/codex/codex-auth.ts)|100.00|100.00|100.00|100.00
+🟢|[src/codex/codex-config.ts](packages/providers/src/codex/codex-config.ts)|100.00|100.00|100.00|100.00
+🟢|[src/codex/codex-stream.ts](packages/providers/src/codex/codex-stream.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/cursor-tool-calls.ts](packages/providers/src/common/cursor-tool-calls.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/json.ts](packages/providers/src/common/json.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/mcp-use.ts](packages/providers/src/common/mcp-use.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/path-globs.ts](packages/providers/src/common/path-globs.ts)|100.00|100.00|100.00|100.00
+🟢|[src/common/stream-json.ts](packages/providers/src/common/stream-json.ts)|100.00|100.00|100.00|100.00
+🟢|[src/cursor/cursor-agent.provider.ts](packages/providers/src/cursor/cursor-agent.provider.ts)|100.00|100.00|100.00|100.00
+🟢|[src/cursor/cursor-cli-json.ts](packages/providers/src/cursor/cursor-cli-json.ts)|100.00|100.00|100.00|100.00
+🟢|[src/cursor/cursor-permissions.ts](packages/providers/src/cursor/cursor-permissions.ts)|100.00|100.00|100.00|100.00
+🟢|[src/cursor/cursor-state.ts](packages/providers/src/cursor/cursor-state.ts)|100.00|100.00|100.00|100.00
+🟢|[src/registry/known-providers.ts](packages/providers/src/registry/known-providers.ts)|100.00|100.00|100.00|100.00
 
 </details>
 

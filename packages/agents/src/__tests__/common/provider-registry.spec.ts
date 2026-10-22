@@ -2,6 +2,7 @@ import { coreShell, createShell } from '@choliba/core';
 import { fakePlatform, VERBS_ROOT } from '@choliba/core/testing';
 
 import { AGENT_PROVIDERS, agentsShell, knownProviders } from '../..';
+import { knownProvidersShell } from '../helpers/providers-shell';
 import {
   AUTO,
   InvalidProviderPreferenceError,
@@ -110,7 +111,7 @@ describe('ProviderRegistry — the names and descriptions --provider shows', () 
 
 describe('AGENT_PROVIDERS', () => {
   it('gives claude, claude-ollama, codex and cursor, in that order, once', () => {
-    const { container } = createShell(fakePlatform(), [coreShell, agentsShell, VERBS_ROOT]);
+    const { container } = createShell(fakePlatform(), [coreShell, knownProvidersShell, agentsShell, VERBS_ROOT]);
 
     expect(container.get(AGENT_PROVIDERS).choices()).toEqual(['auto', 'claude', 'claude-ollama', 'codex', 'cursor']);
     expect(container.get(AGENT_PROVIDERS)).toBe(container.get(AGENT_PROVIDERS));

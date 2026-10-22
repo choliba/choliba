@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 
-import { agentsShell } from '@choliba/agents';
+import { AGENT_PROVIDERS, agentsShell } from '@choliba/agents';
+import { knownProviders } from '@choliba/providers';
 import { defineConfig, type ConfigGroup } from '@choliba/config';
 import {
   coreShell,
@@ -66,6 +67,7 @@ export function cholibaShell(runtime: Runtime): ShellModule {
       verbs: CHOLIBA_VERBS,
     },
     provide: (container) => {
+      container.provide(AGENT_PROVIDERS, () => knownProviders());
       container.provide(RUNTIME, () => runtime);
       container.provide(PANEL_LOGO, () => findResource(join('assets', 'choliba-logo.png'), __dirname));
       container.provide(PANEL_ICON, () => OWL_ICON);

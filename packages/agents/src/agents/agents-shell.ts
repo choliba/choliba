@@ -3,21 +3,19 @@ import { projectsConfig } from '@choliba/projects';
 import { sandboxConfig } from '@choliba/sandbox';
 
 import { agentsConfig } from './agents-config';
-import { knownProviders } from '../providers';
 import { listAgentsCommand } from './agents-list.command';
 import { runAgentCommand } from './agents-run.command';
 import { AGENT_PROVIDERS, AGENTS } from './agents.constants';
 import { AgentsService } from './agents.service';
 
 /**
- * @choliba/agents in the shell: the providers (`knownProviders`), `choliba run agent`,
- * and `choliba list agents`.
+ * @choliba/agents in the shell: `choliba run agent` and `choliba list agents`. The app
+ * registers the providers (`AGENT_PROVIDERS`).
  */
 export const agentsShell: ShellModule = {
   name: '@choliba/agents',
   config: [agentsConfig, projectsConfig, sandboxConfig],
   provide: (container) => {
-    container.provide(AGENT_PROVIDERS, () => knownProviders());
     container.provide(AGENTS, (c) => {
       const platform = c.get(PLATFORM);
       const agents = c.get(agentsConfig.token);
