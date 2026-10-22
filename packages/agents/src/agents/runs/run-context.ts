@@ -19,7 +19,7 @@ import type { AppReachDeps } from './app-reach';
 import type { AgentInvocation, PrepareRunDeps, RunProject } from '@choliba/engine';
 import type { ExecutionMode } from '../../common';
 
-export { errorMessage, locationsOf, projectsDir, toAbsolute } from '@choliba/engine';
+export { errorMessage, projectsDir, toAbsolute } from '@choliba/engine';
 export type { PreparedRun, Stopped } from '@choliba/engine';
 
 export interface RunAgentsCliDeps extends PrepareRunDeps {

@@ -107,6 +107,7 @@
         "@choliba/domain": "workspace:*",
         "@choliba/kernel": "workspace:*",
         "@choliba/projects": "workspace:*",
+        "@choliba/runner": "workspace:*",
         "@choliba/sandbox": "workspace:*",
         "@choliba/workspace": "workspace:*",
         "yaml": "^2.8.1",
