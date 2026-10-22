@@ -1,12 +1,11 @@
 import {
   AGENT,
   RESUME_AT,
+  agentSequenceState,
   agentPaint,
   agentsDir,
   listAgents,
   resumeSequence,
-  runningAgent,
-  sequenceRunning,
   sessionAgentIds,
   showRun,
   talkToAgent,
@@ -53,7 +52,7 @@ async function changeAgent(
   panel: ChatPanel,
   agent: AgentDefinition,
 ): Promise<void> {
-  if (runningAgent(context) === agent.id) {
+  if (agentSequenceState(context)?.current === agent.id) {
     panel.write(warn(`O agente ${agent.id} está rodando: troque o provider e o modelo dele depois que terminar.`));
     return;
   }
@@ -142,12 +141,14 @@ const resumeCommand: PanelCommand = {
   description: 'Volta a um agente da sequência e segue dela',
   unavailable: (context) => {
     if (sessionAgentIds(context).length === 0) return 'Escolha os agentes antes, com /agents';
-    return sequenceRunning(context) ? 'Os agentes estão rodando: espere terminar ou pare com Ctrl+C' : undefined;
+    return agentSequenceState(context)?.running === true
+      ? 'Os agentes estão rodando: espere terminar ou pare com Ctrl+C'
+      : undefined;
   },
   run: async ({ container, panel, context }) => {
     const ids = sessionAgentIds(context);
     // Where it stopped, checked; a sequence that ended has none.
-    const stopped = Number(context.get(RESUME_AT));
+    const stopped = agentSequenceState(context)?.resumeAt ?? Number(context.get(RESUME_AT));
     const chosen = await panel.choose({
       title: 'Voltar a qual agente?',
       description: 'A sequência roda de novo a partir dele, com o ticket da sessão.',

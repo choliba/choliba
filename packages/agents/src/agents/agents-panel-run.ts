@@ -7,6 +7,13 @@ import {
   type PanelContext,
 } from '@choliba/core';
 import { holdApp } from '@choliba/runner';
+import {
+  createAgentSequence,
+  type AgentSequence,
+  type AgentSequenceState,
+  type SequenceExecution,
+  type SequenceStop,
+} from '@choliba/engine';
 
 import type { AgentDefinition } from '../common';
 import { agentVoice } from './agents-panel-card';
@@ -80,9 +87,7 @@ export const RESUME_AT = 'retomar';
 /** The conversation of a session with its agents: what /resume calls to run the sequence again from one of them. */
 interface Talk {
   readonly resume: (panel: ChatPanel, from: number, task: string | undefined) => void;
-  readonly running: () => boolean;
-  /** The agent running now, if any. */
-  readonly current: () => string | undefined;
+  readonly sequence: AgentSequence<AgentDefinition>;
 }
 
 /** The sessions whose conversation goes to their agents already: one per session, whichever agents it has. */
@@ -109,13 +114,14 @@ async function goOn(next: string, panel: ChatPanel): Promise<boolean> {
 export function talkToAgent(container: Container, context: PanelContext): void {
   if (talks.has(context)) return;
   let sending: ((text: string) => void) | undefined;
-  let running = false;
-  // The agent of the sequence running now; the message that started it, the task of the agents with no default one.
-  let current: string | undefined;
-  let message = '';
-  // Set by Ctrl+C: the sequence stops after the run it stopped. Read through a call, as Ctrl+C sets it meanwhile.
-  const interrupt = { asked: false };
-  const interrupted = (): boolean => interrupt.asked;
+  const changed = (state: AgentSequenceState): void => {
+    context.set(RESUME_AT, state.resumeAt === undefined ? undefined : String(state.resumeAt));
+  };
+  const sequence: AgentSequence<AgentDefinition> = createAgentSequence(
+    () => sessionAgentIds(context),
+    (id) => sessionAgent(container, id),
+    changed,
+  );
 
   /** One run of `agent` with `task`: its exit code, or nothing when it did not start (a question left with Esc). */
   const runOne = async (agent: AgentDefinition, task: string, panel: ChatPanel): Promise<number | undefined> => {
@@ -147,7 +153,7 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     };
     // Ctrl+C stops the agent's session while it is open, else the command of the step running; and the sequence.
     context.busy(() => {
-      interrupt.asked = true;
+      sequence.interrupt();
       if (inSession) stopRun?.();
       else steps.abort();
     });
@@ -167,7 +173,14 @@ export function talkToAgent(container: Container, context: PanelContext): void {
           inSession = true;
           stopRun = listener;
         },
-        ask: (question) => panel.ask(question),
+        ask: async (question) => {
+          sequence.question(question);
+          try {
+            return await panel.ask(question);
+          } finally {
+            sequence.question(undefined);
+          }
+        },
         onMessage: (listener) => {
           sending = listener;
         },
@@ -202,83 +215,58 @@ export function talkToAgent(container: Container, context: PanelContext): void {
   };
 
   /** Where the sequence stopped: kept for /resume and said, when the session has more than one agent. */
-  const stopped = (ids: readonly string[], at: number, panel: ChatPanel): void => {
-    const id = ids[at];
-    if (ids.length < 2 || id === undefined) return;
-    context.set(RESUME_AT, String(at));
+  const stopped = (stop: SequenceStop, panel: ChatPanel): void => {
+    if (sessionAgentIds(context).length < 2) return;
     const ticket = context.get(TICKET);
     const kept = ticket === undefined ? '' : `, com o ticket ${ticket}`;
-    panel.answer(warn(`A sequência parou em ${id}. /resume retoma dele${kept}.`));
+    panel.answer(warn(`A sequência parou em ${stop.agent}. /resume retoma dele${kept}.`));
   };
 
-  /**
-   * Runs the session's agents from the one at `from`, the first with `task`; the others, and the first without it,
-   * with their default task, else the message that started the sequence.
-   */
-  const runFrom = async (from: number, task: string | undefined, panel: ChatPanel): Promise<void> => {
-    const ids = sessionAgentIds(context);
-    const project = context.get(PROJECT);
-    const letGo = ids.length > 1 && project !== undefined ? holdApp(project) : noop;
-    running = true;
-    interrupt.asked = false;
-    context.set(RESUME_AT, undefined);
-    // What starts the sequence is the task of the agents after the first that have none of their own.
-    if (task !== undefined && from === 0) message = task;
-    // The agents about to run wait again on their cards.
-    for (const id of ids.slice(from)) context.set(agentKey(STATE, id), undefined);
-    showRun(container, context);
-    // The session's agents are read again at each step: one added while the sequence goes runs at its end.
-    const agentAt = (at: number): string | undefined => sessionAgentIds(context)[at];
-    try {
-      for (let at = from, id = agentAt(at); id !== undefined; at += 1, id = agentAt(at)) {
-        const agent = sessionAgent(container, id);
-        if (agent === undefined) {
-          panel.answer(warn(`O agente ${id} não carrega mais: veja com choliba check.`));
-          stopped(sessionAgentIds(context), at, panel);
-          return;
-        }
-        current = id;
-        const own = at === from ? task : undefined;
-        const code = await runOne(agent, own ?? agent.defaultTask ?? message, panel);
-        current = undefined;
-        if (code !== 0 || interrupted()) {
-          stopped(sessionAgentIds(context), at, panel);
-          return;
-        }
-        const next = agentAt(at + 1);
-        if (next !== undefined && !(await goOn(next, panel))) {
-          stopped(sessionAgentIds(context), at + 1, panel);
-          return;
-        }
-      }
-    } finally {
-      running = false;
-      current = undefined;
-      letGo();
-    }
+  const execution = (panel: ChatPanel): SequenceExecution<AgentDefinition> => ({
+    run: (agent, task) => runOne(agent, task, panel),
+    continueTo: (next) => goOn(next, panel),
+    ticket: () => context.get(TICKET),
+    before: (ids) => {
+      for (const id of ids) context.set(agentKey(STATE, id), undefined);
+      showRun(container, context);
+    },
+    missing: (id) => {
+      panel.answer(warn(`O agente ${id} não carrega mais: veja com choliba check.`));
+    },
+    stopped: (stop) => {
+      stopped(stop, panel);
+    },
+    hold: (multiple) => {
+      if (!multiple) return noop;
+      const project = context.get(PROJECT);
+      return project === undefined ? noop : holdApp(project);
+    },
+  });
+
+  const runFrom = (from: number, task: string | undefined, panel: ChatPanel): void => {
+    void sequence.start(from, task, execution(panel));
   };
 
   talks.set(context, {
-    running: () => running,
-    current: () => current,
+    sequence,
     resume: (panel, from, task) => {
-      if (!running) void runFrom(from, task, panel);
+      runFrom(from, task, panel);
     },
   });
   context.converse((text, panel) => {
-    if (running) sending?.(text);
-    else void runFrom(0, text, panel);
+    if (sequence.state().running) sending?.(text);
+    else runFrom(0, text, panel);
   });
 }
 
-/** The agent of the session running now, if any. */
-export function runningAgent(context: PanelContext): string | undefined {
-  return talks.get(context)?.current();
+/** The sequence's engine state, which the panel reads to draw and dispatch its controls. */
+export function agentSequenceState(context: PanelContext): AgentSequenceState | undefined {
+  return talks.get(context)?.sequence.state();
 }
 
-/** Whether the session's agents run now: a sequence going, or one agent. */
-export function sequenceRunning(context: PanelContext): boolean {
-  return talks.get(context)?.running() === true;
+/** Forgets where a stopped sequence would resume after its order changes. */
+export function resetSequenceStop(context: PanelContext): void {
+  talks.get(context)?.sequence.resetStop();
 }
 
 /**
