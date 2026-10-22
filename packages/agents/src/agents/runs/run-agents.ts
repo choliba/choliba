@@ -16,8 +16,7 @@ import type { ExecutionMode } from '../../common';
 import { APP_LOGS_DIR, LOGS_DIR, resolveAgentsDir } from '@choliba/workspace';
 import type { ProviderRequest } from '../../common';
 import type { ResolvedProvider } from '../../common';
-import { formatStepFailure, stepExitCode } from '@choliba/engine';
-import { spawnToEnd } from '@choliba/engine';
+import { runAfter, spawnToEnd } from '@choliba/engine';
 import { formatAgentDetail, runList } from './agent-detail';
 import { formatDryRun, modelText, type DryRunInput } from './dry-run';
 import { runAgent } from './run-agent';
@@ -183,34 +182,6 @@ function sandboxFor(deps: RunAgentsCliDeps): Sandbox | undefined {
  * ended. Each failed step is reported; the run ends with the agent's exit code when the agent
  * failed, else with the first failed step's.
  */
-async function runAfter(
-  command: AgentInvocation,
-  ended: { readonly mode: ExecutionMode; readonly exitCode: number; readonly answer: string | undefined },
-  deps: RunAgentsCliDeps,
-  project: string | undefined,
-): Promise<number> {
-  const { mode, exitCode, answer } = ended;
-  const input = {
-    repoRoot: deps.repoRoot,
-    mode,
-    exitCode,
-    ...(deps.signal === undefined ? {} : { signal: deps.signal }),
-    ...(answer === undefined ? {} : { answer }),
-    ...(project === undefined ? {} : { project: { projectsDir: projectsDir(deps), name: project } }),
-  };
-  const failures = (await command.after?.(input)) ?? [];
-  for (const failure of failures) {
-    deps.stderr.write(`${formatStepFailure(failure)}\n`);
-  }
-  const [first] = failures;
-  if (first !== undefined) {
-    // Once, after every failed step, so it does not read as part of the last one's output.
-    const blame = exitCode === 0 ? '; quem falhou foram os steps acima' : '';
-    deps.stderr.write(`O agente terminou com código ${String(exitCode)}${blame}.\n`);
-  }
-  return exitCode !== 0 || first === undefined ? exitCode : stepExitCode(first);
-}
-
 /** The real run: spawn the provider, then the `after` steps. */
 async function runAndRecord(
   command: AgentInvocation,
@@ -270,7 +241,16 @@ async function runAndRecord(
     },
   );
 
-  return runAfter(command, { mode, exitCode, answer }, deps, project);
+  return runAfter(
+    command,
+    { mode, exitCode, answer },
+    {
+      repoRoot: deps.repoRoot,
+      stderr: deps.stderr,
+      ...(deps.signal === undefined ? {} : { signal: deps.signal }),
+      ...(project === undefined ? {} : { project: { projectsDir: projectsDir(deps), name: project } }),
+    },
+  );
 }
 
 /** The run's deps with `--sandbox` in place of `CHOL_SANDBOX`, so everything after it sees one sandbox. */

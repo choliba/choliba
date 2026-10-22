@@ -43,3 +43,9 @@ export {
   validateReportedModel,
 } from './run-event';
 export type { ReportedModelContext } from './run-event';
+export { containerReachProblem } from './app-reach';
+export type { AppReachDeps } from './app-reach';
+export { launchFor, realDisk } from './sandbox-launch';
+export type { Launch, LaunchDisk, LaunchInput } from './sandbox-launch';
+export { runAfter } from './run-after';
+export type { EndedRun, RunAfterDeps } from './run-after';

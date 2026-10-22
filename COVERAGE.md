@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 22/10/2026 15:15:16 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 22/10/2026 15:52:11 — não editar manualmente.
 
 ## Resumo
 
@@ -185,7 +185,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/engine</b> — 100.00% das linhas, 52 arquivos</summary>
+<summary>🟢 <b>packages/engine</b> — 100.00% das linhas, 55 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -208,6 +208,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/prompt/project.ts](packages/engine/src/prompt/project.ts)|100.00|100.00|100.00|100.00
 🟢|[src/prompt/prompt.ts](packages/engine/src/prompt/prompt.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/agent-skills.ts](packages/engine/src/runs/agent-skills.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/app-reach.ts](packages/engine/src/runs/app-reach.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/ask-watcher.ts](packages/engine/src/runs/ask-watcher.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/invocation.ts](packages/engine/src/runs/invocation.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/location-vars.ts](packages/engine/src/runs/location-vars.ts)|100.00|100.00|100.00|100.00
@@ -217,11 +218,13 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/runs/prepare-run.ts](packages/engine/src/runs/prepare-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/project-denies.ts](packages/engine/src/runs/project-denies.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/resolve-mcps.ts](packages/engine/src/runs/resolve-mcps.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/run-after.ts](packages/engine/src/runs/run-after.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/run-agent.ts](packages/engine/src/runs/run-agent.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/run-choice.ts](packages/engine/src/runs/run-choice.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/run-context.ts](packages/engine/src/runs/run-context.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/run-event.ts](packages/engine/src/runs/run-event.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/run-files.ts](packages/engine/src/runs/run-files.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/sandbox-launch.ts](packages/engine/src/runs/sandbox-launch.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/session-input.ts](packages/engine/src/runs/session-input.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/ticket-run.ts](packages/engine/src/runs/ticket-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/written-tool-call.ts](packages/engine/src/runs/written-tool-call.ts)|100.00|100.00|100.00|100.00
