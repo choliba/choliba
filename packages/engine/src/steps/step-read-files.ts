@@ -1,10 +1,12 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-import { untrustedBlock, type AgentStep } from '../../common';
+import type { AgentStep } from '@choliba/domain';
+
+import { untrustedBlock } from '../prompt';
 import { listField, textField, type FieldSpec } from './step-fields';
 import { loadListing } from './step-listing';
-import { compilePathPatterns } from '@choliba/core';
+import { compilePathPatterns } from '@choliba/kernel';
 
 import { searchFolder } from './step-search';
 import { checkSectionSize, parseMaxSize } from './step-size';

@@ -25,7 +25,7 @@ import { resolveMcps } from '../../common';
 import type { ProviderRequest } from '../../common';
 import type { SkillSummary } from '../agent-skills';
 import { formatSkillsInstruction, resolveSkills } from '../agent-skills';
-import { StepFailedError, stepExitCode } from '../steps/step-actions';
+import { StepFailedError, stepExitCode } from '@choliba/engine';
 import { buildUserPrompt } from '../../common';
 import {
   checkModelSupported,

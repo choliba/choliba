@@ -2,8 +2,8 @@ import type { CommandEntry, CommandSpec, FlagSpec, Suggestions, TypedFlags, GitR
 import { listTicketTypes, readTicketTemplate, ticketTemplatesDir } from '@choliba/projects';
 
 import type { AgentDefinition } from '../../common';
-import { SINCE_PENDING } from '../steps/step-constants';
-import { diffBaseOf } from '../steps/step-registry';
+import { SINCE_PENDING } from '@choliba/engine';
+import { diffBaseOf } from '@choliba/engine';
 import type { ProviderRegistry } from '../../common';
 import {
   CLI_PROGRAM_NAME,

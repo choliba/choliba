@@ -1,6 +1,6 @@
 import type { ToolEntry, ToolPolicy } from '@choliba/sandbox';
 
-import type { McpDeclaration } from '../../common';
+import type { McpDeclaration } from '@choliba/domain';
 import { SUBAGENT_TOOLS } from './delegation-guard';
 
 /** A declared server: all of it, or only the tools it lists. */

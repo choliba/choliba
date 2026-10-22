@@ -1,7 +1,7 @@
 import { readdirSync, type Dirent } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { compilePathPatterns } from '@choliba/core';
+import { compilePathPatterns } from '@choliba/kernel';
 
 /** What every search skips, at any depth: dependencies, builds, git and caches (path patterns, as `ignore`). */
 export const DEFAULT_IGNORE: readonly string[] = ['node_modules', 'vendor', 'dist', 'build', '.git', '.cache'];

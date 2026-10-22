@@ -11,7 +11,7 @@ import {
 } from '@choliba/domain';
 import { AGENT_FILE } from '@choliba/workspace';
 
-import { checkStep } from './steps/step-actions';
+import { checkStep } from '@choliba/engine';
 
 export { AgentConfigError, isValidAgentName, policyFromPermissions } from '@choliba/domain';
 

@@ -1,5 +1,5 @@
 import type { AgentEvent, McpUse } from '../../../common/interfaces/event.interface';
-import { permissionContext, toolRequest } from '../../../agents/runs/tool-request';
+import { permissionContext, toolRequest } from '../../../../../engine/src/guards/tool-request';
 
 function call(name: string, mcp?: McpUse): AgentEvent {
   return { type: 'tool-call', id: 'c1', name, summary: '', ...(mcp === undefined ? {} : { mcp }) };

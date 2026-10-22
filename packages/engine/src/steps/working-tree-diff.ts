@@ -1,9 +1,9 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import type { GitRunner } from '@choliba/core';
+import type { GitRunner } from '@choliba/kernel';
 
-import { untrustedBlock } from '../../common';
+import { untrustedBlock } from '../prompt';
 
 import { getWorkingTreeDiff } from './git-working-tree-diff';
 import { indexDiff } from './index-diff';

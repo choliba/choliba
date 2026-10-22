@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { AgentStep } from '../../../common';
-import { formatFilesSection, matchingPaths, readFiles } from '../../../agents/steps/step-read-files';
+import { formatFilesSection, matchingPaths, readFiles } from '../../../../../engine/src/steps/step-read-files';
 import { UNTRUSTED_INPUT_LINE } from '../../../common';
 import { makeTmpDir } from '../../helpers/tmp';
 

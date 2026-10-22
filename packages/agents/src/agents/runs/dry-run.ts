@@ -2,7 +2,7 @@ import type { ProjectEnvironment } from '@choliba/projects';
 import type { SandboxPath } from '@choliba/sandbox';
 
 import type { AgentStep, McpDeclaration } from '../../common';
-import { describeStep } from '../steps/step-actions';
+import { describeStep } from '@choliba/engine';
 import { runPlaceOf, wrapInstructions } from '../../common';
 import type { PlannedFile, ProviderRequest } from '../../common';
 

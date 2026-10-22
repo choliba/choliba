@@ -1,13 +1,13 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import * as gitDiff from '../../../agents/steps/git-working-tree-diff';
+import * as gitDiff from '../../../../../engine/src/steps/git-working-tree-diff';
 
 import type { AgentDefinition, AgentModeSteps } from '../../../common/interfaces/agent.interface';
 import { loadAgent } from '../../../agents/agent-loader';
-import * as actionsModule from '../../../agents/steps/step-actions';
-import { buildAfter, buildPrepare, diffBaseOf } from '../../../agents/steps/step-registry';
-import { readGitState } from '../../../agents/steps/git-state';
+import * as actionsModule from '../../../../../engine/src/steps/step-actions';
+import { buildAfter, buildPrepare, diffBaseOf } from '../../../../../engine/src/steps/step-registry';
+import { readGitState } from '../../../../../engine/src/steps/git-state';
 import { NO_MODE_STEPS, NO_STEPS } from '../../helpers/agent';
 import { makeTmpGitRepo } from '../../helpers/git-repo';
 import { makeTmpDir } from '../../helpers/tmp';

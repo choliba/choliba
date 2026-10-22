@@ -1,6 +1,6 @@
 import { PROJECT_CONFIG_KEYS, writeProjectConfigKey } from '@choliba/projects';
 
-import type { AgentStep } from '../../common';
+import type { AgentStep } from '@choliba/domain';
 import { textField, type FieldSpec } from './step-fields';
 import { answerContent } from './step-write-files';
 

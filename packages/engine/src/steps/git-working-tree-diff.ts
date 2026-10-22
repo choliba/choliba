@@ -2,7 +2,7 @@ import { copyFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { type GitRunResult, type GitRunner, createSpawnGitRunner } from '@choliba/core';
+import { type GitRunResult, type GitRunner, createSpawnGitRunner } from '@choliba/kernel';
 import { CACHE_DIR } from '@choliba/workspace';
 
 export const DEFAULT_DIFF_BASE = 'develop';

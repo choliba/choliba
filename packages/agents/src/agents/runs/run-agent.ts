@@ -29,7 +29,7 @@ import type { Launch } from './sandbox-launch';
 import { applyRunTools, askExchangeDir, runToolsOf } from '../../common';
 import { watchQuestions } from './ask-watcher';
 import { sessionInput } from './session-input';
-import { toolGuard, toolViolation } from './tool-guard';
+import { toolGuard, toolViolation } from '@choliba/engine';
 import { writtenToolCall, writtenToolCallMessage } from './written-tool-call';
 import { declaredModels } from './run-choice';
 import { loggedStream, NO_RUN_LOG, type RunLog } from './run-log';

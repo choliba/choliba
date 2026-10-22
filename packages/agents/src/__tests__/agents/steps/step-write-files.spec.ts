@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { answerContent, writeFiles } from '../../../agents/steps/step-write-files';
+import { answerContent, writeFiles } from '../../../../../engine/src/steps/step-write-files';
 import { makeTmpDir } from '../../helpers/tmp';
 
 describe('answerContent', () => {

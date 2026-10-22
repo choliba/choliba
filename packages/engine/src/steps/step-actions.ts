@@ -3,7 +3,7 @@ import { join, relative } from 'node:path';
 
 import { CACHE_DIR } from '@choliba/workspace';
 
-import type { AgentStep } from '../../common';
+import type { AgentStep } from '@choliba/domain';
 import { READ_FILES_FIELDS, READ_FILES_USAGE, readFiles } from './step-read-files';
 import { recordGitHead } from './git-state';
 import { WRITE_FILES_FIELDS, WRITE_FILES_USAGE, writeFiles } from './step-write-files';
