@@ -33,6 +33,12 @@ describe('the architecture of the packages', () => {
     expect({ exports: entryExports(ROOT), how: UPDATE }).toEqual({ exports: listed, how: UPDATE });
   }, 30_000);
 
+  it('forbids the engine from importing a provider', () => {
+    const graph = packageGraph(ROOT);
+
+    expect(graph['@choliba/engine']?.imports ?? []).not.toContain('@choliba/providers');
+  });
+
   it('keeps panel and terminal drawing out of the agent run', () => {
     const run = readFileSync(join(ROOT, 'packages/agents/src/agents/runs/run-agent.ts'), 'utf8');
 
