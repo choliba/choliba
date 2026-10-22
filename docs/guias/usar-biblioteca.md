@@ -9,6 +9,19 @@ regras do `choliba` na linha de comando. Um script e a CLI sempre dão a mesma r
 A biblioteca só lê, e é experimental até a versão 1.0. Para criar ou alterar alguma coisa, use os comandos
 (`choliba set config`, `choliba add`, `choliba new project`).
 
+## Subcaminhos públicos
+
+Use um subcaminho quando precisar da API de baixo nível de um conceito:
+
+| Import             | O que expõe                                                                                                                                        |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `choliba/core`     | Montagem de CLI, plataforma, ajuda, terminal e cores. Para testar, use `choliba/core/testing`. Veja a [referência do core](../referencia/core.md). |
+| `choliba/agents`   | `AgentDefinition`, `AgentProviderModels`, `loadAgent`, `listAgents`, `agentsConfig` e `agentRunChoice`.                                            |
+| `choliba/projects` | Tipos de projeto e ticket, leitura de tickets, configurações e resolução de caminhos de projeto e ticket.                                          |
+
+Esses subcaminhos são fachadas por conceito, não cópias das entradas internas. Helpers de execução, validação e CLI
+que não aparecem nesta lista não são uma API pública; use os módulos de `choliba` acima ou os comandos da CLI.
+
 ## Exemplo
 
 Dentro de uma pasta de trabalho (uma pasta cujo `package.json` depende de `choliba`), crie `choliba.ts`:
