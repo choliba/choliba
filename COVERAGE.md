@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 22/10/2026 15:52:11 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 22/10/2026 16:57:08 — não editar manualmente.
 
 ## Resumo
 
@@ -185,7 +185,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/engine</b> — 100.00% das linhas, 55 arquivos</summary>
+<summary>🟢 <b>packages/engine</b> — 100.00% das linhas, 56 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -207,6 +207,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/prompt/message-blocks.ts](packages/engine/src/prompt/message-blocks.ts)|100.00|100.00|100.00|100.00
 🟢|[src/prompt/project.ts](packages/engine/src/prompt/project.ts)|100.00|100.00|100.00|100.00
 🟢|[src/prompt/prompt.ts](packages/engine/src/prompt/prompt.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/agent-sequence.ts](packages/engine/src/runs/agent-sequence.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/agent-skills.ts](packages/engine/src/runs/agent-skills.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/app-reach.ts](packages/engine/src/runs/app-reach.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/ask-watcher.ts](packages/engine/src/runs/ask-watcher.ts)|100.00|100.00|100.00|100.00

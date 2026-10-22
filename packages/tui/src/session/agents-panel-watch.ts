@@ -1,6 +1,7 @@
 import {
   AGENT,
   RESUME_AT,
+  agentSequenceState,
   agentPaint,
   agentsConfig,
   listenModeKey,
@@ -11,7 +12,7 @@ import {
   showSandbox,
   TICKET,
   warn,
-  sequenceRunning,
+  resetSequenceStop,
 } from '@choliba/agents';
 import type { Container } from '@choliba/kernel';
 import type { ChatPanel, PanelContext } from '@choliba/shell';
@@ -24,7 +25,7 @@ const watching = new WeakSet<PanelContext>();
  * stopped sequence no longer resumes, its order changed. Not while the agents run.
  */
 function moveAgent(container: Container, context: PanelContext, id: string, onto: string, panel: ChatPanel): void {
-  if (sequenceRunning(context)) {
+  if (agentSequenceState(context)?.running === true) {
     panel.answer(warn('A ordem dos agentes não muda enquanto eles rodam.'));
     return;
   }
@@ -34,6 +35,7 @@ function moveAgent(container: Container, context: PanelContext, id: string, onto
   ids.splice(ids.indexOf(id), 1);
   ids.splice(to, 0, id);
   context.set(AGENT, ids.join(','));
+  resetSequenceStop(context);
   context.set(RESUME_AT, undefined);
   const named = (each: string): string => {
     const agent = sessionAgent(container, each);

@@ -151,5 +151,5 @@ export {
   showSandbox,
   warn,
 } from './agents-panel-state';
-export { RESUME_AT, resumeSequence, runningAgent, sequenceRunning, talkToAgent } from './agents-panel-run';
+export { RESUME_AT, agentSequenceState, resetSequenceStop, resumeSequence, talkToAgent } from './agents-panel-run';
 export { agentCard, agentPaint, agentVoice, type AgentCardPlace, type AgentRunLabels } from './agents-panel-card';

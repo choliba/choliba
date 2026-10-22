@@ -49,3 +49,15 @@ export { launchFor, realDisk } from './sandbox-launch';
 export type { Launch, LaunchDisk, LaunchInput } from './sandbox-launch';
 export { runAfter } from './run-after';
 export type { EndedRun, RunAfterDeps } from './run-after';
+export { createAgentSequence } from './agent-sequence';
+export type {
+  AgentSequence,
+  AgentSequenceState,
+  SequenceAgent,
+  SequenceExecution,
+  SequencePrompt,
+  SequenceQuestion,
+  SequenceResult,
+  SequenceStop,
+  SequenceStopReason,
+} from './agent-sequence';
