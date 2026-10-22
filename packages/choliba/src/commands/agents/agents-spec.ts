@@ -1,36 +1,19 @@
-import type { CommandEntry, CommandSpec, FlagSpec, Suggestions, TypedFlags, GitRunner } from '@choliba/core';
+import type { CommandEntry, CommandSpec, FlagSpec, Suggestions, TypedFlags } from '@choliba/core';
 import { listTicketTypes, readTicketTemplate, ticketTemplatesDir } from '@choliba/projects';
-
-import type { AgentDefinition } from '../../common';
-import { SINCE_PENDING } from '@choliba/engine';
-import { diffBaseOf } from '@choliba/engine';
-import type { ProviderRegistry } from '../../common';
 import {
+  AUTO,
   CLI_PROGRAM_NAME,
+  EXECUTION_MODES,
   LIST_PROGRAM_NAME,
   MODE_CHOICES,
-  PREPARE_FLAGS,
-  PROJECT_FLAGS,
   runFlagDefinitions,
-  TICKET_FLAGS,
+  SINCE_PENDING,
+  agentRunFlags,
   TYPE_SHORTCUT_PREFIX,
-  modeDescription,
-  sinceDescription,
-} from './agents-flags';
-import { AUTO, EXECUTION_MODES } from '../../common';
-import { declaredModels } from './run-choice';
-
-export interface AgentsCliSpecContext {
-  /** The providers choliba found: `--provider`, `--<id>` and their completion. */
-  readonly providers: ProviderRegistry;
-  readonly agents: readonly AgentDefinition[];
-  readonly repoRoot: string;
-  readonly git: GitRunner;
-  /** The project names `--project` completes to, read when asked (none when the locations are not set). */
-  readonly projects: () => readonly string[];
-  /** The ticket keys `--ticket` completes to: of `project` when given, else of every project; read when asked. */
-  readonly tickets: (project?: string) => readonly string[];
-}
+  type AgentDefinition,
+  type AgentsCliSpecContext,
+} from '@choliba/agents';
+import { declaredModels } from '@choliba/agents';
 
 const FILES: Suggestions = { kind: 'files' };
 
@@ -53,6 +36,15 @@ function summary(description: string): string {
   const oneLine = description.replaceAll(/\s+/g, ' ').trim();
   const end = oneLine.indexOf('. ');
   return end === -1 ? oneLine : oneLine.slice(0, end + 1);
+}
+
+/** What a ticket type is for: its template's `description`. */
+function ticketTypeDescription(type: string): string {
+  try {
+    return readTicketTemplate(ticketTemplatesDir(), type).description;
+  } catch {
+    return 'Tipo sem template em packages/projects/templates/ticket/.';
+  }
 }
 
 /** How to complete the value of a `runFlagDefinitions` entry for `agent`; nothing for a free-form value. */
@@ -92,81 +84,6 @@ export function flagValueSuggestions(
 }
 
 /** What a ticket type is for: its template's `description`. */
-function ticketTypeDescription(type: string): string {
-  try {
-    return readTicketTemplate(ticketTemplatesDir(), type).description;
-  } catch {
-    return 'Tipo sem template em packages/projects/templates/ticket/.';
-  }
-}
-
-/**
- * `--type` with each ticket type the agent works on as a value, saying what it is for, then one
- * `--type-<type>` shortcut per type, described like the other shortcuts (`--mode-<mode>`).
- */
-function withTicketTypes(flags: readonly FlagSpec[], agent: AgentDefinition): readonly FlagSpec[] {
-  const types = agent.ticketTypes ?? [];
-  const choices = types.map((type) => ({ name: type, description: ticketTypeDescription(type) }));
-  const shortcuts = types.map((type): FlagSpec => ({
-    name: `${TYPE_SHORTCUT_PREFIX}${type}`,
-    description: `Atalho para --type ${type}`,
-  }));
-  return flags.flatMap((flag) => (flag.name === '--type' ? [{ ...flag, choices }, ...shortcuts] : [flag]));
-}
-
-/** `--mode` with only the modes the agent allows as values, and a `--mode-<mode>` shortcut only for those. */
-function withModes(flags: readonly FlagSpec[], agent: AgentDefinition): readonly FlagSpec[] {
-  const refused = EXECUTION_MODES.filter((mode) => !agent.modes.includes(mode)).map((mode) => `--mode-${mode}`);
-  return flags
-    .filter((flag) => !refused.includes(flag.name))
-    .map((flag) =>
-      flag.name === '--mode'
-        ? { ...flag, choices: agent.modes.map((mode) => ({ name: mode, description: MODE_CHOICES[mode] })) }
-        : flag,
-    );
-}
-
-/**
- * `runFlagDefinitions` with value completion for this agent. The diff-base flags only appear for agents
- * with a `git_diff` in `steps.before`, `--project` only for agents that act on a project,
- * `--type`/`--ticket` (and a `--type-<type>` per type) only for agents with `ticket_types`,
- * `--mode` and its shortcuts only with the modes the agent allows, and `--mode`/`--since` show that
- * agent's own defaults.
- */
-function runFlags(agent: AgentDefinition, context: AgentsCliSpecContext): readonly FlagSpec[] {
-  const diffBase = diffBaseOf(agent);
-  const hidden = [
-    ...(diffBase === undefined ? PREPARE_FLAGS : []),
-    ...(agent.projectRequired ? [] : PROJECT_FLAGS),
-    ...(agent.ticketTypes === undefined ? TICKET_FLAGS : []),
-  ];
-  const flags = runFlagDefinitions(context.providers)
-    .filter((flag) => !hidden.includes(flag.name))
-    .map(({ valueName, ...rest }) => {
-      const flag =
-        rest.name === '--mode'
-          ? { ...rest, description: modeDescription(agent.defaultMode) }
-          : rest.name === '--since' && diffBase !== undefined
-            ? { ...rest, description: sinceDescription(diffBase) }
-            : rest;
-      return valueName === undefined
-        ? flag
-        : {
-            ...flag,
-            value: {
-              name: valueName,
-              suggest: (typed: TypedFlags) => flagValueSuggestions(flag.name, agent, context, typed),
-            },
-          };
-    });
-  return withModes(withTicketTypes(flags, agent), agent);
-}
-
-/** Every flag this agent takes, in each of its forms (`--help`, `-h`): exactly what its `--help` lists. */
-export function agentFlagNames(agent: AgentDefinition, context: AgentsCliSpecContext): readonly string[] {
-  return runFlags(agent, context).flatMap((flag) => [flag.name, ...(flag.aliases ?? [])]);
-}
-
 /** The spec of one agent as a command: `agents <agent> [OPTIONS] [TASK...]`. */
 export function agentCommandSpec(
   agent: AgentDefinition,
@@ -176,7 +93,9 @@ export function agentCommandSpec(
   return {
     usage: `${CLI_PROGRAM_NAME} ${agent.name} [OPTIONS] [TASK...]`,
     ...(description === undefined ? {} : { description }),
-    flags: runFlags(agent, context),
+    flags: agentRunFlags(agent, context.providers, (flag, target, typed) =>
+      flagValueSuggestions(flag, target, context, typed),
+    ),
   };
 }
 

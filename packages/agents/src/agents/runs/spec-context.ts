@@ -3,10 +3,23 @@
 import { createSpawnGitRunner } from '@choliba/core';
 import { listProjectNames, listTicketKeys } from '@choliba/projects';
 
-import type { AgentsCliSpecContext } from './agents-spec';
+import type { GitRunner } from '@choliba/core';
 import type { AgentDefinition } from '../../common';
 import type { RunAgentsCliDeps } from './run-context';
 import { projectsDir } from './run-context';
+
+/** The workspace data the app's agents command specs complete against. */
+export interface AgentsCliSpecContext {
+  /** The providers choliba found: `--provider`, `--<id>` and their completion. */
+  readonly providers: RunAgentsCliDeps['providers'];
+  readonly agents: readonly AgentDefinition[];
+  readonly repoRoot: string;
+  readonly git: GitRunner;
+  /** The project names `--project` completes to, read when asked (none when the locations are not set). */
+  readonly projects: () => readonly string[];
+  /** The ticket keys `--ticket` completes to: of `project` when given, else of every project; read when asked. */
+  readonly tickets: (project?: string) => readonly string[];
+}
 
 /** The projects `--project` completes to; none when the locations are not configured or the folder is missing. */
 function projectNames(deps: RunAgentsCliDeps): readonly string[] {

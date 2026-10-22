@@ -5,7 +5,7 @@ import { loadProjectSettings, type ProjectSettings } from '@choliba/projects';
 import { agentURL, type Sandbox } from '@choliba/sandbox';
 
 import { listAgents, loadAgent } from '../agent-loader';
-import { agentFlagNames } from './agents-spec';
+import { agentFlagNames } from './agent-run-flags';
 import { resolveInvocation } from '../invocation-registry';
 import { LIST_PROGRAM_NAME, PREPARE_FLAGS, USAGE } from './agents-flags';
 import type { AgentDefinition } from '../../common';
@@ -15,7 +15,6 @@ import { readPlan } from './plan-store';
 import type { RunAgentsCliDeps, RunArgs } from './run-context';
 import type { RunProject } from '../../common';
 import { errorMessage, projectsDir, toAbsolute } from './run-context';
-import { specContext } from './spec-context';
 import type { TicketTarget } from './ticket-run';
 import { resolveTicketTarget } from './ticket-run';
 
@@ -68,7 +67,7 @@ export function acceptedFlagNames(
   agent: AgentDefinition,
   deps: RunAgentsCliDeps,
 ): readonly string[] {
-  return [...agentFlagNames(agent, specContext([], deps)), ...(command.prepare === undefined ? [] : PREPARE_FLAGS)];
+  return [...agentFlagNames(agent, deps.providers), ...(command.prepare === undefined ? [] : PREPARE_FLAGS)];
 }
 
 /**

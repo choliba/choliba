@@ -18,9 +18,21 @@ import type { RunLog } from './run-log';
 import type { AppReachDeps } from './app-reach';
 import type { AgentInvocation, PrepareRunDeps, RunProject } from '@choliba/engine';
 import type { ExecutionMode } from '../../common';
+import type { AgentDefinition } from '../../common';
 
 export { errorMessage, projectsDir, toAbsolute } from '@choliba/engine';
 export type { PreparedRun, Stopped } from '@choliba/engine';
+
+/** App-owned renderers for help requests in `choliba run agent`. */
+export interface AgentsRunHelpHandlers {
+  readonly agents: () => void;
+  readonly agent: (command: AgentInvocation, agent: AgentDefinition) => void;
+}
+
+/** App-owned renderer for `choliba list agents --help`. */
+export interface AgentsListHelpHandler {
+  readonly list: () => void;
+}
 
 export interface RunAgentsCliDeps extends PrepareRunDeps {
   /**
@@ -50,6 +62,8 @@ export interface RunAgentsCliDeps extends PrepareRunDeps {
   readonly hostedPanel?: boolean;
   /** Takes what `--dry-run` would show, in place of printing it: a host that shows it its own way (the panel). */
   readonly preview?: (input: DryRunInput) => void;
+  readonly help?: AgentsRunHelpHandlers;
+  readonly listHelp?: AgentsListHelpHandler;
   /**
    * Told the ticket of the run once it ends, when the ticket is still there (created with `--type` and filled, or given
    * with `--ticket`): the panel makes it the session's, so the next agent of a sequence works on it.

@@ -1,17 +1,19 @@
 import { join } from 'node:path';
 
 import { complete, formatHelp, type GitRunner } from '@choliba/core';
+import * as projects from '@choliba/projects';
 
-import { loadAgent } from '../../../agents/agent-loader';
+import { loadAgent } from '@choliba/agents';
 import {
   agentCommandSpec,
   agentsCliSpec,
   flagValueSuggestions,
   listAgentsSpec,
-} from '../../../agents/runs/agents-spec';
-import { PROVIDERS } from '../../helpers/providers';
+  runAgentReferenceSpec,
+} from '../../commands/agents';
+import { PROVIDERS } from '../../../../agents/src/__tests__/helpers/providers';
 
-const FIXTURES = join(__dirname, '..', '..', 'fixtures', 'agents');
+const FIXTURES = join(__dirname, '..', '..', '..', '..', 'agents', 'src', '__tests__', 'fixtures', 'agents');
 const git: GitRunner = { run: () => ({ stdout: '', stderr: '', status: 0 }) };
 
 describe('agentsCliSpec', () => {
@@ -144,6 +146,22 @@ describe('agentsCliSpec', () => {
 
     const unknown = formatHelp(agentCommandSpec({ ...withTickets, ticketTypes: ['nope'] }, context));
     expect(unknown.replace(/\s+/g, ' ')).toContain('nope Tipo sem template em packages/projects/templates/ticket/.');
+  });
+});
+
+describe('runAgentReferenceSpec', () => {
+  it('describes ticket types even when a template cannot be read', () => {
+    const readTemplate = jest.spyOn(projects, 'readTicketTemplate').mockImplementation(() => {
+      throw new Error('template inválido');
+    });
+
+    try {
+      const help = formatHelp(runAgentReferenceSpec({ providers: PROVIDERS }));
+      expect(readTemplate).toHaveBeenCalled();
+      expect(help.replace(/\s+/g, ' ')).toContain('Tipo sem template em packages/projects/templates/ticket/.');
+    } finally {
+      readTemplate.mockRestore();
+    }
   });
 });
 

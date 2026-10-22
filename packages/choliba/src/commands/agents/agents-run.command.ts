@@ -1,5 +1,12 @@
 import type { CommandEntry, CommandSpec, Container, ShellCommand } from '@choliba/core';
-import { AGENT_PROVIDERS, AGENTS, runAgentReferenceSpec } from '@choliba/agents';
+import {
+  AGENT_PROVIDERS,
+  AGENTS,
+  formatAgentDetail,
+  type AgentsCliSpecContext,
+  type AgentsRunHelpHandlers,
+} from '@choliba/agents';
+import { agentCommandSpec, agentsCliSpec, runAgentReferenceSpec } from './agents-spec';
 
 /** How `choliba run --help` lists `agent`. */
 const RUN_ENTRY: Omit<CommandEntry, 'spec'> = {
@@ -20,9 +27,21 @@ export function runAgentEntry(helpSpec: () => CommandSpec, reference: () => Comm
 /** `run agent` as the workspace has it, or, without one, every flag. */
 function entryIn(container: Container): CommandEntry {
   return runAgentEntry(
-    () => container.get(AGENTS).helpSpec(),
+    () => agentsCliSpec(container.get(AGENTS).helpContext()),
     () => runAgentReferenceSpec({ providers: container.get(AGENT_PROVIDERS) }),
   );
+}
+
+function helpHandlers(container: Container, showHelp: (spec: CommandSpec) => void): AgentsRunHelpHandlers {
+  return {
+    agents: () => {
+      showHelp(entryIn(container).spec);
+    },
+    agent: (command, agent) => {
+      const context: AgentsCliSpecContext = container.get(AGENTS).helpContext([agent]);
+      showHelp(agentCommandSpec(agent, context, formatAgentDetail(command, agent)));
+    },
+  };
 }
 
 /** `choliba run agent <agent> [OPTIONS] [TASK...]`: its flags as typed. */
@@ -36,6 +55,13 @@ export const runAgentCommand: ShellCommand = {
       io.printHelp(entryIn(container).spec);
       return;
     }
-    io.exit(await container.get(AGENTS).run(args));
+    io.exit(
+      await container.get(AGENTS).run(
+        args,
+        helpHandlers(container, (spec) => {
+          io.printHelp(spec);
+        }),
+      ),
+    );
   },
 };

@@ -5,13 +5,13 @@ import { join } from 'node:path';
 import { envSource, fileSource } from '@choliba/config';
 import { complete, coreShell, createShell, formatSuggestions } from '@choliba/core';
 import { BufferWritable, fakePlatform, runShell, VERBS_ROOT, type FakePlatform } from '@choliba/core/testing';
+import { AGENTS, agentsShell } from '@choliba/agents';
 
-import { AGENTS, agentsShell } from '../..';
-import { agentsCommandsShell, runAgentEntry } from '../../../../choliba/src/commands/agents';
-import { fakeSpawner, streamFromChunks } from '../helpers/fake-spawner';
-import { knownProvidersShell } from '../helpers/providers-shell';
+import { agentsCliSpec, agentsCommandsShell, runAgentEntry } from '../../commands/agents';
+import { fakeSpawner, streamFromChunks } from '../../../../agents/src/__tests__/helpers/fake-spawner';
+import { knownProvidersShell } from '../../../../agents/src/__tests__/helpers/providers-shell';
 
-const FIXTURES = join(__dirname, '..', 'fixtures');
+const FIXTURES = join(__dirname, '..', '..', '..', '..', 'agents', 'src', '__tests__', 'fixtures');
 
 /** A workspace whose agents, skills and MCPs are the fixtures. */
 async function withWorkspace(fn: (root: string) => Promise<void>): Promise<void> {
@@ -63,6 +63,26 @@ describe('choliba run agent and list agents', () => {
       expect(help.platform.stdout.text()).toContain('Usage:  choliba run agent AGENT [OPTIONS] [TASK...]');
       expect(help.platform.stdout.text()).toContain('(auto, claude, claude-ollama, codex, cursor)');
       expect(help.platform.stdout.text()).not.toContain('list');
+    }));
+
+  it('prints the loaded agent details and its options from the app-owned help', () =>
+    withWorkspace(async (cwd) => {
+      const { code, platform } = await choliba(['run', 'agent', 'echo', '--help'], { cwd });
+
+      expect(code).toBe(0);
+      expect(platform.stdout.text()).toContain('id: echo');
+      expect(platform.stdout.text()).toContain('Usage:  choliba run agent echo [OPTIONS] [TASK...]');
+      expect(platform.stdout.text()).toContain('--dry-run');
+    }));
+
+  it('prints the agents help through the service callback when more options follow --help', () =>
+    withWorkspace(async (cwd) => {
+      const { code, platform } = await choliba(['run', 'agent', '--help', '--agents-dir', join(FIXTURES, 'agents')], {
+        cwd,
+      });
+
+      expect(code).toBe(0);
+      expect(platform.stdout.text()).toContain('Usage:  choliba run agent AGENT [OPTIONS] [TASK...]');
     }));
 
   it('refuses an argument list agents does not take', () =>
@@ -118,17 +138,18 @@ describe('runAgentEntry', () => {
   });
 });
 
-describe('AgentsService.helpSpec', () => {
+describe('the app-owned agents help spec', () => {
   it('completes the agents on disk and the providers', () =>
     withWorkspace((cwd) => {
       const platform = fakePlatform({ cwd });
-      const spec = createShell(
+      const service = createShell(
         platform,
         [coreShell, knownProvidersShell, agentsShell, agentsCommandsShell, VERBS_ROOT],
         [envSource(platform.env), fileSource(join(cwd, '.env'))],
       )
         .container.get(AGENTS)
-        .helpSpec();
+        .helpContext();
+      const spec = agentsCliSpec(service);
 
       expect(formatSuggestions(complete(spec, ['ec']))).toBe('echo');
       expect(formatSuggestions(complete(spec, ['l']))).toBe('');

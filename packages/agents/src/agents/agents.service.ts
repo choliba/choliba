@@ -1,5 +1,4 @@
 import type {
-  CommandSpec,
   Panel,
   PanelOptions,
   Platform,
@@ -9,11 +8,14 @@ import type {
   WritableWithColumns,
 } from '@choliba/core';
 
-import type { ProviderRegistry } from '../common';
-import { listAgentsSpec } from './runs/agents-spec';
-import { agentsHelpSpec, runAgentsCli, runAgentsList } from './runs/run-agents';
+import type { AgentDefinition, ProviderRegistry } from '../common';
+import { listAgents } from './agent-loader';
+import { resolveAgentsDir } from '@choliba/workspace';
+import { runAgentsCli, runAgentsList } from './runs/run-agents';
 import type { DryRunInput } from './runs/dry-run';
-import type { RunAgentsCliDeps } from './runs/run-context';
+import type { AgentsListHelpHandler, AgentsRunHelpHandlers, RunAgentsCliDeps } from './runs/run-context';
+import type { AgentsCliSpecContext } from './runs/spec-context';
+import { specContext } from './runs/spec-context';
 
 /** What a run reads from the process: where it writes, the clock, the signals, git and the executables on PATH. */
 export type AgentsPlatform = Pick<Platform, 'which' | 'clock' | 'stdout' | 'stderr' | 'signals' | 'git'>;
@@ -42,8 +44,8 @@ export class AgentsService {
   ) {}
 
   /** Runs the command line after `choliba run agent`; resolves with the exit code. */
-  run(argv: readonly string[]): Promise<number> {
-    return runAgentsCli(argv, this.deps());
+  run(argv: readonly string[], help?: AgentsRunHelpHandlers): Promise<number> {
+    return runAgentsCli(argv, { ...this.deps(), ...(help === undefined ? {} : { help }) });
   }
 
   /**
@@ -82,19 +84,15 @@ export class AgentsService {
   }
 
   /** Lists the agents, from the command line after `choliba list agents`; returns the exit code. */
-  list(argv: readonly string[]): number {
-    return runAgentsList(argv, this.deps());
+  list(argv: readonly string[], help?: AgentsListHelpHandler): number {
+    return runAgentsList(argv, { ...this.deps(), ...(help === undefined ? {} : { listHelp: help }) });
   }
 
-  /** `--help` and completion of `choliba list agents`. */
-  listHelpSpec(): CommandSpec {
-    // Only the providers: no workspace needed, so it also shows outside one.
-    return listAgentsSpec({ providers: this.providers });
-  }
-
-  /** `--help` and completion: the agents on disk now, their flags and what their values complete to. */
-  helpSpec(): CommandSpec {
-    return agentsHelpSpec(this.deps());
+  /** The workspace data the app needs to build `choliba run agent` help and completion. */
+  helpContext(agents?: readonly AgentDefinition[]): AgentsCliSpecContext {
+    const deps = this.deps();
+    const agentsDir = resolveAgentsDir(undefined, this.config, this.workspaceRoot());
+    return specContext(agents ?? listAgents(agentsDir), deps);
   }
 
   private deps(): RunAgentsCliDeps {

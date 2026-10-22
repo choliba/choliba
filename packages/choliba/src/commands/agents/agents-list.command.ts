@@ -1,5 +1,6 @@
 import type { CommandEntry, ShellCommand } from '@choliba/core';
-import { AGENTS } from '@choliba/agents';
+import { AGENT_PROVIDERS, AGENTS } from '@choliba/agents';
+import { listAgentsSpec } from './agents-spec';
 
 /** How `choliba list --help` lists `agents`. */
 const LIST_ENTRY: Omit<CommandEntry, 'spec'> = {
@@ -12,9 +13,16 @@ const LIST_ENTRY: Omit<CommandEntry, 'spec'> = {
 export const listAgentsCommand: ShellCommand = {
   verb: 'list',
   name: 'agents',
-  help: (container) => [{ ...LIST_ENTRY, spec: container.get(AGENTS).listHelpSpec() }],
+  help: (container) => [{ ...LIST_ENTRY, spec: listAgentsSpec({ providers: container.get(AGENT_PROVIDERS) }) }],
   run: (container, io) => {
-    io.exit(container.get(AGENTS).list(io.args('list', 'agents')));
+    const providers = container.get(AGENT_PROVIDERS);
+    io.exit(
+      container.get(AGENTS).list(io.args('list', 'agents'), {
+        list: () => {
+          io.printHelp(listAgentsSpec({ providers }));
+        },
+      }),
+    );
     return Promise.resolve();
   },
 };

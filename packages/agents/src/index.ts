@@ -31,10 +31,23 @@ export { AUTO, InvalidProviderPreferenceError, ProviderNotFoundError, ProviderRe
 export type { ResolvedProvider } from './common';
 export { renderEvent } from './agents';
 export type { RenderOptions } from './agents';
-export { runAgent } from './agents';
+export { formatAgentDetail, runAgent } from './agents';
 export type { RunAgentDeps, RunAgentRequest } from './agents';
 export { runAgentsCli, type RunAgentsCliDeps } from './agents';
-export { runAgentReferenceSpec } from './agents';
+export type { AgentsListHelpHandler, AgentsRunHelpHandlers, AgentsCliSpecContext } from './agents';
+export {
+  CLI_PROGRAM_NAME,
+  LIST_PROGRAM_NAME,
+  PREPARE_FLAGS,
+  PROJECT_FLAGS,
+  TICKET_FLAGS,
+  TYPE_SHORTCUT_PREFIX,
+  modeDescription,
+  runFlagDefinitions,
+  sinceDescription,
+} from './agents';
+export { agentFlagNames, agentRunFlags } from './agents';
+export { EXECUTION_MODES, diffBaseOf, SINCE_PENDING } from './agents';
 export { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from './agents';
 export {
   AGENTS_SUBDIR,
