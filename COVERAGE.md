@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 22/10/2026 11:33:44 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 22/10/2026 12:35:27 — não editar manualmente.
 
 ## Resumo
 
@@ -275,7 +275,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 31 arquivos</summary>
+<summary>🟢 <b>packages/projects</b> — 100.00% das linhas, 26 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -287,11 +287,6 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/paths/project-paths.ts](packages/projects/src/paths/project-paths.ts)|100.00|100.00|100.00|100.00
 🟢|[src/paths/results.ts](packages/projects/src/paths/results.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/new-project.ts](packages/projects/src/projects/new-project.ts)|100.00|100.00|100.00|100.00
-🟢|[src/projects/project-app-ensure.ts](packages/projects/src/projects/project-app-ensure.ts)|100.00|100.00|100.00|100.00
-🟢|[src/projects/project-app-launch.ts](packages/projects/src/projects/project-app-launch.ts)|100.00|100.00|100.00|100.00
-🟢|[src/projects/project-app-log.ts](packages/projects/src/projects/project-app-log.ts)|100.00|100.00|100.00|100.00
-🟢|[src/projects/project-app-prepare.ts](packages/projects/src/projects/project-app-prepare.ts)|100.00|100.00|100.00|100.00
-🟢|[src/projects/project-app-share.ts](packages/projects/src/projects/project-app-share.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project-devices.ts](packages/projects/src/projects/project-devices.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project-readme.ts](packages/projects/src/projects/project-readme.ts)|100.00|100.00|100.00|100.00
 🟢|[src/projects/project-settings.ts](packages/projects/src/projects/project-settings.ts)|100.00|100.00|100.00|100.00
@@ -314,10 +309,18 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/runner</b> — 100.00% das linhas, 17 arquivos</summary>
+<summary>🟢 <b>packages/runner</b> — 100.00% das linhas, 25 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
+🟢|[src/app/json-file.ts](packages/runner/src/app/json-file.ts)|100.00|100.00|100.00|100.00
+🟢|[src/app/project-app-ensure.ts](packages/runner/src/app/project-app-ensure.ts)|100.00|100.00|100.00|100.00
+🟢|[src/app/project-app-launch.ts](packages/runner/src/app/project-app-launch.ts)|100.00|100.00|100.00|100.00
+🟢|[src/app/project-app-log.ts](packages/runner/src/app/project-app-log.ts)|100.00|100.00|100.00|100.00
+🟢|[src/app/project-app-prepare.ts](packages/runner/src/app/project-app-prepare.ts)|100.00|100.00|100.00|100.00
+🟢|[src/app/project-app-share.ts](packages/runner/src/app/project-app-share.ts)|100.00|100.00|100.00|100.00
+🟢|[src/app/project-files.ts](packages/runner/src/app/project-files.ts)|100.00|100.00|100.00|100.00
+🟢|[src/app/ticket-files.ts](packages/runner/src/app/ticket-files.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/fill-ticket-tests.ts](packages/runner/src/tests/fill-ticket-tests.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/playwright-env.ts](packages/runner/src/tests/playwright-env.ts)|100.00|100.00|100.00|100.00
 🟢|[src/tests/playwright-results.ts](packages/runner/src/tests/playwright-results.ts)|100.00|100.00|100.00|100.00
