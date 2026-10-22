@@ -26,6 +26,7 @@ const STRUCTURE: Readonly<Record<string, Partial<Record<Exclude<Layer, 'common'>
   projects: { domain: ['paths'], module: ['locations', 'tickets', 'projects'] },
   runner: { module: ['tests', 'app'] },
   sandbox: { domain: ['sandbox'] },
+  providers: { module: ['claude', 'codex', 'cursor', 'registry'] },
   agents: { module: ['agents', 'providers'] },
   choliba: { domain: ['help', 'runtime'], module: ['check', 'config', 'library', 'setup', 'tooling'] },
 };
