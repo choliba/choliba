@@ -19,6 +19,7 @@ const STRUCTURE: Readonly<Record<string, Partial<Record<Exclude<Layer, 'common'>
   kernel: { domain: ['paths'], module: ['platform', 'config', 'runtime', 'container'] },
   workspace: { domain: ['layout'], module: ['locations'] },
   domain: { domain: ['agent', 'permissions'] },
+  engine: { domain: ['prompt'], ports: ['ports'], orchestration: ['steps', 'guards'] },
   shell: { module: ['help', 'cli', 'theme', 'panel', 'shell', 'terminal'] },
   tui: { module: ['panel', 'session'] },
   core: { module: ['shell'] },
