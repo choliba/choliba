@@ -5,8 +5,11 @@ import path from 'node:path';
 import { envSource, fileSource } from '@choliba/config';
 import { complete, coreShell, createShell, describe as describeWords, formatSuggestions } from '@choliba/core';
 import { fakePlatform, replace, runShell, type FakePlatform, VERBS_ROOT } from '@choliba/core/testing';
+import { projectsShell } from '@choliba/projects';
+import { RUNNER_ROOT, runnerShell, TESTS_HOOKS, type TestsHooks } from '@choliba/runner';
+import { projectsConfig } from '@choliba/workspace';
 
-import { RUNNER_ROOT, runnerShell, TESTS, TESTS_HOOKS, type TestsHooks, type TestsService } from '../..';
+import { testsCommandSpec, testsCommandsShell } from '../../commands/tests';
 
 interface Workspace {
   readonly root: string;
@@ -43,7 +46,7 @@ async function tests(
   hooks: TestsHooks,
 ): Promise<{ code: number; platform: FakePlatform }> {
   const platform = fakePlatform({ argv: ['run', 'tests', ...args], cwd });
-  const code = await runShell([coreShell, runnerShell, VERBS_ROOT], platform, [
+  const code = await runShell([coreShell, projectsShell, runnerShell, testsCommandsShell, VERBS_ROOT], platform, [
     replace(TESTS_HOOKS, { stdinIsTTY: false, ...hooks }),
     replace(RUNNER_ROOT, cwd),
   ]);
@@ -105,7 +108,7 @@ describe('choliba run tests — color', () => {
       const colored = fakePlatform({ argv: ['run', 'tests', '--list'], cwd: root, env: { FORCE_COLOR: '1' } });
       const plain = fakePlatform({ argv: ['run', 'tests', '--list'], cwd: root, env: { NO_COLOR: '1' } });
       for (const platform of [colored, plain]) {
-        await runShell([coreShell, runnerShell, VERBS_ROOT], platform, [
+        await runShell([coreShell, projectsShell, runnerShell, testsCommandsShell, VERBS_ROOT], platform, [
           replace(TESTS_HOOKS, { stdinIsTTY: false, spawnPlaywright }),
           replace(RUNNER_ROOT, root),
         ]);
@@ -127,16 +130,10 @@ describe('runnerShell', () => {
   });
 });
 
-describe('TestsService.helpSpec — completion and description', () => {
-  function specIn(cwd: string): ReturnType<TestsService['helpSpec']> {
+describe('testsCommandSpec — completion and description', () => {
+  function specIn(cwd: string): ReturnType<typeof testsCommandSpec> {
     const platform = fakePlatform({ cwd });
-    return createShell(
-      platform,
-      [coreShell, runnerShell, VERBS_ROOT],
-      [envSource(platform.env), fileSource(path.join(cwd, '.env'))],
-    )
-      .container.get(TESTS)
-      .helpSpec();
+    return testsCommandSpec(projectsConfig.read([envSource(platform.env), fileSource(path.join(cwd, '.env'))]));
   }
 
   it('completes its flags, the projects, their tickets and the values of --expect', () =>

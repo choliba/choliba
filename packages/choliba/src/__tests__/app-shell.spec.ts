@@ -19,6 +19,7 @@ describe('the choliba shell', () => {
       '@choliba/projects',
       'choliba-projects-commands',
       '@choliba/runner',
+      'choliba-tests-commands',
     ]);
   });
 

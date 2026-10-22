@@ -26,6 +26,7 @@ import { tuiShell } from '@choliba/tui';
 import { addCommand } from './add';
 import { agentsCommandsShell } from './commands/agents';
 import { projectsCommandsShell } from './commands/projects';
+import { testsCommandsShell } from './commands/tests';
 import {
   cholibaLibrary,
   type Choliba,
@@ -102,6 +103,7 @@ export const CHOLIBA_SHELL: readonly ShellModule[] = [
   projectsShell,
   projectsCommandsShell,
   runnerShell,
+  testsCommandsShell,
 ];
 
 /** The shell of choliba on `platform` and `runtime`. */
