@@ -65,28 +65,46 @@ const CHECKER = `import { defineConfig } from 'choliba/config';
 import { createShell } from 'choliba/core';
 import { fakePlatform } from 'choliba/core/testing';
 import { createCholibaShell } from 'choliba';
-import { loadAgent } from 'choliba/agents';
-import { loadProjectSettings } from 'choliba/projects';
+import { agentRunChoice, agentsConfig, listAgents, loadAgent } from 'choliba/agents';
+import { loadProjectSettings, readTicket, readTickets } from 'choliba/projects';
 import { runnerShell } from 'choliba/runner';
 import { createSandboxBackend } from 'choliba/sandbox';
 import { loadProjectEnv } from 'choliba/runner/env';
 import { BasePage } from 'choliba/runner/pages/base-page';
 import config from 'choliba/eslint';
 
-const values = [
+const functions = [
   defineConfig,
   createShell,
   fakePlatform,
   createCholibaShell,
+  agentRunChoice,
+  listAgents,
   loadAgent,
   loadProjectSettings,
+  readTicket,
+  readTickets,
   createSandboxBackend,
   loadProjectEnv,
   BasePage,
 ];
-if (values.some((value) => typeof value !== 'function')) throw new Error('a subpath did not export its function');
+if (functions.some((value) => typeof value !== 'function')) throw new Error('a subpath did not export its function');
+if (typeof agentsConfig !== 'object' || agentsConfig === null) throw new Error('choliba/agents');
 if (typeof runnerShell !== 'object' || runnerShell === null) throw new Error('choliba/runner');
 if (!Array.isArray(config)) throw new Error('choliba/eslint');
+
+const core = await import('choliba/core');
+const agents = await import('choliba/agents');
+const projects = await import('choliba/projects');
+if ('assertArgvFits' in core || 'commandPage' in core || 'VERBS_ROOT' in await import('choliba/core/testing')) {
+  throw new Error('choliba/core exported an internal detail');
+}
+if ('slugify' in agents || 'renderEvent' in agents || 'runAgent' in agents) {
+  throw new Error('choliba/agents exported an internal detail');
+}
+if ('createProject' in projects || 'runSubcommand' in projects || 'projectOfArgument' in projects) {
+  throw new Error('choliba/projects exported an internal detail');
+}
 
 try {
   await import('choliba/agents/src/x');
@@ -104,8 +122,8 @@ const TYPECHECK = `import { defineConfig, type ConfigSource } from 'choliba/conf
 import { createShell } from 'choliba/core';
 import { fakePlatform } from 'choliba/core/testing';
 import { createCholibaShell } from 'choliba';
-import { loadAgent } from 'choliba/agents';
-import { loadProjectSettings } from 'choliba/projects';
+import { agentRunChoice, agentsConfig, listAgents, loadAgent, type AgentDefinition } from 'choliba/agents';
+import { loadProjectSettings, readTicket, readTickets, type TicketInfo } from 'choliba/projects';
 import { runnerShell } from 'choliba/runner';
 import { createSandboxBackend } from 'choliba/sandbox';
 import { loadProjectEnv } from 'choliba/runner/env';
@@ -118,13 +136,24 @@ void source;
 void createShell;
 void fakePlatform;
 void createCholibaShell;
+void agentRunChoice;
+void agentsConfig;
+void listAgents;
 void loadAgent;
 void loadProjectSettings;
+void readTicket;
+void readTickets;
 void createSandboxBackend;
 void runnerShell;
 void loadProjectEnv;
 void BasePage;
 void config;
+type PublicAgent = AgentDefinition;
+type PublicTicket = TicketInfo;
+const agent: PublicAgent | undefined = undefined;
+const ticket: PublicTicket | undefined = undefined;
+void agent;
+void ticket;
 `;
 
 interface ExportEntry {
