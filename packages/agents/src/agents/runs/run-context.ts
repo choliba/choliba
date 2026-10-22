@@ -8,7 +8,8 @@ import {
   type Writable,
   type WritableWithColumns,
 } from '@choliba/core';
-import { type ProjectSettings, type RunningApp } from '@choliba/projects';
+import type { ProjectSettings } from '@choliba/projects';
+import type { RunningApp } from '@choliba/runner';
 import type { Sandbox } from '@choliba/sandbox';
 
 import type { ParsedAgentsArgs } from './agents-flags';
@@ -37,7 +38,7 @@ export interface RunAgentsCliDeps extends PrepareRunDeps {
   /** Where each run's log goes, in a folder per agent (`run-log.ts`); defaults to `<repoRoot>/.cache/logs`. */
   readonly logsDir?: string;
   /**
-   * Makes sure the project's application is up for a run with `--project` (`ensureApp` of `@choliba/projects`,
+   * Makes sure the project's application is up for a run with `--project` (`ensureApp` of `@choliba/runner`,
    * logging to `.cache/app/`); the specs pass a fake.
    */
   readonly ensureApp?: (settings: ProjectSettings) => Promise<RunningApp>;

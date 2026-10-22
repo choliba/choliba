@@ -1,11 +1,11 @@
-import { answers } from '@choliba/projects';
+import { answers } from '@choliba/runner';
 import { agentURL, CONTAINER_HOST_NAME, dockerHostAddress, type Sandbox } from '@choliba/sandbox';
 
 /** How to find whether a container reaches the application: this machine's address for it, and a request to a URL. */
 export interface AppReachDeps {
   /** The address a container reaches this machine by (`dockerHostAddress`); `undefined` where it is not known. */
   readonly dockerHost: () => string | undefined;
-  /** Whether something answers at `url` (`answers` of `@choliba/projects`). */
+  /** Whether something answers at `url` (`answers` of `@choliba/runner`). */
   readonly reaches: (url: string) => Promise<boolean>;
 }
 

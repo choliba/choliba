@@ -15,6 +15,7 @@
     "@choliba/domain": "workspace:*",
     "@choliba/engine": "workspace:*",
     "@choliba/projects": "workspace:*",
+    "@choliba/runner": "workspace:*",
     "@choliba/sandbox": "workspace:*",
     "@choliba/workspace": "workspace:*",
     "@playwright/test": "1.63.0",

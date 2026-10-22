@@ -2,7 +2,8 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { formatDuration, formatHelp, openOpenTuiPanel, wantsFooter, type CommandSpec } from '@choliba/core';
-import { AppError, ensureApp, shareApp, type ProjectSettings, type RunningApp } from '@choliba/projects';
+import type { ProjectSettings } from '@choliba/projects';
+import { AppError, ensureApp, shareApp, type RunningApp } from '@choliba/runner';
 import { readSandbox, type Sandbox, type SandboxConfigError } from '@choliba/sandbox';
 
 import { listAgents } from '../agent-loader';

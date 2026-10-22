@@ -1,10 +1,15 @@
 import { join } from 'node:path';
 
-import { configJsonPath } from '../paths';
-import type { ProjectSettings } from './project-settings';
+import type { ProjectSettings } from '@choliba/domain';
+import { PROJECT_CONFIG_FILE } from '@choliba/workspace';
+
 import { answers, launchApp, type LaunchedApp } from './project-app-launch';
 import { logTail } from './project-app-log';
 import { AppError, prepareApp, type SetupSpawn } from './project-app-prepare';
+
+function configJsonPath(projectsDir: string, project: string): string {
+  return join(projectsDir, project, PROJECT_CONFIG_FILE);
+}
 
 /** The application of a run: `stop` stops it when choliba started it, and does nothing otherwise. */
 export interface RunningApp {
