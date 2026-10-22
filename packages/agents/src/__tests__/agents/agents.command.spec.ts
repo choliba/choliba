@@ -8,6 +8,7 @@ import { BufferWritable, fakePlatform, runShell, VERBS_ROOT, type FakePlatform }
 
 import { AGENTS, agentsShell, runAgentEntry } from '../..';
 import { fakeSpawner, streamFromChunks } from '../helpers/fake-spawner';
+import { knownProvidersShell } from '../helpers/providers-shell';
 
 const FIXTURES = join(__dirname, '..', 'fixtures');
 
@@ -40,7 +41,7 @@ async function choliba(
   platform: Partial<FakePlatform>,
 ): Promise<{ code: number; platform: FakePlatform }> {
   const run = fakePlatform({ argv: [...args], ...platform });
-  return { code: await runShell([coreShell, agentsShell, VERBS_ROOT], run), platform: run };
+  return { code: await runShell([coreShell, knownProvidersShell, agentsShell, VERBS_ROOT], run), platform: run };
 }
 
 describe('choliba run agent and list agents', () => {
@@ -119,7 +120,7 @@ describe('AgentsService.helpSpec', () => {
       const platform = fakePlatform({ cwd });
       const spec = createShell(
         platform,
-        [coreShell, agentsShell, VERBS_ROOT],
+        [coreShell, knownProvidersShell, agentsShell, VERBS_ROOT],
         [envSource(platform.env), fileSource(join(cwd, '.env'))],
       )
         .container.get(AGENTS)
