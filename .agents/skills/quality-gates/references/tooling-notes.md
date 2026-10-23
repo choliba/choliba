@@ -26,7 +26,7 @@ confirm with `bunx tsc --version`. TypeScript 6.0 is the last JS-based release a
 
 **`rootDir` now defaults to the tsconfig directory, `strict` defaults to `true`, `module` to `esnext`,
 `target` to `es2025`.** `tsconfig.base.json` sets `noEmit: true`, so the `rootDir` change does not bite, and cross-package
-imports (`@scope/core` resolving to `packages/core/src/index.ts`) typecheck fine. If a package ever needs to emit
+imports (`@choliba/kernel` resolving to `packages/kernel/src/index.ts`) typecheck fine. If a package ever needs to emit
 declarations or JS, that is a separate decision: ask before introducing a build step.
 
 **`esModuleInterop` cannot be `false` anymore**, but ts-jest still prints warning TS151001 unless the tsconfig
@@ -121,4 +121,3 @@ is a plain class, built by a factory the shell registers on a token.
   a decorator.
 - **The runner's typecheck has no Bun types.** `createBunProcessSpawner` takes a structural function. The real
   `Bun.spawn` is read only in `packages/choliba/src/main.ts`, which the runner does not compile.
-

@@ -1,13 +1,15 @@
 # Testing a command
 
-`@choliba/core/testing` is the fakes. Jest runs on Node, so a spec never calls `Bun`.
+`@choliba/kernel/testing` provides platform fakes and `@choliba/shell/testing` provides shell helpers. Jest runs
+on Node, so a spec never calls `Bun`. The installed `choliba/core/testing` facade combines both entries.
 
 ```ts
-import { coreShell } from '@choliba/core';
-import { fakePlatform, replace, runShell } from '@choliba/core/testing';
+import { baseShell } from '@choliba/shell';
+import { fakePlatform } from '@choliba/kernel/testing';
+import { replace, runShell } from '@choliba/shell/testing';
 
 const platform = fakePlatform({ argv: ['terminal', 'run'] });
-const code = await runShell([coreShell], platform, [replace(SOME_TOKEN, fake)]);
+const code = await runShell([baseShell], platform, [replace(SOME_TOKEN, fake)]);
 
 expect(code).toBe(1);
 expect(platform.stderr.text()).toContain('Usage:');

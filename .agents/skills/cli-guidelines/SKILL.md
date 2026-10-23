@@ -25,10 +25,10 @@ already exists, and remove a line when it is closed.
 2. **Exit 0 on success, non-zero on failure**, including usage errors. A command that found problems (a red
    gate, a failed `check`) fails with non-zero even if it printed a report.
 3. **`-h`, `--help` and `choliba help <command>` all work** and print the help in pt-BR from the command's
-   `CommandSpec` (`formatHelp` in `packages/core/src/cli/help.ts`); help ignores every other flag. A command
+   `CommandSpec` (`formatHelp` in `packages/shell/src/help/format-help.ts`); help ignores every other flag. A command
    missing a required argument prints a short usage plus "Run '... --help' for usage" on stderr and exits 1.
 4. **Lead help with examples**, the most common use first. Every command and flag has a description; every new
-   flag also reaches autocomplete (`complete` in `packages/core/src/help/complete.ts`).
+   flag also reaches autocomplete (`complete` in `packages/shell/src/help/complete.ts`).
 5. **Flags over positional arguments.** At most one positional kind per command (a project, a ticket, a task
    text). Every flag has a long name; a one-letter alias only for the most used ones. Prefer the standard
    names: `--help`, `--version`, `--dry-run`, `--force`, `--json`, `--quiet`, `--no-input`, `--no-color`,
@@ -46,8 +46,8 @@ already exists, and remove a line when it is closed.
    important line last; no stack trace unless it is an unexpected error, which goes with a hint to report it.
 10. **Say what changed and what comes next.** A command that changes state prints the new state briefly and
     suggests the next command of the workflow (`generate ticket` → run the `product-owner`).
-11. **Configuration precedence: flags > process environment > workspace `.env` > defaults** (already what
-    `loadRepoConfig` does in `packages/core/src/config/repo-config.ts`). Environment variable names are uppercase
+11. **Configuration precedence: flags > process environment > workspace `.env` > defaults** (the app orders these
+    sources when it builds the workspace config). Environment variable names are uppercase
     with underscores and prefixed (`CHOL_*`) unless they are general-purpose ones (`NO_COLOR`, `TERM`,
     `PAGER`, `TMPDIR`...).
 12. **No secrets in flags.** Credentials live in files (`.env.json` of a project, the workspace `.env`); never
@@ -64,7 +64,7 @@ already exists, and remove a line when it is closed.
     `check`, `setup`, `lint`, `format`, `help`, `version`); a command is reached as `verb type` (`run agent`,
     `run tests`, `new project`, `list agents`) or by its own word. A word the root, a verb or the agent runner does
     not know is a usage error, in pt-BR, that suggests the closest name (`unknownWordMessage` in
-    `packages/core/src/help/suggest.ts`): `comando desconhecido: chek. Você quis dizer "check"?`. Subcommands are
+    `packages/shell/src/help/suggest.ts`): `comando desconhecido: chek. Você quis dizer "check"?`. Subcommands are
     never abbreviated.
 
 ## Where choliba departs from clig.dev
