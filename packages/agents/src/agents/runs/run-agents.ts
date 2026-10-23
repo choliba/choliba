@@ -131,6 +131,7 @@ function plannedDisk(request: ProviderRequest, files: readonly PlannedFile[]): L
     exists: (path) => path === request.runDir || planned.has(path) || realDisk.exists(path),
     isDirectory: (path) => path === request.runDir || (!planned.has(path) && realDisk.isDirectory(path)),
     ensureDir: () => undefined,
+    link: () => undefined,
     owner: () => ({ uid: 0, gid: 0 }),
   };
 }

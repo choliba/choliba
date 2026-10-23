@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, realpathSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, realpathSync, statSync, symlinkSync, unlinkSync } from 'node:fs';
 import { delimiter, dirname, isAbsolute, join } from 'node:path';
 
 import { absolutePermissions } from '@choliba/domain';
@@ -61,6 +61,8 @@ export interface LaunchInput {
 export interface LaunchDisk extends DiskFacts {
   readonly owner: (path: string) => ContainerUser;
   readonly ensureDir: (path: string) => void;
+  /** A link at `path` that points at `target`, so a short name on `PATH` reaches the resolved executable. */
+  readonly link: (target: string, path: string) => void;
   readonly realpath: (path: string) => string;
   /** The `bun` running choliba: the run tools' scripts start with `#!/usr/bin/env bun`. */
   readonly runtime: string;
@@ -76,6 +78,10 @@ export const realDisk: LaunchDisk = {
   },
   ensureDir: (path) => {
     mkdirSync(path, { recursive: true });
+  },
+  link: (target, path) => {
+    if (existsSync(path)) unlinkSync(path);
+    symlinkSync(target, path);
   },
   realpath: realpathSync,
   runtime: process.execPath,
@@ -106,6 +112,32 @@ function localProgram(provider: ResolvedProvider, disk: LaunchDisk): SandboxProg
     credentials: provider.adapter.credentials,
     credentialHelp: provider.adapter.credentialHelp,
   };
+}
+
+/**
+ * The provider's short name (`claude`, `agent`) as a link in the run's shortcuts folder, which goes first on PATH.
+ * The home that held `~/.local/bin` is empty inside bwrap, so `execvp("claude")` would miss it without this.
+ */
+function providerShortcut(runDir: string, name: string, executable: string, disk: LaunchDisk): string {
+  const shortcuts = runToolShortcuts(runDir);
+  disk.ensureDir(shortcuts);
+  const path = join(shortcuts, name);
+  disk.link(executable, path);
+  return path;
+}
+
+function providerShortcutOf(input: LaunchInput, program: SandboxProgram, disk: LaunchDisk): readonly string[] {
+  const [name] = input.provider.command;
+  if (name === undefined || name === '') return [];
+  return [providerShortcut(input.request.runDir, name, program.executable, disk)];
+}
+
+/** PATH for this session: always on this machine (the provider's short name lives in the shortcuts folder). */
+function pathVariables(input: LaunchInput): Readonly<Record<string, string>> {
+  if (input.sandbox.kind === 'local' || runToolsOf(input.request).length > 0) {
+    return { PATH: sessionPath(input) };
+  }
+  return {};
 }
 
 function fromRoot(path: string, root: string): string {
@@ -178,12 +210,19 @@ export function launchFor(input: LaunchInput, disk: LaunchDisk = realDisk): Laun
   const root = request.workspaceRoot;
   const outputs = [...outputFolders(request, config), ...browserState(input)];
   outputs.forEach(disk.ensureDir);
+  const program = input.sandbox.kind === 'local' ? localProgram(input.provider, disk) : undefined;
+  const shortcut = program === undefined ? [] : providerShortcutOf(input, program, disk);
   const reach = {
     permissions: absolutePermissions(request.agent.permissions, root),
     policy: request.policy,
     addDirs: request.addDirs,
     runDir: request.runDir,
-    alsoRead: [...input.files.map((file) => file.path), join(root, 'node_modules'), ...browserFolders(input, disk)],
+    alsoRead: [
+      ...input.files.map((file) => file.path),
+      join(root, 'node_modules'),
+      ...browserFolders(input, disk),
+      ...shortcut,
+    ],
     alsoWrite: outputs,
   };
   const backend = createSandboxBackend(input.sandbox, {
@@ -191,14 +230,12 @@ export function launchFor(input: LaunchInput, disk: LaunchDisk = realDisk): Laun
     environment: definedConfig(config),
     disk,
   });
-  const program = input.sandbox.kind === 'local' ? localProgram(input.provider, disk) : undefined;
   const providerVariables = input.provider.adapter.variables?.({
     request,
     config,
     reachable: (url) => agentURL(url, input.sandbox),
   });
-  const toolVariables = runToolsOf(request).length > 0 ? { PATH: sessionPath(input) } : {};
-  const variables = { ...providerVariables, ...toolVariables };
+  const variables = { ...providerVariables, ...pathVariables(input) };
   return backend.plan({
     command: input.command,
     ...(program === undefined ? {} : { program }),
