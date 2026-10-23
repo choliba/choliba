@@ -1,4 +1,4 @@
-import type { ProjectEnvironment } from '@choliba/projects';
+import type { ProjectEnvironment } from '@choliba/domain';
 import type { SandboxPath } from '@choliba/sandbox';
 
 import type { PlannedFile, ProviderRequest } from '../ports';

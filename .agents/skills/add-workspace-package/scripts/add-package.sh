@@ -40,7 +40,10 @@ if [[ "$kind" == lib ]]; then
   "type": "module",
   "exports": { ".": "./src/index.ts" },
   "scripts": { "typecheck": "tsc --noEmit -p tsconfig.json" },
-  "dependencies": { "@choliba/core": "workspace:*" }
+  "dependencies": {
+    "@choliba/kernel": "workspace:*",
+    "@choliba/shell": "workspace:*"
+  }
 }
 JSON
   cat > "$dir/src/$pkg/$pkg.ts" <<TS
@@ -59,14 +62,14 @@ export class ${class}Service {
 }
 TS
   cat > "$dir/src/$pkg/$pkg.constants.ts" <<TS
-import { token } from '@choliba/core';
+import { token } from '@choliba/kernel';
 
 import type { ${class}Service } from './$pkg.service';
 
 export const ${token} = token<${class}Service>('${class}Service');
 TS
   cat > "$dir/src/$pkg/$pkg-shell.ts" <<TS
-import type { ShellModule } from '@choliba/core';
+import type { ShellModule } from '@choliba/shell';
 
 import { ${token} } from './$pkg.constants';
 import { ${class}Service } from './$pkg.service';

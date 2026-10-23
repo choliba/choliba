@@ -1,12 +1,6 @@
-import {
-  listTicketKeys,
-  loadProjectSettings,
-  PROJECTS,
-  readTickets,
-  type ProjectsService,
-  type TicketInfo,
-} from '@choliba/projects';
 import { CARD_RULE, type PanelCommand, type PanelCommandContext } from '@choliba/shell';
+import { PROJECTS } from './projects.constants';
+import type { ProjectPanelTicket, ProjectsService } from './interfaces';
 
 /** The context keys these commands set, as the panel's header shows them. */
 const PROJECT = 'projeto';
@@ -27,13 +21,12 @@ function projectCard(
   description: string,
   ticket?: string,
 ): { readonly lines: readonly string[]; readonly summary: readonly string[] } {
-  const projectsDir = projects.projectsDir();
   let place: string;
   // Collapsed, the environment beside the tickets, and the address on its own line without its scheme nor its last slash.
   let environmentName = '';
   let address: string;
   try {
-    const { environment } = loadProjectSettings(projectsDir, project);
+    const { environment } = projects.check(project);
     place = `\u001b[90m${environment.nome} · ${environment.baseURL}\u001b[39m`;
     environmentName = environment.nome;
     address = `\u001b[90m${environment.baseURL.replace(/^https?:\/\//, '').replace(/\/$/, '')}\u001b[39m`;
@@ -41,7 +34,7 @@ function projectCard(
     place = '\u001b[33mconfiguração incompleta: choliba check ' + project + '\u001b[39m';
     address = place;
   }
-  const count = listTicketKeys(projectsDir, project).length;
+  const count = projects.ticketKeys(project).length;
   const tickets = `${String(count)} ${count === 1 ? 'ticket' : 'tickets'}`;
   const name = `\u001b[1m\u001b[36m${project}\u001b[39m\u001b[22m`;
   const status = ticket === undefined ? tickets : `${tickets} · ativo \u001b[1m${ticket}\u001b[22m`;
@@ -59,7 +52,7 @@ function projectCard(
 }
 
 /** A ticket's summary in the panel: its title, then each criterion and whether a test covers it. */
-function ticketSummary(ticket: TicketInfo): readonly string[] {
+function ticketSummary(ticket: ProjectPanelTicket): readonly string[] {
   const covered = ticket.criteria.filter((criterion) => criterion.tests.length > 0).length;
   return [
     `\u001b[1m${ticket.id}\u001b[22m ${ticket.title ?? ''}`.trimEnd(),
@@ -76,7 +69,7 @@ function ticketSummary(ticket: TicketInfo): readonly string[] {
 async function chooseTicket({ container, panel, context }: PanelCommandContext): Promise<void> {
   const project = context.get(PROJECT);
   if (project === undefined) return;
-  const tickets = readTickets(container.get(PROJECTS).projectsDir(), project);
+  const tickets = container.get(PROJECTS).tickets(project);
   if (tickets.length === 0) {
     panel.write(`O projeto ${project} ainda não tem tickets.`);
     return;
@@ -131,7 +124,7 @@ const projectsPanelCommand: PanelCommand = {
     const card = projectCard(container.get(PROJECTS), project.name, project.description);
     context.show(CARD, { ...card, key: 'p', order: 2 });
     panel.write(`Projeto \u001b[1m${project.name}\u001b[22m selecionado.`);
-    if (listTicketKeys(container.get(PROJECTS).projectsDir(), project.name).length > 0) await chooseTicket(command);
+    if (container.get(PROJECTS).ticketKeys(project.name).length > 0) await chooseTicket(command);
   },
 };
 
@@ -142,7 +135,7 @@ const ticketsPanelCommand: PanelCommand = {
   unavailable: (context, container) => {
     const project = context.get(PROJECT);
     if (project === undefined) return 'Escolha um projeto antes, com /projects';
-    return listTicketKeys(container.get(PROJECTS).projectsDir(), project).length === 0
+    return container.get(PROJECTS).ticketKeys(project).length === 0
       ? `O projeto ${project} ainda não tem tickets`
       : undefined;
   },

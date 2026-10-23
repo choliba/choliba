@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 
-import { FILES_MARKER } from '@choliba/core';
-import { fakePlatform, type FakePlatform } from '@choliba/core/testing';
+import { FILES_MARKER } from '@choliba/shell';
+import { fakePlatform, type FakePlatform } from '@choliba/kernel/testing';
 
 import { createCholibaShell } from '../../app-shell';
 import { fakeRuntime, withFolder, withWorkspace } from '../helpers/runtime';
 
-const FIXTURES = join(__dirname, '..', '..', '..', '..', 'agents', 'src', '__tests__', 'fixtures');
+const FIXTURES = join(__dirname, '..', 'fixtures');
 const ENV = ['agents', 'skills', 'mcps']
   .map((dir) => `CHOL_${dir.toUpperCase()}_DIR=${join(FIXTURES, dir)}\n`)
   .join('')

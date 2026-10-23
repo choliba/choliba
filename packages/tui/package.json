@@ -5,18 +5,15 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./panel": "./src/panel/index.ts",
     "./testing": "./src/testing/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@choliba/agents": "workspace:*",
+    "@choliba/domain": "workspace:*",
     "@choliba/kernel": "workspace:*",
-    "@choliba/projects": "workspace:*",
     "@choliba/shell": "workspace:*",
-    "@choliba/workspace": "workspace:*",
     "@opentui/core": "0.5.14"
   }
 }

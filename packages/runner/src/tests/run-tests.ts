@@ -3,7 +3,8 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import readline from 'node:readline/promises';
 
-import { writeStderr, writeStdout, type Theme, type Writable } from '@choliba/core';
+import { writeStderr, writeStdout, type Theme } from '@choliba/shell';
+import { type Writable } from '@choliba/kernel';
 import type { ProjectLocations } from '@choliba/workspace';
 import { APP_LOGS_DIR } from '@choliba/workspace';
 

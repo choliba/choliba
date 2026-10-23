@@ -1,4 +1,4 @@
-import type { ShellModule } from '@choliba/core';
+import type { ShellModule } from '@choliba/shell';
 
 import { testsCommand } from './tests.command';
 

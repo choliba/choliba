@@ -25,8 +25,9 @@ missing `typecheck` script or a wrong `extends` path silently drops the package 
    should do, make it pass, then delete the starter code. The starter exists only so the gates have something
    to check the moment the package appears.
 4. **Wire dependencies.** To use a sibling, add `"@choliba/<name>": "workspace:*"` to the dependent's
-   `package.json` `dependencies`, run `bun install`, and import from `@choliba/<name>` (its functions, its
-   `ShellModule` and its service; see the `cli-shell` skill). Libraries expose `./src/index.ts` through
+   `package.json` `dependencies`, run `bun install`, and import from `@choliba/<name>` (its functions and service;
+   see the `cli-shell` skill). A shell module imports `ShellModule` from `@choliba/shell` and `token` from
+   `@choliba/kernel`. Libraries expose `./src/index.ts` through
    `exports`, so no build is needed. For an external package, run `bun add <pkg>`
    from inside that package's directory so it lands in the right `package.json` (Bun guide:
    https://bun.com/guides/install/workspaces). Shared tooling goes in the root `devDependencies` instead.

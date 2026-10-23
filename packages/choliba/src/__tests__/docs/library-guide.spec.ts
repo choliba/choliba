@@ -14,9 +14,9 @@ function tsBlocks(markdown: string): readonly string[] {
 /** Where `choliba` and its subpaths come from in this repository, as the published package maps them. */
 const PATHS = {
   choliba: [join(repo, 'packages', 'choliba', 'src', 'index.ts')],
-  'choliba/agents': [join(repo, 'packages', 'agents', 'src', 'index.ts')],
+  'choliba/agents': [join(repo, 'packages', 'choliba', 'scripts', 'entries', 'agents.ts')],
   'choliba/config': [join(repo, 'packages', 'config', 'src', 'index.ts')],
-  'choliba/projects': [join(repo, 'packages', 'projects', 'src', 'index.ts')],
+  'choliba/projects': [join(repo, 'packages', 'choliba', 'scripts', 'entries', 'projects.ts')],
   'choliba/sandbox': [join(repo, 'packages', 'sandbox', 'src', 'index.ts')],
 };
 

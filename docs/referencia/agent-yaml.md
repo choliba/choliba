@@ -5,7 +5,7 @@
 
 Todas as chaves do `agent.yaml` (padrão 1), as variáveis `${NOME}` que ele aceita e as ações de `steps`. Um exemplo
 completo e o passo a passo estão em [Escrevendo um agente](../guias/escrever-um-agente.md); o schema é
-`packages/agents/schemes/v1/agent.schema.json`.
+`packages/domain/src/agent/schemes/v1/agent.schema.json`.
 
 | Chave                             | Obrigatória | Padrão              | O que é                                                                                                                                                                                                                                                                                                                                                     |
 | --------------------------------- | ----------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -382,7 +382,7 @@ steps:
 
 O `write_config` também é o choliba gravando, no `config.json` do projeto da execução (`--project`); o agente não
 diz o arquivo. A resposta do agente tem de ser um JSON, sem nada em volta além de um bloco de código. Quem confere e
-grava é o `@choliba/projects`: o valor segue a regra da chave, as outras chaves do arquivo ficam como estão, e uma
+grava é o choliba: o valor segue a regra da chave, as outras chaves do arquivo ficam como estão, e uma
 resposta que não é JSON ou não segue a regra falha sem tocar no arquivo. Hoje a única chave é `stack` (veja
 [`config.json`](config-json.md#stack)).
 

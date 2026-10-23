@@ -1,11 +1,12 @@
-import type { CommandEntry, CommandSpec, Container, ShellCommand } from '@choliba/core';
+import type { CommandEntry, CommandSpec, ShellCommand } from '@choliba/shell';
+import type { Container } from '@choliba/kernel';
 import {
   AGENT_PROVIDERS,
   AGENTS,
   formatAgentDetail,
   type AgentsCliSpecContext,
   type AgentsRunHelpHandlers,
-} from '@choliba/agents';
+} from '../../agents';
 import { agentCommandSpec, agentsCliSpec, runAgentReferenceSpec } from './agents-spec';
 
 /** How `choliba run --help` lists `agent`. */

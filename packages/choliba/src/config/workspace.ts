@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 
-import { ExpectedError } from '@choliba/core';
+import { ExpectedError } from '@choliba/kernel';
 
 import { PACKAGE_FILE } from '@choliba/workspace';
 

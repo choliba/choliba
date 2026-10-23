@@ -28,7 +28,7 @@ export function runShell(
 
 /**
  * A root with the verbs the app's packages register their commands under (`run`, `new`, `list`), for a spec that runs
- * a package's commands without the app: `runShell([coreShell, projectsShell, VERBS_ROOT], platform)`.
+ * a package's commands without the app: `runShell([baseShell, projectsShell, VERBS_ROOT], platform)`.
  */
 export const VERBS_ROOT: ShellModule = {
   name: 'verbs-root',

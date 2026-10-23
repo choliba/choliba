@@ -1,13 +1,9 @@
-import { messageOf, PLATFORM, type Ask, type CommandEntry, type ShellCommand, type ShellIo } from '@choliba/core';
-import {
-  parseNewProjectArgs,
-  resolveNewProject,
-  PROJECTS,
-  UsageError,
-  type CreatedProject,
-  type NewProject,
-  type ProjectsService,
-} from '@choliba/projects';
+import { messageOf, PLATFORM, type CommandEntry, type ShellCommand, type ShellIo } from '@choliba/shell';
+import { type Ask } from '@choliba/kernel';
+import { PROJECTS } from '@choliba/tui';
+import type { ProjectsService } from '@choliba/tui';
+import { UsageError, type CreatedProject } from '@choliba/workspace';
+import { parseNewProjectArgs, resolveNewProject, type NewProject } from '../../projects';
 
 import { newProjectSpec } from './projects-spec';
 

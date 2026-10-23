@@ -16,7 +16,7 @@ jest.mock('node:readline/promises', () => ({
 }));
 
 import * as projects from '../../app';
-import * as terminalOutput from '@choliba/core';
+import * as terminalOutput from '@choliba/shell';
 
 import { installSilentTerminal } from '../helpers/silent-terminal';
 import { playwrightNodePath } from '../../tests/playwright-env';

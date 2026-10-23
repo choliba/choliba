@@ -1,4 +1,4 @@
-import { PLATFORM, THEME, WORKSPACE_ROOT, type ShellModule } from '@choliba/core';
+import { PLATFORM, THEME, WORKSPACE_ROOT, type ShellModule } from '@choliba/shell';
 
 import { findRunnerRoot } from './runner-root';
 import { RUNNER_ROOT, TESTS, TESTS_HOOKS } from './tests.constants';

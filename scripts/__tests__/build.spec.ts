@@ -208,7 +208,7 @@ function assertExports(out: string): void {
   expect(manifest.exports['./package.json']).toBe('./package.json');
   expect(readFileSync(join(out, 'agents.js'), 'utf8')).toContain('__CHOLIBA_SHIPPED_DIR__');
   expect(readFileSync(join(out, 'core', 'README.md'), 'utf8')).toBe(
-    readFileSync(join(repo, 'packages', 'core', 'README.md'), 'utf8'),
+    readFileSync(join(repo, 'packages', 'choliba', 'core', 'README.md'), 'utf8'),
   );
   const configGuide = readFileSync(join(repo, 'packages', 'config', 'README.md'), 'utf8');
   expect(readFileSync(join(out, 'config', 'README.md'), 'utf8')).toBe(configGuide);

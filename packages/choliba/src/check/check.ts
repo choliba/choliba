@@ -1,16 +1,11 @@
 import { existsSync, readdirSync } from 'node:fs';
 
-import {
-  definedConfig,
-  isValidAgentName,
-  loadAgent,
-  resolveAgentsDir,
-  resolveMcps,
-  resolveMcpsDir,
-  resolveSkills,
-  resolveSkillsDir,
-} from '@choliba/agents';
-import { listProjectNames, loadProjectSettings, projectLocations, retiredCriteria } from '@choliba/projects';
+import { definedConfig, resolveMcps, resolveSkills } from '@choliba/engine';
+import { isValidAgentName } from '@choliba/domain';
+import { resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '@choliba/workspace';
+import { loadAgent } from '../agents';
+import { projectLocations } from '@choliba/workspace';
+import { listProjectNames, loadProjectSettings, retiredCriteria } from '@choliba/workspace';
 
 import { ENV_FILE } from '../config';
 

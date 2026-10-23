@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 
-import { ExpectedError } from '@choliba/core';
+import { ExpectedError } from '@choliba/kernel';
 
 /** Reads and parses a JSON file; invalid JSON fails naming the file, the same way everywhere. */
 export function readJsonFile(filePath: string): unknown {

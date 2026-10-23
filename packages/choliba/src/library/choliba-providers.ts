@@ -1,6 +1,7 @@
-import { agentRunChoice, type AgentDefinition, type AgentProvider, type ProviderRegistry } from '@choliba/agents';
+import { agentRunChoice, type AgentProvider, type ProviderRegistry } from '@choliba/engine';
+import { type AgentDefinition } from '@choliba/domain';
 import type { ConfigSource } from '@choliba/config';
-import { commandOnPath, ExpectedError } from '@choliba/core';
+import { commandOnPath, ExpectedError } from '@choliba/kernel';
 
 import type { CholibaProvider, CholibaProviders } from './interfaces/choliba.interface';
 

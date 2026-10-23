@@ -11,6 +11,6 @@
   },
   "dependencies": {
     "@choliba/config": "workspace:*",
-    "@choliba/core": "workspace:*"
+    "@choliba/kernel": "workspace:*"
   }
 }

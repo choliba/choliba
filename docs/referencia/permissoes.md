@@ -77,9 +77,9 @@ Duas concessões valem só para uma execução:
 
 ## Quem decide e quem impõe
 
-Um único ponto decide: o `@choliba/sandbox`. Ele responde `allow` ou `deny` a cada pedido. O `@choliba/agents`
-escreve a política do agente e traduz o que o provider faz (uma chamada de ferramenta no stream) em pedidos; ele não
-decide. A decisão é imposta em camadas, e cada decisão diz onde foi imposta:
+Um único ponto decide: o sandbox. Ele responde `allow` ou `deny` a cada pedido. A execução do agente escreve a
+política e traduz o que o provider faz (uma chamada de ferramenta no stream) em pedidos; ela não decide. A decisão é
+imposta em camadas, e cada decisão diz onde foi imposta:
 
 | Nível       | Quem impõe                                                       |
 | ----------- | ---------------------------------------------------------------- |

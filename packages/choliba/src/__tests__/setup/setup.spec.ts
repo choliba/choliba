@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { loadProjectSettings } from '@choliba/projects';
+import { loadProjectSettings } from '@choliba/workspace';
 
 import {
   COMPLETION_BASH,
@@ -13,10 +13,10 @@ import {
   DEFAULT_THEME,
   parseColors,
   CONFIG_CATALOG,
-} from '@choliba/core';
+} from '@choliba/shell';
 
 import { createCholibaShell } from '../../app-shell';
-import { fakePlatform } from '@choliba/core/testing';
+import { fakePlatform } from '@choliba/kernel/testing';
 import { fakeRuntime } from '../helpers/runtime';
 
 import {

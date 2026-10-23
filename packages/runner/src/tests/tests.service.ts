@@ -1,4 +1,5 @@
-import type { Platform, ThemeService } from '@choliba/core';
+import type { Platform } from '@choliba/kernel';
+import type { ThemeService } from '@choliba/shell';
 
 import { runTests, type RunTestsOptions } from './run-tests';
 

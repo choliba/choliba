@@ -1,19 +1,18 @@
-import type { CommandEntry, CommandSpec, FlagSpec, Suggestions, TypedFlags } from '@choliba/core';
-import { listTicketTypes, readTicketTemplate, ticketTemplatesDir } from '@choliba/projects';
+import type { CommandEntry, CommandSpec, FlagSpec, Suggestions, TypedFlags } from '@choliba/shell';
+import { listTicketTypes, readTicketTemplate } from '@choliba/workspace';
+import { AUTO, SINCE_PENDING } from '@choliba/engine';
+import { EXECUTION_MODES, type AgentDefinition } from '@choliba/domain';
 import {
-  AUTO,
   CLI_PROGRAM_NAME,
-  EXECUTION_MODES,
   LIST_PROGRAM_NAME,
   MODE_CHOICES,
   runFlagDefinitions,
-  SINCE_PENDING,
   agentRunFlags,
   TYPE_SHORTCUT_PREFIX,
-  type AgentDefinition,
   type AgentsCliSpecContext,
-} from '@choliba/agents';
-import { declaredModels } from '@choliba/agents';
+} from '../../agents';
+import { declaredModels } from '@choliba/engine';
+import { ticketTemplatesDir } from '../../projects';
 
 const FILES: Suggestions = { kind: 'files' };
 
@@ -43,7 +42,7 @@ function ticketTypeDescription(type: string): string {
   try {
     return readTicketTemplate(ticketTemplatesDir(), type).description;
   } catch {
-    return 'Tipo sem template em packages/projects/templates/ticket/.';
+    return 'Tipo sem template em packages/choliba/templates/ticket/.';
   }
 }
 

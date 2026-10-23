@@ -1,14 +1,14 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { FILES_MARKER } from '@choliba/core';
-import { fakePlatform } from '@choliba/core/testing';
+import { FILES_MARKER } from '@choliba/shell';
+import { fakePlatform } from '@choliba/kernel/testing';
 
 import { createCholibaShell } from '../../app-shell';
 import { fakeRuntime, withFolder, withWorkspace, type FakeRuntime } from '../helpers/runtime';
 
 /** An agent with no skills or MCPs, as the source to install. */
-const AGENTS = join(__dirname, '..', '..', '..', '..', 'agents', 'src', '__tests__', 'fixtures', 'agents');
+const AGENTS = join(__dirname, '..', 'fixtures', 'agents');
 
 async function add(
   args: readonly string[],

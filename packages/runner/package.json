@@ -14,8 +14,9 @@
   },
   "dependencies": {
     "@choliba/config": "workspace:*",
-    "@choliba/core": "workspace:*",
     "@choliba/domain": "workspace:*",
+    "@choliba/kernel": "workspace:*",
+    "@choliba/shell": "workspace:*",
     "@choliba/workspace": "workspace:*"
   },
   "devDependencies": {

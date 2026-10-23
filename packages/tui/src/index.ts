@@ -19,12 +19,13 @@ export {
   type PanelRunScreenOptions,
 } from './panel';
 export {
-  agentsPanel,
   clearPanelCommand,
   panelCommand,
   projectsPanel,
+  PROJECTS,
   providePanel,
   quitPanelCommand,
+  PANEL_LOG_DIRECTORY,
   tuiShell,
-  watchChoices,
 } from './session';
+export type { CreatedProject, ProjectPanelTicket, ProjectSummary, ProjectTickets, ProjectsService } from './session';

@@ -29,16 +29,10 @@ export type {
   CholibaTickets,
   CholibaWorkspace,
 } from './library';
-export type {
-  ProjectSettings,
-  ProjectStack,
-  ProjectStackItem,
-  ProjectSummary,
-  RetiredCriterion,
-  TicketCriterion,
-  TicketInfo,
-} from '@choliba/projects';
-export type { AgentDefinition, SkillSummary } from '@choliba/agents';
+export type { ProjectSettings, ProjectStack, ProjectStackItem, RetiredCriterion } from '@choliba/domain';
+export type { ProjectSummary } from '@choliba/tui';
+export type { TicketCriterion, TicketInfo } from '@choliba/workspace';
+export type { AgentDefinition, SkillSummary } from './agents';
 export type { CriterionStatus, TestResult, TicketResults } from '@choliba/runner';
 export type { ConfigGroup, ConfigSetting } from '@choliba/config';
 export type { Runtime } from './runtime';
