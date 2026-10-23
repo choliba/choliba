@@ -1,5 +1,5 @@
-import { formatRows, messageOf, type CommandEntry, type ShellCommand, type ShellIo } from '@choliba/core';
-import { PROJECTS, type ProjectsService } from '@choliba/projects';
+import { formatRows, messageOf, type CommandEntry, type ShellCommand, type ShellIo } from '@choliba/shell';
+import { PROJECTS, type ProjectsService } from '@choliba/tui';
 
 import { listProjectsSpec } from './projects-spec';
 

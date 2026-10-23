@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { locateResource } from '@choliba/core';
+import { locateResource } from '@choliba/kernel';
 
 /**
  * The folder with the runner's Playwright config (and its `reporters/` and `shared/`): `packages/runner`

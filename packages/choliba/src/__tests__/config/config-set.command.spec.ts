@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Platform } from '@choliba/core';
-import { BufferWritable, fakePlatform } from '@choliba/core/testing';
+import type { Platform } from '@choliba/kernel';
+import { BufferWritable, fakePlatform } from '@choliba/kernel/testing';
 
 import { createCholibaShell } from '../../app-shell';
 import { fakeRuntime } from '../helpers/runtime';

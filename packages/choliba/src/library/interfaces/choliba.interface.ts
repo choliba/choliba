@@ -1,6 +1,9 @@
-import type { AgentDefinition, SkillSummary } from '@choliba/agents';
+import type { AgentDefinition } from '@choliba/domain';
+import type { SkillSummary } from '@choliba/engine';
 import type { ConfigGroup, ConfigSetting } from '@choliba/config';
-import type { ProjectSettings, ProjectSummary, RetiredCriterion, TicketInfo } from '@choliba/projects';
+import type { ProjectSettings, RetiredCriterion } from '@choliba/domain';
+import type { TicketInfo } from '@choliba/workspace';
+import type { ProjectSummary } from '@choliba/tui';
 import type { TicketResults } from '@choliba/runner';
 
 /** Where `choliba` looks, when not the process's own folder and environment. */

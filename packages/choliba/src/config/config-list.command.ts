@@ -6,7 +6,7 @@ import {
   type CommandEntry,
   type CommandSpec,
   type ShellCommand,
-} from '@choliba/core';
+} from '@choliba/shell';
 
 import { workspaceConfigSources, workspaceRootOrNothing } from './config-sources';
 

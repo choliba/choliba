@@ -4,7 +4,8 @@ import path from 'node:path';
 import type { ProjectLocations } from '@choliba/workspace';
 
 import { fullTicket, resolveReportFolder, resolveTicketRunsRoot, ticketJsonPath, ticketSuffix } from '../app';
-import { writeStderr, writeStdout, type Writable } from '@choliba/core';
+import { writeStderr, writeStdout } from '@choliba/shell';
+import { type Writable } from '@choliba/kernel';
 
 import { flattenResults, isRealFailure } from './playwright-results';
 

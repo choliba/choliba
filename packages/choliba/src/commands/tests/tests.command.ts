@@ -1,4 +1,4 @@
-import { type CommandEntry, type CommandSpec, type ShellCommand } from '@choliba/core';
+import { type CommandEntry, type CommandSpec, type ShellCommand } from '@choliba/shell';
 import { listProjectNames, listTicketSuffixes, TESTS, ticketsFolderPath } from '@choliba/runner';
 import { projectLocations, projectsConfig } from '@choliba/workspace';
 

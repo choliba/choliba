@@ -1,4 +1,4 @@
-import type { RootSpec, ShellVerb } from '@choliba/core';
+import type { RootSpec, ShellVerb } from '@choliba/shell';
 
 /** The flag every command takes, removed from the command line before any of them sees it. */
 const GLOBAL_FLAGS = [

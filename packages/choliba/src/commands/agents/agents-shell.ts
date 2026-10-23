@@ -1,4 +1,4 @@
-import type { ShellModule } from '@choliba/core';
+import type { ShellModule } from '@choliba/shell';
 
 import { listAgentsCommand } from './agents-list.command';
 import { runAgentCommand } from './agents-run.command';

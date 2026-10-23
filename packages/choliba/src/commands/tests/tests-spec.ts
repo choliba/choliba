@@ -1,4 +1,4 @@
-import type { CommandSpec } from '@choliba/core';
+import type { CommandSpec } from '@choliba/shell';
 import { EXPECTATIONS } from '@choliba/runner';
 
 /**

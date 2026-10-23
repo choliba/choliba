@@ -3,13 +3,14 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { envSource, fileSource } from '@choliba/config';
-import { complete, coreShell, createShell, describe as describeWords, formatSuggestions } from '@choliba/core';
-import { fakePlatform, replace, runShell, type FakePlatform, VERBS_ROOT } from '@choliba/core/testing';
-import { projectsShell } from '@choliba/projects';
+import { complete, baseShell, createShell, describe as describeWords, formatSuggestions } from '@choliba/shell';
+import { fakePlatform, type FakePlatform } from '@choliba/kernel/testing';
+import { replace, runShell, VERBS_ROOT } from '@choliba/shell/testing';
 import { RUNNER_ROOT, runnerShell, TESTS_HOOKS, type TestsHooks } from '@choliba/runner';
 import { projectsConfig } from '@choliba/workspace';
 
 import { testsCommandSpec, testsCommandsShell } from '../../commands/tests';
+import { projectsShell } from '../../projects';
 
 interface Workspace {
   readonly root: string;
@@ -46,7 +47,7 @@ async function tests(
   hooks: TestsHooks,
 ): Promise<{ code: number; platform: FakePlatform }> {
   const platform = fakePlatform({ argv: ['run', 'tests', ...args], cwd });
-  const code = await runShell([coreShell, projectsShell, runnerShell, testsCommandsShell, VERBS_ROOT], platform, [
+  const code = await runShell([baseShell, projectsShell, runnerShell, testsCommandsShell, VERBS_ROOT], platform, [
     replace(TESTS_HOOKS, { stdinIsTTY: false, ...hooks }),
     replace(RUNNER_ROOT, cwd),
   ]);
@@ -108,7 +109,7 @@ describe('choliba run tests — color', () => {
       const colored = fakePlatform({ argv: ['run', 'tests', '--list'], cwd: root, env: { FORCE_COLOR: '1' } });
       const plain = fakePlatform({ argv: ['run', 'tests', '--list'], cwd: root, env: { NO_COLOR: '1' } });
       for (const platform of [colored, plain]) {
-        await runShell([coreShell, projectsShell, runnerShell, testsCommandsShell, VERBS_ROOT], platform, [
+        await runShell([baseShell, projectsShell, runnerShell, testsCommandsShell, VERBS_ROOT], platform, [
           replace(TESTS_HOOKS, { stdinIsTTY: false, spawnPlaywright }),
           replace(RUNNER_ROOT, root),
         ]);
@@ -124,13 +125,13 @@ describe('choliba run tests — color', () => {
 
 describe('runnerShell', () => {
   it("finds the runner's Playwright config on its own", () => {
-    const { container } = createShell(fakePlatform(), [coreShell, runnerShell, VERBS_ROOT]);
+    const { container } = createShell(fakePlatform(), [baseShell, runnerShell, VERBS_ROOT]);
 
     expect(fs.existsSync(path.join(container.get(RUNNER_ROOT), 'playwright.config.ts'))).toBe(true);
   });
 
   it('provides empty default hooks for the tests service', () => {
-    const { container } = createShell(fakePlatform(), [coreShell, runnerShell, VERBS_ROOT]);
+    const { container } = createShell(fakePlatform(), [baseShell, runnerShell, VERBS_ROOT]);
 
     expect(container.get(TESTS_HOOKS)).toEqual({});
   });

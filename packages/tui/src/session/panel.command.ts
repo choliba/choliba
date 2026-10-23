@@ -4,13 +4,13 @@ import {
   PANEL_STARTS,
   PLATFORM,
   visibleWidth,
-  WORKSPACE_ROOT,
   type PanelCommand,
   type ShellCommand,
 } from '@choliba/shell';
 
 import { openOpenTuiPanel, PANEL_ICON, PANEL_LOGO, PANEL_OPENER, PANEL_SPEC, PANEL_VERSION } from '../panel';
 import { loggedPanel, openPanelLog } from './panel-log';
+import { PANEL_LOG_DIRECTORY } from './panel-log.constants';
 import { panelSession, type PanelSession } from './panel-session';
 
 const PANEL_HINT = 'Digite uma mensagem ou / para os comandos';
@@ -103,7 +103,7 @@ export const panelCommand: ShellCommand = {
     const panel = loggedPanel(
       opened,
       openPanelLog(
-        container.get(WORKSPACE_ROOT),
+        container.get(PANEL_LOG_DIRECTORY),
         [`choliba painel ${version ?? ''}`.trimEnd(), `pasta: ${cwd}`],
         container.get(PLATFORM).clock,
       ),

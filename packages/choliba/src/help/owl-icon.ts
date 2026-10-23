@@ -1,4 +1,5 @@
-import { pixelMap, type ArtColor, type ArtPixels } from '@choliba/core';
+import { pixelMap, type ArtColor } from '@choliba/tui';
+import { type ArtPixels } from '@choliba/shell';
 
 /** The owl's colors: its green, the white and orange of its eyes and beak, and the black of its pupils. */
 const OWL_COLORS: Readonly<Record<string, ArtColor>> = {

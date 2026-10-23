@@ -8,6 +8,7 @@ bun.lock
 .choliba/mcps
 .claude
 .playwright-cli
+packages/runner/playwright-report
 docs/.vitepress/cache
 docs/.vitepress/dist
 # Generated architecture baseline; compact arrays keep export-list diffs readable.

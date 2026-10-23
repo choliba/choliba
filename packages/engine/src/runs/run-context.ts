@@ -1,7 +1,7 @@
 import { isAbsolute, join } from 'node:path';
 
 import type { Writable } from '@choliba/kernel';
-import { projectLocations, type ProjectLocations } from '@choliba/projects';
+import { projectLocations, type ProjectLocations } from '@choliba/workspace';
 import type { Sandbox } from '@choliba/sandbox';
 import type { ExecutionMode } from '@choliba/domain';
 

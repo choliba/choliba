@@ -1,4 +1,4 @@
-import { token } from '@choliba/core';
+import { token } from '@choliba/kernel';
 
 import type { Runtime } from './interfaces/runtime.interface';
 

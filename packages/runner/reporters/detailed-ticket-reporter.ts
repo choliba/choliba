@@ -10,7 +10,7 @@ import {
   printBox,
   writeStdout,
   type Theme,
-} from '@choliba/core';
+} from '@choliba/shell';
 import { readAppliedLocations } from '@choliba/workspace';
 import type { FullConfig, Reporter, TestCase, TestResult } from '@playwright/test/reporter';
 

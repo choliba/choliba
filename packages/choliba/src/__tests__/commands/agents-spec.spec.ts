@@ -1,9 +1,10 @@
 import { join } from 'node:path';
 
-import { complete, formatHelp, type GitRunner } from '@choliba/core';
-import * as projects from '@choliba/projects';
+import { complete, formatHelp } from '@choliba/shell';
+import { type GitRunner } from '@choliba/kernel';
+import * as projects from '@choliba/workspace';
 
-import { loadAgent } from '@choliba/agents';
+import { loadAgent } from '../../agents';
 import {
   agentCommandSpec,
   agentsCliSpec,
@@ -11,9 +12,9 @@ import {
   listAgentsSpec,
   runAgentReferenceSpec,
 } from '../../commands/agents';
-import { PROVIDERS } from '../../../../agents/src/__tests__/helpers/providers';
+import { PROVIDERS } from '../helpers/providers';
 
-const FIXTURES = join(__dirname, '..', '..', '..', '..', 'agents', 'src', '__tests__', 'fixtures', 'agents');
+const FIXTURES = join(__dirname, '..', 'fixtures', 'agents');
 const git: GitRunner = { run: () => ({ stdout: '', stderr: '', status: 0 }) };
 
 describe('agentsCliSpec', () => {
@@ -145,7 +146,7 @@ describe('agentsCliSpec', () => {
     expect(flagValueSuggestions('--type', echo, context)).toEqual({ kind: 'values', values: [] });
 
     const unknown = formatHelp(agentCommandSpec({ ...withTickets, ticketTypes: ['nope'] }, context));
-    expect(unknown.replace(/\s+/g, ' ')).toContain('nope Tipo sem template em packages/projects/templates/ticket/.');
+    expect(unknown.replace(/\s+/g, ' ')).toContain('nope Tipo sem template em packages/choliba/templates/ticket/.');
   });
 });
 
@@ -158,7 +159,7 @@ describe('runAgentReferenceSpec', () => {
     try {
       const help = formatHelp(runAgentReferenceSpec({ providers: PROVIDERS }));
       expect(readTemplate).toHaveBeenCalled();
-      expect(help.replace(/\s+/g, ' ')).toContain('Tipo sem template em packages/projects/templates/ticket/.');
+      expect(help.replace(/\s+/g, ' ')).toContain('Tipo sem template em packages/choliba/templates/ticket/.');
     } finally {
       readTemplate.mockRestore();
     }

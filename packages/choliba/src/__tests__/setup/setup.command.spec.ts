@@ -1,8 +1,9 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { coreShell } from '@choliba/core';
-import { fakePlatform, runShell } from '@choliba/core/testing';
+import { baseShell } from '@choliba/shell';
+import { fakePlatform } from '@choliba/kernel/testing';
+import { runShell } from '@choliba/shell/testing';
 
 import { cholibaShell } from '../../app-shell';
 import { fakeRuntime, withFolder, withWorkspace, type FakeRuntime } from '../helpers/runtime';
@@ -14,7 +15,7 @@ async function setup(
   env: Readonly<Record<string, string>> = {},
 ): Promise<{ code: number; out: string }> {
   const platform = fakePlatform({ argv: ['setup', ...args], cwd, env });
-  const code = await runShell([coreShell, cholibaShell(runtime)], platform);
+  const code = await runShell([baseShell, cholibaShell(runtime)], platform);
   return { code, out: platform.stdout.text() };
 }
 

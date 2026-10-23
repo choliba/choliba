@@ -1,4 +1,4 @@
-import type { CommandSpec, FlagSpec } from '@choliba/core';
+import type { CommandSpec, FlagSpec } from '@choliba/shell';
 
 const HELP_FLAG: FlagSpec = { name: '--help', aliases: ['-h'], description: 'Mostra esta ajuda', terminal: true };
 

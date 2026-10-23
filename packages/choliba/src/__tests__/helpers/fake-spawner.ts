@@ -1,0 +1,83 @@
+import type { ProcessSpawner, SpawnCommandOptions, SpawnedProcess } from '@choliba/kernel';
+
+/**
+ * A minimal fake `ProcessSpawner` for `ProcessRunnerService`, so `run-agent.spec.ts` exercises the
+ * real runner and session lifecycle without ever touching `Bun.spawn`. Mirrors the helper under
+ * `packages/kernel/src/__tests__/terminal/`, which is not importable across packages.
+ */
+
+export function streamFromChunks(chunks: readonly string[]): ReadableStream<Uint8Array> {
+  const encoder = new TextEncoder();
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      for (const chunk of chunks) {
+        controller.enqueue(encoder.encode(chunk));
+      }
+      controller.close();
+    },
+  });
+}
+
+/** A stream that fails mid-read, to exercise the runner's `Session.markFailed` path. */
+export function erroringStream(error: Error): ReadableStream<Uint8Array> {
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.error(error);
+    },
+  });
+}
+
+export interface FakeSpawnedProcessOptions {
+  readonly pid?: number;
+  readonly stdout?: ReadableStream<Uint8Array> | null;
+  readonly stderr?: ReadableStream<Uint8Array> | null;
+  readonly exitCode?: number;
+  readonly signalCode?: NodeJS.Signals | null;
+}
+
+export interface FakeSpawner {
+  readonly spawner: ProcessSpawner;
+  readonly kill: jest.Mock;
+  readonly spawnCalls: SpawnCommandOptions[];
+  /** What was written to the stdin of a process spawned with `input`, and whether it was closed. */
+  readonly stdin: { readonly written: string[]; ended: boolean };
+}
+
+export function fakeSpawner(options: FakeSpawnedProcessOptions = {}): FakeSpawner {
+  const kill = jest.fn();
+  const spawnCalls: SpawnCommandOptions[] = [];
+  const stdin = { written: [] as string[], ended: false };
+  const spawner: ProcessSpawner = {
+    spawn(cmdOptions: SpawnCommandOptions): SpawnedProcess {
+      spawnCalls.push(cmdOptions);
+      return {
+        pid: options.pid ?? 1234,
+        stdout: options.stdout === undefined ? streamFromChunks([]) : options.stdout,
+        stderr: options.stderr === undefined ? streamFromChunks([]) : options.stderr,
+        exited: Promise.resolve(options.exitCode ?? 0),
+        signalCode: options.signalCode ?? null,
+        kill,
+        stdin:
+          cmdOptions.input === true
+            ? {
+                write: (text) => {
+                  stdin.written.push(text);
+                },
+                end: () => {
+                  stdin.ended = true;
+                },
+              }
+            : null,
+      };
+    },
+  };
+  return { spawner, kill, spawnCalls, stdin };
+}
+
+export function throwingSpawner(error: Error): ProcessSpawner {
+  return {
+    spawn(): SpawnedProcess {
+      throw error;
+    },
+  };
+}

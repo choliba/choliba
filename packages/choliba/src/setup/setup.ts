@@ -1,17 +1,17 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, sep } from 'node:path';
 
-import { findResource, installShellCompletion } from '@choliba/core';
-import { DEFAULT_AGENTS_DIR, DEFAULT_MCPS_DIR, DEFAULT_SKILLS_DIR } from '@choliba/agents';
+import { findResource } from '@choliba/kernel';
+import { installShellCompletion } from '@choliba/shell';
+import { DEFAULT_AGENTS_DIR, DEFAULT_MCPS_DIR, DEFAULT_SKILLS_DIR } from '@choliba/workspace';
 import {
   PROJECTS_SUBDIR,
   PROJECT_CONFIG_FILE,
   PROJECT_ENV_FILE,
   TESTS_SUBDIR,
   TICKETS_SUBDIR,
-  createProject,
-  projectTemplatesDir,
-} from '@choliba/projects';
+} from '@choliba/workspace';
+import { createProject } from '@choliba/workspace';
 
 import {
   APP_DIR,
@@ -27,6 +27,7 @@ import {
   PRETTIERRC_FILE,
   findWorkspaceRoot,
 } from '../config';
+import { projectTemplatesDir } from '../projects';
 
 /** What to do after installing: shown by `setup` (the postinstall), and enough to get going. */
 export const NEXT_STEPS = [

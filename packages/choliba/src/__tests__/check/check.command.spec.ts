@@ -2,7 +2,7 @@ import fs, { writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path, { join } from 'node:path';
 
-import { fakePlatform } from '@choliba/core/testing';
+import { fakePlatform } from '@choliba/kernel/testing';
 
 import { createCholibaShell } from '../../app-shell';
 import { fakeRuntime, withFolder, withWorkspace } from '../helpers/runtime';

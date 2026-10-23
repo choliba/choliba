@@ -3,15 +3,16 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { envSource, fileSource } from '@choliba/config';
-import { complete, coreShell, createShell, formatSuggestions } from '@choliba/core';
-import { BufferWritable, fakePlatform, runShell, VERBS_ROOT, type FakePlatform } from '@choliba/core/testing';
-import { AGENTS, agentsShell } from '@choliba/agents';
+import { complete, baseShell, createShell, formatSuggestions } from '@choliba/shell';
+import { BufferWritable, fakePlatform, type FakePlatform } from '@choliba/kernel/testing';
+import { runShell, VERBS_ROOT } from '@choliba/shell/testing';
+import { AGENTS, agentsShell } from '../../agents';
 
 import { agentsCliSpec, agentsCommandsShell, runAgentEntry } from '../../commands/agents';
-import { fakeSpawner, streamFromChunks } from '../../../../agents/src/__tests__/helpers/fake-spawner';
-import { knownProvidersShell } from '../../../../agents/src/__tests__/helpers/providers-shell';
+import { fakeSpawner, streamFromChunks } from '../helpers/fake-spawner';
+import { knownProvidersShell } from '../helpers/providers-shell';
 
-const FIXTURES = join(__dirname, '..', '..', '..', '..', 'agents', 'src', '__tests__', 'fixtures');
+const FIXTURES = join(__dirname, '..', 'fixtures');
 
 /** A workspace whose agents, skills and MCPs are the fixtures. */
 async function withWorkspace(fn: (root: string) => Promise<void>): Promise<void> {
@@ -43,7 +44,7 @@ async function choliba(
 ): Promise<{ code: number; platform: FakePlatform }> {
   const run = fakePlatform({ argv: [...args], ...platform });
   return {
-    code: await runShell([coreShell, knownProvidersShell, agentsShell, agentsCommandsShell, VERBS_ROOT], run),
+    code: await runShell([baseShell, knownProvidersShell, agentsShell, agentsCommandsShell, VERBS_ROOT], run),
     platform: run,
   };
 }
@@ -144,7 +145,7 @@ describe('the app-owned agents help spec', () => {
       const platform = fakePlatform({ cwd });
       const service = createShell(
         platform,
-        [coreShell, knownProvidersShell, agentsShell, agentsCommandsShell, VERBS_ROOT],
+        [baseShell, knownProvidersShell, agentsShell, agentsCommandsShell, VERBS_ROOT],
         [envSource(platform.env), fileSource(join(cwd, '.env'))],
       )
         .container.get(AGENTS)

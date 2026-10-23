@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { ExpectedError, locateResource, type Which } from '@choliba/core';
+import { ExpectedError, locateResource, type Which } from '@choliba/kernel';
 
 import type { Runtime } from '../runtime';
 

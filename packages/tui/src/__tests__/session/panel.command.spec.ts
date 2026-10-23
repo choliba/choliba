@@ -1,15 +1,16 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import {
-  baseShell,
-  createShell,
-  WORKSPACE_ROOT,
-  type ChatPanel,
-  type PanelOptions,
-  type ShellModule,
-} from '@choliba/shell';
+import { baseShell, createShell, type ChatPanel, type PanelOptions, type ShellModule } from '@choliba/shell';
 
-import { openOpenTuiPanel, PANEL_ICON, PANEL_LOGO, PANEL_OPENER, PANEL_VERSION, tuiShell } from '../../index';
+import {
+  openOpenTuiPanel,
+  PANEL_ICON,
+  PANEL_LOGO,
+  PANEL_LOG_DIRECTORY,
+  PANEL_OPENER,
+  PANEL_VERSION,
+  tuiShell,
+} from '../../index';
 import { fakeChatPanel as fakePanel } from '../../testing';
 import { BufferWritable, fakePlatform, type FakePlatform } from '@choliba/kernel/testing';
 import { replace, runShell, VERBS_ROOT, type ShellOverride } from '@choliba/shell/testing';
@@ -21,13 +22,14 @@ afterAll(() => {
   LOGS.cleanup();
 });
 
-/** `runShell`, with the workspace's root in `LOGS`, where the panel keeps its session's log. */
+/** `runShell`, with a temporary log directory for the panel session. */
 function runPanel(
   modules: readonly ShellModule[],
   platform: FakePlatform,
   overrides: readonly ShellOverride[] = [],
+  logsDirectory = join(LOGS.path, '.cache', 'logs'),
 ): Promise<number> {
-  return runShell(modules, platform, [replace(WORKSPACE_ROOT, LOGS.path), ...overrides]);
+  return runShell(modules, platform, [replace(PANEL_LOG_DIRECTORY, logsDirectory), ...overrides]);
 }
 
 const ICON = { data: new Uint8Array(4), width: 1, height: 1, stride: 4 };
@@ -92,13 +94,17 @@ describe('choliba panel', () => {
     };
     const platform = terminal();
     const root = makeTmpDir('panel-log');
-    const code = runPanel([baseShell, tuiShell, VERBS_ROOT], platform, [
-      replace(PANEL_OPENER, opener),
-      replace(PANEL_LOGO, '/assets/logo.webp'),
-      replace(PANEL_VERSION, 'choliba 1.2.3'),
-      replace(PANEL_ICON, ICON),
-      replace(WORKSPACE_ROOT, root.path),
-    ]);
+    const code = runPanel(
+      [baseShell, tuiShell, VERBS_ROOT],
+      platform,
+      [
+        replace(PANEL_OPENER, opener),
+        replace(PANEL_LOGO, '/assets/logo.webp'),
+        replace(PANEL_VERSION, 'choliba 1.2.3'),
+        replace(PANEL_ICON, ICON),
+      ],
+      join(root.path, '.cache', 'logs'),
+    );
     await new Promise((resolve) => setImmediate(resolve));
 
     expect(opened).toHaveLength(1);

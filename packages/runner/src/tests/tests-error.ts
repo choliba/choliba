@@ -1,5 +1,5 @@
 /** Why `choliba run tests` cannot run, said to the person; the command prints the message and exits 1. */
-import { ExpectedError } from '@choliba/core';
+import { ExpectedError } from '@choliba/kernel';
 
 export class TestsError extends ExpectedError {}
 

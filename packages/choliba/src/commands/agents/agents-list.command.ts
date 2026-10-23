@@ -1,5 +1,5 @@
-import type { CommandEntry, ShellCommand } from '@choliba/core';
-import { AGENT_PROVIDERS, AGENTS } from '@choliba/agents';
+import type { CommandEntry, ShellCommand } from '@choliba/shell';
+import { AGENT_PROVIDERS, AGENTS } from '../../agents';
 import { listAgentsSpec } from './agents-spec';
 
 /** How `choliba list --help` lists `agents`. */

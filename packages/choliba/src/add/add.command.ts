@@ -1,11 +1,5 @@
-import {
-  agentsConfig,
-  install,
-  parseInstallArgs,
-  resolveAgentsDir,
-  resolveMcpsDir,
-  resolveSkillsDir,
-} from '@choliba/agents';
+import { resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '@choliba/workspace';
+import { agentsConfig, install, parseInstallArgs } from '../agents';
 import {
   entryHelp,
   PLATFORM,
@@ -13,7 +7,7 @@ import {
   type CommandEntry,
   type ShellCommand,
   type Suggestions,
-} from '@choliba/core';
+} from '@choliba/shell';
 
 import { RUNTIME } from '../runtime';
 

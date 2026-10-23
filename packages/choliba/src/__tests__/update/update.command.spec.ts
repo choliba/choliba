@@ -2,8 +2,9 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { coreShell } from '@choliba/core';
-import { fakePlatform, runShell } from '@choliba/core/testing';
+import { baseShell } from '@choliba/shell';
+import { fakePlatform } from '@choliba/kernel/testing';
+import { runShell } from '@choliba/shell/testing';
 
 import { cholibaShell } from '../../app-shell';
 import type { HttpResponse, Runtime } from '../../runtime';
@@ -93,7 +94,7 @@ async function update(
   env: Readonly<Record<string, string>> = {},
 ): Promise<{ code: number; out: string; err: string }> {
   const platform = fakePlatform({ argv: ['update', ...args], cwd: root, env });
-  const code = await runShell([coreShell, cholibaShell(runtime)], platform);
+  const code = await runShell([baseShell, cholibaShell(runtime)], platform);
   return { code, out: platform.stdout.text(), err: platform.stderr.text() };
 }
 
