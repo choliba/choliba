@@ -1,6 +1,6 @@
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 
 import {
   EXPORTS_FILE,
@@ -40,21 +40,30 @@ describe('the architecture of the packages', () => {
   });
 
   it('keeps panel and terminal drawing out of the agent run', () => {
-    const run = readFileSync(join(ROOT, 'packages/agents/src/agents/runs/run-agent.ts'), 'utf8');
+    const run = readFileSync(join(ROOT, 'packages/choliba/src/agents/agents/runs/run-agent.ts'), 'utf8');
 
     expect(run).not.toMatch(/openPanel|panel\.write|frameTop|frameLines|frameBottom|summaryLine/);
   });
 
-  it('keeps panel commands and their registration in tui', () => {
-    const packages = ['agents', 'projects'];
-    const sources = packages.flatMap((name) => productionFiles(join(ROOT, 'packages', name, 'src')));
-    const commands = sources.filter((file) => readFileSync(file, 'utf8').includes('PanelCommand'));
-    const shells = packages.map((name) =>
-      readFileSync(join(ROOT, 'packages', name, 'src', name, `${name}-shell.ts`), 'utf8'),
-    );
+  it('keeps shared project panels in tui and app-specific agent panels in app composition', () => {
+    const tuiSources = productionFiles(join(ROOT, 'packages/tui/src'));
+    const appPanelSources = productionFiles(join(ROOT, 'packages/choliba/src/panel'));
 
-    expect(commands).toEqual([]);
-    expect(shells).not.toContainEqual(expect.stringMatching(/\bpanel(?:Start)?:/));
+    expect(tuiSources.some((file) => file.endsWith('/session/projects-panel.ts'))).toBe(true);
+    expect(appPanelSources.some((file) => file.endsWith('/agents-panel.ts'))).toBe(true);
+    expect(readFileSync(join(ROOT, 'packages/choliba/src/panel/agents-panel-shell.ts'), 'utf8')).toMatch(/\bpanel:/);
+  });
+
+  it('keeps CLI commands and their specs out of library packages', () => {
+    const packages = ['tui', 'runner'];
+    const sources = packages.flatMap((name) => productionFiles(join(ROOT, 'packages', name, 'src')));
+    const commandSpecs = new Set(['agents-spec.ts', 'projects-spec.ts', 'tests-spec.ts']);
+    const outsideApp = sources.filter((file) => {
+      const name = basename(file);
+      return (name.endsWith('.command.ts') && name !== 'panel.command.ts') || commandSpecs.has(name);
+    });
+
+    expect(outsideApp).toEqual([]);
   });
 });
 
@@ -136,6 +145,10 @@ describe('packageGraph and entryExports', () => {
           files: {
             'src/index.ts': 'export const run = 1;\nexport type Kind = string;\n',
             'src/eslint.ts': 'export default {};\n',
+            'scripts/entries/core.ts': 'export const createShell = () => 0;\n',
+            'scripts/entries/core/testing.ts': 'export const fakePlatform = () => 0;\n',
+            'scripts/entries/agents.ts': 'export const loadAgent = () => 0;\n',
+            'scripts/entries/projects.ts': 'export const readTicket = () => 0;\n',
           },
         },
       },
@@ -143,9 +156,20 @@ describe('packageGraph and entryExports', () => {
         expect(packageEntries(root)).toEqual({
           choliba: join(root, 'packages', 'app', 'src', 'index.ts'),
           'choliba/eslint': join(root, 'packages', 'app', 'src', 'eslint.ts'),
+          'choliba/core': join(root, 'packages', 'app', 'scripts/entries/core.ts'),
+          'choliba/core/testing': join(root, 'packages', 'app', 'scripts/entries/core/testing.ts'),
+          'choliba/agents': join(root, 'packages', 'app', 'scripts/entries/agents.ts'),
+          'choliba/projects': join(root, 'packages', 'app', 'scripts/entries/projects.ts'),
         });
-        expect(entryExports(root)).toEqual({ choliba: ['Kind', 'run'], 'choliba/eslint': ['default'] });
-        expect(exportsText({ b: ['y'], a: ['x'] })).toBe('{\n  "a": [\n    "x"\n  ],\n  "b": [\n    "y"\n  ]\n}\n');
+        expect(entryExports(root)).toEqual({
+          choliba: ['Kind', 'run'],
+          'choliba/eslint': ['default'],
+          'choliba/core': ['createShell'],
+          'choliba/core/testing': ['fakePlatform'],
+          'choliba/agents': ['loadAgent'],
+          'choliba/projects': ['readTicket'],
+        });
+        expect(exportsText({ b: ['y', 'z'], a: ['x', 'z'] })).toBe('{\n  "a": ["x", "z"],\n  "b": ["y", "z"]\n}\n');
       },
     );
   });

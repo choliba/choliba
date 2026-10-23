@@ -1,4 +1,4 @@
-import { boldAnsi, entryHelp, THEME, WORKSPACE_ROOT, type CommandEntry, type ShellCommand } from '@choliba/core';
+import { boldAnsi, entryHelp, THEME, WORKSPACE_ROOT, type CommandEntry, type ShellCommand } from '@choliba/shell';
 
 import { RUNTIME } from '../runtime';
 import { RELEASES_PAGE, update } from './update';

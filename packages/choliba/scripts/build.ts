@@ -27,20 +27,7 @@ const packageDir = join(import.meta.dir, '..');
 const packagesDir = join(packageDir, '..');
 const repoRoot = join(packagesDir, '..');
 const entriesDir = join(packageDir, 'scripts', 'entries');
-const BUNDLED = [
-  'agents',
-  'config',
-  'core',
-  'domain',
-  'engine',
-  'kernel',
-  'projects',
-  'runner',
-  'sandbox',
-  'shell',
-  'tui',
-  'workspace',
-];
+const BUNDLED = ['config', 'domain', 'engine', 'kernel', 'runner', 'sandbox', 'shell', 'tui', 'workspace'];
 
 /** Set from the loaded file before its imports, so a lookup during import sees this package, not the build machine. */
 const SHIPPED_DIR = 'globalThis.__CHOLIBA_SHIPPED_DIR__ = decodeURIComponent(new URL(".", import.meta.url).pathname);';
@@ -73,26 +60,32 @@ const SHIPPED: readonly ShippedExport[] = [
     declaration: 'types/config/src/index.d.ts',
     kind: 'star',
   },
-  { subpath: './core', js: './core.js', types: 'core.d.ts', declaration: 'types/core/src/index.d.ts', kind: 'star' },
+  {
+    subpath: './core',
+    js: './core.js',
+    types: 'core.d.ts',
+    declaration: 'types/choliba/src/core/index.d.ts',
+    kind: 'star',
+  },
   {
     subpath: './core/testing',
     js: './core/testing.js',
     types: 'core/testing.d.ts',
-    declaration: 'types/core/src/testing/index.d.ts',
+    declaration: 'types/choliba/scripts/entries/core/testing.d.ts',
     kind: 'star',
   },
   {
     subpath: './agents',
     js: './agents.js',
     types: 'agents.d.ts',
-    declaration: 'types/agents/src/index.d.ts',
+    declaration: 'types/choliba/src/agents/index.d.ts',
     kind: 'star',
   },
   {
     subpath: './projects',
     js: './projects.js',
     types: 'projects.d.ts',
-    declaration: 'types/projects/src/index.d.ts',
+    declaration: 'types/choliba/src/projects/index.d.ts',
     kind: 'star',
   },
   {
@@ -200,13 +193,11 @@ function ensureBunShebang(file: string): void {
 }
 
 function copyResources(outDir: string): void {
-  cpSync(join(packagesDir, 'agents', 'schemes'), join(outDir, 'schemes'), { recursive: true });
-  cpSync(join(packagesDir, 'projects', 'templates'), join(outDir, 'templates'), { recursive: true });
-  cpSync(join(packageDir, 'templates', 'workspace'), join(outDir, 'templates', 'workspace'), { recursive: true });
-  cpSync(join(packageDir, 'templates', 'example'), join(outDir, 'templates', 'example'), { recursive: true });
+  cpSync(join(packagesDir, 'domain', 'src', 'agent', 'schemes'), join(outDir, 'schemes'), { recursive: true });
+  cpSync(join(packageDir, 'templates'), join(outDir, 'templates'), { recursive: true });
   cpSync(join(packageDir, 'assets'), join(outDir, 'assets'), { recursive: true });
   // The guide of choliba/core, next to its entry, for whoever installed the package.
-  cpSync(join(packagesDir, 'core', 'README.md'), join(outDir, 'core', 'README.md'));
+  cpSync(join(packageDir, 'core', 'README.md'), join(outDir, 'core', 'README.md'));
   // The independent configuration guide, next to its public entry.
   cpSync(join(packagesDir, 'config', 'README.md'), join(outDir, 'config', 'README.md'));
 }
@@ -252,12 +243,9 @@ function emitDeclarations(outDir: string): void {
   emitPackage('workspace', outDir, ['src']);
   emitPackage('shell', outDir, ['src']);
   emitPackage('tui', outDir, ['src']);
-  emitPackage('core', outDir, ['src']);
-  emitPackage('agents', outDir, ['src']);
-  emitPackage('projects', outDir, ['src']);
   emitPackage('sandbox', outDir, ['src']);
   emitPackage('runner', outDir, ['src', 'shared', 'reporters', 'playwright.config.ts']);
-  emitPackage('choliba', outDir, ['src']);
+  emitPackage('choliba', outDir, ['src', 'scripts/entries/core/testing.ts']);
 }
 
 function declarationFiles(dir: string): string[] {

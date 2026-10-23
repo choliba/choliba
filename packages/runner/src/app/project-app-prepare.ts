@@ -1,7 +1,7 @@
 import { appendFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { ExpectedError } from '@choliba/core';
+import { ExpectedError } from '@choliba/kernel';
 import type { ProjectSettings } from '@choliba/domain';
 import { PROJECT_CONFIG_FILE } from '@choliba/workspace';
 

@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type { Writable, Theme } from '@choliba/core';
+import type { Writable } from '@choliba/kernel';
+import type { Theme } from '@choliba/shell';
 
 import { fail } from './tests-error';
 import { readReport, reportFile } from './ticket-results';

@@ -12,22 +12,25 @@
     "build": "bun scripts/build.ts"
   },
   "dependencies": {
-    "@choliba/agents": "workspace:*",
     "@choliba/config": "workspace:*",
-    "@choliba/core": "workspace:*",
-    "@choliba/projects": "workspace:*",
+    "@choliba/domain": "workspace:*",
+    "@choliba/engine": "workspace:*",
+    "@choliba/kernel": "workspace:*",
     "@choliba/providers": "workspace:*",
     "@choliba/runner": "workspace:*",
     "@choliba/sandbox": "workspace:*",
+    "@choliba/shell": "workspace:*",
     "@choliba/tui": "workspace:*",
     "@choliba/workspace": "workspace:*",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "1.63.0",
+    "ajv": "^8.20.0",
     "@types/bun": "^1.4.2",
     "eslint": "^10.11.0",
     "prettier": "^3.9.8",
     "typescript": "~6.0.3",
-    "typescript-eslint": "^8.70.1"
+    "typescript-eslint": "^8.70.1",
+    "yaml": "^2.8.1"
   },
   "exports": {
     "./eslint": "./src/tooling/eslint-config.ts",

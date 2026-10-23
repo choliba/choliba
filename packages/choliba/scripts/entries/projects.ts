@@ -1,1 +1,1 @@
-export * from '@choliba/projects';
+export * from '../../src/projects';

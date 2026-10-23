@@ -28,3 +28,36 @@ export type { TicketArgs, TicketTarget } from './ticket-run';
 export { formatPlanTimestamp, planBasename, readPlan, resolvePlanPath, slugify, writePlan } from './plan-store';
 export type { WritePlanOptions } from './plan-store';
 export type { DryRunInput } from './dry-run';
+export { everySecond, imageFoldersNotice, runAgent } from './run-agent';
+export type { RunAgentDeps, RunAgentRequest, RunFooterInfo, RunLaunch, RunLog, RunLogSource } from './run-agent';
+export { applyRunFiles, askExchangeDir } from './run-files';
+export { watchQuestions } from './ask-watcher';
+export { ALREADY_DONE, NOT_READ, sessionInput } from './session-input';
+export type { SessionInput } from './session-input';
+export { writtenToolCall, writtenToolCallMessage } from './written-tool-call';
+export {
+  defaultResolvePlanContent,
+  isSubstantiveAgentEvent,
+  modelReportMissingMessage,
+  validateModelReportMissing,
+  validateReportedModel,
+} from './run-event';
+export type { ReportedModelContext } from './run-event';
+export { containerReachProblem } from './app-reach';
+export type { AppReachDeps } from './app-reach';
+export { launchFor, realDisk } from './sandbox-launch';
+export type { Launch, LaunchDisk, LaunchInput } from './sandbox-launch';
+export { runAfter } from './run-after';
+export type { EndedRun, RunAfterDeps } from './run-after';
+export { createAgentSequence } from './agent-sequence';
+export type {
+  AgentSequence,
+  AgentSequenceState,
+  SequenceAgent,
+  SequenceExecution,
+  SequencePrompt,
+  SequenceQuestion,
+  SequenceResult,
+  SequenceStop,
+  SequenceStopReason,
+} from './agent-sequence';

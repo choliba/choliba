@@ -1,4 +1,4 @@
-import * as terminalOutput from '@choliba/core';
+import * as terminalOutput from '@choliba/shell';
 
 export function installSilentTerminal(): () => void {
   const stderrSpy = jest.spyOn(terminalOutput, 'writeStderr').mockImplementation(() => undefined);

@@ -1,29 +1,30 @@
 import { join } from 'node:path';
 
-import { AGENT_PROVIDERS, agentsShell } from '@choliba/agents';
+import { AGENT_PROVIDERS, agentsShell } from './agents';
 import { knownProviders } from '@choliba/providers';
 import { defineConfig, type ConfigGroup } from '@choliba/config';
 import {
-  coreShell,
+  baseShell,
   createShell,
-  findResource,
-  PANEL_ICON,
-  PANEL_LOGO,
-  PANEL_VERSION,
   PLATFORM,
   parseColors,
   THEME_CHOICES,
   WORKSPACE_ROOT,
-  versionLine,
-  type Platform,
   type Shell,
   type ShellModule,
-} from '@choliba/core';
-import { projectsShell } from '@choliba/projects';
+} from '@choliba/shell';
+import { findResource, versionLine, type Platform } from '@choliba/kernel';
+import { PANEL_ICON, PANEL_LOGO, PANEL_VERSION } from '@choliba/tui';
 import { runnerShell } from '@choliba/runner';
-import { tuiShell } from '@choliba/tui';
+import { LOGS_DIR } from '@choliba/workspace';
+import { PANEL_LOG_DIRECTORY, tuiShell } from '@choliba/tui';
 
 import { addCommand } from './add';
+import { agentsCommandsShell } from './commands/agents';
+import { projectsCommandsShell } from './commands/projects';
+import { projectsShell } from './projects';
+import { agentsPanelShell } from './panel';
+import { testsCommandsShell } from './commands/tests';
 import {
   cholibaLibrary,
   type Choliba,
@@ -73,6 +74,7 @@ export function cholibaShell(runtime: Runtime): ShellModule {
       container.provide(PANEL_ICON, () => OWL_ICON);
       container.provide(PANEL_VERSION, () => versionLine(PACKAGE_NAME, cholibaManifest()));
       container.provide(WORKSPACE_ROOT, (current) => findWorkspaceRoot(current.get(PLATFORM).cwd));
+      container.provide(PANEL_LOG_DIRECTORY, (current) => join(current.get(WORKSPACE_ROOT), LOGS_DIR));
       container.provide(THEME_CHOICES, (current) => parseColors(current.get(cholibaConfig.token).colors));
       container.provide(TOOLS, (c) => new ToolsService(c.get(RUNTIME), c.get(WORKSPACE_ROOT), c.get(PLATFORM).which));
     },
@@ -90,10 +92,19 @@ export function cholibaShell(runtime: Runtime): ShellModule {
 }
 
 /**
- * The packages' commands in the shell, in a fixed order. A package adds a command to its own module, never here, so
- * moving commands of different packages to the shell never touches the same file.
+ * The packages and their app-owned commands in a fixed order.
  */
-export const CHOLIBA_SHELL: readonly ShellModule[] = [coreShell, tuiShell, agentsShell, projectsShell, runnerShell];
+export const CHOLIBA_SHELL: readonly ShellModule[] = [
+  baseShell,
+  tuiShell,
+  agentsPanelShell,
+  agentsShell,
+  agentsCommandsShell,
+  projectsShell,
+  projectsCommandsShell,
+  runnerShell,
+  testsCommandsShell,
+];
 
 /** The shell of choliba on `platform` and `runtime`. */
 export function createCholibaShell(

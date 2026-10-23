@@ -7,14 +7,8 @@ import { homedir } from 'node:os';
 import { createInterface, type Interface } from 'node:readline';
 import { Writable } from 'node:stream';
 
-import {
-  createBunProcessSpawner,
-  createSpawnGitRunner,
-  takeGlobalFlags,
-  type Ask,
-  type BunSpawnFn,
-  type Platform,
-} from '@choliba/core';
+import { createBunProcessSpawner, type BunSpawnFn } from '@choliba/shell';
+import { createSpawnGitRunner, takeGlobalFlags, type Ask, type Platform } from '@choliba/kernel';
 
 import { createCholibaShell } from './app-shell';
 import type { Runtime } from './runtime';

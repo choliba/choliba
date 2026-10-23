@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 
 import { envSource, fileSource, type ConfigSource } from '@choliba/config';
-import type { Platform } from '@choliba/core';
+import type { Platform } from '@choliba/kernel';
 
 import { findWorkspaceRoot } from './workspace';
 import { ENV_FILE } from '@choliba/workspace';

@@ -2,14 +2,13 @@ export { asBoolean, asString, isRecord, parseJsonLine } from './json';
 export { pathGlobs } from './path-globs';
 export { claudeMcpUse } from './mcp-use';
 export { cursorToolName, parseCursorToolCall } from './cursor-tool-calls';
+export { createStreamJsonParser, extractCreatePlanToolPlan, parseInitEvent } from './stream-json';
+export type { StreamJsonParser, StreamJsonParserOptions } from './stream-json';
 export {
-  createStreamJsonParser,
   defaultResolvePlanContent,
-  extractCreatePlanToolPlan,
   isSubstantiveAgentEvent,
   modelReportMissingMessage,
-  parseInitEvent,
   validateModelReportMissing,
   validateReportedModel,
-} from './stream-json';
-export type { ReportedModelContext, StreamJsonParser, StreamJsonParserOptions } from './stream-json';
+} from '@choliba/engine';
+export type { ReportedModelContext } from '@choliba/engine';

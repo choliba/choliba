@@ -25,7 +25,7 @@ const LOCATION_VAR = new RegExp(`\\$\\{(${LOCATION_VARS.join('|')})\\}`);
  * application), `${CHOL_AGENTS_DIR}`, `${CHOL_SKILLS_DIR}` and `${CHOL_MCPS_DIR}` always;
  * `${CHOL_GLOBAL_DIR}`, `${CHOL_PROJECTS_DIR}` and `${CHOL_TICKET_RUNS}` once CHOL_GLOBAL_DIR is configured;
  * `${PROJECT}`/`${PROJECT_DIR}`/`${APP_DIR}` (the active environment's application code) when the run has
- * a project — all from `@choliba/projects` and `workspace-dirs`, this CLI works out no path itself.
+ * a project — all from `@choliba/workspace`, this CLI works out no path itself.
  */
 function locationVars(
   deps: PrepareRunDeps,

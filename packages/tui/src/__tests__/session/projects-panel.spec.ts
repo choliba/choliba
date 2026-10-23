@@ -3,24 +3,58 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { Container } from '@choliba/kernel';
-import { PROJECTS, ProjectsService, type LocationsService } from '@choliba/projects';
+import type { ProjectSettings } from '@choliba/domain';
 import type { PanelContext } from '@choliba/shell';
 
+import { PROJECTS, type ProjectPanelTicket, type ProjectsService } from '../../session';
 import { projectsPanel } from '../../session/projects-panel';
 import { fakeChatPanel } from '../../testing';
 
-/** A projects folder with `projects` (name → its files), and the panel's commands on it. */
-function withProjects(projects: Readonly<Record<string, Readonly<Record<string, string>>>>) {
+interface ProjectFixture {
+  readonly description: string;
+  readonly settings: ProjectSettings | undefined;
+  readonly tickets: readonly ProjectPanelTicket[];
+}
+
+/** The settings the project panel needs to show a configured project. */
+function settings(project: string): ProjectSettings {
+  const environment = { nome: 'local', baseURL: 'http://localhost:5173/', appDir: `/code/${project}` };
+  return {
+    project,
+    projectPath: `/projects/${project}`,
+    config: { name: project, envs: [environment] },
+    environment,
+    appDir: environment.appDir,
+    credentials: {},
+    globals: {},
+    env: {},
+  };
+}
+
+/** An in-memory workspace service and the panel's commands on it. */
+function withProjects(projects: Readonly<Record<string, ProjectFixture>>) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'projects-panel-'));
-  for (const [name, files] of Object.entries(projects)) {
-    for (const [file, content] of Object.entries(files)) {
-      fs.mkdirSync(path.dirname(path.join(dir, name, file)), { recursive: true });
-      fs.writeFileSync(path.join(dir, name, file), content);
-    }
-  }
   const container = new Container();
-  const locations = { projectsDir: () => dir } as unknown as LocationsService;
-  container.provide(PROJECTS, () => new ProjectsService(locations));
+  const projectsService: ProjectsService = {
+    projectsDir: () => dir,
+    list: () => Object.entries(projects).map(([name, project]) => ({ name, description: project.description })),
+    listWithTickets: () =>
+      Object.entries(projects).map(([name, project]) => ({
+        name,
+        tickets: project.tickets.map((ticket) => ticket.id),
+      })),
+    check: (project) => {
+      const configured = projects[project]?.settings;
+      if (configured === undefined) throw new Error('Project settings are incomplete');
+      return configured;
+    },
+    tickets: (project) => projects[project]?.tickets ?? [],
+    ticketKeys: (project) => (projects[project]?.tickets ?? []).map((ticket) => ticket.id),
+    create: () => {
+      throw new Error('Not used by the project panel');
+    },
+  };
+  container.provide(PROJECTS, () => projectsService);
   const values = new Map<string, string>();
   const context: PanelContext = {
     get: (key) => values.get(key),
@@ -62,21 +96,20 @@ function withProjects(projects: Readonly<Record<string, Readonly<Record<string, 
   };
 }
 
-const LOJA = {
-  'config.json': JSON.stringify({
-    name: 'Loja',
-    description: 'Loja de exemplo',
-    envs: [{ nome: 'local', baseURL: 'http://localhost:5173/', appDir: '/code/loja' }],
-  }),
-  '.env.json': JSON.stringify({ local: {} }),
-  'tickets/1.json': JSON.stringify({
-    titulo: 'Carrinho',
-    criterios: [
-      { id: 'CA-01', descricao: ['Dado um produto', 'Quando adiciono'], testes: ['carrinho.spec.ts › adiciona'] },
-      { id: 'CA-02', descricao: [] },
-    ],
-  }),
-  'tickets/2.json': '{}',
+const LOJA: ProjectFixture = {
+  description: 'Loja de exemplo',
+  settings: settings('loja'),
+  tickets: [
+    {
+      id: 'loja-1',
+      title: 'Carrinho',
+      criteria: [
+        { id: 'CA-01', description: ['Dado um produto', 'Quando adiciono'], tests: ['carrinho.spec.ts › adiciona'] },
+        { id: 'CA-02', description: [], tests: [] },
+      ],
+    },
+    { id: 'loja-2', criteria: [] },
+  ],
 };
 
 describe('the project panel commands of @choliba/tui', () => {
@@ -88,7 +121,10 @@ describe('the project panel commands of @choliba/tui', () => {
   });
 
   it('chooses the active project, marking the current one, clears the ticket when it changes, and asks for one', async () => {
-    const panel = withProjects({ blog: { 'config.json': '{}' }, loja: LOJA });
+    const panel = withProjects({
+      blog: { description: '', settings: undefined, tickets: [] },
+      loja: LOJA,
+    });
     try {
       panel.values.set('ticket', 'blog-1');
       panel.fake.answer(1);
@@ -148,7 +184,9 @@ describe('the project panel commands of @choliba/tui', () => {
   });
 
   it('shows a card of a project with no description, settings or more than one ticket as it is', async () => {
-    const panel = withProjects({ blog: { 'config.json': '{}', 'tickets/1.json': '{}' } });
+    const panel = withProjects({
+      blog: { description: '', settings: undefined, tickets: [{ id: 'blog-1', criteria: [] }] },
+    });
     try {
       await panel.projects();
 
@@ -235,7 +273,10 @@ describe('the project panel commands of @choliba/tui', () => {
   });
 
   it('is unavailable with no active project or no ticket in it, saying which', async () => {
-    const panel = withProjects({ blog: { 'config.json': '{}' }, loja: LOJA });
+    const panel = withProjects({
+      blog: { description: '', settings: undefined, tickets: [] },
+      loja: LOJA,
+    });
     try {
       const tickets = projectsPanel[1];
       const context = {

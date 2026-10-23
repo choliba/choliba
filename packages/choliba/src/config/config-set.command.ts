@@ -5,10 +5,10 @@ import {
   PLATFORM,
   type CommandEntry,
   type CommandSpec,
-  type Platform,
   type ShellCommand,
   type ShellIo,
-} from '@choliba/core';
+} from '@choliba/shell';
+import { type Platform } from '@choliba/kernel';
 
 import { workspaceConfigSources, workspaceRootOrNothing } from './config-sources';
 

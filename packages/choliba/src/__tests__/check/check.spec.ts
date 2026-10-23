@@ -4,7 +4,7 @@ import path from 'node:path';
 
 import { allFine, checkAgents, checkProjects, checkWorkspace, formatCheck } from '../../check/check';
 
-const FIXTURES = path.join(__dirname, '..', '..', '..', '..', 'agents', 'src', '__tests__', 'fixtures', 'agents');
+const FIXTURES = path.join(__dirname, '..', 'fixtures', 'agents');
 
 function withWorkspace(run: (root: string) => Promise<void> | void): Promise<void> {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'choliba-check-'));

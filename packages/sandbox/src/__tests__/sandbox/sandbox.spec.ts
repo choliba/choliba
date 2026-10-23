@@ -142,13 +142,13 @@ describe('the agent image', () => {
 
   it('is built on the Playwright version every package pins, so its browsers are the ones that version expects', () => {
     const image = /^ARG PLAYWRIGHT_VERSION=(.+)$/m.exec(dockerfile)?.[1];
-    const pinned = ['agents', 'choliba', 'runner'].map((pkg) => {
+    const pinned = ['choliba', 'runner'].map((pkg) => {
       const manifest = JSON.parse(readFileSync(join(ROOT, 'packages', pkg, 'package.json'), 'utf8')) as Readonly<
         Record<'dependencies' | 'devDependencies', Readonly<Record<string, string>> | undefined>
       >;
       return { ...manifest.devDependencies, ...manifest.dependencies }['@playwright/test'];
     });
-    expect(pinned).toEqual([image, image, image]);
+    expect(pinned).toEqual([image, image]);
   });
 
   it('runs no downloaded script, and installs the Cursor CLI of a pinned version checked against its sha256', () => {

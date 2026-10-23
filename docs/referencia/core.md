@@ -2,4 +2,4 @@
 
 > A base de linha de comando do choliba: comandos, acesso ao processo, ajuda, terminal e cores, para a sua CLI.
 
-<!--@include: ../../packages/core/README.md#guia-->
+<!--@include: ../../packages/choliba/core/README.md#guia-->

@@ -1,4 +1,4 @@
-import { PROJECT_CONFIG_KEYS, writeProjectConfigKey } from '@choliba/projects';
+import { PROJECT_CONFIG_KEYS, writeProjectConfigKey } from '@choliba/workspace';
 
 import type { AgentStep } from '@choliba/domain';
 import { textField, type FieldSpec } from './step-fields';
@@ -37,7 +37,7 @@ export interface StepProject {
 }
 
 /**
- * The `write_config` action: the agent's final answer, a JSON value, saved by `@choliba/projects` as `key` of the
+ * The `write_config` action: the agent's final answer, a JSON value, saved by `@choliba/workspace` as `key` of the
  * run's project's `config.json`, once it follows that key's rule. The other keys stay as they are; a run without a
  * project, or an answer that is not JSON or does not follow the rule, fails and leaves the file untouched.
  */

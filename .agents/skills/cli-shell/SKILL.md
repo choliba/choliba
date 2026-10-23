@@ -29,12 +29,12 @@ codes, pt-BR): `cli-guidelines`.
 - **Another package is reached only through `.`.** Never through a folder, and a package never imports its own
   entry from inside. A folder is reached only through its `index.ts`.
 
-## What every command uses (`@choliba/core`)
+## What every command uses (`@choliba/shell` and `@choliba/kernel`)
 
-- **`PLATFORM`**: the process, registered by `createShell` from what `main.ts` built (argv already without
+- **`PLATFORM`** (`@choliba/kernel`): the process, registered by `createShell` from what `main.ts` built (argv already without
   `--no-color`, cwd, env, stdout, stderr, clock, signals, spawn, which, git). Only `main.ts` reads Bun and
   `process`. Jest runs on Node, so nothing else may.
-- **`CONFIG`** and **`THEME`**: a `ConfigService` and a `ThemeService`, registered by `coreShell` from
+- **`CONFIG`** and **`THEME`** (`@choliba/shell`): a `ConfigService` and a `ThemeService`, registered by `baseShell` from
   `PLATFORM`. Another package's factory asks for them with `container.get(CONFIG)`.
 - **`RUNTIME`**: the app's own token (`packages/choliba`), registered by `cholibaShell`. It is how `check`,
   `lint`, `format` and `setup` run ESLint, Prettier and the deferred setup step.
@@ -63,10 +63,10 @@ codes, pt-BR): `cli-guidelines`.
 
 ## Adding an agent provider
 
-1. `packages/agents/src/providers/<id>/<id>-agent.provider.ts`: a plain class `extends AgentProvider` with `id`,
+1. `packages/providers/src/<provider>/<id>-agent.provider.ts`: a plain class `extends AgentProvider` with `id`,
    `binaries`, `autoPriority`, `buildArgs`, `createParser` (and the optional hooks), exported from
    `providers/index.ts`.
-2. Add an instance to the list `agentsShell` builds `AGENT_PROVIDERS` from (`agents/agents-shell.ts`):
+2. Add an instance to the list `agentsShell` builds `AGENT_PROVIDERS` from (`choliba/src/agents/agents/agents-shell.ts`):
    `--provider <id>`, `--<id>`, `auto`'s order and completion follow with no other change.
 3. Specs: its args and parser, and the registry spec, which the new provider must not break.
 
@@ -84,9 +84,10 @@ the closest one. A first word that is neither a command nor a verb is a usage er
 is no fallback. Two roots, a verb that is also a command, a command under a verb the root does not declare, or two
 commands claiming one word (or one type of a verb) throw when the shell is built.
 
-A spec that runs a package's verb commands without the app adds `VERBS_ROOT` from `@choliba/core/testing`.
+A spec that runs a package's verb commands without the app adds `VERBS_ROOT` from `@choliba/shell/testing`.
 
 ## Tests
 
 `references/testing.md`: `runShell([module], fakePlatform({ argv }))` for a command line, `new Service(...)` for
-a service, `@choliba/core/testing` for the fakes. Never `bun test`.
+a service, `@choliba/kernel/testing` and `@choliba/shell/testing` for internal fakes. The installed
+`choliba/core/testing` facade combines them. Never `bun test`.

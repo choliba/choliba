@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import type { Writable } from '@choliba/core';
+import type { Writable } from '@choliba/kernel';
 
 import { installSilentTerminal } from '../helpers/silent-terminal';
 import { anchorSpecFile, fillTicketTests, shortTitle, specFileFromFullTitle } from '../../tests/fill-ticket-tests';

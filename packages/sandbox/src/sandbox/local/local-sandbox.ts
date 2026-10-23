@@ -1,4 +1,4 @@
-import { ExpectedError } from '@choliba/core';
+import { ExpectedError } from '@choliba/kernel';
 
 import type { DiskFacts } from '../mounts/interfaces/container-mounts.interface';
 import { containerMounts } from '../mounts/container-mounts';

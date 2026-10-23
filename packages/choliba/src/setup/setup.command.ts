@@ -1,4 +1,4 @@
-import { entryHelp, PLATFORM, type CommandEntry, type ShellCommand } from '@choliba/core';
+import { entryHelp, PLATFORM, type CommandEntry, type ShellCommand } from '@choliba/shell';
 
 import { RUNTIME } from '../runtime';
 import { setup, setupWorkspace, updatePackageWhenListed } from './setup';

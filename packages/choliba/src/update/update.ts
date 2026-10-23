@@ -2,7 +2,8 @@ import { createHash } from 'node:crypto';
 import { readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
-import { findManifest, messageOf, type PackageManifest } from '@choliba/core';
+import { findManifest, type PackageManifest } from '@choliba/kernel';
+import { messageOf } from '@choliba/shell';
 
 import { PACKAGE_NAME, shownVersion } from '../help';
 import type { HttpResponse, Runtime } from '../runtime';

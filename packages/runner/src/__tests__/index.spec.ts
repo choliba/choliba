@@ -11,7 +11,8 @@ describe('playwright package entrypoint', () => {
     expect(typeof playwright.fillTicketTests).toBe('function');
     expect(typeof playwright.runTests).toBe('function');
     expect(playwright.runnerShell.name).toBe('@choliba/runner');
-    expect(playwright.testsCommand.name).toBe('tests');
+    expect(playwright).not.toHaveProperty('testsCommand');
+    expect(playwright).not.toHaveProperty('testsCliSpec');
     expect([playwright.RUNNER_ROOT, playwright.TESTS, playwright.TESTS_HOOKS].map(({ name }) => name)).toEqual([
       'RunnerRoot',
       'TestsService',

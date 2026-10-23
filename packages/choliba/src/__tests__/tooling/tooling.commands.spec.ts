@@ -2,8 +2,9 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { coreShell } from '@choliba/core';
-import { fakePlatform, runShell } from '@choliba/core/testing';
+import { baseShell } from '@choliba/shell';
+import { fakePlatform } from '@choliba/kernel/testing';
+import { runShell } from '@choliba/shell/testing';
 
 import { cholibaShell } from '../../app-shell';
 import { fakeRuntime, withFolder, withWorkspace, type FakeRuntime } from '../helpers/runtime';
@@ -15,7 +16,7 @@ async function tool(
   which: (bin: string) => string | null = () => '/usr/bin/node',
 ): Promise<{ code: number; err: string }> {
   const platform = fakePlatform({ argv: args, cwd, which });
-  const code = await runShell([coreShell, cholibaShell(runtime)], platform);
+  const code = await runShell([baseShell, cholibaShell(runtime)], platform);
   return { code, err: platform.stderr.text() };
 }
 

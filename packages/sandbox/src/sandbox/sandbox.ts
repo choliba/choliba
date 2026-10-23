@@ -1,4 +1,4 @@
-import { ExpectedError } from '@choliba/core';
+import { ExpectedError } from '@choliba/kernel';
 
 const CHOL_NETWORK = 'CHOL_NETWORK';
 const CHOL_SANDBOX = 'CHOL_SANDBOX';

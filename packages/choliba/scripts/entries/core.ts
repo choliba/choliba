@@ -1,1 +1,1 @@
-export * from '@choliba/core';
+export * from '../../src/core';

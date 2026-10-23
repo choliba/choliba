@@ -1,4 +1,4 @@
-import { BufferWritable, fakePlatform } from '@choliba/core/testing';
+import { BufferWritable, fakePlatform } from '@choliba/kernel/testing';
 
 import { createCholibaShell } from '../../app-shell';
 import { fakeRuntime } from '../helpers/runtime';

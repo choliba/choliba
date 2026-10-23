@@ -1,4 +1,4 @@
-import type { CommandEntry, ShellCommand, Suggestions } from '@choliba/core';
+import type { CommandEntry, ShellCommand, Suggestions } from '@choliba/shell';
 
 import { TOOLS } from './tooling.constants';
 

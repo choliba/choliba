@@ -35,47 +35,6 @@ export function parseInitEvent(doc: Record<string, unknown>): Extract<AgentEvent
   return { type: 'init', model: readModel(doc), sessionId: readSessionId(doc) };
 }
 
-export interface ReportedModelContext {
-  readonly providerId: string;
-  readonly agentName: string;
-}
-
-export function validateReportedModel(
-  model: string,
-  supportedModels: readonly string[],
-  ctx: ReportedModelContext,
-): string | undefined {
-  if (supportedModels.length === 0 || supportedModels.includes(model)) {
-    return undefined;
-  }
-  return (
-    `${ctx.providerId} is using model "${model}", not declared in agent.yaml#providers.${ctx.providerId}.models ` +
-    `for "${ctx.agentName}". Supported: ${supportedModels.join(', ')}. Stopping.`
-  );
-}
-
-export function modelReportMissingMessage(supportedModels: readonly string[], ctx: ReportedModelContext): string {
-  return (
-    `${ctx.providerId} did not report a model before starting work for "${ctx.agentName}" ` +
-    `(agent.yaml#providers.${ctx.providerId}.models requires one of: ${supportedModels.join(', ')}). ` +
-    'Pass --model explicitly or fix the provider stream parser. Stopping.'
-  );
-}
-
-export function validateModelReportMissing(
-  supportedModels: readonly string[],
-  ctx: ReportedModelContext,
-): string | undefined {
-  if (supportedModels.length === 0) {
-    return undefined;
-  }
-  return modelReportMissingMessage(supportedModels, ctx);
-}
-
-export function isSubstantiveAgentEvent(event: AgentEvent): boolean {
-  return event.type === 'text' || event.type === 'tool-call';
-}
-
 /** Reads plan markdown from cursor-agent `{type:tool_call, tool_call.createPlanToolCall}`. */
 export function extractCreatePlanToolPlan(doc: Record<string, unknown>): string | undefined {
   const toolCall = doc['tool_call'];
@@ -91,23 +50,6 @@ export function extractCreatePlanToolPlan(doc: Record<string, unknown>): string 
     return undefined;
   }
   return asString(args['plan']);
-}
-
-export function defaultResolvePlanContent(context: {
-  readonly planMarkdown: string | undefined;
-  readonly doneEvent: Extract<AgentEvent, { type: 'done' }> | undefined;
-  readonly textParts: readonly string[];
-}): string | undefined {
-  return firstNonEmpty(context.planMarkdown, context.doneEvent?.text, context.textParts.join('\n\n'));
-}
-
-function firstNonEmpty(...candidates: readonly (string | undefined)[]): string | undefined {
-  for (const candidate of candidates) {
-    if (candidate !== undefined && candidate.trim() !== '') {
-      return candidate;
-    }
-  }
-  return undefined;
 }
 
 type ToolCall = Extract<AgentEvent, { type: 'tool-call' }>;

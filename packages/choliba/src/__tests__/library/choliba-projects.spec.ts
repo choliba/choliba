@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { fakePlatform } from '@choliba/core/testing';
+import { fakePlatform } from '@choliba/kernel/testing';
 
 import { createCholibaShell, openCholiba } from '../../app-shell';
 import { fakeRuntime } from '../helpers/runtime';

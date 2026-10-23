@@ -14,8 +14,8 @@ import {
   readTicket,
   readTickets,
   retiredCriteria,
-  type ProjectsService,
-} from '@choliba/projects';
+} from '@choliba/workspace';
+import type { ProjectsService } from '../projects';
 import { ticketResults } from '@choliba/runner';
 
 import type { CholibaProject, CholibaProjectCounts, CholibaProjects } from './interfaces/choliba.interface';

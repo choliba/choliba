@@ -2,14 +2,15 @@ import {
   messageOf,
   type CommandEntry,
   type CommandSpec,
-  type Container,
   type ShellCommand,
   type ShellIo,
   WORKSPACE_ROOT,
-} from '@choliba/core';
-import { agentsConfig } from '@choliba/agents';
-import { projectsConfig } from '@choliba/projects';
-import { PROJECTS, projectCompletions } from '@choliba/projects';
+} from '@choliba/shell';
+import { type Container } from '@choliba/kernel';
+import { agentsConfig } from '../agents';
+import { projectsConfig } from '@choliba/workspace';
+import { PROJECTS } from '@choliba/tui';
+import { projectCompletions } from '../projects';
 
 import { allFine, checkWorkspace, formatCheck } from './check';
 

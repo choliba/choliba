@@ -1,4 +1,4 @@
-import { token } from '@choliba/core';
+import { token } from '@choliba/kernel';
 
 import type { TestsHooks, TestsService } from './tests.service';
 

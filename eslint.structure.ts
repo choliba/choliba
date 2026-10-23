@@ -16,19 +16,32 @@ type Layer = (typeof LAYERS)[number];
 /** The folders of `src/` of each package that follows the standard, by layer (`common` is always `common/`). */
 const STRUCTURE: Readonly<Record<string, Partial<Record<Exclude<Layer, 'common'>, readonly string[]>>>> = {
   config: { domain: ['formats', 'sources', 'groups'] },
-  kernel: { domain: ['paths'], module: ['platform', 'config', 'runtime', 'container'] },
-  workspace: { domain: ['layout'], module: ['locations'] },
+  kernel: { domain: ['paths'], module: ['config', 'container', 'platform', 'runtime'] },
+  workspace: { domain: ['layout'], module: ['locations', 'projects'] },
   domain: { domain: ['agent', 'permissions', 'project', 'ticket', 'verdict'] },
   engine: { domain: ['prompt'], ports: ['ports'], orchestration: ['steps', 'guards', 'runs', 'install'] },
   shell: { module: ['help', 'cli', 'theme', 'panel', 'shell', 'terminal'] },
   tui: { module: ['panel', 'session'] },
-  core: { module: ['shell'] },
-  projects: { domain: ['paths'], module: ['locations', 'tickets', 'projects'] },
   runner: { module: ['tests', 'app'] },
   sandbox: { domain: ['sandbox'] },
   providers: { module: ['claude', 'codex', 'cursor', 'registry'] },
-  agents: { module: ['agents', 'providers'] },
-  choliba: { domain: ['help', 'runtime'], module: ['check', 'config', 'library', 'setup', 'tooling'] },
+  choliba: {
+    domain: ['help', 'runtime'],
+    module: [
+      'add',
+      'agents',
+      'check',
+      'commands',
+      'config',
+      'core',
+      'library',
+      'panel',
+      'projects',
+      'setup',
+      'tooling',
+      'update',
+    ],
+  },
 };
 
 /** File-name suffixes still in use: a service, a provider, a dto, a command and injection-token constants. */

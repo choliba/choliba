@@ -1,4 +1,4 @@
-import { findManifest, resourceStarts, shippedDir, versionLine, type PackageManifest } from '@choliba/core';
+import { findManifest, resourceStarts, shippedDir, versionLine, type PackageManifest } from '@choliba/kernel';
 
 /** The package `--version` describes; its name skips any other package.json on the way (a test runner's). */
 export const PACKAGE_NAME = 'choliba';

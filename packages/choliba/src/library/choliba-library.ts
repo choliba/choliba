@@ -1,11 +1,13 @@
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-import { agentsConfig, listAgents, listSkills, loadAgent, resolveSkill, resolveSkills } from '@choliba/agents';
+import { listSkills, resolveSkill, resolveSkills } from '@choliba/engine';
+import { agentsConfig, listAgents, loadAgent } from '../agents';
 import { knownProviders } from '@choliba/providers';
 import { configCatalog, configSettings, type ConfigGroup } from '@choliba/config';
-import { versionLine } from '@choliba/core';
-import { LocationsService, ProjectsService, projectsConfig } from '@choliba/projects';
+import { versionLine } from '@choliba/kernel';
+import { projectsConfig } from '@choliba/workspace';
+import { LocationsService, ProjectsService } from '../projects';
 
 import { configSourcesAt, findWorkspaceRoot } from '../config';
 import { cholibaManifest, PACKAGE_NAME } from '../help';

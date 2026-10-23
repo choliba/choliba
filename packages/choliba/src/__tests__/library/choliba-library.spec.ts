@@ -1,10 +1,10 @@
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { agentsConfig } from '@choliba/agents';
+import { agentsConfig } from '../../agents';
 import { defineConfig } from '@choliba/config';
-import { versionLine } from '@choliba/core';
-import { fakePlatform } from '@choliba/core/testing';
+import { versionLine } from '@choliba/kernel';
+import { fakePlatform } from '@choliba/kernel/testing';
 import { sandboxConfig } from '@choliba/sandbox';
 
 import { cholibaManifest, PACKAGE_NAME } from '../../help';

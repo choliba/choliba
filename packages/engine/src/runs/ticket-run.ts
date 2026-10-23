@@ -11,8 +11,7 @@ import {
   ticketJsonPath,
   ticketPlaceholders,
   ticketShapeProblems,
-  ticketTemplatesDir,
-} from '@choliba/projects';
+} from '@choliba/workspace';
 
 export class TicketRunError extends Error {}
 
@@ -45,12 +44,13 @@ function newTicket(
   project: string,
   type: string,
   projectsDir: string,
+  templatesDir: string,
 ) {
   if (!types.includes(type)) {
     throw new TicketRunError(`"${agent.name}" não trabalha com tickets "${type}" (aceitos: ${types.join(', ')}).`);
   }
   const environment = loadProjectSettings(projectsDir, project).environment.nome;
-  const planned = planTicket(projectsDir, project, type, ticketTemplatesDir(), { environment });
+  const planned = planTicket(projectsDir, project, type, templatesDir, { environment });
   return { ticket: planned.ticket, file: planned.path, create: { projectsDir, project, type, environment } };
 }
 
@@ -73,6 +73,7 @@ export function resolveTicketTarget(
   agent: AgentDefinition,
   args: TicketArgs,
   projectsDir: () => string,
+  templatesDir: string,
 ): TicketTarget | undefined {
   const types = agent.ticketTypes;
   if (types === undefined) {
@@ -88,7 +89,7 @@ export function resolveTicketTarget(
     throw new TicketRunError(`"${agent.name}" precisa de --project para achar o ticket.`);
   }
   if (args.ticketType !== undefined) {
-    return newTicket(agent, types, args.project, args.ticketType, projectsDir());
+    return newTicket(agent, types, args.project, args.ticketType, projectsDir(), templatesDir);
   }
   if (args.ticket !== undefined) {
     return existingTicket(projectsDir(), args.project, args.ticket);
@@ -99,12 +100,12 @@ export function resolveTicketTarget(
 }
 
 /** Writes the ticket `--type` asked for and returns what was written; nothing for `--ticket`. */
-export function createPlannedTicket(target: TicketTarget | undefined): string | undefined {
+export function createPlannedTicket(target: TicketTarget | undefined, templatesDir: string): string | undefined {
   if (target?.create === undefined) {
     return undefined;
   }
   const { projectsDir, project, type, environment } = target.create;
-  const created = createTicket(projectsDir, project, type, ticketTemplatesDir(), { environment });
+  const created = createTicket(projectsDir, project, type, templatesDir, { environment });
   if (created.path !== target.file) {
     rmSync(created.path, { force: true });
     throw new TicketRunError(`Outro ticket foi criado em ${target.file} durante esta execução; rode de novo.`);
@@ -124,6 +125,7 @@ export function finishTicket(
   mode: ExecutionMode,
   exitCode: number,
   stderr: Writable,
+  templatesDir: string,
 ): number {
   if (target === undefined || !existsSync(target.file)) {
     return exitCode;
@@ -142,7 +144,7 @@ export function finishTicket(
     return 1;
   }
   // The Gherkin form is checked once the ticket keeps its template's shape: a `descricao` that is not a list says so once.
-  const shape = ticketShapeProblems(target.file, ticketTemplatesDir());
+  const shape = ticketShapeProblems(target.file, templatesDir);
   const problems = shape.length > 0 ? shape : ticketCriteriaProblems(target.file);
   if (problems.length === 0) {
     return exitCode;

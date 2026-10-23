@@ -7,7 +7,7 @@ not a gap: it is in `SKILL.md`, "Where choliba departs from clig.dev".
 | Rule | Today | Where |
 |---|---|---|
 | 7. `--no-input` | Only `new project` takes it; the one other prompt (open the HTML report in `run tests`) is already TTY-only | `packages/runner/src/tests/run-tests.ts` |
-| Output: `--json`, `--quiet` | No command has them; `list projects --tickets` is a line format the `product-owner` reads | `packages/projects/src/projects/projects-list.command.ts` |
+| Output: `--json`, `--quiet` | No command has them; `list projects --tickets` is a line format the `product-owner` reads | `packages/choliba/src/commands/projects/` |
 | Output: pager | Long help and `list agents` are not paged on a TTY | `ShellIo.printHelp`, `runList` |
 
 What already follows the rules, for reference: pt-BR help from `CommandSpec`, `help [COMMAND...]`, dynamic

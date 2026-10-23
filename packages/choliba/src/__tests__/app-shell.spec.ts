@@ -1,22 +1,28 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { listAgents } from '@choliba/agents';
-import { PANEL_ICON, PANEL_LOGO, PANEL_VERSION, type ShellModule } from '@choliba/core';
-import { fakePlatform } from '@choliba/core/testing';
+import { listAgents } from '../agents';
+import { PANEL_ICON, PANEL_LOG_DIRECTORY, PANEL_LOGO, PANEL_VERSION } from '@choliba/tui';
+import { type ShellModule, WORKSPACE_ROOT } from '@choliba/shell';
+import { fakePlatform } from '@choliba/kernel/testing';
+import { LOGS_DIR } from '@choliba/workspace';
 
 import { CHOLIBA_SHELL, createCholibaShell } from '../app-shell';
 import { RUNTIME } from '../runtime';
-import { fakeRuntime } from './helpers/runtime';
+import { fakeRuntime, withWorkspace } from './helpers/runtime';
 
 describe('the choliba shell', () => {
   it('lists every package once, in a fixed order', () => {
     expect(CHOLIBA_SHELL.map((module) => module.name)).toEqual([
-      '@choliba/core',
+      '@choliba/shell',
       '@choliba/tui',
+      'choliba-agents-panel',
       '@choliba/agents',
+      'choliba-agents-commands',
       '@choliba/projects',
+      'choliba-projects-commands',
       '@choliba/runner',
+      'choliba-tests-commands',
     ]);
   });
 
@@ -45,6 +51,15 @@ describe('the choliba shell', () => {
       /^choliba 0\.0\.1-dev/,
     );
   });
+
+  it('gives the panel its logs folder under the workspace', () =>
+    withWorkspace(async (root) => {
+      const container = createCholibaShell(fakePlatform({ cwd: root }), fakeRuntime()).container;
+
+      await expect(Promise.resolve(container.get(PANEL_LOG_DIRECTORY))).resolves.toBe(
+        join(container.get(WORKSPACE_ROOT), LOGS_DIR),
+      );
+    }));
 
   it('runs every command and verb, and nothing of the old root', () => {
     const shell = createCholibaShell(fakePlatform(), fakeRuntime());
