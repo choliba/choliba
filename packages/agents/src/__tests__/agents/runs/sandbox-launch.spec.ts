@@ -48,17 +48,22 @@ function request(permissions: Partial<AgentPermissions> = {}, more: Partial<Prov
   };
 }
 
-/** Every path exists, as a folder unless it has a dot in its last part; records the folders made. */
-function disk(): LaunchDisk & { readonly made: string[] } {
+/** Every path exists, as a folder unless it has a dot in its last part; records the folders made and the links. */
+function disk(): LaunchDisk & { readonly made: string[]; readonly links: readonly (readonly [string, string])[] } {
   const made: string[] = [];
+  const links: (readonly [string, string])[] = [];
   return {
     made,
+    links,
     exists: () => true,
     isDirectory: (path) => !/\.[^/]*$/.test(path.split('/').pop() ?? ''),
     read: () => [],
     owner: () => ({ uid: 1000, gid: 1000 }),
     ensureDir: (path) => {
       made.push(path);
+    },
+    link: (target, path) => {
+      links.push([target, path]);
     },
     realpath: (path) => path,
     runtime: '/home/test/.bun/bin/bun',
@@ -100,7 +105,7 @@ describe('launchFor', () => {
     expect(home).toBeGreaterThan(0);
     expect(provider).toBeGreaterThan(home);
     expect(run).toBeGreaterThan(provider);
-    expect(launch.env).toEqual(CONFIG);
+    expect(launch.env).toEqual({ ...CONFIG, PATH: '/w/.cache/runs/1.bin:/usr/local/bin:/usr/bin:/bin' });
     expect(launch.paths).toEqual(
       expect.arrayContaining([{ path: '/w/.cache/runs/1', access: 'write', directory: true }]),
     );
@@ -163,6 +168,40 @@ describe('launchFor', () => {
     );
 
     expect(launch.env?.['PATH']).toBe('/w/.cache/runs/1.bin:/usr/bin:/bin');
+  });
+
+  it("links the provider's short name in the shortcuts folder, and still runs the realpath", () => {
+    const fake = disk();
+    const launch = launchFor(
+      {
+        sandbox: { kind: 'local' },
+        command: ['claude', '-p'],
+        provider: PROVIDER,
+        request: request(),
+        files: [],
+        config: CONFIG,
+      },
+      fake,
+    );
+    expect(fake.links).toEqual([['/provider/claude', '/w/.cache/runs/1.bin/claude']]);
+    expect(launch.env?.['PATH']?.startsWith('/w/.cache/runs/1.bin:')).toBe(true);
+    expect(launch.command.slice(-2)).toEqual(['/provider/claude', '-p']);
+  });
+
+  it('does not link a shortcut when the provider has no short name', () => {
+    const input = {
+      sandbox: { kind: 'local' } as const,
+      command: ['claude', '-p'],
+      request: request(),
+      files: [],
+      config: CONFIG,
+    };
+    for (const command of [[], ['']]) {
+      const fake = disk();
+      const launch = launchFor({ ...input, provider: { ...PROVIDER, command } }, fake);
+      expect(fake.links).toEqual([]);
+      expect(launch.command.slice(-2)).toEqual(['/provider/claude', '-p']);
+    }
   });
 
   it('refuses a broken provider link and a missing credential with actionable messages', () => {
@@ -413,6 +452,12 @@ describe('realDisk', () => {
       expect(realDisk.isDirectory(join(tmp.path, 'nada'))).toBe(false);
       const { uid, gid } = statSync(tmp.path);
       expect(realDisk.owner(tmp.path)).toEqual({ uid, gid });
+      const target = join(tmp.path, 'f.txt');
+      const shortcut = join(folder, 'claude');
+      realDisk.link(target, shortcut);
+      expect(realDisk.realpath(shortcut)).toBe(realDisk.realpath(target));
+      realDisk.link(target, shortcut);
+      expect(realDisk.realpath(shortcut)).toBe(realDisk.realpath(target));
     } finally {
       tmp.cleanup();
     }
