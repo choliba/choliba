@@ -301,9 +301,30 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     restart,
   });
   context.converse((text, panel) => {
-    if (sequence.state().running) sending?.(text);
-    else runFrom(0, text, panel);
+    if (sequence.state().running) {
+      sending?.(text);
+      return;
+    }
+    void confirmTask(panel, text).then((confirmed) => {
+      if (confirmed) runFrom(0, text, panel);
+    });
   });
+}
+
+/** The fewest characters a task has before the panel takes it as one without asking: an "i" or a "/" is a slip. */
+const SHORT_TASK = 3;
+
+/**
+ * Whether `task` goes to the agents: at once when it has the length of one, else when the person confirms it was meant.
+ */
+export async function confirmTask(panel: ChatPanel, task: string): Promise<boolean> {
+  if (task.trim().length >= SHORT_TASK) return true;
+  const chosen = await panel.choose({
+    title: `Mandar "${task.trim()}" como tarefa?`,
+    description: 'É curta demais para uma tarefa: confira se não foi enviada por engano.',
+    options: [{ label: 'Sim, mandar' }, { label: 'Não' }],
+  });
+  return chosen === 0;
 }
 
 /** The sequence's engine state, which the panel reads to draw and dispatch its controls. */

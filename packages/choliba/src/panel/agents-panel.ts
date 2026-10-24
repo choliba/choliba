@@ -5,6 +5,7 @@ import {
   agentSequenceState,
   agentPaint,
   agentsDir,
+  confirmTask,
   resumeSequence,
   sessionAgentIds,
   showRun,
@@ -161,6 +162,7 @@ const resumeCommand: PanelCommand = {
       multi: false,
     });
     const said = reply.status === 'answered' && typeof reply.answer === 'string' ? reply.answer.trim() : '';
+    if (said !== '' && !(await confirmTask(panel, said))) return;
     talkToAgent(container, context);
     resumeSequence(context, panel, chosen, said === '' ? undefined : said);
   },
