@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 23/10/2026 00:14:26 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 24/10/2026 11:58:25 — não editar manualmente.
 
 ## Resumo
 
@@ -22,7 +22,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 104 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 100 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -63,18 +63,14 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/agents/runs/run-preparation.ts](packages/choliba/src/agents/agents/runs/run-preparation.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents/runs/run-screen.ts](packages/choliba/src/agents/agents/runs/run-screen.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents/runs/sandbox-launch.ts](packages/choliba/src/agents/agents/runs/sandbox-launch.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/agents/runs/session-input.ts](packages/choliba/src/agents/agents/runs/session-input.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents/runs/spec-context.ts](packages/choliba/src/agents/agents/runs/spec-context.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents/runs/ticket-run.ts](packages/choliba/src/agents/agents/runs/ticket-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents/runs/tool-failure.ts](packages/choliba/src/agents/agents/runs/tool-failure.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/agents/runs/written-tool-call.ts](packages/choliba/src/agents/agents/runs/written-tool-call.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/common/agent-mcps.ts](packages/choliba/src/agents/common/agent-mcps.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/common/agent-permissions.ts](packages/choliba/src/agents/common/agent-permissions.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/common/agent-provider.ts](packages/choliba/src/agents/common/agent-provider.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/common/agent-vars.ts](packages/choliba/src/agents/common/agent-vars.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/common/definition-denies.ts](packages/choliba/src/agents/common/definition-denies.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/common/json.ts](packages/choliba/src/agents/common/json.ts)|100.00|100.00|100.00|100.00
-🟢|[src/agents/common/message-blocks.ts](packages/choliba/src/agents/common/message-blocks.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/common/path-policy.ts](packages/choliba/src/agents/common/path-policy.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/common/prompt.ts](packages/choliba/src/agents/common/prompt.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/common/provider-registry.ts](packages/choliba/src/agents/common/provider-registry.ts)|100.00|100.00|100.00|100.00

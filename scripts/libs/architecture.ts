@@ -2,7 +2,7 @@
 // exports. Both are read from the code and compared with the lists in `scripts/architecture/`, so a change to either
 // shows in a pull request's diff and is made on purpose.
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 
 import ts from 'typescript';
 
@@ -71,6 +71,35 @@ function importedPackages(files: readonly string[], self: string): string[] {
     }
   }
   return [...found].sort();
+}
+
+/** A relative specifier (`./x`, `../../y`) in an import, an export or a dynamic import. */
+const RELATIVE = /(?:from\s+|import\s*\(\s*|import\s+)['"](\.{1,2}\/[^'"]*)['"]/g;
+
+/** Every `.ts` file under `path`, specs included, without `node_modules/`. */
+function everyFile(path: string): string[] {
+  if (statSync(path).isFile()) return path.endsWith('.ts') ? [path] : [];
+  return readdirSync(path)
+    .filter((name) => name !== 'node_modules')
+    .flatMap((name) => everyFile(join(path, name)));
+}
+
+/**
+ * The relative imports that leave their package, as `<file>: <specifier>` from `root`, specs included: another
+ * package is reached by its entry (`@choliba/engine`), never by a path into its sources.
+ */
+export function escapingImports(root: string): string[] {
+  const found: string[] = [];
+  for (const dir of packageDirs(root)) {
+    for (const file of everyFile(dir)) {
+      for (const match of readFileSync(file, 'utf8').matchAll(RELATIVE)) {
+        const specifier = match[1] ?? '';
+        const target = resolve(dirname(file), specifier);
+        if (!target.startsWith(`${dir}${sep}`)) found.push(`${relative(root, file)}: ${specifier}`);
+      }
+    }
+  }
+  return found.sort();
 }
 
 /** Who imports whom among the packages of `root`, and what each package.json declares. */
