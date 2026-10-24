@@ -1,0 +1,23 @@
+name: Sugerir uma mudança
+description: Uma funcionalidade nova ou uma mudança de comportamento.
+title: '[feature] '
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: O problema
+      description: O que você está tentando fazer e por que hoje não dá ou é difícil.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: A proposta
+      description: Como deveria funcionar (o comando, a flag, o campo do agent.yaml…).
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
