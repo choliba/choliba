@@ -19,6 +19,7 @@ import {
   bold,
   flag,
   gray,
+  pausing,
   PROJECT,
   sessionAgent,
   sessionAgentIds,
@@ -93,8 +94,15 @@ interface Talk {
 /** The sessions whose conversation goes to their agents already: one per session, whichever agents it has. */
 const talks = new WeakMap<PanelContext, Talk>();
 
-/** Asks whether to go on to `next` after an agent ended with code 0: Enter goes on, Esc stops the sequence. */
-async function goOn(next: string, panel: ChatPanel): Promise<boolean> {
+/**
+ * Asks whether to go on to `next` after an agent ended with code 0: Enter goes on, Esc stops the sequence. With the
+ * pause turned off (/pause), it goes on and says so.
+ */
+async function goOn(context: PanelContext, next: string, panel: ChatPanel): Promise<boolean> {
+  if (!pausing(context)) {
+    panel.answer(`Seguindo para ${next}.`);
+    return true;
+  }
   const chosen = await panel.choose({
     title: `Seguir para ${next}?`,
     description: 'Enter segue; Esc para a sequência, que /resume retoma.',
@@ -303,7 +311,7 @@ export function talkToAgent(container: Container, context: PanelContext): void {
       if (code === undefined) return undefined;
       return conclusion === undefined ? { code } : { code, conclusion };
     },
-    continueTo: (next) => goOn(next, panel),
+    continueTo: (next) => goOn(context, next, panel),
     ticket: () => context.get(TICKET),
     before: (ids) => {
       for (const id of ids) context.set(agentKey(STATE, id), undefined);

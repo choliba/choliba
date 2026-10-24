@@ -33,8 +33,10 @@ export const PANEL_SPEC: CommandSpec = {
     '`/agents` acrescenta um agente ao fim da sequência: ele escolhe o provider, entre os que o agente declara, e ' +
       'depois o modelo, entre os que ele declara para esse provider; Esc em qualquer dos dois usa o do painel, e um ' +
       'agente que não pode rodar com eles não entra, e o painel diz por quê. Depois, `/agents` pergunta pelo ' +
-      'próximo. Escolher um agente que já está na sequência troca só o provider e o modelo dele, menos o que roda ' +
-      'agora. `/agents` nunca recomeça a sequência (`/clear` recomeça) e funciona enquanto ela roda: um agente ' +
+      'próximo. Escolher um agente que já está na sequência pergunta o que fazer com ele: trocar o provider e o ' +
+      'modelo (menos o que roda agora), movê-lo uma posição para um lado ou para o outro, ou tirá-lo da sequência, ' +
+      'com o que foi escolhido para ele; mover e tirar esperam os agentes pararem de rodar. `/agents` nunca ' +
+      'recomeça a sequência (`/clear` recomeça) e funciona enquanto ela roda: um agente ' +
       'acrescentado roda no fim, e um que espera roda com o que foi escolhido para ele.',
     'A coluna do cabeçalho mostra o provider e o modelo do painel, os dos agentes que não escolheram os seus: ' +
       '`/provider` os escolhe entre `auto` e todos os providers, e `/model` entre os modelos que os agentes declaram ' +
@@ -45,7 +47,8 @@ export const PANEL_SPEC: CommandSpec = {
     'Uma mensagem sem `/` é a tarefa do primeiro agente. Os seguintes rodam com a sua tarefa padrão, ou com a ' +
       'mensagem quando não têm uma, e o ticket que um deixa é o do próximo (sem ticket, um agente de tickets pergunta ' +
       'o tipo do ticket novo que a execução cria). Entre dois agentes, o painel pergunta se segue: Enter segue, e Esc ' +
-      'para a sequência. Ela também para quando um agente falha, quando o Ctrl+C o interrompe e quando uma execução em ' +
+      'para a sequência; `/pause` desliga essa pergunta, e a sequência segue sozinha, ou a liga de novo, e a linha de ' +
+      'status diz qual vale (o `/clear` a liga). Ela também para quando um agente falha, quando o Ctrl+C o interrompe e quando uma execução em ' +
       '`execute` deixa intacto o ticket que criou. Quando um agente para porque o modelo dele está sem capacidade ' +
       '(ou com limite de uso), o painel oferece rodá-lo de novo, no mesmo modelo ou em outro provider e modelo ' +
       'escolhidos para ele, com a mesma tarefa. `/resume` volta a qualquer agente da sequência, parada ou já ' +

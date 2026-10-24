@@ -12,12 +12,15 @@ import {
   modeChoice,
   MODEL,
   PANEL_MODEL_DEFAULT,
+  PAUSE,
+  pausing,
   panelProviderChoice,
   PROVIDER,
   restartSequence,
   SANDBOX,
   sandboxChoice,
   sandboxProblem,
+  showPause,
   showRun,
   warn,
   MODE_CHOICES,
@@ -182,4 +185,30 @@ const sandboxCommand: PanelCommand = {
 };
 
 /** The choices about a run of the active agent that `choliba panel` takes. */
-export const runChoices: readonly PanelCommand[] = [providerCommand, modelCommand, modeCommand, sandboxCommand];
+/**
+ * `/pause`: turns the pause between two agents of the sequence off, so it goes on by itself, or on again; the status
+ * line says which, and /clear brings it back on.
+ */
+const pauseCommand: PanelCommand = {
+  name: 'pause',
+  description: 'Liga ou desliga a pausa entre agentes',
+  run: ({ panel, context }) => {
+    const on = !pausing(context);
+    context.set(PAUSE, on ? undefined : 'não');
+    showPause(context);
+    panel.write(
+      on
+        ? 'Pausa entre agentes ligada: o painel pergunta antes de cada próximo agente.'
+        : 'Pausa entre agentes desligada: a sequência segue sozinha de um agente para o próximo.',
+    );
+    return Promise.resolve();
+  },
+};
+
+export const runChoices: readonly PanelCommand[] = [
+  providerCommand,
+  modelCommand,
+  modeCommand,
+  sandboxCommand,
+  pauseCommand,
+];
