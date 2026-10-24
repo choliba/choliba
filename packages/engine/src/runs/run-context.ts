@@ -23,6 +23,8 @@ export interface PrepareRunDeps {
   readonly signal?: AbortSignal;
   /** What the other agents of the session concluded (the panel's sequence), for the prompt; none on the command line. */
   readonly conclusions?: readonly AgentConclusion[];
+  /** The session's agents, in order (the panel's sequence), so the prompt says how to hand the work back to one. */
+  readonly sessionAgents?: readonly string[];
 }
 
 /** What a run asks of preparation: the flags that change the provider request. */

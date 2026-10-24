@@ -26,6 +26,8 @@ export interface HostedRun {
   readonly conclusions?: readonly AgentConclusion[];
   /** Told what the agent said last when its session ends (`RunAgentsCliDeps.concluded`). */
   readonly concluded?: (conclusion: string) => void;
+  /** The host session's agents, in order, so the run's prompt says how to hand the work back to one. */
+  readonly sessionAgents?: readonly string[];
 }
 
 /** `choliba run agent` and `choliba list agents`: the workspace's agents, run through a provider. */
@@ -59,6 +61,7 @@ export class AgentsService {
       ...(host.ticket === undefined ? {} : { ticket: host.ticket }),
       ...(host.conclusions === undefined ? {} : { conclusions: host.conclusions }),
       ...(host.concluded === undefined ? {} : { concluded: host.concluded }),
+      ...(host.sessionAgents === undefined ? {} : { sessionAgents: host.sessionAgents }),
     });
   }
 

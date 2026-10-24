@@ -6,6 +6,7 @@ import {
   type AgentSequence,
   type AgentSequenceState,
   type SequenceExecution,
+  type HandBack,
   type SequenceStop,
 } from '@choliba/engine';
 
@@ -132,7 +133,7 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     agent: AgentDefinition,
     task: string,
     panel: ChatPanel,
-    session: Pick<HostedRun, 'conclusions' | 'concluded'>,
+    session: Pick<HostedRun, 'conclusions' | 'concluded' | 'sessionAgents'>,
   ): Promise<number | undefined> => {
     const argv = await runArgv(context, agent, task, panel);
     if (argv === undefined) return undefined;
@@ -227,9 +228,31 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     }
   };
 
+  /**
+   * An agent handed the work back to another of the session: says so, and offers to go back to it, with why as its
+   * task, once this round of the sequence is over.
+   */
+  const offerHandBack = async (stop: SequenceStop, handBack: HandBack, panel: ChatPanel): Promise<void> => {
+    const why = handBack.why === '' ? '' : `: ${handBack.why}`;
+    panel.answer(warn(`${stop.agent} devolveu o trabalho a ${handBack.agent}${why}.`));
+    const chosen = await panel.choose({
+      title: `Voltar a ${handBack.agent}?`,
+      description: 'Ele recebe o que os outros agentes concluíram, e o motivo como tarefa.',
+      options: [{ label: `Voltar a ${handBack.agent}` }, { label: 'Parar aqui' }],
+    });
+    await currentStart;
+    const at = sessionAgentIds(context).indexOf(handBack.agent);
+    if (chosen === 0 && at >= 0) runFrom(at, handBack.why === '' ? undefined : handBack.why, panel);
+    else panel.answer(warn(`/resume volta a ${handBack.agent} quando quiser.`));
+  };
+
   /** Where the sequence stopped: kept for /resume and said, when the session has more than one agent. */
   const stopped = (stop: SequenceStop, panel: ChatPanel): void => {
     if (sessionAgentIds(context).length < 2) return;
+    if (stop.handBack !== undefined) {
+      void offerHandBack(stop, stop.handBack, panel);
+      return;
+    }
     const ticket = context.get(TICKET);
     const kept = ticket === undefined ? '' : `, com o ticket ${ticket}`;
     panel.answer(warn(`A sequência parou em ${stop.agent}. /resume retoma dele${kept}.`));
@@ -240,6 +263,7 @@ export function talkToAgent(container: Container, context: PanelContext): void {
       let conclusion: string | undefined;
       const code = await runOne(agent, task, panel, {
         conclusions: others,
+        sessionAgents: sessionAgentIds(context),
         concluded: (said) => {
           conclusion = said;
         },

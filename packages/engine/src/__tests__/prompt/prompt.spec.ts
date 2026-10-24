@@ -1,11 +1,13 @@
 import { type AgentDefinition, NO_PERMISSIONS } from '@choliba/domain';
 import {
   CONCLUSION_MAX_CHARS,
+  HAND_BACK,
   MAX_ARG_BYTES,
   PromptTooLargeError,
   UNTRUSTED_INPUT_LINE,
   assertArgvFits,
   buildUserPrompt,
+  handBackSection,
   formatMcps,
   formatSections,
   modeInstruction,
@@ -270,6 +272,30 @@ describe('buildUserPrompt', () => {
     expect(buildUserPrompt({ templateOutput: 'x', mode: 'execute', planContent: undefined, conclusions: [] })).toBe(
       'Task:\nx',
     );
+  });
+
+  it('says how to hand the work back to another agent of its sequence, before the task, and nothing when alone', () => {
+    const prompt = buildUserPrompt({
+      templateOutput: 'escreva os testes',
+      mode: 'execute',
+      planContent: undefined,
+      sequence: { self: 'test-writer', agents: ['product-owner', 'test-writer', 'implementer'] },
+    });
+
+    expect(prompt).toContain(
+      'This run is one of a sequence of agents: product-owner → test-writer → implementer (you are test-writer). ' +
+        `If you stop because the work needs one of the others first (the ticket needs rewriting, say), end your answer with one line: \`${HAND_BACK} <agent> — <why>\`, the agent being one of: product-owner, implementer. The sequence then offers to go back to it.`,
+    );
+    expect(prompt.indexOf(HAND_BACK)).toBeLessThan(prompt.indexOf('escreva os testes'));
+    expect(handBackSection('echo', ['echo'])).toBe('');
+    expect(
+      buildUserPrompt({
+        templateOutput: 'x',
+        mode: 'execute',
+        planContent: undefined,
+        sequence: { self: 'echo', agents: ['echo'] },
+      }),
+    ).toBe('Task:\nx');
   });
 
   it('never starts with a task that begins with "-", so no CLI parser mistakes it for a flag', () => {
