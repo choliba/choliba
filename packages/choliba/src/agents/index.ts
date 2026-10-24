@@ -42,6 +42,7 @@ export {
   listenModeKey,
   modeChoice,
   panelProviderChoice,
+  confirmTask,
   forgetSequence,
   resetSequenceStop,
   restartSequence,

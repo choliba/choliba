@@ -511,6 +511,30 @@ describe('talkToAgent', () => {
     }
   });
 
+  it('asks before taking a task too short to mean one, and runs it only when confirmed', async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      const talk = conversation(tmp.path, 'echo');
+      talk.fake.answerNext(1);
+      talk.state.send('i', talk.fake.panel);
+      await talk.settle();
+      expect(talk.fake.choices.at(-1)).toEqual({
+        title: 'Mandar "i" como tarefa?',
+        description: 'É curta demais para uma tarefa: confira se não foi enviada por engano.',
+        options: [{ label: 'Sim, mandar' }, { label: 'Não' }],
+      });
+      expect(talk.asked).toHaveLength(0);
+
+      talk.fake.answerNext(0);
+      talk.state.send('ok', talk.fake.panel);
+      await talk.settle();
+      expect(talk.asked.map((run) => run.argv)).toEqual([['echo', 'ok']]);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
   it('runs at the end of the sequence an agent added while it goes', async () => {
     const tmp = makeTmpDir('panel-run');
     try {

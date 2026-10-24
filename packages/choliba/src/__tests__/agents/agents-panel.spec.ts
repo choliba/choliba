@@ -281,6 +281,12 @@ describe('/agents', () => {
       await run({ ...agents.fake.panel, ask: () => Promise.resolve({ status: 'answered', answer: ' só a busca ' }) });
       await new Promise((resolve) => setImmediate(resolve));
       expect(ran.at(-1)?.at(-1)).toBe('só a busca');
+      // What is too short to mean a task asks first, and goes back to nobody when it was a slip.
+      agents.fake.answerNext(0, 1);
+      await run({ ...agents.fake.panel, ask: () => Promise.resolve({ status: 'answered', answer: '/' }) });
+      await new Promise((resolve) => setImmediate(resolve));
+      expect(agents.fake.choices.at(-1)?.title).toBe('Mandar "/" como tarefa?');
+      expect(ran.at(-1)?.at(-1)).toBe('só a busca');
     } finally {
       tmp.cleanup();
     }

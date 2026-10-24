@@ -1111,6 +1111,60 @@ describe('openPanel', () => {
     expect(input.value).toBe('');
   });
 
+  it('sends a command typed while a question waits, which stays, and takes the marker off a pasted text', async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, OPTIONS);
+    const { input } = layoutOf(renderer);
+    const sent: string[] = [];
+    panel.onMessage((text) => sent.push(text));
+
+    input.value = '❯ veja o ticket';
+    input.emit('submit');
+    const reply = panel.ask({ question: 'Qual o nome?', options: [], multi: false });
+    input.value = '/agents';
+    input.emit('submit');
+    expect(sent).toEqual(['veja o ticket', '/agents']);
+    expect(input.placeholder).toBe('Qual o nome?');
+
+    input.value = '❯ /resume';
+    input.emit('submit');
+    input.value = '❯ ';
+    input.emit('submit');
+    input.value = 'Ana';
+    input.emit('submit');
+    expect(sent).toEqual(['veja o ticket', '/agents', '/resume']);
+    expect(await reply).toEqual({ status: 'answered', answer: 'Ana' });
+  });
+
+  it('takes a question out of the field, or out of the queue, when the one who asked withdraws it', async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, OPTIONS);
+    const { input } = layoutOf(renderer);
+    const first = new AbortController();
+    const second = new AbortController();
+
+    const asked = panel.ask({ question: 'Qual o nome?', options: [], multi: false }, first.signal);
+    const queued = panel.ask({ question: 'Qual a cidade?', options: [], multi: false }, second.signal);
+    second.abort();
+    expect(await queued).toEqual({ status: 'skipped' });
+    expect(input.placeholder).toBe('Qual o nome?');
+    first.abort();
+    expect(await asked).toEqual({ status: 'skipped' });
+    expect(input.placeholder).toBe('Enter envia · Ctrl+J cria uma linha');
+    expect(await panel.ask({ question: 'Já foi?', options: [], multi: false }, first.signal)).toEqual({
+      status: 'skipped',
+    });
+    expect(input.placeholder).toBe('Enter envia · Ctrl+J cria uma linha');
+
+    const late = new AbortController();
+    const answered = panel.ask({ question: 'Qual o nome?', options: [], multi: false }, late.signal);
+    input.value = 'Ana';
+    input.emit('submit');
+    late.abort();
+    expect(await answered).toEqual({ status: 'answered', answer: 'Ana' });
+    expect(input.placeholder).toBe('Enter envia · Ctrl+J cria uma linha');
+  });
+
   it('brings back what was sent with ↑ and ↓, on an empty field, keeping the keys from it', async () => {
     const { kit, renderer, press } = fakeToolkit();
     const panel = await openPanel(kit, OPTIONS);
