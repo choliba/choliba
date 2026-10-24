@@ -3,6 +3,7 @@ import {
   type AgentSequenceState,
   type SequenceAgent,
   type SequenceExecution,
+  type SequenceResult,
   type SequenceStop,
 } from '../../runs';
 
@@ -22,6 +23,8 @@ function setup(ids: string[] = ['first', 'second']) {
   const releases: boolean[] = [];
   const codes: (number | undefined)[] = [];
   const confirmations: boolean[] = [];
+  const conclusions: (string | undefined)[] = [];
+  const told: (readonly SequenceResult[])[] = [];
   let run = (agent: TestAgent, task: string): Promise<number | undefined> => {
     runs.push({ agent: agent.id, task });
     return Promise.resolve(codes.shift() ?? 0);
@@ -33,7 +36,13 @@ function setup(ids: string[] = ['first', 'second']) {
     (state) => states.push(state),
   );
   const execution: SequenceExecution<TestAgent> = {
-    run: (agent, task) => run(agent, task),
+    run: async (agent, task, others) => {
+      told.push(others);
+      const code = await run(agent, task);
+      const conclusion = conclusions.shift();
+      if (code === undefined) return undefined;
+      return conclusion === undefined ? { code } : { code, conclusion };
+    },
     continueTo: () => Promise.resolve(confirmations.shift() ?? true),
     ticket: () => ticket,
     before: () => undefined,
@@ -52,6 +61,8 @@ function setup(ids: string[] = ['first', 'second']) {
     releases,
     codes,
     confirmations,
+    conclusions,
+    told,
     sequence,
     execution,
     ticket: (value: string) => {
@@ -103,6 +114,49 @@ describe('createAgentSequence', () => {
 
     await test.sequence.start(0, undefined, test.execution);
     expect(test.runs.at(-2)).toEqual({ agent: 'first', task: 'build' });
+  });
+
+  it('tells each run what the earlier runs of the session concluded, a failed one too, across a resume', async () => {
+    const test = setup();
+    test.codes.push(0, 1);
+    test.conclusions.push('o ticket está pronto', 'parei: o CA-01 não é testável');
+
+    await test.sequence.start(0, 'build', test.execution);
+    const first = {
+      agent: 'first',
+      task: 'build',
+      reason: 'completed',
+      exitCode: 0,
+      conclusion: 'o ticket está pronto',
+    };
+    const second = {
+      agent: 'second',
+      task: 'review',
+      reason: 'failed',
+      exitCode: 1,
+      conclusion: 'parei: o CA-01 não é testável',
+    };
+    expect(test.told).toEqual([[], [first]]);
+    expect(test.sequence.state().history).toEqual([first, second]);
+
+    await test.sequence.start(0, 'veja o que o second disse', test.execution);
+    expect(test.told[2]).toEqual([first, second]);
+    expect(test.sequence.state().results.map((result) => result.agent)).toEqual(['first', 'second']);
+    expect(test.sequence.state().history).toHaveLength(4);
+  });
+
+  it('forgets the runs of a session it is told to forget', async () => {
+    const test = setup(['first']);
+    test.conclusions.push('feito');
+
+    await test.sequence.start(0, 'build', test.execution);
+    test.sequence.forget();
+    await test.sequence.start(0, 'build', test.execution);
+
+    expect(test.told).toEqual([[], []]);
+    expect(test.sequence.state().history).toEqual([
+      { agent: 'first', task: 'build', reason: 'completed', exitCode: 0 },
+    ]);
   });
 
   it('stops before the next agent when continuing is declined', async () => {

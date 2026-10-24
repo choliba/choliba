@@ -226,7 +226,10 @@ export function talkToAgent(container: Container, context: PanelContext): void {
   };
 
   const execution = (panel: ChatPanel): SequenceExecution<AgentDefinition> => ({
-    run: (agent, task) => runOne(agent, task, panel),
+    run: async (agent, task) => {
+      const code = await runOne(agent, task, panel);
+      return code === undefined ? undefined : { code };
+    },
     continueTo: (next) => goOn(next, panel),
     ticket: () => context.get(TICKET),
     before: (ids) => {
