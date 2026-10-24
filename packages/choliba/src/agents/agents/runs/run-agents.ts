@@ -233,6 +233,7 @@ async function runAndRecord(
       answered: (text) => {
         answer = text;
       },
+      ...(deps.concluded === undefined ? {} : { concluded: deps.concluded }),
     },
   );
 

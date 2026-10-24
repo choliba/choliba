@@ -1002,6 +1002,23 @@ describe('runAgentsCli — run', () => {
     );
   });
 
+  it("shows the session's conclusions in the prompt and tells what the agent concluded", async () => {
+    const conclusions = [{ agent: 'product-owner', reason: 'completed', exitCode: 0, conclusion: 'ticket escrito' }];
+    const preview = harness([], { conclusions });
+    expect(
+      await runAgentsCli(['echo', '--agents-dir', FIXTURES, '--dry-run', '--show-prompt', 'x'], preview.deps),
+    ).toBe(0);
+    expect(preview.stdout.chunks.join('')).toContain('### product-owner (completed, exit code 0)');
+
+    const concluded: string[] = [];
+    const run = harness(claudeStdout(claudeSuccessLine('feito: os testes passam')), {
+      conclusions,
+      concluded: (said) => concluded.push(said),
+    });
+    expect(await runAgentsCli(['echo', '--agents-dir', FIXTURES, 'x'], run.deps)).toBe(0);
+    expect(concluded).toEqual(['feito: os testes passam']);
+  });
+
   it('accepts a declared --model before spawning the provider', async () => {
     const { deps } = harness(claudeStdout(claudeSuccessLine()));
 

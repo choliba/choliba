@@ -2,7 +2,7 @@ import type { Panel, PanelOptions, ProcessRunnerService, ThemeService } from '@c
 import type { Platform, Writable, WritableWithColumns } from '@choliba/kernel';
 
 import type { AgentDefinition } from '@choliba/domain';
-import { type ProviderRegistry, type DryRunInput, listAgents } from '@choliba/engine';
+import { type AgentConclusion, type ProviderRegistry, type DryRunInput, listAgents } from '@choliba/engine';
 import { resolveAgentsDir } from '@choliba/workspace';
 import { runAgentsCli, runAgentsList } from './runs/run-agents';
 import type { AgentsListHelpHandler, AgentsRunHelpHandlers, RunAgentsCliDeps } from './runs/run-context';
@@ -22,6 +22,10 @@ export interface HostedRun {
   readonly signal?: AbortSignal;
   /** Told the run's ticket when it ends and the ticket is still there (`RunAgentsCliDeps.ticket`). */
   readonly ticket?: (ticket: string) => void;
+  /** What the other agents of the host's session concluded, for the run's prompt. */
+  readonly conclusions?: readonly AgentConclusion[];
+  /** Told what the agent said last when its session ends (`RunAgentsCliDeps.concluded`). */
+  readonly concluded?: (conclusion: string) => void;
 }
 
 /** `choliba run agent` and `choliba list agents`: the workspace's agents, run through a provider. */
@@ -53,6 +57,8 @@ export class AgentsService {
       hostedPanel: true,
       ...(host.signal === undefined ? {} : { signal: host.signal }),
       ...(host.ticket === undefined ? {} : { ticket: host.ticket }),
+      ...(host.conclusions === undefined ? {} : { conclusions: host.conclusions }),
+      ...(host.concluded === undefined ? {} : { concluded: host.concluded }),
     });
   }
 

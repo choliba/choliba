@@ -26,6 +26,7 @@ import {
   warn,
 } from './agents-panel-state';
 import { AGENTS } from './agents.constants';
+import type { HostedRun } from './agents.service';
 
 /** The status line's part while an agent runs. */
 const RUN = 'execução';
@@ -123,8 +124,16 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     changed,
   );
 
-  /** One run of `agent` with `task`: its exit code, or nothing when it did not start (a question left with Esc). */
-  const runOne = async (agent: AgentDefinition, task: string, panel: ChatPanel): Promise<number | undefined> => {
+  /**
+   * One run of `agent` with `task`, told what the session's other runs concluded and telling what it concludes: its exit
+   * code, or nothing when it did not start (a question left with Esc).
+   */
+  const runOne = async (
+    agent: AgentDefinition,
+    task: string,
+    panel: ChatPanel,
+    session: Pick<HostedRun, 'conclusions' | 'concluded'>,
+  ): Promise<number | undefined> => {
     const argv = await runArgv(context, agent, task, panel);
     if (argv === undefined) return undefined;
     if (typeof argv === 'string') {
@@ -207,6 +216,7 @@ export function talkToAgent(container: Container, context: PanelContext): void {
         ticket: (ticket) => {
           context.set(TICKET, ticket);
         },
+        ...session,
       });
       const how = code === 0 ? bold('código 0') : warn(`código ${String(code)}`);
       return announce(code, `${agent.id} terminou: ${how} ${gray(`· ${duration(Date.now() - startedAt)}`)}`);
@@ -226,9 +236,16 @@ export function talkToAgent(container: Container, context: PanelContext): void {
   };
 
   const execution = (panel: ChatPanel): SequenceExecution<AgentDefinition> => ({
-    run: async (agent, task) => {
-      const code = await runOne(agent, task, panel);
-      return code === undefined ? undefined : { code };
+    run: async (agent, task, others) => {
+      let conclusion: string | undefined;
+      const code = await runOne(agent, task, panel, {
+        conclusions: others,
+        concluded: (said) => {
+          conclusion = said;
+        },
+      });
+      if (code === undefined) return undefined;
+      return conclusion === undefined ? { code } : { code, conclusion };
     },
     continueTo: (next) => goOn(next, panel),
     ticket: () => context.get(TICKET),
@@ -313,6 +330,11 @@ export function resumeSequence(context: PanelContext, panel: ChatPanel, from: nu
  */
 export async function restartSequence(context: PanelContext, panel: ChatPanel): Promise<void> {
   await talks.get(context)?.restart(panel);
+}
+
+/** Forgets what the session's agents concluded: a session started over (`/clear`) tells its agents nothing of the old one. */
+export function forgetSequence(context: PanelContext): void {
+  talks.get(context)?.sequence.forget();
 }
 
 function noop(): void {
