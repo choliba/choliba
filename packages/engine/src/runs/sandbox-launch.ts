@@ -117,13 +117,14 @@ function localProgram(provider: ResolvedProvider, disk: LaunchDisk): SandboxProg
 /**
  * The provider's short name (`claude`, `agent`) as a link in the run's shortcuts folder, which goes first on PATH.
  * The home that held `~/.local/bin` is empty inside bwrap, so `execvp("claude")` would miss it without this.
+ * The folder is what the sandbox mounts, not the link: a same-path bind of a symlink whose target sits under the
+ * emptied home fails (`Can't create file .../agent`). The resolved executable is already in `program.readOnly`.
  */
 function providerShortcut(runDir: string, name: string, executable: string, disk: LaunchDisk): string {
   const shortcuts = runToolShortcuts(runDir);
   disk.ensureDir(shortcuts);
-  const path = join(shortcuts, name);
-  disk.link(executable, path);
-  return path;
+  disk.link(executable, join(shortcuts, name));
+  return shortcuts;
 }
 
 function providerShortcutOf(input: LaunchInput, program: SandboxProgram, disk: LaunchDisk): readonly string[] {
