@@ -1,110 +1,101 @@
 ---
 name: plans
-description: How work is planned in choliba — plan files in `plans/`, the name `<author>-<unix-ts>-NN-slug.md`, the shared queue index `plans/00-indice.md` with its statuses, an open pool where any agent executes any available plan, one plan equals one pull request, every plan estimates its commits, and the minimum sections. Use when creating or naming a plan, picking a plan to execute, updating the queue index, deciding how to split work into pull requests, reading `plans/`, or about to implement a plan.
-argument-hint: 'The work to plan, or the plan file to execute.'
+description: How work is planned in choliba — every piece of work is a GitHub issue opened with the repo's issue forms, the plan is a comment on the issue, status labels say who executes it, one issue is one pull request that closes it, every plan estimates its commits and maps the project skills to its steps. Use when turning pending work into an issue, writing or reading a plan, picking an issue to execute, splitting work into pull requests, or about to implement an issue.
+argument-hint: 'The work to plan, or the issue number to execute.'
 user-invocable: true
 disable-model-invocation: false
 ---
 
 # Plans
 
-Work that changes this repo starts as a plan in `plans/` at the repo root. That folder is gitignored: a plan is
-local working state and is never committed. `plans/` may be a symlink to one folder shared by several clones, so
-every agent sees the same plans and the same index at once.
+Work that changes this repo starts as an **issue** in https://github.com/choliba/choliba/issues. The issue says
+what is wrong or what is wanted; the **plan** says how it will be done and is a comment on that issue. There is no
+other queue: the open issues are the backlog, and an issue closed by its pull request is the history.
 
-The plans form an **open pool**: any agent (`claude`, `cursor`, `codex`) may execute any available plan, whoever
-wrote it. The filename says who wrote the draft; the current executor is the one in the status
-`em execução por <origin>` in [`plans/00-indice.md`](#queue-index). Each agent keeps at most one pull request open
-at a time.
+The work is an **open pool**: any agent (`claude`, `codex`, `cursor`) may execute any available issue, whoever
+opened it. The repository is public: an issue, a plan and a comment never carry secrets, `.env` values, tokens or
+personal data, and never paths outside the working folder.
 
-## Name
+## Opening an issue
 
-`<author>-<unix-ts>-<NN>-<slug>.md`
+Open it in the format of the forms in `.github/ISSUE_TEMPLATE/`, with the form's title prefix and labels:
 
-- **author** is `claude`, `cursor` or `codex`: who wrote the draft, **not** who executes it. Drafts from every
-  author live in the same `plans/` folder. Executing a plan with another author's prefix needs no rename.
-- **unix-ts** is the creation time, from `TZ='America/Sao_Paulo' date +%s`.
-- **NN** is two digits, the plan's place in the active queue (`01`, `02`, …). `00` is the queue index, not a pull
-  request. Numbering restarts at `01` when the active queue is empty (every plan merged or abandoned); plans in the
-  history do not hold their numbers.
-- **slug** is kebab-case.
+| Form | Title | Labels |
+| ---- | ----- | ------ |
+| `1-bug.yml` | `[bug] …` | `bug` |
+| `2-feature.yml` | `[feature] …` | `enhancement` |
+| `3-execution-error.yml` | `[execution-error] …` | `execution-error`, `bug` |
+| `4-architecture-change.yml` | `[architecture] …` | `architecture` |
 
-Example: `cursor-1791597051-01-skill-plans.md`.
+From the command line, write the body as the form renders it: one `### <field label>` per field, in the form's
+order, `_No response_` for an optional field left empty, and `- [X]` / `- [ ]` for checkboxes. Then:
 
-Scaffold one with `bash .agents/skills/plans/scripts/new-plan.sh <claude|cursor|codex> <NN> <slug>`. When
-`plans/00-indice.md` exists, the script also appends the plan to the active queue as `rascunho`, with the slug as
-its title; fix the title and `Depende de` by hand.
-
-## Queue index
-
-`plans/00-indice.md` (no author, no timestamp: `00` already says it is the index) is the shared panel of the queue.
-It is an aid: git and GitHub stay the source of truth for branches, pull requests and merges.
-
-The active queue is a table:
-
-```markdown
-| NN | Autor | Título | Status | PR | Depende de |
-|---|---|---|---|---|---|
-| 01 | claude | Sandbox: isolated network | em execução por codex | — | — |
+```bash
+gh issue create --repo choliba/choliba --title '[bug] …' --label bug --body-file body.md
 ```
 
-Statuses, where `<origin>` is `claude`, `cursor` or `codex` and may differ from the author:
+One problem per issue. When an issue needs another one first, comment `Depende de #N` on it.
+
+## Status
+
+The status of an issue is its labels:
 
 | Status | Meaning |
 | ------ | ------- |
-| `rascunho` | Written; nobody is implementing it. |
-| `próximo` | Will be taken as soon as the executor's current plan or a dependency is merged. |
-| `em execução por <origin>` | `<origin>` has a branch or local commits for it. |
-| `PR aberto por <origin>` | Pull request open, waiting for the merge; the `PR` column holds `#<number>`. |
-| `mergeado` | Merged into `develop`; the row moves to the history. |
-| `abandonado` | Dropped before a pull request; the row moves to the history and keeps the NN traceable. |
+| no status label | Open and available. A plan comment may exist or not. |
+| `em execução` | Someone has a branch or local commits for it; the latest `Pego por <origin>` comment names who. |
+| `PR aberto` | The pull request is open, waiting for the merge; the PR is linked to the issue (`Closes #N`). |
+| closed | Merged and released (`Closes #N` closes the issue when the PR reaches `master`), or closed as not planned. |
 
 Transitions:
 
-1. **Before creating the branch**, mark the plan `em execução por <you>`.
-2. **On opening the pull request**, mark it `PR aberto por <you>` and fill the `PR` column.
-3. **After the merge**, move the row to the "Histórico" table (`NN | Autor | Executor | Título | Resultado | PR`)
-   and delete the plan's `.md` from `plans/`.
+1. **Before creating the branch**, add `em execução` and comment `Pego por <origin>` (`claude`, `codex` or `cursor`).
+2. **On opening the pull request**, swap `em execução` for `PR aberto`. The PR body has `Closes #N`.
+3. **After the merge into `develop`**, leave the issue open with `PR aberto`; the release to `master` closes it.
+4. **Giving up**, remove the label and comment why, so the next one starts from there.
 
-**Claiming a plan.** There is no atomic lock, so re-reading the index is the only defence against two agents
-taking the same plan:
+**Claiming an issue.** There is no atomic lock, so re-reading is the only defence against two agents taking the same
+issue:
 
-1. Re-read the index right before marking; do not trust an earlier read. If the plan is already
-   `em execução por` someone else, leave it and pick another.
-2. Mark it `em execução por <you>` (wrap the edit in `flock plans/00-indice.md -c '…'` when available).
-3. Re-read once more. If the row now names another agent, the other agent won: pick another plan.
+1. Right before claiming, read the issue again (`gh issue view N --comments`). If it has `em execução` or `PR aberto`,
+   pick another one.
+2. Add the label and the `Pego por` comment.
+3. Read it once more. If an earlier `Pego por` from another agent appeared, the other agent won: undo yours and pick
+   another one.
 
-**Who edits a row.** An agent edits only rows whose current or about-to-be executor is itself; any agent may write
-a row that is `rascunho` or `próximo`. The author has no editing precedence. A plan file is edited by its executor,
-or by its author while it is still `rascunho`.
+Pick an issue only when it has no status label, every `Depende de #N` is merged, and you have no pull request of
+your own open.
 
-## One plan, one pull request
+## The plan
 
-- **One plan is one pull request** into `develop`, from a branch `<type>/<description>`. Commits, the review and
-  the merge follow the `git-workflow` skill.
-- **Every plan estimates its commits** in the header, and lists them. One logical change per commit, in that
-  order. Each commit still needs the user's approval before it is created.
-- Do not open the pull request until every plan named in `depende de` (the index's `Depende de`) is merged. `—`
-  means no dependency.
-- Pick a plan only when it is `rascunho` or `próximo` and you have no pull request of your own open.
-
-## Minimum sections
+Before implementing, comment the plan on the issue, starting with `## Plano`. Read the project skills that apply
+first and name, in each step, the skill that governs it.
 
 ```markdown
-# NN — Title
+## Plano
 
 **PR único · commits estimados: N · depende de: —**
 
-## Contexto
+### Contexto
 
-## Escopo (1 PR)
+### Escopo (1 PR)
 
-## Commits
+### Commits
 
-1. `type(scope): description` — what this commit does
+1. `type(scope): description` — what this commit does (skill: `code-standard`)
 
-## Verificação
+### Verificação
 ```
 
-`## Fora de escopo` is optional. `## Verificação` says how to prove the plan, and always includes `bun run check`
-green. A plan that changes docs also includes `bun run docs:build` green.
+`### Fora de escopo` is optional. `### Verificação` says how to prove the work and always includes `bun run check`
+green by its exit code; a plan that changes docs also includes `bun run docs:build` green. When the plan changes
+while executing, edit the comment and say what changed; do not post a second plan.
+
+## One issue, one pull request
+
+- **One issue is one pull request** into `develop`, from a branch `<type>/<description>`, with `Closes #N` in the
+  body. Commits, the review and the merge follow the `git-workflow` skill.
+- **Every plan estimates its commits** and lists them. One logical change per commit, in that order.
+- Work that needs more than one pull request is split into one issue per pull request (each with its own plan),
+  linked by `Depende de #N`. The first one keeps the context; the others point to it.
+- Do not open the pull request until every `Depende de #N` is merged.

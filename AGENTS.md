@@ -16,6 +16,9 @@
   (squash separa os históricos). A branch é excluída automaticamente. Quem mergeia é o usuário; não mergear sem ele
   pedir, e nunca fazer `git merge` local em `develop` ou `master`.
 
+Todo trabalho começa numa issue do GitHub, aberta no formato dos formulários de `.github/ISSUE_TEMPLATE/`, com o plano
+como comentário dela (skill `plans`); o PR que a resolve leva `Closes #N`.
+
 Detalhes e o passo a passo: skill `git-workflow` (`.agents/skills/git-workflow/SKILL.md`).
 
 ## Stack

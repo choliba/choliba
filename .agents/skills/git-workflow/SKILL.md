@@ -98,7 +98,7 @@ pushes, and GitHub refuses them: a ruleset on each branch (see the table below) 
    (`COMMIT_OR_PR_TITLE`, `COMMIT_MESSAGES`), a PR with **one commit** is squashed with that commit's own title and
    body; with several, the title is the PR title and the body lists the commits. So both the commit and the PR
    title must follow section 3, and a breaking change carries its footer in the commit. Write the PR body
-   yourself; strip any tool-generated footer and run `.githooks/commit-msg --no-format` on the body locally if
+   yourself, with `Closes #N` for the issue it resolves (skill `plans`); strip any tool-generated footer and run `.githooks/commit-msg --no-format` on the body locally if
    unsure. After `gh pr create`, verify with `gh pr view --json body` — some hosts append attribution after
    creation; edit the PR with `gh pr edit` if needed.
 5. Wait for CI (`gh pr checks --watch`). GitHub keeps the merge button blocked until `check` is green. Into
