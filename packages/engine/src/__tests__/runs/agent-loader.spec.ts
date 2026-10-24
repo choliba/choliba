@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { stringify } from 'yaml';
 
-import { listAgents, loadAgent, parseAgentYaml } from '../../agents/agents/agent-loader';
+import { listAgents, loadAgent, parseAgentYaml } from '../../runs/agent-loader';
 import { AgentConfigError, isValidAgentName, policyFromPermissions, NO_PERMISSIONS } from '@choliba/domain';
 import { makeTmpDir } from '../helpers/tmp';
 

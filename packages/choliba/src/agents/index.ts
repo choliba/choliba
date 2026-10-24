@@ -1,5 +1,3 @@
-export { listAgents, loadAgent, parseAgentYaml } from './agents';
-export { resolveInvocation } from './agents';
 export { renderEvent } from './agents';
 export type { RenderOptions } from './agents';
 export { formatAgentDetail, runAgent } from './agents';
@@ -61,6 +59,6 @@ export {
 
 // The package names the public facade `choliba/agents` publishes (scripts/entries/agents.ts): its types are built from
 // `src/`, like `src/core` and `src/projects`.
-export { agentRunChoice } from '@choliba/engine';
+export { agentRunChoice, listAgents, loadAgent } from '@choliba/engine';
 export type { RunAsk, RunChoice } from '@choliba/engine';
 export type { AgentDefinition, AgentProviderModels } from '@choliba/domain';

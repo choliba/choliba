@@ -5,9 +5,8 @@ import {
   planInstall as planEngineInstall,
   type InstallArgs,
   type InstallDeps as EngineInstallDeps,
+  loadAgent,
 } from '@choliba/engine';
-
-import { loadAgent } from '../agent-loader';
 
 export type InstallDeps = Omit<EngineInstallDeps, 'loadAgent'>;
 

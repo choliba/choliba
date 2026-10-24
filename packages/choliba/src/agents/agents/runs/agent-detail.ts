@@ -1,7 +1,6 @@
 // `choliba list agents` and the block that describes one agent in its `--help`.
 
-import { listAgents } from '../agent-loader';
-import { invocationFromAgent, type AgentInvocation } from '@choliba/engine';
+import { listAgents, invocationFromAgent, type AgentInvocation } from '@choliba/engine';
 import type { ParsedListArgs } from './agents-flags';
 import type { AgentDefinition } from '@choliba/domain';
 import { resolveAgentsDir } from '@choliba/workspace';

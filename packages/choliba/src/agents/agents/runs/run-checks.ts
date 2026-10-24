@@ -5,11 +5,10 @@ import { loadProjectSettings } from '@choliba/workspace';
 import type { ProjectSettings, AgentDefinition, ExecutionMode } from '@choliba/domain';
 import { agentURL, type Sandbox } from '@choliba/sandbox';
 
-import { listAgents, loadAgent } from '../agent-loader';
-import { agentFlagNames } from './agent-run-flags';
-import { resolveInvocation } from '../invocation-registry';
-import { LIST_PROGRAM_NAME, PREPARE_FLAGS, USAGE } from './agents-flags';
 import {
+  listAgents,
+  loadAgent,
+  resolveInvocation,
   type AgentInvocation,
   readPlan,
   type RunProject,
@@ -19,6 +18,8 @@ import {
   type TicketTarget,
   resolveTicketTarget,
 } from '@choliba/engine';
+import { agentFlagNames } from './agent-run-flags';
+import { LIST_PROGRAM_NAME, PREPARE_FLAGS, USAGE } from './agents-flags';
 import type { RunAgentsCliDeps, RunArgs } from './run-context';
 
 /** Step 1: which command, and which agent it loads — the only two things every later step needs. */

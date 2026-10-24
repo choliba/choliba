@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import * as gitDiff from '../../../../../engine/src/steps/git-working-tree-diff';
 
 import type { AgentDefinition, AgentModeSteps } from '@choliba/domain';
-import { loadAgent } from '../../../agents/agents/agent-loader';
+import { loadAgent } from '@choliba/engine';
 import * as actionsModule from '../../../../../engine/src/steps/step-actions';
 import { buildAfter, buildPrepare, diffBaseOf } from '../../../../../engine/src/steps/step-registry';
 import { readGitState } from '../../../../../engine/src/steps/git-state';

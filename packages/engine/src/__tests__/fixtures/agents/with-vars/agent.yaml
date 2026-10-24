@@ -1,0 +1,36 @@
+version: 1
+
+agent:
+  id: with-vars
+  name: With Vars
+  version: 1.0.0
+  description: Fixture agent whose permissions and text name the projects folder.
+
+providers:
+  claude:
+    models:
+      - claude-3-5-sonnet
+
+role: |
+  Fixture de teste: grava tickets em ${CHOL_PROJECTS_DIR}.
+context:
+  - Nada.
+input: |
+  Qualquer texto.
+flow: |
+  1. Nada.
+output: |
+  Nada.
+notes:
+  - Fixture de teste.
+
+permissions:
+  allow:
+    read: ['${CHOL_PROJECTS_DIR}/*/config.json']
+    write: ['${CHOL_PROJECTS_DIR}/*/tickets/']
+  deny:
+    write: [agents/]
+
+task:
+  required: false
+  default: Trabalhe no projeto.

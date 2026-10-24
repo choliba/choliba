@@ -1,0 +1,27 @@
+version: 1
+
+agent:
+  id: schema-invalid-yaml
+  name: Schema Invalid Yaml
+  version: 1.0.0
+  description: Fixture com campo extra não permitido pelo schema.
+
+providers:
+  claude:
+    models:
+      - claude-3-5-sonnet
+
+role: |
+  Fixture cujo problema está no agent.yaml, não aqui.
+context:
+  - Nenhum preparo necessário.
+input: |
+  Não aplicável.
+flow: |
+  1. Não aplicável.
+output: |
+  Não aplicável.
+notes:
+  - Fixture de teste.
+
+bogus_field: nope

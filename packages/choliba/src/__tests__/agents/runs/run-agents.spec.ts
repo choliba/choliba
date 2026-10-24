@@ -15,12 +15,12 @@ import { type GitRunner, type SignalSource, type Writable } from '@choliba/kerne
 import type { ProjectSettings } from '@choliba/domain';
 import * as projects from '@choliba/workspace';
 import { AppError } from '@choliba/runner';
-import { formatAgentDetail, listAgents, type AgentsCliSpecContext } from '../../../agents';
+import { formatAgentDetail, type AgentsCliSpecContext } from '../../../agents';
+import { listAgents, defineInvocation, readPlan } from '@choliba/engine';
 import { resolveAgentsDir } from '@choliba/workspace';
 
 import * as gitDiff from '../../../../../engine/src/steps/git-working-tree-diff';
 
-import { defineInvocation, readPlan } from '@choliba/engine';
 import { StepFailedError } from '../../../../../engine/src/steps/step-actions';
 import type { RunAgentsCliDeps } from '../../../agents/agents/runs/run-context';
 import { ticketTemplatesDir } from '../../../projects/project-templates';
