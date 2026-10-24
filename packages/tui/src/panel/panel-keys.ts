@@ -45,7 +45,8 @@ export const PANEL_SPEC: CommandSpec = {
     'Uma mensagem sem `/` é a tarefa do primeiro agente. Os seguintes rodam com a sua tarefa padrão, ou com a ' +
       'mensagem quando não têm uma, e o ticket que um deixa é o do próximo (sem ticket, um agente de tickets pergunta ' +
       'o tipo do ticket novo que a execução cria). Entre dois agentes, o painel pergunta se segue: Enter segue, e Esc ' +
-      'para a sequência. Ela também para quando um agente falha, quando o Ctrl+C o interrompe e quando uma execução em ' +
+      'para a sequência; `/pause` desliga essa pergunta, e a sequência segue sozinha, ou a liga de novo, e a linha de ' +
+      'status diz qual vale (o `/clear` a liga). Ela também para quando um agente falha, quando o Ctrl+C o interrompe e quando uma execução em ' +
       '`execute` deixa intacto o ticket que criou. `/resume` volta a qualquer agente da sequência, parada ou já ' +
       'terminada: escolhido o agente, o texto escrito depois do comando (`/resume veja o ticket`) é dito a ele; sem ' +
       'texto, o painel pergunta o que dizer (vazio ou Esc repete a tarefa dele). A sequência ' +
