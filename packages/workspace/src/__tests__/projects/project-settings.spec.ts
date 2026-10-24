@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { loadProjectSettings, ProjectsError, selectEnvironment, type ProjectEnvironment } from '@choliba/workspace';
+import { loadProjectSettings, selectEnvironment, type ProjectEnvironment } from '../../projects/project-settings';
+import { ProjectsError } from '../../projects/common/errors';
 import { PLACEHOLDER_VALUE } from '@choliba/domain';
 
 const ENV = { nome: 'development', baseURL: 'http://localhost:5173/', appDir: '/code/app', default: true };

@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { projectOfArgument } from '@choliba/workspace';
+import { projectOfArgument } from '../../projects/paths/project-paths';
 
 const PROJECTS_DIR = path.join(path.sep, 'work', 'projects');
 const PROJECTS = ['site', 'site-choliba'];

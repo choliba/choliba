@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { parseProjectStack, PROJECT_CONFIG_KEYS, ProjectsError, writeProjectConfigKey } from '@choliba/workspace';
+import { parseProjectStack, PROJECT_CONFIG_KEYS, writeProjectConfigKey } from '../../projects/project-stack';
+import { ProjectsError } from '../../projects/common/errors';
 
 const STACK = {
   language: { name: 'TypeScript', version: '^5.9', url: 'https://www.typescriptlang.org/' },

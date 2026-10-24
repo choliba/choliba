@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { listProjectSpecs, readTicket, readTickets } from '@choliba/workspace';
+import { listProjectSpecs } from '../../../projects/paths/project-paths';
+import { readTicket, readTickets } from '../../../projects/tickets/ticket-info';
 
 function withProjects<T>(fn: (projectsDir: string) => T): T {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ticket-info-'));

@@ -1,4 +1,4 @@
-import { isDeviceOn } from '@choliba/domain';
+import { isDeviceOn } from '../../project/project-devices';
 
 const DEVICES = ['chromium', 'firefox', 'webkit', 'mobile-chrome'];
 

@@ -2,28 +2,30 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { applyLocations, LocationsError, readAppliedLocations } from '../../locations/project-locations';
 import {
-  applyLocations,
   assertProjectExists,
-  LocationsError,
   projectHookFile,
-  readAppliedLocations,
-  REPORT_FOLDER,
-  resolveResultsRoot,
-  resolveResultsTestFolder,
-  TEST_RESULTS_FOLDER,
-  listTicketSuffixes,
   projectConfigFile,
   projectEnvExampleFile,
   projectEnvFile,
   projectTestsFolder,
-  ProjectsError,
-  readJsonFile,
+} from '../../projects/paths/project-paths';
+import {
+  REPORT_FOLDER,
+  resolveResultsRoot,
+  resolveResultsTestFolder,
+  TEST_RESULTS_FOLDER,
+} from '../../projects/paths/results';
+import {
+  listTicketSuffixes,
   resolveTestResultsFolder,
   resolveTicketRunsRoot,
   ticketFilePath,
   ticketsFolderPath,
-} from '@choliba/workspace';
+} from '../../projects/tickets/ticket';
+import { ProjectsError } from '../../projects/common/errors';
+import { readJsonFile } from '../../projects/common/json-file';
 
 function withTmpDir(fn: (dir: string) => void): void {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'projects-layout-'));

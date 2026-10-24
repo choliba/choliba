@@ -1,6 +1,6 @@
-import { NO_PERMISSIONS } from '../../agents/common/agent-permissions';
-import { definitionExceptionProblems, withDefinitionDenies } from '../../agents/common/definition-denies';
-import type { AgentDefinition } from '../../agents/common/interfaces/agent.interface';
+import { NO_PERMISSIONS } from '../../permissions/agent-permissions';
+import { definitionExceptionProblems, withDefinitionDenies } from '../../permissions/definition-denies';
+import type { AgentDefinition } from '../../agent/agent.interface';
 import { NO_MODE_STEPS, fakeSections } from '../helpers/agent';
 
 const DIRS = ['/w/.choliba/agents', '/w/.choliba/skills/', '/w/.choliba/mcps'];

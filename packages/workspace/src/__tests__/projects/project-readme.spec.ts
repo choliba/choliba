@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { findReadme, readText, readmeSummary } from '@choliba/workspace';
+import { findReadme, readText, readmeSummary } from '../../projects/project-readme';
 
 function comPasta(arquivos: Readonly<Record<string, string | Buffer>>, fn: (dir: string) => void): void {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'projects-readme-'));
