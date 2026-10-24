@@ -11,6 +11,14 @@ export interface SequenceResult {
   readonly reason: 'completed' | SequenceStopReason;
   readonly exitCode?: number | undefined;
   readonly ticket?: string | undefined;
+  /** What the agent said last (its answer, or why it stopped), when it said anything. */
+  readonly conclusion?: string | undefined;
+}
+
+/** How one run of a sequence ended: its exit code and what the agent concluded. */
+export interface SequenceRun {
+  readonly code: number;
+  readonly conclusion?: string | undefined;
 }
 
 export interface SequencePrompt {
@@ -28,6 +36,8 @@ export interface AgentSequenceState {
   readonly resumeAt?: number | undefined;
   readonly pending?: SequenceQuestion | undefined;
   readonly results: readonly SequenceResult[];
+  /** Every run of the session, oldest first, across `/resume`s, until `forget`. */
+  readonly history: readonly SequenceResult[];
 }
 
 export interface SequenceStop {
@@ -37,7 +47,8 @@ export interface SequenceStop {
 }
 
 export interface SequenceExecution<Agent extends SequenceAgent> {
-  readonly run: (agent: Agent, task: string) => Promise<number | undefined>;
+  /** Runs `agent` with `task`, telling it what the session's other runs concluded; nothing when it did not start. */
+  readonly run: (agent: Agent, task: string, others: readonly SequenceResult[]) => Promise<SequenceRun | undefined>;
   readonly continueTo: (agent: string) => Promise<boolean>;
   readonly ticket: () => string | undefined;
   readonly before: (agents: readonly string[]) => void;
@@ -52,6 +63,8 @@ export interface AgentSequence<Agent extends SequenceAgent> {
   readonly interrupt: () => void;
   readonly question: (question: SequencePrompt | undefined) => void;
   readonly resetStop: () => void;
+  /** Forgets the session's runs: a new session (`/clear`) tells its agents nothing of the old one. */
+  readonly forget: () => void;
 }
 
 export function createAgentSequence<Agent extends SequenceAgent>(
@@ -66,8 +79,9 @@ export function createAgentSequence<Agent extends SequenceAgent>(
   let interrupted = false;
   let firstTask = '';
   let results: readonly SequenceResult[] = [];
+  let history: readonly SequenceResult[] = [];
 
-  const state = (): AgentSequenceState => ({ running, current, resumeAt, pending, results });
+  const state = (): AgentSequenceState => ({ running, current, resumeAt, pending, results, history });
   const notify = (): void => {
     changed(state());
   };
@@ -118,7 +132,7 @@ export function createAgentSequence<Agent extends SequenceAgent>(
       const agent = loadAgent(id);
       if (agent === undefined) {
         execution.missing(id);
-        record(id, '', 'missing', undefined, execution.ticket());
+        record({ agent: id, task: '', reason: 'missing' }, execution.ticket());
         stopAt(execution, at, 'missing');
         return;
       }
@@ -126,10 +140,19 @@ export function createAgentSequence<Agent extends SequenceAgent>(
       notify();
       const ownTask = at === from ? task : undefined;
       const effectiveTask = ownTask ?? agent.defaultTask ?? firstTask;
-      const code = await execution.run(agent, effectiveTask);
+      const ran = await execution.run(agent, effectiveTask, history);
       current = undefined;
-      const reason = resultReason(code, interrupted);
-      record(id, effectiveTask, reason, code, execution.ticket());
+      const reason = resultReason(ran?.code, interrupted);
+      record(
+        {
+          agent: id,
+          task: effectiveTask,
+          reason,
+          ...(ran === undefined ? {} : { exitCode: ran.code }),
+          ...(ran?.conclusion === undefined ? {} : { conclusion: ran.conclusion }),
+        },
+        execution.ticket(),
+      );
       notify();
       if (reason !== 'completed') {
         stopAt(execution, at, reason);
@@ -143,23 +166,10 @@ export function createAgentSequence<Agent extends SequenceAgent>(
     }
   };
 
-  const record = (
-    agent: string,
-    task: string,
-    reason: SequenceResult['reason'],
-    exitCode: number | undefined,
-    ticket: string | undefined,
-  ): void => {
-    results = [
-      ...results,
-      {
-        agent,
-        task,
-        reason,
-        ...(exitCode === undefined ? {} : { exitCode }),
-        ...(ticket === undefined ? {} : { ticket }),
-      },
-    ];
+  const record = (result: SequenceResult, ticket: string | undefined): void => {
+    const recorded = ticket === undefined ? result : { ...result, ticket };
+    results = [...results, recorded];
+    history = [...history, recorded];
   };
 
   const confirmNext = async (next: string, execution: SequenceExecution<Agent>): Promise<boolean> => {
@@ -183,6 +193,11 @@ export function createAgentSequence<Agent extends SequenceAgent>(
     },
     resetStop: () => {
       resumeAt = undefined;
+      notify();
+    },
+    forget: () => {
+      results = [];
+      history = [];
       notify();
     },
   };

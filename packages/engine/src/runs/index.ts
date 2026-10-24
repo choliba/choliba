@@ -60,6 +60,7 @@ export type {
   SequencePrompt,
   SequenceQuestion,
   SequenceResult,
+  SequenceRun,
   SequenceStop,
   SequenceStopReason,
 } from './agent-sequence';

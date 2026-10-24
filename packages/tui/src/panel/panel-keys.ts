@@ -48,7 +48,9 @@ export const PANEL_SPEC: CommandSpec = {
       'para a sequência. Ela também para quando um agente falha, quando o Ctrl+C o interrompe e quando uma execução em ' +
       '`execute` deixa intacto o ticket que criou. `/resume` volta a qualquer agente da sequência, parada ou já ' +
       'terminada: escolhido o agente, o que se digita é dito a ele (vazio ou Esc repete a tarefa dele), e a sequência ' +
-      'roda de novo a partir dele, com o ticket da sessão.',
+      'roda de novo a partir dele, com o ticket da sessão. Cada agente recebe, antes da tarefa, o que os outros da ' +
+      'sessão concluíram (o que disseram por último, e como a execução terminou), também um que parou ou um que vem ' +
+      'depois dele, quando o `/resume` volta; o `/clear` esquece.',
     'Enquanto um agente roda, o que se envia vai para ele, e as perguntas dele aparecem no campo. As linhas de cada ' +
       'agente aparecem num bloco com a borda na cor dele e o nome no começo; as do choliba, com `●`. Ctrl+C duas ' +
       'vezes para a execução; sem nada rodando, sai do painel. `/quit` sai do painel depois de parar a execução e ' +

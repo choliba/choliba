@@ -5,6 +5,7 @@ import { projectLocations, type ProjectLocations } from '@choliba/workspace';
 import type { Sandbox } from '@choliba/sandbox';
 import type { ExecutionMode } from '@choliba/domain';
 
+import type { AgentConclusion } from '../prompt';
 import type { ProviderRegistry, ProviderRequest, ResolvedProvider, RunProject } from '../ports';
 
 export interface PrepareRunDeps {
@@ -20,6 +21,8 @@ export interface PrepareRunDeps {
   readonly runsDir?: string;
   /** Stops the command of the step running: the panel's Ctrl+C, which the steps then report as failed. */
   readonly signal?: AbortSignal;
+  /** What the other agents of the session concluded (the panel's sequence), for the prompt; none on the command line. */
+  readonly conclusions?: readonly AgentConclusion[];
 }
 
 /** What a run asks of preparation: the flags that change the provider request. */

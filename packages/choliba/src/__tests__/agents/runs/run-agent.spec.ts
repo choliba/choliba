@@ -325,6 +325,44 @@ describe('runAgent', () => {
     expect(answers).toEqual(['a análise']);
   });
 
+  it('tells what the agent concluded whatever its exit code, and nothing when it said nothing', async () => {
+    const conclusions: string[] = [];
+    const deps = (s: Setup) => ({
+      runner: s.runner,
+      stdout: s.stdout,
+      stderr: s.stderr,
+      signals: s.signals,
+      now: () => new Date(0),
+      concluded: (conclusion: string) => conclusions.push(conclusion),
+      screen: (info: RunFooterInfo, request: RunAgentRequest) =>
+        createRunScreen(info, request, {
+          stdout: s.stdout,
+          stderr: s.stderr,
+          now: () => new Date(0),
+          footer: false,
+          hostedPanel: false,
+        }),
+    });
+    const clean = setup(
+      fakeSpawner({ stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'a análise' }])]) })
+        .spawner,
+    );
+    const failed = setup(
+      fakeSpawner({
+        stdout: streamFromChunks([eventLines([{ type: 'text', text: 'parei: o ticket precisa de ajuste' }])]),
+        exitCode: 2,
+      }).spawner,
+    );
+    const silent = setup(
+      fakeSpawner({ stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: ' ' }])]) }).spawner,
+    );
+
+    expect(await runAgent(clean.request(), deps(clean))).toBe(0);
+    expect(await runAgent(failed.request(), deps(failed))).toBe(2);
+    expect(await runAgent(silent.request(), deps(silent))).toBe(0);
+    expect(conclusions).toEqual(['a análise', 'parei: o ticket precisa de ajuste']);
+  });
+
   it('propagates a non-zero process exit code even when the last done event looked successful', async () => {
     const lines = eventLines([{ type: 'done', isError: false, text: 'ok' }]);
     const s = setup(fakeSpawner({ stdout: streamFromChunks([lines]), exitCode: 3 }).spawner);

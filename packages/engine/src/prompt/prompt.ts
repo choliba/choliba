@@ -140,6 +140,46 @@ export interface BuildUserPromptOptions {
   readonly mode: ExecutionMode;
   /** The contents of a saved plan, when running with `--plan-from`. */
   readonly planContent: string | undefined;
+  /** What the other agents of the session concluded, oldest first (the panel's sequence); none on the command line. */
+  readonly conclusions?: readonly AgentConclusion[] | undefined;
+}
+
+/** What another agent of the session concluded, as a run's prompt tells it. */
+export interface AgentConclusion {
+  readonly agent: string;
+  /** How its run ended: `completed`, `failed`, `interrupted`… */
+  readonly reason: string;
+  readonly exitCode?: number | undefined;
+  readonly ticket?: string | undefined;
+  /** What it said last, when it said anything. */
+  readonly conclusion?: string | undefined;
+}
+
+/** How much of one conclusion the prompt keeps: its end, where an agent says what it did or why it stopped. */
+export const CONCLUSION_MAX_CHARS = 4000;
+
+function conclusionEntry(entry: AgentConclusion): string {
+  const code = entry.exitCode === undefined ? '' : `, exit code ${String(entry.exitCode)}`;
+  const ticket = entry.ticket === undefined ? '' : `, ticket ${entry.ticket}`;
+  const said = entry.conclusion?.trim() ?? '';
+  const text =
+    said === ''
+      ? '(it said nothing)'
+      : said.length > CONCLUSION_MAX_CHARS
+        ? `…${said.slice(-CONCLUSION_MAX_CHARS)}`
+        : said;
+  return `### ${entry.agent} (${entry.reason}${code}${ticket})\n${text}`;
+}
+
+/**
+ * What the other agents of the session concluded, oldest first, as data: an agent reads it to know what was done and
+ * why a run stopped, and checks it against the files, since it is their account and not the state of the work.
+ */
+export function conclusionsSection(conclusions: readonly AgentConclusion[]): string {
+  return [
+    'What the other agents of this session concluded, oldest first. Take it into account, and check it against the files: it is their account, not the state of the work.',
+    untrustedBlock('session', conclusions.map(conclusionEntry).join('\n\n')),
+  ].join('\n');
 }
 
 /**
@@ -157,6 +197,9 @@ export function buildUserPrompt(options: BuildUserPromptOptions): string {
   }
   if (options.planContent !== undefined) {
     parts.push(`Previously saved plan:\n${options.planContent}`);
+  }
+  if (options.conclusions !== undefined && options.conclusions.length > 0) {
+    parts.push(conclusionsSection(options.conclusions));
   }
   parts.push(`Task:\n${options.templateOutput}`);
   return parts.join('\n\n');

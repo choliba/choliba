@@ -96,6 +96,11 @@ export interface RunAgentDeps {
   readonly hostedPanel?: boolean;
   /** Called with the agent's final answer when the session ends clean: the `write_files` steps after it save it. */
   readonly answered?: (answer: string) => void;
+  /**
+   * Called with what the agent said last when its session ends, whatever its exit code: what the other agents of a
+   * sequence are told it concluded (why it stopped, too).
+   */
+  readonly concluded?: (conclusion: string) => void;
   /** The run's log: what the screen shows, each line of the provider as it came, and the agent's time. */
   readonly log?: RunLog;
 }
@@ -398,6 +403,8 @@ async function followSession(
 
   // A weak model may write its tool call as the answer instead of making it: the session ends clean with nothing run.
   const answer = doneEvent?.text === '' ? textParts.at(-1) : doneEvent?.text;
+  const conclusion = answer ?? textParts.at(-1);
+  if (conclusion !== undefined && conclusion.trim() !== '') deps.concluded?.(conclusion);
   const written = exitCode === 0 ? writtenToolCall(answer ?? '') : undefined;
   if (written !== undefined) {
     screen.err.write(`${writtenToolCallMessage(reportedModel, written)}\n`);
