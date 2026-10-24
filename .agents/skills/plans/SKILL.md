@@ -49,20 +49,23 @@ The status of an issue is its labels:
 
 Transitions:
 
-1. **Before creating the branch**, add `em execução` and comment `Pego por <origin>` (`claude`, `codex` or `cursor`).
+1. **Before creating the branch**, assign the issue to yourself, add `em execução` and comment `Pego por <origin>`
+   (`claude`, `codex` or `cursor`):
+   `gh issue edit N --add-assignee @me --add-label 'em execução'` and `gh issue comment N --body 'Pego por <origin>'`.
 2. **On opening the pull request**, swap `em execução` for `PR aberto`. The PR body has `Closes #N`.
 3. **After the merge into `develop`**, close the issue yourself, without the label:
    `gh issue close N --comment 'Resolvida em #PR; sai na próxima release.'` and `gh issue edit N --remove-label 'PR aberto'`.
    GitHub only acts on `Closes #N` when a PR reaches the default branch (`master`), so it would wait for the release;
    in the PR, `Closes #N` still links the two.
-4. **Giving up**, remove the label and comment why, so the next one starts from there.
+4. **Giving up**, remove the assignee and the label (`--remove-assignee @me --remove-label 'em execução'`) and
+   comment why, so the next one starts from there.
 
 **Claiming an issue.** There is no atomic lock, so re-reading is the only defence against two agents taking the same
 issue:
 
 1. Right before claiming, read the issue again (`gh issue view N --comments`). If it has `em execução` or `PR aberto`,
    pick another one.
-2. Add the label and the `Pego por` comment.
+2. Assign it to yourself, add the label and the `Pego por` comment.
 3. Read it once more. If an earlier `Pego por` from another agent appeared, the other agent won: undo yours and pick
    another one.
 
