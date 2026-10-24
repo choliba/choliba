@@ -56,7 +56,7 @@ function disk(): LaunchDisk & { readonly made: string[]; readonly links: readonl
     made,
     links,
     exists: () => true,
-    isDirectory: (path) => !/\.[^/]*$/.test(path.split('/').pop() ?? ''),
+    isDirectory: (path) => made.includes(path) || !/\.[^/]*$/.test(path.split('/').pop() ?? ''),
     read: () => [],
     owner: () => ({ uid: 1000, gid: 1000 }),
     ensureDir: (path) => {
@@ -131,7 +131,12 @@ describe('launchFor', () => {
       fake,
     );
     expect(launch.command).toEqual(expect.arrayContaining(['--ro-bind', '/versions/1', '/versions/1']));
+    expect(launch.command).toEqual(
+      expect.arrayContaining(['--ro-bind', '/w/.cache/runs/1.bin', '/w/.cache/runs/1.bin']),
+    );
+    expect(launch.command).not.toContain('/w/.cache/runs/1.bin/agent');
     expect(launch.command.slice(-2)).toEqual(['/versions/1/agent', '-p']);
+    expect(fake.links).toEqual([['/versions/1/agent', '/w/.cache/runs/1.bin/agent']]);
     // The run tools' scripts run on choliba's own bun, which lives under the home the sandbox empties.
     expect(launch.command).toEqual(
       expect.arrayContaining(['--ro-bind', '/home/test/.bun/bin/bun', '/home/test/.bun/bin/bun']),
@@ -184,6 +189,15 @@ describe('launchFor', () => {
       fake,
     );
     expect(fake.links).toEqual([['/provider/claude', '/w/.cache/runs/1.bin/claude']]);
+    expect(fake.made).toContain('/w/.cache/runs/1.bin');
+    expect(launch.paths).toEqual(
+      expect.arrayContaining([{ path: '/w/.cache/runs/1.bin', access: 'read', directory: true }]),
+    );
+    expect(launch.paths).not.toContainEqual(expect.objectContaining({ path: '/w/.cache/runs/1.bin/claude' }));
+    expect(launch.command).toEqual(
+      expect.arrayContaining(['--ro-bind', '/w/.cache/runs/1.bin', '/w/.cache/runs/1.bin']),
+    );
+    expect(launch.command).not.toContain('/w/.cache/runs/1.bin/claude');
     expect(launch.env?.['PATH']?.startsWith('/w/.cache/runs/1.bin:')).toBe(true);
     expect(launch.command.slice(-2)).toEqual(['/provider/claude', '-p']);
   });
