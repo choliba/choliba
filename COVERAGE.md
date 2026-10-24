@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 24/10/2026 15:38:18 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 24/10/2026 17:34:05 — não editar manualmente.
 
 ## Resumo
 
@@ -22,7 +22,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 78 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 80 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -30,6 +30,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/agents/agents/agent-print.ts](packages/choliba/src/agents/agents/agent-print.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents/agent-validation.ts](packages/choliba/src/agents/agents/agent-validation.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents/agents-config.ts](packages/choliba/src/agents/agents/agents-config.ts)|100.00|100.00|100.00|100.00
+🟢|[src/agents/agents/agents-panel-agent-run.ts](packages/choliba/src/agents/agents/agents-panel-agent-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents/agents-panel-card.ts](packages/choliba/src/agents/agents/agents-panel-card.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents/agents-panel-run.ts](packages/choliba/src/agents/agents/agents-panel-run.ts)|100.00|100.00|100.00|100.00
 🟢|[src/agents/agents/agents-panel-state.ts](packages/choliba/src/agents/agents/agents-panel-state.ts)|100.00|100.00|100.00|100.00
@@ -83,6 +84,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/library/choliba-projects.ts](packages/choliba/src/library/choliba-projects.ts)|100.00|100.00|100.00|100.00
 🟢|[src/library/choliba-providers.ts](packages/choliba/src/library/choliba-providers.ts)|100.00|100.00|100.00|100.00
 🟢|[src/panel/agents-panel-choices.ts](packages/choliba/src/panel/agents-panel-choices.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/agents-panel-order.ts](packages/choliba/src/panel/agents-panel-order.ts)|100.00|100.00|100.00|100.00
 🟢|[src/panel/agents-panel-shell.ts](packages/choliba/src/panel/agents-panel-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/panel/agents-panel-watch.ts](packages/choliba/src/panel/agents-panel-watch.ts)|100.00|100.00|100.00|100.00
 🟢|[src/panel/agents-panel.ts](packages/choliba/src/panel/agents-panel.ts)|100.00|100.00|100.00|100.00
@@ -159,7 +161,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/engine</b> — 100.00% das linhas, 59 arquivos</summary>
+<summary>🟢 <b>packages/engine</b> — 100.00% das linhas, 60 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -190,6 +192,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/runs/invocation-registry.ts](packages/engine/src/runs/invocation-registry.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/invocation.ts](packages/engine/src/runs/invocation.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/location-vars.ts](packages/engine/src/runs/location-vars.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/model-unavailable.ts](packages/engine/src/runs/model-unavailable.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/plan-store.ts](packages/engine/src/runs/plan-store.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/prepare-checks.ts](packages/engine/src/runs/prepare-checks.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/prepare-request.ts](packages/engine/src/runs/prepare-request.ts)|100.00|100.00|100.00|100.00

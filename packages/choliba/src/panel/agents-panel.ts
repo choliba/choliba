@@ -5,6 +5,7 @@ import {
   agentSequenceState,
   agentPaint,
   agentsDir,
+  chooseAgentRun,
   confirmTask,
   resumeSequence,
   sessionAgentIds,
@@ -16,7 +17,8 @@ import { listAgents } from '@choliba/engine';
 import type { Container } from '@choliba/kernel';
 import { messageOf, type ChatPanel, type PanelCommand, type PanelContext } from '@choliba/shell';
 
-import { chooseAgentRun, runChoices } from './agents-panel-choices';
+import { runChoices } from './agents-panel-choices';
+import { moveAgentTo, removeAgent } from './agents-panel-order';
 
 /** The option that ends the additions, first and checked: Enter after an agent keeps the sequence as it is. */
 const NO_OTHER = 'nenhum outro';
@@ -66,6 +68,42 @@ async function changeAgent(
   showRun(container, context, panel);
 }
 
+/**
+ * What to do with an agent already in the sequence: choose its provider and model again, move it one place either way,
+ * or take it out. Moving and taking out wait for the agents to stop running.
+ */
+async function editAgent(
+  container: Container,
+  context: PanelContext,
+  panel: ChatPanel,
+  agent: AgentDefinition,
+): Promise<void> {
+  const ids = sessionAgentIds(context);
+  const at = ids.indexOf(agent.id);
+  const before = ids[at - 1];
+  const after = ids[at + 1];
+  const move = (to: number) => (): void => {
+    moveAgentTo(container, context, agent.id, to, panel);
+  };
+  const actions: readonly { readonly label: string; readonly act: () => Promise<void> | void }[] = [
+    { label: 'Trocar o provider e o modelo', act: () => changeAgent(container, context, panel, agent) },
+    ...(before === undefined ? [] : [{ label: `Mover para antes de ${before}`, act: move(at - 1) }]),
+    ...(after === undefined ? [] : [{ label: `Mover para depois de ${after}`, act: move(at + 1) }]),
+    {
+      label: 'Tirar da sequência',
+      act: () => {
+        removeAgent(container, context, agent.id, panel);
+      },
+    },
+  ];
+  const chosen = await panel.choose({
+    title: `O que fazer com ${agent.id}?`,
+    description: 'Ele já está na sequência.',
+    options: actions.map((action) => ({ label: action.label })),
+  });
+  await (chosen === undefined ? undefined : actions[chosen]?.act());
+}
+
 /** Asks for the agents to add after the sequence, one at a time, until "nenhum outro" or Esc. */
 async function addMore(
   container: Container,
@@ -93,13 +131,13 @@ async function addMore(
 
 /**
  * `/agents`: the session's agents, among the workspace's, which it never starts over (/clear does). One already in the
- * sequence (checked) chooses its provider and its model again, unless it runs now; another is added at its end, after
- * choosing them, and then the ones after it, in order. Each one enters with its card in the header as soon as it can
+ * sequence (checked) chooses its provider and its model again, unless it runs now, moves one place or leaves it;
+ * another is added at its end, after choosing them, and then the ones after it, in order. Each one enters with its card in the header as soon as it can
  * run, even while the sequence goes; what is sent with no `/` is the first one's task.
  */
 const agentsPanelCommand: PanelCommand = {
   name: 'agents',
-  description: 'Acrescenta agentes à sequência, ou troca o provider e o modelo de um',
+  description: 'Acrescenta agentes à sequência, ou troca, move ou tira um dela',
   unavailable: (_context, container) => {
     try {
       return listAgents(agentsDir(container)).length === 0
@@ -114,7 +152,7 @@ const agentsPanelCommand: PanelCommand = {
     const sequence = sessionAgentIds(context);
     const chosen = await panel.choose({
       title: 'Escolha o agente',
-      description: 'Um agente da sequência (marcado) troca o provider e o modelo; outro entra no fim dela.',
+      description: 'Um agente da sequência (marcado) se troca, se move ou sai dela; outro entra no fim dela.',
       options: agents.map((agent) => ({
         label: agent.id,
         detail: agent.description,
@@ -125,7 +163,7 @@ const agentsPanelCommand: PanelCommand = {
     if (agent === undefined) return;
     talkToAgent(container, context);
     if (sequence.includes(agent.id)) {
-      await changeAgent(container, context, panel, agent);
+      await editAgent(container, context, panel, agent);
       return;
     }
     await addAgent(container, context, panel, agent);

@@ -614,6 +614,80 @@ describe('talkToAgent', () => {
     }
   });
 
+  it('goes on to the next agent without asking when the pause is off, and says so', async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      const talk = conversation(tmp.path, 'echo,with-project');
+      talk.state.context.set('projeto', 'site');
+      talk.state.context.set('pausa', 'não');
+      talk.state.send('faça', talk.fake.panel);
+      await talk.settle();
+      const asked = talk.fake.choices.length;
+      talk.asked[0]?.end(0);
+      await talk.settle();
+
+      expect(talk.fake.choices).toHaveLength(asked);
+      expect(talk.fake.written).toContain('Seguindo para with-project.');
+      expect(talk.asked[1]?.argv[0]).toBe('with-project');
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('offers another try when the model could not take the run, on it or on another model, from the same agent', async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      const talk = conversation(tmp.path, 'echo');
+      const busy = (at: number): void => {
+        talk.asked[at]?.host.concluded?.('Selected model is at capacity. Please try a different model.');
+        talk.asked[at]?.end(1);
+      };
+      talk.state.send('faça', talk.fake.panel);
+      await talk.settle();
+
+      talk.fake.answerNext(0);
+      busy(0);
+      await talk.settle();
+      await talk.settle();
+      expect(talk.fake.written).toContain(warn('O modelo de echo está sem capacidade agora.'));
+      expect(talk.fake.choices.at(-1)).toEqual({
+        title: 'Rodar echo de novo?',
+        description: 'A sequência recomeça dele, com a mesma tarefa.',
+        options: [{ label: 'Tentar de novo' }, { label: 'Escolher outro provider e modelo' }, { label: 'Parar aqui' }],
+      });
+      expect(talk.asked[1]?.argv).toEqual(['echo', 'faça']);
+
+      // Another provider and model, chosen for it, then the same task.
+      talk.fake.answerNext(1, 0, 0);
+      busy(1);
+      await talk.settle();
+      await talk.settle();
+      expect(talk.state.values.get('provider:echo')).toBe('claude');
+      expect(talk.asked[2]?.argv).toEqual(['echo', '--provider', 'claude', '--model', 'claude-3-5-sonnet', 'faça']);
+
+      // A provider this machine lacks keeps the agent as it was; stopping says where /resume goes back.
+      talk.fake.answerNext(1, 1);
+      busy(2);
+      await talk.settle();
+      await talk.settle();
+      expect(talk.fake.written.at(-1)).toBe(
+        warn('O agente echo fica como estava: o provider cursor não está instalado nesta máquina.'),
+      );
+      talk.state.send('de novo', talk.fake.panel);
+      await talk.settle();
+      talk.fake.answerNext(2);
+      busy(3);
+      await talk.settle();
+      await talk.settle();
+      expect(talk.fake.written.at(-1)).toBe(warn('A sequência parou em echo. /resume retoma dele.'));
+      expect(talk.asked).toHaveLength(4);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
   it('runs at the end of the sequence an agent added while it goes', async () => {
     const tmp = makeTmpDir('panel-run');
     try {

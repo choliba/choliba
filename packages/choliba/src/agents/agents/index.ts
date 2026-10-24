@@ -24,6 +24,9 @@ export {
   PROJECT,
   PROVIDER,
   SANDBOX,
+  PAUSE,
+  pausing,
+  showPause,
   STATE,
   TICKET,
   activeAgent,
@@ -58,3 +61,4 @@ export {
   talkToAgent,
 } from './agents-panel-run';
 export { agentCard, agentPaint, agentVoice, type AgentCardPlace, type AgentRunLabels } from './agents-panel-card';
+export { chooseAgentRun, installedDetail } from './agents-panel-agent-run';
