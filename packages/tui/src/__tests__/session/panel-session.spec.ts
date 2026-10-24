@@ -114,6 +114,31 @@ describe('panelSession', () => {
     expect(fake.press('escape')).toBe(false);
   });
 
+  it('gives the text after its name to a command that takes text, and to no other', async () => {
+    const fake = fakeChatPanel();
+    const texts: (string | undefined)[] = [];
+    const resume: PanelCommand = {
+      name: 'resume',
+      description: 'Volta a um agente',
+      takesText: true,
+      run: ({ text }) => {
+        texts.push(text);
+        return Promise.resolve();
+      },
+    };
+    const plain: PanelCommand = { name: 'agents', description: 'Escolhe', run: () => Promise.resolve() };
+    panelSession(new Container(), fake.panel, [resume, plain], HEADING);
+    fake.send('/resume veja o que o test-writer disse');
+    fake.send('/resume');
+    fake.send('/agents echo');
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(texts).toEqual(['veja o que o test-writer disse', undefined]);
+    expect(fake.written).toEqual([
+      '\u001b[33mComando desconhecido: /agents echo. Digite / para ver os comandos.\u001b[39m',
+    ]);
+  });
+
   it('says a command is unknown, naming how to see them', async () => {
     const { fake, ran, settle } = session();
     fake.send('/xyz');

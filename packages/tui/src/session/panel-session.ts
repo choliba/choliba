@@ -251,7 +251,7 @@ export function panelSession(
     }
     return from;
   };
-  const run = async (command: PanelCommand): Promise<void> => {
+  const run = async (command: PanelCommand, typed?: string): Promise<void> => {
     const reason = why(command);
     if (reason !== undefined) {
       panel.answer(`\u001b[33m${reason}\u001b[39m`);
@@ -269,6 +269,7 @@ export function panelSession(
           },
         },
         context,
+        ...(typed === undefined ? {} : { text: typed }),
       });
     } catch (error) {
       panel.answer(`\u001b[31merro: ${messageOf(error)}\u001b[39m`);
@@ -311,10 +312,18 @@ export function panelSession(
     filter = undefined;
     const found = word === undefined ? [] : matching(word);
     const command = commands.find((each) => each.name === word) ?? found[Math.min(choice, found.length - 1)];
+    // `/resume veja o ticket`: the first word names a command that takes the rest as its text.
+    const [name = '', ...rest] = word?.split(/\s+/) ?? [];
+    const taking =
+      rest.length === 0 ? undefined : commands.find((each) => each.name === name && each.takesText === true);
     // What is said goes on its band; a command is not repeated there: what it chose it says itself.
     if (word === undefined) {
       panel.say(text);
       conversation?.(text, panel);
+      return;
+    }
+    if (taking !== undefined) {
+      void run(taking, rest.join(' '));
       return;
     }
     if (command === undefined) {

@@ -287,6 +287,16 @@ describe('/agents', () => {
       await new Promise((resolve) => setImmediate(resolve));
       expect(agents.fake.choices.at(-1)?.title).toBe('Mandar "/" como tarefa?');
       expect(ran.at(-1)?.at(-1)).toBe('só a busca');
+      // What is typed after /resume is said at once: the fake panel's question would have said nothing.
+      agents.fake.answerNext(0);
+      await resume?.run({
+        container: agents.container,
+        panel: agents.fake.panel,
+        context: agents.context,
+        text: ' veja o que o optional disse ',
+      });
+      await new Promise((resolve) => setImmediate(resolve));
+      expect(ran.at(-1)?.at(-1)).toBe('veja o que o optional disse');
     } finally {
       tmp.cleanup();
     }
