@@ -1,19 +1,12 @@
 import { type GitRunner, type SignalSource, type Writable, type WritableWithColumns } from '@choliba/kernel';
 import { type Panel, type PanelOptions, type ProcessRunnerService, type Theme } from '@choliba/shell';
-import type { ProjectSettings } from '@choliba/domain';
+import type { ProjectSettings, ExecutionMode, AgentDefinition } from '@choliba/domain';
 import type { RunningApp } from '@choliba/runner';
 import type { Sandbox } from '@choliba/sandbox';
 
 import type { ParsedAgentsArgs } from './agents-flags';
-import type { DryRunInput } from './dry-run';
+import type { DryRunInput, AppReachDeps, AgentInvocation, PrepareRunDeps, RunProject } from '@choliba/engine';
 import type { RunLog } from './run-log';
-import type { AppReachDeps } from './app-reach';
-import type { AgentInvocation, PrepareRunDeps, RunProject } from '@choliba/engine';
-import type { ExecutionMode } from '../../common';
-import type { AgentDefinition } from '../../common';
-
-export { errorMessage, projectsDir, toAbsolute } from '@choliba/engine';
-export type { PreparedRun, Stopped } from '@choliba/engine';
 
 /** App-owned renderers for help requests in `choliba run agent`. */
 export interface AgentsRunHelpHandlers {

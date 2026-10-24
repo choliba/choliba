@@ -3,28 +3,48 @@ import { join } from 'node:path';
 
 import { formatDuration, wantsFooter } from '@choliba/shell';
 import { openOpenTuiPanel } from '@choliba/tui';
-import type { ProjectSettings } from '@choliba/domain';
+import { type ProjectSettings, type AgentDefinition, type ExecutionMode, CHOL_ROOT } from '@choliba/domain';
 import { AppError, ensureApp, shareApp, type RunningApp } from '@choliba/runner';
 import { readSandbox, type Sandbox, type SandboxConfigError } from '@choliba/sandbox';
 
-import type { AgentsArgsError, ParsedAgentsArgs, ParsedListArgs } from './agents-flags';
-import { parseAgentsArgs, parseListArgs, unknownFlagMessage } from './agents-flags';
-import type { AgentDefinition } from '../../common';
-import type { AgentInvocation } from '../interfaces/invocation.interface';
-import type { ExecutionMode } from '../../common';
+import {
+  type AgentsArgsError,
+  type ParsedAgentsArgs,
+  type ParsedListArgs,
+  parseAgentsArgs,
+  parseListArgs,
+  unknownFlagMessage,
+} from './agents-flags';
+import {
+  type AgentInvocation,
+  type ProviderRequest,
+  type ResolvedProvider,
+  runAfter,
+  spawnToEnd,
+  type DryRunInput,
+  type PlannedFile,
+  containerReachProblem,
+  launchFor,
+  realDisk,
+  type Launch,
+  type LaunchDisk,
+  type PreparedRun,
+  errorMessage,
+  projectsDir,
+  definitionDirectories,
+  prepareRun,
+  type TicketTarget,
+  createPlannedTicket,
+  finishTicket,
+  ticketVars,
+} from '@choliba/engine';
 import { APP_LOGS_DIR, LOGS_DIR, resolveAgentsDir } from '@choliba/workspace';
-import type { ProviderRequest } from '../../common';
-import type { ResolvedProvider } from '../../common';
-import { runAfter, spawnToEnd } from '@choliba/engine';
 import { runList } from './agent-detail';
-import { formatDryRun, modelText, type DryRunInput } from './dry-run';
+import { formatDryRun, modelText } from './dry-run';
 import { runAgent } from './run-agent';
 import { createRunScreen } from './run-screen';
 import { loggedStream, NO_RUN_LOG, openRunLog, type RunLog } from './run-log';
-import { planRunTools, type PlannedFile } from '../../common';
-import { CHOL_ROOT } from '../../common';
-import { containerReachProblem } from './app-reach';
-import { launchFor, realDisk, type Launch, type LaunchDisk } from './sandbox-launch';
+import { planRunTools } from '../../common';
 import {
   acceptedFlagNames,
   foreignFlag,
@@ -34,12 +54,8 @@ import {
   resolveRunTicket,
   resolveTaskAndMode,
 } from './run-checks';
-import type { PreparedRun, RunAgentsCliDeps, RunArgs, RunContext } from './run-context';
-import { errorMessage, projectsDir } from './run-context';
+import type { RunAgentsCliDeps, RunArgs, RunContext } from './run-context';
 import { definitionChangeReport, definitionChanges, definitionSnapshot } from './definition-snapshot';
-import { definitionDirectories, prepareRun } from './run-preparation';
-import type { TicketTarget } from './ticket-run';
-import { createPlannedTicket, finishTicket, ticketVars } from './ticket-run';
 
 export type { RunAgentsCliDeps } from './run-context';
 

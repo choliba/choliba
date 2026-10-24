@@ -5,7 +5,7 @@ import {
   CursorAgentProvider,
 } from '@choliba/providers';
 
-import { ProviderRegistry } from '../../agents/common/provider-registry';
+import { ProviderRegistry } from '@choliba/engine';
 
 export const claudeProvider = new ClaudeAgentProvider();
 export const cursorProvider = new CursorAgentProvider();

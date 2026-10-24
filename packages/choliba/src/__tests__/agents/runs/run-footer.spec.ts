@@ -8,7 +8,7 @@ import {
   wantsFooter,
 } from '@choliba/shell';
 
-import type { RunFooterInfo } from '../../../agents/agents/interfaces/run-footer.interface';
+import type { RunFooterInfo } from '@choliba/engine';
 
 const DOCKER: RunFooterInfo = {
   provider: 'cursor',

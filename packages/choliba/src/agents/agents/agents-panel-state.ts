@@ -2,14 +2,14 @@ import { messageOf, PLATFORM, WORKSPACE_ROOT, type ChatPanel, type PanelContext 
 import { type Container } from '@choliba/kernel';
 import { sandboxConfig } from '@choliba/sandbox';
 
-import { AUTO, EXECUTION_MODES, type AgentDefinition, type AgentProvider, type ExecutionMode } from '../common';
+import { AUTO, type AgentProvider, agentRunChoice } from '@choliba/engine';
+import { EXECUTION_MODES, type AgentDefinition, type ExecutionMode } from '@choliba/domain';
 import { resolveAgentsDir } from '@choliba/workspace';
 import { loadAgent } from './agent-loader';
 import { agentCard, agentPaint } from './agents-panel-card';
 import { agentsConfig } from './agents-config';
 import { AGENT_PROVIDERS } from './agents.constants';
 import { isSandboxChoice, type SandboxChoice } from './runs/agents-flags';
-import { agentRunChoice } from './runs/run-choice';
 
 /**
  * What the panel's session keeps about its runs, the context keys of each choice. `AGENT` holds the session's agents,

@@ -2,22 +2,24 @@
 
 import { unknownWordMessage } from '@choliba/shell';
 import { loadProjectSettings } from '@choliba/workspace';
-import type { ProjectSettings } from '@choliba/domain';
+import type { ProjectSettings, AgentDefinition, ExecutionMode } from '@choliba/domain';
 import { agentURL, type Sandbox } from '@choliba/sandbox';
 
 import { listAgents, loadAgent } from '../agent-loader';
 import { agentFlagNames } from './agent-run-flags';
 import { resolveInvocation } from '../invocation-registry';
 import { LIST_PROGRAM_NAME, PREPARE_FLAGS, USAGE } from './agents-flags';
-import type { AgentDefinition } from '../../common';
-import type { AgentInvocation } from '../interfaces/invocation.interface';
-import type { ExecutionMode } from '../../common';
-import { readPlan } from './plan-store';
+import {
+  type AgentInvocation,
+  readPlan,
+  type RunProject,
+  errorMessage,
+  projectsDir,
+  toAbsolute,
+  type TicketTarget,
+  resolveTicketTarget,
+} from '@choliba/engine';
 import type { RunAgentsCliDeps, RunArgs } from './run-context';
-import type { RunProject } from '../../common';
-import { errorMessage, projectsDir, toAbsolute } from './run-context';
-import type { TicketTarget } from './ticket-run';
-import { resolveTicketTarget } from './ticket-run';
 
 /** Step 1: which command, and which agent it loads — the only two things every later step needs. */
 export function resolveAgentForCommand(

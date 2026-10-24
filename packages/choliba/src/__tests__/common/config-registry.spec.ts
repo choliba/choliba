@@ -2,7 +2,7 @@ import { envSource } from '@choliba/config';
 import { DEFAULT_OLLAMA_URL } from '@choliba/providers';
 
 import { agentsConfig } from '../../agents/agents/agents-config';
-import { AUTO } from '../../agents/common/provider-registry';
+import { AUTO } from '@choliba/engine';
 import { DEFAULT_PLAYWRIGHT_OUTPUT_DIR } from '../../agents/common/run-tools/playwright-tool';
 import { PROVIDERS_WITH_OLLAMA } from '../helpers/providers';
 

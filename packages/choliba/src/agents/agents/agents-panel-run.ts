@@ -9,7 +9,7 @@ import {
   type SequenceStop,
 } from '@choliba/engine';
 
-import type { AgentDefinition } from '../common';
+import type { AgentDefinition } from '@choliba/domain';
 import { agentVoice } from './agents-panel-card';
 import {
   agentKey,

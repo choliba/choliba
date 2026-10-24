@@ -5,8 +5,8 @@ import { stringify } from 'yaml';
 
 import { ANSI_COLORS } from '@choliba/shell';
 
-import { SUPPORTED_AGENT_YAML_VERSIONS, validateAgentYamlV1 } from '../../agents/agents/agent-validation';
-import { knownProviders } from '../../agents/providers';
+import { SUPPORTED_AGENT_YAML_VERSIONS, validateAgentYamlV1 } from '@choliba/domain';
+import { knownProviders } from '@choliba/providers';
 
 const FULL = `version: 1
 

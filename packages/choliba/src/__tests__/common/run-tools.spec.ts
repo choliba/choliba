@@ -2,19 +2,11 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { AgentDefinition } from '../../agents/common/interfaces/agent.interface';
-import type { PermissionPolicy } from '../../agents/common/interfaces/execution.interface';
-import type { ProviderRequest } from '../../agents/common/interfaces/provider.interface';
-import { NO_PERMISSIONS, readAgentPermissions } from '../../agents/common/agent-permissions';
+import { type AgentDefinition, type PermissionPolicy, NO_PERMISSIONS, readAgentPermissions } from '@choliba/domain';
+import { type ProviderRequest, activeRunTools, runToolCommands, runToolLines } from '@choliba/engine';
 import { deleteScript } from '../../agents/common/run-tools/delete-tool';
 import { DEFAULT_PLAYWRIGHT_OUTPUT_DIR, playwrightScript } from '../../agents/common/run-tools/playwright-tool';
-import {
-  activeRunTools,
-  applyRunTools,
-  planRunTools,
-  runToolCommands,
-  runToolLines,
-} from '../../agents/common/run-tools/run-tools';
+import { applyRunTools, planRunTools } from '../../agents/common/run-tools/run-tools';
 import { NO_MODE_STEPS, fakeSections } from '../helpers/agent';
 import { makeTmpDir } from '../helpers/tmp';
 

@@ -1,5 +1,5 @@
-import type { AgentDefinition } from '../../../agents/common';
-import { agentRunChoice, declaredModels } from '../../../agents/agents/runs/run-choice';
+import type { AgentDefinition } from '@choliba/domain';
+import { agentRunChoice, declaredModels } from '@choliba/engine';
 import { PROVIDERS_WITH_OLLAMA } from '../../helpers/providers';
 
 /** An agent that declares `providers`, the rest of it never read here. */

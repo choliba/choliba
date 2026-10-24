@@ -1,8 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { AskAnswer, AskQuestion } from '../../../agents/common/run-tools/ask-tool';
-import { watchQuestions } from '../../../agents/agents/runs/ask-watcher';
+import { type AskAnswer, type AskQuestion, watchQuestions } from '@choliba/engine';
 import { makeTmpDir } from '../../helpers/tmp';
 
 /** A timer the spec ticks by hand. */

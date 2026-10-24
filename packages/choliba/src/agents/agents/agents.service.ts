@@ -1,14 +1,13 @@
 import type { Panel, PanelOptions, ProcessRunnerService, ThemeService } from '@choliba/shell';
 import type { Platform, Writable, WritableWithColumns } from '@choliba/kernel';
 
-import type { AgentDefinition, ProviderRegistry } from '../common';
+import type { AgentDefinition } from '@choliba/domain';
+import type { ProviderRegistry, DryRunInput } from '@choliba/engine';
 import { listAgents } from './agent-loader';
 import { resolveAgentsDir } from '@choliba/workspace';
 import { runAgentsCli, runAgentsList } from './runs/run-agents';
-import type { DryRunInput } from './runs/dry-run';
 import type { AgentsListHelpHandler, AgentsRunHelpHandlers, RunAgentsCliDeps } from './runs/run-context';
-import type { AgentsCliSpecContext } from './runs/spec-context';
-import { specContext } from './runs/spec-context';
+import { type AgentsCliSpecContext, specContext } from './runs/spec-context';
 import { ticketTemplatesDir } from '../../projects';
 
 /** What a run reads from the process: where it writes, the clock, the signals, git and the executables on PATH. */

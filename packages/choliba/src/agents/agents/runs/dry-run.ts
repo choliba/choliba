@@ -1,7 +1,5 @@
 import { describeStep, runPlaceOf, wrapInstructions, type DryRunInput } from '@choliba/engine';
 
-export type { DryRunInput } from '@choliba/engine';
-
 /** One numbered entry: who does it (the CLI or the agent) and what, one line each. */
 interface Entry {
   readonly who: 'CLI' | 'agente';

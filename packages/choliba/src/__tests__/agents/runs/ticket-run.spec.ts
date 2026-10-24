@@ -1,15 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { AgentDefinition } from '../../../agents/common/interfaces/agent.interface';
-import {
-  createPlannedTicket,
-  finishTicket,
-  resolveTicketTarget,
-  ticketVars,
-} from '../../../agents/agents/runs/ticket-run';
+import { type AgentDefinition, NO_PERMISSIONS } from '@choliba/domain';
+import { createPlannedTicket, finishTicket, resolveTicketTarget, ticketVars } from '@choliba/engine';
 import { makeTmpDir } from '../../helpers/tmp';
-import { NO_PERMISSIONS } from '../../../agents/common/agent-permissions';
 import { NO_MODE_STEPS, fakeSections } from '../../helpers/agent';
 import { ticketTemplatesDir } from '../../../projects/project-templates';
 

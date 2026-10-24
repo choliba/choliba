@@ -8,9 +8,8 @@ import {
   CursorAgentProvider,
 } from '@choliba/providers';
 
-import { launchFor, realDisk, type LaunchDisk } from '../../../agents/agents/runs/sandbox-launch';
-import { NO_PERMISSIONS, type AgentPermissions } from '../../../agents/common/agent-permissions';
-import type { ProviderRequest } from '../../../agents/common/interfaces/provider.interface';
+import { launchFor, realDisk, type LaunchDisk, type ProviderRequest } from '@choliba/engine';
+import { NO_PERMISSIONS, type AgentPermissions } from '@choliba/domain';
 import { NO_MODE_STEPS, fakeSections } from '../../helpers/agent';
 import { makeTmpDir } from '../../helpers/tmp';
 

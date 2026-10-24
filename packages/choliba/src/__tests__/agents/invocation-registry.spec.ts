@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 
 import { resolveInvocation } from '../../agents/agents/invocation-registry';
-import { defineInvocation } from '../../agents/agents/invocation';
+import { defineInvocation } from '@choliba/engine';
 
 const FIXTURES = join(__dirname, '..', 'fixtures/agents');
 

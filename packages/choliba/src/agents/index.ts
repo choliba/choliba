@@ -1,34 +1,5 @@
-export type { AgentDefinition, AgentProviderModels } from './common';
-export {
-  AgentConfigError,
-  agentRunChoice,
-  declaredModels,
-  isValidAgentName,
-  listAgents,
-  loadAgent,
-  parseAgentYaml,
-} from './agents';
-export type { RunAsk, RunChoice } from './agents';
-export type { AgentInvocation } from './agents';
-export type { ExecutionMode, PermissionPolicy, PromptInput } from './common';
+export { listAgents, loadAgent, parseAgentYaml } from './agents';
 export { resolveInvocation } from './agents';
-export { invocationFromAgent, defineInvocation, effectivePolicy, implicitInvocation } from './agents';
-export type { InvocationSpec } from './agents';
-export type { AgentEvent } from './common';
-export {
-  MAX_ARG_BYTES,
-  PromptTooLargeError,
-  assertArgvFits,
-  buildUserPrompt,
-  modeInstruction,
-  wrapInstructions,
-} from './common';
-export { readPlan, resolvePlanPath, slugify, writePlan } from './agents';
-export type { WritePlanOptions } from './agents';
-export { AgentProvider } from './common';
-export type { ProviderRequest, StreamParser } from './common';
-export { AUTO, InvalidProviderPreferenceError, ProviderNotFoundError, ProviderRegistry } from './common';
-export type { ResolvedProvider } from './common';
 export { renderEvent } from './agents';
 export type { RenderOptions } from './agents';
 export { formatAgentDetail, runAgent } from './agents';
@@ -47,34 +18,7 @@ export {
   sinceDescription,
 } from './agents';
 export { agentFlagNames, agentRunFlags } from './agents';
-export { EXECUTION_MODES, diffBaseOf, SINCE_PENDING } from './agents';
-export { definedConfig, resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from './agents';
-export {
-  AGENTS_SUBDIR,
-  AGENT_FILE,
-  CACHE_DIR,
-  CHOLIBA_DIR,
-  DEFAULT_AGENTS_DIR,
-  DEFAULT_MCPS_DIR,
-  DEFAULT_SKILLS_DIR,
-  MCPS_SUBDIR,
-  RUNS_DIR,
-  SKILLS_SUBDIR,
-  SKILL_FILE,
-} from './agents';
-export { listSkills, resolveSkill, resolveSkills, SkillError, skillDescription } from './agents';
-export type { SkillSummary } from './agents';
-export { mcpConfig, resolveMcps } from './common';
-export {
-  formatInstall,
-  install,
-  InstallError,
-  parseInstallArgs,
-  planInstall,
-  type InstallArgs,
-  type InstallDeps,
-  type InstallTargets,
-} from './agents';
+export { install, parseInstallArgs, planInstall, type InstallDeps } from './agents';
 export { agentsConfig, AGENT_PROVIDERS, AGENTS, AgentsService, agentsShell } from './agents';
 export type { AgentsPlatform } from './agents';
 export {
@@ -114,4 +58,9 @@ export {
   warn,
   type SandboxChoice,
 } from './agents';
-export { ClaudeAgentProvider, CodexAgentProvider, CursorAgentProvider, knownProviders } from './providers';
+
+// The package names the public facade `choliba/agents` publishes (scripts/entries/agents.ts): its types are built from
+// `src/`, like `src/core` and `src/projects`.
+export { agentRunChoice } from '@choliba/engine';
+export type { RunAsk, RunChoice } from '@choliba/engine';
+export type { AgentDefinition, AgentProviderModels } from '@choliba/domain';

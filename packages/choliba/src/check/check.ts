@@ -2,12 +2,17 @@ import { existsSync, readdirSync } from 'node:fs';
 
 import { definedConfig, resolveMcps, resolveSkills } from '@choliba/engine';
 import { isValidAgentName } from '@choliba/domain';
-import { resolveAgentsDir, resolveMcpsDir, resolveSkillsDir } from '@choliba/workspace';
+import {
+  resolveAgentsDir,
+  resolveMcpsDir,
+  resolveSkillsDir,
+  projectLocations,
+  listProjectNames,
+  loadProjectSettings,
+  retiredCriteria,
+  ENV_FILE,
+} from '@choliba/workspace';
 import { loadAgent } from '../agents';
-import { projectLocations } from '@choliba/workspace';
-import { listProjectNames, loadProjectSettings, retiredCriteria } from '@choliba/workspace';
-
-import { ENV_FILE } from '../config';
 
 type Config = Readonly<Record<string, string | undefined>>;
 
