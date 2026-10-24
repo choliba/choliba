@@ -3,9 +3,9 @@ import { join } from 'node:path';
 
 import type { Writable } from '@choliba/kernel';
 
-import { AgentConfigError } from '../../agents/agents/agent-loader';
+import { AgentConfigError, validateAgentYamlV1 } from '@choliba/domain';
 import { printAgentDefinition } from '../../agents/agents/agent-print';
-import { validateAgentFiles, validateAgentYamlV1 } from '../../agents/agents/agent-validation';
+import { validateAgentFiles } from '../../agents/agents/agent-validation';
 
 const FIXTURES = join(__dirname, '..', 'fixtures', 'agents');
 

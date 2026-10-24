@@ -11,9 +11,7 @@ import {
 } from '@choliba/domain';
 import { AGENT_FILE } from '@choliba/workspace';
 
-import { checkStep } from '@choliba/engine';
-
-export { AgentConfigError, isValidAgentName, policyFromPermissions } from '@choliba/domain';
+import { checkStep } from '../steps';
 
 const TICKET_VAR = /\$\{(?:TICKET|TICKET_FILE)\}/;
 

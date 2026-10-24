@@ -2,8 +2,8 @@ import { DEFAULT_COLUMNS, createLineRunScreen, type Panel, type PanelOptions, on
 import { createPanelRunScreen } from '@choliba/tui';
 import { type Writable, type WritableWithColumns } from '@choliba/kernel';
 
-import type { RunFooterInfo, RunScreen } from '../interfaces/run-footer.interface';
-import { everySecond, type RunAgentRequest } from './run-agent';
+import { type RunFooterInfo, type RunScreen, everySecond } from '@choliba/engine';
+import { type RunAgentRequest } from './run-agent';
 
 export const FOOTER_REFRESH_MS = 50;
 

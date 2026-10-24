@@ -3,12 +3,9 @@ import { join } from 'node:path';
 
 import type { ErrorObject } from 'ajv';
 
-import { loadAgent } from '../../agents/agents/agent-loader';
-import {
-  formatAgentYamlSchemaError,
-  mapAgentYamlSchemaErrors,
-  validateAgentFiles,
-} from '../../agents/agents/agent-validation';
+import { loadAgent } from '@choliba/engine';
+import { validateAgentFiles } from '../../agents/agents/agent-validation';
+import { formatAgentYamlSchemaError, mapAgentYamlSchemaErrors } from '@choliba/domain';
 import { makeTmpDir } from '../helpers/tmp';
 
 const FIXTURES = join(__dirname, '..', 'fixtures', 'agents');

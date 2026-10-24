@@ -1,5 +1,6 @@
 import { pathBase, withoutTrailingSlash } from '@choliba/sandbox';
 
+import { pathGlobs } from '../../agents/common/agent-permissions';
 import {
   NO_PERMISSIONS,
   absolutePermissions,
@@ -9,10 +10,9 @@ import {
   blocksEveryCommand,
   formatPermissions,
   mapPermissions,
-  pathGlobs,
   permissionTexts,
   readAgentPermissions,
-} from '../../agents/common/agent-permissions';
+} from '@choliba/domain';
 
 const NO_MCPS = 'MCP: you have no MCP servers. Do not list, look for or call any MCP tool.';
 

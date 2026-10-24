@@ -1,0 +1,29 @@
+version: 1
+
+agent:
+  id: reviewer
+  name: Reviewer
+  version: 2.1.0
+  description: Agente sem skills, para cobrir esse caso do formato.
+
+providers:
+  claude:
+    models:
+      - claude-3-5-sonnet
+
+role: |
+  Você revisa código, usado só nos testes deste pacote.
+context:
+  - Nenhum preparo necessário.
+input: |
+  Recebe um diff ou trecho de código pra revisar.
+flow: |
+  1. Revise o código recebido.
+output: |
+  Devolve comentários de revisão.
+notes:
+  - Fixture de teste.
+
+permissions:
+  deny:
+    write: [agents/]

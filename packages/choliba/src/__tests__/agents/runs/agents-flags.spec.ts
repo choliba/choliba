@@ -1,21 +1,15 @@
 import { join } from 'node:path';
 
-import type { ParsedRunArgs } from '../../../agents/agents/runs/agents-flags';
 import {
+  type ParsedRunArgs,
   AgentsArgsError,
   parseAgentsArgs as parseWith,
   parseListArgs,
   runFlagDefinitions,
   USAGE,
 } from '../../../agents/agents/runs/agents-flags';
-import {
-  agentFlagNames,
-  loadAgent,
-  modeDescription,
-  PROJECT_FLAGS,
-  sinceDescription,
-  TICKET_FLAGS,
-} from '../../../agents';
+import { agentFlagNames, modeDescription, PROJECT_FLAGS, sinceDescription, TICKET_FLAGS } from '../../../agents';
+import { loadAgent } from '@choliba/engine';
 import { PROVIDERS } from '../../helpers/providers';
 
 const parseAgentsArgs = (argv: readonly string[]): ReturnType<typeof parseWith> => parseWith(argv, PROVIDERS);

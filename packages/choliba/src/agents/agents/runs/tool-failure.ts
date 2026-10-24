@@ -1,4 +1,4 @@
-import type { AgentEvent } from '../../common';
+import type { AgentEvent } from '@choliba/engine';
 
 type ToolResult = Extract<AgentEvent, { type: 'tool-result' }>;
 

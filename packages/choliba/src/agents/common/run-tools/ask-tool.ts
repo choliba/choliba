@@ -1,7 +1,5 @@
 import { join } from 'node:path';
 
-export type { AskAnswer, AskQuestion } from '@choliba/engine';
-
 /** How long the `ask` script waits for an answer before telling the agent to go on without one: 25 minutes. */
 export const ASK_TIMEOUT_MS = 25 * 60 * 1000;
 

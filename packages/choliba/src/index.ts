@@ -32,7 +32,8 @@ export type {
 export type { ProjectSettings, ProjectStack, ProjectStackItem, RetiredCriterion } from '@choliba/domain';
 export type { ProjectSummary } from '@choliba/tui';
 export type { TicketCriterion, TicketInfo } from '@choliba/workspace';
-export type { AgentDefinition, SkillSummary } from './agents';
+export type { AgentDefinition } from '@choliba/domain';
+export type { SkillSummary } from '@choliba/engine';
 export type { CriterionStatus, TestResult, TicketResults } from '@choliba/runner';
 export type { ConfigGroup, ConfigSetting } from '@choliba/config';
 export type { Runtime } from './runtime';

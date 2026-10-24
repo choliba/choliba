@@ -1,6 +1,6 @@
 import { formatLine, type AnsiColor, type Theme } from '@choliba/shell';
 
-import type { AgentEvent } from '../../common';
+import type { AgentEvent } from '@choliba/engine';
 import { failureLine } from './tool-failure';
 
 export interface RenderOptions {

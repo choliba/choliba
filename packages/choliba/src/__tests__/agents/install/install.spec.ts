@@ -2,13 +2,8 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, write
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import {
-  formatInstall,
-  install,
-  parseInstallArgs,
-  planInstall,
-  type InstallTargets,
-} from '../../../agents/agents/install/install';
+import { install, parseInstallArgs, planInstall } from '../../../agents/agents/install/install';
+import { formatInstall, type InstallTargets } from '@choliba/engine';
 
 const FIXTURES = join(__dirname, '..', '..', 'fixtures');
 

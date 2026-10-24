@@ -3,15 +3,8 @@ import { join } from 'node:path';
 
 import { stringify } from 'yaml';
 
-import {
-  AgentConfigError,
-  isValidAgentName,
-  listAgents,
-  loadAgent,
-  parseAgentYaml,
-  policyFromPermissions,
-} from '../../agents/agents/agent-loader';
-import { NO_PERMISSIONS } from '../../agents/common/agent-permissions';
+import { listAgents, loadAgent, parseAgentYaml } from '../../runs/agent-loader';
+import { AgentConfigError, isValidAgentName, policyFromPermissions, NO_PERMISSIONS } from '@choliba/domain';
 import { makeTmpDir } from '../helpers/tmp';
 
 const FIXTURES = join(__dirname, '..', 'fixtures/agents');

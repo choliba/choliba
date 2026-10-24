@@ -26,18 +26,6 @@ const ESCAPES_ALLOWED: Readonly<Record<string, string>> = {
   'packages/choliba/scripts/entries/shared/global-setup.ts: ../../../../runner/shared/global-setup': 'build entry',
   'packages/choliba/scripts/entries/shared/global-teardown.ts: ../../../../runner/shared/global-teardown':
     'build entry',
-  // These spy on engine modules and load agents with the app's loader; they leave the list with #320.
-  'packages/choliba/src/__tests__/agents/runs/run-agents.spec.ts: ../../../../../engine/src/steps/git-working-tree-diff':
-    '#320',
-  'packages/choliba/src/__tests__/agents/runs/run-agents.spec.ts: ../../../../../engine/src/steps/step-actions': '#320',
-  'packages/choliba/src/__tests__/agents/steps/step-registry.spec.ts: ../../../../../engine/src/steps/git-state':
-    '#320',
-  'packages/choliba/src/__tests__/agents/steps/step-registry.spec.ts: ../../../../../engine/src/steps/git-working-tree-diff':
-    '#320',
-  'packages/choliba/src/__tests__/agents/steps/step-registry.spec.ts: ../../../../../engine/src/steps/step-actions':
-    '#320',
-  'packages/choliba/src/__tests__/agents/steps/step-registry.spec.ts: ../../../../../engine/src/steps/step-registry':
-    '#320',
 };
 
 describe('the architecture of the packages', () => {

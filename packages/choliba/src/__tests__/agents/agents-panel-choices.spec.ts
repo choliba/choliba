@@ -16,14 +16,13 @@ import { fakeChatPanel, fakePanelContext } from '@choliba/tui/testing';
 import { fakePlatform } from '@choliba/kernel/testing';
 import { agentsPanel, agentsPanelShell } from '../../panel';
 
-import { ProviderRegistry } from '../../agents/common';
+import { ProviderRegistry, loadAgent } from '@choliba/engine';
 import { sandboxConfig } from '@choliba/sandbox';
 
 import { agentsConfig } from '../../agents/agents/agents-config';
-import { loadAgent } from '../../agents/agents/agent-loader';
 import { sessionArgv, showRun } from '../../agents/agents/agents-panel-state';
 import { AGENT_PROVIDERS } from '../../agents/agents/agents.constants';
-import { ClaudeAgentProvider, ClaudeOllamaAgentProvider, CursorAgentProvider } from '../../agents/providers';
+import { ClaudeAgentProvider, ClaudeOllamaAgentProvider, CursorAgentProvider } from '@choliba/providers';
 import { makeTmpDir } from '../helpers/tmp';
 
 const FIXTURES = join(__dirname, '..', 'fixtures', 'agents');

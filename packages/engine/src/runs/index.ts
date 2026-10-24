@@ -7,7 +7,9 @@ export {
   SkillError,
 } from './agent-skills';
 export type { SkillSummary } from './agent-skills';
+export { listAgents, loadAgent, parseAgentYaml } from './agent-loader';
 export { defineInvocation, effectivePolicy, implicitInvocation, invocationFromAgent } from './invocation';
+export { resolveInvocation } from './invocation-registry';
 export type { InvocationSpec } from './invocation';
 export type { AgentInvocation } from './invocation.interface';
 export {

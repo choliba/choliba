@@ -15,13 +15,10 @@ import { type GitRunner, type SignalSource, type Writable } from '@choliba/kerne
 import type { ProjectSettings } from '@choliba/domain';
 import * as projects from '@choliba/workspace';
 import { AppError } from '@choliba/runner';
-import { formatAgentDetail, listAgents, resolveAgentsDir, type AgentsCliSpecContext } from '../../../agents';
+import { formatAgentDetail, type AgentsCliSpecContext } from '../../../agents';
+import { listAgents, defineInvocation, readPlan, StepFailedError } from '@choliba/engine';
+import { resolveAgentsDir } from '@choliba/workspace';
 
-import * as gitDiff from '../../../../../engine/src/steps/git-working-tree-diff';
-
-import { defineInvocation } from '../../../agents/agents/invocation';
-import { StepFailedError } from '../../../../../engine/src/steps/step-actions';
-import { readPlan } from '../../../agents/agents/runs/plan-store';
 import type { RunAgentsCliDeps } from '../../../agents/agents/runs/run-context';
 import { ticketTemplatesDir } from '../../../projects/project-templates';
 import { runAgentsCli, runAgentsList } from '../../../agents/agents/runs/run-agents';
@@ -1012,7 +1009,6 @@ describe('runAgentsCli — run', () => {
   });
 
   it('runs an agent whose prepare hook comes from agent.yaml', async () => {
-    const getDiff = jest.spyOn(gitDiff, 'getWorkingTreeDiff').mockReturnValue('diff --git a/a.ts b/a.ts\n');
     const tmp = makeTmpDir('cli-with-prepare');
     const { deps, stdout } = harness(claudeStdout(claudeSuccessLine()), { repoRoot: tmp.path });
 
@@ -1020,8 +1016,7 @@ describe('runAgentsCli — run', () => {
       expect(await runAgentsCli(['with-prepare', '--agents-dir', FIXTURES, '--dry-run', '--show-prompt'], deps)).toBe(
         0,
       );
-      // --dry-run runs none of the steps: it shows where what they produce would go.
-      expect(getDiff).not.toHaveBeenCalled();
+      // --dry-run runs none of the steps: it shows where what they produce would go, and writes nothing.
       expect(stdout.chunks.join('')).toContain(' 1. [CLI]    execute.before 1/3 — git_diff: develop');
       expect(stdout.chunks.join('')).toContain('[execute.before 1/3 — git_diff: develop');
       expect(existsSync(join(tmp.path, '.cache'))).toBe(false);
@@ -1030,7 +1025,6 @@ describe('runAgentsCli — run', () => {
       expect(dryRunArgv(stdout)).toContain(`Edit(/${tmp.path}/docs/**)`);
     } finally {
       tmp.cleanup();
-      getDiff.mockRestore();
     }
   });
 

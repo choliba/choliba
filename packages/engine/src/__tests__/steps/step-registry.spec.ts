@@ -1,18 +1,18 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import * as gitDiff from '../../../../../engine/src/steps/git-working-tree-diff';
+import * as gitDiff from '../../steps/git-working-tree-diff';
 
-import type { AgentDefinition, AgentModeSteps } from '../../../agents/common/interfaces/agent.interface';
-import { loadAgent } from '../../../agents/agents/agent-loader';
-import * as actionsModule from '../../../../../engine/src/steps/step-actions';
-import { buildAfter, buildPrepare, diffBaseOf } from '../../../../../engine/src/steps/step-registry';
-import { readGitState } from '../../../../../engine/src/steps/git-state';
-import { NO_MODE_STEPS, NO_STEPS } from '../../helpers/agent';
-import { makeTmpGitRepo } from '../../helpers/git-repo';
-import { makeTmpDir } from '../../helpers/tmp';
+import type { AgentDefinition, AgentModeSteps } from '@choliba/domain';
+import { loadAgent } from '../../runs/agent-loader';
+import * as actionsModule from '../../steps/step-actions';
+import { buildAfter, buildPrepare, diffBaseOf } from '../../steps/step-registry';
+import { readGitState } from '../../steps/git-state';
+import { NO_MODE_STEPS, NO_STEPS } from '../helpers/agent';
+import { makeTmpGitRepo } from '../helpers/git-repo';
+import { makeTmpDir } from '../helpers/tmp';
 
-const FIXTURES = join(__dirname, '..', '..', 'fixtures', 'agents');
+const FIXTURES = join(__dirname, '..', 'fixtures', 'agents');
 
 function withSteps(agent: AgentDefinition, mode: 'execute' | 'plan' | 'ask', steps: AgentModeSteps): AgentDefinition {
   return { ...agent, steps: { ...NO_MODE_STEPS, [mode]: steps } };

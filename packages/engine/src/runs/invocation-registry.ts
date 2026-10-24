@@ -1,9 +1,11 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { isValidAgentName, loadAgent } from './agent-loader';
-import type { AgentInvocation } from './interfaces/invocation.interface';
+import { isValidAgentName } from '@choliba/domain';
+
+import { loadAgent } from './agent-loader';
 import { invocationFromAgent } from './invocation';
+import type { AgentInvocation } from './invocation.interface';
 
 /**
  * Resolves a CLI name to a command. An explicit entry in `builtins` wins; otherwise, if `name`

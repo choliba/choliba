@@ -1,6 +1,6 @@
 import type { Writable } from '@choliba/kernel';
 
-import { loadAgent } from './agent-loader';
+import { loadAgent } from '@choliba/engine';
 
 /**
  * Reads one agent's `agent.yaml` (via `loadAgent`, which validates it for real — see

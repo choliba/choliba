@@ -2,14 +2,10 @@ import { baseShell, createShell } from '@choliba/shell';
 import { fakePlatform } from '@choliba/kernel/testing';
 import { VERBS_ROOT } from '@choliba/shell/testing';
 
-import { AGENT_PROVIDERS, agentsShell, knownProviders } from '../../agents';
+import { AGENT_PROVIDERS, agentsShell } from '../../agents';
+import { knownProviders } from '@choliba/providers';
 import { knownProvidersShell } from '../helpers/providers-shell';
-import {
-  AUTO,
-  InvalidProviderPreferenceError,
-  ProviderNotFoundError,
-  ProviderRegistry,
-} from '../../agents/common/provider-registry';
+import { AUTO, InvalidProviderPreferenceError, ProviderNotFoundError, ProviderRegistry } from '@choliba/engine';
 import {
   claudeOllamaProvider,
   claudeProvider,

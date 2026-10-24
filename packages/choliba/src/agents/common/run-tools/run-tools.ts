@@ -5,25 +5,17 @@ export const CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR = 'CHOL_PLAYWRIGHT_MCP_OUTPUT_DIR';
 import { denyExceptions, isException } from '@choliba/sandbox';
 import {
   DELETE,
-  activeRunTools,
-  runToolCommands,
-  runToolLines,
   runToolsOf,
   shortcutPath,
-  type ActiveRunTool,
   type PlannedFile,
   type ProviderRequest,
-  type RunToolCommands,
   type RunToolName,
 } from '@choliba/engine';
 
-import { type AgentPermissions, absolutePermissions } from '../agent-permissions';
+import { type AgentPermissions, absolutePermissions } from '@choliba/domain';
 import { askExchangeDir, askScript } from './ask-tool';
 import { deleteScript } from './delete-tool';
 import { DEFAULT_PLAYWRIGHT_OUTPUT_DIR, playwrightScript } from './playwright-tool';
-
-export { DELETE, activeRunTools, runToolCommands, runToolLines, runToolsOf, shortcutPath };
-export type { ActiveRunTool, RunToolCommands, RunToolName };
 
 /** What a run tool's script is written from. */
 interface ScriptContext {

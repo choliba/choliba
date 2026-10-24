@@ -3,17 +3,16 @@ import { dirname, join, sep } from 'node:path';
 
 import { findResource } from '@choliba/kernel';
 import { installShellCompletion } from '@choliba/shell';
-import { DEFAULT_AGENTS_DIR, DEFAULT_MCPS_DIR, DEFAULT_SKILLS_DIR } from '@choliba/workspace';
 import {
+  DEFAULT_AGENTS_DIR,
+  DEFAULT_MCPS_DIR,
+  DEFAULT_SKILLS_DIR,
   PROJECTS_SUBDIR,
   PROJECT_CONFIG_FILE,
   PROJECT_ENV_FILE,
   TESTS_SUBDIR,
   TICKETS_SUBDIR,
-} from '@choliba/workspace';
-import { createProject } from '@choliba/workspace';
-
-import {
+  createProject,
   APP_DIR,
   ARTIFACTS_DIR,
   BUNFIG_FILE,
@@ -25,8 +24,9 @@ import {
   PACKAGE_FILE,
   PRETTIERIGNORE_FILE,
   PRETTIERRC_FILE,
-  findWorkspaceRoot,
-} from '../config';
+} from '@choliba/workspace';
+
+import { findWorkspaceRoot } from '../config';
 import { projectTemplatesDir } from '../projects';
 
 /** What to do after installing: shown by `setup` (the postinstall), and enough to get going. */
