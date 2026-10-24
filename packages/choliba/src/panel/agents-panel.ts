@@ -134,19 +134,21 @@ const agentsPanelCommand: PanelCommand = {
 };
 
 /**
- * `/resume`: goes back to an agent of the sequence (where it stopped, checked) and runs it again from there, with the
- * session's ticket: what is typed is said to that agent, and an empty line or Esc repeats its task.
+ * `/resume [texto]`: goes back to an agent of the sequence (where it stopped, checked) and runs it again from there,
+ * with the session's ticket: the text typed after it, or else what is answered to its question, is said to that agent,
+ * and an empty answer or Esc repeats its task.
  */
 const resumeCommand: PanelCommand = {
   name: 'resume',
   description: 'Volta a um agente da sequência e segue dela',
+  takesText: true,
   unavailable: (context) => {
     if (sessionAgentIds(context).length === 0) return 'Escolha os agentes antes, com /agents';
     return agentSequenceState(context)?.running === true
       ? 'Os agentes estão rodando: espere terminar ou pare com Ctrl+C'
       : undefined;
   },
-  run: async ({ container, panel, context }) => {
+  run: async ({ container, panel, context, text }) => {
     const ids = sessionAgentIds(context);
     // Where it stopped, checked; a sequence that ended has none.
     const stopped = agentSequenceState(context)?.resumeAt ?? Number(context.get(RESUME_AT));
@@ -156,17 +158,23 @@ const resumeCommand: PanelCommand = {
       options: ids.map((id, at) => ({ label: id, detail: '', current: at === stopped })),
     });
     if (chosen === undefined) return;
-    const reply = await panel.ask({
-      question: `O que dizer a ${String(ids[chosen])}? Vazio ou Esc repete a tarefa dele.`,
-      options: [],
-      multi: false,
-    });
-    const said = reply.status === 'answered' && typeof reply.answer === 'string' ? reply.answer.trim() : '';
+    // What was typed after /resume is what is said; without it, the panel asks.
+    const said = text?.trim() ?? (await whatToSay(panel, String(ids[chosen])));
     if (said !== '' && !(await confirmTask(panel, said))) return;
     talkToAgent(container, context);
     resumeSequence(context, panel, chosen, said === '' ? undefined : said);
   },
 };
+
+/** What to say to `agent`, gone back to: what is typed, or nothing (empty or Esc) to repeat its task. */
+async function whatToSay(panel: ChatPanel, agent: string): Promise<string> {
+  const reply = await panel.ask({
+    question: `O que dizer a ${agent}? Vazio ou Esc repete a tarefa dele.`,
+    options: [],
+    multi: false,
+  });
+  return reply.status === 'answered' && typeof reply.answer === 'string' ? reply.answer.trim() : '';
+}
 
 /** The agent commands the TUI brings to `choliba panel`. */
 export const agentsPanel: readonly PanelCommand[] = [agentsPanelCommand, resumeCommand, ...runChoices];

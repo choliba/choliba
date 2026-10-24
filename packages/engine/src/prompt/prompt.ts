@@ -142,6 +142,24 @@ export interface BuildUserPromptOptions {
   readonly planContent: string | undefined;
   /** What the other agents of the session concluded, oldest first (the panel's sequence); none on the command line. */
   readonly conclusions?: readonly AgentConclusion[] | undefined;
+  /** The sequence the run is one of: the agent it runs and the session's agents, in order; none on the command line. */
+  readonly sequence?: { readonly self: string; readonly agents: readonly string[] } | undefined;
+}
+
+/** What starts the line an agent ends its answer with to hand the work back to another agent of its sequence. */
+export const HAND_BACK = 'Hand back to:';
+
+/**
+ * How an agent of a sequence hands the work back: the sequence in order, and the line to end its answer with when the
+ * work needs one of the others first; nothing when the session has no other agent.
+ */
+export function handBackSection(self: string, agents: readonly string[]): string {
+  const others = agents.filter((agent) => agent !== self);
+  if (others.length === 0) return '';
+  return [
+    `This run is one of a sequence of agents: ${agents.join(' → ')} (you are ${self}).`,
+    `If you stop because the work needs one of the others first (the ticket needs rewriting, say), end your answer with one line: \`${HAND_BACK} <agent> — <why>\`, the agent being one of: ${others.join(', ')}. The sequence then offers to go back to it.`,
+  ].join(' ');
 }
 
 /** What another agent of the session concluded, as a run's prompt tells it. */
@@ -201,6 +219,9 @@ export function buildUserPrompt(options: BuildUserPromptOptions): string {
   if (options.conclusions !== undefined && options.conclusions.length > 0) {
     parts.push(conclusionsSection(options.conclusions));
   }
+  const handBack =
+    options.sequence === undefined ? '' : handBackSection(options.sequence.self, options.sequence.agents);
+  if (handBack !== '') parts.push(handBack);
   parts.push(`Task:\n${options.templateOutput}`);
   return parts.join('\n\n');
 }

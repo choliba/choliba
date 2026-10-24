@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 24/10/2026 13:34:44 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 24/10/2026 15:38:18 — não editar manualmente.
 
 ## Resumo
 
@@ -159,7 +159,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 </details>
 
 <details>
-<summary>🟢 <b>packages/engine</b> — 100.00% das linhas, 58 arquivos</summary>
+<summary>🟢 <b>packages/engine</b> — 100.00% das linhas, 59 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -186,6 +186,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/runs/agent-skills.ts](packages/engine/src/runs/agent-skills.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/app-reach.ts](packages/engine/src/runs/app-reach.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/ask-watcher.ts](packages/engine/src/runs/ask-watcher.ts)|100.00|100.00|100.00|100.00
+🟢|[src/runs/hand-back.ts](packages/engine/src/runs/hand-back.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/invocation-registry.ts](packages/engine/src/runs/invocation-registry.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/invocation.ts](packages/engine/src/runs/invocation.ts)|100.00|100.00|100.00|100.00
 🟢|[src/runs/location-vars.ts](packages/engine/src/runs/location-vars.ts)|100.00|100.00|100.00|100.00
