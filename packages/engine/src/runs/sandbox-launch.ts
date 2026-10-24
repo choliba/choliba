@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, realpathSync, statSync, symlinkSync, unlinkSync } from 'node:fs';
 import { delimiter, dirname, isAbsolute, join } from 'node:path';
 
-import { absolutePermissions } from '@choliba/domain';
+import { absolutePermissions, isWithin } from '@choliba/domain';
 import { resolveTicketRunsFolder, resolveTicketRunsRoot } from '@choliba/runner';
 import {
   agentURL,
@@ -95,6 +95,27 @@ export const realDisk: LaunchDisk = {
 function runtimeFiles(disk: LaunchDisk): readonly string[] {
   const bunx = join(dirname(disk.runtime), 'bunx');
   return disk.exists(bunx) ? [disk.runtime, bunx] : [disk.runtime];
+}
+
+/** choliba's own packages under `modules`: `choliba` and each `@choliba/*` there. */
+function cholibaModules(modules: string, disk: LaunchDisk): readonly string[] {
+  const scope = join(modules, '@choliba');
+  const scoped = disk.read(scope).map((entry) => join(scope, entry.name));
+  return [join(modules, 'choliba'), ...scoped].filter((path) => disk.exists(path));
+}
+
+/**
+ * Where choliba's own packages really are when it runs from the workspace's sources (`workspace:*`, as in its own
+ * repository): `node_modules/choliba` and `node_modules/@choliba/*` link into the workspace, and an agent that denies
+ * those folders would find the links dangling, its `bun choliba` without the script. They come back read-only, as
+ * choliba's runtime, like `bun`; writing there stays denied, and the agent's own read tool stays limited by its
+ * permissions. An installed choliba lies inside `node_modules`: nothing is added.
+ */
+function cholibaSources(root: string, disk: LaunchDisk): readonly string[] {
+  const modules = join(root, 'node_modules');
+  return cholibaModules(modules, disk)
+    .map((path) => disk.realpath(path))
+    .filter((path) => isWithin(root, path) && !isWithin(modules, path));
 }
 
 function localProgram(provider: ResolvedProvider, disk: LaunchDisk): SandboxProgram {
@@ -221,6 +242,7 @@ export function launchFor(input: LaunchInput, disk: LaunchDisk = realDisk): Laun
     alsoRead: [
       ...input.files.map((file) => file.path),
       join(root, 'node_modules'),
+      ...cholibaSources(root, disk),
       ...browserFolders(input, disk),
       ...shortcut,
     ],

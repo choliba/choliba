@@ -110,6 +110,36 @@ describe('launchFor', () => {
     );
   });
 
+  it('brings back, read-only, the sources choliba runs from when the agent denies their folder', () => {
+    const fromSources = {
+      ...disk(),
+      read: (dir: string) => (dir === '/w/node_modules/@choliba' ? [{ name: 'engine', isDirectory: false }] : []),
+      realpath: (path: string) =>
+        ({
+          '/w/node_modules/choliba': '/w/packages/choliba',
+          '/w/node_modules/@choliba/engine': '/w/packages/engine',
+        })[path] ?? path,
+    };
+    const input = {
+      sandbox: { kind: 'local' } as const,
+      command: ['claude', '-p'],
+      provider: PROVIDER,
+      request: request({ allowRead: ['/w'], denyRead: ['/w/packages/'] }),
+      files: [],
+      config: CONFIG,
+    };
+
+    expect(launchFor(input, fromSources).paths).toEqual(
+      expect.arrayContaining([
+        { path: '/w/packages', access: 'hidden', directory: true },
+        { path: '/w/packages/choliba', access: 'read', directory: true },
+        { path: '/w/packages/engine', access: 'read', directory: true },
+      ]),
+    );
+    const installed = launchFor(input, disk()).paths.map((mount) => mount.path);
+    expect(installed).not.toContain('/w/packages/choliba');
+  });
+
   it('mounts the whole cursor version folder but only the claude executable', () => {
     const base = disk();
     const fake = { ...base, realpath: (path: string) => `/versions/1/${path.split('/').pop() ?? ''}` };
