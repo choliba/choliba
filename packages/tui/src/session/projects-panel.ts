@@ -1,4 +1,4 @@
-import { CARD_RULE, type PanelCommand, type PanelCommandContext } from '@choliba/shell';
+import { CARD_RULE, messageOf, type PanelCommand, type PanelCommandContext } from '@choliba/shell';
 import { PROJECTS } from './projects.constants';
 import type { ProjectPanelTicket, ProjectsService } from './interfaces';
 
@@ -51,6 +51,16 @@ function projectCard(
   };
 }
 
+/** Why `project`'s settings would not run an agent (what `choliba check` says), or nothing when they would. */
+function projectProblem(projects: ProjectsService, project: string): string | undefined {
+  try {
+    projects.check(project);
+    return undefined;
+  } catch (error) {
+    return messageOf(error);
+  }
+}
+
 /** A ticket's summary in the panel: its title, then each criterion and whether a test covers it. */
 function ticketSummary(ticket: ProjectPanelTicket): readonly string[] {
   const covered = ticket.criteria.filter((criterion) => criterion.tests.length > 0).length;
@@ -94,7 +104,8 @@ async function chooseTicket({ container, panel, context }: PanelCommandContext):
 
 /**
  * `/projects`: the active project, chosen among the workspace's; another one clears the active ticket and, when it has
- * tickets, asks for one at once.
+ * tickets, asks for one at once. A project whose settings would not run an agent says so in the list, and once chosen
+ * says why, so it is fixed before a run finds out; it stays chosen, its tickets still at hand.
  */
 const projectsPanelCommand: PanelCommand = {
   name: 'projects',
@@ -107,12 +118,17 @@ const projectsPanelCommand: PanelCommand = {
       return;
     }
     const active = context.get(PROJECT);
+    const service = container.get(PROJECTS);
+    const problems = projects.map((project) => projectProblem(service, project.name));
     const chosen = await panel.choose({
       title: 'Escolha o projeto',
       description: 'O projeto em que os tickets, os testes e os agentes vão agir.',
-      options: projects.map((project) => ({
+      options: projects.map((project, index) => ({
         label: project.name,
-        detail: project.description,
+        detail:
+          problems[index] === undefined
+            ? project.description
+            : [project.description, 'configuração incompleta'].filter((part) => part !== '').join(' · '),
         current: project.name === active,
       })),
     });
@@ -124,6 +140,13 @@ const projectsPanelCommand: PanelCommand = {
     const card = projectCard(container.get(PROJECTS), project.name, project.description);
     context.show(CARD, { ...card, key: 'p', order: 2 });
     panel.write(`Projeto \u001b[1m${project.name}\u001b[22m selecionado.`);
+    const problem = problems[projects.indexOf(project)];
+    if (problem !== undefined) {
+      panel.write(
+        `\u001b[33mO projeto ${project.name} ainda não roda um agente: ${problem}. ` +
+          `Confira com choliba check ${project.name}.\u001b[39m`,
+      );
+    }
     if (container.get(PROJECTS).ticketKeys(project.name).length > 0) await chooseTicket(command);
   },
 };

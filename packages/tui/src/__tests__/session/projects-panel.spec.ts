@@ -120,7 +120,7 @@ describe('the project panel commands of @choliba/tui', () => {
     ]);
   });
 
-  it('chooses the active project, marking the current one, clears the ticket when it changes, and asks for one', async () => {
+  it('chooses the active project, marking the current one and one that cannot run, clears the ticket, and asks for one', async () => {
     const panel = withProjects({
       blog: { description: '', settings: undefined, tickets: [] },
       loja: LOJA,
@@ -134,7 +134,7 @@ describe('the project panel commands of @choliba/tui', () => {
         title: 'Escolha o projeto',
         description: 'O projeto em que os tickets, os testes e os agentes vão agir.',
         options: [
-          { label: 'blog', detail: '', current: false },
+          { label: 'blog', detail: 'configuração incompleta', current: false },
           { label: 'loja', detail: 'Loja de exemplo', current: false },
         ],
       });
@@ -173,6 +173,10 @@ describe('the project panel commands of @choliba/tui', () => {
         'blog',
         false,
         4,
+      ]);
+      expect(panel.fake.written.slice(-2)).toEqual([
+        'Projeto \u001b[1mblog\u001b[22m selecionado.',
+        '\u001b[33mO projeto blog ainda não roda um agente: Project settings are incomplete. Confira com choliba check blog.\u001b[39m',
       ]);
 
       panel.fake.answer(undefined);
