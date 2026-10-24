@@ -13,7 +13,7 @@ import {
   varProblems,
   withExpandedVars,
 } from '@choliba/domain';
-import { loadAgent } from '../../agents/agents/agent-loader';
+import { loadAgent } from '@choliba/engine';
 
 const FIXTURES = join(__dirname, '..', 'fixtures', 'agents');
 

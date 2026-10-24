@@ -1,9 +1,7 @@
 export { agentsConfig } from './agents-config';
-export * from './agent-loader';
 export * from './agent-print';
 export * from './agent-validation';
 export * from './install/install';
-export * from './invocation-registry';
 export * from './runs/agent-detail';
 export * from './runs/agents-flags';
 export * from './runs/dry-run';

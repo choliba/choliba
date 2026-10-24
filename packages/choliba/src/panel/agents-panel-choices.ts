@@ -1,4 +1,4 @@
-import { AUTO, declaredModels, type AgentProvider } from '@choliba/engine';
+import { AUTO, declaredModels, type AgentProvider, listAgents } from '@choliba/engine';
 import { type AgentDefinition } from '@choliba/domain';
 import {
   AGENT_PROVIDERS,
@@ -21,7 +21,6 @@ import {
   sessionRun,
   showRun,
   warn,
-  listAgents,
   MODE_CHOICES,
   SANDBOX_CHOICES,
   type SandboxChoice,

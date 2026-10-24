@@ -1,0 +1,6 @@
+version: 1
+
+agent:
+  id: broken
+  name: Broken
+  version: 1.0.0

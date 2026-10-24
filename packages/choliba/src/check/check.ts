@@ -1,6 +1,6 @@
 import { existsSync, readdirSync } from 'node:fs';
 
-import { definedConfig, resolveMcps, resolveSkills } from '@choliba/engine';
+import { definedConfig, resolveMcps, resolveSkills, loadAgent } from '@choliba/engine';
 import { isValidAgentName } from '@choliba/domain';
 import {
   resolveAgentsDir,
@@ -12,7 +12,6 @@ import {
   retiredCriteria,
   ENV_FILE,
 } from '@choliba/workspace';
-import { loadAgent } from '../agents';
 
 type Config = Readonly<Record<string, string | undefined>>;
 

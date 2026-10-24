@@ -4,7 +4,7 @@ import { complete, formatHelp } from '@choliba/shell';
 import { type GitRunner } from '@choliba/kernel';
 import * as projects from '@choliba/workspace';
 
-import { loadAgent } from '../../agents';
+import { loadAgent } from '@choliba/engine';
 import {
   agentCommandSpec,
   agentsCliSpec,

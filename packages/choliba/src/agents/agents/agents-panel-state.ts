@@ -2,10 +2,9 @@ import { messageOf, PLATFORM, WORKSPACE_ROOT, type ChatPanel, type PanelContext 
 import { type Container } from '@choliba/kernel';
 import { sandboxConfig } from '@choliba/sandbox';
 
-import { AUTO, type AgentProvider, agentRunChoice } from '@choliba/engine';
+import { AUTO, type AgentProvider, agentRunChoice, loadAgent } from '@choliba/engine';
 import { EXECUTION_MODES, type AgentDefinition, type ExecutionMode } from '@choliba/domain';
 import { resolveAgentsDir } from '@choliba/workspace';
-import { loadAgent } from './agent-loader';
 import { agentCard, agentPaint } from './agents-panel-card';
 import { agentsConfig } from './agents-config';
 import { AGENT_PROVIDERS } from './agents.constants';

@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { listAgents } from '../agents';
+import { listAgents } from '@choliba/engine';
 import { PANEL_ICON, PANEL_LOG_DIRECTORY, PANEL_LOGO, PANEL_VERSION } from '@choliba/tui';
 import { type ShellModule, WORKSPACE_ROOT } from '@choliba/shell';
 import { fakePlatform } from '@choliba/kernel/testing';

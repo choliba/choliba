@@ -1,8 +1,7 @@
 import { join } from 'node:path';
 
 import { type AgentDefinition, NO_PERMISSIONS } from '@choliba/domain';
-import { loadAgent } from '../../agents/agents/agent-loader';
-import { invocationFromAgent, defineInvocation, effectivePolicy, implicitInvocation } from '@choliba/engine';
+import { loadAgent, invocationFromAgent, defineInvocation, effectivePolicy, implicitInvocation } from '@choliba/engine';
 import { NO_MODE_STEPS, fakeSections } from '../helpers/agent';
 
 const FIXTURES = join(__dirname, '..', 'fixtures/agents');

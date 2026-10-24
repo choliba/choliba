@@ -5,13 +5,13 @@ import {
   agentSequenceState,
   agentPaint,
   agentsDir,
-  listAgents,
   resumeSequence,
   sessionAgentIds,
   showRun,
   talkToAgent,
   warn,
 } from '../agents';
+import { listAgents } from '@choliba/engine';
 import type { Container } from '@choliba/kernel';
 import { messageOf, type ChatPanel, type PanelCommand, type PanelContext } from '@choliba/shell';
 
