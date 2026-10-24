@@ -1,10 +1,8 @@
-import type { McpDeclaration } from '../../../agents/common/interfaces/agent.interface';
-import type { ProviderRequest } from '../../../agents/common/interfaces/provider.interface';
-import type { AgentEvent, McpUse } from '../../../agents/common/interfaces/event.interface';
-import { readAgentPermissions } from '../../../agents/common/agent-permissions';
-import { pathPolicy } from '../../../agents/common/path-policy';
-import { toolGuard, toolViolation, type ToolGuard } from '../../../../../engine/src/guards/tool-guard';
-import { toolPolicy } from '../../../../../engine/src/guards/tool-policy';
+import { type McpDeclaration, readAgentPermissions, pathPolicy } from '@choliba/domain';
+import type { ProviderRequest } from '../../ports/provider.interface';
+import type { AgentEvent, McpUse } from '../../ports/event.interface';
+import { toolGuard, toolViolation, type ToolGuard } from '../../guards/tool-guard';
+import { toolPolicy } from '../../guards/tool-policy';
 
 function call(name: string, mcp?: McpUse, summary = ''): AgentEvent {
   return { type: 'tool-call', id: 'c1', name, summary, ...(mcp === undefined ? {} : { mcp }) };

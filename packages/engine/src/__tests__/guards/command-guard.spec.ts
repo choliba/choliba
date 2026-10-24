@@ -1,7 +1,7 @@
-import type { AgentDefinition, ProviderRequest } from '../../../agents/common';
-import { readAgentPermissions } from '../../../agents/common/agent-permissions';
-import { commandRules, commandViolation, type CommandRules } from '../../../../../engine/src/guards/command-guard';
-import { NO_MODE_STEPS, fakeSections } from '../../helpers/agent';
+import { type AgentDefinition, readAgentPermissions } from '@choliba/domain';
+import type { ProviderRequest } from '../../ports/provider.interface';
+import { commandRules, commandViolation, type CommandRules } from '../../guards/command-guard';
+import { NO_MODE_STEPS, fakeSections } from '../helpers/agent';
 
 function request(permissions: unknown): ProviderRequest {
   const agent: AgentDefinition = {

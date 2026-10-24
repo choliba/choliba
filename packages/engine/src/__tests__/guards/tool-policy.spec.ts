@@ -1,4 +1,4 @@
-import { toolPolicy } from '../../../../../engine/src/guards/tool-policy';
+import { toolPolicy } from '../../guards/tool-policy';
 
 describe('toolPolicy', () => {
   it('allows each declared server, or only the tools it lists, and denies the subagent and unlimited tools', () => {
