@@ -5,6 +5,7 @@ import { basename, join } from 'node:path';
 import {
   EXPORTS_FILE,
   entryExports,
+  escapingImports,
   exportsText,
   GRAPH_FILE,
   graphText,
@@ -15,6 +16,29 @@ import {
 
 const ROOT = join(__dirname, '..', '..');
 const UPDATE = 'Se a mudança é de propósito, rode `bun run arch:update` e mande as listas no PR.';
+
+/** The relative imports allowed to leave their package, each with why. */
+const ESCAPES_ALLOWED: Readonly<Record<string, string>> = {
+  // The build republishes the files Playwright loads by path from the runner's own sources.
+  'packages/choliba/scripts/entries/playwright.config.ts: ../../../runner/playwright.config': 'build entry',
+  'packages/choliba/scripts/entries/reporters/detailed-ticket-reporter.ts: ../../../../runner/reporters/detailed-ticket-reporter':
+    'build entry',
+  'packages/choliba/scripts/entries/shared/global-setup.ts: ../../../../runner/shared/global-setup': 'build entry',
+  'packages/choliba/scripts/entries/shared/global-teardown.ts: ../../../../runner/shared/global-teardown':
+    'build entry',
+  // These spy on engine modules and load agents with the app's loader; they leave the list with #320.
+  'packages/choliba/src/__tests__/agents/runs/run-agents.spec.ts: ../../../../../engine/src/steps/git-working-tree-diff':
+    '#320',
+  'packages/choliba/src/__tests__/agents/runs/run-agents.spec.ts: ../../../../../engine/src/steps/step-actions': '#320',
+  'packages/choliba/src/__tests__/agents/steps/step-registry.spec.ts: ../../../../../engine/src/steps/git-state':
+    '#320',
+  'packages/choliba/src/__tests__/agents/steps/step-registry.spec.ts: ../../../../../engine/src/steps/git-working-tree-diff':
+    '#320',
+  'packages/choliba/src/__tests__/agents/steps/step-registry.spec.ts: ../../../../../engine/src/steps/step-actions':
+    '#320',
+  'packages/choliba/src/__tests__/agents/steps/step-registry.spec.ts: ../../../../../engine/src/steps/step-registry':
+    '#320',
+};
 
 describe('the architecture of the packages', () => {
   it('imports between packages only as the checked-in graph says', () => {
@@ -32,6 +56,10 @@ describe('the architecture of the packages', () => {
 
     expect({ exports: entryExports(ROOT), how: UPDATE }).toEqual({ exports: listed, how: UPDATE });
   }, 30_000);
+
+  it('reaches another package by its entry, never by a relative path into its sources, specs included', () => {
+    expect(escapingImports(ROOT)).toEqual(Object.keys(ESCAPES_ALLOWED).sort());
+  });
 
   it('forbids the engine from importing a provider', () => {
     const graph = packageGraph(ROOT);
@@ -133,6 +161,28 @@ describe('packageGraph and entryExports', () => {
           '@choliba/a declara @choliba/c, que não importa',
         ]);
         expect(graphText(graph)).toBe('@choliba/a → @choliba/b\n');
+      },
+    );
+  });
+
+  it('find the relative imports that leave their package, in specs as well, and nothing inside it', () => {
+    withRepo(
+      {
+        a: {
+          manifest: { name: '@choliba/a' },
+          files: {
+            'src/index.ts': "export { x } from './x';\nexport const y = import('../shared/y');\n",
+            'src/__tests__/a.spec.ts': "import { b } from '../../../b/src/b';\n",
+            'shared/y.ts': "import { c } from '../../c/src/c';\n",
+          },
+        },
+        b: { manifest: { name: '@choliba/b' }, files: { 'src/b.ts': 'export const b = 1;\n' } },
+      },
+      (root) => {
+        expect(escapingImports(root)).toEqual([
+          'packages/a/shared/y.ts: ../../c/src/c',
+          'packages/a/src/__tests__/a.spec.ts: ../../../b/src/b',
+        ]);
       },
     );
   });
