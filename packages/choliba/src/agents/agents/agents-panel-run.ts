@@ -183,10 +183,10 @@ export function talkToAgent(container: Container, context: PanelContext): void {
           inSession = true;
           stopRun = listener;
         },
-        ask: async (question) => {
+        ask: async (question, signal) => {
           sequence.question(question);
           try {
-            return await panel.ask(question);
+            return await panel.ask(question, signal);
           } finally {
             sequence.question(undefined);
           }

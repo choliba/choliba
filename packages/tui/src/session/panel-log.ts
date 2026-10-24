@@ -43,9 +43,9 @@ export function loggedPanel(panel: ChatPanel, log: LogFile): ChatPanel {
       log.write('escolha', `${request.title}: ${option?.label ?? 'cancelada'}`);
       return chosen;
     },
-    ask: async (question) => {
+    ask: async (question, signal) => {
       log.write('pergunta', question.question);
-      const reply = await panel.ask(question);
+      const reply = await panel.ask(question, signal);
       log.write('resposta', replied(reply));
       return reply;
     },

@@ -36,6 +36,8 @@ export function createPanelRunScreen(options: PanelRunScreenOptions): PanelRunSc
       options.panel.write(text);
     },
   };
+  // What withdraws the run's questions from the field when it ends.
+  const asking = new AbortController();
   const stop = options.every(50, () => {
     options.panel.refresh();
   });
@@ -54,11 +56,13 @@ export function createPanelRunScreen(options: PanelRunScreenOptions): PanelRunSc
     },
     answer: async (question) => {
       shown.write(`? ${question.question}\n`);
-      const reply = await options.panel.ask(question);
+      const reply = await options.panel.ask(question, asking.signal);
       shown.write(`→ ${reply.status === 'skipped' ? '(sem resposta)' : [reply.answer].flat().join(', ')}\n`);
       return reply;
     },
     close: (exitCode) => {
+      // A question of the run still in the field has no one to answer it any more.
+      asking.abort();
       stop();
       options.panel.close();
       if (options.hostedPanel) return;

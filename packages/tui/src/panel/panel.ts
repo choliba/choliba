@@ -384,7 +384,7 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     onInterrupt: (listener) => {
       interrupts.push(listener);
     },
-    ask: (question) => desk.ask(question),
+    ask: (question, signal) => desk.ask(question, signal),
     onMessage: (listener) => {
       desk.onMessage(listener);
     },

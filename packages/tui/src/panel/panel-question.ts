@@ -3,7 +3,7 @@ import type { PanelInput, PanelSelect } from './interfaces/panel.interface';
 
 /** What the panel's field does: answer the questions asked in it, one at a time, or send what is typed. */
 export interface QuestionDesk {
-  ask(question: PanelQuestion): Promise<PanelReply>;
+  ask(question: PanelQuestion, signal?: AbortSignal): Promise<PanelReply>;
   /** Called with what the person typed and sent while no question was pending. */
   onMessage(listener: (text: string) => void): void;
   /** Space marks a choice of a question of several; Esc skips the question. `true` when the key was the desk's. */
@@ -112,10 +112,24 @@ export function questionDesk<Styled>(input: PanelInput<Styled>, select: PanelSel
   });
 
   return {
-    ask: (question) =>
+    ask: (question, signal) =>
       new Promise((reply) => {
-        queue.push({ question, reply });
+        if (signal?.aborted === true) {
+          reply({ status: 'skipped' });
+          return;
+        }
+        const pending = { question, reply };
+        queue.push(pending);
         if (queue.length === 1) show(current());
+        // Withdrawn while it waits: out of the field (the next one shows) or out of the queue.
+        signal?.addEventListener('abort', () => {
+          const at = queue.indexOf(pending);
+          if (at === 0) finish(pending, { status: 'skipped' });
+          else if (at > 0) {
+            queue.splice(at, 1);
+            pending.reply({ status: 'skipped' });
+          }
+        });
       }),
     onMessage: (listener) => {
       messages.push(listener);
