@@ -1,0 +1,46 @@
+name: Relatar um bug
+description: Algo no choliba não funciona como a documentação diz.
+title: '[bug] '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Não cole tokens, credenciais, `.env`, `.env.json` nem dados pessoais. Para um erro de uma execução de agente,
+        use o template "Erro de execução de agente".
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: O que aconteceu
+      description: O comando, a saída (sem segredos) e o código de saída.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: O que era esperado
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Como reproduzir
+      placeholder: |
+        1. bun choliba …
+        2. …
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versão do choliba
+      description: A saída de `bun choliba --version`.
+      placeholder: 0.0.1-dev.79+f38f044
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Sistema e Bun
+      placeholder: Ubuntu 26.04, bun 1.4.2
