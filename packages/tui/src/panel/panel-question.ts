@@ -26,10 +26,15 @@ function choiceName(option: string, multi: boolean, marked: boolean): string {
   return `${marked ? '[x]' : '[ ]'} ${option}`;
 }
 
+/** The marker the panel draws before what was said (`❯ texto`): copied from the screen and pasted, it is not part of it. */
+const SAID_MARKER = /^❯\s*/;
+
 /**
  * The questions asked in `input`, with `select` for the choices: the field shows the question and takes the answer in
  * words, for any question; the list, shown only while a question has choices, takes one with Enter, or several marked
- * with Space, and Tab moves between the list and the field. Esc skips the question. With none pending, Enter sends what was typed, and the field shows `hint`.
+ * with Space, and Tab moves between the list and the field. Esc skips the question. With none pending, Enter sends what
+ * was typed, and the field shows `hint`. A text that starts with `/` is a command, sent as such, even with a question
+ * pending, which stays. The `❯` before a text pasted from the screen is taken off.
  */
 export function questionDesk<Styled>(input: PanelInput<Styled>, select: PanelSelect, hint: string): QuestionDesk {
   const queue: Pending[] = [];
@@ -81,10 +86,10 @@ export function questionDesk<Styled>(input: PanelInput<Styled>, select: PanelSel
   };
 
   input.onSubmit = () => {
-    const text = input.plainText.trim();
+    const text = input.plainText.trim().replace(SAID_MARKER, '').trim();
     if (text === '') return;
     const pending = current();
-    if (pending === undefined) {
+    if (pending === undefined || text.startsWith('/')) {
       input.setText('');
       messages.forEach((listener) => {
         listener(text);
