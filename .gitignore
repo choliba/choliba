@@ -12,6 +12,7 @@ trash
 .cache/
 # Traces extracted by playwright trace open (choliba playwright-trace)
 .playwright-cli/
+# Planos que um agente grava com --mode plan (plans/<agente>/), para rodar depois com --plan-from
 /plans
 
 # Pacote gerado por `bun run chol:pack` (instalação local, nunca publicado)
