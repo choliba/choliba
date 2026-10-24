@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 24/10/2026 15:38:18 — não editar manualmente.
+Gerado automaticamente por `bun run test:cov` em 24/10/2026 16:18:37 — não editar manualmente.
 
 ## Resumo
 
@@ -22,7 +22,7 @@ Status|Pacote|% Stmts|% Branch|% Funcs|% Lines
 ## Por pacote
 
 <details>
-<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 78 arquivos</summary>
+<summary>🟢 <b>packages/choliba</b> — 100.00% das linhas, 79 arquivos</summary>
 
 Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 --|--|--|--|--|--
@@ -83,6 +83,7 @@ Status|Arquivo|% Stmts|% Branch|% Funcs|% Lines
 🟢|[src/library/choliba-projects.ts](packages/choliba/src/library/choliba-projects.ts)|100.00|100.00|100.00|100.00
 🟢|[src/library/choliba-providers.ts](packages/choliba/src/library/choliba-providers.ts)|100.00|100.00|100.00|100.00
 🟢|[src/panel/agents-panel-choices.ts](packages/choliba/src/panel/agents-panel-choices.ts)|100.00|100.00|100.00|100.00
+🟢|[src/panel/agents-panel-order.ts](packages/choliba/src/panel/agents-panel-order.ts)|100.00|100.00|100.00|100.00
 🟢|[src/panel/agents-panel-shell.ts](packages/choliba/src/panel/agents-panel-shell.ts)|100.00|100.00|100.00|100.00
 🟢|[src/panel/agents-panel-watch.ts](packages/choliba/src/panel/agents-panel-watch.ts)|100.00|100.00|100.00|100.00
 🟢|[src/panel/agents-panel.ts](packages/choliba/src/panel/agents-panel.ts)|100.00|100.00|100.00|100.00

@@ -126,14 +126,14 @@ describe('/agents', () => {
       const agents = withAgents(tmp.path);
       expect([agents.command.name, agents.command.description]).toEqual([
         'agents',
-        'Acrescenta agentes à sequência, ou troca o provider e o modelo de um',
+        'Acrescenta agentes à sequência, ou troca, move ou tira um dela',
       ]);
       expect(agents.command.unavailable?.(agents.context, agents.container)).toBeUndefined();
 
       await agents.run();
       expect(agents.fake.choices[0]).toMatchObject({
         title: 'Escolha o agente',
-        description: 'Um agente da sequência (marcado) troca o provider e o modelo; outro entra no fim dela.',
+        description: 'Um agente da sequência (marcado) se troca, se move ou sai dela; outro entra no fim dela.',
       });
       expect(agents.fake.choices[0]?.options.map((option) => [option.label, option.current])).toEqual([
         ['echo', false],
@@ -162,7 +162,12 @@ describe('/agents', () => {
       // Chosen again, it is in the sequence: it chooses its provider and its model again, and stays where it is.
       await agents.run();
       expect(agents.fake.choices[4]?.options[0]?.current).toBe(true);
-      expect(agents.fake.choices[5]?.title).toBe('Provider de echo');
+      expect(agents.fake.choices[5]).toEqual({
+        title: 'O que fazer com echo?',
+        description: 'Ele já está na sequência.',
+        options: [{ label: 'Trocar o provider e o modelo' }, { label: 'Tirar da sequência' }],
+      });
+      expect(agents.fake.choices[6]?.title).toBe('Provider de echo');
       expect(agents.values.get('agente')).toBe('echo');
       expect(agents.fake.written.at(-1)).toBe(`Agente ${painted('magenta', 'echo')} atualizado.`);
       expect(agents.shown.map(([title]) => title)).toEqual(['echo', 'echo']);
@@ -221,14 +226,36 @@ describe('/agents', () => {
         ['with-project', true],
       ]);
       // One in it, chosen again, changes its provider and its model: the sequence stays.
-      agents.fake.answerNext(2, esc, esc);
+      agents.fake.answerNext(2, 0, esc, esc);
       await agents.run();
       expect(agents.values.get('agente')).toBe('echo,ticketed,optional,with-project');
       expect(agents.fake.written.at(-1)).toBe(`Agente ${painted('cyan', 'ticketed')} atualizado.`);
+      // Or moves one place either way, or leaves it, with what was kept for it.
+      agents.fake.answerNext(2, esc);
+      await agents.run();
+      expect(agents.fake.choices.at(-1)?.options.map((option) => option.label)).toEqual([
+        'Trocar o provider e o modelo',
+        'Mover para antes de echo',
+        'Mover para depois de optional',
+        'Tirar da sequência',
+      ]);
+      agents.fake.answerNext(2, 1);
+      await agents.run();
+      expect(agents.values.get('agente')).toBe('ticketed,echo,optional,with-project');
+      expect(agents.fake.written.at(-1)).toMatch(/^Agente .*ticketed.* movido\. Ordem: .*ticketed.* → .*echo.*/);
+      agents.fake.answerNext(2, 1);
+      await agents.run();
+      expect(agents.values.get('agente')).toBe('echo,ticketed,optional,with-project');
+      agents.values.set('provider:ticketed', 'claude');
+      agents.fake.answerNext(2, 3);
+      await agents.run();
+      expect(agents.values.get('agente')).toBe('echo,optional,with-project');
+      expect(agents.values.has('provider:ticketed')).toBe(false);
+      expect(agents.fake.written.at(-1)).toMatch(/^Agente .*ticketed.* tirado da sequência\. Ordem: .*echo.* → /);
       // Esc on the list changes nothing.
       agents.fake.answerNext(undefined);
       await agents.run();
-      expect(agents.values.get('agente')).toBe('echo,ticketed,optional,with-project');
+      expect(agents.values.get('agente')).toBe('echo,optional,with-project');
     } finally {
       tmp.cleanup();
     }
@@ -297,6 +324,22 @@ describe('/agents', () => {
       });
       await new Promise((resolve) => setImmediate(resolve));
       expect(ran.at(-1)?.at(-1)).toBe('veja o que o optional disse');
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('leaves the session with no agent when its only one is taken out', async () => {
+    const tmp = makeTmpDir('agents-panel');
+    try {
+      agentsFolder(tmp.path);
+      const agents = withAgents(tmp.path);
+      agents.values.set('agente', 'echo');
+      agents.fake.answerNext(0, 1);
+      await agents.run();
+
+      expect(agents.values.has('agente')).toBe(false);
+      expect(agents.fake.written.at(-1)).toMatch(/^Agente .*echo.* tirado da sequência\. A sequência ficou vazia\.$/);
     } finally {
       tmp.cleanup();
     }
