@@ -33,8 +33,10 @@ export const PANEL_SPEC: CommandSpec = {
     '`/agents` acrescenta um agente ao fim da sequência: ele escolhe o provider, entre os que o agente declara, e ' +
       'depois o modelo, entre os que ele declara para esse provider; Esc em qualquer dos dois usa o do painel, e um ' +
       'agente que não pode rodar com eles não entra, e o painel diz por quê. Depois, `/agents` pergunta pelo ' +
-      'próximo. Escolher um agente que já está na sequência troca só o provider e o modelo dele, menos o que roda ' +
-      'agora. `/agents` nunca recomeça a sequência (`/clear` recomeça) e funciona enquanto ela roda: um agente ' +
+      'próximo. Escolher um agente que já está na sequência pergunta o que fazer com ele: trocar o provider e o ' +
+      'modelo (menos o que roda agora), movê-lo uma posição para um lado ou para o outro, ou tirá-lo da sequência, ' +
+      'com o que foi escolhido para ele; mover e tirar esperam os agentes pararem de rodar. `/agents` nunca ' +
+      'recomeça a sequência (`/clear` recomeça) e funciona enquanto ela roda: um agente ' +
       'acrescentado roda no fim, e um que espera roda com o que foi escolhido para ele.',
     'A coluna do cabeçalho mostra o provider e o modelo do painel, os dos agentes que não escolheram os seus: ' +
       '`/provider` os escolhe entre `auto` e todos os providers, e `/model` entre os modelos que os agentes declaram ' +
