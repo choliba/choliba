@@ -5,15 +5,18 @@ import { join } from 'node:path';
 import { buildTheme, ProcessRunnerService, type Panel, type PanelOptions, type PanelReply } from '@choliba/shell';
 import { type ProcessSpawner, type SignalSource, type Writable } from '@choliba/kernel';
 
-import type { AgentDefinition } from '../../../agents/common/interfaces/agent.interface';
-import type { AgentEvent } from '../../../agents/common/interfaces/event.interface';
-import { readPlan } from '../../../agents/agents/runs/plan-store';
-import type { AgentProvider } from '../../../agents/common/agent-provider';
-import type { PlanContentContext, ProviderRequest } from '../../../agents/common/interfaces/provider.interface';
-import type { ResolvedProvider } from '../../../agents/common/provider-registry';
-import type { RunAgentDeps, RunAgentRequest } from '../../../agents/agents/runs/run-agent';
-import type { RunFooterInfo } from '../../../agents/agents/interfaces/run-footer.interface';
-import { everySecond, runAgent } from '../../../agents/agents/runs/run-agent';
+import { type AgentDefinition, NO_PERMISSIONS, readAgentPermissions } from '@choliba/domain';
+import {
+  type AgentEvent,
+  readPlan,
+  type AgentProvider,
+  type PlanContentContext,
+  type ProviderRequest,
+  type ResolvedProvider,
+  type RunFooterInfo,
+  everySecond,
+} from '@choliba/engine';
+import { type RunAgentDeps, type RunAgentRequest, runAgent } from '../../../agents/agents/runs/run-agent';
 import {
   createRunScreen,
   FOOTER_REFRESH_MS,
@@ -22,7 +25,6 @@ import {
 } from '../../../agents/agents/runs/run-screen';
 import { erroringStream, fakeSpawner, streamFromChunks, throwingSpawner } from '../../helpers/fake-spawner';
 import { makeTmpDir } from '../../helpers/tmp';
-import { NO_PERMISSIONS, readAgentPermissions } from '../../../agents/common/agent-permissions';
 import { NO_MODE_STEPS, fakeSections } from '../../helpers/agent';
 
 /** A run dir of its own per request: `runAgent` creates it and removes it. */

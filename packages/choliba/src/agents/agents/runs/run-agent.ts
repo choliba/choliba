@@ -1,16 +1,13 @@
 import {
-  everySecond,
   runAgent as runEngineAgent,
   type RunAgentDeps as EngineRunAgentDeps,
   type RunAgentRequest as EngineRunAgentRequest,
   type RunFooterInfo,
+  type RunScreen,
 } from '@choliba/engine';
 import type { Theme } from '@choliba/shell';
 
 import { agentRenderOptions, renderEvent } from './event-render';
-import type { RunScreen } from '../interfaces/run-footer.interface';
-
-export { everySecond };
 
 export interface RunAgentRequest extends EngineRunAgentRequest {
   readonly theme: Theme;

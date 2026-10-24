@@ -10,7 +10,6 @@ export {
   providers,
   skills,
   workspace,
-  type AgentDefinition,
   type Choliba,
   type CholibaAgents,
   type CholibaConfig,
@@ -25,18 +24,17 @@ export {
   type CholibaTests,
   type CholibaTickets,
   type CholibaWorkspace,
-  type ConfigGroup,
-  type ConfigSetting,
-  type CriterionStatus,
+  type Runtime,
+} from '../../src/index';
+export {
+  type AgentDefinition,
   type ProjectSettings,
   type ProjectStack,
   type ProjectStackItem,
-  type ProjectSummary,
   type RetiredCriterion,
-  type Runtime,
-  type SkillSummary,
-  type TestResult,
-  type TicketCriterion,
-  type TicketInfo,
-  type TicketResults,
-} from '../../src/index';
+} from '@choliba/domain';
+export { type ConfigGroup, type ConfigSetting } from '@choliba/config';
+export { type CriterionStatus, type TestResult, type TicketResults } from '@choliba/runner';
+export { type ProjectSummary } from '@choliba/tui';
+export { type SkillSummary } from '@choliba/engine';
+export { type TicketCriterion, type TicketInfo } from '@choliba/workspace';

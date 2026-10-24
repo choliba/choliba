@@ -9,9 +9,6 @@ import {
 
 import { loadAgent } from '../agent-loader';
 
-export { formatInstall, InstallError } from '@choliba/engine';
-export type { InstallArgs, InstallTargets, InstalledItem, ItemKind, PlannedItem } from '@choliba/engine';
-
 export type InstallDeps = Omit<EngineInstallDeps, 'loadAgent'>;
 
 const USAGE = 'Uso: choliba add <origem> [--path <caminho na origem>] [--dry-run]';

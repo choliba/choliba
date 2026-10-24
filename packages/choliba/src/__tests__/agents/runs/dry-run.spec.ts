@@ -1,8 +1,7 @@
-import { COMMAND_LINE_TITLE, formatDryRun, type DryRunInput } from '../../../agents/agents/runs/dry-run';
-import { wrapInstructions } from '../../../agents/common/prompt';
-import type { ProviderRequest } from '../../../agents/common/interfaces/provider.interface';
+import { COMMAND_LINE_TITLE, formatDryRun } from '../../../agents/agents/runs/dry-run';
+import { type DryRunInput, wrapInstructions, type ProviderRequest } from '@choliba/engine';
 import { NO_MODE_STEPS, NO_STEPS, fakeSections } from '../../helpers/agent';
-import { NO_PERMISSIONS } from '../../../agents/common/agent-permissions';
+import { NO_PERMISSIONS } from '@choliba/domain';
 
 function request(overrides: Partial<ProviderRequest> = {}): ProviderRequest {
   return {

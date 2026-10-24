@@ -8,12 +8,12 @@ import { fakePlatform } from '@choliba/kernel/testing';
 import { sandboxConfig } from '@choliba/sandbox';
 import { agentsPanel, watchChoices } from '../../panel';
 
-import { ProviderRegistry } from '../../agents/common';
+import { ProviderRegistry } from '@choliba/engine';
 import { agentsConfig } from '../../agents/agents/agents-config';
 import { talkToAgent } from '../../agents/agents/agents-panel-run';
 import { AGENT_PROVIDERS, AGENTS } from '../../agents/agents/agents.constants';
 import type { AgentsService } from '../../agents/agents/agents.service';
-import { ClaudeAgentProvider } from '../../agents/providers';
+import { ClaudeAgentProvider } from '@choliba/providers';
 import { makeTmpDir } from '../helpers/tmp';
 
 const FIXTURES = join(__dirname, '..', 'fixtures', 'agents');

@@ -1,9 +1,8 @@
 import type { FlagSpec, Suggestions, TypedFlags } from '@choliba/shell';
-import { diffBaseOf } from '@choliba/engine';
+import { diffBaseOf, type ProviderRegistry } from '@choliba/engine';
 import { readTicketTemplate } from '@choliba/workspace';
 
-import type { AgentDefinition, ProviderRegistry } from '../../common';
-import { EXECUTION_MODES } from '../../common';
+import { type AgentDefinition, EXECUTION_MODES } from '@choliba/domain';
 import { ticketTemplatesDir } from '../../../projects';
 import {
   MODE_CHOICES,

@@ -1,7 +1,7 @@
 import { boldAnsi, CARD_RULE, paintAnsi, THEME, type AnsiColor, type PanelCard, type PanelVoice } from '@choliba/shell';
 import { type Container } from '@choliba/kernel';
 
-import type { AgentDefinition } from '../common';
+import type { AgentDefinition } from '@choliba/domain';
 
 /** `text` in bold, in the agent's color, as a run paints its label: `CHOL_COLORS` first, then its `agent.color`. */
 export function agentPaint(container: Container, agent: AgentDefinition): (text: string) => string {

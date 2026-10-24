@@ -17,8 +17,8 @@ import { fakeChatPanel } from '@choliba/tui/testing';
 import { fakePlatform } from '@choliba/kernel/testing';
 import { agentsPanel } from '../../panel/agents-panel';
 
-import { ProviderRegistry } from '../../agents/common';
-import { ClaudeAgentProvider, ClaudeOllamaAgentProvider, CursorAgentProvider } from '../../agents/providers';
+import { ProviderRegistry } from '@choliba/engine';
+import { ClaudeAgentProvider, ClaudeOllamaAgentProvider, CursorAgentProvider } from '@choliba/providers';
 import { AGENT_PROVIDERS, AGENTS } from '../../agents/agents/agents.constants';
 import type { AgentsService } from '../../agents/agents/agents.service';
 

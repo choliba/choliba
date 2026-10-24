@@ -1,6 +1,5 @@
-import { EXECUTION_MODES } from '../../common';
-import { SINCE_PENDING } from '@choliba/engine';
-import type { ProviderRegistry } from '../../common';
+import { EXECUTION_MODES, type ExecutionMode } from '@choliba/domain';
+import { SINCE_PENDING, type ProviderRegistry } from '@choliba/engine';
 import { unknownWordMessage } from '@choliba/shell';
 
 import {
@@ -15,7 +14,6 @@ import {
   type ParsedListArgs,
   type SandboxChoice,
 } from './run-flag-definitions';
-import type { ExecutionMode } from '../../common';
 
 /**
  * Consumes and returns the next token, or throws naming `flag`. A plain `queue.shift()` inline

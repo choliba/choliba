@@ -1,17 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import {
-  formatAgentYamlSchemaError,
-  mapAgentYamlSchemaErrors,
-  SUPPORTED_AGENT_YAML_VERSIONS,
-  validateAgentYamlV1,
-  type ValidationResult,
-} from '@choliba/domain';
+import { validateAgentYamlV1, type ValidationResult } from '@choliba/domain';
 import { AGENT_FILE } from '@choliba/workspace';
-
-export { formatAgentYamlSchemaError, mapAgentYamlSchemaErrors, SUPPORTED_AGENT_YAML_VERSIONS, validateAgentYamlV1 };
-export type { ValidationResult };
 
 export function validateAgentFiles(agentsDir: string, name: string): ValidationResult {
   const path = join(agentsDir, name, AGENT_FILE);

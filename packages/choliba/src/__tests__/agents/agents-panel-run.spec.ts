@@ -15,8 +15,8 @@ import { BufferWritable, fakePlatform } from '@choliba/kernel/testing';
 import { sandboxConfig } from '@choliba/sandbox';
 import { fakeChatPanel, fakePanelContext } from '@choliba/tui/testing';
 
-import { ProviderRegistry } from '../../agents/common';
-import { ClaudeAgentProvider } from '../../agents/providers';
+import { ProviderRegistry } from '@choliba/engine';
+import { ClaudeAgentProvider } from '@choliba/providers';
 import { agentsConfig } from '../../agents/agents/agents-config';
 import { restartSequence, resumeSequence, talkToAgent } from '../../agents/agents/agents-panel-run';
 import { AGENT_PROVIDERS, AGENTS } from '../../agents/agents/agents.constants';

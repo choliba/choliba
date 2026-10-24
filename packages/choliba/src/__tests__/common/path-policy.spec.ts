@@ -1,7 +1,6 @@
 import { decide, type PermissionRequest } from '@choliba/sandbox';
 
-import { readAgentPermissions } from '../../agents/common/agent-permissions';
-import { pathPolicy } from '../../agents/common/path-policy';
+import { readAgentPermissions, pathPolicy } from '@choliba/domain';
 
 const PERMISSIONS = readAgentPermissions({
   allow: { read: ['/w/'], write: ['/w/tickets/'], delete: ['/w/app/'] },

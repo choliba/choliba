@@ -1,6 +1,5 @@
-import { EXECUTION_MODES, type ExecutionMode } from '../../common';
-import { SINCE_PENDING } from '@choliba/engine';
-import type { ProviderRegistry } from '../../common';
+import { EXECUTION_MODES, type ExecutionMode } from '@choliba/domain';
+import { SINCE_PENDING, type ProviderRegistry } from '@choliba/engine';
 import { ExpectedError } from '@choliba/kernel';
 import { unknownWordMessage } from '@choliba/shell';
 

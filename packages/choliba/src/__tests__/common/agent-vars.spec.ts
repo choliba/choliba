@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 
-import type { AgentDefinition, AgentModeSteps } from '../../agents/common/interfaces/agent.interface';
-import { loadAgent } from '../../agents/agents/agent-loader';
-import { readAgentPermissions } from '../../agents/common/agent-permissions';
 import {
+  type AgentDefinition,
+  type AgentModeSteps,
+  readAgentPermissions,
   AGENT_VARS,
   AgentVarsError,
   agentTexts,
@@ -12,7 +12,8 @@ import {
   varNames,
   varProblems,
   withExpandedVars,
-} from '../../agents/common/agent-vars';
+} from '@choliba/domain';
+import { loadAgent } from '../../agents/agents/agent-loader';
 
 const FIXTURES = join(__dirname, '..', 'fixtures', 'agents');
 

@@ -2,10 +2,10 @@ import { spawn } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { ProviderRequest } from '../../agents/common/interfaces/provider.interface';
-import { NO_PERMISSIONS, readAgentPermissions } from '../../agents/common/agent-permissions';
-import { askExchangeDir, askScript, type AskAnswer } from '../../agents/common/run-tools/ask-tool';
-import { activeRunTools, applyRunTools, planRunTools, runToolLines } from '../../agents/common/run-tools/run-tools';
+import { type ProviderRequest, type AskAnswer, activeRunTools, runToolLines } from '@choliba/engine';
+import { NO_PERMISSIONS, readAgentPermissions } from '@choliba/domain';
+import { askExchangeDir, askScript } from '../../agents/common/run-tools/ask-tool';
+import { applyRunTools, planRunTools } from '../../agents/common/run-tools/run-tools';
 import { claudeOllamaProvider, claudeProvider } from '../helpers/providers';
 import { NO_MODE_STEPS, fakeSections } from '../helpers/agent';
 import { makeTmpDir } from '../helpers/tmp';

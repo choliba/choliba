@@ -1,5 +1,4 @@
 import type { TableColumn } from '@choliba/shell';
-export type { AskAnswer, AskQuestion, RunFooterInfo, RunScreen } from '@choliba/engine';
 
 /** The context of a run in words: provider, sandbox, image and container (`—` for the last two on this machine). */
 export interface RunContextWords {
