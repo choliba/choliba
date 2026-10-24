@@ -12,13 +12,15 @@ import {
   type PanelOptions,
 } from '@choliba/shell';
 import { BufferWritable, fakePlatform } from '@choliba/kernel/testing';
+import { sandboxConfig } from '@choliba/sandbox';
 import { fakeChatPanel, fakePanelContext } from '@choliba/tui/testing';
 
 import { ProviderRegistry } from '../../agents/common';
 import { ClaudeAgentProvider } from '../../agents/providers';
 import { agentsConfig } from '../../agents/agents/agents-config';
-import { resumeSequence, talkToAgent } from '../../agents/agents/agents-panel-run';
+import { restartSequence, resumeSequence, talkToAgent } from '../../agents/agents/agents-panel-run';
 import { AGENT_PROVIDERS, AGENTS } from '../../agents/agents/agents.constants';
+import { agentsPanel } from '../../panel';
 import { AgentsService, type HostedRun } from '../../agents/agents/agents.service';
 import { makeTmpDir } from '../helpers/tmp';
 
@@ -48,6 +50,7 @@ function conversation(dir: string, agent: string) {
   const asked: Asked[] = [];
   const container = new Container();
   container.provide(agentsConfig.token, () => ({ ...agentsConfig.read([]), agentsDir: dir }));
+  container.provide(sandboxConfig.token, () => ({ ...sandboxConfig.read([]), mode: 'local' }));
   container.provide(WORKSPACE_ROOT, () => '/');
   const platform = fakePlatform({ which: (bin: string) => `/usr/bin/${bin}` });
   container.provide(PLATFORM, () => platform);
@@ -65,7 +68,7 @@ function conversation(dir: string, agent: string) {
   const fake = fakeChatPanel();
   talkToAgent(container, state.context);
   const settle = () => new Promise((resolve) => setImmediate(resolve));
-  return { asked, state, fake, settle };
+  return { asked, state, fake, settle, container };
 }
 
 const bold = (text: string): string => `\u001b[1m\u001b[36m${text}\u001b[39m\u001b[22m`;
@@ -377,6 +380,82 @@ describe('talkToAgent', () => {
       resumeSequence(talk.state.context, talk.fake.panel, 0, 'só a busca');
       await talk.settle();
       expect(talk.asked[3]?.argv).toEqual(['echo', 'só a busca']);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('restarts the running agent when /sandbox chooses another, and keeps the next one when none runs yet', async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      const sandbox = agentsPanel.find((command) => command.name === 'sandbox');
+      const talk = conversation(tmp.path, 'echo,with-project');
+      talk.state.context.set('projeto', 'site');
+      talk.state.send('faça', talk.fake.panel);
+      await talk.settle();
+
+      talk.fake.answer(1);
+      const changing = sandbox?.run({
+        container: talk.container,
+        panel: talk.fake.panel,
+        context: talk.state.context,
+      });
+      expect(talk.fake.choices.at(-1)).toEqual({
+        title: 'Escolha o sandbox',
+        description: 'Trocar reinicia a execução no sandbox novo.',
+        options: [
+          { label: 'local', detail: 'Nesta máquina, isolado com bwrap', current: true },
+          { label: 'docker', detail: 'Num container do Docker', current: false },
+        ],
+      });
+      await talk.settle();
+      talk.asked[0]?.end(1);
+      await changing;
+      await talk.settle();
+
+      expect(talk.state.values.get('sandbox')).toBe('docker');
+      expect(talk.fake.written).toEqual([`Sandbox ${bold('docker')} selecionado.`, 'Reiniciando a execução.']);
+      expect(talk.asked).toHaveLength(2);
+      expect(talk.asked[1]?.argv).toEqual(['echo', '--sandbox', 'docker', 'faça']);
+
+      talk.fake.answerNext(0);
+      talk.asked[1]?.end(0);
+      await talk.settle();
+      expect(talk.asked[2]?.argv).toEqual([
+        'with-project',
+        '--project',
+        'site',
+        '--sandbox',
+        'docker',
+        'Trabalhe no projeto.',
+      ]);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('restarts once for two restarts at the same time, and not at all when no agent runs', async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      const talk = conversation(tmp.path, 'echo');
+      await restartSequence(talk.state.context, talk.fake.panel);
+      expect(talk.asked).toHaveLength(0);
+
+      talk.state.send('faça', talk.fake.panel);
+      await talk.settle();
+      const first = restartSequence(talk.state.context, talk.fake.panel);
+      const second = restartSequence(talk.state.context, talk.fake.panel);
+      talk.asked[0]?.end(1);
+      await Promise.all([first, second]);
+      await talk.settle();
+
+      expect(talk.asked.map((run) => run.argv)).toEqual([
+        ['echo', 'faça'],
+        ['echo', 'faça'],
+      ]);
+      expect(talk.fake.written.filter((line) => line.includes('terminou'))).toEqual([]);
     } finally {
       tmp.cleanup();
     }

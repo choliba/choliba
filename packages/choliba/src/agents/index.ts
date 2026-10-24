@@ -101,6 +101,7 @@ export {
   modeChoice,
   panelProviderChoice,
   resetSequenceStop,
+  restartSequence,
   resumeSequence,
   sandboxChoice,
   sandboxProblem,

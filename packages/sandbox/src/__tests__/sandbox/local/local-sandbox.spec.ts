@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 
 import {
@@ -310,6 +310,51 @@ describe('LocalSandbox with bwrap', () => {
       ]);
       expect(result.stdout).not.toContain('hidden');
       expect(result.stdout).not.toContain('outside');
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('follows a short-name link in a mounted shortcuts folder after home is emptied', () => {
+    const bwrap = bwrapOnPath();
+    expect(bwrap).toBeDefined();
+    const tmp = makeTmpDir('bwrap-shortcut');
+    try {
+      const home = join(tmp.path, 'home');
+      const version = join(home, '.local', 'share', 'agent', 'versions', '1');
+      const executable = join(version, 'agent');
+      const runDir = join(tmp.path, 'run');
+      const shortcuts = `${runDir}.bin`;
+      mkdirSync(version, { recursive: true });
+      mkdirSync(runDir);
+      mkdirSync(shortcuts);
+      writeFileSync(executable, '#!/usr/bin/bash\necho ran\n');
+      chmodSync(executable, 0o755);
+      symlinkSync(executable, join(shortcuts, 'agent'));
+      const facts: DiskFacts = {
+        exists: existsSync,
+        isDirectory: (path) => existsSync(path) && statSync(path).isDirectory(),
+        read: readDir,
+      };
+      const plan = new LocalSandbox({
+        disk: facts,
+        bwrap,
+        environment: { HOME: home, CLAUDE_CODE_OAUTH_TOKEN: 'secret', PATH: `${shortcuts}:/usr/bin:/bin` },
+      }).plan({
+        command: ['/usr/bin/bash', '-c', 'agent'],
+        program: {
+          executable: '/usr/bin/bash',
+          readOnly: [version, '/usr/bin/bash'],
+          credentials: ['CLAUDE_CODE_OAUTH_TOKEN'],
+          credentialHelp: 'defina a credencial',
+        },
+        reach: reach({}, { runDir, alsoRead: [shortcuts] }),
+      });
+      const result = spawnSync(plan.command[0] ?? '', plan.command.slice(1), {
+        encoding: 'utf8',
+        env: plan.env,
+      });
+      expect([result.status, result.stdout, result.stderr]).toEqual([0, 'ran\n', '']);
     } finally {
       tmp.cleanup();
     }

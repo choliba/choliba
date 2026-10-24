@@ -4,6 +4,7 @@ import {
   AGENT_PROVIDERS,
   activeAgent,
   agentKey,
+  agentSequenceState,
   agentsDir,
   bold,
   installedProvider,
@@ -13,6 +14,7 @@ import {
   PANEL_MODEL_DEFAULT,
   panelProviderChoice,
   PROVIDER,
+  restartSequence,
   SANDBOX,
   sandboxChoice,
   sandboxProblem,
@@ -208,9 +210,12 @@ const sandboxCommand: PanelCommand = {
   description: 'Escolhe onde o provider roda',
   run: async ({ container, panel, context }) => {
     const active = sandboxChoice(container, context);
+    const running = agentSequenceState(context)?.current !== undefined;
     const chosen = await panel.choose({
       title: 'Escolha o sandbox',
-      description: 'Onde o provider roda nesta sessão. O padrão vem de CHOL_SANDBOX.',
+      description: running
+        ? 'Trocar reinicia a execução no sandbox novo.'
+        : 'Onde o provider roda nesta sessão. O padrão vem de CHOL_SANDBOX.',
       options: SANDBOXES.map((sandbox) => ({
         label: sandbox,
         detail: sandboxProblem(container, sandbox) === undefined ? SANDBOX_CHOICES[sandbox] : 'Docker não encontrado',
@@ -226,6 +231,9 @@ const sandboxCommand: PanelCommand = {
     }
     context.set(SANDBOX, sandbox);
     panel.write(`Sandbox ${bold(sandbox)} selecionado.`);
+    if (agentSequenceState(context)?.current === undefined) return;
+    panel.write('Reiniciando a execução.');
+    await restartSequence(context, panel);
   },
 };
 

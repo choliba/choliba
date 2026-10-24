@@ -40,7 +40,8 @@ export const PANEL_SPEC: CommandSpec = {
       '`/provider` os escolhe entre `auto` e todos os providers, e `/model` entre os modelos que os agentes declaram ' +
       'para ele e o padrão, em que cada agente roda o primeiro modelo que declara. A linha de status mostra o modo, que o Shift+Tab alterna e `/mode` escolhe ' +
       'entre os que o primeiro agente aceita, o sandbox onde o provider roda (o de CHOL_SANDBOX), que `/sandbox` ' +
-      'troca para a sessão, e, enquanto um agente roda, há quanto tempo.',
+      'troca para a sessão e reinicia a execução se um agente estiver rodando, e, enquanto um agente roda, há quanto ' +
+      'tempo.',
     'Uma mensagem sem `/` é a tarefa do primeiro agente. Os seguintes rodam com a sua tarefa padrão, ou com a ' +
       'mensagem quando não têm uma, e o ticket que um deixa é o do próximo (sem ticket, um agente de tickets pergunta ' +
       'o tipo do ticket novo que a execução cria). Entre dois agentes, o painel pergunta se segue: Enter segue, e Esc ' +
