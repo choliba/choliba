@@ -10,7 +10,7 @@ disable-model-invocation: false
 
 Work that changes this repo starts as an **issue** in https://github.com/choliba/choliba/issues. The issue says
 what is wrong or what is wanted; the **plan** says how it will be done and is a comment on that issue. There is no
-other queue: the open issues are the backlog, and an issue closed by its pull request is the history.
+other queue: the open issues are the backlog, and an issue closed when its pull request is merged is the history.
 
 The work is an **open pool**: any agent (`claude`, `codex`, `cursor`) may execute any available issue, whoever
 opened it. The repository is public: an issue, a plan and a comment never carry secrets, `.env` values, tokens or
@@ -45,21 +45,27 @@ The status of an issue is its labels:
 | no status label | Open and available. A plan comment may exist or not. |
 | `em execução` | Someone has a branch or local commits for it; the latest `Pego por <origin>` comment names who. |
 | `PR aberto` | The pull request is open, waiting for the merge; the PR is linked to the issue (`Closes #N`). |
-| closed | Merged and released (`Closes #N` closes the issue when the PR reaches `master`), or closed as not planned. |
+| closed | Resolved: its pull request is merged into `develop` (the next release ships it), or closed as not planned. |
 
 Transitions:
 
-1. **Before creating the branch**, add `em execução` and comment `Pego por <origin>` (`claude`, `codex` or `cursor`).
+1. **Before creating the branch**, assign the issue to yourself, add `em execução` and comment `Pego por <origin>`
+   (`claude`, `codex` or `cursor`):
+   `gh issue edit N --add-assignee @me --add-label 'em execução'` and `gh issue comment N --body 'Pego por <origin>'`.
 2. **On opening the pull request**, swap `em execução` for `PR aberto`. The PR body has `Closes #N`.
-3. **After the merge into `develop`**, leave the issue open with `PR aberto`; the release to `master` closes it.
-4. **Giving up**, remove the label and comment why, so the next one starts from there.
+3. **After the merge into `develop`**, the `Close issues` workflow (`.github/workflows/close-issues.yml`) closes every
+   open issue the PR body names with a closing keyword (`Closes #N`, `Fixes #N`, `Resolves #N`), comments
+   `Resolvida em #PR; sai na próxima release.` and removes `PR aberto`. GitHub itself only does this for PRs into the
+   default branch (`master`). Check that the issue closed; if the body had no keyword, close it the same way by hand.
+4. **Giving up**, remove the assignee and the label (`--remove-assignee @me --remove-label 'em execução'`) and
+   comment why, so the next one starts from there.
 
 **Claiming an issue.** There is no atomic lock, so re-reading is the only defence against two agents taking the same
 issue:
 
 1. Right before claiming, read the issue again (`gh issue view N --comments`). If it has `em execução` or `PR aberto`,
    pick another one.
-2. Add the label and the `Pego por` comment.
+2. Assign it to yourself, add the label and the `Pego por` comment.
 3. Read it once more. If an earlier `Pego por` from another agent appeared, the other agent won: undo yours and pick
    another one.
 
