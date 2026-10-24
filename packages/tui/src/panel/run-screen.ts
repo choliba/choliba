@@ -6,6 +6,8 @@ export interface PanelRunScreen {
   readonly framed: true;
   readonly out: Writable;
   readonly err: Writable;
+  /** A notice in the warning color, line by line, in the conversation like the rest. */
+  readonly warn: Writable;
   model(name: string): void;
   onInterrupt(listener: () => void): void;
   onMessage(listener: (text: string) => void): void;
@@ -45,6 +47,11 @@ export function createPanelRunScreen(options: PanelRunScreenOptions): PanelRunSc
     framed: true,
     out: shown,
     err: shown,
+    warn: {
+      write: (text) => {
+        shown.write(text.replace(/[^\n]+/g, (line) => `\u001b[33m${line}\u001b[39m`));
+      },
+    },
     model: (name) => {
       options.reportModel(name);
     },

@@ -1172,7 +1172,7 @@ describe('runAgent — panel', () => {
 
     expect(await runAgent(request, deps(s, open, true))).toBe(0);
     expect(record.written.join('')).toContain(
-      '› use React (não entregue: este provider não recebe mensagens durante a execução)\n',
+      '› use React (não entregue: este provider não recebe mensagens durante a execução; envie de novo quando ele terminar)\n',
     );
 
     const skipping = fakePanel(false, { status: 'skipped' });
@@ -1201,7 +1201,7 @@ describe('runAgent — panel', () => {
     expect(record.options[0]?.hint).toBe('Enter envia · Ctrl+J cria uma linha');
   });
 
-  it("in a host's panel, which already shows what was said, writes only that a message did not reach the agent", async () => {
+  it("in a host's panel, which already shows what was said, warns only that a message did not reach the agent", async () => {
     const delivered = setup(
       fakeSpawner({ stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'ok' }])]) }).spawner,
       { inputMessage: (text) => `>${text}\n` },
@@ -1216,7 +1216,8 @@ describe('runAgent — panel', () => {
     const refused = fakePanel(false, { status: 'skipped' }, 'use React');
     expect(await runAgent(refusing.request(), { ...deps(refusing, refused.open), hostedPanel: true })).toBe(0);
     expect(refused.record.written.join('')).toContain(
-      '(não entregue: este provider não recebe mensagens durante a execução)\n',
+      '\u001b[33mMensagem não entregue a example-echo-agent: este provider não recebe mensagens durante a execução; ' +
+        'envie de novo quando ele terminar.\u001b[39m\n',
     );
     expect(refused.record.written.join('')).not.toContain('› use React');
   });

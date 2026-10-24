@@ -359,13 +359,13 @@ async function followSession(
   screen.onInterrupt(onSigint);
   input.begin();
   // What the person sends goes to the session and stays in the frame, saying why when it could not reach the agent. A
-  // host's panel already shows what was said: there, the frame says only that it did not reach the agent.
+  // host's panel already shows what was said: there, a warning says it did not reach the agent, and what to do.
   screen.onMessage((text) => {
     const refused = input.send(text);
     if (deps.hostedPanel !== true) {
       screen.out.write(`› ${text}${refused === undefined ? '' : ` (não entregue: ${refused})`}\n`);
     } else if (refused !== undefined) {
-      screen.out.write(`(não entregue: ${refused})\n`);
+      screen.warn.write(`Mensagem não entregue a ${request.providerRequest.agent.id}: ${refused}.\n`);
     }
   });
   const stopAsking = runToolsOf(request.providerRequest).some((tool) => tool.name === 'ask')
