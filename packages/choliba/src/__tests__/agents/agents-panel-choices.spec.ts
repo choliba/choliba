@@ -180,8 +180,8 @@ describe('/agents, changing an agent of the sequence', () => {
       const panel = session(tmp.path, noCursor);
       await panel.add(0, 0, 0, 0);
       expect(panel.state.values.get('provider:echo')).toBe('claude');
-      // echo again, on cursor, which is not installed: it stays on claude, with its model.
-      await panel.add(0, 1);
+      // echo again, changed to cursor, which is not installed: it stays on claude, with its model.
+      await panel.add(0, 0, 1);
       expect(panel.fake.written.at(-1)).toBe(
         warn('O agente echo fica como estava: o provider cursor não está instalado nesta máquina.'),
       );
