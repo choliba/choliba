@@ -54,7 +54,13 @@ function artBox<Context, Node, Styled extends { readonly chunks: Chunk[] }, Chun
   art: ArtCell[][],
   lift: number,
 ): Node & PanelBox<Node> {
-  const picture = new kit.BoxRenderable(renderer, { flexDirection: 'column', position: 'relative', top: -lift });
+  // It never gives up width: a narrower art would wrap its rows and break the picture; the lines beside it do instead.
+  const picture = new kit.BoxRenderable(renderer, {
+    flexDirection: 'column',
+    position: 'relative',
+    top: -lift,
+    flexShrink: 0,
+  });
   const chunks = (cell: ArtCell): Chunk[] => {
     const drawn = cell.fg === undefined ? kit.stringToStyledText(cell.text).chunks : [kit.fg(cell.fg)(cell.text)];
     const background = cell.bg;
@@ -123,6 +129,8 @@ export interface Header<Node> {
   cards(cards: readonly PanelCard[]): void;
   /** Opens or collapses the card whose key is `key` (Ctrl+`key`): `true` when a card has it. Open at first. */
   toggleKey(key: string): boolean;
+  /** Lays the cards out again in the header's width: the terminal changed size. */
+  relayout(): void;
   /** Called when a card that can move is dropped on another that can: it takes that one's place. */
   onMove(listener: (title: string, onto: string) => void): void;
   /** Stops the spinners: the panel is closing. */
@@ -203,9 +211,10 @@ const CARD_BORDER = PALETTE.gray;
 const DRAGGED_BORDER = PALETTE['bright-yellow'];
 const AIMED_BORDER = PALETTE.white;
 
-/** A card over its slot; the slot of a card dragged, over the other cards. */
+/** A card over its slot; the slot of a card dragged, over the other cards; what covers the conversation, under both. */
 const CARD_Z = 2;
 const DRAGGED_Z = 1;
+const BACKDROP_Z = 0;
 
 /**
  * Behind a card, so an open one covers the conversation under it: the background of the dark theme `PALETTE` comes
@@ -237,6 +246,20 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
   let headingWidth = 0;
   const column = new kit.BoxRenderable(renderer, { flexDirection: 'column' });
   box.add(column);
+  // Under the header's rows and as wide as the panel, down to where an open card ends: shown while a card is open, it
+  // covers the conversation on both sides of the card, as the card covers it under itself.
+  const backdrop = new kit.BoxRenderable(renderer, {
+    flexDirection: 'column',
+    position: 'absolute',
+    top: COLLAPSED_HEIGHT,
+    left: 0,
+    width: '100%',
+    height: CARD_HEIGHT - COLLAPSED_HEIGHT,
+    zIndex: BACKDROP_Z,
+    backgroundColor: CARD_BACKGROUND,
+  });
+  backdrop.visible = false;
+  box.add(backdrop);
   // A line no longer given keeps its row, empty, so the header does not jump.
   const rows: PanelText<Styled>[] = [];
   const heading = (lines: readonly string[]): void => {
@@ -441,6 +464,7 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
   const cards = (shown: readonly PanelCard[]): void => {
     current = shown;
     spin(shown.some((each) => each.busy === true));
+    backdrop.visible = shown.some((each) => expanded.has(each.title));
     for (const [title, card] of made) {
       card.slot.visible = shown.some((each) => each.title === title);
       card.joint.visible = false;
@@ -524,5 +548,8 @@ export function headerBox<Context, Node, Styled extends { readonly chunks: Chunk
   const onMove = (listener: (title: string, onto: string) => void): void => {
     moves.push(listener);
   };
-  return { box, heading, cards, toggleKey, onMove, stop };
+  const relayout = (): void => {
+    cards(current);
+  };
+  return { box, heading, cards, toggleKey, relayout, onMove, stop };
 }
