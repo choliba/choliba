@@ -127,8 +127,11 @@ export interface Panel {
   refresh(): void;
   /** Called when the person presses Ctrl+C, which the panel's keyboard takes before the terminal makes a signal. */
   onInterrupt(listener: () => void): void;
-  /** Asks `question` in the field and gives the answer; questions asked together wait their turn. */
-  ask(question: PanelQuestion): Promise<PanelReply>;
+  /**
+   * Asks `question` in the field and gives the answer; questions asked together wait their turn. When `signal` aborts
+   * first (the run that asked has ended), the question leaves the field and the reply is `skipped`.
+   */
+  ask(question: PanelQuestion, signal?: AbortSignal): Promise<PanelReply>;
   /** Called with what the person typed and sent in the field while no question was pending. */
   onMessage(listener: (text: string) => void): void;
   /** Gives the terminal back as it was; the panel's lines are the caller's to print. */

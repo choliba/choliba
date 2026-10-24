@@ -81,7 +81,7 @@ export async function buildProviderRequest(
     agent,
     mode,
     policy: effectivePolicy(command, mode),
-    userPrompt: buildUserPrompt({ templateOutput, mode, planContent }),
+    userPrompt: buildUserPrompt({ templateOutput, mode, planContent, conclusions: deps.conclusions }),
     workspaceRoot: deps.repoRoot,
     runDir: join(
       deps.runsDir ?? join(deps.repoRoot, RUNS_DIR),

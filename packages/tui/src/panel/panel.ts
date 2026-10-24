@@ -284,6 +284,11 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     resizeInput();
   };
   refresh();
+  // A terminal of another size: the footer's lines and the header's cards take its new width.
+  renderer.on('resize', () => {
+    refresh();
+    top?.relayout();
+  });
   // What the conversation added to the scroll box, so `clear` can take it out.
   const chat: Node[] = [];
   // The block of the agent that wrote last, which its next lines join; anything else written ends it.
@@ -384,7 +389,7 @@ export async function openPanel<Context, Node, Styled extends { readonly chunks:
     onInterrupt: (listener) => {
       interrupts.push(listener);
     },
-    ask: (question) => desk.ask(question),
+    ask: (question, signal) => desk.ask(question, signal),
     onMessage: (listener) => {
       desk.onMessage(listener);
     },

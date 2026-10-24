@@ -61,6 +61,11 @@ ele suba. As regras do provider continuam valendo dentro do container.
   de trabalho; com escrita, a pasta da execução, `allow.write` (fora de `plan` e `ask`), a saída das ferramentas do
   Playwright e o `ticket-runs/` do projeto. Um `deny.read` dentro disso aparece vazio; um `deny.write` dentro de algo
   com escrita volta a ser só leitura.
+- **O choliba usado das fontes também roda**: quando `node_modules/choliba` e `node_modules/@choliba/*` são links para
+  pastas da própria pasta de trabalho (o choliba como `workspace:*`, no repositório dele), o destino real deles entra
+  só para leitura, mesmo dentro de um `deny.read`, para o `bun choliba` do agente achar o script. A escrita ali
+  continua negada, e a ferramenta de leitura do agente continua limitada pelas permissões dele. Com o choliba
+  instalado, esses pacotes estão dentro do `node_modules`, e nada muda.
 - **Um arquivo com escrita abre a pasta dele**, exista ou não: o provider grava um arquivo temporário ao lado e o
   renomeia por cima, o que um arquivo montado sozinho não aceita. O resto dessa pasta que não leva a um caminho com
   escrita (os outros tickets, por exemplo) fica só leitura, e as regras do provider limitam a escrita ao arquivo.

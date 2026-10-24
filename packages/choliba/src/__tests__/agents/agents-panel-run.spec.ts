@@ -18,7 +18,7 @@ import { fakeChatPanel, fakePanelContext } from '@choliba/tui/testing';
 import { ProviderRegistry } from '@choliba/engine';
 import { ClaudeAgentProvider } from '@choliba/providers';
 import { agentsConfig } from '../../agents/agents/agents-config';
-import { restartSequence, resumeSequence, talkToAgent } from '../../agents/agents/agents-panel-run';
+import { forgetSequence, restartSequence, resumeSequence, talkToAgent } from '../../agents/agents/agents-panel-run';
 import { AGENT_PROVIDERS, AGENTS } from '../../agents/agents/agents.constants';
 import { agentsPanel } from '../../panel';
 import { AgentsService, type HostedRun } from '../../agents/agents/agents.service';
@@ -461,6 +461,80 @@ describe('talkToAgent', () => {
     }
   });
 
+  it('tells each agent what the others of the session concluded, a stopped one too, until the session forgets', async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      const talk = conversation(tmp.path, 'echo,with-project');
+      talk.state.context.set('projeto', 'site');
+      talk.state.send('escreva o ticket', talk.fake.panel);
+      await talk.settle();
+      expect(talk.asked[0]?.host.conclusions).toEqual([]);
+
+      talk.asked[0]?.host.concluded?.('o ticket está pronto');
+      talk.fake.answerNext(0);
+      talk.asked[0]?.end(0);
+      await talk.settle();
+      const echo = {
+        agent: 'echo',
+        task: 'escreva o ticket',
+        reason: 'completed',
+        exitCode: 0,
+        conclusion: 'o ticket está pronto',
+      };
+      expect(talk.asked[1]?.host.conclusions).toEqual([echo]);
+
+      talk.asked[1]?.host.concluded?.('parei: o CA-01 não é testável');
+      talk.asked[1]?.end(1);
+      await talk.settle();
+      resumeSequence(talk.state.context, talk.fake.panel, 0, 'veja o que o with-project disse');
+      await talk.settle();
+      expect(talk.asked[2]?.host.conclusions).toEqual([
+        echo,
+        {
+          agent: 'with-project',
+          task: 'Trabalhe no projeto.',
+          reason: 'failed',
+          exitCode: 1,
+          conclusion: 'parei: o CA-01 não é testável',
+        },
+      ]);
+      talk.asked[2]?.end(1);
+      await talk.settle();
+
+      forgetSequence(talk.state.context);
+      resumeSequence(talk.state.context, talk.fake.panel, 0, 'de novo');
+      await talk.settle();
+      expect(talk.asked[3]?.host.conclusions).toEqual([]);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('asks before taking a task too short to mean one, and runs it only when confirmed', async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      const talk = conversation(tmp.path, 'echo');
+      talk.fake.answerNext(1);
+      talk.state.send('i', talk.fake.panel);
+      await talk.settle();
+      expect(talk.fake.choices.at(-1)).toEqual({
+        title: 'Mandar "i" como tarefa?',
+        description: 'É curta demais para uma tarefa: confira se não foi enviada por engano.',
+        options: [{ label: 'Sim, mandar' }, { label: 'Não' }],
+      });
+      expect(talk.asked).toHaveLength(0);
+
+      talk.fake.answerNext(0);
+      talk.state.send('ok', talk.fake.panel);
+      await talk.settle();
+      expect(talk.asked.map((run) => run.argv)).toEqual([['echo', 'ok']]);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
   it('runs at the end of the sequence an agent added while it goes', async () => {
     const tmp = makeTmpDir('panel-run');
     try {
@@ -554,6 +628,16 @@ describe('AgentsService.runHosted', () => {
       const ticket = (): void => undefined;
       expect(
         await service.runHosted(['nada'], { panel: () => Promise.resolve(undefined), stdout, stderr, ticket }),
+      ).toBe(1);
+      const concluded = (): void => undefined;
+      expect(
+        await service.runHosted(['nada'], {
+          panel: () => Promise.resolve(undefined),
+          stdout,
+          stderr,
+          conclusions: [],
+          concluded,
+        }),
       ).toBe(1);
       expect(opened).toEqual([]);
       expect(platform.stdout.text()).toBe('');

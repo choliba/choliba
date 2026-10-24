@@ -36,6 +36,8 @@ export interface PanelRenderer<Node> {
   readonly keyInput: { on(event: 'keypress', listener: (key: PanelKey) => void): unknown };
   /** Called when the person lets go of the mouse after dragging it over text. */
   on(event: 'selection', listener: (selection: PanelSelection | null) => void): unknown;
+  /** Called when the terminal changes size. */
+  on(event: 'resize', listener: () => void): unknown;
   /** Puts `text` in the terminal's clipboard (OSC 52); `false` when the terminal does not take it. */
   copyToClipboardOSC52(text: string): boolean;
   destroy(): void;

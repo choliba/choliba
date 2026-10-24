@@ -9,6 +9,7 @@ export interface LineRunScreen {
   readonly framed: boolean;
   readonly out: Writable;
   readonly err: Writable;
+  readonly warn: Writable;
   model(name: string): void;
   onInterrupt(listener: () => void): void;
   onMessage(listener: (text: string) => void): void;
@@ -45,6 +46,7 @@ function plainScreen(options: LineRunScreenOptions): LineRunScreen {
     framed: false,
     out: options.stdout,
     err: options.stderr,
+    warn: options.stderr,
     model: noop,
     onInterrupt: noop,
     onMessage: noop,
@@ -77,6 +79,7 @@ function footerScreen(options: LineRunScreenOptions): LineRunScreen {
     framed: true,
     out: framed(options.stdout),
     err: framed(options.stderr),
+    warn: framed(options.stderr),
     model: (reported) => {
       model = reported;
     },

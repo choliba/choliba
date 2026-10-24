@@ -138,7 +138,16 @@ function clickCard(card: FakeNode | undefined): void {
 
 /** The cards' slots in a header: its boxes after the column of lines, the `>>>` between them left out. */
 function slotsOf(header: FakeNode | undefined): FakeNode[] {
-  return (header?.children ?? []).slice(1).filter((each) => each.kind === 'box');
+  return (header?.children ?? []).slice(1).filter((each) => each.kind === 'box' && !isBackdrop(each));
+}
+
+/** The header's box that covers the conversation beside an open card: the only one over the layout, as wide as it. */
+function isBackdrop(node: FakeNode): boolean {
+  return node.built['position'] === 'absolute' && node.built['width'] === '100%';
+}
+
+function backdropOf(header: FakeNode | undefined): FakeNode | undefined {
+  return header?.children.find(isBackdrop);
 }
 
 /** Three by two pixels: red over blue, nothing over green, nothing over nothing. */
@@ -154,6 +163,7 @@ function fakeToolkit(failToOpen = false) {
   const keys: ((key: PanelKey) => void)[] = [];
   const configs: PanelRendererConfig[] = [];
   const selections: ((selection: PanelSelection | null) => void)[] = [];
+  const resizes: (() => void)[] = [];
   const copied: string[] = [];
   const renderer = {
     root: new FakeNode('root', {}),
@@ -164,8 +174,12 @@ function fakeToolkit(failToOpen = false) {
         keys.push(listener);
       },
     },
-    on: (_event: 'selection', listener: (selection: PanelSelection | null) => void) => {
-      selections.push(listener);
+    on: (event: 'selection' | 'resize', listener: (selection: PanelSelection | null) => void) => {
+      if (event === 'resize') {
+        resizes.push(() => {
+          listener(null);
+        });
+      } else selections.push(listener);
     },
     copyToClipboardOSC52: (text: string) => {
       copied.push(text);
@@ -247,7 +261,14 @@ function fakeToolkit(failToOpen = false) {
       listener(text === null ? null : { getSelectedText: () => text });
     });
   };
-  return { kit, renderer, configs, press, images, select, copied };
+  /** The terminal is now `width` columns wide. */
+  const resize = (width: number): void => {
+    renderer.width = width;
+    resizes.forEach((listener) => {
+      listener();
+    });
+  };
+  return { kit, renderer, configs, press, images, select, copied, resize };
 }
 
 const OPTIONS = {
@@ -411,7 +432,7 @@ describe('openPanel', () => {
 
     const [layout] = renderer.root.children;
     const [header, , , bottom, , , footer] = layout?.children ?? [];
-    expect(header?.children.map((child) => child.kind)).toEqual(['box']);
+    expect(header?.children.filter((child) => !isBackdrop(child)).map((child) => child.kind)).toEqual(['box']);
     expect([header?.visible, bottom?.visible, footer?.visible]).toEqual([false, false, false]);
     press({ name: 'return', ctrl: false });
     expect([header?.visible, bottom?.visible, footer?.visible]).toEqual([true, true, true]);
@@ -520,7 +541,7 @@ describe('openPanel', () => {
       { chunks: [{ text: 'ticket site-1' }] },
     ]);
     expect(card(implementer)?.title).toBe(' ▸ implementer-de-n…');
-    const [ownerJoint, , implementerJoint] = (header?.children ?? []).slice(1);
+    const [ownerJoint, , implementerJoint] = (header?.children ?? []).slice(1).filter((child) => !isBackdrop(child));
     expect([ownerJoint?.visible, implementerJoint?.visible]).toEqual([false, true]);
     // An arrow from one card's border to the other's, over the gaps on its sides.
     expect(JSON.stringify(implementerJoint?.content)).toContain('──────▶');
@@ -817,6 +838,38 @@ describe('openPanel', () => {
     expect(clicked).toEqual([1]);
   });
 
+  it('covers the conversation beside an open card across the panel, and lays the cards out again on a resize', async () => {
+    const { kit, renderer, press, resize } = fakeToolkit();
+    const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });
+    const header = renderer.root.children[0]?.children[0];
+    panel.cards([
+      { title: 'projeto', key: 'p', lines: ['site'] },
+      { title: 'owner', lines: ['o'], state: 'aguardando' },
+      { title: 'implementer', lines: ['i'], state: 'aguardando', joined: true },
+    ]);
+    const backdrop = backdropOf(header);
+    expect(backdrop?.built).toMatchObject({
+      position: 'absolute',
+      top: 5,
+      left: 0,
+      width: '100%',
+      height: 5,
+      zIndex: 0,
+      backgroundColor: '#1e1e1e',
+    });
+    expect(backdrop?.visible).toBe(false);
+    press({ name: 'p', ctrl: true });
+    expect(backdrop?.visible).toBe(true);
+    press({ name: 'p', ctrl: true });
+    expect(backdrop?.visible).toBe(false);
+
+    const widths = () => slotsOf(header).map((slot) => slot.width);
+    expect(widths()).toEqual([44, 20, 20]);
+    resize(200);
+    expect(widths()).toEqual([44, 44, 44]);
+    panel.close();
+  });
+
   it('shows cards on the right of the header lines, all as tall and scrolling inside, each made once', async () => {
     const { kit, renderer } = fakeToolkit();
     const panel = await openPanel(kit, { ...OPTIONS, header: { lines: ['a'] } });
@@ -869,7 +922,7 @@ describe('openPanel', () => {
     panel.cards([{ title: 'ticket', lines: ['site-2'] }]);
     // A card no longer given hides with its slot, which gives its room back.
     expect(slotsOf(header).map((each) => each.visible)).toEqual([false, true]);
-    expect(header?.children.length).toBe(5);
+    expect(header?.children.filter((child) => !isBackdrop(child)).length).toBe(5);
     expect(ticket?.children[0]?.content).toEqual({ chunks: [{ text: 'site-2' }] });
 
     panel.cards([
@@ -1109,6 +1162,60 @@ describe('openPanel', () => {
     input.emit('submit');
     expect(sent).toEqual(['continue com React']);
     expect(input.value).toBe('');
+  });
+
+  it('sends a command typed while a question waits, which stays, and takes the marker off a pasted text', async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, OPTIONS);
+    const { input } = layoutOf(renderer);
+    const sent: string[] = [];
+    panel.onMessage((text) => sent.push(text));
+
+    input.value = '❯ veja o ticket';
+    input.emit('submit');
+    const reply = panel.ask({ question: 'Qual o nome?', options: [], multi: false });
+    input.value = '/agents';
+    input.emit('submit');
+    expect(sent).toEqual(['veja o ticket', '/agents']);
+    expect(input.placeholder).toBe('Qual o nome?');
+
+    input.value = '❯ /resume';
+    input.emit('submit');
+    input.value = '❯ ';
+    input.emit('submit');
+    input.value = 'Ana';
+    input.emit('submit');
+    expect(sent).toEqual(['veja o ticket', '/agents', '/resume']);
+    expect(await reply).toEqual({ status: 'answered', answer: 'Ana' });
+  });
+
+  it('takes a question out of the field, or out of the queue, when the one who asked withdraws it', async () => {
+    const { kit, renderer } = fakeToolkit();
+    const panel = await openPanel(kit, OPTIONS);
+    const { input } = layoutOf(renderer);
+    const first = new AbortController();
+    const second = new AbortController();
+
+    const asked = panel.ask({ question: 'Qual o nome?', options: [], multi: false }, first.signal);
+    const queued = panel.ask({ question: 'Qual a cidade?', options: [], multi: false }, second.signal);
+    second.abort();
+    expect(await queued).toEqual({ status: 'skipped' });
+    expect(input.placeholder).toBe('Qual o nome?');
+    first.abort();
+    expect(await asked).toEqual({ status: 'skipped' });
+    expect(input.placeholder).toBe('Enter envia · Ctrl+J cria uma linha');
+    expect(await panel.ask({ question: 'Já foi?', options: [], multi: false }, first.signal)).toEqual({
+      status: 'skipped',
+    });
+    expect(input.placeholder).toBe('Enter envia · Ctrl+J cria uma linha');
+
+    const late = new AbortController();
+    const answered = panel.ask({ question: 'Qual o nome?', options: [], multi: false }, late.signal);
+    input.value = 'Ana';
+    input.emit('submit');
+    late.abort();
+    expect(await answered).toEqual({ status: 'answered', answer: 'Ana' });
+    expect(input.placeholder).toBe('Enter envia · Ctrl+J cria uma linha');
   });
 
   it('brings back what was sent with ↑ and ↓, on an empty field, keeping the keys from it', async () => {

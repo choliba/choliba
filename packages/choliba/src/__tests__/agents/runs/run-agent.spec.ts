@@ -325,6 +325,44 @@ describe('runAgent', () => {
     expect(answers).toEqual(['a análise']);
   });
 
+  it('tells what the agent concluded whatever its exit code, and nothing when it said nothing', async () => {
+    const conclusions: string[] = [];
+    const deps = (s: Setup) => ({
+      runner: s.runner,
+      stdout: s.stdout,
+      stderr: s.stderr,
+      signals: s.signals,
+      now: () => new Date(0),
+      concluded: (conclusion: string) => conclusions.push(conclusion),
+      screen: (info: RunFooterInfo, request: RunAgentRequest) =>
+        createRunScreen(info, request, {
+          stdout: s.stdout,
+          stderr: s.stderr,
+          now: () => new Date(0),
+          footer: false,
+          hostedPanel: false,
+        }),
+    });
+    const clean = setup(
+      fakeSpawner({ stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'a análise' }])]) })
+        .spawner,
+    );
+    const failed = setup(
+      fakeSpawner({
+        stdout: streamFromChunks([eventLines([{ type: 'text', text: 'parei: o ticket precisa de ajuste' }])]),
+        exitCode: 2,
+      }).spawner,
+    );
+    const silent = setup(
+      fakeSpawner({ stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: ' ' }])]) }).spawner,
+    );
+
+    expect(await runAgent(clean.request(), deps(clean))).toBe(0);
+    expect(await runAgent(failed.request(), deps(failed))).toBe(2);
+    expect(await runAgent(silent.request(), deps(silent))).toBe(0);
+    expect(conclusions).toEqual(['a análise', 'parei: o ticket precisa de ajuste']);
+  });
+
   it('propagates a non-zero process exit code even when the last done event looked successful', async () => {
     const lines = eventLines([{ type: 'done', isError: false, text: 'ok' }]);
     const s = setup(fakeSpawner({ stdout: streamFromChunks([lines]), exitCode: 3 }).spawner);
@@ -1134,7 +1172,7 @@ describe('runAgent — panel', () => {
 
     expect(await runAgent(request, deps(s, open, true))).toBe(0);
     expect(record.written.join('')).toContain(
-      '› use React (não entregue: este provider não recebe mensagens durante a execução)\n',
+      '› use React (não entregue: este provider não recebe mensagens durante a execução; envie de novo quando ele terminar)\n',
     );
 
     const skipping = fakePanel(false, { status: 'skipped' });
@@ -1163,7 +1201,7 @@ describe('runAgent — panel', () => {
     expect(record.options[0]?.hint).toBe('Enter envia · Ctrl+J cria uma linha');
   });
 
-  it("in a host's panel, which already shows what was said, writes only that a message did not reach the agent", async () => {
+  it("in a host's panel, which already shows what was said, warns only that a message did not reach the agent", async () => {
     const delivered = setup(
       fakeSpawner({ stdout: streamFromChunks([eventLines([{ type: 'done', isError: false, text: 'ok' }])]) }).spawner,
       { inputMessage: (text) => `>${text}\n` },
@@ -1178,7 +1216,8 @@ describe('runAgent — panel', () => {
     const refused = fakePanel(false, { status: 'skipped' }, 'use React');
     expect(await runAgent(refusing.request(), { ...deps(refusing, refused.open), hostedPanel: true })).toBe(0);
     expect(refused.record.written.join('')).toContain(
-      '(não entregue: este provider não recebe mensagens durante a execução)\n',
+      '\u001b[33mMensagem não entregue a example-echo-agent: este provider não recebe mensagens durante a execução; ' +
+        'envie de novo quando ele terminar.\u001b[39m\n',
     );
     expect(refused.record.written.join('')).not.toContain('› use React');
   });

@@ -56,6 +56,8 @@ export interface RunAgentsCliDeps extends PrepareRunDeps {
    * with `--ticket`): the panel makes it the session's, so the next agent of a sequence works on it.
    */
   readonly ticket?: (ticket: string) => void;
+  /** Told what the agent said last when its session ends, whatever the exit code (the panel's sequence keeps it). */
+  readonly concluded?: (conclusion: string) => void;
 }
 
 export type RunArgs = Extract<ParsedAgentsArgs, { kind: 'run' }>;

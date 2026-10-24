@@ -50,6 +50,8 @@ export {
 export {
   RESUME_AT,
   agentSequenceState,
+  confirmTask,
+  forgetSequence,
   resetSequenceStop,
   restartSequence,
   resumeSequence,

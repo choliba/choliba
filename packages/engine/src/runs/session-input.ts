@@ -13,7 +13,7 @@ export interface SessionInput {
 }
 
 /** Why a message did not reach a provider that reads none while it runs. */
-export const NOT_READ = 'este provider não recebe mensagens durante a execução';
+export const NOT_READ = 'este provider não recebe mensagens durante a execução; envie de novo quando ele terminar';
 
 /** Why a message did not reach a session whose stdin is already closed. */
 export const ALREADY_DONE = 'o agente já terminou';

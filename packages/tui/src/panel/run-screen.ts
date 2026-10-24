@@ -6,6 +6,8 @@ export interface PanelRunScreen {
   readonly framed: true;
   readonly out: Writable;
   readonly err: Writable;
+  /** A notice in the warning color, line by line, in the conversation like the rest. */
+  readonly warn: Writable;
   model(name: string): void;
   onInterrupt(listener: () => void): void;
   onMessage(listener: (text: string) => void): void;
@@ -36,6 +38,8 @@ export function createPanelRunScreen(options: PanelRunScreenOptions): PanelRunSc
       options.panel.write(text);
     },
   };
+  // What withdraws the run's questions from the field when it ends.
+  const asking = new AbortController();
   const stop = options.every(50, () => {
     options.panel.refresh();
   });
@@ -43,6 +47,11 @@ export function createPanelRunScreen(options: PanelRunScreenOptions): PanelRunSc
     framed: true,
     out: shown,
     err: shown,
+    warn: {
+      write: (text) => {
+        shown.write(text.replace(/[^\n]+/g, (line) => `\u001b[33m${line}\u001b[39m`));
+      },
+    },
     model: (name) => {
       options.reportModel(name);
     },
@@ -54,11 +63,13 @@ export function createPanelRunScreen(options: PanelRunScreenOptions): PanelRunSc
     },
     answer: async (question) => {
       shown.write(`? ${question.question}\n`);
-      const reply = await options.panel.ask(question);
+      const reply = await options.panel.ask(question, asking.signal);
       shown.write(`→ ${reply.status === 'skipped' ? '(sem resposta)' : [reply.answer].flat().join(', ')}\n`);
       return reply;
     },
     close: (exitCode) => {
+      // A question of the run still in the field has no one to answer it any more.
+      asking.abort();
       stop();
       options.panel.close();
       if (options.hostedPanel) return;

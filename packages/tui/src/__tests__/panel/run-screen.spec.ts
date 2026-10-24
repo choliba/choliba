@@ -49,6 +49,40 @@ describe('createPanelRunScreen', () => {
     expect(panel.refreshed).toBe(true);
   });
 
+  it('takes its question out of the field when it closes, the answer skipped', async () => {
+    const written: string[] = [];
+    const signals: (AbortSignal | undefined)[] = [];
+    const panel: Panel = {
+      ...createPanel({ written }),
+      ask: (_question, signal) =>
+        new Promise((reply) => {
+          signals.push(signal);
+          signal?.addEventListener('abort', () => {
+            reply({ status: 'skipped' });
+          });
+        }),
+    };
+    const screen = createPanelRunScreen({
+      panel,
+      currentInfo: () => ({ provider: 'claude', place: { kind: 'local' }, startedAt: 0 }),
+      reportModel: () => undefined,
+      name: 'worker',
+      color: undefined,
+      theme: theme(),
+      stdout: { write: () => undefined },
+      now: () => new Date(0),
+      every: () => () => undefined,
+      hostedPanel: true,
+    });
+
+    const answer = screen.answer({ question: 'Qual o nome?', options: [], multi: false });
+    screen.close(1);
+
+    expect(await answer).toEqual({ status: 'skipped' });
+    expect(signals[0]?.aborted).toBe(true);
+    expect(written).toEqual(['? Qual o nome?\n', '→ (sem resposta)\n']);
+  });
+
   it('does not print a hosted panel transcript on close', () => {
     const output: string[] = [];
     const screen = createPanelRunScreen({

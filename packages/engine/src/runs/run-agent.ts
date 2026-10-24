@@ -96,6 +96,11 @@ export interface RunAgentDeps {
   readonly hostedPanel?: boolean;
   /** Called with the agent's final answer when the session ends clean: the `write_files` steps after it save it. */
   readonly answered?: (answer: string) => void;
+  /**
+   * Called with what the agent said last when its session ends, whatever its exit code: what the other agents of a
+   * sequence are told it concluded (why it stopped, too).
+   */
+  readonly concluded?: (conclusion: string) => void;
   /** The run's log: what the screen shows, each line of the provider as it came, and the agent's time. */
   readonly log?: RunLog;
 }
@@ -354,13 +359,13 @@ async function followSession(
   screen.onInterrupt(onSigint);
   input.begin();
   // What the person sends goes to the session and stays in the frame, saying why when it could not reach the agent. A
-  // host's panel already shows what was said: there, the frame says only that it did not reach the agent.
+  // host's panel already shows what was said: there, a warning says it did not reach the agent, and what to do.
   screen.onMessage((text) => {
     const refused = input.send(text);
     if (deps.hostedPanel !== true) {
       screen.out.write(`› ${text}${refused === undefined ? '' : ` (não entregue: ${refused})`}\n`);
     } else if (refused !== undefined) {
-      screen.out.write(`(não entregue: ${refused})\n`);
+      screen.warn.write(`Mensagem não entregue a ${request.providerRequest.agent.id}: ${refused}.\n`);
     }
   });
   const stopAsking = runToolsOf(request.providerRequest).some((tool) => tool.name === 'ask')
@@ -398,6 +403,8 @@ async function followSession(
 
   // A weak model may write its tool call as the answer instead of making it: the session ends clean with nothing run.
   const answer = doneEvent?.text === '' ? textParts.at(-1) : doneEvent?.text;
+  const conclusion = answer ?? textParts.at(-1);
+  if (conclusion !== undefined && conclusion.trim() !== '') deps.concluded?.(conclusion);
   const written = exitCode === 0 ? writtenToolCall(answer ?? '') : undefined;
   if (written !== undefined) {
     screen.err.write(`${writtenToolCallMessage(reportedModel, written)}\n`);
