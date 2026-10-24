@@ -614,6 +614,27 @@ describe('talkToAgent', () => {
     }
   });
 
+  it('goes on to the next agent without asking when the pause is off, and says so', async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      const talk = conversation(tmp.path, 'echo,with-project');
+      talk.state.context.set('projeto', 'site');
+      talk.state.context.set('pausa', 'não');
+      talk.state.send('faça', talk.fake.panel);
+      await talk.settle();
+      const asked = talk.fake.choices.length;
+      talk.asked[0]?.end(0);
+      await talk.settle();
+
+      expect(talk.fake.choices).toHaveLength(asked);
+      expect(talk.fake.written).toContain('Seguindo para with-project.');
+      expect(talk.asked[1]?.argv[0]).toBe('with-project');
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
   it('runs at the end of the sequence an agent added while it goes', async () => {
     const tmp = makeTmpDir('panel-run');
     try {

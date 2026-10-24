@@ -21,6 +21,8 @@ export const PROVIDER = 'provider';
 export const MODEL = 'modelo';
 export const MODE = 'modo';
 export const SANDBOX = 'sandbox';
+/** The context key of the pause between two agents of the sequence: `não` when /pause turned it off. */
+export const PAUSE = 'pausa';
 
 /** The context key of how the last run of an agent went, as its card says it: `estado:<id>`. */
 export const STATE = 'estado';
@@ -179,6 +181,19 @@ function modeLine(modes: readonly ExecutionMode[], current: ExecutionMode): stri
 function showMode(container: Container, context: PanelContext, agent: AgentDefinition | undefined): void {
   context.status(MODE, modeLine(sessionModes(agent), modeChoice(context, agent)));
   showSandbox(container, context);
+  showPause(context);
+}
+
+/** Whether the panel asks before each next agent of the sequence: yes, unless /pause turned it off. */
+export function pausing(context: PanelContext): boolean {
+  return context.get(PAUSE) !== 'não';
+}
+
+/** The pause between agents in the status line, after the sandbox, while the session has more than one agent. */
+export function showPause(context: PanelContext): void {
+  context.status(PAUSE, undefined);
+  if (sessionAgentIds(context).length < 2) return;
+  context.status(PAUSE, pausing(context) ? gray('pausa entre agentes') : bold('sem pausa entre agentes'));
 }
 
 /**

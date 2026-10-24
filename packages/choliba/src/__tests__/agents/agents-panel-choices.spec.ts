@@ -405,6 +405,34 @@ describe('/mode', () => {
   });
 });
 
+describe('/pause', () => {
+  it('turns the pause between agents off and on, the status line saying which while the session has two agents', async () => {
+    const tmp = makeTmpDir('choices');
+    try {
+      agentsFolder(tmp.path);
+      const panel = session(tmp.path, noCursor);
+      await panel.run('pause', undefined);
+      expect(panel.fake.written.at(-1)).toBe(
+        'Pausa entre agentes desligada: a sequência segue sozinha de um agente para o próximo.',
+      );
+      expect(panel.state.values.get('pausa')).toBe('não');
+      expect(panel.state.statuses.has('pausa')).toBe(false);
+
+      panel.state.context.set('agente', 'echo,local');
+      await panel.run('pause', undefined);
+      expect(panel.fake.written.at(-1)).toBe(
+        'Pausa entre agentes ligada: o painel pergunta antes de cada próximo agente.',
+      );
+      expect(panel.state.values.has('pausa')).toBe(false);
+      expect(panel.state.statuses.get('pausa')).toBe(gray('pausa entre agentes'));
+      await panel.run('pause', undefined);
+      expect(panel.state.statuses.get('pausa')).toBe(bold('sem pausa entre agentes'));
+    } finally {
+      tmp.cleanup();
+    }
+  });
+});
+
 describe('/sandbox', () => {
   it('lists local and docker with what each is, the configured one checked, and takes one for the session', async () => {
     const tmp = makeTmpDir('choices');
