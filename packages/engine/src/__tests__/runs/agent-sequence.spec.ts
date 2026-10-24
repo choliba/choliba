@@ -145,6 +145,38 @@ describe('createAgentSequence', () => {
     expect(test.sequence.state().history).toHaveLength(4);
   });
 
+  it('stops where an agent hands the work back to another of the session, pointing /resume at it', async () => {
+    const test = setup(['first', 'second', 'third']);
+    test.codes.push(0, 1);
+    test.conclusions.push('pronto', 'parei.\nHand back to: first — o critério não é testável');
+
+    await test.sequence.start(0, 'build', test.execution);
+
+    expect(test.runs.map((run) => run.agent)).toEqual(['first', 'second']);
+    expect(test.stops).toEqual([
+      { at: 1, agent: 'second', reason: 'handed-back', handBack: { agent: 'first', why: 'o critério não é testável' } },
+    ]);
+    expect(test.sequence.state().resumeAt).toBe(0);
+    expect(test.sequence.state().results.at(-1)?.reason).toBe('handed-back');
+  });
+
+  it('does not take an interrupted run, or one that hands back to no agent of the session, as handing back', async () => {
+    const test = setup(['first', 'second']);
+    test.conclusions.push('Hand back to: nobody — x');
+    await test.sequence.start(0, 'build', test.execution);
+    expect(test.stops).toEqual([]);
+    expect(test.runs.map((run) => run.agent)).toEqual(['first', 'second']);
+
+    const stopped = setup(['first', 'second']);
+    stopped.conclusions.push('Hand back to: second — x');
+    stopped.replaceRun(() => {
+      stopped.sequence.interrupt();
+      return Promise.resolve(0);
+    });
+    await stopped.sequence.start(0, 'build', stopped.execution);
+    expect(stopped.stops).toEqual([{ at: 0, agent: 'first', reason: 'interrupted' }]);
+  });
+
   it('forgets the runs of a session it is told to forget', async () => {
     const test = setup(['first']);
     test.conclusions.push('feito');

@@ -535,6 +535,85 @@ describe('talkToAgent', () => {
     }
   });
 
+  it('offers to go back to the agent a run hands the work back to, with why as its task, or says /resume will', async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      const talk = conversation(tmp.path, 'echo,with-project');
+      talk.state.context.set('projeto', 'site');
+      talk.state.send('escreva o ticket', talk.fake.panel);
+      await talk.settle();
+      expect(talk.asked[0]?.host.sessionAgents).toEqual(['echo', 'with-project']);
+      talk.fake.answerNext(0);
+      talk.asked[0]?.end(0);
+      await talk.settle();
+
+      talk.asked[1]?.host.concluded?.('parei.\nHand back to: echo — o CA-01 não é testável');
+      talk.fake.answerNext(0);
+      talk.asked[1]?.end(1);
+      await talk.settle();
+      await talk.settle();
+      expect(talk.fake.written).toContain(warn('with-project devolveu o trabalho a echo: o CA-01 não é testável.'));
+      expect(talk.fake.choices.at(-1)).toEqual({
+        title: 'Voltar a echo?',
+        description: 'Ele recebe o que os outros agentes concluíram, e o motivo como tarefa.',
+        options: [{ label: 'Voltar a echo' }, { label: 'Parar aqui' }],
+      });
+      expect(talk.asked[2]?.argv).toEqual(['echo', 'o CA-01 não é testável']);
+
+      talk.asked[2]?.host.concluded?.('Hand back to: with-project');
+      talk.fake.answerNext(1);
+      talk.asked[2]?.end(0);
+      await talk.settle();
+      await talk.settle();
+      expect(talk.asked).toHaveLength(3);
+      expect(talk.fake.written.at(-1)).toBe(warn('/resume volta a with-project quando quiser.'));
+
+      // An agent gone from the session while the panel asked is not gone back to.
+      const leaving = {
+        ...talk.fake.panel,
+        choose: () => {
+          talk.state.context.set('agente', 'with-project,ticketed');
+          return Promise.resolve(0);
+        },
+      };
+      resumeSequence(talk.state.context, leaving, 1, undefined);
+      await talk.settle();
+      talk.asked[3]?.host.concluded?.('Hand back to: echo');
+      talk.asked[3]?.end(1);
+      await talk.settle();
+      await talk.settle();
+      expect(talk.asked).toHaveLength(4);
+      expect(talk.fake.written.at(-1)).toBe(warn('/resume volta a echo quando quiser.'));
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
+  it('goes back, on a hand-back with no why, with the task the agent would run anyway', async () => {
+    const tmp = makeTmpDir('panel-run');
+    try {
+      agentsFolder(tmp.path);
+      const talk = conversation(tmp.path, 'echo,with-project');
+      talk.state.context.set('projeto', 'site');
+      talk.state.send('escreva o ticket', talk.fake.panel);
+      await talk.settle();
+      talk.fake.answerNext(0);
+      talk.asked[0]?.end(0);
+      await talk.settle();
+      talk.asked[1]?.host.concluded?.('Hand back to: echo');
+      talk.fake.answerNext(0);
+      talk.asked[1]?.end(1);
+      await talk.settle();
+      await talk.settle();
+
+      expect(talk.fake.written).toContain(warn('with-project devolveu o trabalho a echo.'));
+      expect(talk.asked[2]?.argv).toEqual(['echo', 'escreva o ticket']);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
   it('runs at the end of the sequence an agent added while it goes', async () => {
     const tmp = makeTmpDir('panel-run');
     try {
@@ -637,6 +716,7 @@ describe('AgentsService.runHosted', () => {
           stderr,
           conclusions: [],
           concluded,
+          sessionAgents: ['nada'],
         }),
       ).toBe(1);
       expect(opened).toEqual([]);

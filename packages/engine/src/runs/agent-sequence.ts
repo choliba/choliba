@@ -1,9 +1,11 @@
+import { handBackOf, type HandBack } from './hand-back';
+
 export interface SequenceAgent {
   readonly id: string;
   readonly defaultTask?: string | undefined;
 }
 
-export type SequenceStopReason = 'declined' | 'failed' | 'interrupted' | 'missing' | 'not-started';
+export type SequenceStopReason = 'declined' | 'failed' | 'handed-back' | 'interrupted' | 'missing' | 'not-started';
 
 export interface SequenceResult {
   readonly agent: string;
@@ -44,6 +46,8 @@ export interface SequenceStop {
   readonly at: number;
   readonly agent: string;
   readonly reason: SequenceStopReason;
+  /** The agent `agent` handed the work back to (`handed-back`), and why; `/resume` points at it. */
+  readonly handBack?: HandBack | undefined;
 }
 
 export interface SequenceExecution<Agent extends SequenceAgent> {
@@ -89,11 +93,17 @@ export function createAgentSequence<Agent extends SequenceAgent>(
     pending = question;
     notify();
   };
-  const stopAt = (execution: SequenceExecution<Agent>, at: number, reason: SequenceStopReason): void => {
+  const stopAt = (
+    execution: SequenceExecution<Agent>,
+    at: number,
+    reason: SequenceStopReason,
+    handBack?: HandBack,
+  ): void => {
     const ids = agentIds();
     const agent = ids[at];
-    resumeAt = ids.length < 2 || agent === undefined ? undefined : at;
-    if (agent !== undefined) execution.stopped({ at, agent, reason });
+    const back = handBack === undefined ? -1 : ids.indexOf(handBack.agent);
+    resumeAt = ids.length < 2 || agent === undefined ? undefined : back >= 0 ? back : at;
+    if (agent !== undefined) execution.stopped({ at, agent, reason, ...(handBack === undefined ? {} : { handBack }) });
     notify();
   };
 
@@ -142,7 +152,8 @@ export function createAgentSequence<Agent extends SequenceAgent>(
       const effectiveTask = ownTask ?? agent.defaultTask ?? firstTask;
       const ran = await execution.run(agent, effectiveTask, history);
       current = undefined;
-      const reason = resultReason(ran?.code, interrupted);
+      const handBack = interrupted ? undefined : handBackOf(ran?.conclusion, id, agentIds());
+      const reason = handBack === undefined ? resultReason(ran?.code, interrupted) : 'handed-back';
       record(
         {
           agent: id,
@@ -155,7 +166,7 @@ export function createAgentSequence<Agent extends SequenceAgent>(
       );
       notify();
       if (reason !== 'completed') {
-        stopAt(execution, at, reason);
+        stopAt(execution, at, reason, handBack);
         return;
       }
       const next = agentIds()[at + 1];

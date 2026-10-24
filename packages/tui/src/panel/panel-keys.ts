@@ -50,7 +50,9 @@ export const PANEL_SPEC: CommandSpec = {
       'terminada: escolhido o agente, o que se digita é dito a ele (vazio ou Esc repete a tarefa dele), e a sequência ' +
       'roda de novo a partir dele, com o ticket da sessão. Cada agente recebe, antes da tarefa, o que os outros da ' +
       'sessão concluíram (o que disseram por último, e como a execução terminou), também um que parou ou um que vem ' +
-      'depois dele, quando o `/resume` volta; o `/clear` esquece.',
+      'depois dele, quando o `/resume` volta; o `/clear` esquece. Um agente que precisa de outro da sessão antes ' +
+      '(o ticket precisa ser reescrito, por exemplo) termina devolvendo o trabalho a ele: a sequência para ali, e o ' +
+      'painel pergunta se volta a esse agente, com o motivo como tarefa; sem voltar, o `/resume` aponta para ele.',
     'Enquanto um agente roda, o que se envia vai para ele, e as perguntas dele aparecem no campo; quando ele termina, ' +
       'a pergunta que ficou sem resposta sai do campo. Um texto que começa com `/` é sempre um comando, também com ' +
       'uma pergunta aberta, que continua lá; o `❯` de um texto copiado da tela sai, e uma tarefa de menos de 3 ' +
