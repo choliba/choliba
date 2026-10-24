@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import * as gitDiff from '../../../../../engine/src/steps/git-working-tree-diff';
+import * as gitDiff from '../../steps/git-working-tree-diff';
 
 import {
   buildWorkingTreeDiffPrompt,
@@ -9,8 +9,8 @@ import {
   removeDiffFile,
   runGitDiff,
   writeDiffFile,
-} from '../../../../../engine/src/steps/working-tree-diff';
-import { makeTmpDir } from '../../helpers/tmp';
+} from '../../steps/working-tree-diff';
+import { makeTmpDir } from '../helpers/tmp';
 
 const TEST_DIFF_FILE = '.cache/test-agent/diff.patch';
 

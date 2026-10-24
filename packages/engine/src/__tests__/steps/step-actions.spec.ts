@@ -1,10 +1,11 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync, writeSync } from 'node:fs';
 import { join } from 'node:path';
 
-import * as gitDiff from '../../../../../engine/src/steps/git-working-tree-diff';
+import * as gitDiff from '../../steps/git-working-tree-diff';
 
-import type { StepFailure, StepSpawn } from '../../../../../engine/src/steps/step-actions';
 import {
+  type StepFailure,
+  type StepSpawn,
   ACTIONS,
   StepFailedError,
   checkStep,
@@ -15,10 +16,10 @@ import {
   runAfterSteps,
   runBeforeSteps,
   stepExitCode,
-} from '../../../../../engine/src/steps/step-actions';
-import { readGitState } from '../../../../../engine/src/steps/git-state';
-import { makeTmpGitRepo } from '../../helpers/git-repo';
-import { makeTmpDir } from '../../helpers/tmp';
+} from '../../steps/step-actions';
+import { readGitState } from '../../steps/git-state';
+import { makeTmpGitRepo } from '../helpers/git-repo';
+import { makeTmpDir } from '../helpers/tmp';
 
 /** A command that writes `chunks`, in order, to the one file its stdout and stderr go to, and exits with `status`. */
 function recordingSpawn(status: number | null = 0, ...chunks: readonly string[]): StepSpawn & { calls: unknown[][] } {

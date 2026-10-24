@@ -1,9 +1,9 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { AgentStep } from '../../../agents/common';
-import { answerJson, writeConfig } from '../../../../../engine/src/steps/step-write-config';
-import { makeTmpDir } from '../../helpers/tmp';
+import type { AgentStep } from '@choliba/domain';
+import { answerJson, writeConfig } from '../../steps/step-write-config';
+import { makeTmpDir } from '../helpers/tmp';
 
 const STEP: AgentStep = { action: 'write_config', args: [], options: { key: 'stack' } };
 

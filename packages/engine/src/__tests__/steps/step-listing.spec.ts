@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { formatListing, loadListing, parseListing, saveListing } from '../../../../../engine/src/steps/step-listing';
-import { makeTmpDir } from '../../helpers/tmp';
+import { formatListing, loadListing, parseListing, saveListing } from '../../steps/step-listing';
+import { makeTmpDir } from '../helpers/tmp';
 
 const LISTINGS = [
   { dir: '/app', files: ['Makefile', 'src/a.php'] },

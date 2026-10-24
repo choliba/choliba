@@ -2,10 +2,10 @@ import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { makeTmpGitRepo } from '../../helpers/git-repo';
-import { makeTmpDir } from '../../helpers/tmp';
-import { SINCE_PENDING } from '../../../../../engine/src/steps/step-constants';
-import { DEFAULT_DIFF_BASE } from '../../../../../engine/src/steps/git-working-tree-diff';
+import { makeTmpGitRepo } from '../helpers/git-repo';
+import { makeTmpDir } from '../helpers/tmp';
+import { SINCE_PENDING } from '../../steps/step-constants';
+import { DEFAULT_DIFF_BASE } from '../../steps/git-working-tree-diff';
 import {
   getHeadCommit,
   pendingSinceHint,
@@ -13,7 +13,7 @@ import {
   recordGitHead,
   resolveDiffBase,
   writeGitState,
-} from '../../../../../engine/src/steps/git-state';
+} from '../../steps/git-state';
 
 const TEST_STATE_FILE = '.cache/test-agent/last-base';
 

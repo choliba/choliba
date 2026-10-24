@@ -1,9 +1,9 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { AgentStep } from '../../../agents/common';
-import { folderSummary, searchFiles } from '../../../../../engine/src/steps/step-search-files';
-import { makeTmpDir } from '../../helpers/tmp';
+import type { AgentStep } from '@choliba/domain';
+import { folderSummary, searchFiles } from '../../steps/step-search-files';
+import { makeTmpDir } from '../helpers/tmp';
 
 /** A `search_files` step with these named fields. */
 function searchStep(options: Readonly<Record<string, string | readonly string[]>>): AgentStep {

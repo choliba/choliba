@@ -1,8 +1,8 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { answerContent, writeFiles } from '../../../../../engine/src/steps/step-write-files';
-import { makeTmpDir } from '../../helpers/tmp';
+import { answerContent, writeFiles } from '../../steps/step-write-files';
+import { makeTmpDir } from '../helpers/tmp';
 
 describe('answerContent', () => {
   it('takes out a code block that wraps the whole answer, with or without a language', () => {

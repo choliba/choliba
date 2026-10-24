@@ -2,9 +2,9 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { GitRunner } from '@choliba/kernel';
-import { getWorkingTreeDiff } from '../../../../../engine/src/steps/git-working-tree-diff';
-import { makeTmpGitRepo } from '../../helpers/git-repo';
-import { makeTmpDir } from '../../helpers/tmp';
+import { getWorkingTreeDiff } from '../../steps/git-working-tree-diff';
+import { makeTmpGitRepo } from '../helpers/git-repo';
+import { makeTmpDir } from '../helpers/tmp';
 
 describe('getWorkingTreeDiff', () => {
   it('throws when the base ref does not exist', () => {

@@ -1,10 +1,10 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { AgentStep } from '../../../agents/common';
-import { formatFilesSection, matchingPaths, readFiles } from '../../../../../engine/src/steps/step-read-files';
-import { UNTRUSTED_INPUT_LINE } from '../../../agents/common';
-import { makeTmpDir } from '../../helpers/tmp';
+import type { AgentStep } from '@choliba/domain';
+import { formatFilesSection, matchingPaths, readFiles } from '../../steps/step-read-files';
+import { UNTRUSTED_INPUT_LINE } from '../../prompt/prompt';
+import { makeTmpDir } from '../helpers/tmp';
 
 /** A `read_files` step with these named fields. */
 function readStep(options: Readonly<Record<string, string | readonly string[]>>): AgentStep {

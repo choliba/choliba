@@ -1,8 +1,8 @@
 import { chmodSync, mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { DEFAULT_IGNORE, searchFolder } from '../../../../../engine/src/steps/step-search';
-import { makeTmpDir } from '../../helpers/tmp';
+import { DEFAULT_IGNORE, searchFolder } from '../../steps/step-search';
+import { makeTmpDir } from '../helpers/tmp';
 
 describe('searchFolder', () => {
   it('lists every folder and the files the pattern matches, sorted, skipping the ignored folders', () => {

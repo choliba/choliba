@@ -1,4 +1,4 @@
-import { spawnToEnd } from '../../../../../engine/src/steps/step-spawn';
+import { spawnToEnd } from '../../steps/step-spawn';
 
 describe('spawnToEnd', () => {
   it("resolves to the command's exit status", async () => {
