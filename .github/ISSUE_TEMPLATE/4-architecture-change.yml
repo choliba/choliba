@@ -1,0 +1,47 @@
+name: Propor mudança de arquitetura
+description: Uma mudança que afeta contratos, pacotes ou fronteiras.
+title: '[architecture] '
+labels: ['architecture']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema
+      description: O problema concreto e o custo atual para mudar, testar ou estender.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposta
+      description: A mudança, os pacotes afetados e as arestas do grafo que entram ou saem (A → B = A importa B).
+    validations:
+      required: true
+  - type: checkboxes
+    id: compatibility
+    attributes:
+      label: Compatibilidade
+      options:
+        - label: Mantém Bun, TypeScript 6.0.x, Jest e Playwright
+          required: true
+        - label: Sem HTTP, sem decorators, sem `any`
+          required: true
+        - label: As guardas, o sandbox e as permissões continuam valendo igual para todo provider
+          required: true
+        - label: Mantém os subcaminhos públicos ou traz a nota de migração
+        - label: Cabe em PRs pequenos, cada um com o comportamento igual
+  - type: textarea
+    id: risks
+    attributes:
+      label: Riscos e alternativas
+    validations:
+      required: true
+  - type: checkboxes
+    id: acceptance
+    attributes:
+      label: Critérios de aceite
+      options:
+        - label: '`bun run check` verde e cobertura igual ou maior'
+        - label: '`docs:commands --check` sem diferença, ou páginas regeradas no PR'
+        - label: Spec de arquitetura (grafo e exports) atualizado
+        - label: '`ARCHITECTURE.md` e as skills afetadas atualizados'
