@@ -1,4 +1,4 @@
-import { definedConfig } from '../../agents/agents/defined-config';
+import { definedConfig } from '../../common/defined-config';
 
 describe('definedConfig', () => {
   it('keeps only the config entries that have a value', () => {

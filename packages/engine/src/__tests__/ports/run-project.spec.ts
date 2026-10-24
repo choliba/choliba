@@ -1,6 +1,6 @@
-import type { AgentDefinition } from '../../agents/common/interfaces/agent.interface';
-import { NO_PERMISSIONS, readAgentPermissions } from '../../agents/common/agent-permissions';
-import { formatProject, withProjectDenies } from '../../agents/common/run-project';
+import { type AgentDefinition, NO_PERMISSIONS, readAgentPermissions } from '@choliba/domain';
+import { formatProject } from '../../prompt/project';
+import { withProjectDenies } from '../../runs/project-denies';
 import { NO_MODE_STEPS, fakeSections } from '../helpers/agent';
 
 function fakeAgent(permissions: AgentDefinition['permissions']): AgentDefinition {

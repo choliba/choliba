@@ -1,4 +1,4 @@
-import { ALREADY_DONE, NOT_READ, sessionInput } from '../../../agents/agents/runs/session-input';
+import { ALREADY_DONE, NOT_READ, sessionInput } from '../../runs/session-input';
 
 function fakeSession(accepts = true) {
   const written: string[] = [];

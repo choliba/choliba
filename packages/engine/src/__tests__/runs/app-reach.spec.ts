@@ -1,6 +1,6 @@
 import type { Sandbox } from '@choliba/sandbox';
 
-import { containerReachProblem, type AppReachDeps } from '../../../agents/agents/runs/app-reach';
+import { containerReachProblem, type AppReachDeps } from '../../runs/app-reach';
 
 const ISOLATED: Sandbox = { kind: 'docker', image: 'choliba-agent:local', network: 'isolated' };
 

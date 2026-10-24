@@ -1,4 +1,4 @@
-import { contentBlocks, summarize, toolResultText } from '../../agents/common/message-blocks';
+import { contentBlocks, summarize, toolResultText } from '../../prompt/message-blocks';
 
 describe('contentBlocks', () => {
   it('extracts the content array from a message', () => {

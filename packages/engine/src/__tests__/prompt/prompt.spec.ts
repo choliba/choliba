@@ -1,4 +1,4 @@
-import type { AgentDefinition } from '../../agents/common/interfaces/agent.interface';
+import { type AgentDefinition, NO_PERMISSIONS } from '@choliba/domain';
 import {
   MAX_ARG_BYTES,
   PromptTooLargeError,
@@ -8,12 +8,11 @@ import {
   formatMcps,
   formatSections,
   modeInstruction,
-  runPlaceOf,
   unenforcedToolsLine,
   untrustedBlock,
   wrapInstructions,
-} from '../../agents/common/prompt';
-import { NO_PERMISSIONS } from '../../agents/common/agent-permissions';
+} from '../../prompt/prompt';
+import { runPlaceOf } from '../../ports/run-place';
 import { NO_MODE_STEPS, fakeSections } from '../helpers/agent';
 
 function fakeAgent(overrides: Partial<AgentDefinition> = {}): AgentDefinition {

@@ -8,8 +8,8 @@ import {
   resolvePlanPath,
   slugify,
   writePlan,
-} from '../../../agents/agents/runs/plan-store';
-import { makeTmpDir } from '../../helpers/tmp';
+} from '../../runs/plan-store';
+import { makeTmpDir } from '../helpers/tmp';
 
 describe('slugify', () => {
   it('lowercases and replaces non-alphanumerics with a single dash', () => {

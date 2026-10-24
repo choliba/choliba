@@ -1,7 +1,8 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { expandMcpConfig, mcpConfig, mcpServersMap, resolveMcps } from '../../agents/common/agent-mcps';
+import { expandMcpConfig, mcpConfig, mcpServersMap } from '@choliba/domain';
+import { resolveMcps } from '../../runs/resolve-mcps';
 import { makeTmpDir } from '../helpers/tmp';
 
 const MCPS = join(__dirname, '..', 'fixtures', 'mcps');

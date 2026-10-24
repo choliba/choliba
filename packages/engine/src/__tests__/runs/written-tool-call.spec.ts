@@ -1,4 +1,4 @@
-import { writtenToolCall, writtenToolCallMessage } from '../../../agents/agents/runs/written-tool-call';
+import { writtenToolCall, writtenToolCallMessage } from '../../runs/written-tool-call';
 
 const CALL = '{\n  "name": "Read",\n  "arguments": {\n    "file_path": "/w/projects/site/config.json"\n  }\n}';
 

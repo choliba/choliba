@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { formatSkillsInstruction, listSkills, resolveSkills, skillDescription } from '../../agents/agents/agent-skills';
+import { formatSkillsInstruction, listSkills, resolveSkills, skillDescription } from '../../runs/agent-skills';
 import { makeTmpDir } from '../helpers/tmp';
 
 const SKILLS = join(__dirname, '..', 'fixtures', 'skills');
