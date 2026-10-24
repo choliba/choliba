@@ -5,6 +5,7 @@ import {
   agentSequenceState,
   agentPaint,
   agentsDir,
+  chooseAgentRun,
   confirmTask,
   resumeSequence,
   sessionAgentIds,
@@ -16,7 +17,7 @@ import { listAgents } from '@choliba/engine';
 import type { Container } from '@choliba/kernel';
 import { messageOf, type ChatPanel, type PanelCommand, type PanelContext } from '@choliba/shell';
 
-import { chooseAgentRun, runChoices } from './agents-panel-choices';
+import { runChoices } from './agents-panel-choices';
 
 /** The option that ends the additions, first and checked: Enter after an agent keeps the sequence as it is. */
 const NO_OTHER = 'nenhum outro';

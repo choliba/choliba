@@ -46,7 +46,9 @@ export const PANEL_SPEC: CommandSpec = {
       'mensagem quando não têm uma, e o ticket que um deixa é o do próximo (sem ticket, um agente de tickets pergunta ' +
       'o tipo do ticket novo que a execução cria). Entre dois agentes, o painel pergunta se segue: Enter segue, e Esc ' +
       'para a sequência. Ela também para quando um agente falha, quando o Ctrl+C o interrompe e quando uma execução em ' +
-      '`execute` deixa intacto o ticket que criou. `/resume` volta a qualquer agente da sequência, parada ou já ' +
+      '`execute` deixa intacto o ticket que criou. Quando um agente para porque o modelo dele está sem capacidade ' +
+      '(ou com limite de uso), o painel oferece rodá-lo de novo, no mesmo modelo ou em outro provider e modelo ' +
+      'escolhidos para ele, com a mesma tarefa. `/resume` volta a qualquer agente da sequência, parada ou já ' +
       'terminada: escolhido o agente, o texto escrito depois do comando (`/resume veja o ticket`) é dito a ele; sem ' +
       'texto, o painel pergunta o que dizer (vazio ou Esc repete a tarefa dele). A sequência ' +
       'roda de novo a partir dele, com o ticket da sessão. Cada agente recebe, antes da tarefa, o que os outros da ' +

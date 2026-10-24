@@ -3,6 +3,7 @@ import { type Container } from '@choliba/kernel';
 import { holdApp } from '@choliba/runner';
 import {
   createAgentSequence,
+  modelUnavailable,
   type AgentSequence,
   type AgentSequenceState,
   type SequenceExecution,
@@ -11,6 +12,7 @@ import {
 } from '@choliba/engine';
 
 import type { AgentDefinition } from '@choliba/domain';
+import { chooseAgentRun } from './agents-panel-agent-run';
 import { agentVoice } from './agents-panel-card';
 import {
   agentKey,
@@ -246,8 +248,38 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     else panel.answer(warn(`/resume volta a ${handBack.agent} quando quiser.`));
   };
 
+  /**
+   * An agent whose model could not take the run now: offers to run it again, on the same model or on another provider
+   * and model chosen for it, from where the sequence stopped and with the same task, once this round is over.
+   */
+  const offerAnotherTry = async (stop: SequenceStop, task: string, panel: ChatPanel): Promise<void> => {
+    panel.answer(warn(`O modelo de ${stop.agent} está sem capacidade agora.`));
+    const chosen = await panel.choose({
+      title: `Rodar ${stop.agent} de novo?`,
+      description: 'A sequência recomeça dele, com a mesma tarefa.',
+      options: [{ label: 'Tentar de novo' }, { label: 'Escolher outro provider e modelo' }, { label: 'Parar aqui' }],
+    });
+    await currentStart;
+    const agent = sessionAgent(container, stop.agent);
+    if (chosen === 1 && agent !== undefined) {
+      const refused = await chooseAgentRun(container, context, panel, agent);
+      if (refused !== undefined) {
+        panel.answer(warn(`O agente ${agent.id} fica como estava: ${refused}`));
+        return;
+      }
+      showRun(container, context);
+    }
+    if (chosen === 0 || chosen === 1) runFrom(stop.at, task, panel);
+    else panel.answer(warn(`A sequência parou em ${stop.agent}. /resume retoma dele.`));
+  };
+
   /** Where the sequence stopped: kept for /resume and said, when the session has more than one agent. */
   const stopped = (stop: SequenceStop, panel: ChatPanel): void => {
+    const last = sequence.state().results.at(-1);
+    if (stop.reason === 'failed' && last !== undefined && modelUnavailable(last.conclusion)) {
+      void offerAnotherTry(stop, last.task, panel);
+      return;
+    }
     if (sessionAgentIds(context).length < 2) return;
     if (stop.handBack !== undefined) {
       void offerHandBack(stop, stop.handBack, panel);

@@ -22,6 +22,7 @@ export { definitionDirectories, prepareRun } from './prepare-run';
 export { withProjectDenies } from './project-denies';
 export { handBackOf } from './hand-back';
 export type { HandBack } from './hand-back';
+export { modelUnavailable } from './model-unavailable';
 export { resolveMcps } from './resolve-mcps';
 export { agentRunChoice, declaredModels, undeclaredModel } from './run-choice';
 export type { RunAsk, RunChoice } from './run-choice';
