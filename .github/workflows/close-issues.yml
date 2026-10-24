@@ -1,0 +1,37 @@
+name: Close issues
+
+# Fecha as issues que um PR resolve quando ele é mergeado no develop. O GitHub só age sobre `Closes #N` num PR para a
+# branch padrão (master), e nem liga a issue a um PR com outra base; aqui as palavras-chave são lidas do corpo do PR.
+on:
+  pull_request:
+    types: [closed]
+    branches: [develop]
+
+permissions:
+  issues: write
+
+jobs:
+  close:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      # O corpo do PR é texto não confiável: entra só por variável de ambiente, e dele sai só o número de cada issue.
+      - name: Fechar as issues que o corpo do PR diz que ele resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          numbers=$(printf '%s\n' "$PR_BODY" \
+            | grep -oiE '\b(close[sd]?|fix(e[sd])?|resolve[sd]?):?[[:space:]]+#[0-9]+\b' \
+            | grep -oE '[0-9]+$' | sort -un || true)
+          for number in $numbers; do
+            open=$(gh api "repos/$GH_REPO/issues/$number" --jq '.pull_request == null and .state == "open"' || echo false)
+            if [ "$open" != true ]; then
+              echo "#$number: não é uma issue aberta, fica como está"
+              continue
+            fi
+            gh issue close "$number" --comment "Resolvida em #$PR_NUMBER; sai na próxima release."
+            gh issue edit "$number" --remove-label "PR aberto" || true
+          done
