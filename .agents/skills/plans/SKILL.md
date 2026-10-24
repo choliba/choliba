@@ -53,10 +53,10 @@ Transitions:
    (`claude`, `codex` or `cursor`):
    `gh issue edit N --add-assignee @me --add-label 'em execução'` and `gh issue comment N --body 'Pego por <origin>'`.
 2. **On opening the pull request**, swap `em execução` for `PR aberto`. The PR body has `Closes #N`.
-3. **After the merge into `develop`**, close the issue yourself, without the label:
-   `gh issue close N --comment 'Resolvida em #PR; sai na próxima release.'` and `gh issue edit N --remove-label 'PR aberto'`.
-   GitHub only acts on `Closes #N` when a PR reaches the default branch (`master`), so it would wait for the release;
-   in the PR, `Closes #N` still links the two.
+3. **After the merge into `develop`**, the `Close issues` workflow (`.github/workflows/close-issues.yml`) closes every
+   open issue the PR body names with a closing keyword (`Closes #N`, `Fixes #N`, `Resolves #N`), comments
+   `Resolvida em #PR; sai na próxima release.` and removes `PR aberto`. GitHub itself only does this for PRs into the
+   default branch (`master`). Check that the issue closed; if the body had no keyword, close it the same way by hand.
 4. **Giving up**, remove the assignee and the label (`--remove-assignee @me --remove-label 'em execução'`) and
    comment why, so the next one starts from there.
 
