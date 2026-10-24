@@ -22,6 +22,8 @@ export interface RunScreen {
   readonly framed: boolean;
   readonly out: Writable;
   readonly err: Writable;
+  /** What the person must not miss (a message that did not reach the agent): a warning in the panel, `err` elsewhere. */
+  readonly warn: Writable;
   /** The model the provider reported, for the footer. */
   model(name: string): void;
   /** Called when the person interrupts the run from the screen itself (Ctrl+C in the panel, which takes the keyboard). */
