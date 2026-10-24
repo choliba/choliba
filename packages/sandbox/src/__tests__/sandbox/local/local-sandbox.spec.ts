@@ -315,6 +315,48 @@ describe('LocalSandbox with bwrap', () => {
     }
   });
 
+  it('reads a folder mounted inside a hidden one, through a link that points into it, and nothing else there', () => {
+    const bwrap = bwrapOnPath();
+    expect(bwrap).toBeDefined();
+    const tmp = makeTmpDir('bwrap-inside-hidden');
+    try {
+      const root = join(tmp.path, 'w');
+      const runDir = join(root, 'run');
+      mkdirSync(join(root, 'packages', 'choliba'), { recursive: true });
+      mkdirSync(join(root, 'packages', 'other'), { recursive: true });
+      mkdirSync(join(root, 'node_modules'), { recursive: true });
+      mkdirSync(runDir);
+      writeFileSync(join(root, 'packages', 'choliba', 'main.txt'), 'ran\n');
+      symlinkSync('../packages/choliba', join(root, 'node_modules', 'choliba'));
+      const facts: DiskFacts = {
+        exists: existsSync,
+        isDirectory: (path) => existsSync(path) && statSync(path).isDirectory(),
+        read: readDir,
+      };
+      const plan = new LocalSandbox({
+        disk: facts,
+        bwrap,
+        environment: { HOME: join(tmp.path, 'home'), CLAUDE_CODE_OAUTH_TOKEN: 'secret', PATH: '/usr/bin:/bin' },
+      }).plan({
+        command: ['/usr/bin/bash', '-c', `cat ${root}/node_modules/choliba/main.txt; ls ${root}/packages`],
+        program: {
+          executable: '/usr/bin/bash',
+          readOnly: ['/usr/bin/bash'],
+          credentials: ['CLAUDE_CODE_OAUTH_TOKEN'],
+          credentialHelp: 'defina a credencial',
+        },
+        reach: reach(
+          { allowRead: [root], denyRead: [join(root, 'packages')] },
+          { runDir, alsoRead: [join(root, 'node_modules'), join(root, 'packages', 'choliba')] },
+        ),
+      });
+      const result = spawnSync(plan.command[0] ?? '', plan.command.slice(1), { encoding: 'utf8', env: plan.env });
+      expect([result.status, result.stdout, result.stderr]).toEqual([0, 'ran\ncholiba\n', '']);
+    } finally {
+      tmp.cleanup();
+    }
+  });
+
   it('follows a short-name link in a mounted shortcuts folder after home is emptied', () => {
     const bwrap = bwrapOnPath();
     expect(bwrap).toBeDefined();
