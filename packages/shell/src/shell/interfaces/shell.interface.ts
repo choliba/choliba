@@ -81,6 +81,8 @@ export interface PanelCommandContext {
   /** The panel the command was typed in; its `write` answers in the chat (`●`). */
   readonly panel: ChatPanel;
   readonly context: PanelContext;
+  /** What was typed after the name of a command that takes text (`/resume veja o ticket`); none without it. */
+  readonly text?: string;
 }
 
 /** What the panel's session is acting on (`projeto`, `ticket`), and the cards it shows in the header about it. */
@@ -142,5 +144,7 @@ export interface PanelCommand {
    * of what the command does. Asked as the person types, so it reads little.
    */
   readonly unavailable?: (context: PanelContext, container: Container) => string | undefined;
+  /** Whether what follows its name (`/resume <texto>`) goes to `run` as `text`; a command without it takes none. */
+  readonly takesText?: boolean;
   readonly run: (context: PanelCommandContext) => Promise<void>;
 }
