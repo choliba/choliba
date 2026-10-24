@@ -19,12 +19,15 @@ export function handBackOf(
   agents: readonly string[],
 ): HandBack | undefined {
   const lines = (conclusion ?? '').split('\n').reverse();
-  for (const line of lines) {
-    const match = LINE.exec(line);
-    const agent = match?.[1]?.toLowerCase();
-    if (agent === undefined) continue;
-    if (agent === self || !agents.includes(agent)) return undefined;
-    return { agent, why: (match?.[2] ?? '').replace(/[*_]+$/, '').trim() };
-  }
-  return undefined;
+  const line = lines.find((each) => LINE.test(each));
+  if (line === undefined) return undefined;
+  const agent = line.replace(LINE, '$1').toLowerCase();
+  if (agent === self || !agents.includes(agent)) return undefined;
+  return {
+    agent,
+    why: line
+      .replace(LINE, '$2')
+      .replace(/[*_]+$/, '')
+      .trim(),
+  };
 }
