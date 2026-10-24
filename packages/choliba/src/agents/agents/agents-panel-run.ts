@@ -82,6 +82,8 @@ export const RESUME_AT = 'retomar';
 interface Talk {
   readonly resume: (panel: ChatPanel, from: number, task: string | undefined) => void;
   readonly sequence: AgentSequence<AgentDefinition>;
+  /** Stops the agent that runs and starts it again, with the session as it is now (`/sandbox`). */
+  readonly restart: (panel: ChatPanel) => Promise<void>;
 }
 
 /** The sessions whose conversation goes to their agents already: one per session, whichever agents it has. */
@@ -108,6 +110,10 @@ async function goOn(next: string, panel: ChatPanel): Promise<boolean> {
 export function talkToAgent(container: Container, context: PanelContext): void {
   if (talks.has(context)) return;
   let sending: ((text: string) => void) | undefined;
+  let halt: (() => void) | undefined;
+  let currentStart: Promise<void> | undefined;
+  let restarting = false;
+  let inFlightRestart: Promise<void> | undefined;
   const changed = (state: AgentSequenceState): void => {
     context.set(RESUME_AT, state.resumeAt === undefined ? undefined : String(state.resumeAt));
   };
@@ -145,12 +151,13 @@ export function talkToAgent(container: Container, context: PanelContext): void {
       context.set(agentKey(STATE, agent.id), code === 0 ? `concluído · ${took}` : warn(`falhou · ${took}`));
       showRun(container, context);
     };
-    // Ctrl+C stops the agent's session while it is open, else the command of the step running; and the sequence.
-    context.busy(() => {
+    // Ctrl+C and /sandbox stop the agent's session while it is open, else the command of the step running; and the sequence.
+    halt = () => {
       sequence.interrupt();
       if (inSession) stopRun?.();
       else steps.abort();
-    });
+    };
+    context.busy(halt);
     const voice = agentVoice(container, agent);
     const hosted = (): Promise<Panel> =>
       Promise.resolve({
@@ -183,6 +190,13 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     const startedAt = Date.now();
     // The agent's card turns a spinner while it runs; the chat keeps only what the run says.
     context.spin(agent.id, true);
+    const announce = (code: number, line: string): number => {
+      done();
+      if (restarting) return code;
+      ended(code);
+      panel.answer(line);
+      return code;
+    };
     try {
       const code = await container.get(AGENTS).runHosted(argv, {
         panel: hosted,
@@ -194,17 +208,12 @@ export function talkToAgent(container: Container, context: PanelContext): void {
           context.set(TICKET, ticket);
         },
       });
-      done();
-      ended(code);
       const how = code === 0 ? bold('código 0') : warn(`código ${String(code)}`);
-      panel.answer(`${agent.id} terminou: ${how} ${gray(`· ${duration(Date.now() - startedAt)}`)}`);
-      return code;
+      return announce(code, `${agent.id} terminou: ${how} ${gray(`· ${duration(Date.now() - startedAt)}`)}`);
     } catch (error) {
       // An error nothing expected ends this run in the conversation; the panel stays usable for the next one.
-      done();
-      ended(1);
-      panel.answer(warn(`${agent.id} parou por um erro: ${error instanceof Error ? error.message : String(error)}`));
-      return 1;
+      const detail = error instanceof Error ? error.message : String(error);
+      return announce(1, warn(`${agent.id} parou por um erro: ${detail}`));
     }
   };
 
@@ -228,7 +237,7 @@ export function talkToAgent(container: Container, context: PanelContext): void {
       panel.answer(warn(`O agente ${id} não carrega mais: veja com choliba check.`));
     },
     stopped: (stop) => {
-      stopped(stop, panel);
+      if (!restarting) stopped(stop, panel);
     },
     hold: (multiple) => {
       if (!multiple) return noop;
@@ -238,7 +247,30 @@ export function talkToAgent(container: Container, context: PanelContext): void {
   });
 
   const runFrom = (from: number, task: string | undefined, panel: ChatPanel): void => {
-    void sequence.start(from, task, execution(panel));
+    currentStart = sequence.start(from, task, execution(panel));
+    void currentStart;
+  };
+
+  const restart = async (panel: ChatPanel): Promise<void> => {
+    if (inFlightRestart !== undefined) {
+      await inFlightRestart;
+      return;
+    }
+    const current = sequence.state().current;
+    const from = current === undefined ? -1 : sessionAgentIds(context).indexOf(current);
+    if (from < 0 || halt === undefined) return;
+    inFlightRestart = (async () => {
+      restarting = true;
+      halt();
+      await currentStart;
+      restarting = false;
+      runFrom(from, undefined, panel);
+    })();
+    try {
+      await inFlightRestart;
+    } finally {
+      inFlightRestart = undefined;
+    }
   };
 
   talks.set(context, {
@@ -246,6 +278,7 @@ export function talkToAgent(container: Container, context: PanelContext): void {
     resume: (panel, from, task) => {
       runFrom(from, task, panel);
     },
+    restart,
   });
   context.converse((text, panel) => {
     if (sequence.state().running) sending?.(text);
@@ -269,6 +302,14 @@ export function resetSequenceStop(context: PanelContext): void {
  */
 export function resumeSequence(context: PanelContext, panel: ChatPanel, from: number, task?: string): void {
   talks.get(context)?.resume(panel, from, task);
+}
+
+/**
+ * Stops the agent that runs and starts it again from there, with the session as it is now: `/sandbox` after a change,
+ * so the provider comes up in the sandbox just chosen. Nothing when none runs.
+ */
+export async function restartSequence(context: PanelContext, panel: ChatPanel): Promise<void> {
+  await talks.get(context)?.restart(panel);
 }
 
 function noop(): void {
