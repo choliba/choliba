@@ -3,6 +3,9 @@ layout: home
 hero:
   name: Choliba
   text: Agentes de código, sempre numa sandbox
+  image:
+    src: /owl-logo-choliba.svg
+    alt: A coruja do choliba
   tagline: Claude Code, Codex, Cursor e modelos locais pelo Ollama, a partir de scripts TypeScript, com a mesma política, a mesma conversa e o mesmo log.
   actions:
     - theme: brand
