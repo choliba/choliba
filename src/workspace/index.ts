@@ -269,6 +269,7 @@ function createSandbox(
         writable,
         paths,
         image: options.image ?? DEFAULT_DOCKER_IMAGE,
+        ...(programs === undefined ? {} : { programs }),
       })
     : new BubblewrapSandbox({
         root,

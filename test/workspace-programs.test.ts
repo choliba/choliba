@@ -270,3 +270,51 @@ describe('bubblewrap com programs', () => {
     },
   );
 });
+
+describe('docker com programs', () => {
+  test('tmpfs nas pastas de programas e cada visível de volta, sem mount duplicado', async () => {
+    const workspace = new Workspace({
+      type: 'docker',
+      root: base,
+      programs: ['ls'],
+    });
+    const args =
+      (await workspace.prepare({ executable: 'true' })).arguments ?? [];
+    const ls = realpathSync(Bun.which('ls') ?? '/usr/bin/ls');
+    const lsDir = realpathSync(join(Bun.which('ls') ?? '/usr/bin/ls', '..'));
+    // `-v source:destination[:ro]` and `--tmpfs destination[:options]`.
+    const destinations = args.flatMap((spec, index) => {
+      if (args[index - 1] === '-v') return [spec.split(':')[1]];
+      if (args[index - 1] === '--tmpfs') return [spec.split(':')[0]];
+      return [];
+    });
+
+    expect(args).toContain(`/host${realpathSync('/usr/bin')}`);
+    expect(args).toContain(`${ls}:/host${lsDir}/ls:ro`);
+    expect(args.some((arg) => arg.endsWith('/setpriv:ro'))).toBe(true);
+    expect(new Set(destinations).size).toBe(destinations.length);
+  });
+
+  test('sem programs, nenhuma pasta de programas é esvaziada', async () => {
+    const args =
+      (
+        await new Workspace({ type: 'docker', root: base }).prepare({
+          executable: 'true',
+        })
+      ).arguments ?? [];
+
+    expect(args).not.toContain(`/host${realpathSync('/usr/bin')}`);
+  });
+
+  test('um programa selecionado que falta para antes do docker run', async () => {
+    const workspace = new Workspace({
+      type: 'docker',
+      root: base,
+      programs: ['programa-que-nao-existe'],
+    });
+
+    await expect(workspace.prepare({ executable: 'true' })).rejects.toThrow(
+      'Programas selecionados que a sandbox não encontra: programa-que-nao-existe.',
+    );
+  });
+});
