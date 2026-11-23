@@ -15,3 +15,6 @@ docs/comandos.md
 docs/.vitepress/generated/
 docs/.vitepress/cache/
 docs/.vitepress/dist/
+
+# Verificação do Search Console: o conteúdo é o que o Google deu, byte a byte
+docs/public/google*.html
