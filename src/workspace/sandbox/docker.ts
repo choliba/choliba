@@ -12,10 +12,15 @@ import { hostStateDirs } from './host-state';
 import { protectedMasks } from './protect';
 import type { NetworkExit, Sandbox } from './types';
 import type { SandboxHost } from './host-access';
-import { bubblewrapReadonlyBinds } from './bubblewrap';
+import { bubblewrapReadonlyBinds, hostOptEntries } from './bubblewrap';
+import { SandboxPaths } from './path-map';
 import { wrapCommand } from './wrap-command';
 import type { FilesystemAccess } from '../../policy/index';
-import { DEFAULT_DOCKER_IMAGE } from '../constants';
+import {
+  DEFAULT_DOCKER_IMAGE,
+  HOST_HOMES,
+  SANDBOX_SUPPORT_DIR,
+} from '../constants';
 
 export interface DockerSandboxOptions {
   /**
@@ -26,6 +31,11 @@ export interface DockerSandboxOptions {
   readonly root: string;
   readonly env?: NodeJS.ProcessEnv;
   readonly writable?: readonly string[];
+  /**
+   * Where each host path is seen in the container (the root at
+   * `/home/choliba`); by default, from `root` and the `HOME` of `env`.
+   */
+  readonly paths?: SandboxPaths;
 }
 
 export { DEFAULT_DOCKER_IMAGE } from '../constants';
@@ -42,13 +52,17 @@ interface DockerImage {
 
 /**
  * Jails the host executable inside the image: the host filesystem is read-only,
- * except for the workspace root and generic CLI state directories.
+ * except for the workspace root and generic CLI state directories. The host's
+ * `/home` is an empty tmpfs: the root is seen at `/home/choliba` and what the
+ * agent needs from the homes (tools, the CLI's home, Choliba's cache) under
+ * `/opt/choliba` (see `SandboxPaths`).
  */
 export class DockerSandbox implements Sandbox {
   private readonly image: DockerImage;
   private readonly root: string;
   private readonly env: NodeJS.ProcessEnv;
   private readonly writable: readonly string[];
+  private paths: SandboxPaths;
   private containerName: string | undefined;
   private filesystem: FilesystemAccess | undefined;
   private protectedPaths: readonly string[] = [];
@@ -60,11 +74,13 @@ export class DockerSandbox implements Sandbox {
     root,
     env = environment(),
     writable = [],
+    paths,
   }: DockerSandboxOptions) {
     this.image = readDockerImage(image);
     this.root = root;
     this.env = env;
     this.writable = writable;
+    this.paths = paths ?? new SandboxPaths({ root, hostHome: homeOf(env) });
   }
 
   public configureFilesystem(access: FilesystemAccess): void {
@@ -81,6 +97,8 @@ export class DockerSandbox implements Sandbox {
    */
   public useHost(host: SandboxHost): void {
     this.host = host;
+    // The CLI's home, wherever the host share put it.
+    if (host.home !== undefined) this.paths = this.paths.withHome(host.home);
   }
 
   public isolateNetwork(exit: NetworkExit): void {
@@ -94,11 +112,20 @@ export class DockerSandbox implements Sandbox {
     // With a host share, only its variables reach the container; the docker
     // client keeps its own (DOCKER_HOST…) without passing them in.
     const passed = host?.env ?? this.env;
+    const paths = this.paths;
     const envNames = Object.keys(passed)
       .filter((name) => passed[name] !== undefined)
       .toSorted();
-    const envArgs = envNames.flatMap((name) => ['-e', name]);
-    const innerRoot = `${HOST_ROOT}${this.root}`;
+    // A variable with a host path in it (HOME, PATH) goes with the value the
+    // container sees; the others, by name, from the docker client's own.
+    const translated = paths.insideEnv(passed);
+    const envArgs = envNames.flatMap((name) =>
+      translated[name] === passed[name]
+        ? ['-e', name]
+        : ['-e', `${name}=${translated[name] ?? ''}`],
+    );
+    const agentRoot = paths.agentRoot;
+    const innerRoot = `${HOST_ROOT}${agentRoot}`;
     const writable = [
       ...(host?.state ?? hostStateDirs(this.env)),
       ...this.writable,
@@ -108,8 +135,8 @@ export class DockerSandbox implements Sandbox {
       ...(network === undefined ? [] : [network.sandboxDir()]),
     ];
     const described = describeMounts(
+      paths,
       this.root,
-      innerRoot,
       writable,
       {
         workspaceAccess: this.filesystem?.workspaceAccess ?? 'readwrite',
@@ -124,7 +151,7 @@ export class DockerSandbox implements Sandbox {
           })),
         ],
       },
-      host === undefined ? undefined : homeOf(this.env),
+      bubblewrapReadonlyBinds(this.env),
     );
     // The CLI's installation, read-only; the workspace's home, writable, with
     // the CLI's login read-only inside it. Docker mounts the shorter paths
@@ -143,7 +170,7 @@ export class DockerSandbox implements Sandbox {
         .map((path) => ({
           type: 'bind',
           source: path,
-          destination: `${HOST_ROOT}${path}`,
+          destination: `${HOST_ROOT}${paths.inside(path)}`,
           mode: 'ro',
         })),
       ...(host?.home === undefined
@@ -152,13 +179,13 @@ export class DockerSandbox implements Sandbox {
             {
               type: 'bind',
               source: host.home,
-              destination: `${HOST_ROOT}${host.home}`,
+              destination: `${HOST_ROOT}${paths.inside(host.home)}`,
               mode: 'rw',
             },
             ...host.credentials.map(({ source, destination }) => ({
               type: 'bind',
               source,
-              destination: `${HOST_ROOT}${destination}`,
+              destination: `${HOST_ROOT}${paths.inside(destination)}`,
               mode: 'ro',
             })),
           ]),
@@ -185,7 +212,7 @@ export class DockerSandbox implements Sandbox {
       user: { uid, gid },
       env: envNames,
       chroot: HOST_ROOT,
-      chdir: this.root,
+      chdir: agentRoot,
     });
 
     const prepared = wrapCommand(
@@ -211,11 +238,11 @@ export class DockerSandbox implements Sandbox {
         HOST_ROOT,
         ...innerUserCommand(),
         '/usr/bin/env',
-        `--chdir=${this.root}`,
+        `--chdir=${agentRoot}`,
         ...(network?.environment() ?? []),
-        ...launcher,
+        ...launcher.map((argument) => paths.insideValue(argument)),
       ],
-      command,
+      paths.insideCommand(command, passed['PATH']),
     );
     // The docker client gets only what goes in, plus its own settings.
     return host === undefined
@@ -276,21 +303,22 @@ interface Mount {
 }
 
 function describeMounts(
+  paths: SandboxPaths,
   root: string,
-  innerRoot: string,
   extra: readonly string[],
-  filesystem?: FilesystemAccess,
-  /** Hidden behind an empty tmpfs; only the tools and `extra` come back. */
-  home?: string,
+  filesystem: FilesystemAccess,
+  /** The tools; those under the hidden `/home` and `/opt` come back. */
+  tools: readonly string[],
 ): Mount[] {
+  const at = (path: string): string => `${HOST_ROOT}${paths.inside(path)}`;
   const mounts: Mount[] = [
     { type: 'bind', source: '/', destination: HOST_ROOT, mode: 'ro' },
-    ...(home === undefined ? [] : hiddenHome(home)),
+    ...hiddenHomes(paths, tools),
     {
       type: 'bind',
       source: root,
-      destination: innerRoot,
-      mode: filesystem?.workspaceAccess === 'readonly' ? 'ro' : 'rw',
+      destination: at(root),
+      mode: filesystem.workspaceAccess === 'readonly' ? 'ro' : 'rw',
     },
   ];
   const seen = new Set([root]);
@@ -304,15 +332,15 @@ function describeMounts(
     mounts.push({
       type: 'bind',
       source: path,
-      destination: `${HOST_ROOT}${path}`,
+      destination: at(path),
       mode: 'rw',
     });
   }
 
   mounts.push({ type: 'tmpfs', destination: `${HOST_ROOT}/tmp` });
 
-  for (const mask of filesystem?.masks ?? []) {
-    const destination = `${HOST_ROOT}${mask.path}`;
+  for (const mask of filesystem.masks) {
+    const destination = at(mask.path);
 
     if (mask.access === 'readonly') {
       mounts.push({
@@ -336,23 +364,36 @@ function describeMounts(
 }
 
 /**
- * The host home as an empty tmpfs (no ~/.config, no browser profiles, no
- * other logins), with the tools the agent runs (bun, ~/.local/bin, PATH
- * entries under it) mounted back read-only.
+ * The host's `/home` as an empty tmpfs (no other homes, no ~/.config, no
+ * browser profiles, no logins), and `/opt` as one too, with the host's
+ * entries mounted back next to `/opt/choliba`, where the tools the agent runs
+ * from the homes (bun, ~/.local/bin, PATH entries there) come back read-only.
+ * Both are tmpfs because the host's `/` is read-only: Docker cannot create
+ * the mount points there.
  */
-function hiddenHome(home: string): Mount[] {
-  const tools = bubblewrapReadonlyBinds().filter((path) =>
-    path.startsWith(`${home}/`),
-  );
+function hiddenHomes(paths: SandboxPaths, tools: readonly string[]): Mount[] {
+  if (!isDirectory('/opt')) {
+    throw new UsageError(
+      `O workspace Docker precisa da pasta /opt no host: é onde ${SANDBOX_SUPPORT_DIR} é montado. Crie-a (sudo mkdir /opt).`,
+    );
+  }
+  const opt = new Set(hostOptEntries());
   return [
-    // Traversable: the paths mounted back inside are reached through it.
-    { type: 'tmpfs', destination: `${HOST_ROOT}${home}`, options: 'mode=755' },
-    ...tools.map((path) => ({
-      type: 'bind',
-      source: path,
-      destination: `${HOST_ROOT}${path}`,
-      mode: 'ro',
-    })),
+    // Traversable: the paths mounted back inside are reached through them.
+    {
+      type: 'tmpfs',
+      destination: `${HOST_ROOT}${HOST_HOMES}`,
+      options: 'mode=755',
+    },
+    { type: 'tmpfs', destination: `${HOST_ROOT}/opt`, options: 'mode=755' },
+    ...tools
+      .filter((path) => opt.has(path) || paths.moves(path))
+      .map((path) => ({
+        type: 'bind',
+        source: path,
+        destination: `${HOST_ROOT}${paths.inside(path)}`,
+        mode: 'ro',
+      })),
   ];
 }
 

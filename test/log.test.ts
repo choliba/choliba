@@ -6,7 +6,7 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { afterEach, beforeEach, expect, test } from 'bun:test';
@@ -16,6 +16,7 @@ import { clearConfigCache, loadConfig } from '../src/config/index';
 import { createProducer } from '../src/events/index';
 import { closeLogger, log, openLogger } from '../src/logger/index';
 import { DockerSandbox } from '../src/workspace/sandbox/docker';
+import { SandboxPaths } from '../src/workspace/sandbox/path-map';
 import type { ProgramCommand, ProgramOutput } from '../src/execute/types';
 import type { Provider, ProviderEvent } from '../src/providers/types';
 import { Workspace } from '../src/workspace/index';
@@ -155,13 +156,13 @@ test('debug registra montagens e rede do bubblewrap', async () => {
       expect.objectContaining({
         sandbox: 'bubblewrap',
         network: { unshare: 'all', share: ['net'] },
-        workingDir: cwd,
+        workingDir: '/home/choliba',
       }),
     );
     expect(sandbox['mounts']).toEqual(
       expect.arrayContaining([
         { type: 'bind', source: '/usr', destination: '/usr', mode: 'ro' },
-        { type: 'bind', source: cwd, destination: cwd, mode: 'rw' },
+        { type: 'bind', source: cwd, destination: '/home/choliba', mode: 'rw' },
         { type: 'tmpfs', destination: '/tmp' },
       ]),
     );
@@ -211,17 +212,27 @@ test('debug registra imagem, volumes e rede do docker', async () => {
         network: { mode: 'host' },
         env: ['HOME', 'TOKEN'],
         chroot: '/host',
-        chdir: cwd,
+        chdir: '/home/choliba',
       }),
     );
     expect(JSON.stringify(record)).not.toContain('secret');
     expect(sandbox['volumes']).toEqual(
-      expect.arrayContaining([`/:/host:ro`, `${cwd}:/host${cwd}:rw`]),
+      expect.arrayContaining([`/:/host:ro`, `${cwd}:/host/home/choliba:rw`]),
     );
     expect(sandbox['mounts']).toEqual(
       expect.arrayContaining([
         { type: 'bind', source: '/', destination: '/host', mode: 'ro' },
-        { type: 'bind', source: cwd, destination: `/host${cwd}`, mode: 'rw' },
+        {
+          type: 'tmpfs',
+          destination: '/host/home',
+          options: 'mode=755',
+        },
+        {
+          type: 'bind',
+          source: cwd,
+          destination: '/host/home/choliba',
+          mode: 'rw',
+        },
         { type: 'tmpfs', destination: '/host/tmp' },
       ]),
     );
@@ -306,7 +317,11 @@ test('debug registra os comandos executados pelo agente', async () => {
       expect.objectContaining({
         executable: 'nsenter',
         args: expect.arrayContaining([
-          process.execPath,
+          // Where the jail sees the runtime (outside /home).
+          new SandboxPaths({
+            root: cwd,
+            hostHome: process.env['HOME'] ?? homedir(),
+          }).inside(process.execPath),
           '-e',
           'process.stdin.pipe(process.stdout)',
         ]),

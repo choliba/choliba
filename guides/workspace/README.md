@@ -26,26 +26,54 @@ Um `Workspace` define a raiz que o agente pode alterar e prepara cada comando pa
 | `src/workspace/sandbox/docker.ts`      | Contêineres, montagens, ambiente e rede do Docker.                                                                              |
 | `src/workspace/sandbox/host-access.ts` | Traduz o contrato do provider e `hostState` em home, credenciais, ambiente e caminhos visíveis.                                 |
 | `src/workspace/sandbox/host-state.ts`  | Caminhos genéricos de estado que o sandbox compartilha quando não recebe um contrato de host.                                   |
+| `src/workspace/sandbox/path-map.ts`    | `SandboxPaths`: onde o sandbox vê cada caminho do host (a raiz em `/home/choliba`, o resto de `/home` em `/opt/choliba`).       |
 
 [↑ topo](#topo)
 
 ## Interface
 
-| Exportação                           | O que faz                                                                                   |
-| ------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `Workspace`                          | Representa a raiz e o sandbox escolhido (`bubblewrap` ou `docker`).                         |
-| `WorkspaceOptions`                   | Recebe `type`, `root`, caminhos graváveis, portas, imagem do Docker, `hostState` e `homes`. |
-| `Workspace.homes`                    | A pasta dos homes: a opção `homes` ou, sem ela, `workspaces.homes` da config.               |
-| `Workspace.home()`                   | Retorna o home persistente daquela raiz em `homes`; raízes iguais produzem o mesmo caminho. |
-| `Workspace.applyPermissions(policy)` | Compila as permissões de filesystem e configura a fronteira de rede opcional.               |
-| `Workspace.useHost(host)`            | Passa ao sandbox o conjunto já calculado de montagens e variáveis.                          |
-| `Workspace.protect(paths)`           | Mantém arquivos de configuração e hooks somente para leitura.                               |
-| `Workspace.prepare(command)`         | Prepara o comando com o diretório de trabalho da raiz, criando a raiz se ela não existir.   |
-| `Workspace.close()`                  | Encerra sandbox e rede.                                                                     |
+| Exportação                           | O que faz                                                                                                |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `Workspace`                          | Representa a raiz e o sandbox escolhido (`bubblewrap` ou `docker`).                                      |
+| `WorkspaceOptions`                   | Recebe `type`, `root`, caminhos graváveis, portas, imagem do Docker, `hostState`, `homes` e `agentRoot`. |
+| `Workspace.homes`                    | A pasta dos homes: a opção `homes` ou, sem ela, `workspaces.homes` da config.                            |
+| `Workspace.home()`                   | Retorna o home persistente daquela raiz em `homes`; raízes iguais produzem o mesmo caminho.              |
+| `Workspace.paths`                    | O `SandboxPaths` do workspace: `paths.inside(caminho)` diz onde o sandbox vê um caminho do host.         |
+| `Workspace.applyPermissions(policy)` | Compila as permissões de filesystem e configura a fronteira de rede opcional.                            |
+| `Workspace.useHost(host)`            | Passa ao sandbox o conjunto já calculado de montagens e variáveis.                                       |
+| `Workspace.protect(paths)`           | Mantém arquivos de configuração e hooks somente para leitura.                                            |
+| `Workspace.prepare(command)`         | Prepara o comando com o diretório de trabalho da raiz, criando a raiz se ela não existir.                |
+| `Workspace.close()`                  | Encerra sandbox e rede.                                                                                  |
 
 `hostState` aceita três valores. `login` é o padrão: a CLI ganha um home por workspace e somente seu arquivo de login entra, montado para leitura. `none` não compartilha arquivos de login e exige uma variável de credencial declarada pelo provider; um provider local sem credenciais continua válido. `share` entrega o estado do provider no host, gravável, incluindo o histórico de outras raízes.
 
 O diretório dos homes é a opção `homes` do `Workspace`; sem ela, vale `workspaces.homes` do `choliba.config.ts`, cujo padrão é `.choliba/homes`. O diretório que contém todos os homes fica oculto dentro do sandbox se estiver dentro da raiz do workspace.
+
+### O que o agente vê: `/home/choliba`
+
+Nas duas sandboxes, a raiz do workspace aparece em **`/home/choliba`** (a opção `agentRoot`, uma pasta direto em
+`/home`), e é o diretório de trabalho: `pwd` mostra `/home/choliba`. É a única coisa em `/home`: os homes do host não
+existem lá dentro, nem a pasta de onde a raiz veio. `/usr`, `/etc` e as outras pastas do sistema continuam onde estão,
+somente leitura.
+
+O que o agente precisa dos homes do host vai para `/opt/choliba`:
+
+| No host                                                                        | No sandbox            |
+| ------------------------------------------------------------------------------ | --------------------- |
+| a raiz do workspace                                                            | `/home/choliba`       |
+| o home do workspace (o da CLI)                                                 | `/opt/choliba/home`   |
+| o home de quem roda o Choliba (`~/.bun`, `~/.local/bin`, `~/.cache/choliba/…`) | `/opt/choliba/user`   |
+| qualquer outro caminho em `/home`                                              | `/opt/choliba/host/…` |
+
+Só aparecem ali as pastas montadas (as ferramentas, o estado da CLI, o gate), nunca o home inteiro. O Choliba traduz
+para esses caminhos tudo o que entrega ao sandbox: o comando e os argumentos, as variáveis (`HOME`, `PATH`, `XDG_*`),
+o hook do gate e o servidor das ferramentas gravados na configuração da CLI. O executável da CLI que é um link para o
+home (`~/.local/bin/claude`) entra pelo caminho real. Um link **absoluto** para dentro de `/home` que o agente siga por
+conta própria (outra ferramenta em `~/.local/bin`) não funciona lá dentro: o destino não existe.
+
+No Docker, `/home` e `/opt` são tmpfs vazios (as entradas do `/opt` do host voltam, uma a uma, somente leitura): o `/`
+do host é somente leitura, e o Docker não consegue criar pontos de montagem nele. Por isso o workspace Docker precisa
+da pasta `/opt` no host.
 
 O cache do Choliba (`~/.cache/choliba`) também fica fora do sandbox, em qualquer `hostState`: lá ficam os gates dos outros agentes e homes antigos de CLIs. Do cache, o sandbox vê só o que é do próprio agente: o diretório do gate de execução, somente leitura, e o da saída de rede.
 
@@ -57,9 +85,10 @@ O cache do Choliba (`~/.cache/choliba`) também fica fora do sandbox, em qualque
 2. `home()` calcula um identificador estável a partir do caminho resolvido da raiz. O home guarda sessões e configuração da CLI entre execuções.
 3. O agente consulta `provider.hostAccess()` e prepara o acesso conforme `hostState`. O sandbox recebe o resultado por `useHost`.
 4. O agente passa as permissões, os caminhos protegidos e a rede por operações de `Workspace`.
-5. `prepare` define `cwd` como a raiz e delega ao sandbox. `close` encerra os recursos.
+5. `prepare` define `cwd` como a raiz e delega ao sandbox, que traduz o comando para os caminhos de dentro
+   (`SandboxPaths`). `close` encerra os recursos.
 
-Claude recebe `CLAUDE_CONFIG_DIR` apontando para `.claude` no home isolado; Codex recebe `CODEX_HOME` apontando para `.codex`. Com `share` e o gate de execução, o Codex roda com um `CODEX_HOME` próprio, `.codex-share` no home do workspace: o hook do gate e as regras da política ficam ali, somente leitura, e o resto (sessões, login, configuração) são links para o `~/.codex` do host. Nada do Choliba é gravado no `~/.codex`. O home do workspace é montado também em `share`, mas o `HOME` continua o do host.
+Claude recebe `CLAUDE_CONFIG_DIR` apontando para `.claude` no home isolado; Codex recebe `CODEX_HOME` apontando para `.codex`. Com `share` e o gate de execução, o Codex roda com um `CODEX_HOME` próprio, `.codex-share` no home do workspace: o hook do gate e as regras da política ficam ali, somente leitura, e o resto (sessões, login, configuração) são links para o `~/.codex` do host, apontando para onde o sandbox o vê (`/opt/choliba/user/.codex`). Nada do Choliba é gravado no `~/.codex`. O home do workspace é montado também em `share`, mas o `HOME` continua o do host (visto em `/opt/choliba/user`).
 
 [↑ topo](#topo)
 
@@ -119,6 +148,8 @@ O nome do diretório é um hash da raiz resolvida; o mesmo caminho normalizado s
 - Só `Workspace` escolhe e configura `DockerSandbox` ou `BubblewrapSandbox`.
 - Quem usa workspace passa política, caminhos protegidos, host e rede por suas operações; não monta esses limites à mão no comando do agente.
 - A raiz não pode ser vazia nem `/`.
+- Lá dentro, a raiz é `agentRoot` (`/home/choliba`) e `/home` não tem mais nada; o que vai para o sandbox passa por
+  `SandboxPaths`, nunca com o caminho do host.
 - O provider descreve o que precisa do host; `Workspace` aplica somente a parte permitida pelo `hostState` escolhido.
 - Configure filesystem, host e rede antes de iniciar a jaula Bubblewrap.
 

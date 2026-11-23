@@ -217,7 +217,7 @@ describe('runProvider', () => {
 
   afterAll(() => workspace.close());
 
-  test('o provider cria o comando e lê a saída; roda na raiz do workspace', async () => {
+  test('o provider cria o comando e lê a saída; roda na raiz do workspace (/home/choliba)', async () => {
     const events = await collect(
       runProvider(new TestProvider('process.stdout.write(process.cwd());'), {
         executor: new Executor(),
@@ -226,7 +226,7 @@ describe('runProvider', () => {
       }),
     );
 
-    expect(events.map(readEvent)).toEqual([`stdout:${process.cwd()}`]);
+    expect(events.map(readEvent)).toEqual(['stdout:/home/choliba']);
   });
 
   test('publica execuções simultâneas no despachante sem misturá-las', async () => {

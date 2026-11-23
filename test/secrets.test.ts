@@ -223,7 +223,9 @@ describe('o estado das CLIs no host (hostState)', () => {
 
       try {
         const saida = await dentro(workspace);
-        expect(saida).toContain(`HOME=${host.home ?? ''}`);
+        // O home do workspace, visto fora de /home.
+        expect(host.home).toBeDefined();
+        expect(saida).toContain('HOME=/opt/choliba/home\n');
         // O login chega pelo home do workspace…
         expect(saida).toContain('arquivo-login-do-claude');
         // …e nada mais do estado das CLIs no host, nem os outros homes.
@@ -303,7 +305,8 @@ describe('o estado das CLIs no host (hostState)', () => {
 
       try {
         const saida = await dentro(workspace);
-        expect(saida).toContain(`HOME=${home}`);
+        // O home do host, visto fora de /home.
+        expect(saida).toContain('HOME=/opt/choliba/user\n');
         expect(saida).toContain('conversa-de-outro-projeto');
         // Os logins de outras CLIs continuam escondidos.
         expect(saida).not.toContain('login-do-codex');
@@ -377,7 +380,7 @@ describe('o estado das CLIs no host (hostState)', () => {
             await child.exited;
           }
           if (hostState === 'share') {
-            expect(output).toContain(`HOME=${home}`);
+            expect(output).toContain('HOME=/opt/choliba/user\n');
             expect(output).not.toContain('login-do-codex');
           }
         } finally {

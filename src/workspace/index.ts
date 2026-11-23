@@ -15,6 +15,8 @@ import {
   type TrafficObserver,
 } from '../network/index';
 import { DEFAULT_DOCKER_IMAGE } from './constants';
+import { environment, userHome } from '../execute/process';
+import { SandboxPaths } from './sandbox/path-map';
 import {
   HOST_STATES,
   type HostState,
@@ -46,6 +48,12 @@ interface CommonWorkspaceOptions {
    * `home()`); `workspaces.homes` of the config by default.
    */
   readonly homes?: string;
+  /**
+   * Where the agent sees the root, a folder right in `/home` (the only thing
+   * there: the host's homes are hidden); `AGENT_ROOT` (`/home/choliba`) by
+   * default.
+   */
+  readonly agentRoot?: string;
 }
 
 export interface DockerWorkspaceOptions extends CommonWorkspaceOptions {
@@ -95,6 +103,8 @@ export class Workspace {
   public readonly hostState: HostState;
   /** Where the homes of the workspaces are kept (see `home()`). */
   public readonly homes: string;
+  /** Where the sandbox sees each host path (the root at `paths.agentRoot`). */
+  public readonly paths: SandboxPaths;
   private network: NetworkBoundary | undefined;
 
   public constructor(options: WorkspaceOptions) {
@@ -121,7 +131,15 @@ export class Workspace {
     this.type = options.type;
     this.options = options;
     this.hostState = hostState;
-    this.sandbox = createSandbox(options);
+    this.paths = new SandboxPaths({
+      root: options.root,
+      home: this.home(),
+      hostHome: environment()['HOME'] ?? userHome(),
+      ...(options.agentRoot === undefined
+        ? {}
+        : { agentRoot: options.agentRoot }),
+    });
+    this.sandbox = createSandbox(options, this.paths);
   }
 
   /**
@@ -210,11 +228,17 @@ export class Workspace {
   }
 }
 
-function createSandbox(options: WorkspaceOptions): Sandbox {
+function createSandbox(
+  options: WorkspaceOptions,
+  paths: SandboxPaths,
+): Sandbox {
+  const { root, writable = [] } = options;
   return options.type === 'docker'
     ? new DockerSandbox({
-        ...options,
+        root,
+        writable,
+        paths,
         image: options.image ?? DEFAULT_DOCKER_IMAGE,
       })
-    : new BubblewrapSandbox(options);
+    : new BubblewrapSandbox({ root, writable, paths });
 }
