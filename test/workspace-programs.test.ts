@@ -1,0 +1,342 @@
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { spawnSync } from 'node:child_process';
+import { join } from 'node:path';
+
+import { afterAll, describe, expect, test } from 'bun:test';
+
+import { clearConfigCache, loadConfig } from '../src/config/index';
+import { UsageError } from '../src/usage';
+import { Workspace } from '../src/workspace/index';
+import { bubblewrapProgramArgs } from '../src/workspace/sandbox/bubblewrap';
+import { SandboxPaths } from '../src/workspace/sandbox/path-map';
+import {
+  findPrograms,
+  programAt,
+  programDirs,
+  requirePrograms,
+  visiblePrograms,
+} from '../src/workspace/sandbox/programs';
+
+const base = realpathSync(mkdtempSync(join(tmpdir(), 'choliba-programs-')));
+const usrBin = join(base, 'usr/bin');
+const localBin = join(base, 'home/.local/bin');
+const linkedBin = join(base, 'bin');
+mkdirSync(usrBin, { recursive: true });
+mkdirSync(localBin, { recursive: true });
+symlinkSync(usrBin, linkedBin);
+
+/** An executable file in `dir`. */
+function program(dir: string, name: string): string {
+  const path = join(dir, name);
+  writeFileSync(path, '#!/bin/sh\n');
+  chmodSync(path, 0o755);
+  return path;
+}
+
+program(usrBin, 'php8.5');
+symlinkSync('php8.5', join(usrBin, 'php'));
+program(usrBin, 'node');
+program(localBin, 'node');
+mkdirSync(join(usrBin, 'pasta'));
+
+const searchPath = `${localBin}:${linkedBin}:${usrBin}`;
+
+afterAll(() => {
+  rmSync(base, { recursive: true, force: true });
+});
+
+describe('programas da sandbox', () => {
+  test('acha cada programa como o shell: primeiro no PATH, pelo arquivo final do link', () => {
+    expect(findPrograms(['php', 'node'], searchPath)).toEqual({
+      found: [
+        // Through `bin`, a link to `usr/bin`: mounted at the real folder.
+        {
+          name: 'php',
+          path: join(usrBin, 'php'),
+          file: join(usrBin, 'php8.5'),
+        },
+        {
+          name: 'node',
+          path: join(localBin, 'node'),
+          file: join(localBin, 'node'),
+        },
+      ],
+      missing: [],
+    });
+  });
+
+  test('o que não está no PATH, ou é pasta, falta; repetido conta uma vez', () => {
+    expect(findPrograms(['composer', 'pasta', 'composer'], searchPath)).toEqual(
+      { found: [], missing: ['composer', 'pasta'] },
+    );
+    expect(findPrograms(['php'], undefined).missing).toEqual(['php']);
+  });
+
+  test('recusa caminho, pacote com espaço e nome vazio', () => {
+    for (const name of ['/usr/bin/php', 'php cli', '', '..']) {
+      expect(() => findPrograms([name], searchPath)).toThrow(UsageError);
+    }
+    expect(() => findPrograms(['/usr/bin/php'], searchPath)).toThrow(
+      'Programa inválido em programs: "/usr/bin/php". Use o nome do executável, como php (não o caminho nem o pacote).',
+    );
+  });
+
+  test('requirePrograms para nomeando o que falta', () => {
+    expect(
+      requirePrograms(['php'], searchPath).map((found) => found.name),
+    ).toEqual(['php']);
+    expect(() =>
+      requirePrograms(['php', 'composer', 'go'], searchPath),
+    ).toThrow(
+      'Programas selecionados que a sandbox não encontra: composer, go. Instale no host, numa pasta do PATH, ou tire da lista programs.',
+    );
+  });
+
+  test('programAt: um executável por caminho absoluto; pasta ou inexistente, nada', () => {
+    expect(programAt(join(linkedBin, 'php'))).toEqual({
+      name: 'php',
+      path: join(usrBin, 'php'),
+      file: join(usrBin, 'php8.5'),
+    });
+    expect(programAt(usrBin)).toBeUndefined();
+    expect(programAt(join(base, 'nada'))).toBeUndefined();
+  });
+
+  test('visiblePrograms: os selecionados, a base que existe e o runtime, sem repetir', () => {
+    const visible = visiblePrograms(['php', 'node'], searchPath, [
+      'node',
+      'sh-que-nao-existe',
+    ]);
+    const names = visible.map((found) => found.name);
+
+    expect(names.slice(0, 2)).toEqual(['php', 'node']);
+    expect(names.filter((name) => name === 'node')).toHaveLength(1);
+    expect(names).not.toContain('sh-que-nao-existe');
+    // Choliba's runtime, by its own path.
+    expect(visible.at(-1)?.file).toBe(realpathSync(process.execPath));
+    expect(() => visiblePrograms(['composer'], searchPath, [])).toThrow(
+      UsageError,
+    );
+  });
+
+  test('programDirs: pastas do sistema, do home e do PATH, reais, sem as graváveis', () => {
+    const home = join(base, 'home');
+    const dirs = programDirs(
+      `${searchPath}:relativa:${join(base, 'nada')}`,
+      home,
+      [localBin],
+    );
+
+    expect(dirs).toContain(usrBin);
+    expect(dirs).not.toContain(linkedBin);
+    expect(dirs).not.toContain(localBin);
+    expect(dirs).not.toContain('relativa');
+    expect(dirs).not.toContain(join(base, 'nada'));
+    expect(dirs.filter((dir) => dir === usrBin)).toHaveLength(1);
+    expect(dirs).toContain(realpathSync('/usr/bin'));
+  });
+});
+
+describe('Workspace.programs', () => {
+  test('guarda a seleção e confere sem rodar nada', () => {
+    const workspace = new Workspace({
+      type: 'bubblewrap',
+      root: base,
+      programs: ['php', 'composer'],
+    });
+
+    expect(workspace.programs).toEqual(['php', 'composer']);
+    expect(workspace.checkPrograms(undefined, searchPath)).toEqual({
+      found: [
+        {
+          name: 'php',
+          path: join(usrBin, 'php'),
+          file: join(usrBin, 'php8.5'),
+        },
+      ],
+      missing: ['composer'],
+    });
+    expect(workspace.checkPrograms(['node'], searchPath).found).toHaveLength(1);
+  });
+
+  test('sem a opção, vale workspaces.programs da config', async () => {
+    const cwd = mkdtempSync(join(base, 'config-'));
+    writeFileSync(
+      join(cwd, 'choliba.config.ts'),
+      `export default { workspaces: { programs: ['php'] } };\n`,
+    );
+
+    try {
+      await loadConfig({ cwd });
+      expect(
+        new Workspace({ type: 'bubblewrap', root: base }).programs,
+      ).toEqual(['php']);
+      expect(
+        new Workspace({ type: 'bubblewrap', root: base, programs: [] })
+          .programs,
+      ).toEqual([]);
+    } finally {
+      clearConfigCache();
+    }
+  });
+
+  test('sem programs, nenhuma seleção; um nome inválido é recusado ao criar', () => {
+    const workspace = new Workspace({ type: 'bubblewrap', root: base });
+
+    expect(workspace.programs).toBeUndefined();
+    expect(workspace.checkPrograms()).toEqual({ found: [], missing: [] });
+    expect(
+      () =>
+        new Workspace({ type: 'docker', root: base, programs: ['php cli'] }),
+    ).toThrow(UsageError);
+  });
+});
+
+describe('bubblewrap com programs', () => {
+  test('esvazia as pastas e monta cada programa de volta, do arquivo final', () => {
+    const paths = new SandboxPaths({
+      root: base,
+      hostHome: join(base, 'home'),
+    });
+
+    expect(
+      bubblewrapProgramArgs(paths, {
+        dirs: [usrBin, localBin],
+        visible: [
+          {
+            name: 'php',
+            path: join(usrBin, 'php'),
+            file: join(usrBin, 'php8.5'),
+          },
+          {
+            name: 'node',
+            path: join(localBin, 'node'),
+            file: join(localBin, 'node'),
+          },
+        ],
+      }),
+    ).toEqual([
+      '--tmpfs',
+      join(base, 'usr/bin').replace(base, '/home/choliba'),
+      '--tmpfs',
+      '/opt/choliba/user/.local/bin',
+      '--ro-bind',
+      join(usrBin, 'php8.5'),
+      '/home/choliba/usr/bin/php',
+      '--ro-bind',
+      join(localBin, 'node'),
+      '/opt/choliba/user/.local/bin/node',
+    ]);
+    expect(bubblewrapProgramArgs(paths, { dirs: [], visible: [] })).toEqual([]);
+  });
+
+  test('um programa selecionado que falta para antes de a jaula subir', async () => {
+    const workspace = new Workspace({
+      type: 'bubblewrap',
+      root: base,
+      programs: ['programa-que-nao-existe'],
+    });
+
+    try {
+      await expect(workspace.prepare({ executable: 'true' })).rejects.toThrow(
+        'Programas selecionados que a sandbox não encontra: programa-que-nao-existe.',
+      );
+    } finally {
+      await workspace.close();
+    }
+  });
+
+  test.skipIf(Bun.which('bwrap') === null || Bun.which('nsenter') === null)(
+    'na jaula, só os selecionados e a base: o resto do /usr/bin some',
+    async () => {
+      const workspace = new Workspace({
+        type: 'bubblewrap',
+        root: base,
+        programs: ['ls'],
+      });
+
+      try {
+        const prepared = await workspace.prepare({
+          executable: 'bash',
+          arguments: [
+            '-c',
+            'ls /usr/bin; command -v head || echo sem-head; ls -d /home/choliba',
+          ],
+        });
+        const ran = spawnSync(
+          prepared.executable,
+          [...(prepared.arguments ?? [])],
+          { encoding: 'utf8', env: prepared.env, cwd: prepared.cwd },
+        );
+        const lines = ran.stdout.trim().split('\n');
+
+        expect(ran.status).toBe(0);
+        expect(lines).toContain('ls');
+        expect(lines).toContain('env');
+        expect(lines).toContain('bash');
+        expect(lines).toContain('sem-head');
+        expect(lines).not.toContain('head');
+        expect(lines).toContain('/home/choliba');
+      } finally {
+        await workspace.close();
+      }
+    },
+  );
+});
+
+describe('docker com programs', () => {
+  test('tmpfs nas pastas de programas e cada visível de volta, sem mount duplicado', async () => {
+    const workspace = new Workspace({
+      type: 'docker',
+      root: base,
+      programs: ['ls'],
+    });
+    const args =
+      (await workspace.prepare({ executable: 'true' })).arguments ?? [];
+    const ls = realpathSync(Bun.which('ls') ?? '/usr/bin/ls');
+    const lsDir = realpathSync(join(Bun.which('ls') ?? '/usr/bin/ls', '..'));
+    // `-v source:destination[:ro]` and `--tmpfs destination[:options]`.
+    const destinations = args.flatMap((spec, index) => {
+      if (args[index - 1] === '-v') return [spec.split(':')[1]];
+      if (args[index - 1] === '--tmpfs') return [spec.split(':')[0]];
+      return [];
+    });
+
+    expect(args).toContain(`/host${realpathSync('/usr/bin')}`);
+    expect(args).toContain(`${ls}:/host${lsDir}/ls:ro`);
+    expect(args.some((arg) => arg.endsWith('/setpriv:ro'))).toBe(true);
+    expect(new Set(destinations).size).toBe(destinations.length);
+  });
+
+  test('sem programs, nenhuma pasta de programas é esvaziada', async () => {
+    const args =
+      (
+        await new Workspace({ type: 'docker', root: base }).prepare({
+          executable: 'true',
+        })
+      ).arguments ?? [];
+
+    expect(args).not.toContain(`/host${realpathSync('/usr/bin')}`);
+  });
+
+  test('um programa selecionado que falta para antes do docker run', async () => {
+    const workspace = new Workspace({
+      type: 'docker',
+      root: base,
+      programs: ['programa-que-nao-existe'],
+    });
+
+    await expect(workspace.prepare({ executable: 'true' })).rejects.toThrow(
+      'Programas selecionados que a sandbox não encontra: programa-que-nao-existe.',
+    );
+  });
+});

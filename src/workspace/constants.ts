@@ -23,3 +23,32 @@ export const HOST_HOMES = '/home';
  * home (`user`) and anything else under `/home` (`host`).
  */
 export const SANDBOX_SUPPORT_DIR = '/opt/choliba';
+
+/**
+ * The system's program folders, emptied in a sandbox that shows only the
+ * selected programs (`programs`). `/bin` and `/sbin` count once when they are
+ * links to the `/usr` ones.
+ */
+export const STANDARD_PROGRAM_DIRS: readonly string[] = [
+  '/usr/bin',
+  '/usr/sbin',
+  '/usr/local/bin',
+  '/usr/local/sbin',
+  '/bin',
+  '/sbin',
+];
+
+/** The program folders of the user's home, relative to it: emptied too. */
+export const USER_PROGRAM_DIRS: readonly string[] = ['.local/bin', '.bun/bin'];
+
+/**
+ * What a sandbox with `programs` always shows, selected or not: what
+ * Choliba itself runs inside it (`env` before the CLI, `cat` keeping the
+ * bubblewrap jail up) and the shell the CLIs run commands with. Choliba's
+ * runtime comes too, by its own path. Nothing else: the rest is the user's
+ * choice.
+ */
+export const BASE_PROGRAMS: readonly string[] = ['env', 'cat', 'sh', 'bash'];
+
+/** Besides `BASE_PROGRAMS`, in a Docker sandbox: it drops root after `chroot`. */
+export const DOCKER_BASE_PROGRAMS: readonly string[] = ['setpriv'];

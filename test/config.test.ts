@@ -185,6 +185,7 @@ test('loadConfig usa defaults quando não há arquivo', async () => {
         dir: resolve(cwd, '.choliba/workspaces'),
         // A temporary folder in the tests (test/support/env.ts).
         homes: resolve(cwd, DEFAULT_HOMES_DIR),
+        programs: undefined,
       },
       rounds: {
         dir: undefined,
@@ -252,6 +253,34 @@ test('loadConfig recusa uma opção desconhecida em workspaces', async () => {
       `export default { workspaces: { home: 'storage/homes' } };\n`,
     );
     await expect(loadConfig({ cwd })).rejects.toThrow('workspaces.home');
+  } finally {
+    rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test('loadConfig lê workspaces.programs e recusa o que não é lista de nomes', async () => {
+  const cwd = mkdtempSync(join(tmpdir(), 'choliba-config-'));
+
+  try {
+    writeFileSync(
+      join(cwd, 'choliba.config.ts'),
+      `export default { workspaces: { programs: ['php', 'bun'] } };\n`,
+    );
+    expect((await loadConfig({ cwd })).workspaces.programs).toEqual([
+      'php',
+      'bun',
+    ]);
+
+    for (const programs of [`'php'`, `['php', '']`, `[1]`]) {
+      const dir = mkdtempSync(join(cwd, 'invalido-'));
+      writeFileSync(
+        join(dir, 'choliba.config.ts'),
+        `export default { workspaces: { programs: ${programs} } };\n`,
+      );
+      await expect(loadConfig({ cwd: dir })).rejects.toThrow(
+        "deve ser uma lista de nomes de programas, como ['php', 'bun'].",
+      );
+    }
   } finally {
     rmSync(cwd, { recursive: true, force: true });
   }

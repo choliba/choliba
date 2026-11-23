@@ -1,7 +1,6 @@
 import type { ProgramCommand } from '../../execute/types';
 import { UsageError } from '../../errors';
 import {
-  isDirectory,
   isWithin,
   join,
   pathExists,
@@ -9,6 +8,7 @@ import {
   resolve,
 } from '../../filesystem/index';
 import { AGENT_ROOT, HOST_HOMES, SANDBOX_SUPPORT_DIR } from '../constants';
+import { findInPath } from './programs';
 
 export interface SandboxPathsOptions {
   /** The workspace root, on the host. */
@@ -172,17 +172,4 @@ function programAfterEnv(args: readonly string[]): number | undefined {
     (argument) => !argument.includes('=') && argument !== 'env',
   );
   return index < 0 ? undefined : index;
-}
-
-/** The first `name` in the directories of `searchPath`, as a shell finds it. */
-function findInPath(
-  name: string,
-  searchPath: string | undefined,
-): string | undefined {
-  for (const dir of (searchPath ?? '').split(':')) {
-    if (dir.length === 0) continue;
-    const candidate = join(dir, name);
-    if (pathExists(candidate) && !isDirectory(candidate)) return candidate;
-  }
-  return undefined;
 }

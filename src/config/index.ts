@@ -97,6 +97,12 @@ export interface CholibaWorkspacesConfig {
    * to the config file (or `~/…`); defaults to `.choliba/homes`.
    */
   readonly homes?: string;
+  /**
+   * The programs the agents see in their sandboxes, by name (`php`, `bun`),
+   * even when more are installed (a workspace's `programs`). Without it,
+   * every program of the host.
+   */
+  readonly programs?: readonly string[];
 }
 
 /**
@@ -148,6 +154,8 @@ export interface ResolvedCholibaConfig {
     readonly dir: string;
     /** Absolute directory of the workspaces' homes. */
     readonly homes: string;
+    /** The programs the agents see; `undefined`: all of them. */
+    readonly programs: readonly string[] | undefined;
   };
   /** The rounds' absolute folders, each `undefined` when not configured. */
   readonly rounds: {
@@ -518,21 +526,44 @@ function normalizeWorkspaces(
   }
 
   const unknown = Object.keys(workspaces).find(
-    (key) => key !== 'dir' && key !== 'homes',
+    (key) => key !== 'dir' && key !== 'homes' && key !== 'programs',
   );
   if (unknown !== undefined) {
     throw new UsageError(
-      `Opção desconhecida "workspaces.${unknown}" em ${configPath}. Opções: dir, homes.`,
+      `Opção desconhecida "workspaces.${unknown}" em ${configPath}. Opções: dir, homes, programs.`,
     );
   }
 
   const dir = workspacesPath(workspaces['dir'], 'dir', configPath);
   const homes = workspacesPath(workspaces['homes'], 'homes', configPath);
+  const programs = workspacesPrograms(workspaces['programs'], configPath);
 
   return {
     ...(dir === undefined ? {} : { dir }),
     ...(homes === undefined ? {} : { homes }),
+    ...(programs === undefined ? {} : { programs }),
   };
+}
+
+/** `workspaces.programs`: names; whether each one is an executable's, the workspace checks. */
+function workspacesPrograms(
+  programs: unknown,
+  configPath: string,
+): readonly string[] | undefined {
+  if (programs === undefined) return undefined;
+  if (!isNameList(programs)) {
+    throw new UsageError(
+      `workspaces.programs em ${configPath} deve ser uma lista de nomes de programas, como ['php', 'bun'].`,
+    );
+  }
+  return programs;
+}
+
+function isNameList(value: unknown): value is readonly string[] {
+  return (
+    Array.isArray(value) &&
+    value.every((name) => typeof name === 'string' && name.trim() !== '')
+  );
 }
 
 /** The options of `rounds`, each a folder. */
@@ -748,6 +779,7 @@ function resolveConfig(
     workspaces: {
       dir: absolute(baseDir, file.workspaces?.dir ?? DEFAULT_WORKSPACES_DIR),
       homes: absolute(baseDir, file.workspaces?.homes ?? DEFAULT_HOMES_DIR),
+      programs: file.workspaces?.programs,
     },
     rounds: {
       dir:
