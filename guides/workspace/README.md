@@ -2,17 +2,20 @@
 
 # Módulo workspace: preparar um ambiente isolado
 
-> Um `Workspace` define a raiz que o agente pode alterar e prepara cada comando para rodar numa sandbox, com as permissões de arquivos e a fronteira de rede.
+> Um `Workspace` define a raiz que o agente altera e roda cada comando numa sandbox, com permissões de arquivos, programas visíveis e rede.
 
-Um `Workspace` define a raiz que o agente pode alterar e prepara cada comando para executá-lo dentro de um sandbox. Também reúne as permissões de filesystem, a fronteira de rede e o acesso declarado pelo provider ao estado da CLI no host.
+Um `Workspace` define a raiz que o agente pode alterar e prepara cada comando para executá-lo dentro de um sandbox. Também reúne as permissões de filesystem, os programas que o agente vê, a fronteira de rede e o acesso declarado pelo provider ao estado da CLI no host. Nada disso depende de agente: qualquer programa roda num workspace (veja o [Exemplo 2](#2-rodar-programas-num-workspace-sem-agente)).
 
 ## Índice
 
 - [Os arquivos](#os-arquivos)
 - [Interface](#interface)
+  - [O que o agente vê: `/home/choliba`](#o-que-o-agente-vê-homecholiba)
+  - [Programas visíveis: `programs`](#programas-visíveis-programs)
 - [Como funciona](#como-funciona)
 - [Exemplos](#exemplos)
   - [1. Homes persistentes e modos de hostState](#1-homes-persistentes-e-modos-de-hoststate)
+  - [2. Rodar programas num workspace, sem agente](#2-rodar-programas-num-workspace-sem-agente)
 - [Regras do módulo](#regras-do-módulo)
 - [Exercícios](#exercícios)
 
@@ -27,23 +30,26 @@ Um `Workspace` define a raiz que o agente pode alterar e prepara cada comando pa
 | `src/workspace/sandbox/host-access.ts` | Traduz o contrato do provider e `hostState` em home, credenciais, ambiente e caminhos visíveis.                                 |
 | `src/workspace/sandbox/host-state.ts`  | Caminhos genéricos de estado que o sandbox compartilha quando não recebe um contrato de host.                                   |
 | `src/workspace/sandbox/path-map.ts`    | `SandboxPaths`: onde o sandbox vê cada caminho do host (a raiz em `/home/choliba`, o resto de `/home` em `/opt/choliba`).       |
+| `src/workspace/sandbox/programs.ts`    | Os programas visíveis: acha cada nome no `PATH` como o sandbox, a base e as pastas de programas que o sandbox esvazia.          |
 
 [↑ topo](#topo)
 
 ## Interface
 
-| Exportação                           | O que faz                                                                                                |
-| ------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| `Workspace`                          | Representa a raiz e o sandbox escolhido (`bubblewrap` ou `docker`).                                      |
-| `WorkspaceOptions`                   | Recebe `type`, `root`, caminhos graváveis, portas, imagem do Docker, `hostState`, `homes` e `agentRoot`. |
-| `Workspace.homes`                    | A pasta dos homes: a opção `homes` ou, sem ela, `workspaces.homes` da config.                            |
-| `Workspace.home()`                   | Retorna o home persistente daquela raiz em `homes`; raízes iguais produzem o mesmo caminho.              |
-| `Workspace.paths`                    | O `SandboxPaths` do workspace: `paths.inside(caminho)` diz onde o sandbox vê um caminho do host.         |
-| `Workspace.applyPermissions(policy)` | Compila as permissões de filesystem e configura a fronteira de rede opcional.                            |
-| `Workspace.useHost(host)`            | Passa ao sandbox o conjunto já calculado de montagens e variáveis.                                       |
-| `Workspace.protect(paths)`           | Mantém arquivos de configuração e hooks somente para leitura.                                            |
-| `Workspace.prepare(command)`         | Prepara o comando com o diretório de trabalho da raiz, criando a raiz se ela não existir.                |
-| `Workspace.close()`                  | Encerra sandbox e rede.                                                                                  |
+| Exportação                                     | O que faz                                                                                                                                        |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Workspace`                                    | Representa a raiz e o sandbox escolhido (`bubblewrap` ou `docker`).                                                                              |
+| `WorkspaceOptions`                             | Recebe `type`, `root`, caminhos graváveis, portas, imagem do Docker, `hostState`, `homes`, `agentRoot` e `programs`.                             |
+| `Workspace.programs`                           | Os programas que o agente vê: a opção `programs` ou, sem ela, `workspaces.programs` da config; `undefined`: todos os do host.                    |
+| `Workspace.checkPrograms(names?, searchPath?)` | Diz quais programas (os de `programs`, por padrão) o sandbox acha no `PATH` e onde: `{ found: [{ name, path, file }], missing }`. Não roda nada. |
+| `Workspace.homes`                              | A pasta dos homes: a opção `homes` ou, sem ela, `workspaces.homes` da config.                                                                    |
+| `Workspace.home()`                             | Retorna o home persistente daquela raiz em `homes`; raízes iguais produzem o mesmo caminho.                                                      |
+| `Workspace.paths`                              | O `SandboxPaths` do workspace: `paths.inside(caminho)` diz onde o sandbox vê um caminho do host.                                                 |
+| `Workspace.applyPermissions(policy)`           | Compila as permissões de filesystem e configura a fronteira de rede opcional.                                                                    |
+| `Workspace.useHost(host)`                      | Passa ao sandbox o conjunto já calculado de montagens e variáveis.                                                                               |
+| `Workspace.protect(paths)`                     | Mantém arquivos de configuração e hooks somente para leitura.                                                                                    |
+| `Workspace.prepare(command)`                   | Prepara o comando com o diretório de trabalho da raiz, criando a raiz se ela não existir.                                                        |
+| `Workspace.close()`                            | Encerra sandbox e rede.                                                                                                                          |
 
 `hostState` aceita três valores. `login` é o padrão: a CLI ganha um home por workspace e somente seu arquivo de login entra, montado para leitura. `none` não compartilha arquivos de login e exige uma variável de credencial declarada pelo provider; um provider local sem credenciais continua válido. `share` entrega o estado do provider no host, gravável, incluindo o histórico de outras raízes.
 
@@ -77,6 +83,32 @@ da pasta `/opt` no host.
 
 O cache do Choliba (`~/.cache/choliba`) também fica fora do sandbox, em qualquer `hostState`: lá ficam os gates dos outros agentes e homes antigos de CLIs. Do cache, o sandbox vê só o que é do próprio agente: o diretório do gate de execução, somente leitura, e o da saída de rede.
 
+### Programas visíveis: `programs`
+
+Sem `programs`, o agente vê todos os programas instalados no host (as pastas do sistema, somente leitura). Com
+`programs`, ele vê **só os escolhidos**, mesmo que haja outros instalados:
+
+```ts
+new Workspace({ type: 'bubblewrap', root, programs: ['php', 'composer'] });
+```
+
+- A lista tem **nomes de executáveis**, como se roda no shell: `php`, não `/usr/bin/php` nem o pacote `php-cli`. O
+  Choliba não instala nada: o programa precisa estar no host, numa pasta do `PATH`.
+- As pastas de programas viram vazias lá dentro: `/usr/bin`, `/usr/sbin`, `/usr/local/bin`, `/usr/local/sbin`,
+  `~/.local/bin`, `~/.bun/bin` e cada pasta do `PATH`. Cada programa visível volta, somente leitura, onde o `PATH` o
+  acha, montado do arquivo final do link (`/usr/bin/php` → `php8.5`).
+- Além dos escolhidos, uma **base** sempre aparece: o que o próprio Choliba roda lá dentro (`env`, `cat` e, no Docker,
+  `setpriv`), o shell (`sh`, `bash`) e o runtime do Choliba. Nada mais: `ls`, `grep`, `git` e os outros só aparecem se
+  estiverem na lista. A CLI do provider entra pela pasta de instalação dela, como sem `programs`.
+- Um escolhido que não existe para o sandbox **antes** de ele subir, com um `UsageError` que diz o que falta. Nenhum
+  agente é chamado.
+- O resto do sistema fica como está: bibliotecas (`/usr/lib`), `/usr/share`, `/etc`. Um executável fora das pastas de
+  programas (dentro de `/usr/lib`, por exemplo) ainda roda pelo caminho absoluto, e a raiz é gravável: `programs` decide
+  o que o agente acha, não é uma trava contra quem procura.
+
+Sem a opção, vale `workspaces.programs` do `choliba.config.ts` (veja o [curso de config](../config/README.md)). Uma
+lista vazia (`programs: []`) mostra só a base.
+
 [↑ topo](#topo)
 
 ## Como funciona
@@ -85,6 +117,7 @@ O cache do Choliba (`~/.cache/choliba`) também fica fora do sandbox, em qualque
 2. `home()` calcula um identificador estável a partir do caminho resolvido da raiz. O home guarda sessões e configuração da CLI entre execuções.
 3. O agente consulta `provider.hostAccess()` e prepara o acesso conforme `hostState`. O sandbox recebe o resultado por `useHost`.
 4. O agente passa as permissões, os caminhos protegidos e a rede por operações de `Workspace`.
+   Com `programs`, o sandbox confere os programas ao subir (antes de qualquer comando) e esvazia as pastas de programas.
 5. `prepare` define `cwd` como a raiz e delega ao sandbox, que traduz o comando para os caminhos de dentro
    (`SandboxPaths`). `close` encerra os recursos.
 
@@ -141,6 +174,115 @@ hostState compartilhado: share
 
 O nome do diretório é um hash da raiz resolvida; o mesmo caminho normalizado sempre resulta no mesmo home. O diretório de todos os homes é ocultado dentro do sandbox quando está sob a raiz do projeto.
 
+### 2. Rodar programas num workspace, sem agente
+
+Um workspace serve a qualquer programa, não só a um agente. O exemplo cria um workspace, roda `pwd` dentro dele, depois
+cria outro que mostra só o `php` e roda o `php` lá dentro. Cada comando passa por `workspace.prepare`, que o embrulha na
+sandbox, e pelo `Executor`, que o roda (veja o [curso de execute](../execute/README.md)). Precisa do bubblewrap e do
+`php` instalado no host.
+
+`guides/workspace/exemplos/2-programas.ts`:
+
+```ts
+/**
+ * Exemplo 2 do curso de workspace: rodar programas dentro de um workspace,
+ * sem agente nenhum. Cria um workspace, roda `pwd` dentro dele, depois um
+ * workspace que mostra só o programa escolhido (`programs`) e roda esse
+ * programa lá dentro. Precisa do bubblewrap e do php instalado no host; rode
+ * na raiz do repositório.
+ */
+import { Executor, ProgramExecutionError } from '../../../src/execute/index';
+import { currentDirectory } from '../../../src/execute/process';
+import type { ProgramCommand } from '../../../src/execute/types';
+import { join } from '../../../src/filesystem/index';
+import { writeOut } from '../../../src/output/stdio';
+import { Workspace } from '../../../src/workspace/index';
+
+// A raiz do workspace: uma pasta qualquer do host (criada se não existir).
+const root = join(currentDirectory(), '.choliba/exemplo-programas');
+
+/** Roda `command` dentro de `workspace` e mostra o que ele imprime. */
+async function runInside(
+  workspace: Workspace,
+  command: ProgramCommand,
+): Promise<void> {
+  const label = [command.executable, ...(command.arguments ?? [])].join(' ');
+  writeOut(`$ ${label}\n`);
+  try {
+    for await (const { chunk } of new Executor().run(
+      await workspace.prepare(command),
+    )) {
+      writeOut(chunk);
+    }
+  } catch (error) {
+    const code =
+      error instanceof ProgramExecutionError
+        ? ` (código ${String(error.code)})`
+        : '';
+    writeOut(`falhou${code}\n`);
+  }
+}
+
+// 1. Um workspace sem `programs`: o agente veria todos os programas do host.
+const workspace = new Workspace({ type: 'bubblewrap', root });
+try {
+  await runInside(workspace, { executable: 'pwd' });
+} finally {
+  await workspace.close();
+}
+
+// 2. Um workspace que mostra só o php (mais a base: env, cat, sh, bash e o
+// runtime do Choliba).
+const onlyPhp = new Workspace({ type: 'bubblewrap', root, programs: ['php'] });
+const { found, missing } = onlyPhp.checkPrograms();
+writeOut(
+  `\nprograms: ${found.map(({ name, path }) => `${name} em ${path}`).join(', ')}; faltando: ${missing.length}\n`,
+);
+try {
+  await runInside(onlyPhp, {
+    executable: 'php',
+    arguments: [
+      '-r',
+      'echo getcwd(), " com PHP ", PHP_MAJOR_VERSION, PHP_EOL;',
+    ],
+  });
+  // O que existe em /usr/bin lá dentro (o `echo` do bash, sem o `ls`).
+  await runInside(onlyPhp, {
+    executable: 'bash',
+    arguments: ['-c', 'echo /usr/bin/*'],
+  });
+  // Instalado no host, mas não escolhido: lá dentro ele não existe.
+  await runInside(onlyPhp, {
+    executable: 'bash',
+    arguments: ['-c', 'git --version'],
+  });
+} finally {
+  await onlyPhp.close();
+}
+```
+
+Saída real:
+
+```text
+$ pwd
+/home/choliba
+
+programs: php em /usr/bin/php; faltando: 0
+$ php -r echo getcwd(), " com PHP ", PHP_MAJOR_VERSION, PHP_EOL;
+/home/choliba com PHP 8
+$ bash -c echo /usr/bin/*
+/usr/bin/bash /usr/bin/cat /usr/bin/env /usr/bin/php /usr/bin/sh
+$ bash -c git --version
+bash: line 1: git: command not found
+falhou (código 127)
+```
+
+- `pwd` mostra `/home/choliba`: a raiz do workspace (`.choliba/exemplo-programas`, no host) aparece ali, e é o
+  diretório de trabalho.
+- `checkPrograms` achou o `php` sem rodar nada.
+- No segundo workspace, `/usr/bin` tem só o `php` e a base. O `git` está instalado no host, mas não foi escolhido: lá
+  dentro ele não existe. Com `type: 'docker'` a saída é a mesma, com `setpriv` a mais na base.
+
 [↑ topo](#topo)
 
 ## Regras do módulo
@@ -152,6 +294,7 @@ O nome do diretório é um hash da raiz resolvida; o mesmo caminho normalizado s
   `SandboxPaths`, nunca com o caminho do host.
 - O provider descreve o que precisa do host; `Workspace` aplica somente a parte permitida pelo `hostState` escolhido.
 - Configure filesystem, host e rede antes de iniciar a jaula Bubblewrap.
+- `programs` lista nomes de executáveis; o Choliba nunca instala nem copia programas, só escolhe quais o sandbox mostra.
 
 [↑ topo](#topo)
 
@@ -160,5 +303,6 @@ O nome do diretório é um hash da raiz resolvida; o mesmo caminho normalizado s
 1. Crie dois workspaces com raízes equivalentes após normalização. Compare `home()` e explique por que a sessão da CLI pode continuar entre execuções.
 2. Escolha `hostState: 'none'` para um provider de nuvem. Quais variáveis declaradas pelo provider precisam estar configuradas?
 3. Compare o que entra no sandbox em `login` e `share`. Que dado de outros projetos passa a ficar disponível em `share`?
+4. Rode o Exemplo 2 com `programs: ['php', 'ls']` e depois com `programs: ['composer']`. O que muda em `/usr/bin`, e em que momento o segundo para?
 
 [↑ topo](#topo)

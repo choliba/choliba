@@ -4,16 +4,16 @@
 
 > O módulo `config` encontra o `choliba.config.ts` do projeto, confere o que ele diz, completa com os padrões e entrega tudo resolvido, com caminhos absolutos.
 
-Um projeto que usa o Choliba tem **um arquivo de configuração**, o `choliba.config.ts`. Ele define o log, o banco, os workspaces (a raiz padrão e os homes isolados deles), onde as rodadas rodam e as variáveis de ambiente.
+Um projeto que usa o Choliba tem **um arquivo de configuração**, o `choliba.config.ts`. Ele define o log, o banco, os workspaces (a raiz padrão, os homes isolados deles e os programas que o agente vê), onde as rodadas rodam e as variáveis de ambiente.
 
-| Opção        | O que é                                                                                                                                                                              | Sem ela                                                                                     |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `debug`      | grava também os registros de `debug` no log                                                                                                                                          | `false`                                                                                     |
-| `logger`     | onde fica o log (`dir`) e qual pacote o escreve (`use`)                                                                                                                              | `.choliba/logs`, em JSONL, sem pacote                                                       |
-| `database`   | onde fica o banco SQLite (sessões, decisões, aprovações)                                                                                                                             | `.choliba/choliba.db`                                                                       |
-| `workspaces` | a raiz padrão dos workspaces (`dir`) e os homes isolados deles (`homes`)                                                                                                             | `.choliba/workspaces`, `.choliba/homes`                                                     |
-| `rounds`     | onde as rodadas rodam (`dir`), fora do projeto, e onde ficam as declarações, fixtures e registros (`definitions`, `fixtures`, `data`); veja o [curso de rounds](../rounds/README.md) | nenhum: a config carrega sem elas, e só os comandos das rodadas as cobram (`requireRounds`) |
-| `envs`       | variáveis de ambiente que o projeto usa                                                                                                                                              | nenhuma                                                                                     |
+| Opção        | O que é                                                                                                                                                                                              | Sem ela                                                                                     |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `debug`      | grava também os registros de `debug` no log                                                                                                                                                          | `false`                                                                                     |
+| `logger`     | onde fica o log (`dir`) e qual pacote o escreve (`use`)                                                                                                                                              | `.choliba/logs`, em JSONL, sem pacote                                                       |
+| `database`   | onde fica o banco SQLite (sessões, decisões, aprovações)                                                                                                                                             | `.choliba/choliba.db`                                                                       |
+| `workspaces` | a raiz padrão dos workspaces (`dir`), os homes isolados deles (`homes`) e os programas que o agente vê (`programs`, veja o [curso de workspace](../workspace/README.md#programas-visíveis-programs)) | `.choliba/workspaces`, `.choliba/homes`, todos os programas do host                         |
+| `rounds`     | onde as rodadas rodam (`dir`), fora do projeto, e onde ficam as declarações, fixtures e registros (`definitions`, `fixtures`, `data`); veja o [curso de rounds](../rounds/README.md)                 | nenhum: a config carrega sem elas, e só os comandos das rodadas as cobram (`requireRounds`) |
+| `envs`       | variáveis de ambiente que o projeto usa                                                                                                                                                              | nenhuma                                                                                     |
 
 É **dado do projeto**: não é a política de um agente (isso é a `AgentPolicy`, do módulo `policy`) nem o código de nenhum agente. O módulo `config` encontra o arquivo, **confere** o que ele diz, completa com os padrões e entrega o resultado já resolvido, com caminhos absolutos, para quem precisa: o logger, o banco, a tela de aprovações, o agente.
 
@@ -92,7 +92,7 @@ export default defineConfig({
 | `CholibaLoggerConfig`     | `{ dir?: string, use?: LoggerFactory }`                                                                                                                                                        |
 | `LoggerFactory`           | `(target: { dir, session }) => object`: cria a instância do pacote de log                                                                                                                      |
 | `CholibaDatabaseConfig`   | `{ dir?: string, name?: string }`: `name` é só o nome do arquivo, sem barras                                                                                                                   |
-| `CholibaWorkspacesConfig` | `{ dir?: string, homes?: string }`: a raiz padrão e a pasta dos homes; relativos ao arquivo ou `~/…`                                                                                           |
+| `CholibaWorkspacesConfig` | `{ dir?: string, homes?: string, programs?: string[] }`: a raiz padrão e a pasta dos homes, relativos ao arquivo ou `~/…`; os nomes dos programas que o agente vê                              |
 | `CholibaRoundsConfig`     | `{ dir?, definitions?, fixtures?, data? }`: onde as rodadas rodam (recusado dentro do projeto) e onde ficam as declarações, os pontos de partida e os registros; relativos ao arquivo ou `~/…` |
 | `CholibaEnv`              | `{ [nome]: string \| boolean \| number \| undefined }`                                                                                                                                         |
 | `CholibaConfigFactory`    | um `CholibaConfig` ou uma função (até `async`) que o devolve                                                                                                                                   |
@@ -101,23 +101,24 @@ export default defineConfig({
 
 O que `loadConfig` e `getConfig` devolvem. Tudo já decidido, com caminhos absolutos; só as pastas das rodadas podem faltar.
 
-| Campo                | Tipo                                                           | O que é                                                                                                 |
-| -------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `logger.dir`         | `string`                                                       | diretório do log, absoluto                                                                              |
-| `logger.use`         | `LoggerFactory \| undefined`                                   | a fábrica do pacote, se houver                                                                          |
-| `logger.logrotate`   | `{ maxFileBytes, days, maxTotalBytes, compress } \| undefined` | como os logs são guardados, com os padrões preenchidos e os tamanhos em bytes; sem a opção, `undefined` |
-| `databasePath`       | `string`                                                       | caminho absoluto do arquivo do banco                                                                    |
-| `workspaces.dir`     | `string`                                                       | a raiz padrão dos workspaces, absoluta                                                                  |
-| `workspaces.homes`   | `string`                                                       | diretório absoluto dos homes, um por workspace                                                          |
-| `rounds.dir`         | `string \| undefined`                                          | onde as rodadas rodam, absoluto; `undefined` sem a opção                                                |
-| `rounds.definitions` | `string \| undefined`                                          | a pasta das declarações das rodadas, absoluta; `undefined` sem a opção                                  |
-| `rounds.fixtures`    | `string \| undefined`                                          | a pasta dos pontos de partida, absoluta; `undefined` sem a opção                                        |
-| `rounds.data`        | `string \| undefined`                                          | a pasta dos registros das execuções, absoluta; `undefined` sem a opção                                  |
-| `project`            | `string`                                                       | o projeto: a pasta do arquivo de config (ou onde a busca começou)                                       |
-| `debug`              | `boolean`                                                      |                                                                                                         |
-| `configPath`         | `string \| undefined`                                          | o arquivo lido; `undefined` sem arquivo                                                                 |
-| `env`                | `{ vars } \| undefined`                                        | o env ativo: o **primeiro** de `envs`                                                                   |
-| `envs`               | `{ vars }[]`                                                   | todos os envs; `vars` tem só os valores de texto                                                        |
+| Campo                 | Tipo                                                           | O que é                                                                                                 |
+| --------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `logger.dir`          | `string`                                                       | diretório do log, absoluto                                                                              |
+| `logger.use`          | `LoggerFactory \| undefined`                                   | a fábrica do pacote, se houver                                                                          |
+| `logger.logrotate`    | `{ maxFileBytes, days, maxTotalBytes, compress } \| undefined` | como os logs são guardados, com os padrões preenchidos e os tamanhos em bytes; sem a opção, `undefined` |
+| `databasePath`        | `string`                                                       | caminho absoluto do arquivo do banco                                                                    |
+| `workspaces.dir`      | `string`                                                       | a raiz padrão dos workspaces, absoluta                                                                  |
+| `workspaces.homes`    | `string`                                                       | diretório absoluto dos homes, um por workspace                                                          |
+| `workspaces.programs` | `string[] \| undefined`                                        | os programas que o agente vê; `undefined` sem a opção: todos os do host                                 |
+| `rounds.dir`          | `string \| undefined`                                          | onde as rodadas rodam, absoluto; `undefined` sem a opção                                                |
+| `rounds.definitions`  | `string \| undefined`                                          | a pasta das declarações das rodadas, absoluta; `undefined` sem a opção                                  |
+| `rounds.fixtures`     | `string \| undefined`                                          | a pasta dos pontos de partida, absoluta; `undefined` sem a opção                                        |
+| `rounds.data`         | `string \| undefined`                                          | a pasta dos registros das execuções, absoluta; `undefined` sem a opção                                  |
+| `project`             | `string`                                                       | o projeto: a pasta do arquivo de config (ou onde a busca começou)                                       |
+| `debug`               | `boolean`                                                      |                                                                                                         |
+| `configPath`          | `string \| undefined`                                          | o arquivo lido; `undefined` sem arquivo                                                                 |
+| `env`                 | `{ vars } \| undefined`                                        | o env ativo: o **primeiro** de `envs`                                                                   |
+| `envs`                | `{ vars }[]`                                                   | todos os envs; `vars` tem só os valores de texto                                                        |
 
 ### Funções
 
