@@ -79,6 +79,9 @@ jobs:
           if [ "$(sysctl -n kernel.apparmor_restrict_unprivileged_userns 2>/dev/null || echo 0)" = "1" ]; then
             sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           fi
+      # Os testes do Docker só rodam com a imagem já baixada; sem ela eles pulam e a cobertura cai abaixo do limite.
+      - name: Baixar a imagem do Docker dos testes
+        run: docker pull oven/bun:latest
       - run: bun run test:cov
 
       # A cobertura só pode subir. O limite anterior é o coverage-thresholds.json commitado na branch de destino
