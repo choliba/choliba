@@ -1,56 +1,55 @@
 # Docs as code
 
-Source: Write the Docs, <https://www.writethedocs.org/guide/docs-as-code/>. Treat documentation like source code:
-plain text in version control, changed through the same review, checked automatically.
+Fonte: Write the Docs, <https://www.writethedocs.org/guide/docs-as-code/>. Trate a documentação como código-fonte:
+texto simples no controle de versão, alterado pela mesma revisão, conferido automaticamente.
 
-## Principles
+## Princípios
 
-- **Same repository, same change.** The pull request that changes behavior updates the docs that describe it.
-  Reviewers check both together, which is the only reliable way to keep them in sync.
-- **Plain text.** Markdown (or the format the project already uses), readable in a diff and in an editor.
-- **Single source of truth.** A fact is written once and linked from everywhere else. Copies drift.
-- **Generate what can be generated.** CLI `--help`, API reference from signatures and doc comments, config
-  reference from a schema. Hand-written copies of generated facts go stale first.
-- **Delete aggressively.** Outdated docs are worse than none: readers trust them. When behavior is removed,
-  remove its documentation in the same change.
+- **Mesmo repositório, mesma mudança.** O PR que muda o comportamento atualiza o texto que o descreve. Quem revisa
+  confere os dois juntos, o único jeito confiável de manter os dois em sincronia.
+- **Texto simples.** Markdown, legível no diff e no editor.
+- **Uma fonte de verdade.** Um fato é escrito uma vez e ligado de todo lugar. Cópias se afastam.
+- **Gere o que dá para gerar.** O `--help` da CLI, a lista de comandos, as páginas do site. Cópias à mão de fatos
+  gerados envelhecem primeiro.
+- **Apague sem dó.** Documentação velha é pior que nenhuma: o leitor confia. Quando um comportamento sai, o texto sai
+  na mesma mudança.
 
-## Deciding whether a change needs docs
+## Esta mudança precisa de documentação?
 
-Needs documentation:
+Precisa:
 
-- new or changed commands, flags, options, config keys, environment variables, defaults;
-- changed behavior a user can observe (output, exit codes, errors, files written);
-- new setup steps, dependencies or requirements;
-- removals and deprecations (say what replaces them);
-- a non-obvious design decision others will have to live with (often an ADR).
+- comandos, opções, chaves de configuração, variáveis de ambiente e padrões novos ou alterados;
+- comportamento que quem usa observa (saída, códigos de saída, erros, arquivos escritos);
+- passos de instalação, dependências ou requisitos novos;
+- remoções e obsolescências (diga o que as substitui);
+- uma decisão de desenho difícil de desfazer que os outros terão de aceitar (em geral um ADR).
 
-Usually does not:
+Em geral não precisa:
 
-- internal refactors and renames invisible to users;
-- formatting, test-only and tooling-internal changes;
-- fixes that restore documented behavior (the docs were already right).
+- refatoração interna e renomeações invisíveis para quem usa;
+- formatação, mudança só de teste e de ferramenta interna;
+- correção que restaura o comportamento documentado (o texto já estava certo).
 
-When in doubt, check whether a reader following the current docs would now be misled. If yes, update them.
+Na dúvida, pergunte se quem segue o texto atual agora seria enganado. Se sim, atualize.
 
-## Automated checks
+## Verificações automáticas
 
-Run whatever the project already runs; common ones:
+Rode o que o projeto já roda:
 
-| Check        | What it catches                                   | Typical tools                  |
-| ------------ | ------------------------------------------------- | ------------------------------ |
-| Formatting   | inconsistent Markdown, tables, wrapping           | Prettier, markdownlint         |
-| Links        | broken internal and external links, bad anchors   | lychee, markdown-link-check    |
-| Prose style  | banned words, passive voice, terminology drift    | Vale (with a project style)    |
-| Spelling     | typos, with a project word list                   | cspell, Vale                   |
-| Examples     | commands and snippets that no longer run          | doctest-style runners, CI jobs |
+| Verificação | O que pega | No Choliba |
+| --- | --- | --- |
+| Formatação | Markdown e tabelas inconsistentes | `bun run format:check` (Prettier) |
+| Links | links internos quebrados e âncoras erradas | `bun run docs:build` (o VitePress recusa link morto) |
+| Exemplos | comandos e trechos que não rodam mais | os exemplos de `guides/` rodam e passam pelo `bun run check` |
+| Páginas geradas | `docs/guias/` e `docs/comandos.md` fora de dia com a fonte | `bun run docs:pages` antes do `docs:build` |
 
-If an edit tool or agent cannot run these, at least keep the output in a state the project's formatter accepts
-and double-check every path and anchor by hand.
+Se uma ferramenta ou agente não consegue rodá-las, ao menos deixe a saída num estado que o formatador aceita e
+confira à mão cada caminho e âncora.
 
-## Review checklist
+## Lista de revisão
 
-- Does each changed page still serve one reader need (one Diátaxis type per section)?
-- Is every command, flag, path, default and example verified against the current code?
-- Do all links and anchors resolve? Were pages that referenced removed behavior updated?
-- Is anything now duplicated that should be a link?
-- Does the README still get a new user running?
+- Cada página alterada ainda serve a uma necessidade do leitor (um tipo de Diátaxis por seção)?
+- Cada comando, opção, caminho, padrão e exemplo foi conferido no código de agora?
+- Todo link e âncora resolve? As páginas que citavam o comportamento removido foram atualizadas?
+- Algo ficou duplicado que deveria ser um link?
+- O README ainda põe quem chega para rodar?

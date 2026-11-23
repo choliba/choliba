@@ -1,0 +1,397 @@
+import { log } from '../../logger/index';
+import { userHome } from '../../execute/process';
+import type { ProgramCommand, ProgramOutput } from '../../execute/types';
+import { join } from '../../filesystem/index';
+import type { AgentPolicy } from '../../policy/index';
+import {
+  cursorCommandPolicy,
+  translateCursorPolicy,
+  type CursorCommandPolicy,
+  type CursorPermissions,
+} from './policy';
+import type {
+  Provider as ProviderContract,
+  PolicyTranslation,
+} from '../provider.interface';
+import type {
+  ExecutionGate,
+  Provider,
+  ProviderDescription,
+  ProviderEvent,
+  ProviderOptions,
+  ToolEvent,
+  TokenUsage,
+  HostAccess,
+} from '../types';
+
+export class CursorProvider
+  implements
+    Provider<string, string>,
+    ProviderContract<string, string, CursorPermissions>
+{
+  public readonly id = 'cursor';
+
+  private readonly executable: string;
+  private readonly model: string;
+  private commandPolicy: CursorCommandPolicy | undefined;
+
+  /** What the constructor was given, as written. */
+  private readonly declared: Readonly<Record<string, unknown>>;
+
+  public constructor(options: ProviderOptions) {
+    const { executable = 'agent', model } = options;
+    this.declared = { ...options };
+    if (model.trim().length === 0) {
+      throw new Error('O modelo não pode estar vazio.');
+    }
+
+    this.executable = executable;
+    this.model = model;
+  }
+
+  /** The options it was created with, as written (a round's declaration). */
+  public declaredOptions(): Readonly<Record<string, unknown>> {
+    return this.declared;
+  }
+
+  public describe(): ProviderDescription {
+    return { name: 'cursor', model: this.model };
+  }
+
+  /**
+   * The Cursor API; `--print` has nobody to approve extra destinations. The
+   * agent itself talks to a host of its own (`agentn.global.api5…`): without
+   * it the CLI gets the proxy's 403 and answers nothing.
+   */
+  public networkEndpoints(): readonly string[] {
+    return ['api2.cursor.sh:443', 'agentn.global.api5.cursor.sh:443'];
+  }
+
+  /** The policy as `--force` in `--print`; the sandbox is the rest. */
+  public translatePolicy(
+    policy: AgentPolicy,
+  ): PolicyTranslation<CursorPermissions> {
+    return translateCursorPolicy(policy);
+  }
+
+  public applyPolicy(
+    policy: AgentPolicy,
+    gate: ExecutionGate | undefined,
+  ): readonly string[] {
+    this.commandPolicy = cursorCommandPolicy(policy, gate);
+    return [];
+  }
+
+  /** Its state and its install; it logs in with CURSOR_API_KEY. */
+  public hostAccess(): HostAccess {
+    const home = userHome();
+    return {
+      programs: [join(home, '.local/share/cursor-agent')],
+      credentialFiles: [join(home, '.config/cursor/auth.json')],
+      credentialEnv: ['CURSOR_API_KEY'],
+      sharedState: [
+        join(home, '.cursor'),
+        join(home, '.config/cursor'),
+        join(home, '.local/share/cursor-agent'),
+      ],
+    };
+  }
+
+  public createCommand(
+    input: string,
+    sessionId?: string,
+    workspaceRoot?: string,
+  ): ProgramCommand {
+    return {
+      executable: this.executable,
+      arguments: [
+        '--print',
+        '--output-format',
+        'stream-json',
+        '--model',
+        this.model,
+        ...(workspaceRoot === undefined ? [] : ['--workspace', workspaceRoot]),
+        // --print has nobody to approve commands; the sandbox is the limit.
+        '--trust',
+        '--force',
+        ...(this.commandPolicy?.arguments ?? []),
+        ...(sessionId === undefined ? [] : ['--resume', sessionId]),
+      ],
+      input: appendInteractionProtocol(input),
+    };
+  }
+
+  public async *parseOutput(
+    output: AsyncIterable<ProgramOutput>,
+  ): AsyncIterable<ProviderEvent<string>> {
+    let stdout = '';
+    let sawAssistant = false;
+    let sessionEmitted = false;
+
+    for await (const { channel, chunk } of output) {
+      if (channel === 'stderr') {
+        const text = withoutNoise(chunk);
+        if (text !== undefined) yield { type: 'stderr', text };
+        continue;
+      }
+
+      stdout += chunk;
+      const lines = stdout.split('\n');
+      stdout = lines.pop() ?? '';
+
+      for (const line of lines) {
+        for (const event of readEvents(line, {
+          sawAssistant,
+          sessionEmitted,
+        })) {
+          if (event.value.type === 'session') {
+            sessionEmitted = true;
+          } else if (event.source === 'assistant') {
+            sawAssistant = true;
+          }
+
+          yield event.value;
+        }
+      }
+    }
+
+    if (stdout.length > 0) {
+      for (const event of readEvents(stdout, {
+        sawAssistant,
+        sessionEmitted,
+      })) {
+        yield event.value;
+      }
+    }
+  }
+}
+
+interface ParseState {
+  readonly sawAssistant: boolean;
+  readonly sessionEmitted: boolean;
+}
+
+interface ParsedEvent {
+  readonly value: ProviderEvent<string>;
+  readonly source?: 'assistant';
+}
+
+function readEvents(
+  line: string,
+  { sawAssistant, sessionEmitted }: ParseState,
+): readonly ParsedEvent[] {
+  if (line.trim().length === 0) {
+    return [];
+  }
+
+  try {
+    const event: unknown = JSON.parse(line);
+
+    if (!isRecord(event)) {
+      return [];
+    }
+
+    const events: ParsedEvent[] = [];
+
+    if (
+      !sessionEmitted &&
+      typeof event['session_id'] === 'string' &&
+      event['session_id'].length > 0
+    ) {
+      events.push({ value: { type: 'session', id: event['session_id'] } });
+    }
+
+    if (event['type'] === 'tool_call') {
+      const tool = toolCall(event);
+      if (tool !== undefined) events.push({ value: tool });
+    }
+
+    if (event['type'] === 'assistant') {
+      const text = readAssistantText(event['message']);
+
+      if (text !== undefined) {
+        events.push({ value: createEvent(text), source: 'assistant' });
+      }
+
+      return events;
+    }
+
+    if (
+      event['type'] === 'result' &&
+      !sawAssistant &&
+      typeof event['result'] === 'string'
+    ) {
+      events.push({ value: createEvent(event['result']) });
+    }
+
+    if (event['type'] === 'result') {
+      const usage = resultUsage(event['usage']);
+      if (usage !== undefined) events.push({ value: { type: 'usage', usage } });
+    }
+
+    return events;
+  } catch {
+    return [{ value: createEvent(line) }];
+  }
+}
+
+const count = (value: unknown): number =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : 0;
+
+/**
+ * The turn's tokens, summed by the CLI. Its `inputTokens` leaves out what
+ * came from the cache and what went to it; `TokenUsage.input` is everything
+ * the model read. The CLI does not report a cost.
+ */
+function resultUsage(usage: unknown): TokenUsage | undefined {
+  if (!isRecord(usage)) return undefined;
+  const cacheRead = count(usage['cacheReadTokens']);
+  const cacheWrite = count(usage['cacheWriteTokens']);
+  return {
+    input: count(usage['inputTokens']) + cacheRead + cacheWrite,
+    output: count(usage['outputTokens']),
+    cachedInput: cacheRead,
+    cacheWrite,
+  };
+}
+
+function readAssistantText(message: unknown): string | undefined {
+  if (!isRecord(message) || !Array.isArray(message['content'])) {
+    return undefined;
+  }
+
+  const parts: string[] = [];
+
+  for (const block of message['content']) {
+    if (
+      isRecord(block) &&
+      block['type'] === 'text' &&
+      typeof block['text'] === 'string'
+    ) {
+      parts.push(block['text']);
+    }
+  }
+
+  if (parts.length === 0) {
+    return undefined;
+  }
+
+  return parts.join('');
+}
+
+function createEvent(text: string): ProviderEvent<string> {
+  if (text.trimEnd().endsWith('?')) {
+    return { type: 'ask', question: text };
+  }
+
+  return { type: 'output', value: text };
+}
+
+/**
+ * stderr lines the CLI prints only because it runs in the sandbox: its login
+ * is mounted read-only, and it warns on every run that it could not save it
+ * (the session goes on with the one it has). They go to the debug log
+ * instead of the output.
+ */
+const CURSOR_NOISE = [
+  /Cursor couldn't save your credentials/,
+  /EROFS: read-only file system, open '[^']*\/\.config\/cursor\/auth\.json'/,
+];
+
+/** The chunk without the noise lines; `undefined` when nothing else is left. */
+function withoutNoise(chunk: string): string | undefined {
+  const kept = chunk.split('\n').filter((line) => {
+    const noise = CURSOR_NOISE.some((pattern) => pattern.test(line));
+    if (noise) log.debug({ type: 'provider-noise', line });
+    return !noise;
+  });
+  return kept.some((line) => line.trim().length > 0)
+    ? kept.join('\n')
+    : undefined;
+}
+
+function appendInteractionProtocol(input: string): string {
+  return `${input}\n\n${[
+    'Regra de interação:',
+    '- Nunca chame a ferramenta request_user_input.',
+    '- Se precisar de uma informação do usuário, faça somente uma pergunta direta.',
+    '- A pergunta deve terminar com "?".',
+    '- Encerre o turno imediatamente após a pergunta e não continue a tarefa.',
+    '- Quando receber a resposta no próximo turno, continue a tarefa normalmente.',
+  ].join('\n')}`;
+}
+
+function toolCall(event: Record<string, unknown>): ToolEvent | undefined {
+  if (!isRecord(event['tool_call'])) {
+    return undefined;
+  }
+
+  const entry = Object.entries(event['tool_call']).at(0);
+
+  if (entry === undefined) {
+    return undefined;
+  }
+
+  const [rawName, payload] = entry;
+  const body = isRecord(payload) ? payload : {};
+
+  return {
+    type: 'tool',
+    // The CLI tells each tool twice: when it starts and when it completes.
+    phase: event['subtype'] === 'completed' ? 'result' : 'call',
+    detail: {
+      subtype: event['subtype'],
+      call_id: event['call_id'],
+      tool: rawName.replace(/ToolCall$/, ''),
+      args: sanitizeToolValue(body['args']),
+      result: sanitizeToolResult(body['result']),
+    },
+  };
+}
+
+function sanitizeToolValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(sanitizeToolValue);
+  }
+
+  if (!isRecord(value)) {
+    return value;
+  }
+
+  const sanitized: Record<string, unknown> = {};
+
+  for (const [key, nested] of Object.entries(value)) {
+    if (key === 'parsingResult') {
+      continue;
+    }
+
+    if (
+      (key === 'fileText' ||
+        key === 'contents' ||
+        key === 'old_string' ||
+        key === 'new_string' ||
+        key === 'stdout' ||
+        key === 'stderr') &&
+      typeof nested === 'string'
+    ) {
+      sanitized[key] = { bytes: nested.length };
+      continue;
+    }
+
+    sanitized[key] = sanitizeToolValue(nested);
+  }
+
+  return sanitized;
+}
+
+function sanitizeToolResult(result: unknown): unknown {
+  if (result === undefined) {
+    return undefined;
+  }
+
+  return sanitizeToolValue(result);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}

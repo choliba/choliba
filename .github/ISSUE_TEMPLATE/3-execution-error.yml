@@ -59,7 +59,7 @@ body:
     id: version
     attributes:
       label: Versão do choliba e commit da pasta de trabalho
-      placeholder: 0.0.1-dev.79+f38f044 · 1a2b3c4
+      placeholder: 0.1.0 · 1a2b3c4
     validations:
       required: true
   - type: input

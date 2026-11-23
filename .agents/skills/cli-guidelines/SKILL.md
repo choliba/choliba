@@ -1,96 +1,89 @@
 ---
 name: cli-guidelines
-description: Design rules for choliba's command line, based on the Command Line Interface Guidelines (clig.dev) and adapted to this repo — help text, stdout vs stderr, exit codes, color and TTY detection, flags and their standard names, prompts, dry runs, errors, signals, configuration precedence, secrets and future-proofing. Use when adding or changing any `choliba` command, subcommand, flag, help text, error message, prompt or terminal output, when reviewing CLI code, or when someone asks how a command should behave, what a flag should be called, or where output should go.
-argument-hint: 'The command, flag or output you are designing or reviewing.'
+description: Regras de desenho da linha de comando do Choliba (`bin/choliba.ts`, `src/cli/`, `scripts/`), baseadas nas Command Line Interface Guidelines (clig.dev) e adaptadas ao repositório — texto de ajuda, stdout e stderr, códigos de saída, cor e TTY, opções e seus nomes padrão, perguntas, `--dry`, erros, sinais, precedência da configuração, segredos e compatibilidade futura. Use ao criar ou mudar qualquer comando, opção, texto de ajuda, mensagem de erro, pergunta ou saída de terminal, ao revisar código de CLI, ou quando perguntarem como um comando deve se comportar, como uma opção deve se chamar ou para onde vai a saída.
+argument-hint: 'O comando, a opção ou a saída que você está desenhando ou revisando.'
 user-invocable: true
 disable-model-invocation: false
 ---
 
-# CLI guidelines
+# Diretrizes da linha de comando
 
-The choliba CLI is used by people at a terminal and by agents and scripts that read its output. Its one reference
-is [clig.dev](https://clig.dev/) (the full checklist is in `references/clig-checklist.md`), followed by default:
-what clig.dev says holds unless this file says otherwise. POSIX and the GNU standards are not references; what
-choliba needs from them clig.dev already says, except `--`, which is rule 15.
+A CLI do Choliba é usada por pessoas num terminal e por agentes e scripts que leem a saída dela. A referência é uma só,
+o [clig.dev](https://clig.dev/) (o checklist inteiro está em `references/clig-checklist.md`), seguida por padrão: o que
+o clig.dev diz vale, salvo o que este arquivo disser em contrário. POSIX e os padrões GNU não são referência.
 
-Two lists keep the rest honest. **Deliberate departures** from clig.dev are in "Where choliba departs from
-clig.dev" below, each with its reason; a new one is decided with the user and written there. **Gaps**, what
-clig.dev asks and choliba does not do yet, are in `references/current-gaps.md`; check it before saying a behavior
-already exists, and remove a line when it is closed.
+Duas listas mantêm o resto honesto. Os **desvios deliberados** do clig.dev estão em "Onde o Choliba se afasta do
+clig.dev", cada um com o motivo; um desvio novo se decide com quem usa o projeto e se escreve ali. As **lacunas**, o que
+o clig.dev pede e o Choliba ainda não faz, estão em `references/lacunas.md`; consulte antes de dizer que um
+comportamento já existe, e apague a linha quando ela fechar.
 
-## The rules choliba applies on every command
+## Onde mora a CLI
 
-1. **Primary output to stdout; errors, progress and messages to stderr.** An agent or script piping a command
-   must get only the result on stdout. Never print a warning to stdout.
-2. **Exit 0 on success, non-zero on failure**, including usage errors. A command that found problems (a red
-   gate, a failed `check`) fails with non-zero even if it printed a report.
-3. **`-h`, `--help` and `choliba help <command>` all work** and print the help in pt-BR from the command's
-   `CommandSpec` (`formatHelp` in `packages/shell/src/help/format-help.ts`); help ignores every other flag. A command
-   missing a required argument prints a short usage plus "Run '... --help' for usage" on stderr and exits 1.
-4. **Lead help with examples**, the most common use first. Every command and flag has a description; every new
-   flag also reaches autocomplete (`complete` in `packages/shell/src/help/complete.ts`).
-5. **Flags over positional arguments.** At most one positional kind per command (a project, a ticket, a task
-   text). Every flag has a long name; a one-letter alias only for the most used ones. Prefer the standard
-   names: `--help`, `--version`, `--dry-run`, `--force`, `--json`, `--quiet`, `--no-input`, `--no-color`,
-   `--output`. Never reuse a standard name with another meaning.
-6. **Color only for humans.** Color is off when stdout is not a TTY, `NO_COLOR` is set and non-empty,
-   `TERM=dumb` or `--no-color` is passed; `FORCE_COLOR` forces it on. Decide once, centrally, and pass the
-   decision down (`ThemeService` and its `Theme`), never test the environment deep in rendering code. No spinners or live regions
-   when stdout is not a TTY.
-7. **Prompts only on a TTY, never required.** Every prompted value can also come from a flag. When stdin is not a
-   TTY, or `--no-input` is passed, skip the prompt and fail with a message naming the flag to use.
-8. **Dangerous actions are confirmed or previewable.** Anything that deletes or overwrites user files offers
-   `--dry-run` (describe, write nothing) and asks before doing it on a TTY; `--force` skips the question.
-9. **Errors are for humans, in pt-BR**: what went wrong, the path or value involved, and how to fix it ("Projeto
-   "x" não encontrado (…/config.json não existe). Veja os projetos com `bun choliba list projects`."). The most
-   important line last; no stack trace unless it is an unexpected error, which goes with a hint to report it.
-10. **Say what changed and what comes next.** A command that changes state prints the new state briefly and
-    suggests the next command of the workflow (`generate ticket` → run the `product-owner`).
-11. **Configuration precedence: flags > process environment > workspace `.env` > defaults** (the app orders these
-    sources when it builds the workspace config). Environment variable names are uppercase
-    with underscores and prefixed (`CHOL_*`) unless they are general-purpose ones (`NO_COLOR`, `TERM`,
-    `PAGER`, `TMPDIR`...).
-12. **No secrets in flags.** Credentials live in files (`.env.json` of a project, the workspace `.env`); never
-    add a flag that takes a password or token, since it leaks into `ps` and shell history.
-13. **Ctrl-C works.** Forward SIGINT/SIGTERM to child processes (as `runAgent` and `terminal run` do), print
-    something at once, clean up with a bound on time, and leave nothing half-written that the next run cannot
-    recover from.
-14. **Changes are additive.** Add flags instead of changing what an existing one does; deprecate with a warning
-    that says what to use instead before removing. Human-readable output may change; anything scripts or agents
-    parse goes behind `--json` and stays stable.
-15. **`--` ends the options.** Everything after it is an operand, even when it starts with `-`, and goes on as
-    typed (`choliba terminal run --label x -- <command…>`).
-16. **No catch-all, verbs at the root.** The root has a few verbs and commands (`run`, `add`, `new`, `list`,
-    `check`, `setup`, `lint`, `format`, `help`, `version`); a command is reached as `verb type` (`run agent`,
-    `run tests`, `new project`, `list agents`) or by its own word. A word the root, a verb or the agent runner does
-    not know is a usage error, in pt-BR, that suggests the closest name (`unknownWordMessage` in
-    `packages/shell/src/help/suggest.ts`): `comando desconhecido: chek. Você quis dizer "check"?`. Subcommands are
-    never abbreviated.
+- `bin/choliba.ts`: a tabela `COMMANDS` (nome, `run`, `summary`), a ajuda geral e a recusa de comando desconhecido.
+- `src/cli/<comando>.ts`: um comando por arquivo (`approvals`, `clear`, `rounds`), definido com `defineCommand` e
+  executado por `runCommand` (`src/command`). A declaração (descrição, argumentos, opções) gera o `--help` e o parser;
+  o `run` recebe `args`, `options`, `signal` (abortado no Ctrl+C) e `output`.
+- `scripts/*.ts` seguem a mesma forma (`issue`, `plan:gate`).
+- Tudo o que o comando mostra ou pergunta passa por `output` (`src/interaction`) ou por `src/output`; nunca `console`
+  nem `process.stdout` (o lint recusa). Ver `AGENTS.md`, "Cada capacidade tem um dono".
 
-## Where choliba departs from clig.dev
+## As regras de todo comando
 
-Each on purpose, with its reason. Anything else clig.dev says applies.
+1. **A saída principal vai para o stdout; erros, progresso e mensagens vão para o stderr.** Um agente ou script que
+   encadeia o comando precisa receber só o resultado no stdout. Nunca escreva um aviso no stdout.
+2. **Saída 0 em caso de sucesso, diferente de 0 em caso de falha**, erro de uso inclusive. Um comando que achou
+   problemas (um gate vermelho) falha com código diferente de 0 mesmo que tenha imprimido um relatório. Todo código de
+   saída novo tem um teste.
+3. **`-h` e `--help` funcionam** e imprimem a ajuda em português, gerada da declaração (`helpText`); a ajuda ignora as
+   outras opções. Um comando sem um argumento obrigatório mostra o uso curto e como pedir a ajuda, no stderr, e sai com 1.
+4. **Abra a ajuda com exemplos**, o uso mais comum primeiro. Todo comando e toda opção tem descrição.
+5. **Opções antes de argumentos posicionais.** No máximo um tipo de posicional por comando. Toda opção tem nome longo;
+   alias de uma letra só nas mais usadas. Prefira os nomes padrão: `--help`, `--version`, `--dry-run`, `--force`,
+   `--json`, `--quiet`, `--no-input`, `--no-color`, `--output`. Nunca reuse um nome padrão com outro sentido.
+6. **Cor só para gente.** Sem cor quando o stdout não é um TTY, quando `NO_COLOR` está definida e não vazia, com
+   `TERM=dumb` ou com `--no-color`; `FORCE_COLOR` liga. Decida uma vez, num lugar só, e passe a decisão adiante; nunca
+   teste o ambiente no meio da renderização. Sem animação nem região viva quando o stdout não é um TTY.
+7. **Perguntar só num TTY, e nunca ser obrigatório.** Todo valor perguntado também pode vir por opção. Com o stdin fora
+   de um TTY, ou com `--no-input`, pule a pergunta e falhe com uma mensagem que nomeia a opção a usar.
+8. **Ação perigosa pede confirmação.** Uma que apaga ou sobrescreve oferece `--dry-run` (descreve, não grava nada) e,
+   num TTY, pergunta antes; `--yes` ou `--force` pula a pergunta.
+9. **Erros são para pessoas, em português**: o que deu errado, o caminho ou o valor, e como corrigir. A linha mais
+   importante por último; sem stack trace, salvo num erro inesperado, que vai com a dica de como reportar. Um erro de
+   uso é um `UsageError`, com uma mensagem que diz o que fazer; uma opção desconhecida é recusada, nunca ignorada.
+10. **Diga o que mudou e o que vem depois.** Um comando que muda estado mostra o novo estado em poucas palavras e
+    sugere o próximo comando do fluxo.
+11. **Precedência da configuração: opções > ambiente do processo > `.env` do projeto > padrões.** Variáveis de ambiente
+    em maiúsculas com sublinhado e com prefixo (`CHOLIBA_*`), salvo as de uso geral (`NO_COLOR`, `TERM`, `TMPDIR`…).
+12. **Sem segredo em opção.** Credenciais ficam em arquivos ou no ambiente; nunca crie uma opção que recebe senha ou
+    token: ele vaza no `ps` e no histórico do shell.
+13. **O Ctrl-C funciona.** Passe SIGINT/SIGTERM aos processos filhos (o `signal` do `run` existe para isso), escreva
+    algo na hora, limpe com limite de tempo e não deixe nada pela metade que a próxima execução não recupere.
+14. **As mudanças são aditivas.** Acrescente opções em vez de mudar o que uma existente faz; avise antes de remover, dizendo
+    o que usar. O texto para gente pode mudar; o que script ou agente lê fica atrás de `--json` e estável.
+15. **`--` encerra as opções.** O que vem depois é operando, mesmo começando com `-`, e segue como foi digitado.
+16. **Sem comando coringa.** Um nome que a tabela `COMMANDS` não conhece é erro de uso, em português, com a ajuda geral
+    e código de saída 1. Subcomandos nunca são abreviados.
 
-| clig.dev says | choliba does | Why |
+## Onde o Choliba se afasta do clig.dev
+
+Cada um de propósito, com o motivo. O que não está aqui, o clig.dev manda.
+
+| O clig.dev diz | O Choliba faz | Por quê |
 | --- | --- | --- |
-| `noun verb` is the more common order | `verb noun` everywhere (`run agent`, `new project`, `list projects`) | The root stays a handful of stable verbs, and `run` covers agents and tests alike |
-| Use an argument parsing library | Each command reads its words from `ShellIo` against a `CommandSpec` | One spec gives the help, the completion and `__describe`; no library does all three |
-| Messages in the user's language | Help, messages and errors in pt-BR; the help's frame (`Usage:`, `Options:`, `Run '…' for usage.`) in English | The frame follows docker and git, which users already read |
-| `--help` shows the command's help | `lint` and `format` pass every argument, `--help` included, to ESLint and Prettier | They are those tools with choliba's configuration; their own help is the useful one |
-| Warn before a non-additive change, saying how to migrate | Before 1.0, a renamed command goes without an alias; the release notes say how to migrate (`BREAKING CHANGE:`) | A pre-release keeps no compatibility, and an alias would keep the old name alive |
-| Do not read secrets from environment variables | The provider's credentials come from the environment or the workspace `.env` (`CLAUDE_CODE_OAUTH_TOKEN`, `CURSOR_API_KEY`) | That is how Claude Code and the Cursor CLI read them; choliba passes them on |
-| Distribute a single binary | A Bun package (`.tgz`) installed in the workspace | The workspace pins the version, and the runner needs Playwright next to it |
+| Use uma biblioteca de análise de argumentos | `defineCommand` e `parseCommandLine` (`src/command`) | Uma declaração dá a ajuda e o parser, sem dependência |
+| Mensagens no idioma de quem usa | Ajuda, mensagens e erros em português | Quem usa o Choliba lê português |
+| Não leia segredos de variáveis de ambiente | As credenciais dos providers vêm do ambiente ou do `.env` (`CLAUDE_CODE_OAUTH_TOKEN`, `CURSOR_API_KEY`…) | É como as CLIs dos providers as leem; o Choliba só as repassa |
+| Distribua um binário só | Um pacote Bun (`choliba-<versão>.tgz`) instalado no projeto | O projeto fixa a versão, e as rodadas precisam do Puppeteer ao lado |
 
-## Checklist for a new or changed command
+## Checklist para um comando novo ou alterado
 
-- [ ] stdout only has the result; everything else is on stderr
-- [ ] exit codes: 0 success, 1 failure or usage error, covered by a spec
-- [ ] `--help` text in pt-BR with an example; flags described; autocomplete updated
-- [ ] flag names are standard where a standard exists; long form always present
-- [ ] color and prompts respect TTY, `NO_COLOR`, `TERM=dumb`, `--no-color`, `--no-input`
-- [ ] destructive effects have `--dry-run` and confirmation or `--force`
-- [ ] errors say what, where and how to fix, in pt-BR
-- [ ] a new command is a type under a verb when it is one (`run`, `new`, `list`); an unknown word suggests the
-      closest name; no secret taken from a flag
-- [ ] a new departure from clig.dev is decided with the user and added to "Where choliba departs from clig.dev"
-- [ ] README's CLI section updated (see the `documentation` skill)
+- [ ] o stdout só tem o resultado; o resto vai para o stderr
+- [ ] códigos de saída: 0 em sucesso, 1 em falha ou erro de uso, cobertos por um teste
+- [ ] `--help` em português com um exemplo; opções descritas
+- [ ] nomes de opção padrão onde há padrão; a forma longa sempre existe
+- [ ] cor e perguntas respeitam TTY, `NO_COLOR`, `TERM=dumb`, `--no-color` e `--no-input`
+- [ ] efeito destrutivo com `--dry-run` e confirmação ou `--force`
+- [ ] erros dizem o quê, onde e como corrigir, em português, como `UsageError`
+- [ ] nenhum segredo vem de uma opção; nada é escrito com `console` nem `process`
+- [ ] um desvio novo do clig.dev foi decidido com quem usa e entrou em "Onde o Choliba se afasta do clig.dev"
+- [ ] a tabela `COMMANDS` de `bin/choliba.ts` e o README (seção da CLI) estão em dia (skill `documentation`)

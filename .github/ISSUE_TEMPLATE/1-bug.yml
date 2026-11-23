@@ -35,8 +35,8 @@ body:
     id: version
     attributes:
       label: Versão do choliba
-      description: A saída de `bun choliba --version`.
-      placeholder: 0.0.1-dev.79+f38f044
+      description: O `version` do `package.json` instalado (`bun pm ls choliba`) ou, no código-fonte, `git rev-parse --short HEAD`.
+      placeholder: 0.1.0
     validations:
       required: true
   - type: input

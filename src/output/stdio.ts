@@ -1,0 +1,100 @@
+/**
+ * The only writer of the process's stdout and stderr (stdio): `stdioOutput`
+ * and the echo of what is typed both go through here. stdio is there for
+ * every program, on a terminal, a pipe or a file; what only a terminal has
+ * (columns, rows, the alternate screen, a status rewritten in place) is
+ * named `tty` and does nothing, or answers `undefined`, without one.
+ */
+
+const ESC = '\u001b';
+const CLEAR_LINE = '\r\u001b[2K';
+/** Escape sequences: they change no text on screen. */
+// oxlint-disable-next-line no-control-regex -- ESC starts every sequence.
+const ESCAPES = /\u001b\[[0-9;?]*[A-Za-z]/g;
+
+/** The status line on screen now, if any (see {@link writeStatus}). */
+let status: string | undefined;
+/** The cursor is at the start of a line: nothing typed or half-written. */
+let atLineStart = true;
+
+export function writeOut(text: string): void {
+  clearStatus();
+  process.stdout.write(text);
+  track(text);
+}
+
+export function writeErr(text: string): void {
+  clearStatus();
+  process.stderr.write(text);
+  track(text);
+}
+
+/**
+ * A line that each call rewrites in place (e.g. `⏳ pensando…`), and
+ * `undefined` erases; anything else written erases it first. Only on a tty
+ * (ignored otherwise), and only at the start of a line, so it never covers
+ * what is being typed.
+ */
+export function writeStatus(text: string | undefined): void {
+  if (!process.stdout.isTTY) return;
+  if (text === undefined) {
+    clearStatus();
+    return;
+  }
+  if (status === undefined && !atLineStart) return;
+  if (text === status) return;
+
+  process.stdout.write(`${CLEAR_LINE}${text}`);
+  status = text;
+}
+
+/** Nothing typed or half-written on the current line of stdout. */
+export function isAtLineStart(): boolean {
+  return atLineStart;
+}
+
+/** Columns of the tty, or `undefined` when stdout is not one. */
+export function ttyColumns(): number | undefined {
+  return process.stdout.isTTY ? process.stdout.columns : undefined;
+}
+
+/** Rows of the tty, or `undefined` when stdout is not one. */
+export function ttyRows(): number | undefined {
+  return process.stdout.isTTY ? process.stdout.rows : undefined;
+}
+
+/** Calls `listener` when the tty changes size; returns how to stop. */
+export function onTtyResize(listener: () => void): () => void {
+  process.stdout.on('resize', listener);
+  return () => {
+    process.stdout.off('resize', listener);
+  };
+}
+
+/**
+ * A screen of its own (the alternate screen), as full-screen programs use:
+ * what was on the terminal comes back when it is left.
+ */
+export function enterAlternateScreen(): void {
+  clearStatus();
+  // The mouse wheel sends ↑ and ↓ there (alternate scroll): it scrolls
+  // without the mouse being taken, so text can still be selected.
+  process.stdout.write(`${ESC}[?1049h${ESC}[?1007h${ESC}[H`);
+}
+
+export function leaveAlternateScreen(): void {
+  process.stdout.write(`${ESC}[?1007l${ESC}[?1049l`);
+  atLineStart = true;
+}
+
+function clearStatus(): void {
+  if (status === undefined) return;
+  process.stdout.write(CLEAR_LINE);
+  status = undefined;
+  atLineStart = true;
+}
+
+function track(text: string): void {
+  const visible = text.replace(ESCAPES, '');
+  if (visible.length > 0) atLineStart = visible.endsWith('\n');
+}

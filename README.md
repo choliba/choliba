@@ -1,147 +1,148 @@
-<p align="center">
-  <img src="docs/public/owl-logo-choliba.svg" alt="" width="140" />
-</p>
+# Choliba
 
-<h1 align="center">choliba</h1>
-<p align="center">
-  <strong>Observe com atenção. Aja com precisão. Deixe evidências.</strong>
-  <br />
-  <em>Testes E2E multiprojeto com Playwright, operados por agentes.</em>
-</p>
+![GitHub Created At](https://img.shields.io/github/created-at/choliba/choliba?color=bright-green&style=flat-square)
+![GitHub contributors](https://img.shields.io/github/contributors/choliba/choliba?color=bright-green&style=flat-square)
+[![license](https://img.shields.io/github/license/choliba/choliba.svg?color=bright-green&style=flat-square)](LICENSE)
+[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
+[![cobertura](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/choliba/choliba/develop/.github/badges/coverage.json&style=flat-square)](COVERAGE.md)
 
-<p align="center">
-  <a href="https://github.com/choliba/choliba/actions/workflows/ci.yml"><img src="https://github.com/choliba/choliba/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI" /></a>
-  <a href="COVERAGE.md"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/choliba/choliba/develop/.github/badges/coverage.json" alt="cobertura" /></a>
-  <a href="https://github.com/choliba/choliba/releases/tag/v0.0.1-dev"><img src="https://img.shields.io/github/v/release/choliba/choliba?include_prereleases" alt="release" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/licen%C3%A7a-MIT-blue.svg" alt="licença MIT" /></a>
-</p>
+Roda agentes de código (Claude Code, Codex, Cursor e modelos locais pelo Ollama) a partir de scripts TypeScript,
+sempre dentro de uma sandbox.
 
-O choliba organiza os testes de ponta a ponta de várias aplicações em **projetos** (a URL de cada ambiente, as
-credenciais de teste e os specs) e **tickets** (o que muda na aplicação, com critérios de aceite). Agentes de IA
-fazem o trabalho em etapas:
-
-- **`product-owner`**: escreve o ticket usando a aplicação no navegador.
-- **`test-writer`**: transforma cada critério de aceite num teste que falha.
-- **`implementer`**: altera a aplicação até os testes passarem.
-- **`tech-stack-analyzer`**: registra a linguagem, os frameworks, as bibliotecas e as ferramentas da aplicação no
-  `config.json` do projeto.
-
-Quem garante a disciplina é a ferramenta, não o prompt: portões conferem que os testes falham antes e passam
-depois, e cada agente só lê, escreve e roda o que o seu `agent.yaml` libera. Tudo roda numa pasta de trabalho, que
-o pacote cria ao ser instalado.
+Um agente junta um **provider** (qual CLI roda), um **workspace** (a sandbox onde ela roda), uma **política** (o que
+ela pode fazer) e uma **conversa** (com quem ela fala: o terminal, uma tela cheia ou um arquivo). Cada peça é um
+módulo próprio, com um curso em [`guides/`](guides/).
 
 ## Índice
 
+- [Segurança](#segurança)
 - [Contexto](#contexto)
 - [Instalação](#instalação)
 - [Uso](#uso)
-- [Documentação](#documentação)
-- [Filosofia](#filosofia)
-- [Contribuindo](#contribuindo)
-- [Mantenedores](#mantenedores)
+- [API](#api)
+- [Contribuir](#contribuir)
 - [Licença](#licença)
+
+## Segurança
+
+O agente sempre roda isolado (bubblewrap ou Docker): não há modo sem sandbox. A política (`AgentPolicy`) vale igual
+para todos os providers, e nada dela é aplicado pela metade: o que um provider não sabe aplicar é recusado ao criar
+o agente. Comandos em aberto são perguntados a você, e o gate de execução falha fechado (sem resposta, nega).
+Por padrão, cada raiz usa seu próprio home persistente dentro de `workspaces.homes` (`.choliba/homes`); só o arquivo de
+login do provider entra nesse home e fica somente para leitura. Configure `hostState: 'none'` para não compartilhar
+o arquivo de login (e fornecer uma credencial de ambiente), ou `hostState: 'share'` para compartilhar o estado do
+host, gravável e com histórico de outros projetos. Segredos não chegam ao log. Veja os cursos de
+[policy](guides/policy/README.md), [network](guides/network/README.md), [workspace](guides/workspace/README.md) e
+[config](guides/config/README.md).
 
 ## Contexto
 
-Testar várias aplicações com Playwright costuma espalhar specs, URLs e credenciais; e pedir a um agente de IA que
-"faça TDD" não garante que ele escreva o teste antes, nem que não o afrouxe para passar. O choliba junta os testes
-por projeto e ticket e divide o trabalho entre agentes com papéis e permissões separados, com a conferência do
-red e do green feita pelo próprio CLI.
-
-Ele depende do [Playwright](https://playwright.dev) (os testes e o navegador que os agentes usam, via
-`playwright cli`), do [Bun](https://bun.sh) e de um provider de agente:
-
-- [Claude Code](https://claude.com/claude-code) (`claude`)
-- [Codex CLI](https://developers.openai.com/codex/cli) (`codex`)
-- [Cursor CLI](https://cursor.com/cli) (`cursor-agent`)
-
-Agentes podem usar skills e servidores MCP, instalados na pasta de trabalho.
+As CLIs de código são boas em trabalhar sozinhas, mas cada uma tem o seu jeito de rodar, de pedir permissão e de
+mostrar o que faz. O Choliba dá a todas o mesmo contrato: o mesmo agente, a mesma política, a mesma conversa e o
+mesmo log, trocando só o provider.
 
 ## Instalação
 
-O choliba não está no npm: os pacotes são os `.tgz` da pré-release
-[`v0.0.1-dev`](https://github.com/choliba/choliba/releases/tag/v0.0.1-dev), refeita a cada merge na `master`.
+Precisa do [Bun](https://bun.sh), de Linux com `bwrap` e `nsenter` (para o workspace `bubblewrap`) ou do Docker, e
+da CLI que o agente vai usar (`claude`, `codex`, `agent` ou o [Ollama](https://ollama.com)).
 
-Instale numa pasta que já tenha o próprio `package.json` (sem ele, o Bun pode instalar numa pasta acima). Baixe o
-pacote e o checksum publicado na mesma release e verifique o arquivo antes de instalar:
-
-```sh
-echo '{ "name": "dev-tools", "private": true }' > package.json
-curl -LO https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
-curl -LO https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz.sha256
-sha256sum -c choliba-0.0.1-dev.tgz.sha256
-bun add --trust ./choliba-0.0.1-dev.tgz
+```bash
+bun install
 ```
 
-Não instale se `sha256sum -c` não terminar em `OK`. O `--trust` autoriza o pacote a executar o `postinstall`, que
-roda `choliba setup`, monta a pasta de trabalho e liga o autocomplete.
+### Em outro projeto
 
-Dependências, o que o setup cria e como atualizar: [Primeiros passos](docs/primeiros-passos.md).
+O Choliba é um pacote: dá para instalá-lo em qualquer projeto que use o Bun. Do repositório, sem publicar:
+
+```bash
+bun add github:choliba/choliba
+```
+
+Ou gere o pacote aqui (`bun pm pack`, que também gera as páginas das rodadas) e instale o arquivo lá
+(`bun add ./choliba-0.1.0.tgz`).
+
+No outro projeto, a biblioteca vem de `choliba` (e `choliba/rounds`, `choliba/config`), e o comando `choliba` roda as
+rodadas e serve as páginas:
+
+```bash
+bunx choliba rounds <id>      # roda uma rodada declarada em rounds.definitions
+bunx choliba rounds:web       # as páginas das rodadas, com os registros de rounds.data
+bunx choliba approvals        # revisa os comandos negados pelo gate
+```
+
+Cada comando lê o `choliba.config.ts` do projeto. As rodadas precisam das quatro pastas de `rounds` na config: `dir`
+(onde rodam, fora do projeto), `definitions` (as declarações), `fixtures` (os pontos de partida) e `data` (os
+registros). Sem elas, a config carrega igual, e só os comandos das rodadas param, dizendo o que falta.
 
 ## Uso
 
-Numa pasta de trabalho com o choliba instalado, do projeto ao código implementado (o passo a passo completo, de
-uma pasta vazia ao `check` verde, está em
-[Do zero ao primeiro ticket](docs/primeiros-passos.md#do-zero-ao-primeiro-ticket)):
+```ts
+import {
+  Agent,
+  ClaudeProvider,
+  join,
+  runScript,
+  Workspace,
+} from '../src/index';
+import { currentDirectory } from '../src/execute/process';
 
-```sh
-# o exemplo que o setup cria, e os agentes em .choliba/agents/
-bun choliba check
-
-# o ticket, os testes e a implementação
-bun choliba run agent product-owner --project minha-app --type story "a busca aceita filtro por data"
-bun choliba run agent test-writer --project minha-app --ticket minha-app-1
-bun choliba run agent implementer --project minha-app --ticket minha-app-1
-
-# os testes do ticket, a qualquer momento
-bun choliba run tests minha-app:1
+await runScript(async () => {
+  await new Agent({
+    name: 'analista',
+    prompt: 'Analise o projeto.',
+    provider: new ClaudeProvider({ model: 'claude-sonnet-5-5' }),
+    workspace: new Workspace({
+      type: 'bubblewrap',
+      root: join(currentDirectory(), 'storage', 'workspace'),
+    }),
+  }).run();
+});
 ```
 
-Qualquer comando de agente aceita [`--dry-run`](docs/comandos/run.md#--dry-run), que mostra o que ele faria, na
-ordem, sem executar nada. Todos os comandos: [Comandos](docs/comandos/index.md) ou `choliba --help`.
+No terminal, **Ctrl+A** abre as aprovações, **Ctrl+C** para o agente e **Ctrl+D** encerra a conversa. Agentes com
+um modelo de verdade estão no [curso do agente](guides/agent/README.md#7-agentes-de-verdade):
 
-**Segurança:** cada agente só lê, escreve e roda o que o seu `agent.yaml` libera, e cada execução roda numa pasta
-vazia. Detalhes e limites de cada provider: [Segurança](docs/referencia/seguranca.md).
+```bash
+bun run ollama claude   # um agente num modelo local, pela CLI do Claude Code
+bun run tui codex       # o mesmo, em tela cheia, pela CLI do Codex
+bun run approvals       # revisa e aprova comandos negados
+```
 
-## Documentação
+A configuração do projeto fica em `choliba.config.ts` (log, banco, workspaces e seus homes isolados, variáveis de ambiente); veja o curso de
+[config](guides/config/README.md).
 
-No site [choliba.github.io](https://choliba.github.io/), com busca, ou em
-[`docs/`](docs/README.md), por tipo:
+## API
 
-- **Para começar:** [Primeiros passos](docs/primeiros-passos.md).
-- **Guias:** [escrever um agente](docs/guias/escrever-um-agente.md),
-  [instalar agentes, skills e MCPs](docs/guias/instalar-agentes.md).
-- **Referência:** [Comandos](docs/comandos/index.md),
-  [ciclo de execução de um agente](docs/referencia/ciclo-de-execucao-agente.md),
-  [`agent.yaml`](docs/referencia/agent-yaml.md), [segurança](docs/referencia/seguranca.md),
-  [`.env`](docs/referencia/env.md).
-- **Princípios:** [PHILOSOPHY.md](PHILOSOPHY.md).
+Cada módulo tem um curso em `guides/<modulo>/README.md`, com exemplos que rodam como estão:
 
-Para quem mexe no código: [CONTRIBUTING.md](CONTRIBUTING.md) (como contribuir e os padrões do projeto) e
-[ARCHITECTURE.md](ARCHITECTURE.md) (como o código é organizado).
+| Curso                                       | Sobre                                                 |
+| ------------------------------------------- | ----------------------------------------------------- |
+| [agent](guides/agent/README.md)             | o agente: opções, turnos, sessões, parar, `subscribe` |
+| [providers](guides/providers/README.md)     | as CLIs: comandos, eventos, permissões                |
+| [policy](guides/policy/README.md)           | a política: regras, decisões, aprovações              |
+| [network](guides/network/README.md)         | a rede da sandbox                                     |
+| [workspace](guides/workspace/README.md)     | a sandbox: bubblewrap e Docker                        |
+| [interaction](guides/interaction/README.md) | a conversa                                            |
+| [adapters](guides/adapters/README.md)       | as formas de conversar: stdio e arquivo JSONL         |
+| [tui](guides/tui/README.md)                 | a conversa em tela cheia                              |
+| [input](guides/input/README.md)             | o stdin                                               |
+| [output](guides/output/README.md)           | a saída                                               |
+| [execute](guides/execute/README.md)         | rodar programas                                       |
+| [filesystem](guides/filesystem/README.md)   | disco e caminhos                                      |
+| [events](guides/events/README.md)           | eventos dentro do processo                            |
+| [rounds](guides/rounds/README.md)           | as rodadas: comparar agentes com fatos                |
+| [context](guides/context/README.md)         | quem está rodando                                     |
+| [config](guides/config/README.md)           | o `choliba.config.ts`                                 |
+| [command](guides/command/README.md)         | comandos de linha de comando                          |
+| [cli](guides/cli/README.md)                 | os comandos do Choliba                                |
 
-## Filosofia
+## Contribuir
 
-O nome vem da _Megascops choliba_, a corujinha-do-mato. Assim como ela observa antes de agir e ataca um alvo
-específico com precisão, o choliba procura transformar mudanças de software num processo observável, delimitado e
-verificável.
+As regras do projeto, para pessoas e agentes, estão no [AGENTS.md](AGENTS.md). Antes de entregar,
+`bun run check` (typecheck, lint, formatação e testes) precisa passar.
 
-Um agente não recebe liberdade irrestrita para "resolver o problema". Cada agente tem um papel, um contexto, um alvo
-e permissões definidos. A ferramenta controla o processo e verifica os resultados; o prompt orienta o trabalho, mas
-não garante que as regras foram cumpridas.
-
-Em resumo: observar antes de agir, limitar antes de executar e verificar antes de concluir. Esses princípios e as
-decisões de projeto que derivam deles estão em [PHILOSOPHY.md](PHILOSOPHY.md).
-
-## Contribuindo
-
-Perguntas, bugs e sugestões vão para as [issues](https://github.com/choliba/choliba/issues). Para enviar um
-pull request, veja [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Mantenedores
-
-- Jackson Bicalho — [@jacksonbicalho](https://github.com/jacksonbicalho)
+Ao editar este arquivo, siga a especificação do [standard-readme](https://github.com/RichardLitt/standard-readme).
 
 ## Licença
 
-[MIT](LICENSE) © 2026 Jackson Bicalho
+[MIT](LICENSE).

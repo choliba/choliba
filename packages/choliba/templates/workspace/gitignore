@@ -1,6 +1,0 @@
-node_modules/
-.env
-.cache/
-.playwright-cli/
-projects/*/ticket-runs/
-projects/*/.env.json

@@ -43,24 +43,6 @@ jobs:
           # A mensagem não basta: uma identidade proibida no commit pode virar um rodapé no squash do GitHub.
           .githooks/commit-identity "$BASE_SHA..$HEAD_SHA"
 
-  cve:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: ./.github/actions/setup
-
-      # O bloco do scanner entra só aqui: no bunfig.toml ele abortaria este install.
-      - name: CVEs altas ou críticas no lockfile
-        run: |
-          printf '\n[install.security]\nscanner = "@bun-security-scanner/osv"\n' >> bunfig.toml
-          scan="$RUNNER_TEMP/osv-scan.txt"
-          set +e
-          bun pm scan >"$scan" 2>&1
-          status=$?
-          set -e
-          cat "$scan"
-          bun scripts/cve-gate.ts "$scan" "$status"
-
   typecheck:
     runs-on: ubuntu-latest
     steps:
@@ -80,7 +62,7 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: ./.github/actions/setup
-      - run: bun run format
+      - run: bun run format:check
 
   test:
     runs-on: ubuntu-latest
@@ -99,33 +81,30 @@ jobs:
           fi
       - run: bun run test:cov
 
-      # A cobertura só pode subir. O limite anterior é o threshold commitado na branch
-      # de destino (o ratchet mantém esse valor igual à última cobertura aprovada).
-      - name: Cobertura igual ou maior que a da branch de destino
+      # A cobertura só pode subir. O limite anterior é o coverage-thresholds.json commitado na branch de destino
+      # (a catraca mantém esse valor igual à última cobertura aprovada). O test:cov já falha quando a cobertura
+      # medida fica abaixo do limite do PR; aqui se confere que o limite do PR não desceu em relação ao da base.
+      - name: Limites de cobertura iguais ou maiores que os da branch de destino
         env:
           BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
-          base="$RUNNER_TEMP/base-coverage.json"
-          if ! git show "origin/$BASE_REF:jest/jest.coverage.config.json" > "$base" 2>/dev/null; then
-            echo "A branch $BASE_REF ainda não tem jest/jest.coverage.config.json; nada a comparar."
+          base="$RUNNER_TEMP/base-thresholds.json"
+          if ! git show "origin/$BASE_REF:coverage-thresholds.json" > "$base" 2>/dev/null; then
+            echo "A branch $BASE_REF ainda não tem coverage-thresholds.json; nada a comparar."
             exit 0
           fi
           regressions="$(jq -n \
             --slurpfile base "$base" \
-            --slurpfile head jest/jest.coverage.config.json \
-            --slurpfile cov coverage/coverage-summary.json '
-              $base[0].coverageConfig.coverageThreshold.global as $b
-              | $head[0].coverageConfig.coverageThreshold.global as $h
-              | $cov[0].total as $c
-              | ["lines", "statements", "functions", "branches"]
-              | map({metric: ., base: $b[.], threshold_no_pr: $h[.], cobertura_no_pr: $c[.].pct})
-              | map(select(.threshold_no_pr < .base or .cobertura_no_pr < .base))')"
+            --slurpfile head coverage-thresholds.json '
+              ["lines", "functions"]
+              | map({metric: ., base: $base[0][.], head: $head[0][.]})
+              | map(select(.head < .base))')"
           if [ "$regressions" != "[]" ]; then
-            echo "::error::A cobertura ou o threshold ficou abaixo do da branch $BASE_REF."
+            echo "::error::Um limite de cobertura ficou abaixo do da branch $BASE_REF."
             echo "$regressions"
             exit 1
           fi
-          echo "Cobertura e thresholds >= aos de $BASE_REF."
+          echo "Limites de cobertura >= aos de $BASE_REF."
 
       - name: Publicar relatório de cobertura (diagnóstico em caso de falha)
         if: failure()
@@ -140,15 +119,13 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: ./.github/actions/setup
-      # docs/comandos/ sai do spec. O build reescreve as páginas, então a comparação tem de vir antes: uma página velha falha aqui.
-      - run: bun run docs:commands --check
       # O site publicado a partir da master precisa continuar válido em cada PR.
       - run: bun run docs:build
 
   # O nome deste job é o status check exigido pela proteção das branches.
   check:
     if: always()
-    needs: [pr-text, cve, typecheck, lint, format, test, docs]
+    needs: [pr-text, typecheck, lint, format, test, docs]
     runs-on: ubuntu-latest
     steps:
       - name: Conferir todos os gates

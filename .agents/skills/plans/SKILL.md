@@ -1,81 +1,79 @@
 ---
 name: plans
-description: How work is planned in choliba — every piece of work is a GitHub issue opened with the repo's issue forms, the plan is a comment on the issue, status labels say who executes it, one issue is one pull request that closes it, every plan estimates its commits and maps the project skills to its steps. Use when turning pending work into an issue, writing or reading a plan, picking an issue to execute, splitting work into pull requests, or about to implement an issue.
-argument-hint: 'The work to plan, or the issue number to execute.'
+description: Como o trabalho é planejado no Choliba — todo trabalho é uma issue do GitHub aberta com os formulários do repositório, o plano é um comentário na issue, rótulos de status dizem quem executa, uma issue é um pull request que a fecha, todo plano estima seus commits e liga as skills do projeto aos seus passos. Use ao transformar uma pendência em issue, escrever ou ler um plano, escolher uma issue para executar, dividir um trabalho em pull requests, ou antes de implementar uma issue.
+argument-hint: 'O trabalho a planejar, ou o número da issue a executar.'
 user-invocable: true
 disable-model-invocation: false
 ---
 
-# Plans
+# Planos
 
-Work that changes this repo starts as an **issue** in https://github.com/choliba/choliba/issues. The issue says
-what is wrong or what is wanted; the **plan** says how it will be done and is a comment on that issue. There is no
-other queue: the open issues are the backlog, and an issue closed when its pull request is merged is the history.
+O trabalho que muda este repositório começa como uma **issue** em https://github.com/choliba/choliba/issues. A issue diz
+o que está errado ou o que se quer; o **plano** diz como será feito e é um comentário nessa issue. Não há outra fila: as
+issues abertas são o backlog, e uma issue fechada quando o pull request é mergeado é o histórico.
 
-The work is an **open pool**: any agent (`claude`, `codex`, `cursor`) may execute any available issue, whoever
-opened it. The repository is public: an issue, a plan and a comment never carry secrets, `.env` values, tokens or
-personal data, and never paths outside the working folder.
+O trabalho é um **pool aberto**: qualquer agente (`claude`, `codex`) pode executar qualquer issue disponível, seja quem
+for que a abriu. O repositório é público: uma issue, um plano e um comentário nunca levam segredos, valores do `.env`,
+tokens nem dados pessoais, e nunca caminhos fora da pasta de trabalho.
 
-## Opening an issue
+## Abrindo uma issue
 
-Open it in the format of the forms in `.github/ISSUE_TEMPLATE/`, with the form's title prefix and labels:
+Abra no formato dos formulários de `.github/ISSUE_TEMPLATE/`, com o prefixo de título e os rótulos do formulário:
 
-| Form | Title | Labels |
-| ---- | ----- | ------ |
+| Formulário | Título | Rótulos |
+| --- | --- | --- |
 | `1-bug.yml` | `[bug] …` | `bug` |
 | `2-feature.yml` | `[feature] …` | `enhancement` |
 | `3-execution-error.yml` | `[execution-error] …` | `execution-error`, `bug` |
 | `4-architecture-change.yml` | `[architecture] …` | `architecture` |
 
-From the command line, write the body as the form renders it: one `### <field label>` per field, in the form's
-order, `_No response_` for an optional field left empty, and `- [X]` / `- [ ]` for checkboxes. Then:
+Pela linha de comando, escreva o corpo como o formulário o renderiza: um `### <rótulo do campo>` por campo, na ordem do
+formulário, `_No response_` para um campo opcional deixado vazio e `- [X]` / `- [ ]` para as caixas de seleção. Depois:
 
 ```bash
 gh issue create --repo choliba/choliba --title '[bug] …' --label bug --body-file body.md
 ```
 
-One problem per issue. When an issue needs another one first, comment `Depende de #N` on it.
+Um problema por issue. Quando uma issue precisa de outra antes, comente `Depende de #N` nela.
 
-## Status
+## Estado
 
-The status of an issue is its labels:
+O estado de uma issue são os rótulos dela:
 
-| Status | Meaning |
-| ------ | ------- |
-| no status label | Open and available. A plan comment may exist or not. |
-| `em execução` | Someone has a branch or local commits for it; the latest `Pego por <origin>` comment names who. |
-| `PR aberto` | The pull request is open, waiting for the merge; the PR is linked to the issue (`Closes #N`). |
-| closed | Resolved: its pull request is merged into `develop` (the next release ships it), or closed as not planned. |
+| Estado | Significado |
+| --- | --- |
+| sem rótulo de estado | Aberta e disponível. Pode haver ou não um comentário de plano. |
+| `em execução` | Alguém tem uma branch ou commits locais para ela; o último comentário `Pego por <origem>` diz quem. |
+| `PR aberto` | O pull request está aberto, esperando o merge; o PR está ligado à issue (`Closes #N`). |
+| fechada | Resolvida: o pull request foi mergeado na `develop` (a próxima release a entrega), ou fechada como não planejada. |
 
-Transitions:
+Transições:
 
-1. **Before creating the branch**, assign the issue to yourself, add `em execução` and comment `Pego por <origin>`
-   (`claude`, `codex` or `cursor`):
-   `gh issue edit N --add-assignee @me --add-label 'em execução'` and `gh issue comment N --body 'Pego por <origin>'`.
-2. **On opening the pull request**, swap `em execução` for `PR aberto`. The PR body has `Closes #N`.
-3. **After the merge into `develop`**, the `Close issues` workflow (`.github/workflows/close-issues.yml`) closes every
-   open issue the PR body names with a closing keyword (`Closes #N`, `Fixes #N`, `Resolves #N`), comments
-   `Resolvida em #PR; sai na próxima release.` and removes `PR aberto`. GitHub itself only does this for PRs into the
-   default branch (`master`). Check that the issue closed; if the body had no keyword, close it the same way by hand.
-4. **Giving up**, remove the assignee and the label (`--remove-assignee @me --remove-label 'em execução'`) and
-   comment why, so the next one starts from there.
+1. **Antes de criar a branch**, atribua a issue a você, ponha `em execução` e comente `Pego por <origem>` (`claude` ou
+   `codex`): `gh issue edit N --add-assignee @me --add-label 'em execução'` e
+   `gh issue comment N --body 'Pego por <origem>'`.
+2. **Ao abrir o pull request**, troque `em execução` por `PR aberto`. O corpo do PR tem `Closes #N`.
+3. **Depois do merge na `develop`**, o workflow `Close issues` (`.github/workflows/close-issues.yml`) fecha toda issue
+   aberta que o corpo do PR cita com uma palavra-chave de fechamento (`Closes #N`, `Fixes #N`, `Resolves #N`), comenta
+   `Resolvida em #PR; sai na próxima release.` e tira o `PR aberto`. O próprio GitHub só faz isso para PRs na branch
+   padrão (`master`). Confira se a issue fechou; se o corpo não tinha a palavra-chave, feche do mesmo jeito à mão.
+4. **Ao desistir**, tire o responsável e o rótulo (`--remove-assignee @me --remove-label 'em execução'`) e comente por
+   quê, para o próximo começar dali.
 
-**Claiming an issue.** There is no atomic lock, so re-reading is the only defence against two agents taking the same
-issue:
+**Pegando uma issue.** Não há trava atômica, então reler é a única defesa contra dois agentes pegarem a mesma issue:
 
-1. Right before claiming, read the issue again (`gh issue view N --comments`). If it has `em execução` or `PR aberto`,
-   pick another one.
-2. Assign it to yourself, add the label and the `Pego por` comment.
-3. Read it once more. If an earlier `Pego por` from another agent appeared, the other agent won: undo yours and pick
-   another one.
+1. Logo antes de pegar, leia a issue de novo (`gh issue view N --comments`). Se ela tem `em execução` ou `PR aberto`,
+   escolha outra.
+2. Atribua a você, ponha o rótulo e o comentário `Pego por`.
+3. Leia mais uma vez. Se apareceu um `Pego por` anterior de outro agente, o outro ganhou: desfaça o seu e escolha outra.
 
-Pick an issue only when it has no status label, every `Depende de #N` is merged, and you have no pull request of
-your own open.
+Só pegue uma issue quando ela não tem rótulo de estado, todo `Depende de #N` já foi mergeado e você não tem um pull
+request seu aberto.
 
-## The plan
+## O plano
 
-Before implementing, comment the plan on the issue, starting with `## Plano`. Read the project skills that apply
-first and name, in each step, the skill that governs it.
+Antes de implementar, comente o plano na issue, começando por `## Plano`. Leia primeiro as skills do projeto que se
+aplicam e nomeie, em cada passo, a skill que o governa.
 
 ```markdown
 ## Plano
@@ -88,20 +86,21 @@ first and name, in each step, the skill that governs it.
 
 ### Commits
 
-1. `type(scope): description` — what this commit does (skill: `code-standard`)
+1. `tipo(escopo): descrição` — o que este commit faz (skill: `object-calisthenics`)
 
 ### Verificação
 ```
 
-`### Fora de escopo` is optional. `### Verificação` says how to prove the work and always includes `bun run check`
-green by its exit code; a plan that changes docs also includes `bun run docs:build` green. When the plan changes
-while executing, edit the comment and say what changed; do not post a second plan.
+`### Fora de escopo` é opcional. `### Verificação` diz como provar o trabalho e sempre inclui o `bun run check` verde
+pelo código de saída; um plano que muda a documentação (`guides/`, `docs/`, o README) inclui também o
+`bun run docs:build` verde. Quando o plano muda durante a execução, edite o comentário e diga o que mudou; não poste um
+segundo plano.
 
-## One issue, one pull request
+## Uma issue, um pull request
 
-- **One issue is one pull request** into `develop`, from a branch `<type>/<description>`, with `Closes #N` in the
-  body. Commits, the review and the merge follow the `git-workflow` skill.
-- **Every plan estimates its commits** and lists them. One logical change per commit, in that order.
-- Work that needs more than one pull request is split into one issue per pull request (each with its own plan),
-  linked by `Depende de #N`. The first one keeps the context; the others point to it.
-- Do not open the pull request until every `Depende de #N` is merged.
+- **Uma issue é um pull request** na `develop`, de uma branch `<tipo>/<descrição>`, com `Closes #N` no corpo. Os
+  commits, a revisão e o merge seguem a skill `git-workflow`.
+- **Todo plano estima os commits** e os lista. Uma mudança lógica por commit, nessa ordem.
+- Um trabalho que precisa de mais de um pull request se divide em uma issue por pull request (cada uma com o próprio
+  plano), ligadas por `Depende de #N`. A primeira guarda o contexto; as outras apontam para ela.
+- Não abra o pull request até todo `Depende de #N` estar mergeado.

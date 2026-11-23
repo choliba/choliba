@@ -1,0 +1,491 @@
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import { describe, expect, test } from 'bun:test';
+
+import type { ProgramOutput } from '../src/execute/types';
+import { ClaudeProvider } from '../src/providers/claude/claude-provider';
+import { CodexProvider } from '../src/providers/codex/codex-provider';
+import { OllamaProvider } from '../src/providers/ollama/ollama-provider';
+
+describe('OllamaProvider', () => {
+  test('think: false desliga o raciocínio em cada pedido ao /v1/messages', () => {
+    const provider = new OllamaProvider({
+      cli: 'claude',
+      model: 'qwen3.5:4b',
+      think: false,
+    });
+    const body = new TextEncoder().encode(
+      JSON.stringify({
+        model: 'qwen3.5:4b',
+        thinking: { type: 'adaptive', display: 'omitted' },
+      }),
+    );
+    const rewritten = provider.rewriteRequest?.({
+      method: 'POST',
+      path: '/v1/messages?beta=true',
+      body,
+    });
+    expect(
+      JSON.parse(new TextDecoder().decode(rewritten ?? new Uint8Array())),
+    ).toEqual({ model: 'qwen3.5:4b', thinking: { type: 'disabled' } });
+    // Other routes go as they came.
+    expect(
+      provider.rewriteRequest?.({
+        method: 'POST',
+        path: '/v1/messages/count_tokens',
+        body,
+      }),
+    ).toBeUndefined();
+    expect(provider.describe()).toMatchObject({ think: false });
+  });
+
+  test('sem think, nenhum pedido é ajustado; com o codex, think: false é recusado', () => {
+    expect(
+      new OllamaProvider({ cli: 'claude', model: 'qwen3.5:4b' }).rewriteRequest,
+    ).toBeUndefined();
+    expect(
+      () =>
+        new OllamaProvider({ cli: 'codex', model: 'qwen3.5:4b', think: false }),
+    ).toThrow('só vale com cli: claude');
+  });
+
+  test('aponta o claude para o Ollama por variáveis de ambiente', () => {
+    const provider = new OllamaProvider({ cli: 'claude', model: 'qwen3.5:4b' });
+    const command = provider.createCommand('pergunta');
+
+    expect(provider.id).toBe('ollama-claude');
+    expect(command.executable).toBe('env');
+    expect(command.arguments).toEqual([
+      'ANTHROPIC_BASE_URL=http://127.0.0.1:11434',
+      'ANTHROPIC_AUTH_TOKEN=ollama',
+      'ANTHROPIC_API_KEY=',
+      'ANTHROPIC_DEFAULT_HAIKU_MODEL=qwen3.5:4b',
+      'ANTHROPIC_DEFAULT_SONNET_MODEL=qwen3.5:4b',
+      'ANTHROPIC_DEFAULT_OPUS_MODEL=qwen3.5:4b',
+      'CLAUDE_CODE_SUBAGENT_MODEL=qwen3.5:4b',
+      'ENABLE_TOOL_SEARCH=false',
+      'CLAUDE_CODE_MAX_CONTEXT_TOKENS=32768',
+      'CLAUDE_CODE_AUTO_COMPACT_WINDOW=32768',
+      'CLAUDE_CODE_MAX_OUTPUT_TOKENS=8192',
+      'env',
+      'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1',
+      'claude',
+      '--print',
+      '--output-format',
+      'stream-json',
+      '--verbose',
+      '--include-partial-messages',
+      '--model',
+      'qwen3.5:4b',
+      '--permission-mode',
+      'bypassPermissions',
+    ]);
+    expect(command.input).toStartWith('pergunta\n\nRegra de interação:');
+  });
+
+  test('o claude usa o gate como o ClaudeProvider', () => {
+    const provider = new OllamaProvider({ cli: 'claude', model: 'qwen3.5:4b' });
+    provider.applyPolicy(
+      { default: 'deny', allow: { execution: [{ commands: ['bun *'] }] } },
+      {
+        hookCommand: ['/bin/bun', '/gate/hook', '/gate/s.sock'],
+        root: '/w',
+      },
+    );
+
+    const args = provider.createCommand('pergunta').arguments ?? [];
+
+    expect(args).toContain('dontAsk');
+    expect(args[args.indexOf('--settings') + 1]).toContain('/gate/hook');
+  });
+
+  test('roda o codex em modo --oss, em turno novo e no resume', () => {
+    const provider = new OllamaProvider({
+      cli: 'codex',
+      model: 'qwen3.5:4b',
+      baseUrl: 'http://gpu.local:11434/',
+    });
+
+    expect(provider.id).toBe('ollama-codex');
+    expect(provider.createCommand('pergunta').arguments).toEqual([
+      'CODEX_OSS_BASE_URL=http://gpu.local:11434/v1',
+      'RUST_LOG=error,codex_models_manager=off',
+      'codex',
+      'exec',
+      '--oss',
+      '--local-provider',
+      'ollama',
+      '--disable',
+      'apps',
+      '--disable',
+      'goals',
+      '-c',
+      'model_context_window=32768',
+      '-c',
+      'model_auto_compact_token_limit=26214',
+      '--dangerously-bypass-approvals-and-sandbox',
+      '--color',
+      'never',
+      '-c',
+      'analytics.enabled=false',
+      '--skip-git-repo-check',
+      '--json',
+      '--model',
+      'qwen3.5:4b',
+      '-',
+    ]);
+    expect(provider.createCommand('resposta', 'thread-1').arguments).toEqual([
+      'CODEX_OSS_BASE_URL=http://gpu.local:11434/v1',
+      'RUST_LOG=error,codex_models_manager=off',
+      'codex',
+      'exec',
+      '--oss',
+      '--local-provider',
+      'ollama',
+      '--disable',
+      'apps',
+      '--disable',
+      'goals',
+      '-c',
+      'model_context_window=32768',
+      '-c',
+      'model_auto_compact_token_limit=26214',
+      '--dangerously-bypass-approvals-and-sandbox',
+      '--color',
+      'never',
+      '-c',
+      'analytics.enabled=false',
+      'resume',
+      '--skip-git-repo-check',
+      '--json',
+      '--model',
+      'qwen3.5:4b',
+      'thread-1',
+      '-',
+    ]);
+  });
+
+  test('o codex liga o hook do gate num CODEX_HOME do workspace', () => {
+    const root = mkdtempSync(join(tmpdir(), 'choliba-ollama-'));
+    const cache = mkdtempSync(join(tmpdir(), 'choliba-cache-'));
+    const previous = process.env['XDG_CACHE_HOME'];
+    process.env['XDG_CACHE_HOME'] = cache;
+
+    try {
+      const provider = new OllamaProvider({
+        cli: 'codex',
+        model: 'qwen3.5:4b',
+      });
+      const protectedFiles = provider.applyPolicy(
+        { default: 'deny', allow: { execution: [{ commands: ['bun *'] }] } },
+        { hookCommand: ['/bin/bun', '/gate/hook', '/gate/s.sock'], root },
+      );
+      const args = provider.createCommand('pergunta').arguments ?? [];
+      const home = (
+        args.find((arg) => arg.startsWith('CODEX_HOME=')) ?? ''
+      ).slice('CODEX_HOME='.length);
+
+      expect(home.startsWith(join(cache, 'choliba', 'codex'))).toBe(true);
+      expect(args).toContain('--dangerously-bypass-hook-trust');
+      expect(args.indexOf('--oss')).toBe(args.indexOf('exec') + 1);
+      expect(protectedFiles).toEqual([
+        join(home, 'hooks.json'),
+        join(home, 'rules'),
+      ]);
+      expect(
+        JSON.parse(readFileSync(join(home, 'hooks.json'), 'utf8')),
+      ).toEqual({
+        hooks: {
+          PreToolUse: [
+            {
+              matcher: '^Bash$',
+              hooks: [
+                {
+                  type: 'command',
+                  command: `'/bin/bun' '/gate/hook' '/gate/s.sock'`,
+                  timeout: 3600,
+                },
+              ],
+            },
+          ],
+        },
+      });
+      // The same workspace keeps the same CODEX_HOME, so sessions survive.
+      const again = new OllamaProvider({ cli: 'codex', model: 'qwen3.5:4b' });
+      again.applyPolicy(
+        { default: 'deny', allow: { execution: [{ commands: ['bun *'] }] } },
+        { hookCommand: ['/bin/bun', '/gate/hook', '/gate/s.sock'], root },
+      );
+      expect(again.createCommand('pergunta').arguments).toContain(
+        `CODEX_HOME=${home}`,
+      );
+    } finally {
+      if (previous === undefined) delete process.env['XDG_CACHE_HOME'];
+      else process.env['XDG_CACHE_HOME'] = previous;
+      rmSync(root, { recursive: true, force: true });
+      rmSync(cache, { recursive: true, force: true });
+    }
+  });
+
+  test('o codex no Ollama aceita regras de web e desliga a busca hospedada', () => {
+    const provider = new OllamaProvider({
+      cli: 'codex',
+      model: 'qwen3.5:4b',
+    });
+
+    provider.applyPolicy(
+      {
+        default: 'deny',
+        allow: { web: [{ operations: ['*'], domains: ['*'] }] },
+      },
+      undefined,
+    );
+
+    expect(provider.createCommand('pergunta').arguments).toContain(
+      'tools.web_search={mode="disabled"}',
+    );
+  });
+
+  test('a rede vai só ao Ollama; a nuvem da CLI fica bloqueada', () => {
+    const codex = new OllamaProvider({ cli: 'codex', model: 'qwen3.5:4b' });
+    const claude = new OllamaProvider({ cli: 'claude', model: 'qwen3.5:4b' });
+
+    expect(codex.networkEndpoints()).toEqual(['127.0.0.1:11434']);
+    expect(codex.networkBlocked()).toContain('chatgpt.com:443');
+    expect(claude.networkBlocked()).toContain('api.anthropic.com:443');
+  });
+
+  test('tira da saída os avisos que só existem por causa do Ollama', async () => {
+    const provider = new OllamaProvider({ cli: 'claude', model: 'qwen3.5:4b' });
+    const output = (async function* (): AsyncIterable<ProgramOutput> {
+      yield {
+        channel: 'stderr',
+        chunk:
+          '[claude-code:unrecognized_model] {"model":"qwen3.5:4b"}\n' +
+          '⚠ claude.ai connectors are disabled because ANTHROPIC_API_KEY is set\n',
+      };
+      yield { channel: 'stderr', chunk: 'erro de verdade\n' };
+      yield {
+        channel: 'stdout',
+        chunk:
+          '{"type":"assistant","message":{"content":[{"type":"text","text":"oi"}]}}\n',
+      };
+    })();
+    const events = [];
+
+    for await (const event of provider.parseOutput(output)) {
+      events.push(event);
+    }
+
+    expect(events).toEqual([
+      { type: 'stderr', text: 'erro de verdade\n' },
+      { type: 'output', value: 'oi' },
+    ]);
+  });
+
+  test('não repassa os tokens nem o custo que a CLI calcula para o modelo local', async () => {
+    const provider = new OllamaProvider({
+      cli: 'claude',
+      model: 'qwen2.5-coder:latest',
+    });
+    const lines = [
+      {
+        type: 'assistant',
+        message: {
+          id: 'm1',
+          content: [{ type: 'text', text: 'oi' }],
+          usage: { input_tokens: 15_613, output_tokens: 0 },
+        },
+      },
+      {
+        type: 'result',
+        session_id: 's1',
+        result: 'oi',
+        total_cost_usd: 0.071975,
+      },
+    ];
+    const output = (async function* (): AsyncIterable<ProgramOutput> {
+      yield {
+        channel: 'stdout',
+        chunk: lines.map((line) => `${JSON.stringify(line)}\n`).join(''),
+      };
+    })();
+    const events = [];
+
+    for await (const event of provider.parseOutput(output)) {
+      events.push(event);
+    }
+
+    expect(events.map((event) => event.type)).toEqual(['output', 'session']);
+  });
+
+  test('o contexto real chega às duas CLIs', () => {
+    const claude = new OllamaProvider({
+      cli: 'claude',
+      model: 'qwen3.5:4b',
+      contextWindow: 16_384,
+    }).createCommand('oi');
+    const codex = new OllamaProvider({
+      cli: 'codex',
+      model: 'qwen3.5:4b',
+      contextWindow: 16_384,
+    }).createCommand('oi');
+
+    expect(claude.arguments).toEqual(
+      expect.arrayContaining([
+        'CLAUDE_CODE_MAX_CONTEXT_TOKENS=16384',
+        'CLAUDE_CODE_AUTO_COMPACT_WINDOW=16384',
+        'CLAUDE_CODE_MAX_OUTPUT_TOKENS=4096',
+      ]),
+    );
+    expect(codex.arguments).toEqual(
+      expect.arrayContaining([
+        'model_context_window=16384',
+        'model_auto_compact_token_limit=13107',
+      ]),
+    );
+    expect(
+      () => new OllamaProvider({ cli: 'codex', model: 'm', contextWindow: 0 }),
+    ).toThrow('contextWindow');
+  });
+
+  test('só o claude recebe mensagens com o turno rodando, e com o ambiente do Ollama', () => {
+    const claude = new OllamaProvider({ cli: 'claude', model: 'qwen3.5:4b' });
+    const codex = new OllamaProvider({ cli: 'codex', model: 'qwen3.5:4b' });
+    const turn = claude.createLiveTurn?.('oi');
+
+    expect(codex.createLiveTurn).toBeUndefined();
+    expect(turn?.command.executable).toBe('env');
+    expect(turn?.command.arguments).toEqual(
+      expect.arrayContaining([
+        'ANTHROPIC_BASE_URL=http://127.0.0.1:11434',
+        '--input-format',
+        'stream-json',
+      ]),
+    );
+    expect(turn?.command.inputStream).toBeDefined();
+    turn?.close();
+  });
+
+  test('as regras de interação vão só na mensagem que abre a sessão', async () => {
+    for (const cli of ['claude', 'codex'] as const) {
+      const provider = new OllamaProvider({ cli, model: 'qwen3.5:4b' });
+
+      expect(provider.createCommand('oi').input).toContain(
+        'Regra de interação',
+      );
+      expect(provider.createCommand('oi', 'sessao-1').input).toBe('oi');
+    }
+
+    const turn = new OllamaProvider({
+      cli: 'claude',
+      model: 'qwen3.5:4b',
+    }).createLiveTurn?.('primeira');
+    turn?.send('segunda');
+    turn?.close();
+    const sent: string[] = [];
+    for await (const line of turn?.command.inputStream ?? []) sent.push(line);
+
+    expect(sent[0]).toContain('Regra de interação');
+    expect(sent[1]).not.toContain('Regra de interação');
+  });
+
+  test('fora do Ollama, as regras continuam em toda mensagem', () => {
+    expect(
+      new ClaudeProvider({ model: 'modelo' }).createCommand('oi', 'sessao-1')
+        .input,
+    ).toContain('Regra de interação');
+    expect(
+      new CodexProvider({ model: 'modelo' }).createCommand('oi', 'sessao-1')
+        .input,
+    ).toContain('Regra de interação');
+  });
+
+  test('recusa uma baseUrl inválida', () => {
+    expect(
+      () =>
+        new OllamaProvider({
+          cli: 'codex',
+          model: 'qwen3.5:4b',
+          baseUrl: 'localhost',
+        }),
+    ).toThrow('baseUrl do Ollama inválida: localhost');
+  });
+
+  test('tools limita as ferramentas do claude e é recusada no codex', () => {
+    const claude = new OllamaProvider({
+      cli: 'claude',
+      model: 'm',
+      tools: ['shell', 'file_read'],
+    });
+    const args = claude.createCommand('oi').arguments ?? [];
+    expect(
+      args.slice(args.indexOf('--tools'), args.indexOf('--tools') + 3),
+    ).toEqual(['--tools', 'Bash', 'Read']);
+    expect(
+      () => new OllamaProvider({ cli: 'codex', model: 'm', tools: ['shell'] }),
+    ).toThrow('O Codex não deixa escolher quais ferramentas dele');
+  });
+
+  test('appendSystemPrompt chega ao claude e é recusado no codex', () => {
+    const claude = new OllamaProvider({
+      cli: 'claude',
+      model: 'm',
+      appendSystemPrompt: 'Responda em português.',
+    });
+    for (const args of [
+      claude.createCommand('oi').arguments ?? [],
+      claude.createLiveTurn?.('oi').command.arguments ?? [],
+    ]) {
+      expect(args[args.indexOf('--append-system-prompt') + 1]).toBe(
+        'Responda em português.',
+      );
+    }
+    expect(
+      () =>
+        new OllamaProvider({
+          cli: 'codex',
+          model: 'm',
+          appendSystemPrompt: 'Responda em português.',
+        }),
+    ).toThrow('appendSystemPrompt do OllamaProvider só vale com cli: claude');
+  });
+
+  test('com o codex, as ferramentas do projeto chegam pelo servidor MCP', () => {
+    const codex = new OllamaProvider({
+      cli: 'codex',
+      model: 'm',
+      tools: ['choliba/buscar'],
+    });
+    expect(codex.ownTools()).toEqual(['choliba/buscar']);
+    // Codex's background traffic is denied quietly, never queued for approval.
+    expect(codex.networkBlocked()).toContain('github.com:443');
+    codex.applyTools({
+      name: 'choliba',
+      command: [
+        '/usr/bin/bun',
+        '/tmp/ferramentas/server',
+        '/tmp/ferramentas/tools.sock',
+      ],
+    });
+    const args = codex.createCommand('oi').arguments ?? [];
+    expect(args).toContain('mcp_servers.choliba.command="/usr/bin/bun"');
+    expect(args).toContain(
+      'mcp_servers.choliba.args=["/tmp/ferramentas/server","/tmp/ferramentas/tools.sock"]',
+    );
+    // Exec-level options: before `-`, the prompt from stdin.
+    expect(
+      args.indexOf('mcp_servers.choliba.command="/usr/bin/bun"'),
+    ).toBeLessThan(args.indexOf('-'));
+  });
+});
+
+test('recusa um cli que não conduz o modelo', () => {
+  // As it would come from plain JavaScript or a JSON config: no type check.
+  const options: unknown = JSON.parse('{ "cli": "", "model": "qwen3.5:4b" }');
+  expect(() => Reflect.construct(OllamaProvider, [options]) as unknown).toThrow(
+    "cli: 'claude' ou 'codex', veio \"\"",
+  );
+});

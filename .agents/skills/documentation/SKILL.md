@@ -1,103 +1,101 @@
 ---
 name: documentation
-description: Industry practices for writing and maintaining technical documentation — deciding what kind of doc a reader needs (Diátaxis tutorials, how-to guides, reference, explanation), where it belongs, how to write it (Google/Microsoft developer style), keeping it true to the code (docs as code), READMEs, architecture decision records, changelogs, and docs that agents read (AGENTS.md, llms.txt). Use whenever you write, update, restructure or review docs, a README, a guide, a changelog, an ADR or an AGENTS.md, document a feature or a change after implementing it, or decide whether a change needs documentation at all — even if the request only says "update the docs" or "explain this in the README".
+description: Práticas para escrever e manter documentação técnica — decidir que tipo de texto o leitor precisa (Diátaxis: tutorial, guia prático, referência, explicação), onde ele mora, como escrever (estilo Google/Microsoft), como mantê-lo verdadeiro em relação ao código (docs as code), README, ADR, changelog e o que os agentes leem (AGENTS.md). No Choliba, a documentação é o curso de cada módulo em guides/ e o site https://choliba.github.io/ (docs/, VitePress). Use ao escrever, atualizar, reestruturar ou revisar docs, README, um guia, um changelog, um ADR ou o AGENTS.md, ao documentar uma funcionalidade depois de implementá-la, ou ao decidir se uma mudança precisa de documentação — mesmo que o pedido diga só "atualize a documentação" ou "explique isso no README".
+argument-hint: 'O que mudou, ou a página a escrever ou revisar.'
 user-invocable: true
 disable-model-invocation: false
 ---
 
-# Documentation
+# Documentação
 
-Good documentation answers one reader's need, in the place they will look for it, with facts that are true of
-the code today. Almost every documentation failure is one of those three going wrong: the wrong kind of text for
-the need (a tutorial that turns into a reference dump), the right text in the wrong place (a new file nobody finds
-while the existing page goes stale), or text that drifted from the code. The workflow below is built to prevent
-each of them. It is tool- and project-agnostic: follow the project's own conventions wherever they exist, and use
-these practices to fill the gaps.
+Boa documentação responde à necessidade de um leitor, no lugar onde ele vai procurar, com fatos que valem para o
+código de hoje. Quase toda falha de documentação é uma destas três: o tipo de texto errado para a necessidade (um
+tutorial que vira despejo de referência), o texto certo no lugar errado (uma página nova que ninguém acha enquanto a
+antiga envelhece) ou o texto que se afastou do código. O roteiro abaixo existe para evitar cada uma.
 
-## Workflow
+## Onde a documentação do Choliba mora
 
-1. **Start from the change, not from the docs.** Identify what actually changed for someone using the project:
-   a new command, flag, config key, default, behavior or failure mode. Internal refactors, renames nobody sees,
-   formatting and test-only changes usually need no documentation — say so explicitly instead of inventing text.
-2. **Name the reader and their need**, then pick the document type (next section). One page serves one need.
-3. **Find where it belongs before creating anything.** Read the existing docs and their structure. Prefer
-   updating the page that already covers the topic over adding a new one; a new page is justified only when the
-   topic is new *and* no existing page's purpose fits it. Keep the existing file names, headings and ordering.
-4. **Verify every claim against the source of truth** — the code, the config schema, the command's real
-   `--help`, the diff you were given. Never describe behavior from memory, from a plan, or from how it "probably"
-   works. If you cannot verify something, leave it out or flag it as an open question.
-5. **Write** following the style rules below, in the language the project's docs already use.
-6. **Check** what the project's tooling checks (formatter, link checker, prose linter) and that every link,
-   path, command and example still resolves.
-7. **Report** what you changed, where, and why — and which changes you deliberately did not document.
+| Lugar | O que é | Quem escreve |
+| --- | --- | --- |
+| `guides/<modulo>/README.md` | o curso do módulo, com exemplos completos em `guides/<modulo>/exemplos/` que rodam como estão e passam pelo `bun run check` | à mão, seguindo a skill [`guias-exemplos-completos`](../guias-exemplos-completos/SKILL.md) |
+| `README.md` | a porta de entrada: o que é, como instalar e rodar em minutos, para onde ir | à mão |
+| `docs/` | o site https://choliba.github.io/ (VitePress). `docs/index.md`, `docs/primeiros-passos.md` e a ordem do menu são à mão; as páginas dos cursos (`docs/guias/`) e a dos comandos (`docs/comandos.md`) são **geradas** por `bun run docs:pages` a partir de `guides/` e de `bin/choliba.ts` | à mão e por script |
+| `AGENTS.md` e `.agents/skills/` | o que agentes e pessoas leem antes de mexer no código | à mão |
 
-## Picking the document type (Diátaxis)
+O site publica o que está em `guides/`: **uma mudança no curso é uma mudança no site**, não há texto para copiar. Não
+edite à mão as páginas geradas (`docs/guias/`, `docs/comandos.md`); mude a fonte e rode `bun run docs:pages`. O
+`bun run docs:build` roda no CI de todo PR, então um link quebrado ou uma página velha reprova o PR, não só o site.
 
-| The reader wants to...     | Type         | Write it as                                                                   |
-| -------------------------- | ------------ | ----------------------------------------------------------------------------- |
-| learn, by doing, from zero | Tutorial     | A guided lesson with one safe path to a visible result; no choices, no detours |
-| get a specific task done   | How-to guide | Numbered steps toward a goal, assuming competence; starts from the goal       |
-| look up exact facts        | Reference    | Complete, accurate, neutral; structured like the thing it describes           |
-| understand why / how       | Explanation  | Discussion of context, design decisions, trade-offs, alternatives             |
+## Roteiro
 
-The most common mistake is mixing types in one page: a how-to that stops to explain history, or a reference that
-turns into a tutorial. When a page needs two types, split it and link them. For the details and the typical
-failure modes of each type, read `references/diataxis.md`.
+1. **Comece pela mudança, não pelos documentos.** Identifique o que mudou para quem usa o projeto: um comando, uma
+   opção, uma chave de configuração, um padrão, um comportamento, um modo de falha. Refatoração interna, renomeação
+   que ninguém vê, formatação e mudança só de teste costumam não precisar de texto: diga isso, em vez de inventar.
+2. **Nomeie o leitor e a necessidade**, depois escolha o tipo de documento (abaixo). Uma página serve uma necessidade.
+3. **Ache onde o texto mora antes de criar qualquer coisa.** Leia os documentos e a estrutura. Prefira atualizar a
+   página que já cobre o assunto a criar outra; uma página nova só se o assunto é novo *e* nenhuma existente serve.
+   Mantenha os nomes de arquivo, os títulos e a ordem.
+4. **Confira cada afirmação na fonte de verdade**: o código, o `--help` real do comando, o diff. Nunca descreva um
+   comportamento de memória, de um plano ou de como ele "provavelmente" funciona. O que não dá para conferir sai do
+   texto ou vira pergunta em aberto.
+5. **Escreva** seguindo o estilo abaixo, em português, a língua dos cursos.
+6. **Confira** o que o projeto confere: `bun run format:check`, `bun run docs:build` (links e páginas) e os exemplos
+   (`bun run check`). Todo link, caminho, comando e exemplo precisa ainda existir.
+7. **Relate** o que mudou, onde e por quê, e o que você decidiu deliberadamente não documentar.
 
-## Writing style
+## Que tipo de documento (Diátaxis)
 
-Distilled from the Google developer documentation style guide and the Microsoft Writing Style Guide:
+| O leitor quer... | Tipo | Escreva como |
+| --- | --- | --- |
+| aprender fazendo, do zero | Tutorial | uma lição com um caminho seguro até um resultado visível; sem escolhas nem desvios |
+| resolver uma tarefa | Guia prático | passos numerados até um objetivo, para quem já sabe o básico; começa pelo objetivo |
+| consultar um fato exato | Referência | completa, exata e neutra; com a forma da coisa que descreve |
+| entender o porquê | Explicação | contexto, decisões de desenho, trocas, alternativas |
 
-- **Lead with what matters.** The first sentence of a page or section says what it is for; the answer comes
-  before the background.
-- **Second person, active voice, present tense.** "Run `make build`", not "The build should be run".
-- **Short and concrete.** Cut words that carry no information; prefer a real example over an abstract rule.
-- **One idea per sentence, one topic per paragraph.** Use lists for sequences and options, tables for
-  comparisons with several attributes.
-- **Name things exactly as the reader sees them:** the real command, flag, file path, key and error message, in
-  code formatting. Keep terms consistent — one name per concept across all pages.
-- **Show real examples that work.** Copy commands and outputs from actual runs; never placeholders that look
-  real. Mark what the reader must replace (`<project>`).
-- **Sentence-case headings** that describe content ("Configure the provider"), so the table of contents reads
-  as a summary.
-- **Link instead of repeating.** A fact lives in one place; every other page links to it, so an update happens
-  once.
+O erro mais comum é misturar tipos numa página. Quando uma página precisa de dois, separe e ligue as duas. Detalhes e
+sintomas de cada tipo: `references/diataxis.md`. O curso de um módulo mistura os tipos de propósito (tutorial no
+começo, referência no fim): o que importa é que cada *seção* tenha um tipo só.
 
-More rules, word choices and examples: `references/style.md`.
+## Estilo
 
-## Keeping docs true (docs as code)
+Destilado dos guias de estilo de documentação de desenvolvedores do Google e da Microsoft:
 
-- Docs live in the repository, in plain text (usually Markdown), next to the code they describe.
-- A change that affects users updates the docs **in the same change or pull request**, reviewed with the code.
-  Docs written "later" are docs that drift.
-- Automate what can be checked: formatting, broken links, prose style (e.g. Vale), examples that can run.
-- Remove or rewrite what is no longer true. Outdated docs are worse than missing docs, because readers trust them.
-- Generated docs (API reference from code comments, CLI help) should be generated, not copied by hand. In this
-  repository, `docs/comandos/` is generated from each command's `CommandSpec`: change the spec and run
-  `bun run docs:commands`. Do not edit those pages by hand. CI runs `bun run docs:commands --check` and fails when a
-  page is stale.
+- **Comece pelo que importa.** A primeira frase de uma página ou seção diz para que ela serve; a resposta vem antes do
+  contexto.
+- **Segunda pessoa, voz ativa, presente.** "Rode `bun run check`", não "o check deve ser rodado".
+- **Curto e concreto.** Corte o que não informa; prefira um exemplo real a uma regra abstrata.
+- **Uma ideia por frase, um assunto por parágrafo.** Listas para sequências e opções, tabelas para comparações com
+  vários atributos.
+- **Nomeie as coisas como o leitor as vê:** o comando, a opção, o caminho, a chave e a mensagem de erro de verdade, em
+  código. Um nome por conceito em todas as páginas.
+- **Exemplos reais que funcionam.** Copie comandos e saídas de execuções de verdade; nunca um marcador que parece real.
+  Marque o que o leitor troca (`<projeto>`).
+- **Títulos que descrevem o conteúdo**, para o índice se ler como um resumo.
+- **Ligue em vez de repetir.** Um fato mora num lugar só; as outras páginas apontam para ele.
 
-Checks and tooling notes: `references/docs-as-code.md`.
+Mais regras e exemplos: `references/style.md`.
 
-## Special documents
+## Mantendo o texto verdadeiro (docs as code)
 
-- **README** — the front door: what the project is, who it is for, how to install and run it in minutes, where
-  to go next. Structured by the Standard Readme specification (section order, exact titles, short description equal
-  to the package's, table of contents, no broken links) unless the project follows another convention. Link to the
-  docs instead of duplicating them.
-- **Architecture decision record (ADR)** — one significant, hard-to-reverse decision per record: context,
-  decision, consequences. Accepted records are not edited; a new record supersedes an old one.
-- **Changelog** — for humans: grouped by version, newest first, with dates and the change types Added, Changed,
-  Deprecated, Removed, Fixed, Security. Not a dump of commit messages.
-- **Docs that agents read** (`AGENTS.md`, `llms.txt`, docs consumed by tools) — short, structured Markdown with
-  exact commands and paths; grow them only when an agent keeps getting something wrong.
+- A documentação mora no repositório, em texto simples, ao lado do código que descreve.
+- Uma mudança que afeta quem usa atualiza o texto **na mesma mudança**, revisada junto com o código. Texto escrito
+  "depois" é texto que se afasta.
+- Automatize o que dá para conferir: formatação, links quebrados, exemplos que rodam (os de `guides/` rodam no `check`).
+- Remova ou reescreva o que deixou de ser verdade. Texto velho é pior que texto nenhum, porque o leitor confia nele.
+- O que dá para gerar se gera: o `--help` e a lista de comandos saem de `bin/choliba.ts`, e as páginas dos cursos saem
+  de `guides/`.
 
-Templates and guidance for each: `references/special-documents.md`.
+Verificações e ferramentas: `references/docs-as-code.md`.
 
-## Reporting back
+## Documentos especiais
 
-End with a short account the reader of your work can check quickly:
+- **README**: a porta de entrada. O que o projeto é, para quem, como instalar e rodar em minutos, para onde ir. Ligue
+  para os cursos em vez de duplicá-los.
+- **ADR** (registro de decisão de arquitetura): uma decisão grande e difícil de desfazer por registro: contexto,
+  decisão, consequências. Registro aceito não se edita; um novo o substitui.
+- **Changelog**: para pessoas, por versão, do mais novo ao mais antigo, com data e tipo (Adicionado, Alterado,
+  Obsoleto, Removido, Corrigido, Segurança). No Choliba as notas da release são geradas do git (skill `git-workflow`).
+- **O que os agentes leem** (`AGENTS.md`, as skills): Markdown curto e estruturado, com comandos e caminhos exatos;
+  cresce só quando um agente erra a mesma coisa de novo.
 
-- each file changed, with one line on what and why;
-- anything in the change that you decided needs no documentation, and why;
-- open questions or facts you could not verify.
+Modelos de cada um: `references/special-documents.md`.
