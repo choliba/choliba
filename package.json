@@ -1,6 +1,6 @@
 {
   "name": "choliba",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Agentes de IA rodando em sandbox, com uma política de permissões única, e rodadas que medem o que cada agente fez.",
   "license": "MIT",
   "type": "module",
