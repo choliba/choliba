@@ -18,12 +18,18 @@ import { DEFAULT_DOCKER_IMAGE } from './constants';
 import { environment, userHome } from '../execute/process';
 import { SandboxPaths } from './sandbox/path-map';
 import {
+  findPrograms,
+  validateProgramNames,
+  type ProgramCheck,
+} from './sandbox/programs';
+import {
   HOST_STATES,
   type HostState,
   type SandboxHost,
 } from './sandbox/host-access';
 
 export type { HostState } from './sandbox/host-access';
+export type { FoundProgram, ProgramCheck } from './sandbox/programs';
 import {
   BubblewrapSandbox,
   DockerSandbox,
@@ -54,6 +60,14 @@ interface CommonWorkspaceOptions {
    * default.
    */
   readonly agentRoot?: string;
+  /**
+   * The programs the agent sees, by name (`php`, `bun`), even when more are
+   * installed: the program folders are emptied and only these come back,
+   * plus what Choliba itself runs in the sandbox and the shell. Each must
+   * exist, or the sandbox does not start. Without it, every program of the
+   * host is visible.
+   */
+  readonly programs?: readonly string[];
 }
 
 export interface DockerWorkspaceOptions extends CommonWorkspaceOptions {
@@ -105,6 +119,8 @@ export class Workspace {
   public readonly homes: string;
   /** Where the sandbox sees each host path (the root at `paths.agentRoot`). */
   public readonly paths: SandboxPaths;
+  /** The programs the agent sees (see `programs`); `undefined`: all of them. */
+  public readonly programs: readonly string[] | undefined;
   private network: NetworkBoundary | undefined;
 
   public constructor(options: WorkspaceOptions) {
@@ -126,7 +142,9 @@ export class Workspace {
         `hostState desconhecido: ${hostState}. Use ${HOST_STATES.join(', ')}.`,
       );
     }
+    if (options.programs !== undefined) validateProgramNames(options.programs);
     this.root = options.root;
+    this.programs = options.programs;
     this.homes = options.homes ?? getConfig().workspaces.homes;
     this.type = options.type;
     this.options = options;
@@ -152,6 +170,18 @@ export class Workspace {
       .digest('hex')
       .slice(0, 16);
     return join(this.homes, id);
+  }
+
+  /**
+   * Which of `names` (the selected `programs` by default) the sandbox finds
+   * in `searchPath` (Choliba's `PATH` by default), and where: nothing runs
+   * and no agent is asked.
+   */
+  public checkPrograms(
+    names: readonly string[] = this.programs ?? [],
+    searchPath: string | undefined = environment()['PATH'],
+  ): ProgramCheck {
+    return findPrograms(names, searchPath);
   }
 
   /**
