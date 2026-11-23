@@ -6,6 +6,8 @@ import {
   isSymlink,
   listDirectory,
   pathExists,
+  readLink,
+  removePath,
   writeText,
   join,
   cholibaCacheDir,
@@ -205,7 +207,11 @@ export class CodexProvider
     ensureDirectory(rules);
     const hooks = writeHooks(home, gate.hookCommand);
     if (gate.sharedHome !== undefined) {
-      linkSharedState(join(gate.sharedHome, '.codex'), home);
+      linkSharedState(
+        join(gate.sharedHome, '.codex'),
+        home,
+        gate.inside ?? ((path) => path),
+      );
     } else if (this.login && gate.home === undefined) {
       linkCredentials(home);
     }
@@ -500,14 +506,29 @@ function writeHooks(home: string, hookCommand: readonly string[]): string {
  * links: what Codex writes there lands on the host. Only the hook and the
  * rules are ours. Entries the host gains later are linked on the next run.
  */
-function linkSharedState(hostCodexHome: string, home: string): void {
+/**
+ * Links the host's Codex state into our CODEX_HOME, pointing where the
+ * sandbox sees it (`inside`): the links are followed in there. A link left
+ * pointing somewhere else (an older layout) is replaced.
+ */
+function linkSharedState(
+  hostCodexHome: string,
+  home: string,
+  inside: (path: string) => string,
+): void {
   if (!pathExists(hostCodexHome)) return;
 
   for (const name of listDirectory(hostCodexHome)) {
     if (OWN_ENTRIES.has(name)) continue;
     const link = join(home, name);
-    if (pathExists(link) || isSymlinkAt(link)) continue;
-    createSymlink(join(hostCodexHome, name), link);
+    const target = inside(join(hostCodexHome, name));
+    if (isSymlinkAt(link)) {
+      if (readLink(link) === target) continue;
+      removePath(link);
+    } else if (pathExists(link)) {
+      continue;
+    }
+    createSymlink(target, link);
   }
 }
 

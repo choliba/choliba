@@ -69,7 +69,11 @@ export function enforcePolicy({
     broker === undefined
       ? undefined
       : {
-          hookCommand: broker.hookCommand(),
+          // Run by the CLI inside the sandbox: with the paths it sees there.
+          hookCommand: broker
+            .hookCommand()
+            .map((argument) => workspace.paths.insideValue(argument)),
+          inside: (path: string) => workspace.paths.inside(path),
           root: workspace.root,
           home: workspace.home(),
           // `share` also uses the CLI's state on the host.
@@ -239,7 +243,14 @@ export function ownToolBroker(
     );
   }
   const broker = new ToolBroker({ tools: names.map(registeredTool), policy });
-  provider.applyTools(broker.serverCommand());
+  const server = broker.serverCommand();
+  // Started by the CLI inside the sandbox: with the paths it sees there.
+  provider.applyTools({
+    ...server,
+    command: server.command.map((argument) =>
+      workspace.paths.insideValue(argument),
+    ),
+  });
   workspace.protect([broker.dir]);
   return broker;
 }

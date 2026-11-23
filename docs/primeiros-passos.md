@@ -21,7 +21,7 @@ bun add github:choliba/choliba
 Ou baixe o `choliba-<versão>.tgz` da [última release](https://github.com/choliba/choliba/releases) e instale o arquivo:
 
 ```bash
-bun add ./choliba-0.1.1.tgz
+bun add ./choliba-0.2.0.tgz
 ```
 
 ## Configure o projeto

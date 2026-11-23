@@ -29,7 +29,7 @@ import { Workspace } from '../src/workspace/index';
 const root = process.cwd();
 
 const command: ProgramCommand = {
-  executable: 'agent',
+  executable: 'choliba-agente-de-teste',
   arguments: ['--print', 'analise'],
   input: 'prompt do agente',
 };
@@ -115,8 +115,10 @@ describe('Workspace', () => {
       if (args[index] === '-e') {
         const value = args.at(index + 1);
 
-        if (value !== undefined && !value.includes('=')) {
-          envNames.push(value);
+        // `NAME` (from the client's environment) or `NAME=value` (a host
+        // path translated to where the container sees it).
+        if (value !== undefined) {
+          envNames.push(value.split('=')[0] ?? value);
         }
       }
     }
@@ -134,9 +136,12 @@ describe('Workspace', () => {
       'SYS_CHROOT',
     ]);
     expect(args).toContain('/:/host:ro');
-    expect(args).toContain(`${root}:/host${root}`);
+    // The host's homes: an empty tmpfs, with only the root in it.
+    expect(args).toContain('/host/home:mode=755');
+    expect(args).toContain(`${root}:/host/home/choliba`);
     expect(args).toContain('/host/tmp');
-    expect(args).toContain(`/host${root}`);
+    expect(args).toContain('/host/home/choliba');
+    expect(args).not.toContain(`/host${root}`);
     expect(imageIndex).toBeGreaterThan(0);
     expect(args.slice(imageIndex)).toEqual([
       image,
@@ -144,8 +149,8 @@ describe('Workspace', () => {
       '/host',
       ...innerUserArgs(),
       '/usr/bin/env',
-      `--chdir=${root}`,
-      'agent',
+      '--chdir=/home/choliba',
+      'choliba-agente-de-teste',
       '--print',
       'analise',
     ]);
@@ -185,8 +190,10 @@ describe('Workspace', () => {
       }).prepare({ ...command, cwd: root });
       const args = prepared.arguments ?? [];
 
-      expect(args).toContain(`${cursor}:/host${cursor}`);
-      expect(args).toContain(`${codex}:/host${codex}`);
+      // Outside /home: the host user's home is seen at /opt/choliba/user.
+      expect(args).toContain(`${cursor}:/host/opt/choliba/user/.cursor`);
+      expect(args).toContain(`${codex}:/host/opt/choliba/user/.codex`);
+      expect(args).toContain('HOME=/opt/choliba/user');
     } finally {
       rmSync(home, { recursive: true, force: true });
     }
@@ -224,7 +231,10 @@ describe('Workspace', () => {
       });
 
       const prepared = await workspace.prepare(command);
-      expect(prepared.arguments).toContain(`/dev/null:/host${denied}:ro`);
+      expect(prepared.arguments).toContain(
+        '/dev/null:/host/home/choliba/.env:ro',
+      );
+      expect(denied.endsWith('/.env')).toBe(true);
     } finally {
       rmSync(workspaceRoot, { recursive: true, force: true });
     }
@@ -255,9 +265,9 @@ describe('Workspace', () => {
           '-i',
           '-u',
           '-p',
-          `--wdns=${root}`,
+          '--wdns=/home/choliba',
           '--',
-          'agent',
+          'choliba-agente-de-teste',
           '--print',
           'analise',
         ]);
@@ -277,7 +287,7 @@ describe('Workspace', () => {
             '-i',
             '-u',
             '-p',
-            `--wdns=${root}`,
+            '--wdns=/home/choliba',
             '--',
             '/bin/true',
           ],
@@ -316,7 +326,7 @@ describe('Workspace', () => {
   });
 
   test.skipIf(Bun.which('bwrap') === null || Bun.which('nsenter') === null)(
-    'bubblewrap esconde o diretório pai do root',
+    'bubblewrap: a raiz em /home/choliba, sozinha em /home; o pai e os homes do host não existem',
     async () => {
       // A parent with files that must stay hidden, outside the repository.
       const parent = mkdtempSync(join(tmpdir(), 'choliba-parent-'));
@@ -324,6 +334,7 @@ describe('Workspace', () => {
       writeFileSync(join(parent, 'package.json'), '{}');
       const jailRoot = join(parent, 'app');
       mkdirSync(jailRoot);
+      writeFileSync(join(jailRoot, 'leia-me.txt'), 'do projeto');
       const workspace = new Workspace({
         type: 'bubblewrap',
         root: jailRoot,
@@ -332,28 +343,34 @@ describe('Workspace', () => {
       try {
         const prepared = await workspace.prepare(command);
         const pid = nsenterTarget(prepared.arguments ?? []);
-        const listing = spawnSync(
-          'nsenter',
-          [
-            '--preserve-credentials',
-            '-t',
-            String(pid),
-            '-m',
-            '-U',
-            '-i',
-            '-u',
-            `--wd=${jailRoot}`,
-            '--',
-            '/bin/ls',
-            join(jailRoot, '..'),
-          ],
-          { encoding: 'utf8' },
-        );
+        const inJail = (...argv: string[]) =>
+          spawnSync(
+            'nsenter',
+            [
+              '--preserve-credentials',
+              '-t',
+              String(pid),
+              '-m',
+              '-U',
+              '-i',
+              '-u',
+              '--wdns=/home/choliba',
+              '--',
+              ...argv,
+            ],
+            { encoding: 'utf8' },
+          );
 
-        expect(listing.status).toBe(0);
-        expect(listing.stdout).not.toContain('choliba.config.ts');
-        expect(listing.stdout).not.toContain('package.json');
-        expect(listing.stdout.split(/\s+/)).toContain('app');
+        expect(inJail('/bin/pwd').stdout.trim()).toBe('/home/choliba');
+        expect(inJail('/bin/ls', '/home').stdout.trim()).toBe('choliba');
+        expect(inJail('/bin/cat', 'leia-me.txt').stdout).toBe('do projeto');
+        // Neither the root's parent nor the host's home, at any path.
+        expect(inJail('/bin/ls', parent).status).not.toBe(0);
+        expect(inJail('/bin/ls', jailRoot).status).not.toBe(0);
+        const hostHome = process.env['HOME'];
+        if (hostHome?.startsWith('/home/') === true) {
+          expect(inJail('/bin/ls', hostHome).status).not.toBe(0);
+        }
       } finally {
         await workspace.close();
         rmSync(parent, { recursive: true, force: true });
@@ -361,9 +378,66 @@ describe('Workspace', () => {
     },
   );
 
+  test.skipIf(
+    Bun.which('docker') === null ||
+      Bun.spawnSync(['docker', 'image', 'inspect', 'oven/bun:latest'])
+        .exitCode !== 0,
+  )(
+    'docker: a raiz em /home/choliba, sozinha em /home; os homes do host não existem',
+    async () => {
+      const parent = mkdtempSync(join(tmpdir(), 'choliba-parent-'));
+      const dockerRoot = join(parent, 'app');
+      mkdirSync(dockerRoot);
+      writeFileSync(join(dockerRoot, 'leia-me.txt'), 'do projeto');
+      const workspace = new Workspace({
+        type: 'docker',
+        root: dockerRoot,
+        image: 'FROM oven/bun:latest',
+      });
+      const hostHome = process.env['HOME'] ?? '';
+      const script = [
+        'pwd',
+        'ls /home',
+        'cat leia-me.txt; echo',
+        `ls ${dockerRoot} >/dev/null 2>&1 && echo raiz-do-host || echo sem-raiz-do-host`,
+        hostHome.startsWith('/home/')
+          ? `ls ${hostHome} >/dev/null 2>&1 && echo home-do-host || echo sem-home-do-host`
+          : 'echo sem-home-do-host',
+      ].join('; ');
+
+      try {
+        const prepared = await workspace.prepare({
+          executable: 'sh',
+          arguments: ['-c', script],
+        });
+        const result = spawnSync(
+          prepared.executable,
+          [...(prepared.arguments ?? [])],
+          {
+            cwd: prepared.cwd,
+            encoding: 'utf8',
+            ...(prepared.env === undefined ? {} : { env: prepared.env }),
+          },
+        );
+
+        expect(result.stdout.trim().split('\n')).toEqual([
+          '/home/choliba',
+          'choliba',
+          'do projeto',
+          'sem-raiz-do-host',
+          'sem-home-do-host',
+        ]);
+      } finally {
+        await workspace.close();
+        rmSync(parent, { recursive: true, force: true });
+      }
+    },
+    30_000,
+  );
+
   test('bubblewrap monta o comando nsenter para entrar na jaula', () => {
-    expect(bubblewrapEnterCommand(4242, root)).toBe(
-      `nsenter --preserve-credentials -t 4242 -m -U -i -u --wdns=${root} -- env 'PS1=(jaula) \\w \\$ ' /bin/bash --norc -i`,
+    expect(bubblewrapEnterCommand(4242, '/home/choliba')).toBe(
+      `nsenter --preserve-credentials -t 4242 -m -U -i -u --wdns=/home/choliba -- env 'PS1=(jaula) \\w \\$ ' /bin/bash --norc -i`,
     );
   });
 

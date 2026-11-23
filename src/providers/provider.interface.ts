@@ -167,6 +167,11 @@ export interface ToolEvent {
 export interface ExecutionGate {
   /** argv of the hook, runnable inside the sandbox. */
   readonly hookCommand: readonly string[];
+  /**
+   * Where the sandbox sees a host path (the CLI's files hold paths it reads
+   * inside); the same path without a sandbox.
+   */
+  readonly inside?: (path: string) => string;
   /** Workspace root, for CLI state kept per workspace. */
   readonly root: string;
   /**
