@@ -9,6 +9,8 @@ name: Release
 on:
   push:
     branches: [master]
+  # Refazer a release de um commit que já está na master, sem outro merge (a tag e o .tgz são trocados).
+  workflow_dispatch:
 
 permissions:
   contents: write

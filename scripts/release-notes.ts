@@ -57,20 +57,27 @@ async function mergedCommits(
   }));
 }
 
-/** The `version` of `package.json` as it was at `commit`. */
-async function versionAt(commit: string): Promise<string> {
-  const manifest: unknown = JSON.parse(
-    await call('git', ['show', `${commit}:package.json`]),
-  );
-  if (
-    typeof manifest === 'object' &&
-    manifest !== null &&
-    'version' in manifest &&
-    typeof manifest.version === 'string'
-  ) {
-    return manifest.version;
+/**
+ * The `version` of `package.json` as it was at `commit`; `undefined` when it had none (the root of the old monorepo
+ * did not, and its releases follow another scheme of versions).
+ */
+async function versionAt(commit: string): Promise<string | undefined> {
+  try {
+    const manifest: unknown = JSON.parse(
+      await call('git', ['show', `${commit}:package.json`]),
+    );
+    if (
+      typeof manifest === 'object' &&
+      manifest !== null &&
+      'version' in manifest &&
+      typeof manifest.version === 'string'
+    ) {
+      return manifest.version;
+    }
+  } catch {
+    // No package.json at that commit: no version either.
   }
-  throw new Error(`O package.json de ${commit} não tem version.`);
+  return undefined;
 }
 
 async function main(
@@ -117,11 +124,15 @@ async function main(
     const [previous = '', merged = ''] = parents.split(' ');
     const found = /^Merge pull request #(\d+)/.exec(subject)?.[1];
     const pullRequest = found === undefined ? undefined : Number(found);
+    const version = await versionAt(hash);
+    // The notes are of this package's releases: an older merge with no version is of another scheme, and so is
+    // everything before it.
+    if (version === undefined) break;
     releases.push({
       hash,
       previous,
       date,
-      version: await versionAt(hash),
+      version,
       pullRequest,
       highlights:
         pullRequest === undefined ? undefined : await highlights(pullRequest),
