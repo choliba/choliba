@@ -2,6 +2,8 @@
 
 # Módulo workspace: preparar um ambiente isolado
 
+> Um `Workspace` define a raiz que o agente pode alterar e prepara cada comando para rodar numa sandbox, com as permissões de arquivos e a fronteira de rede.
+
 Um `Workspace` define a raiz que o agente pode alterar e prepara cada comando para executá-lo dentro de um sandbox. Também reúne as permissões de filesystem, a fronteira de rede e o acesso declarado pelo provider ao estado da CLI no host.
 
 ## Índice

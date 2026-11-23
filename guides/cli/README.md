@@ -2,6 +2,8 @@
 
 # Módulo cli: os comandos que o Choliba oferece
 
+> Os comandos que o Choliba oferece a quem o usa, como o `approvals`, a tela onde você vê o que o gate negou e decide o que aprovar, valem para qualquer projeto.
+
 O `src/cli` guarda **os comandos que o Choliba oferece a quem o usa**: programas prontos, rodados com `bun run <nome>`, que fazem parte do produto. Hoje há um só, o **`approvals`**: a tela onde você vê os comandos e destinos que o gate negou e decide quais aprovar.
 
 Eles são diferentes de `scripts/`, que são ferramentas de desenvolvimento **deste repositório** (abrir uma issue, limpar o log, gerar os cursos). Um comando do `cli` vale para qualquer projeto que use o Choliba.

@@ -2,6 +2,8 @@
 
 # Módulo context: acompanhar quem está executando
 
+> O módulo `context` diz a cada parte do Choliba qual agente está ativo e em qual execução, para logs e eventos saberem de quem são, sem passar isso a cada método.
+
 Enquanto um agente trabalha, várias partes do Choliba produzem eventos e logs: o executor, a sandbox, a rede, as
 aprovações. O módulo `context` dá a essas partes o contexto de **qual agente está ativo e em qual execução**, sem
 passar esses dados por todos os métodos.

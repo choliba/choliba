@@ -1,5 +1,7 @@
 # Módulo command: para que ele existe (o problema que resolve, em linguagem simples)
 
+> O módulo `command` separa a definição de um comando da execução: valida a linha de comando antes de tudo e monta a ajuda `--help` a partir da declaração.
+
 O módulo `command` existe para separar **definição** de **execução**. Ele garante que:
 
 1. A linha de comando seja **validada antes** de carregar configurações ou abrir logs — erros de uso terminam com código 1 imediatamente.

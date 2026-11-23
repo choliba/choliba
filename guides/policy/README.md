@@ -2,6 +2,8 @@
 
 # Módulo policy: para que ele existe
 
+> A `AgentPolicy` descreve o que um agente pode, o que precisa de aprovação e o que nunca pode, em oito categorias; o módulo `policy` define a forma e decide.
+
 Uma **`AgentPolicy`** é um objeto que descreve permissões: o que pode, o que precisa de aprovação e o que nunca pode, em oito categorias (arquivos, web, rede, comandos, ferramentas, subagentes, comunicação e segredos). É **dado, não código**: não executa nada, não abre arquivo, não conhece agente nem sandbox. Pode ser escrita num arquivo, guardada, comparada, validada e consultada.
 
 O módulo `policy` é o dono desse objeto. Ele define **a forma** (o tipo `AgentPolicy`) e **o significado**: dada uma política e uma ação, qual é a decisão.
