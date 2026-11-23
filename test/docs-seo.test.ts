@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'bun:test';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 
+import { commandsPage, guidePage, guidesIndexPage } from '../scripts/docs';
 import {
+  checkDescription,
+  DESCRIPTION_MAX,
+  DESCRIPTION_MIN,
   FAVICON,
   faviconLink,
   googleAnalyticsTags,
@@ -12,9 +17,13 @@ import {
   quoteUnderTitle,
   robotsTxt,
   shareTags,
+  SITE_DESCRIPTION,
   SITE_URL,
   websiteJsonLd,
 } from '../scripts/docs-seo';
+
+const sized = (length: number): string => 'a'.repeat(length);
+const read = (file: string): string => readFileSync(file, 'utf8');
 
 describe('pageUrl', () => {
   test('serve a página sem .md e um index como a pasta dele', () => {
@@ -50,21 +59,73 @@ describe('quoteUnderTitle', () => {
 describe('pageDescription', () => {
   const page = '# Título\n\n> A citação.\n';
 
-  test('prefere o frontmatter, depois a citação, depois a do site', () => {
-    expect(
-      pageDescription({ description: ' Do frontmatter. ' }, page, 'Site'),
-    ).toBe('Do frontmatter.');
-    expect(pageDescription({}, page, 'Site')).toBe('A citação.');
-    expect(pageDescription({}, '# Título\n\nTexto.\n', 'Site')).toBe('Site');
+  test('prefere o frontmatter e depois a citação sob o título', () => {
+    expect(pageDescription({ description: ' Do frontmatter. ' }, page)).toBe(
+      'Do frontmatter.',
+    );
+    expect(pageDescription({}, page)).toBe('A citação.');
   });
 
-  test('ignora um description vazio ou que não é texto', () => {
-    expect(pageDescription({ description: '  ' }, page, 'Site')).toBe(
-      'A citação.',
+  test('é undefined sem as duas, e ignora um description vazio ou que não é texto', () => {
+    expect(pageDescription({}, '# Título\n\nTexto.\n')).toBeUndefined();
+    expect(pageDescription({ description: '  ' }, page)).toBe('A citação.');
+    expect(pageDescription({ description: 3 }, page)).toBe('A citação.');
+  });
+});
+
+describe('checkDescription', () => {
+  test('devolve uma descrição de DESCRIPTION_MIN a DESCRIPTION_MAX caracteres', () => {
+    expect(checkDescription('x.md', sized(DESCRIPTION_MIN))).toBe(
+      sized(DESCRIPTION_MIN),
     );
-    expect(pageDescription({ description: 3 }, page, 'Site')).toBe(
-      'A citação.',
+    expect(checkDescription('x.md', sized(DESCRIPTION_MAX))).toBe(
+      sized(DESCRIPTION_MAX),
     );
+  });
+
+  test('nomeia a página quando falta a citação, ou ela é curta ou longa demais', () => {
+    expect(() => checkDescription('guias/x.md', undefined)).toThrow(
+      'guias/x.md: falta a descrição',
+    );
+    expect(() => checkDescription('x.md', sized(DESCRIPTION_MIN - 1))).toThrow(
+      'x.md: a descrição tem 99 caracteres',
+    );
+    expect(() => checkDescription('x.md', sized(DESCRIPTION_MAX + 1))).toThrow(
+      'tem 161 caracteres, e deve ter de 100 a 160',
+    );
+  });
+});
+
+describe('as páginas do site', () => {
+  const courses = readdirSync('guides').filter((module) =>
+    existsSync(`guides/${module}/README.md`),
+  );
+
+  test.each(courses)(
+    'o curso %s abre com uma descrição de 100 a 160 caracteres',
+    (module) => {
+      const page = guidePage({
+        module,
+        markdown: read(`guides/${module}/README.md`),
+      });
+      expect(() =>
+        checkDescription(module, pageDescription({}, page)),
+      ).not.toThrow();
+    },
+  );
+
+  test('a página dos cursos, a dos comandos, os primeiros passos e a home também', () => {
+    const pages = {
+      cursos: guidesIndexPage([]),
+      comandos: commandsPage({}),
+      'primeiros-passos': read('docs/primeiros-passos.md'),
+    };
+    for (const [name, markdown] of Object.entries(pages)) {
+      expect(() =>
+        checkDescription(name, pageDescription({}, markdown)),
+      ).not.toThrow();
+    }
+    expect(() => checkDescription('home', SITE_DESCRIPTION)).not.toThrow();
   });
 });
 

@@ -2,6 +2,8 @@
 
 # Módulo input: para que ele existe
 
+> O módulo `input` é o único leitor do stdin do Choliba: entrega o que chegou como texto, inteiro ou em pedaços, e deixa o sentido do texto para os adapters.
+
 Todo processo nasce com um **stdin**: o canal por onde chega o que alguém digita, o que veio por um pipe (`echo oi | bun …`) ou o que a CLI manda para um hook. O módulo `input` é **o único leitor do stdin**, e só faz isso: entrega o que chegou, como texto, **inteiro** ou **em pedaços**.
 
 O que o texto quer dizer (uma tecla, uma linha, uma mensagem, um comando) não é assunto dele. Isso é dos [adapters](../adapters/README.md), que leem o stdin por aqui e transformam o que chega em eventos para a [conversa](../interaction/README.md).

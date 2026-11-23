@@ -2,6 +2,8 @@
 
 # Módulo execute: para que ele existe
 
+> Um programa só roda pelo módulo `execute`: sem shell no meio, com stdout e stderr lidos enquanto roda, com parada a pedido e com a falha virando um erro tratável.
+
 Rodar um programa tem detalhes que ninguém deveria resolver duas vezes: passar os argumentos sem um shell no meio, ler stdout e stderr enquanto o programa roda, parar quando pedem, e transformar um programa que falhou num erro que dá para tratar. No Choliba, **um programa só roda por aqui**.
 
 O centro do módulo é o **`Executor`**: ele recebe um **`ProgramCommand`** (o programa, os argumentos, a entrada) e devolve **o que o programa imprime**, em pedaços, à medida que imprime.

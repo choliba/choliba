@@ -6,6 +6,7 @@ import { defineConfig } from 'vitepress';
 
 import {
   type BuiltPage,
+  checkDescription,
   faviconLink,
   googleAnalyticsTags,
   mainLandmarkMessage,
@@ -15,6 +16,7 @@ import {
   publishedTime,
   robotsTxt,
   shareTags,
+  SITE_DESCRIPTION,
   SITE_URL,
   websiteJsonLd,
 } from '../../scripts/docs-seo';
@@ -29,8 +31,6 @@ const REPOSITORY = 'https://github.com/choliba/choliba';
 const GOOGLE_ANALYTICS = 'G-TMCFNCED9F';
 
 const TITLE = 'Choliba';
-const DESCRIPTION =
-  'Roda agentes de código (Claude Code, Codex, Cursor e modelos locais pelo Ollama) a partir de scripts TypeScript, sempre dentro de uma sandbox.';
 
 /** When this build publishes the site: each release builds it again, so every publication has its own date. */
 const PUBLISHED = publishedTime(new Date());
@@ -48,7 +48,7 @@ function builtPages(outDir: string): BuiltPage[] {
 export default defineConfig({
   lang: 'pt-BR',
   title: TITLE,
-  description: DESCRIPTION,
+  description: SITE_DESCRIPTION,
   base: '/',
   cleanUrls: true,
   lastUpdated: true,
@@ -57,13 +57,15 @@ export default defineConfig({
   // O cartão de compartilhamento de cada página (Open Graph, o card do X, o autor e a data do artigo e a URL canônica)
   // vai no `head` do frontmatter: a página buildada o tem, e o VitePress o troca quando um link abre outra página, o
   // que não faz com o que o transformHead acrescenta. Nenhuma página tem `head` próprio; ele seria substituído.
-  // A descrição é a do frontmatter, a citação sob o título ou, na falta das duas, a do site.
+  // A descrição é a do frontmatter ou a citação sob o título; a home tem a do site. Uma página sem ela, ou com uma curta
+  // ou longa demais, reprova o build (scripts/docs-seo.ts).
   transformPageData(pageData) {
     const markdown = readFileSync(path.join(DOCS, pageData.filePath), 'utf8');
-    const description = pageDescription(
-      pageData.frontmatter,
-      markdown,
-      DESCRIPTION,
+    const description = checkDescription(
+      pageData.filePath,
+      pageData.relativePath === 'index.md'
+        ? SITE_DESCRIPTION
+        : pageDescription(pageData.frontmatter, markdown),
     );
     const card = shareTags({
       siteName: TITLE,

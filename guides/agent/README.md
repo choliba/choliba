@@ -2,6 +2,8 @@
 
 # Módulo agent: para que ele existe
 
+> O módulo `agent` junta as peças de um agente: uma CLI de código trabalhando numa tarefa, dentro de uma sandbox, conversando com alguém. Nenhuma depende dele.
+
 Um **agente** é uma CLI de código (Claude Code, Codex, Cursor, um modelo local pelo Ollama) trabalhando numa tarefa, dentro de uma sandbox, conversando com alguém. O módulo `agent` é **quem junta as peças**, e nenhuma delas depende dele:
 
 | Peça          | De onde vem                                   | O que diz                                 |

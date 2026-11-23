@@ -16,6 +16,10 @@ export type HeadTag = [
 /** Where the site is published; the share tags need absolute URLs. */
 export const SITE_URL = 'https://choliba.github.io';
 
+/** What the site is: the description of its home, and the one of the pages that have none. */
+export const SITE_DESCRIPTION =
+  'Roda agentes de código (Claude Code, Codex, Cursor e modelos locais pelo Ollama) a partir de scripts TypeScript, sempre dentro de uma sandbox.';
+
 /** Who writes the site, for `article:author` and `<meta name="author">`. */
 const AUTHOR = 'choliba';
 
@@ -79,19 +83,47 @@ export function quoteUnderTitle(markdown: string): string | undefined {
   return lines.map((line) => plainText(line.replace(/^>\s?/, ''))).join(' ');
 }
 
+/** A description shorter than this gets a warning from LinkedIn. */
+export const DESCRIPTION_MIN = 100;
+/** A description longer than this is cut by search engines (and X cuts at 200). */
+export const DESCRIPTION_MAX = 160;
+
 /**
- * A page's description: the one in its frontmatter, otherwise the quote under
- * its title, otherwise `fallback` (the site's). The pages generated from
- * `guides/` and the commands have no quote, so they get the site's.
+ * A page's own description: the one in its frontmatter, otherwise the quote
+ * under its title; `undefined` when it has neither.
  */
 export function pageDescription(
   frontmatter: Readonly<Record<string, unknown>>,
   markdown: string,
-  fallback: string,
-): string {
+): string | undefined {
   const own = frontmatter['description'];
   if (typeof own === 'string' && own.trim() !== '') return own.trim();
-  return quoteUnderTitle(markdown) ?? fallback;
+  return quoteUnderTitle(markdown);
+}
+
+/**
+ * `description` as the description of `page`, or an error that names the
+ * page: it must exist and fit between `DESCRIPTION_MIN` and `DESCRIPTION_MAX`
+ * characters, so no card or search result has to cut it or repeat the site's.
+ */
+export function checkDescription(
+  page: string,
+  description: string | undefined,
+): string {
+  if (description === undefined) {
+    throw new Error(
+      `${page}: falta a descrição, uma citação (> …) logo abaixo do título`,
+    );
+  }
+  if (
+    description.length < DESCRIPTION_MIN ||
+    description.length > DESCRIPTION_MAX
+  ) {
+    throw new Error(
+      `${page}: a descrição tem ${String(description.length)} caracteres, e deve ter de ${String(DESCRIPTION_MIN)} a ${String(DESCRIPTION_MAX)}`,
+    );
+  }
+  return description;
 }
 
 /** `date` in ISO 8601, in UTC and to the second (`2026-10-08T16:28:36Z`), the DateTime of Open Graph. */

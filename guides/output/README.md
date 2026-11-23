@@ -2,6 +2,8 @@
 
 # Módulo output: para que ele existe
 
+> O módulo `output` é o contrato de tudo o que o Choliba mostra, com o stdio como destino padrão, e leva a mesma mensagem a um arquivo, a uma página ou a vários.
+
 Um programa **mostra coisas**: uma resposta, o raciocínio do modelo, um aviso, uma linha de "pensando…". O módulo `output` é **a saída**: o contrato de tudo o que o Choliba mostra e o destino padrão, o **stdio** (stdout e stderr).
 
 O stdio é só um destino. A mesma mensagem pode ir para um arquivo, para uma página web, para a memória de um teste, ou para vários lugares ao mesmo tempo, **sem que quem a escreve saiba disso**:

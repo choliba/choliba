@@ -1,6 +1,6 @@
 # Primeiros passos
 
-Instale o Choliba, escreva um agente de dez linhas e rode-o dentro de uma sandbox.
+> Instale o Choliba, escreva um agente de dez linhas e rode-o dentro de uma sandbox. Você precisa do Bun, de Linux com bwrap ou do Docker e da CLI do agente.
 
 ## Antes de começar
 

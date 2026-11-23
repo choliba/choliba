@@ -2,6 +2,8 @@
 
 # Módulo network: para que ele existe
 
+> O módulo `network` decide para onde a CLI de um agente pode ir na internet: a sandbox fica sem rede e a única saída é um proxy que consulta o gate a cada conexão.
+
 Um agente roda dentro de uma sandbox, e a CLI dele (Claude, Codex) precisa falar com a internet: o modelo, um `npm install`, uma busca. O módulo `network` decide **para onde ela pode ir**, uma conexão de cada vez, pela política do agente.
 
 A ideia é simples: **a sandbox fica sem rede nenhuma**. A única saída é um proxy do Choliba, e o proxy pergunta ao **gate de rede** antes de deixar cada conexão passar. O que não passa pelo proxy não tem para onde ir.

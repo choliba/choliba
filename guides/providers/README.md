@@ -2,6 +2,8 @@
 
 # Módulo providers: ligar o Choliba a uma CLI de agente
 
+> Um provider traduz a conversa do Choliba para uma CLI de agente (Claude Code, Codex, Cursor, Ollama): monta o comando do turno e converte a saída em eventos.
+
 Um provider traduz a conversa do Choliba para uma CLI específica. Ele monta o comando que executa um turno e converte
 a saída da CLI em eventos que o agente entende. Assim, o restante do Choliba trabalha com o mesmo contrato mesmo
 quando Claude Code, Codex, Cursor ou Ollama falam formatos diferentes.
