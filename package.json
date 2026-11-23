@@ -49,7 +49,6 @@
     "docs:dev": "bun run docs:pages && vitepress dev docs",
     "docs:build": "bun run docs:pages && vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "plan:gate": "bun scripts/plan-gate.ts",
     "clear": "bun src/cli/clear.ts",
     "test": "bun test test/",
     "test:cov": "bun test test/ --coverage && bun scripts/coverage-ratchet.ts",
