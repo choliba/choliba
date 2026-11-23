@@ -70,7 +70,7 @@ export function validatePorts(ports: readonly number[]): void {
   }
 }
 
-function pipe(client: Socket, upstream: Socket): void {
+export function pipe(client: Socket, upstream: Socket): void {
   client.on('error', () => upstream.destroy());
   upstream.on('error', () => client.destroy());
   client.pipe(upstream);
