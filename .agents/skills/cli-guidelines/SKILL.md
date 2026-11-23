@@ -23,7 +23,7 @@ comportamento já existe, e apague a linha quando ela fechar.
 - `src/cli/<comando>.ts`: um comando por arquivo (`approvals`, `clear`, `rounds`), definido com `defineCommand` e
   executado por `runCommand` (`src/command`). A declaração (descrição, argumentos, opções) gera o `--help` e o parser;
   o `run` recebe `args`, `options`, `signal` (abortado no Ctrl+C) e `output`.
-- `scripts/*.ts` seguem a mesma forma (`issue`, `plan:gate`).
+- `scripts/*.ts` seguem a mesma forma (`issue`, `git:clean`, `release:notes`).
 - Tudo o que o comando mostra ou pergunta passa por `output` (`src/interaction`) ou por `src/output`; nunca `console`
   nem `process.stdout` (o lint recusa). Ver `AGENTS.md`, "Cada capacidade tem um dono".
 

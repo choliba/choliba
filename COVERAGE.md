@@ -1,15 +1,15 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 23/11/2026 01:00:30: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 23/11/2026 02:10:12: não edite à mão.
 
-Limites (coverage-thresholds.json, só sobem): funções 92.44%, linhas 94.71%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
+Limites (coverage-thresholds.json, só sobem): funções 92.44%, linhas 94.78%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
 ## Resumo
 
 Status|Módulo|% Funcs|% Lines
 --|--|--|--
-🟢|**Total**|92.45|94.71
-🟢|[scripts](scripts)|100.00|98.89
+🟢|**Total**|92.45|94.79
+🟢|[scripts](scripts)|100.00|98.61
 🟢|[src/adapters](src/adapters)|90.84|97.80
 🟢|[src/agent](src/agent)|96.70|95.59
 🟢|[src/approval](src/approval)|84.96|87.88
@@ -29,21 +29,20 @@ Status|Módulo|% Funcs|% Lines
 🟡|[src/output](src/output)|52.94|54.87
 🟢|[src/policy](src/policy)|99.55|99.28
 🟢|[src/providers](src/providers)|94.67|98.98
-🟢|[src/rounds](src/rounds)|93.70|96.24
+🟢|[src/rounds](src/rounds)|93.94|96.71
 🟢|[src/store](src/store)|95.71|94.09
 🟢|[src/workspace](src/workspace)|97.06|96.61
 
 ## Por módulo
 
 <details open>
-<summary>🟢 <b>scripts</b>: 98.89% das linhas, 5 arquivos</summary>
+<summary>🟢 <b>scripts</b>: 98.61% das linhas, 4 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[branches.ts](scripts/branches.ts)|100.00|94.44
 🟢|[coverage-report.ts](scripts/coverage-report.ts)|100.00|100.00
 🟢|[docs.ts](scripts/docs.ts)|100.00|100.00
-🟢|[plan.ts](scripts/plan.ts)|100.00|100.00
 🟢|[release.ts](scripts/release.ts)|100.00|100.00
 
 </details>
@@ -288,7 +287,7 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/rounds</b>: 96.24% das linhas, 32 arquivos</summary>
+<summary>🟢 <b>src/rounds</b>: 96.71% das linhas, 32 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
@@ -306,7 +305,7 @@ Status|Arquivo|% Funcs|% Lines
 🟢|[permissions.ts](src/rounds/permissions.ts)|100.00|100.00
 🟢|[record.ts](src/rounds/record.ts)|100.00|100.00
 🟢|[references.ts](src/rounds/references.ts)|100.00|100.00
-🟢|[resources.ts](src/rounds/resources.ts)|92.31|82.72
+🟢|[resources.ts](src/rounds/resources.ts)|100.00|97.91
 🟢|[rules.ts](src/rounds/rules.ts)|100.00|97.50
 🟢|[run.ts](src/rounds/run.ts)|84.62|92.74
 🟢|[same-choliba.ts](src/rounds/same-choliba.ts)|100.00|95.79
