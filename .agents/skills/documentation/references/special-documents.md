@@ -1,113 +1,88 @@
-# Special documents
+# Documentos especiais
 
 ## README
 
-Source: the Standard Readme specification, <https://github.com/RichardLitt/standard-readme> (`spec.md`).
+Fonte: a especificação Standard Readme, <https://github.com/RichardLitt/standard-readme> (`spec.md`).
 
-The README is the front door. A new reader should know within a minute what the project is, whether it is for
-them, and how to get it running. Unless the project already follows another convention, structure it by the
-Standard Readme specification: sections in this order, optional ones omitted when they do not apply, titles exactly
-as below (translated when the README is in another language, e.g. `Instalação`, `Uso`, `Contribuindo`, `Licença`).
+O README é a porta de entrada. Quem chega deve saber em um minuto o que o projeto é, se é para ele e como pô-lo para
+rodar. Salvo convenção própria, estruture pela Standard Readme: seções nesta ordem, as opcionais omitidas quando não
+se aplicam, com os títulos traduzidos (`Instalação`, `Uso`, `Contribuindo`, `Licença`).
 
-| Section | Status | Rules |
+| Seção | Situação | Regras |
 | --- | --- | --- |
-| Title | required | Matches the repository, folder and package names (or explains the difference in the long description). |
-| Banner | optional | No title; a local image right after the title. |
-| Badges | optional | No title; one per line; each says something (CI, coverage, release, license). |
-| Short description | required | No title; one line, at most 120 characters; the same text as the package's `description` and the repository's description. |
-| Long description | optional | No title; why the project exists and how its parts fit, in a few paragraphs. |
-| Table of Contents | required over 100 lines | Links to every level-2 section after it. |
-| Security | optional | Here when security matters to using the project; otherwise an extra section. |
-| Background | optional | Motivation, abstract dependencies, "See also". |
-| Install | required (not for docs repos) | A code block; a Dependencies subsection for anything installed by hand; an Updating subsection when versions change. |
-| Usage | required (not for docs repos) | A code block of common use; a CLI subsection when there is a CLI. |
-| Extra sections | optional | Custom titles, between Usage and API. |
-| API | optional | Exported functions and objects, or a link to generated API docs. |
-| Maintainers | optional | Titled Maintainer(s); each with a contact. |
-| Thanks | optional | Titled Thanks, Credits or Acknowledgements. |
-| Contributing | required | Where to ask questions, whether PRs are accepted, what they must meet; link CONTRIBUTING and the code of conduct when they exist. |
-| License | required, last | SPDX name (or `UNLICENSED`) and owner; link the license file. |
+| Título | obrigatória | Igual ao nome do repositório, da pasta e do pacote (ou explique a diferença na descrição longa). |
+| Selos | opcional | Sem título; um por linha; cada um diz algo (CI, cobertura, release, licença). |
+| Descrição curta | obrigatória | Sem título; uma linha, até 120 caracteres; o mesmo texto do `description` do pacote e do repositório. |
+| Descrição longa | opcional | Sem título; por que o projeto existe e como as partes se encaixam, em poucos parágrafos. |
+| Índice | obrigatória acima de 100 linhas | Links para cada seção de nível 2 depois dele. |
+| Instalação | obrigatória | Um bloco de código; uma subseção de dependências para o que se instala à mão. |
+| Uso | obrigatória | Um bloco de código do uso comum; uma subseção CLI quando há CLI. |
+| Seções extras | opcional | Títulos próprios, entre Uso e API. |
+| API | opcional | Funções e objetos exportados, ou um link para os cursos. |
+| Contribuindo | obrigatória | Onde perguntar, se aceita PR, o que ele precisa cumprir; links para o CONTRIBUTING quando existir. |
+| Licença | obrigatória, a última | Nome SPDX e dono; link para o arquivo da licença. |
 
-The whole file: valid Markdown, no broken links (anchors, local files and URLs), code examples in the project's own
-style. When a change adds a section, put it in its place in this order and add it to the table of contents.
+O arquivo todo: Markdown válido, sem link quebrado (âncoras, arquivos locais e URLs), exemplos no estilo do projeto.
+Quando uma mudança acrescenta uma seção, ponha-a no lugar certo da ordem e no índice.
 
-Avoid: long feature essays, duplicated reference material, badges that say nothing, instructions that only work
-on the author's machine.
+Evite: ensaios de funcionalidades, referência duplicada, selos que não dizem nada, instruções que só funcionam na
+máquina de quem escreveu.
 
-## Architecture decision record (ADR)
+## ADR (registro de decisão de arquitetura)
 
-Source: Michael Nygard, "Documenting Architecture Decisions" (2011); <https://adr.github.io/>.
+Fonte: Michael Nygard, "Documenting Architecture Decisions" (2011); <https://adr.github.io/>.
 
-Write one when a decision is architecturally significant: it affects structure, non-functional characteristics,
-dependencies, interfaces or construction techniques, and would be costly to reverse.
-
-Template (Nygard):
+Escreva um quando a decisão é significativa para a arquitetura: afeta estrutura, características não funcionais,
+dependências, interfaces ou técnicas de construção, e seria cara de desfazer.
 
 ```markdown
-# <N>. <Short title of the decision>
+# <N>. <Título curto da decisão>
 
-Date: <YYYY-MM-DD>
+Data: <AAAA-MM-DD>
 
 ## Status
 
-Proposed | Accepted | Superseded by [ADR <M>](<file>) | Deprecated
+Proposta | Aceita | Substituída pela [ADR <M>](<arquivo>) | Obsoleta
 
-## Context
+## Contexto
 
-The forces at play: the problem, constraints, requirements and options considered, stated neutrally.
+As forças em jogo: o problema, as restrições, os requisitos e as opções, ditos com neutralidade.
 
-## Decision
+## Decisão
 
-What we decided, in active voice: "We will ...".
+O que decidimos, em voz ativa: "Vamos…".
 
-## Consequences
+## Consequências
 
-What becomes easier and harder as a result — the good, the bad and the trade-offs accepted.
+O que fica mais fácil e mais difícil: o bom, o ruim e as trocas aceitas.
 ```
 
-Rules:
-
-- Number sequentially and keep them together (e.g. `docs/adr/0001-<slug>.md`).
-- One decision per record; short enough to read in a few minutes.
-- Once accepted, do not rewrite it. When the decision changes, write a new ADR that supersedes it and update only
-  the old one's status line with a link. The chain is the history.
+- Numere em sequência e mantenha juntos (`docs/adr/0001-<nome>.md`).
+- Uma decisão por registro, curto o bastante para ler em poucos minutos.
+- Aceita, não se reescreve. Quando a decisão muda, uma ADR nova a substitui e só a linha de status da antiga é
+  alterada, com um link. A cadeia é a história.
 
 ## Changelog
 
-Source: Keep a Changelog, <https://keepachangelog.com/en/1.0.0/>.
+Fonte: Keep a Changelog, <https://keepachangelog.com/pt-BR/1.0.0/>.
 
-- Written for humans, not generated from raw commit messages.
-- Newest version first; each version with its release date; an `Unreleased` section at the top.
-- Changes grouped by type: **Added**, **Changed**, **Deprecated**, **Removed**, **Fixed**, **Security**.
-- Each entry says what changed for the user, not how it was implemented.
-- Say whether the project follows Semantic Versioning; mark breaking changes clearly.
+- Escrito para pessoas, não gerado das mensagens de commit cruas.
+- A versão mais nova primeiro, cada uma com a data; uma seção `Não lançado` no topo.
+- Mudanças por tipo: **Adicionado**, **Alterado**, **Obsoleto**, **Removido**, **Corrigido**, **Segurança**.
+- Cada item diz o que mudou para quem usa, não como foi feito.
+- Diga se o projeto segue o Versionamento Semântico; marque as quebras com clareza.
 
-```markdown
-## [Unreleased]
+No Choliba as notas de cada release são geradas do git, dos títulos dos PRs (skill `git-workflow`): por isso o tipo e o
+escopo do título importam.
 
-### Changed
+## O que os agentes leem
 
-- `--plan` was removed; use `--mode-plan` instead.
+Agentes de código e ferramentas leem a documentação do projeto direto (`AGENTS.md`, as skills de `.agents/skills/`).
+Escreva para um leitor que segue instruções ao pé da letra e não lembra de nenhuma sessão anterior.
 
-## [1.2.0] - 2026-09-24
-
-### Added
-
-- `--since-pending` shortcut for `--since pending`.
-```
-
-## Docs that agents read
-
-Coding agents and tools increasingly read project docs directly (`AGENTS.md`, `CLAUDE.md`-style files, `llms.txt`,
-Markdown served to tools). Write them for a reader that follows instructions literally and has no memory of past
-sessions.
-
-- **Short and specific.** Start small (a few dozen lines) and add a rule only when an agent keeps getting that
-  thing wrong; remove rules that stop being true. Long, generic instruction files measurably hurt agents.
-- **Exact and executable:** real commands, paths and file names, not descriptions of them.
-- **Structured Markdown:** clear headings, lists and tables; one topic per section, so the right part is easy to
-  find and quote.
-- **State the non-obvious:** project rules that differ from common defaults, and why.
-- **Point, don't copy:** link to the detailed docs or skills instead of duplicating them, so there is one source.
-- **`llms.txt`** (for published docs): a curated map of the most useful pages, each with a one-line description
-  written for context, regenerated when the docs change.
+- **Curto e específico.** Comece pequeno e acrescente uma regra só quando um agente erra aquilo de novo; tire as que
+  deixam de ser verdade. Arquivo de instruções longo e genérico atrapalha o agente.
+- **Exato e executável:** comandos, caminhos e nomes de arquivo de verdade, não descrições deles.
+- **Markdown estruturado:** títulos, listas e tabelas; um assunto por seção, para achar e citar a parte certa.
+- **Diga o que não é óbvio:** as regras do projeto que diferem do padrão comum, e por quê.
+- **Aponte, não copie:** ligue para os cursos ou skills detalhados em vez de duplicá-los.

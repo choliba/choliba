@@ -16,8 +16,13 @@ runs:
     - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/.bun/install/cache
-        key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+        key: bun-${{ runner.os }}-${{ hashFiles('bun.lock', 'src/rounds/web/bun.lock') }}
 
     - name: Instalar dependências
       shell: bash
       run: bun install --frozen-lockfile
+
+    # As páginas das rodadas têm o próprio package.json e o próprio lockfile (o typecheck e o pacote as usam).
+    - name: Instalar as dependências das páginas das rodadas
+      shell: bash
+      run: bun install --frozen-lockfile --cwd src/rounds/web

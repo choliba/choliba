@@ -1,0 +1,42 @@
+/**
+ * Exemplo 1 do curso de config: um choliba.config.ts e o que `loadConfig`
+ * devolve. Cria um projeto temporário, carrega e apaga.
+ */
+import { randomUUID } from 'node:crypto';
+
+import { loadConfig } from '../../../src/config/index';
+import { environment } from '../../../src/execute/process';
+import {
+  ensureDirectory,
+  join,
+  removePath,
+  writeText,
+  cholibaCacheDir,
+} from '../../../src/filesystem/index';
+import { writeOut } from '../../../src/output/stdio';
+
+const project = join(
+  cholibaCacheDir(environment()),
+  'config-exemplo',
+  randomUUID(),
+);
+ensureDirectory(project);
+writeText(
+  join(project, 'choliba.config.ts'),
+  `export default {
+  debug: true,
+  logger: { dir: 'storage/logs' },
+  database: { dir: 'storage/db', name: 'agentes.db' },
+  workspaces: { dir: 'storage/workspaces', homes: 'storage/homes' },
+};
+`,
+);
+
+try {
+  const config = await loadConfig({ cwd: project });
+  writeOut(
+    `${JSON.stringify(config, null, 2).replaceAll(project, '<projeto>')}\n`,
+  );
+} finally {
+  removePath(project);
+}

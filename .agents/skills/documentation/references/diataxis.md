@@ -1,55 +1,53 @@
-# Diátaxis in practice
+# Diátaxis na prática
 
-Source: <https://diataxis.fr/>. Diátaxis sorts documentation by the reader's need along two axes — *acquiring*
-skill vs. *applying* it, and *doing* vs. *knowing* — which gives four types. Each type has its own purpose, form
-and failure modes.
+Fonte: <https://diataxis.fr/>. A Diátaxis separa a documentação pela necessidade do leitor em dois eixos, *adquirir*
+habilidade ou *aplicá-la*, e *fazer* ou *saber*, o que dá quatro tipos. Cada um tem propósito, forma e defeitos típicos.
 
-## Tutorial — learning by doing
+## Tutorial: aprender fazendo
 
-- **For:** a newcomer who wants to become able to work with the project.
-- **Form:** a lesson with one path, concrete steps, and a visible result at every stage ("you should now see...").
-  The author is responsible for the reader's success, so the path must be safe and tested.
-- **Avoid:** offering choices, explaining theory mid-lesson, depending on things the reader has not set up.
-- **Smell:** "Alternatively, you can..." — that belongs in a how-to guide.
+- **Para:** quem chega e quer ficar capaz de trabalhar com o projeto.
+- **Forma:** uma lição com um caminho só, passos concretos e um resultado visível a cada etapa ("agora você deve ver…").
+  Quem escreve responde pelo sucesso do leitor, então o caminho é seguro e testado.
+- **Evite:** oferecer escolhas, explicar teoria no meio da lição, depender do que o leitor não preparou.
+- **Sintoma:** "Como alternativa, você pode…": isso é de um guia prático.
 
-## How-to guide — getting a task done
+## Guia prático: resolver uma tarefa
 
-- **For:** someone who already knows the basics and has a goal ("add a new agent", "rotate the API key").
-- **Form:** title as the goal, prerequisites, numbered steps, the expected outcome. Real-world conditions and
-  variations are fine; teaching is not.
-- **Avoid:** explaining concepts from scratch (link to the explanation instead); covering every option (that is
-  reference).
-- **Smell:** paragraphs of background before the first step.
+- **Para:** quem já sabe o básico e tem um objetivo ("rodar um agente com o codex", "aprovar um comando negado").
+- **Forma:** o título é o objetivo, depois os pré-requisitos, passos numerados e o resultado esperado. Condições do
+  mundo real e variações cabem; ensinar não.
+- **Evite:** explicar conceitos do zero (ligue para a explicação); cobrir toda opção (isso é referência).
+- **Sintoma:** parágrafos de contexto antes do primeiro passo.
 
-## Reference — looking things up
+## Referência: consultar
 
-- **For:** someone in the middle of work who needs an exact fact: a flag, a field, a default, an error.
-- **Form:** mirrors the structure of the thing described (one section per command, one row per field); complete,
-  accurate, neutral, consistent in shape. Tables and lists fit well.
-- **Avoid:** instructions and opinions; incomplete lists ("some of the options are...").
-- **Smell:** a reference entry that needs a story to make sense — the story is an explanation.
+- **Para:** quem está no meio do trabalho e precisa de um fato exato: uma opção, um campo, um padrão, um erro.
+- **Forma:** espelha a estrutura da coisa descrita (uma seção por comando, uma linha por campo); completa, exata,
+  neutra e regular. Tabelas e listas servem bem.
+- **Evite:** instruções e opiniões; listas incompletas ("algumas das opções são…").
+- **Sintoma:** uma entrada de referência que precisa de uma história para fazer sentido: a história é explicação.
 
-## Explanation — understanding
+## Explicação: entender
 
-- **For:** someone who wants to know why things are the way they are.
-- **Form:** discursive: context, history, design decisions, trade-offs, alternatives considered, how the parts fit.
-  Can hold opinions and connect topics.
-- **Avoid:** step-by-step instructions and exhaustive facts.
-- **Smell:** a numbered list of commands — that is a how-to guide.
+- **Para:** quem quer saber por que as coisas são como são.
+- **Forma:** discursiva: contexto, história, decisões de desenho, trocas, alternativas, como as partes se encaixam.
+  Pode ter opinião e ligar assuntos.
+- **Evite:** passo a passo e fatos exaustivos.
+- **Sintoma:** uma lista numerada de comandos: isso é um guia prático.
 
-## Classifying an existing page
+## Classificando uma página que já existe
 
-Ask of each section: is the reader *doing* or *thinking*? Are they *learning* or *working*? Sections that answer
-differently belong in different pages. Split them and cross-link ("To understand why, see ...", "For every
-option, see ...").
+Pergunte de cada seção: o leitor está *fazendo* ou *pensando*? *Aprendendo* ou *trabalhando*? Seções que respondem
+diferente pertencem a páginas diferentes. Separe e ligue ("para entender por quê, veja…", "para todas as opções,
+veja…").
 
-## Mapping to a small project
+## Num projeto pequeno
 
-Small projects rarely need four separate trees. A common, honest shape:
+Projeto pequeno raramente precisa de quatro árvores. Um formato honesto e comum:
 
-- `README.md` — a quick start (a tiny tutorial) plus links;
-- one page per area, each organized as how-to sections with a reference section (tables of commands, flags,
-  config keys) at the end;
-- explanation where a design is non-obvious, often as ADRs.
+- `README.md`: um começo rápido (um tutorial pequeno) e links;
+- uma página por área, cada uma em seções de guia prático com uma seção de referência no fim (tabelas de comandos,
+  opções, chaves);
+- explicação onde o desenho não é óbvio, em geral como ADR.
 
-What matters is that each *section* has one type, not that the folder tree has four branches.
+O que importa é que cada *seção* tenha um tipo, não que a árvore de pastas tenha quatro ramos.

@@ -1,10 +1,21 @@
-[run]
-silent = true
-
-# O scanner (@bun-security-scanner/osv) não fica ativo aqui. Com ele ligado, o
-# bun install aborta enquanto vite 5 (CVE-2026-53571) e braces 3.0.3
-# (CVE-2026-93687) não tiverem release corrigida. O CI grava o bloco abaixo
-# só depois do install e roda `bun pm scan`.
-#
-# [install.security]
-# scanner = "@bun-security-scanner/osv"
+# Cobertura dos testes (bun run test:cov). O Bun só mede e escreve o lcov; os
+# limites (que só sobem) ficam em coverage-thresholds.json, conferidos pelo
+# scripts/coverage-ratchet.ts. Sem coverageThreshold aqui: o do Bun vale para
+# cada arquivo, não para o total. Veja .agents/skills/coverage-ratchet.
+[test]
+# The developer's CHOLIBA_* variables (.env) do not reach the tests.
+preload = ["./test/support/env.ts"]
+coverageReporter = ["text", "lcov"]
+coverageDir = "coverage"
+coverageSkipTestFiles = true
+# Fora da conta: o que não é o produto. Os testes e o que eles criam em
+# pastas temporárias, os exemplos (guides/), as ferramentas dos agentes do
+# projeto (tools/) e os arquivos de configuração do projeto.
+coveragePathIgnorePatterns = [
+  "../**",
+  "test/**",
+  "tools/**",
+  "guides/**",
+  "config/**",
+  "choliba.config.ts",
+]

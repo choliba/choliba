@@ -1,0 +1,2445 @@
+/*
+ * The rounds' pages: the layout of the old docs/rodadas pages (guava,
+ * violet and leaf lanes, IBM Plex), now for any number of lanes.
+ */
+:root {
+  --bg: #fbf7f7;
+  --surface: #ffffff;
+  --ink: #2a1f23;
+  --muted: #6f5f65;
+  --line: #e7dadd;
+  --guava: #c93d5f; /* first actor, and the page accent */
+  --violet: #5552c9; /* second actor */
+  --leaf: #3b7a37; /* third actor */
+  --amber: #a5670a;
+  --sky: #1f6f99;
+  --you: #4b3e43; /* a person answering */
+  --warn: #b9450f;
+  --warn-bg: #fdf0e8;
+  --code-bg: #f4ecee;
+  --ok-bg: #eaf4e8;
+  --amber-bg: #fbf1df;
+  --sky-bg: #e6f1f7;
+  --display: 'IBM Plex Sans Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #161113;
+    --surface: #201a1d;
+    --ink: #f1e8ea;
+    --muted: #b3a2a8;
+    --line: #3a2e33;
+    --guava: #f17a95;
+    --violet: #a3a1ff;
+    --leaf: #86c77d;
+    --amber: #e9b04f;
+    --sky: #7cc4ea;
+    --you: #d8cbd0;
+    --warn: #ff9a5c;
+    --warn-bg: #3a2218;
+    --code-bg: #2c2327;
+    --ok-bg: #1d2a1b;
+    --amber-bg: #33280f;
+    --sky-bg: #142a36;
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --bg: #161113;
+  --surface: #201a1d;
+  --ink: #f1e8ea;
+  --muted: #b3a2a8;
+  --line: #3a2e33;
+  --guava: #f17a95;
+  --violet: #a3a1ff;
+  --leaf: #86c77d;
+  --amber: #e9b04f;
+  --sky: #7cc4ea;
+  --you: #d8cbd0;
+  --warn: #ff9a5c;
+  --warn-bg: #3a2218;
+  --code-bg: #2c2327;
+  --ok-bg: #1d2a1b;
+  --amber-bg: #33280f;
+  --sky-bg: #142a36;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+html {
+  /* Everything 10% larger, the same as one Ctrl + in the browser: the sizes
+     below are in px, and this scales them all alike. */
+  zoom: 1.1;
+  scroll-behavior: smooth;
+  /* The scrollbar's room stays when a modal locks the page: no jump. */
+  scrollbar-gutter: stable;
+}
+/* While a modal is open, the page under it does not scroll: the wheel and
+   the keys scroll the modal. */
+html:has(dialog.modal[open]) {
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.55 var(--body);
+}
+a {
+  color: var(--guava);
+}
+:focus-visible {
+  outline: 2px solid var(--guava);
+  outline-offset: 2px;
+}
+.page {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding-block: 32px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  gap: 36px;
+}
+.muted {
+  color: var(--muted);
+}
+
+header {
+  display: grid;
+  gap: 10px;
+  max-width: 72ch;
+}
+header p {
+  margin: 0;
+}
+/* A round's heading: its test (a link) over "Rodada 7 de 7" */
+.round-test {
+  font-size: 14px;
+}
+/* When it ran and for how long, on one line */
+.round-when {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+}
+/* Where it started and its configuration, each between rules */
+.round-facts {
+  margin: 4px 0 0;
+  border-top: 1px solid var(--line);
+}
+.round-facts div {
+  display: grid;
+  gap: 2px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.round-facts dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+.round-facts dd {
+  margin: 0;
+}
+.round-facts code {
+  font: 14px var(--mono);
+}
+.round-facts dd p {
+  margin: 4px 0 0;
+}
+.round-facts dd p.muted {
+  font-size: 13.5px;
+}
+/* The starting point's facts: question on the left, answer on the right */
+.fact-list {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 14px;
+  margin: 2px 0 0;
+}
+.fact-list dt {
+  color: var(--muted);
+}
+.fact-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 520px) {
+  .fact-list {
+    grid-template-columns: 1fr;
+  }
+  .fact-list dd {
+    margin-bottom: 6px;
+  }
+}
+.eyebrow {
+  font: 500 12px/1.3 var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--guava);
+}
+h1 {
+  font: 700 clamp(28px, 4vw, 40px)/1.08 var(--display);
+  margin: 0;
+  text-wrap: balance;
+}
+h2 {
+  font: 600 20px/1.2 var(--display);
+  margin: 0;
+}
+h3 {
+  font: 600 16px/1.25 var(--display);
+  margin: 0;
+}
+code {
+  font: 0.88em/1.4 var(--mono);
+  background: var(--code-bg);
+  padding: 1px 5px;
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+pre {
+  font: 12.5px/1.5 var(--mono);
+  background: var(--code-bg);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 360px;
+  overflow: auto;
+}
+ul,
+ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.block {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.note {
+  margin: 0;
+  color: var(--muted);
+  max-width: 72ch;
+}
+.note.warn {
+  color: var(--warn);
+}
+
+/*
+ * The top of every page. Above: the site's name and the list of every
+ * test, the same on every page. Below: the recent tests, like tabs.
+ */
+.topbar {
+  display: grid;
+  gap: 0;
+  /* A header, but the page's width: the text one is for the page heading. */
+  max-width: none;
+  border-bottom: 1px solid var(--line);
+}
+.topbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+}
+.brand {
+  font: 700 22px/1 var(--display);
+  color: var(--ink);
+  text-decoration: none;
+}
+a.brand:hover {
+  color: var(--guava);
+}
+/* The top bar's actions: create a round, every test */
+.topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+a.all-tests-button {
+  text-decoration: none;
+}
+.all-tests-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 14px/1 var(--body);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.all-tests-button:hover,
+.all-tests-button:focus-visible {
+  border-color: var(--guava);
+}
+.rounds-count {
+  font: 500 12px/1 var(--mono);
+  color: var(--muted);
+  background: var(--code-bg);
+  border-radius: 999px;
+  padding: 3px 7px;
+}
+.recent {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  min-width: 0;
+}
+.recent-label {
+  align-self: center;
+  font: 13px var(--body);
+  color: var(--muted);
+  white-space: nowrap;
+  padding: 4px 0;
+  text-decoration: none;
+}
+.recent-label:hover,
+.recent-label:focus-visible {
+  color: var(--guava);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.recent ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.recent a,
+.recent [aria-current] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 9px;
+  border-bottom: 3px solid transparent;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.recent a:hover,
+.recent a:focus-visible {
+  border-bottom-color: var(--line);
+}
+.recent [aria-current] {
+  border-bottom-color: var(--guava);
+  font-weight: 600;
+}
+th small,
+.crumbs small {
+  display: block;
+  font: 500 11px/1.3 var(--mono);
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Tables */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 760px;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+th,
+td {
+  text-align: left;
+  vertical-align: top;
+  padding: 10px 14px;
+  border-top: 1px solid var(--line);
+}
+thead th {
+  border-top: 0;
+  font: 600 12px/1.2 var(--mono);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+tbody th {
+  font-weight: 600;
+}
+td a {
+  white-space: nowrap;
+}
+tbody th a {
+  color: var(--ink);
+  text-decoration: none;
+}
+tbody th a:hover {
+  color: var(--guava);
+}
+tr.total th,
+tr.total td {
+  font-weight: 600;
+  border-top: 2px solid var(--line);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.filters label {
+  display: grid;
+  gap: 4px;
+  font: 500 12px/1 var(--mono);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.filters select,
+.filters input {
+  box-sizing: border-box;
+  height: 36px;
+  font: 14px var(--body);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
+  min-width: 160px;
+}
+/* A number filter: the comparison and the amount, side by side */
+.filters .number-filter-inputs {
+  display: flex;
+  gap: 4px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.filters .number-filter select {
+  min-width: 0;
+}
+.filters .number-filter input {
+  min-width: 0;
+  width: 88px;
+}
+.filters input[aria-invalid='true'] {
+  border-color: var(--warn);
+}
+/* The bar's buttons stand at the fields' height, on their line */
+.filters .filters-clear,
+.filters .filters-fields {
+  align-self: end;
+  box-sizing: border-box;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+/* The gear: a square button, its icon centered */
+.filters .filters-fields {
+  width: 36px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+}
+/* The fields' modal: one checkbox per field */
+.filter-fields {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px 16px;
+}
+.filter-fields label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+/* Rules */
+.rules {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.rules li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: baseline;
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.rules li.failed {
+  background: var(--warn-bg);
+  border-color: color-mix(in srgb, var(--warn) 35%, transparent);
+}
+.rules .asked {
+  flex-basis: 100%;
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.rules .asked li {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.rules .asked pre {
+  margin: 0;
+  padding: 8px 10px;
+  background: var(--code-bg);
+  border-radius: 6px;
+  font: 12.5px/1.45 var(--mono);
+  white-space: pre-wrap;
+}
+/* A section heading with counts beside it that open their lists */
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 10px;
+}
+.section-head h2 {
+  margin-right: 4px;
+}
+.count-toggle {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font: 500 13px/1.4 var(--body);
+  padding: 3px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--status);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--status) 45%, transparent);
+}
+.count-toggle b {
+  font: 600 13px/1.4 var(--mono);
+}
+.count-toggle::after {
+  content: '▸';
+  font-size: 11px;
+}
+.count-toggle[aria-expanded='true'] {
+  background: var(--status-bg);
+}
+.count-toggle[aria-expanded='true']::after {
+  content: '▾';
+}
+.count-toggle:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.count-toggle:disabled::after {
+  content: none;
+}
+
+/* Each actor's configuration */
+.actors {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.actor {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.actor dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  font-size: 13.5px;
+}
+.actor dt {
+  color: var(--muted);
+}
+.actor dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.changes {
+  display: grid;
+  gap: 8px;
+}
+.changes ul {
+  display: grid;
+  gap: 4px;
+}
+
+/* Lanes: one column per lane (--lanes), sticky on top. */
+.lanes,
+.flow,
+.guides {
+  display: grid;
+  grid-template-columns: repeat(var(--lanes, 4), minmax(0, 1fr));
+  column-gap: 16px;
+}
+.lanes {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+  padding-block: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.lane-head {
+  display: grid;
+  gap: 2px;
+  text-align: center;
+  min-width: 0;
+}
+.lane-head b {
+  font: 600 16px/1.2 var(--display);
+  color: var(--c);
+}
+.lane-head span {
+  font: 12px/1.3 var(--mono);
+  color: var(--muted);
+}
+
+/* Flow */
+.flow-wrap {
+  position: relative;
+  display: grid;
+}
+.guides {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.guides i {
+  justify-self: center;
+  width: 0;
+  border-left: 1px dashed var(--line);
+}
+.flow {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.scene {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--c, var(--line));
+  border-radius: 8px;
+  padding: 12px 14px 14px;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  scroll-margin-top: 90px;
+  margin-block: 6px;
+}
+/* The whole card is a button that opens the step in a modal (Flow.tsx) */
+.scene:hover {
+  border-color: var(--c, var(--line));
+}
+.scene-open {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  min-width: 0;
+}
+.scene-open .quote {
+  /* The start of what it said: three lines, the rest in the modal. */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.scene-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+/* A step in full, in its modal */
+.step-details {
+  display: grid;
+  gap: 16px;
+}
+.step-details section {
+  display: grid;
+  gap: 8px;
+}
+.step-details h3 {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font: 600 16px/1.3 var(--display);
+}
+.step-details pre {
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--code-bg);
+  border-radius: 6px;
+  font: 12.5px/1.5 var(--mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* A list of tool calls: its heading, with "expand / collapse all" beside it */
+.tool-list-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+}
+.step-details .tools {
+  max-height: none;
+  margin: 0;
+  padding-left: 24px;
+}
+.scene.script {
+  border-style: dashed;
+  border-top-width: 1px;
+  background: transparent;
+}
+.scene.warn {
+  border-color: var(--warn);
+  border-top-color: var(--c, var(--warn));
+  box-shadow: 0 0 0 1px var(--warn) inset;
+}
+.scene-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.scene-num {
+  font: 500 12px/1 var(--mono);
+  color: var(--muted);
+}
+.scene-who {
+  font: 600 12px/1 var(--mono);
+  color: var(--c, var(--muted));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.scene h3 {
+  flex-basis: 100%;
+  text-wrap: balance;
+}
+.scene p {
+  margin: 0;
+}
+.scene ul {
+  padding-left: 18px;
+  display: grid;
+  gap: 2px;
+}
+.scene.you-line p {
+  font-family: var(--mono);
+}
+.facts {
+  font: 12.5px/1.4 var(--mono);
+  color: var(--muted);
+}
+.context-use {
+  display: grid;
+  gap: 4px;
+  font: 12.5px/1.45 var(--mono);
+  color: var(--muted);
+}
+.context-use p {
+  margin: 0;
+}
+.context-use > p:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.context-use.warn > p:first-child {
+  color: var(--warn);
+}
+.context-use meter {
+  width: 120px;
+  height: 8px;
+}
+.context-advice {
+  font: 13.5px/1.5 var(--body);
+  color: var(--ink);
+  background: var(--warn-bg);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+.context-advice ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+.context-advice code {
+  font: 12.5px var(--mono);
+}
+.tools {
+  font: 12.5px/1.5 var(--mono);
+  max-height: 240px;
+  overflow: auto;
+}
+.tools .error > details > summary,
+.tools .unfinished > details > summary {
+  color: var(--warn);
+}
+.tools summary {
+  cursor: pointer;
+}
+.tool-detail {
+  display: grid;
+  gap: 4px;
+  margin: 4px 0 8px 14px;
+  color: var(--muted);
+}
+.tool-detail pre {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+}
+.tool-detail .tool-message {
+  color: var(--warn);
+}
+.tool-advice {
+  margin: 0;
+  font: 13.5px/1.5 var(--body);
+  color: var(--ink);
+}
+.tool-advice code {
+  font: 12.5px var(--mono);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+.flag {
+  background: var(--warn-bg);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13.5px;
+  display: grid;
+  gap: 2px;
+}
+.flag.ok {
+  background: var(--ok-bg);
+}
+.flag b {
+  color: var(--warn);
+  font: 600 12px/1.2 var(--mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.flag.ok b {
+  color: var(--leaf);
+}
+
+/* Handoffs: an arrow from one lane to another */
+.handoff {
+  position: relative;
+  min-height: 46px;
+  display: grid;
+  align-items: center;
+  min-width: 0;
+}
+.handoff .line {
+  position: absolute;
+  top: 50%;
+  border-top: 1.5px solid var(--muted);
+}
+.handoff .line::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  border: 5.5px solid transparent;
+}
+.handoff.ltr .line::after {
+  right: -2px;
+  border-left: 8px solid var(--muted);
+  border-right: 0;
+}
+.handoff.rtl .line::after {
+  left: -2px;
+  border-right: 8px solid var(--muted);
+  border-left: 0;
+}
+.handoff span {
+  position: relative;
+  justify-self: center;
+  background: var(--bg);
+  padding: 1px 8px;
+  font: 12px/1.35 var(--mono);
+  color: var(--muted);
+  text-align: center;
+  max-width: 92%;
+  transform: translateY(-11px);
+}
+.handoff .mobile-label {
+  display: none;
+}
+.end {
+  grid-column: 1 / -1;
+  justify-self: center;
+  margin-top: 18px;
+  font: 500 12px/1 var(--mono);
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.next {
+  display: grid;
+  gap: 12px;
+  max-width: 72ch;
+}
+.next ol {
+  display: grid;
+  gap: 6px;
+}
+.next p {
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+  .lanes,
+  .guides {
+    display: none;
+  }
+  .flow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .scene,
+  .handoff {
+    grid-column: 1 / -1 !important;
+  }
+  .handoff {
+    min-height: 0;
+    padding-block: 4px;
+    justify-items: center;
+  }
+  .handoff .line,
+  .handoff .desktop-label {
+    display: none;
+  }
+  .handoff span {
+    transform: none;
+  }
+  .handoff .mobile-label {
+    display: inline;
+  }
+}
+
+/* A modal (components/Modal.tsx): every test, a test's rounds */
+.modal {
+  width: min(720px, calc(100vw - 32px));
+  max-height: min(80vh, 720px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--ink);
+}
+.modal.wide {
+  width: min(1000px, calc(100vw - 32px));
+  max-height: 94vh;
+}
+/* Scrolling inside a modal (or its code) stops at its ends: it never
+   passes to the page. */
+.modal,
+.modal .code-block,
+.modal .tools,
+.modal pre {
+  overscroll-behavior: contain;
+}
+.modal::backdrop {
+  background: rgb(22 17 19 / 55%);
+}
+.dialog-body {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+.dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+/* A modal's own actions, in its heading before the × */
+.dialog-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.close {
+  font: 22px/1 var(--body);
+  color: var(--muted);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.close:hover {
+  color: var(--ink);
+  background: var(--code-bg);
+}
+.dialog-body input {
+  font: 15px var(--body);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+.all-tests {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.all-tests a {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+}
+.all-tests a:hover,
+.all-tests a:focus-visible,
+.all-tests a[aria-current] {
+  border-color: var(--guava);
+}
+.all-tests small {
+  font: 500 11px/1.3 var(--mono);
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.all-tests b {
+  font: 600 16px/1.25 var(--display);
+}
+.all-tests span {
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+/* A round's test and its other rounds */
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+/* Under the filter, the test's rounds are part of it: no line of their own */
+.filter-section .crumbs {
+  margin-top: 16px;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.crumbs-test {
+  display: grid;
+  gap: 2px;
+  color: var(--ink);
+  text-decoration: none;
+  font: 600 16px/1.25 var(--display);
+}
+a.crumbs-test:hover {
+  color: var(--guava);
+}
+.crumbs > ol {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.crumbs > ol a,
+.crumbs > ol [aria-current] {
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font: 500 12.5px/1.3 var(--mono);
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--surface);
+}
+.crumbs > ol a:hover {
+  border-color: var(--guava);
+}
+.crumbs > ol [aria-current] {
+  border-color: var(--guava);
+  color: var(--guava);
+}
+
+/* The agents a filter matches, in the index */
+.agent.match {
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--guava);
+  padding-left: 8px;
+}
+.agent.match .muted {
+  color: var(--ink);
+}
+.agent.dim {
+  opacity: 0.45;
+}
+
+/* What changed since the round before, in a test's table */
+.changed {
+  color: var(--guava);
+  font-weight: 500;
+}
+.label {
+  margin: 0 0 4px;
+  font-style: italic;
+  color: var(--ink);
+}
+
+/* Scores: 0 to 5, colored by level */
+.grade {
+  font: 600 13px/1 var(--mono);
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--code-bg);
+  white-space: nowrap;
+}
+/*
+ * Situations, colored the same everywhere (Scores.tsx `Status`): a score, a
+ * badge, an alert or a card's edge takes the pair of its situation.
+ */
+.success {
+  --status: var(--leaf);
+  --status-bg: var(--ok-bg);
+}
+.warning {
+  --status: var(--amber);
+  --status-bg: var(--amber-bg);
+}
+.danger {
+  --status: var(--warn);
+  --status-bg: var(--warn-bg);
+}
+.info {
+  --status: var(--sky);
+  --status-bg: var(--sky-bg);
+}
+.neutral {
+  --status: var(--muted);
+  --status-bg: var(--code-bg);
+}
+.grade.success,
+.grade.warning,
+.grade.danger,
+.grade.info,
+.grade.neutral {
+  color: var(--status);
+  background: var(--status-bg);
+}
+
+/* A short text in the color of its situation */
+.badge {
+  display: inline-block;
+  font: 500 12px/1.4 var(--body);
+  padding: 1px 7px;
+  border-radius: 4px;
+  color: var(--status, var(--muted));
+  background: var(--status-bg, var(--code-bg));
+  border: 1px solid
+    color-mix(in srgb, var(--status, var(--line)) 35%, transparent);
+  white-space: nowrap;
+}
+.alert {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: var(--ink);
+  background: var(--status-bg);
+  border-left: 3px solid var(--status);
+}
+
+/* An agent's score in short: the whole card opens its details (a modal) */
+/* The evaluation's two parts, the round and its agents, each in its frame */
+.score-part {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+/* The round's score, 100%: its parts side by side, each as wide as its weight */
+.score-part-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.score-part-title .grade {
+  font-size: 15px;
+}
+.round-scores {
+  display: grid;
+  gap: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.round-score {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  min-width: 0;
+  padding: 12px 14px;
+  background: var(--surface);
+  /* The share of the score it is: a band in the color of its situation */
+  border-top: 4px solid var(--status, var(--line));
+}
+.round-score + .round-score {
+  border-left: 1px solid var(--line);
+}
+.round-score-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.round-score-label {
+  font: 600 15px/1.2 var(--display);
+}
+.round-score-value {
+  font: 600 22px/1 var(--display);
+  font-variant-numeric: tabular-nums;
+  color: var(--status, var(--ink));
+}
+.round-score-caption {
+  font-size: 13px;
+  color: var(--muted);
+}
+.round-rubric {
+  font-size: 13px;
+}
+.actor-card {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-width: 0;
+  padding: 12px 14px;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--status);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.actor-card:hover {
+  background: color-mix(in srgb, var(--status-bg) 45%, var(--surface));
+}
+.actor-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font: 600 16px/1.2 var(--display);
+}
+.actor-card-head .grade {
+  font-size: 15px;
+}
+.actor-card-dimensions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.actor-card-tally {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* An agent's score in full, in the modal */
+.actor-details {
+  display: grid;
+  gap: 18px;
+}
+.actor-details .grades {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0;
+}
+.actor-details .grades div {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.actor-details .grades dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+.actor-details .grades dd {
+  margin: 0;
+}
+.actor-details .grades .grade {
+  font-size: 20px;
+  padding: 3px 8px;
+}
+.actor-details section {
+  display: grid;
+  gap: 8px;
+}
+.actor-details h3 {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font: 600 16px/1.3 var(--display);
+}
+.actor-details h3 .muted {
+  font: 400 13px/1.3 var(--body);
+}
+.actor-details .tools {
+  padding-left: 24px;
+  max-height: none;
+  margin: 0;
+}
+.criteria-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  border-top: 1px solid var(--line);
+}
+.criteria-rows li {
+  display: grid;
+  grid-template-columns: 3.2em 1fr;
+  gap: 10px;
+  align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+.criteria-rows .grade {
+  justify-self: start;
+}
+.criteria-rows p {
+  margin: 2px 0 0;
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 520px) {
+  .actor-details .grades {
+    grid-template-columns: 1fr;
+  }
+}
+.criteria {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 13.5px;
+}
+.dimension {
+  display: grid;
+  gap: 6px;
+}
+.dimension h4 {
+  margin: 4px 0 0;
+  font: 600 14px/1.3 var(--display);
+}
+
+.scene-key {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.scene .quote {
+  font: 13px/1.5 var(--body);
+  color: var(--ink);
+  border-left: 3px solid var(--c, var(--line));
+  padding-left: 10px;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.actor h3.final {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.actor h3.final .grade {
+  font-size: 15px;
+}
+
+/* A table row that opens its round or test from anywhere on it */
+tr.row-link {
+  cursor: pointer;
+}
+tr.row-link:hover th,
+tr.row-link:hover td {
+  background: var(--code-bg);
+}
+tr.row-link:hover th a {
+  color: var(--guava);
+}
+
+/* XY chart */
+.grid-steps {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  align-items: end;
+  gap: 4px 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.grid-steps legend {
+  grid-column: 1 / -1;
+  padding: 0;
+  margin-bottom: 4px;
+  font: 500 12px/1 var(--mono);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.grid-steps label {
+  position: relative;
+}
+.grid-steps input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.grid-steps span {
+  display: block;
+  min-width: 4.5ch;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: 14px var(--body);
+  text-align: center;
+  cursor: pointer;
+}
+.grid-steps label:first-of-type span {
+  border-radius: 6px 0 0 6px;
+}
+.grid-steps label:last-of-type span {
+  border-radius: 0 6px 6px 0;
+}
+.grid-steps label + label span {
+  border-left: 0;
+}
+.grid-steps input:checked + span {
+  background: var(--guava);
+  border-color: var(--guava);
+  color: var(--surface);
+  font-weight: 600;
+}
+.grid-steps input:focus-visible + span {
+  outline: 2px solid var(--guava);
+  outline-offset: 2px;
+}
+.xy-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 12px;
+}
+.xy-chart .tick line {
+  stroke: var(--line);
+}
+.xy-chart .axis {
+  stroke: var(--muted);
+}
+/* The XY chart's crosshair: dashed while it follows the mouse, solid when
+   pinned; its values sit over the axes */
+.xy-chart .crosshair {
+  pointer-events: none;
+}
+.xy-chart .crosshair line {
+  stroke: var(--muted);
+  stroke-dasharray: 3 3;
+}
+.xy-chart .aim-pinned .crosshair line {
+  stroke: var(--ink);
+  stroke-dasharray: none;
+}
+.xy-chart .crosshair rect {
+  fill: var(--ink);
+}
+.xy-chart .crosshair text {
+  font: 600 11px var(--mono);
+  fill: var(--surface);
+}
+.xy-chart text {
+  font: 11px var(--mono);
+  fill: var(--muted);
+}
+.xy-chart .axis-label {
+  font: 600 12px var(--body);
+  fill: var(--ink);
+}
+.xy-chart circle {
+  fill-opacity: 0.85;
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+.xy-chart .point {
+  cursor: pointer;
+  outline: none;
+}
+.xy-chart .point:hover circle,
+.xy-chart .point:focus-visible circle,
+.xy-chart .point.open circle {
+  fill-opacity: 1;
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+.xy-plot {
+  position: relative;
+}
+.point-card {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  gap: 4px;
+  min-width: 220px;
+  max-width: min(320px, calc(100vw - 32px));
+  padding: 12px 36px 12px 14px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.25);
+  font: 13px/1.4 var(--body);
+}
+.point-card a {
+  color: var(--guava);
+}
+.point-card .close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.point-card .close:hover {
+  background: var(--code-bg);
+  color: var(--ink);
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  font: 13px var(--body);
+  color: var(--muted);
+}
+.legend .swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+/* The machine a round ran on, and its use over time (Resources) */
+.machine {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px 24px;
+  margin: 0 0 16px;
+}
+.machine div {
+  display: grid;
+  gap: 2px;
+}
+.machine dt {
+  font: 600 11px var(--body);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.machine dd {
+  margin: 0;
+  font: 14px var(--body);
+  color: var(--ink);
+}
+.machine dd small {
+  color: var(--muted);
+}
+.sample-chart {
+  margin-top: 12px;
+}
+.sample-plot {
+  position: relative;
+}
+.sample-chart svg {
+  touch-action: none;
+}
+.sample-chart .cursor line {
+  stroke: var(--muted);
+  stroke-dasharray: 3 3;
+}
+.sample-chart .cursor circle {
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+/* The crosshair: pinned by a click, the vertical line is solid; the
+   horizontal line reads a value */
+.sample-chart .cursor.pinned line {
+  stroke: var(--ink);
+  stroke-dasharray: none;
+}
+.sample-chart .cursor.level rect,
+.sample-chart .cursor .time rect {
+  fill: var(--ink);
+}
+.sample-chart .cursor.level text,
+.sample-chart .cursor .time text {
+  font: 600 11px var(--mono);
+  fill: var(--surface);
+}
+.sample-chart svg {
+  cursor: crosshair;
+  border-radius: 6px;
+}
+/* Focused (to move the pinned instant with the arrows): visible, but quiet */
+.sample-chart svg:focus-visible {
+  outline: 1px dashed var(--muted);
+  outline-offset: 2px;
+}
+.chart-hint {
+  margin-top: 4px;
+  font-size: 12.5px;
+}
+.sample-tip {
+  position: absolute;
+  top: 0;
+  /* Beside the cursor, toward the inside of the chart (to-left past the
+     middle): centered on it, it ran off the right edge. */
+  transform: translateX(12px);
+  z-index: 2;
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.25);
+  font: 12.5px/1.4 var(--body);
+  color: var(--ink);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.sample-tip.to-left {
+  transform: translateX(calc(-100% - 12px));
+}
+/* Actor initials above turn numbers, connected along their respective rows. */
+.sample-chart .turn-marks line {
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.sample-chart .turn-marks text {
+  font: 600 7px var(--body);
+}
+.sample-chart .turn-marks .turn-label {
+  fill: var(--amber);
+  font: 600 7px var(--body);
+}
+.sample-chart .turn-marks .actor-label {
+  fill: var(--sky);
+  font: 600 7px var(--body);
+}
+.sample-chart .turn-marks .turn-connector {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.8;
+}
+.sample-chart .turn-marks .actor-connector {
+  fill: none;
+  stroke: var(--sky);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.8;
+}
+.sample-chart .turn-marks .turn line {
+  stroke: var(--amber);
+  opacity: 0.8;
+}
+.sample-chart .turn-marks .turn text {
+  fill: var(--amber);
+}
+.sample-chart .turn-marks .actor line {
+  stroke: var(--sky);
+  opacity: 0.8;
+}
+.sample-chart .turn-marks .actor text {
+  fill: var(--sky);
+}
+.sample-tip .swatch {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+.sample-tip .happened {
+  font-weight: 600;
+  color: var(--ink);
+}
+.sample-chart .marks line {
+  stroke-width: 2;
+}
+
+/* A test's latest rounds on one line, and "Mais (n)" (RecentRounds) */
+.recent-rounds {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+.rounds-cell {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  white-space: nowrap;
+}
+.rounds-cell .recent-rounds {
+  flex-wrap: nowrap;
+}
+.more-rounds {
+  font: 500 13px/1.3 var(--body);
+  color: var(--guava);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.more-rounds:hover,
+.more-rounds:focus-visible {
+  border-color: var(--guava);
+}
+.crumbs .more-rounds {
+  align-self: center;
+}
+
+/* Every round of a test, in the modal (RoundsList) */
+.modal {
+  overflow-y: auto;
+  /* Opened from a table cell, it sits inside it in the DOM: not its type. */
+  white-space: normal;
+  font-size: 15px;
+  font-variant-numeric: normal;
+  cursor: auto;
+}
+.modal a {
+  /* `td a` keeps table links on one line; a modal's links wrap. */
+  white-space: normal;
+}
+.rounds-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.rounds-list a,
+.rounds-list [aria-current] {
+  display: grid;
+  grid-template-columns: 6.5rem 9.5rem 3rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+}
+.rounds-list a:hover,
+.rounds-list a:focus-visible {
+  border-color: var(--guava);
+}
+.rounds-list [aria-current] {
+  border-color: var(--guava);
+}
+.rounds-list .grade {
+  justify-self: start;
+}
+.rounds-list-changes {
+  color: var(--muted);
+  font-size: 13.5px;
+}
+@media (max-width: 640px) {
+  .rounds-list a,
+  .rounds-list [aria-current] {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .rounds-list-changes {
+    grid-column: 1 / -1;
+  }
+}
+
+/* A round's declaration, to copy (CopyDeclaration) */
+.copy-declaration {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.copy-declaration details {
+  flex-basis: 100%;
+}
+.copy-declaration summary {
+  cursor: pointer;
+  color: var(--muted);
+  font: 12.5px var(--mono);
+}
+.copy-declaration pre {
+  margin-top: 8px;
+  max-height: 480px;
+  overflow: auto;
+  padding: 12px;
+  background: var(--code-bg);
+  border-radius: 6px;
+  font: 12.5px/1.5 var(--mono);
+}
+/* The footer of an agent's configuration card: extract it, or read it first */
+.actor:has(.extract-agent) {
+  display: flex;
+  flex-direction: column;
+}
+.actor .extract-agent {
+  display: grid;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+.extract-agent p {
+  margin: 0;
+}
+/* What to do with a copied agent, after "Extrair como agente"; × closes it */
+.extract-hint {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 4px 6px 10px;
+  border-radius: 6px;
+  color: var(--ink);
+  background: var(--sky-bg);
+  border-left: 3px solid var(--sky);
+}
+.extract-hint .close {
+  font-size: 18px;
+  padding: 0 6px;
+}
+.extract-agent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.extract-agent-code {
+  display: grid;
+  gap: 10px;
+}
+.extract-agent-code p {
+  margin: 0;
+  font-size: 13.5px;
+}
+.extract-agent-code .code-block {
+  margin: 0;
+  max-height: calc(94vh - 140px);
+  overflow: auto;
+  padding: 12px;
+  background: var(--code-bg);
+  border-radius: 6px;
+  font: 12.5px/1.5 var(--mono);
+}
+
+/* Colored code (components/CodeBlock.tsx): each token carries both themes'
+   colors, and the page's theme picks one */
+.code-block span {
+  color: var(--shiki-light);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .code-block span {
+    color: var(--shiki-dark);
+  }
+}
+:root[data-theme='dark'] .code-block span {
+  color: var(--shiki-dark);
+}
+
+/* Creating a round: the form, and the declaration it writes beside it */
+.create {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 1100px) {
+  .create {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: start;
+  }
+  .create-output {
+    position: sticky;
+    top: 16px;
+  }
+}
+.create-form {
+  display: grid;
+  gap: 16px;
+}
+.create-form fieldset {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 14px 16px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.create-form legend {
+  padding: 0 6px;
+  font: 600 16px/1.3 var(--display);
+}
+.create-form label {
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+}
+.create-form label .muted {
+  font-size: 12.5px;
+}
+.create-form input,
+.create-form select,
+.create-form textarea {
+  font: 14px/1.4 var(--body);
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+  /* A field takes its column, never more: no intrinsic width pushing out */
+  width: 100%;
+  min-width: 0;
+}
+.create-form input[type='checkbox'] {
+  width: auto;
+}
+.create-form textarea {
+  resize: vertical;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.create-form input:focus-visible,
+.create-form select:focus-visible,
+.create-form textarea:focus-visible {
+  outline: 2px solid var(--guava);
+  outline-offset: 1px;
+}
+.create-output {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.create-output h2 {
+  margin: 0;
+  font: 600 15px/1.3 var(--mono);
+}
+.create-output .code-block {
+  margin: 0;
+  max-height: 75vh;
+  overflow: auto;
+  padding: 12px;
+  background: var(--code-bg);
+  border-radius: 6px;
+  font: 12.5px/1.5 var(--mono);
+}
+.create-problems {
+  margin: 0;
+  padding: 8px 10px 8px 28px;
+  border-radius: 6px;
+  color: var(--ink);
+  background: var(--amber-bg);
+  border-left: 3px solid var(--amber);
+  font-size: 13.5px;
+}
+/* The round's agents: one tab each, the chosen one's fields below */
+.agents {
+  display: grid;
+  gap: 0;
+}
+.agent-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 2px solid var(--line);
+}
+.agent-tab {
+  font: 600 14px/1.3 var(--display);
+  color: var(--muted);
+  background: none;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 6px 6px 0 0;
+  padding: 7px 14px;
+  margin-bottom: -2px;
+  cursor: pointer;
+}
+.agent-tab:hover,
+.agent-tab:focus-visible {
+  color: var(--ink);
+}
+.agent-tab[aria-selected='true'] {
+  color: var(--guava);
+  background: var(--surface);
+  border-color: var(--line);
+  border-bottom: 2px solid var(--surface);
+}
+/* Something to fill in this agent: a dot, so it is found from any tab */
+.agent-tab.has-problems::after {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 6px;
+  vertical-align: middle;
+  border-radius: 50%;
+  background: var(--amber);
+}
+.agent-tab.add {
+  font-weight: 500;
+  color: var(--guava);
+}
+.agent-panel {
+  display: grid;
+  gap: 16px;
+  padding-top: 16px;
+}
+.agent-remove {
+  justify-self: start;
+}
+/* Options seldom changed, folded away */
+.create-more {
+  display: grid;
+  gap: 10px;
+}
+.create-more[open] {
+  padding-bottom: 4px;
+}
+.create-more > summary {
+  font: 500 13.5px/1.3 var(--body);
+  color: var(--guava);
+  cursor: pointer;
+}
+.create-more > label,
+.create-more > p {
+  margin-top: 10px;
+}
+/* The agent's checks said as sentences */
+.criteria-words {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--sky-bg);
+  border-left: 3px solid var(--sky);
+  border-radius: 6px;
+  font-size: 13.5px;
+}
+.criteria-words ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.criteria-words p {
+  margin: 0;
+}
+.create-form fieldset > p {
+  margin: 0;
+  font-size: 13px;
+}
+/* A file criterion: the file, what it checks, what it contains, × */
+.criterion-row {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 3fr) minmax(0, 4fr) auto;
+  gap: 8px;
+  align-items: end;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.criterion-row .close {
+  align-self: end;
+  margin-bottom: 4px;
+}
+.criterion-row input:disabled {
+  opacity: 0.5;
+}
+.create-form > fieldset > .more-rounds {
+  justify-self: start;
+}
+/* The limits of the step: time, tokens and cost, side by side */
+.criterion-limits {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+/* The flow's steps: in order, each an agent (chosen) and its ask */
+.step-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.step-row {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.step-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font: 600 14px/1.3 var(--display);
+}
+.step-row-actions {
+  display: flex;
+  gap: 2px;
+}
+.step-row-actions .close {
+  font-size: 16px;
+  padding: 2px 8px;
+}
+.step-row-actions .close:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.step-row-who {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+  /* The two fields on one line, whatever their labels' heights */
+  align-items: end;
+}
+.step-row label code {
+  font: 12px var(--mono);
+  color: var(--muted);
+  background: var(--code-bg);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.step-row select:disabled {
+  opacity: 0.6;
+}
+/* Commands to tick, in groups, and the typed ones below */
+.command-picker {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+}
+.create-form .command-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 6px 16px;
+  padding: 8px 10px 10px;
+  background: var(--bg);
+  border-radius: 6px;
+}
+.create-form .command-group legend {
+  padding: 0 4px;
+  font: 500 12.5px/1.3 var(--body);
+  color: var(--muted);
+}
+.create-form .command-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+.command-option code {
+  font: 12.5px var(--mono);
+}
+/* Permitido | Não permitido: one pressed at most; pressed again, unmarked */
+.permission-toggle {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  flex: none;
+}
+.permission-toggle button {
+  font: 500 12px/1.3 var(--body);
+  color: var(--muted);
+  background: var(--surface);
+  border: 0;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+.permission-toggle button + button {
+  border-left: 1px solid var(--line);
+}
+.permission-toggle .allow[aria-pressed='true'] {
+  color: var(--leaf);
+  background: var(--ok-bg);
+}
+.permission-toggle .deny[aria-pressed='true'] {
+  color: var(--warn);
+  background: var(--warn-bg);
+}
+/* The commands typed by hand: allowed, and not allowed, side by side */
+.command-more {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+}
+/* The definition's own names beside a section's or a field's title */
+.create-form legend code,
+.create-form label > code {
+  font: 12px var(--mono);
+  color: var(--muted);
+  background: var(--code-bg);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: 4px;
+}
+/* A conditional criterion: the condition, then the branch it picks */
+.criterion-if {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.criterion-if > p {
+  margin: 0;
+  font-size: 13px;
+}
+.criterion-if-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font: 600 14px/1.3 var(--display);
+}
+.criterion-if .criterion-row {
+  grid-template-columns: minmax(0, 3fr) minmax(0, 3fr) minmax(0, 4fr);
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.criterion-branch,
+.criterion-else {
+  font: 600 13.5px/1.3 var(--body);
+}
+.create-form .criterion-else {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.criterion-else input {
+  accent-color: var(--guava);
+}
+.criterion-if code,
+.criterion-branch code,
+.criterion-else code {
+  font: 12px var(--mono);
+  color: var(--muted);
+  background: var(--code-bg);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.criterion-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* Filling the form from a pasted definition */
+.create-code {
+  position: relative;
+}
+.create-open-round {
+  font: 500 13px/1.3 var(--body);
+  color: var(--guava);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 10px;
+  max-width: 100%;
+  cursor: pointer;
+}
+.create-open-round:hover,
+.create-open-round:focus-visible {
+  border-color: var(--guava);
+}
+.create-paste-open {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--surface);
+}
+.create-paste {
+  display: grid;
+  gap: 8px;
+}
+.create-paste textarea {
+  min-height: 60vh;
+  font: 13px/1.5 var(--mono);
+  color: var(--ink);
+  background: var(--code-bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px;
+  resize: vertical;
+}
+.create-paste p {
+  margin: 0;
+  font-size: 13px;
+}
+.create-paste-actions {
+  display: flex;
+  gap: 8px;
+}
+.create-form label.create-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.create-form label.create-check input {
+  width: auto;
+  padding: 0;
+}
+.tool-picker {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.tool-picker legend {
+  padding: 0 4px;
+  font-size: 13px;
+}
+.tool-picker .create-check {
+  flex-wrap: wrap;
+}
+/* A tool's name is long (choliba/fetch_web_content): one per row, unbroken */
+.create-form .command-group.tool-group {
+  grid-template-columns: 1fr;
+}
+.tool-group .command-option {
+  flex-wrap: wrap;
+}
+.tool-group .command-option code {
+  white-space: nowrap;
+}
+/*
+ * By the form's width, not the window's: beside the code the form is narrow
+ * even on a wide window.
+ */
+.create-form {
+  container-type: inline-size;
+}
+@container (max-width: 560px) {
+  /* File, check, and passages below them; the × beside the check */
+  .criterion-row,
+  .criterion-if .criterion-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+  .criterion-row > label:nth-of-type(3) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .criterion-limits {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@container (max-width: 360px) {
+  .criterion-row,
+  .criterion-if .criterion-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .criterion-row > label:nth-of-type(2) {
+    grid-column: 1 / -1;
+  }
+}
+.create-form label.create-check input[type='checkbox'] {
+  flex-shrink: 0;
+}
+.create-check code {
+  white-space: nowrap;
+}

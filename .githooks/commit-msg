@@ -18,7 +18,7 @@ header="$(printf '%s\n' "$message" | sed -n '1p')"
 fail() {
   echo "commit-msg: $1" >&2
   echo "  Regras: Conventional Commits 1.0.0, sem Co-authored-by e sem qualquer menção a agente/LLM." >&2
-  echo "  Exemplo: feat(core): add slugify" >&2
+  echo "  Exemplo: feat(providers): add toolOutput" >&2
   exit 1
 }
 

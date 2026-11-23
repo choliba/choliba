@@ -1,0 +1,300 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "unicorn", "import", "oxc"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "warn"
+  },
+  "options": {
+    "typeAware": true,
+    "reportUnusedDisableDirectives": "error"
+  },
+  "rules": {
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error",
+    "typescript/await-thenable": "error",
+    "typescript/no-unsafe-assignment": "error",
+    "typescript/no-unsafe-call": "error",
+    "typescript/no-unsafe-member-access": "error",
+    "typescript/no-unsafe-return": "error",
+    "typescript/no-unsafe-argument": "error",
+    "typescript/strict-boolean-expressions": "error",
+    "typescript/switch-exhaustiveness-check": "error",
+    "typescript/restrict-template-expressions": "error",
+    "typescript/no-unnecessary-condition": [
+      "error",
+      {
+        "allowConstantLoopConditions": "only-allowed-literals"
+      }
+    ],
+    "typescript/prefer-nullish-coalescing": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-non-null-assertion": "error",
+    "typescript/consistent-type-imports": "error",
+    "eslint/no-await-in-loop": "off",
+    "eslint/no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "node:fs",
+            "message": "Só src/filesystem importa node:fs: o disco passa pelo src/filesystem. Veja AGENTS.md."
+          },
+          {
+            "name": "fs",
+            "message": "Só src/filesystem importa fs: o disco passa pelo src/filesystem. Veja AGENTS.md."
+          },
+          {
+            "name": "node:fs/promises",
+            "message": "Só src/filesystem importa node:fs/promises: o disco passa pelo src/filesystem. Veja AGENTS.md."
+          },
+          {
+            "name": "fs/promises",
+            "message": "Só src/filesystem importa fs/promises: o disco passa pelo src/filesystem. Veja AGENTS.md."
+          },
+          {
+            "name": "node:path",
+            "message": "Só src/filesystem importa node:path: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+          },
+          {
+            "name": "path",
+            "message": "Só src/filesystem importa path: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+          },
+          {
+            "name": "node:child_process",
+            "message": "Só src/execute importa node:child_process: programas rodam pelo src/execute (Executor, runProgram…). Veja AGENTS.md."
+          },
+          {
+            "name": "child_process",
+            "message": "Só src/execute importa child_process: programas rodam pelo src/execute (Executor, runProgram…). Veja AGENTS.md."
+          },
+          {
+            "name": "node:readline",
+            "message": "Só src/input importa node:readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
+          },
+          {
+            "name": "readline",
+            "message": "Só src/input importa readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
+          },
+          {
+            "name": "@modelcontextprotocol/server",
+            "message": "Só src/mcp importa o SDK do MCP: servidores MCP passam pelo src/mcp (serveTools). Veja AGENTS.md."
+          }
+        ]
+      }
+    ],
+    "eslint/no-console": "error",
+    "eslint/no-restricted-globals": [
+      "error",
+      {
+        "name": "process",
+        "message": "Só src/execute/process.ts toca no processo atual (argumentos, ambiente, sinais, saída); stdout/stderr são do src/output/stdio.ts e o stdin do src/input. Veja AGENTS.md."
+      }
+    ]
+  },
+  "ignorePatterns": ["storage/**", "node_modules/**", "logs/**", ".choliba/**"],
+  "overrides": [
+    {
+      "files": ["test/**/*.ts"],
+      "rules": {
+        "typescript/await-thenable": "off",
+        "typescript/no-unsafe-argument": "off",
+        "typescript/no-unsafe-assignment": "off",
+        "eslint/no-restricted-imports": "off",
+        "eslint/no-restricted-globals": "off",
+        "eslint/no-console": "off"
+      }
+    },
+    {
+      "files": ["src/execute/**/*.ts"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "node:fs",
+                "message": "Só src/filesystem importa node:fs: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "fs",
+                "message": "Só src/filesystem importa fs: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "node:fs/promises",
+                "message": "Só src/filesystem importa node:fs/promises: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "fs/promises",
+                "message": "Só src/filesystem importa fs/promises: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "node:path",
+                "message": "Só src/filesystem importa node:path: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+              },
+              {
+                "name": "path",
+                "message": "Só src/filesystem importa path: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+              },
+              {
+                "name": "node:readline",
+                "message": "Só src/input importa node:readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "readline",
+                "message": "Só src/input importa readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "@modelcontextprotocol/server",
+                "message": "Só src/mcp importa o SDK do MCP: servidores MCP passam pelo src/mcp (serveTools). Veja AGENTS.md."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/filesystem/**/*.ts"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "node:child_process",
+                "message": "Só src/execute importa node:child_process: programas rodam pelo src/execute (Executor, runProgram…). Veja AGENTS.md."
+              },
+              {
+                "name": "child_process",
+                "message": "Só src/execute importa child_process: programas rodam pelo src/execute (Executor, runProgram…). Veja AGENTS.md."
+              },
+              {
+                "name": "node:readline",
+                "message": "Só src/input importa node:readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "readline",
+                "message": "Só src/input importa readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "@modelcontextprotocol/server",
+                "message": "Só src/mcp importa o SDK do MCP: servidores MCP passam pelo src/mcp (serveTools). Veja AGENTS.md."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/input/**/*.ts"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "node:fs",
+                "message": "Só src/filesystem importa node:fs: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "fs",
+                "message": "Só src/filesystem importa fs: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "node:fs/promises",
+                "message": "Só src/filesystem importa node:fs/promises: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "fs/promises",
+                "message": "Só src/filesystem importa fs/promises: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "node:path",
+                "message": "Só src/filesystem importa node:path: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+              },
+              {
+                "name": "path",
+                "message": "Só src/filesystem importa path: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+              },
+              {
+                "name": "node:child_process",
+                "message": "Só src/execute importa node:child_process: programas rodam pelo src/execute (Executor, runProgram…). Veja AGENTS.md."
+              },
+              {
+                "name": "child_process",
+                "message": "Só src/execute importa child_process: programas rodam pelo src/execute (Executor, runProgram…). Veja AGENTS.md."
+              },
+              {
+                "name": "@modelcontextprotocol/server",
+                "message": "Só src/mcp importa o SDK do MCP: servidores MCP passam pelo src/mcp (serveTools). Veja AGENTS.md."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/mcp/**/*.ts"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "node:fs",
+                "message": "Só src/filesystem importa node:fs: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "fs",
+                "message": "Só src/filesystem importa fs: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "node:fs/promises",
+                "message": "Só src/filesystem importa node:fs/promises: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "fs/promises",
+                "message": "Só src/filesystem importa fs/promises: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "node:path",
+                "message": "Só src/filesystem importa node:path: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+              },
+              {
+                "name": "path",
+                "message": "Só src/filesystem importa path: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+              },
+              {
+                "name": "node:child_process",
+                "message": "Só src/execute importa node:child_process: programas rodam pelo src/execute (Executor, runProgram…). Veja AGENTS.md."
+              },
+              {
+                "name": "child_process",
+                "message": "Só src/execute importa child_process: programas rodam pelo src/execute (Executor, runProgram…). Veja AGENTS.md."
+              },
+              {
+                "name": "node:readline",
+                "message": "Só src/input importa node:readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "readline",
+                "message": "Só src/input importa readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/execute/process.ts",
+        "src/output/stdio.ts",
+        "src/input/**/*.ts"
+      ],
+      "rules": {
+        "eslint/no-restricted-globals": "off"
+      }
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+name: Release
+
+# Até a versão 1.0 cada release é uma pré-release do GitHub com a tag v<versão> (a `version` do package.json) e o
+# pacote como arquivo: choliba-<versão>.tgz. Cada merge na master (o PR de release) cria a release dessa tag ou, se
+# ela já existe, move a tag para o novo commit e troca o .tgz e as notas. A versão sobe à mão, no package.json, no PR
+# que prepara a release. Mover a tag com --force é a única exceção ao "sem force-push", que vale para branches.
+# As notas trazem o histórico de todas as releases (um merge na master cada): a mais nova aberta, as anteriores
+# recolhidas, cada uma com os Destaques do PR de release e os commits agrupados por tipo (scripts/release-notes.ts).
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+  # Os Destaques: o corpo de cada PR de release.
+  pull-requests: read
+
+# Dois merges seguidos não disputam a tag: o segundo espera o primeiro terminar.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: ./.github/actions/setup
+
+      # A tag e o .tgz têm o mesmo nome de versão: o endereço de instalação é .../download/v<versão>/choliba-<versão>.tgz.
+      - name: Versão e data deste build
+        id: version
+        run: |
+          version="$(jq -r .version package.json)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          echo "date=$(git log -1 --format=%ad --date=short)" >> "$GITHUB_OUTPUT"
+
+      # O prepack monta as páginas das rodadas (bun run rounds:build) antes de empacotar.
+      - name: Empacotar
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          bun pm pack --destination "$RUNNER_TEMP"
+          test -f "$RUNNER_TEMP/choliba-$VERSION.tgz"
+
+      - name: Calcular checksum do pacote
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          cd "$RUNNER_TEMP"
+          sha256sum "choliba-$VERSION.tgz" > "choliba-$VERSION.tgz.sha256"
+
+      # Os Destaques de cada release vêm do corpo do PR de release, lido pelo gh.
+      - name: Notas da release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          bun run release:notes HEAD > "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md"
+
+      - name: Mover a tag para este commit
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          git tag -f "$TAG" "$GITHUB_SHA"
+          git push origin "refs/tags/$TAG" --force
+
+      - name: Atualizar a release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.version }} (${{ steps.version.outputs.date }})
+          prerelease: true
+          body_path: ${{ runner.temp }}/notes.md
+          files: |
+            ${{ runner.temp }}/choliba-${{ steps.version.outputs.version }}.tgz
+            ${{ runner.temp }}/choliba-${{ steps.version.outputs.version }}.tgz.sha256
+          overwrite_files: true

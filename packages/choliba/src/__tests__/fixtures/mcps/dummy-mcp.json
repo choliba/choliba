@@ -1,4 +1,0 @@
-{
-  "command": "npx",
-  "args": ["dummy-mcp-server"]
-}

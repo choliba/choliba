@@ -1,5 +1,5 @@
 name: Propor mudança de arquitetura
-description: Uma mudança que afeta contratos, pacotes ou fronteiras.
+description: Uma mudança que afeta contratos, módulos ou fronteiras.
 title: '[architecture] '
 labels: ['architecture']
 body:
@@ -14,7 +14,7 @@ body:
     id: proposal
     attributes:
       label: Proposta
-      description: A mudança, os pacotes afetados e as arestas do grafo que entram ou saem (A → B = A importa B).
+      description: A mudança, os módulos de `src/` afetados e as dependências que entram ou saem (A → B = A importa B).
     validations:
       required: true
   - type: checkboxes
@@ -22,13 +22,13 @@ body:
     attributes:
       label: Compatibilidade
       options:
-        - label: Mantém Bun, TypeScript 6.0.x, Jest e Playwright
+        - label: Mantém Bun e TypeScript, sem trocar o `bun test`
           required: true
-        - label: Sem HTTP, sem decorators, sem `any`
+        - label: Sem `any`, e cada capacidade com um dono só (`AGENTS.md`)
           required: true
         - label: As guardas, o sandbox e as permissões continuam valendo igual para todo provider
           required: true
-        - label: Mantém os subcaminhos públicos ou traz a nota de migração
+        - label: Mantém os `exports` do `package.json` ou traz a nota de migração
         - label: Cabe em PRs pequenos, cada um com o comportamento igual
   - type: textarea
     id: risks
@@ -42,6 +42,6 @@ body:
       label: Critérios de aceite
       options:
         - label: '`bun run check` verde e cobertura igual ou maior'
-        - label: '`docs:commands --check` sem diferença, ou páginas regeradas no PR'
-        - label: Spec de arquitetura (grafo e exports) atualizado
-        - label: '`ARCHITECTURE.md` e as skills afetadas atualizados'
+        - label: '`bun run docs:build` verde, com as páginas de `guides/` em dia'
+        - label: Os módulos e o `AGENTS.md` (tabela de donos) atualizados
+        - label: 'As skills afetadas atualizadas'
