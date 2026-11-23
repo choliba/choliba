@@ -28,7 +28,8 @@ import { wrapCommand } from './wrap-command';
 import type { FilesystemAccess, FilesystemMask } from '../../policy/index';
 import { protectedMasks } from './protect';
 import { SandboxPaths } from './path-map';
-import { SANDBOX_SUPPORT_DIR } from '../constants';
+import { BASE_PROGRAMS, SANDBOX_SUPPORT_DIR } from '../constants';
+import { programDirs, visiblePrograms, type FoundProgram } from './programs';
 
 export interface BubblewrapSandboxOptions {
   readonly root: string;
@@ -39,6 +40,11 @@ export interface BubblewrapSandboxOptions {
    * by default, from `root` and the `HOME` of `env`.
    */
   readonly paths?: SandboxPaths;
+  /**
+   * The programs the agent sees (see `WorkspaceOptions.programs`); without
+   * it, every program of the host.
+   */
+  readonly programs?: readonly string[];
 }
 
 /**
@@ -63,6 +69,7 @@ export class BubblewrapSandbox implements Sandbox {
   private readonly root: string;
   private readonly env: NodeJS.ProcessEnv;
   private readonly writable: readonly string[];
+  private readonly programs: readonly string[] | undefined;
   private paths: SandboxPaths;
   private keeper: Helper | undefined;
   private jailPid: number | undefined;
@@ -77,10 +84,12 @@ export class BubblewrapSandbox implements Sandbox {
     env = environment(),
     writable = [],
     paths,
+    programs,
   }: BubblewrapSandboxOptions) {
     this.root = root;
     this.env = env;
     this.writable = writable;
+    this.programs = programs;
     this.paths =
       paths ?? new SandboxPaths({ root, hostHome: env['HOME'] ?? homedir() });
   }
@@ -165,6 +174,16 @@ export class BubblewrapSandbox implements Sandbox {
     await keeper?.stop();
   }
 
+  /** Nothing to change without `programs`; with it, see `visiblePrograms`. */
+  private programSelection(writable: readonly string[]): ProgramSelection {
+    if (this.programs === undefined) return { dirs: [], visible: [] };
+    const searchPath = (this.host?.env ?? this.env)['PATH'];
+    return {
+      dirs: programDirs(searchPath, this.env['HOME'] ?? homedir(), writable),
+      visible: visiblePrograms(this.programs, searchPath, BASE_PROGRAMS),
+    };
+  }
+
   private async ensureJail(): Promise<number> {
     if (this.jailPid !== undefined && this.keeper?.pid !== undefined) {
       return this.jailPid;
@@ -200,6 +219,8 @@ export class BubblewrapSandbox implements Sandbox {
       ),
       ...(this.filesystem?.workspaceAccess === 'readonly' ? [this.root] : []),
     ];
+    // Before anything starts: a selected program that is missing stops here.
+    const programs = this.programSelection(writable);
     const jailArgs = [
       ...bubblewrapJailArgs(
         this.root,
@@ -208,6 +229,7 @@ export class BubblewrapSandbox implements Sandbox {
         this.network === undefined,
         this.paths,
       ),
+      ...bubblewrapProgramArgs(this.paths, programs),
       ...bubblewrapMaskArgs(this.paths, [
         ...(this.filesystem?.masks ?? []),
         // Logins the provider does not use, and the other homes: not in
@@ -250,6 +272,16 @@ export class BubblewrapSandbox implements Sandbox {
             source: path,
             destination: this.paths.inside(path),
             mode: 'rw',
+          })),
+          ...programs.dirs.map((dir) => ({
+            type: 'tmpfs',
+            destination: this.paths.inside(dir),
+          })),
+          ...programs.visible.map(({ path, file }) => ({
+            type: 'bind',
+            source: file,
+            destination: this.paths.inside(path),
+            mode: 'ro',
           })),
           ...(this.host?.home === undefined
             ? []
@@ -328,6 +360,31 @@ export class BubblewrapSandbox implements Sandbox {
 
     return pid;
   }
+}
+
+/** The program folders a jail empties, and the programs it shows in them. */
+export interface ProgramSelection {
+  readonly dirs: readonly string[];
+  readonly visible: readonly FoundProgram[];
+}
+
+/**
+ * The program folders emptied (`--tmpfs`) and each visible program mounted
+ * back, read-only, where the `PATH` finds it, from the file it runs (a
+ * multicall binary still sees its own name).
+ */
+export function bubblewrapProgramArgs(
+  paths: SandboxPaths,
+  { dirs, visible }: ProgramSelection,
+): string[] {
+  return [
+    ...dirs.flatMap((dir) => ['--tmpfs', paths.inside(dir)]),
+    ...visible.flatMap(({ path, file }) => [
+      '--ro-bind',
+      file,
+      paths.inside(path),
+    ]),
+  ];
 }
 
 const OPTIONAL_SYSTEM_DIRS = [

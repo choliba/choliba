@@ -262,7 +262,7 @@ function createSandbox(
   options: WorkspaceOptions,
   paths: SandboxPaths,
 ): Sandbox {
-  const { root, writable = [] } = options;
+  const { root, writable = [], programs } = options;
   return options.type === 'docker'
     ? new DockerSandbox({
         root,
@@ -270,5 +270,10 @@ function createSandbox(
         paths,
         image: options.image ?? DEFAULT_DOCKER_IMAGE,
       })
-    : new BubblewrapSandbox({ root, writable, paths });
+    : new BubblewrapSandbox({
+        root,
+        writable,
+        paths,
+        ...(programs === undefined ? {} : { programs }),
+      });
 }

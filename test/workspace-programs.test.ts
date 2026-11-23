@@ -8,12 +8,15 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 
 import { afterAll, describe, expect, test } from 'bun:test';
 
 import { UsageError } from '../src/usage';
 import { Workspace } from '../src/workspace/index';
+import { bubblewrapProgramArgs } from '../src/workspace/sandbox/bubblewrap';
+import { SandboxPaths } from '../src/workspace/sandbox/path-map';
 import {
   findPrograms,
   programAt,
@@ -174,4 +177,96 @@ describe('Workspace.programs', () => {
         new Workspace({ type: 'docker', root: base, programs: ['php cli'] }),
     ).toThrow(UsageError);
   });
+});
+
+describe('bubblewrap com programs', () => {
+  test('esvazia as pastas e monta cada programa de volta, do arquivo final', () => {
+    const paths = new SandboxPaths({
+      root: base,
+      hostHome: join(base, 'home'),
+    });
+
+    expect(
+      bubblewrapProgramArgs(paths, {
+        dirs: [usrBin, localBin],
+        visible: [
+          {
+            name: 'php',
+            path: join(usrBin, 'php'),
+            file: join(usrBin, 'php8.5'),
+          },
+          {
+            name: 'node',
+            path: join(localBin, 'node'),
+            file: join(localBin, 'node'),
+          },
+        ],
+      }),
+    ).toEqual([
+      '--tmpfs',
+      join(base, 'usr/bin').replace(base, '/home/choliba'),
+      '--tmpfs',
+      '/opt/choliba/user/.local/bin',
+      '--ro-bind',
+      join(usrBin, 'php8.5'),
+      '/home/choliba/usr/bin/php',
+      '--ro-bind',
+      join(localBin, 'node'),
+      '/opt/choliba/user/.local/bin/node',
+    ]);
+    expect(bubblewrapProgramArgs(paths, { dirs: [], visible: [] })).toEqual([]);
+  });
+
+  test('um programa selecionado que falta para antes de a jaula subir', async () => {
+    const workspace = new Workspace({
+      type: 'bubblewrap',
+      root: base,
+      programs: ['programa-que-nao-existe'],
+    });
+
+    try {
+      await expect(workspace.prepare({ executable: 'true' })).rejects.toThrow(
+        'Programas selecionados que a sandbox não encontra: programa-que-nao-existe.',
+      );
+    } finally {
+      await workspace.close();
+    }
+  });
+
+  test.skipIf(Bun.which('bwrap') === null || Bun.which('nsenter') === null)(
+    'na jaula, só os selecionados e a base: o resto do /usr/bin some',
+    async () => {
+      const workspace = new Workspace({
+        type: 'bubblewrap',
+        root: base,
+        programs: ['ls'],
+      });
+
+      try {
+        const prepared = await workspace.prepare({
+          executable: 'bash',
+          arguments: [
+            '-c',
+            'ls /usr/bin; command -v head || echo sem-head; ls -d /home/choliba',
+          ],
+        });
+        const ran = spawnSync(
+          prepared.executable,
+          [...(prepared.arguments ?? [])],
+          { encoding: 'utf8', env: prepared.env, cwd: prepared.cwd },
+        );
+        const lines = ran.stdout.trim().split('\n');
+
+        expect(ran.status).toBe(0);
+        expect(lines).toContain('ls');
+        expect(lines).toContain('env');
+        expect(lines).toContain('bash');
+        expect(lines).toContain('sem-head');
+        expect(lines).not.toContain('head');
+        expect(lines).toContain('/home/choliba');
+      } finally {
+        await workspace.close();
+      }
+    },
+  );
 });
