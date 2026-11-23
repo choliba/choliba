@@ -17,10 +17,13 @@ import { SandboxPaths } from './path-map';
 import { wrapCommand } from './wrap-command';
 import type { FilesystemAccess } from '../../policy/index';
 import {
+  BASE_PROGRAMS,
   DEFAULT_DOCKER_IMAGE,
+  DOCKER_BASE_PROGRAMS,
   HOST_HOMES,
   SANDBOX_SUPPORT_DIR,
 } from '../constants';
+import { programDirs, visiblePrograms } from './programs';
 
 export interface DockerSandboxOptions {
   /**
@@ -36,6 +39,11 @@ export interface DockerSandboxOptions {
    * `/home/choliba`); by default, from `root` and the `HOME` of `env`.
    */
   readonly paths?: SandboxPaths;
+  /**
+   * The programs the agent sees (see `WorkspaceOptions.programs`); without
+   * it, every program of the host.
+   */
+  readonly programs?: readonly string[];
 }
 
 export { DEFAULT_DOCKER_IMAGE } from '../constants';
@@ -68,6 +76,7 @@ export class DockerSandbox implements Sandbox {
   private protectedPaths: readonly string[] = [];
   private network: NetworkExit | undefined;
   private host: SandboxHost | undefined;
+  private readonly programs: readonly string[] | undefined;
 
   public constructor({
     image,
@@ -75,9 +84,11 @@ export class DockerSandbox implements Sandbox {
     env = environment(),
     writable = [],
     paths,
+    programs,
   }: DockerSandboxOptions) {
     this.image = readDockerImage(image);
     this.root = root;
+    this.programs = programs;
     this.env = env;
     this.writable = writable;
     this.paths = paths ?? new SandboxPaths({ root, hostHome: homeOf(env) });
@@ -156,8 +167,21 @@ export class DockerSandbox implements Sandbox {
     // The CLI's installation, read-only; the workspace's home, writable, with
     // the CLI's login read-only inside it. Docker mounts the shorter paths
     // first, so the home is there even inside a hidden path.
+    // Before anything starts: a selected program that is missing stops here.
+    const programs = this.programMounts(passed['PATH'], [
+      this.root,
+      ...writable,
+    ]);
+    // Docker refuses two mounts on one place: an emptied folder replaces the
+    // bind that showed it (`~/.local/bin`).
+    const emptied = new Set(
+      programs
+        .filter((mount) => mount.type === 'tmpfs')
+        .map((mount) => mount.destination),
+    );
     const mounts = [
-      ...described,
+      ...described.filter((mount) => !emptied.has(mount.destination)),
+      ...programs,
       ...(host?.programs ?? [])
         // Inside the CLI's state (`share`): already there, writable.
         .filter(
@@ -248,6 +272,37 @@ export class DockerSandbox implements Sandbox {
     return host === undefined
       ? prepared
       : { ...prepared, env: { ...dockerClientEnv(this.env), ...host.env } };
+  }
+
+  /**
+   * Without `programs`, none. With it, each program folder of the host an
+   * empty tmpfs, and each visible program (see `visiblePrograms`) mounted
+   * back read-only, from the file it runs; Docker mounts the shorter paths
+   * first, so the programs land inside the tmpfs.
+   */
+  private programMounts(
+    searchPath: string | undefined,
+    writable: readonly string[],
+  ): Mount[] {
+    if (this.programs === undefined) return [];
+    const at = (path: string): string =>
+      `${HOST_ROOT}${this.paths.inside(path)}`;
+    const visible = visiblePrograms(this.programs, searchPath, [
+      ...BASE_PROGRAMS,
+      ...DOCKER_BASE_PROGRAMS,
+    ]);
+    return [
+      ...programDirs(searchPath, homeOf(this.env), writable).map((dir) => ({
+        type: 'tmpfs',
+        destination: at(dir),
+      })),
+      ...visible.map(({ path, file }) => ({
+        type: 'bind',
+        source: file,
+        destination: at(path),
+        mode: 'ro',
+      })),
+    ];
   }
 
   /** Removes the last container; killing `docker run` does not always stop it. */

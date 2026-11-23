@@ -20,7 +20,7 @@ export const pinoConfig =
   ({ dir, session }) =>
     pino(
       {
-        ...ecsFormat({ serviceName: 'choliba', serviceVersion: '0.2.0' }),
+        ...ecsFormat({ serviceName: 'choliba', serviceVersion: '0.3.0' }),
         level: debug ? 'debug' : 'info',
         // Sem pid: process.* descreve o comando de cada evento.
         base: { hostname: hostname() },
