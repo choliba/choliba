@@ -1,15 +1,15 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 23/11/2026 02:22:11: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 23/11/2026 02:57:49: não edite à mão.
 
-Limites (coverage-thresholds.json, só sobem): funções 92.49%, linhas 94.78%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
+Limites (coverage-thresholds.json, só sobem): funções 92.54%, linhas 94.82%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
 ## Resumo
 
 Status|Módulo|% Funcs|% Lines
 --|--|--|--
-🟢|**Total**|92.49|94.79
-🟢|[scripts](scripts)|100.00|98.61
+🟢|**Total**|92.55|94.82
+🟢|[scripts](scripts)|100.00|98.89
 🟢|[src/adapters](src/adapters)|90.84|97.80
 🟢|[src/agent](src/agent)|96.70|95.59
 🟢|[src/approval](src/approval)|84.96|87.88
@@ -36,12 +36,13 @@ Status|Módulo|% Funcs|% Lines
 ## Por módulo
 
 <details open>
-<summary>🟢 <b>scripts</b>: 98.61% das linhas, 4 arquivos</summary>
+<summary>🟢 <b>scripts</b>: 98.89% das linhas, 5 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[branches.ts](scripts/branches.ts)|100.00|94.44
 🟢|[coverage-report.ts](scripts/coverage-report.ts)|100.00|100.00
+🟢|[docs-seo.ts](scripts/docs-seo.ts)|100.00|100.00
 🟢|[docs.ts](scripts/docs.ts)|100.00|100.00
 🟢|[release.ts](scripts/release.ts)|100.00|100.00
 
