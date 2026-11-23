@@ -64,8 +64,8 @@ interface CommonWorkspaceOptions {
    * The programs the agent sees, by name (`php`, `bun`), even when more are
    * installed: the program folders are emptied and only these come back,
    * plus what Choliba itself runs in the sandbox and the shell. Each must
-   * exist, or the sandbox does not start. Without it, every program of the
-   * host is visible.
+   * exist, or the sandbox does not start. Without it, `workspaces.programs`
+   * of the config; without both, every program of the host is visible.
    */
   readonly programs?: readonly string[];
 }
@@ -142,9 +142,10 @@ export class Workspace {
         `hostState desconhecido: ${hostState}. Use ${HOST_STATES.join(', ')}.`,
       );
     }
-    if (options.programs !== undefined) validateProgramNames(options.programs);
+    const programs = options.programs ?? getConfig().workspaces.programs;
+    if (programs !== undefined) validateProgramNames(programs);
     this.root = options.root;
-    this.programs = options.programs;
+    this.programs = programs;
     this.homes = options.homes ?? getConfig().workspaces.homes;
     this.type = options.type;
     this.options = options;
@@ -157,7 +158,7 @@ export class Workspace {
         ? {}
         : { agentRoot: options.agentRoot }),
     });
-    this.sandbox = createSandbox(options, this.paths);
+    this.sandbox = createSandbox(options, this.paths, programs);
   }
 
   /**
@@ -261,8 +262,9 @@ export class Workspace {
 function createSandbox(
   options: WorkspaceOptions,
   paths: SandboxPaths,
+  programs: readonly string[] | undefined,
 ): Sandbox {
-  const { root, writable = [], programs } = options;
+  const { root, writable = [] } = options;
   return options.type === 'docker'
     ? new DockerSandbox({
         root,

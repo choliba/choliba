@@ -13,6 +13,7 @@ import { join } from 'node:path';
 
 import { afterAll, describe, expect, test } from 'bun:test';
 
+import { clearConfigCache, loadConfig } from '../src/config/index';
 import { UsageError } from '../src/usage';
 import { Workspace } from '../src/workspace/index';
 import { bubblewrapProgramArgs } from '../src/workspace/sandbox/bubblewrap';
@@ -165,6 +166,27 @@ describe('Workspace.programs', () => {
       missing: ['composer'],
     });
     expect(workspace.checkPrograms(['node'], searchPath).found).toHaveLength(1);
+  });
+
+  test('sem a opção, vale workspaces.programs da config', async () => {
+    const cwd = mkdtempSync(join(base, 'config-'));
+    writeFileSync(
+      join(cwd, 'choliba.config.ts'),
+      `export default { workspaces: { programs: ['php'] } };\n`,
+    );
+
+    try {
+      await loadConfig({ cwd });
+      expect(
+        new Workspace({ type: 'bubblewrap', root: base }).programs,
+      ).toEqual(['php']);
+      expect(
+        new Workspace({ type: 'bubblewrap', root: base, programs: [] })
+          .programs,
+      ).toEqual([]);
+    } finally {
+      clearConfigCache();
+    }
   });
 
   test('sem programs, nenhuma seleção; um nome inválido é recusado ao criar', () => {
