@@ -180,7 +180,8 @@ describe('choliba clear', () => {
   });
 
   test('--all sem rounds.dir apaga o resto', async () => {
-    configure({ workspaces: 'workspaces' });
+    // homes explícito: sem ele vale o home padrão dos testes, que outros testes já encheram.
+    configure({ workspaces: 'workspaces', homes: 'homes' });
     fill('workspaces', 'w');
 
     const result = await clear(['--all', '--dry']);
