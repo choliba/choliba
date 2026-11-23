@@ -1,19 +1,17 @@
-node_modules
-dist
-coverage
-COVERAGE.md
+storage/
+node_modules/
+logs/
+.choliba/
 bun.lock
-.agents
-.choliba/skills
-.choliba/mcps
-.claude
-.playwright-cli
-packages/runner/playwright-report
-docs/.vitepress/cache
-docs/.vitepress/dist
-# Generated architecture baseline; compact arrays keep export-list diffs readable.
-scripts/architecture/entry-exports.json
-# Verificação do Google Search Console: o arquivo fica idêntico ao que o Google gera (sem quebra de linha no fim)
-docs/public/google*.html
-# Corpo de uma release de verdade, como o GitHub o guarda: o spec das novidades lê o formato original
-packages/choliba/src/__tests__/update/fixtures/
+.agents/
+# Build das páginas das rodadas (bun run rounds:build)
+src/rounds/web/dist/
+# Gerados pelo bun run test:cov (scripts/coverage-ratchet.ts)
+coverage/
+COVERAGE.md
+# O site: o que é gerado (bun run docs:pages), o cache e o resultado
+docs/guias/
+docs/comandos.md
+docs/.vitepress/generated/
+docs/.vitepress/cache/
+docs/.vitepress/dist/

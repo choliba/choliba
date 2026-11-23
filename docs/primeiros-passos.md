@@ -1,116 +1,60 @@
 # Primeiros passos
 
-> Instale o choliba, crie a pasta de trabalho e leve o primeiro pedido até o código implementado, com ticket e
-> testes no caminho.
+Instale o Choliba, escreva um agente de dez linhas e rode-o dentro de uma sandbox.
 
-## Dependências
+## Antes de começar
 
-- [Bun](https://bun.sh)
-  ```bash
-  curl -fsSL https://bun.com/install | bash
-  ```
-- [install-browsers](https://playwright.dev/docs/browsers#install-browsers)
+Você precisa de:
 
-  ```bash
-  bunx playwright install chromium
-  ```
+- o [Bun](https://bun.sh);
+- Linux com `bwrap` e `nsenter` (para o workspace `bubblewrap`) ou o Docker;
+- a CLI que o agente vai usar: `claude`, `codex`, `agent` ou o [Ollama](https://ollama.com).
 
-- Para rodar agentes, o CLI de um provider instalado e autenticado:
-  - Provider suportados:
-    [claude](https://claude.com/download)
-    [codex](https://developers.openai.com/codex/cli) (rode `codex login` depois de instalar)
-    [cursor-agent](https://cursor.com/pt-BR/docs/cli/installation)
+## Instale o pacote
 
-## Instalação
-
-> _Atenção_
-
-> _Durante a fase de desenvolvimento, choliba não será publicado como package no npm_
-
-A versão de desenvolvimento é [v0.0.1-dev](https://github.com/choliba/choliba/releases/tag/v0.0.1-dev)
-
-### Para instalar
+O Choliba é um pacote Bun. Num projeto que já usa o Bun, instale do repositório:
 
 ```bash
-mkdir dev-tools && cd dev-tools
-echo '{ "name": "dev-tools", "private": true }' > package.json
-curl -LO https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
-curl -LO https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz.sha256
-sha256sum -c choliba-0.0.1-dev.tgz.sha256
-bun add --trust ./choliba-0.0.1-dev.tgz
+bun add github:choliba/choliba
 ```
 
-- Não instale se `sha256sum -c` não terminar em `OK`.
-- O `--trust` deixa o Bun rodar o `postinstall` do pacote, que já executa `choliba setup`.
+Ou baixe o `choliba-<versão>.tgz` da [última release](https://github.com/choliba/choliba/releases) e instale o arquivo:
 
-- Se você rodou sem `--trust`:
-
-```
-bun choliba setup
+```bash
+bun add ./choliba-0.1.0.tgz
 ```
 
-Sem sobrescrever o que já existe, ele:
+## Escreva um agente
 
-- cria
-  - `.choliba/agents/`
-  - `.choliba/skills/`
-  - `.choliba/mcps/`
-  - `projects/`
+Um agente junta um **provider** (qual CLI roda), um **workspace** (a sandbox onde ela roda), uma **política** (o que ela
+pode fazer) e uma **conversa** (com quem ela fala). Salve como `analista.ts`:
 
-- cria em `app/exemplo/` (uma página só)
-- cria em `projects/exemplo/` um projeto que aponta para app/exemplo/
-- copia de um template `.env.example`, `.gitignore`, `.editorconfig` (largura e indentação, que o Prettier lê) e os
-  arquivos do Prettier e do ESLint, e cria o `.env` inicial com `CHOL_GLOBAL_DIR` apontando para
-  `.cache/choliba` e `CHOL_PROJECTS_DIR` para `projects/`, os dois da própria pasta de trabalho;
-- lista `choliba` em `trustedDependencies` do `package.json`, para que instalações futuras rodem o setup de novo
-  sem pedir `--trust`;
-- aponta o VS Code para o schema do `agent.yaml` (`.vscode/settings.json`);
-- liga o autocomplete do bash (veja [Autocomplete](comandos/setup.md#autocomplete)).
+```ts
+import { Agent, ClaudeProvider, resolve, runScript, Workspace } from 'choliba';
 
-## A pasta de trabalho
-
-`choliba` roda sempre numa **pasta de trabalho**: a pasta, subindo a partir de onde o comando é chamado, cujo
-`package.json` depende de `choliba`. A [instalação](#instalação) começa criando um na pasta nova, porque o Bun também
-procura o `package.json` subindo de pasta. É nela que ficam o `.env`, os agentes (`.choliba/agents/`), as skills
-(`.choliba/skills/`) e os MCPs (`.choliba/mcps/`) usados pelos comandos. Rodar `choliba` de qualquer subpasta dela
-funciona do mesmo jeito. Essas três pastas são o padrão; `CHOL_AGENTS_DIR`, `CHOL_SKILLS_DIR` e `CHOL_MCPS_DIR` no
-[`.env`](referencia/env.md) apontam para outras.
-
-## Atualização
-
-Dentro da pasta de trabalho:
-
-```
-bun choliba update
+await runScript(async () => {
+  await new Agent({
+    name: 'analista',
+    prompt: 'Analise o projeto.',
+    provider: new ClaudeProvider({ model: 'claude-sonnet-5-5' }),
+    workspace: new Workspace({
+      type: 'bubblewrap',
+      root: resolve('storage', 'workspace'),
+    }),
+  }).run();
+});
 ```
 
-Ele compara a versão instalada com a da [release](https://github.com/choliba/choliba/releases/tag/v0.0.1-dev), baixa
-o pacote novo, confere o SHA-256, instala e mostra as novidades desde a versão que você tinha. Para só ver se há
-versão nova, sem instalar: `bun choliba update --check`. Detalhes em [`choliba update`](comandos/update.md).
+Rode:
 
-Sem o comando (numa instalação anterior a ele), o passo a passo é este. A URL da release não muda a cada versão,
-então, para o Bun baixar o pacote novo (e não reaproveitar o do cache), remova e instale de novo:
-
-```
-bun remove choliba
-rm -f choliba-0.0.1-dev.tgz choliba-0.0.1-dev.tgz.sha256
-curl -LO https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz
-curl -LO https://github.com/choliba/choliba/releases/download/v0.0.1-dev/choliba-0.0.1-dev.tgz.sha256
-sha256sum -c choliba-0.0.1-dev.tgz.sha256
-bun add --trust ./choliba-0.0.1-dev.tgz
+```bash
+bun analista.ts
 ```
 
-Para conferir qual versão ficou instalada, rode
+No terminal, **Ctrl+A** abre as aprovações, **Ctrl+C** para o agente e **Ctrl+D** encerra a conversa.
 
-```
-bun choliba --version
-```
+## Para onde ir
 
-e compare com o título da última atualização nas [notas da release](https://github.com/choliba/choliba/releases/tag/v0.0.1-dev).
-
-A saída tem este formato:
-
-```
-$ bun choliba --version
-choliba 0.0.1-dev.16+1a2b3c4
-```
+- [Os cursos](/guias/): um por módulo, com exemplos completos que rodam como estão. Comece pelo [agente](/guias/agent).
+- [Os comandos](/comandos) do `choliba`: rodadas, aprovações e limpeza.
+- A configuração do projeto, em [config](/guias/config).

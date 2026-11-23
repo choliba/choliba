@@ -1,4 +1,24 @@
 {
-  "extends": "./tsconfig.base.json",
-  "include": ["*.ts", "jest", "scripts/**/*.ts", "docs/.vitepress/config.ts", "docs/.vitepress/**/*.ts"]
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "types": ["node", "bun"],
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "config/**/*.ts",
+    "bin/**/*.ts",
+    "tools/**/*.ts",
+    "test/**/*.ts",
+    "scripts/**/*.ts",
+    "guides/**/*.ts",
+    "choliba.config.ts"
+  ],
+  "exclude": ["src/rounds/web/**"]
 }

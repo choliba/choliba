@@ -1,5 +1,0 @@
-{
-  "yaml.schemas": {
-    "./node_modules/choliba/schemes/v1/agent.schema.json": [".choliba/agents/*/agent.yaml"]
-  }
-}

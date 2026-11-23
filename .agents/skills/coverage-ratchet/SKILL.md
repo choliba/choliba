@@ -1,55 +1,54 @@
 ---
 name: coverage-ratchet
-description: Explains and safely operates choliba's coverage ratchet (thresholds that only go up): jest/jest.coverage.config.json, COVERAGE.md, the shields badge, coverage exclusions and the Jest globalTeardown. Use when coverage fails or drops, when asked to change a threshold or exclude a file from coverage, when COVERAGE.md or the badge looks wrong, when setting up coverage in CI, or when someone asks why the numbers can't go down.
-argument-hint: 'The coverage failure, or the threshold/exclusion change being considered.'
+description: Explica e opera com segurança a catraca de cobertura do Choliba (limites que só sobem) — coverage-thresholds.json, bunfig.toml, COVERAGE.md, o badge do shields e o scripts/coverage-ratchet.ts. Use quando a cobertura falhar ou cair, quando pedirem para mudar um limite ou tirar um arquivo da cobertura, quando o COVERAGE.md ou o badge parecerem errados, ao montar a cobertura num CI, ou quando perguntarem por que os números não podem descer.
+argument-hint: 'A falha de cobertura, ou a mudança de limite/exclusão em questão.'
 user-invocable: true
 disable-model-invocation: false
 ---
 
-# Coverage ratchet
+# Catraca de cobertura
 
-Coverage in choliba cannot regress silently. Thresholds live in `jest/jest.coverage.config.json` (tracked in git) and
-rise automatically to whatever a passing run reaches; Jest fails any run that falls below them.
+A cobertura do Choliba não pode cair sem ninguém ver. Os limites ficam em `coverage-thresholds.json` (versionado),
+sobem sozinhos até o que uma execução que passou alcançou, e uma execução abaixo deles falha.
 
-## The loop, in five lines
+## O ciclo, em cinco linhas
 
-1. `bun run test:cov` runs Jest with `--coverage`; plain `bun run test` skips all of this.
-2. Jest compares the run with `coverageThreshold.global` and fails on any metric below it.
-3. On a run that met every threshold, `jest/jest.teardown.config.ts` raises each threshold to
-   `max(current, actual)`, metric by metric. It never lowers one.
-4. The same teardown updates `COVERAGE.md` (per-file table) and `.github/badges/coverage.json` (badge), but only when
-   coverage actually changed (the generation time does not count), so running the tests leaves the tree clean.
-5. A run that failed a threshold leaves those files alone, so they always show the last good state.
+1. `bun run test:cov` roda `bun test test/ --coverage` e, se os testes passaram, o `scripts/coverage-ratchet.ts`.
+   O `bun run test` sozinho pula tudo isso, para o ciclo de TDD continuar rápido. O `bun run check` usa o `test:cov`.
+2. O Bun mede funções e linhas e escreve `coverage/lcov.info`. O script calcula o total como o "All files" do Bun
+   (a média por arquivo, um arquivo sem nada a cobrir valendo 100) e o compara com `coverage-thresholds.json`.
+3. Abaixo de qualquer limite, a execução falha (saída 1) e nada é regravado: os arquivos mostram sempre o último
+   estado bom.
+4. Numa execução que passou, cada limite sobe para `max(atual, medido)`, métrica por métrica, arredondado para baixo
+   em 0,01 (nunca acima do medido, senão a próxima execução falharia sem nada piorar). Nunca desce sozinho.
+5. O mesmo script regrava `COVERAGE.md` (tabela por módulo e arquivo) e `.github/badges/coverage.json` (badge), só
+   quando o conteúdo muda (a hora da geração não conta), então rodar os testes deixa a árvore limpa.
 
-Commit `jest/jest.coverage.config.json`, `COVERAGE.md` and `.github/badges/`. Do not edit `COVERAGE.md` by hand.
+Versione `coverage-thresholds.json`, `COVERAGE.md` e `.github/badges/`. Não edite o `COVERAGE.md` à mão.
 
-## When coverage fails
+## Quando a cobertura falha
 
-The fix is a test, not a number. Read the failing file in `coverage/coverage.txt` or `COVERAGE.md`, find the
-uncovered branch or failure path, and write a spec that exercises it through real behavior. Do not write tests
-that only execute declarations to inflate a percentage; they raise the threshold without protecting anything, and
-the ratchet then locks that hollow number in.
+A correção é um teste, não um número. Veja no `COVERAGE.md` (ou na tabela que o `bun test --coverage` mostra) o
+arquivo e as linhas sem cobertura, ache o caminho de erro ou o ramo que ninguém exercita, e escreva um teste que o
+exercite por um comportamento de verdade. Não escreva testes que só executam declarações para inflar a
+porcentagem: eles sobem o limite sem proteger nada, e a catraca trava esse número oco.
 
-## Things that need the user's explicit say-so
+## O que precisa do aval explícito de quem usa
 
-- **Lowering a threshold** in `jest/jest.coverage.config.json`. The whole point is that this is deliberate and visible.
-  Suggest it only when a real, understood reason exists, and edit only the metric they name.
-- **Adding to `collectCoverageFrom` exclusions** in `jest/jest.coverage.config.json`. Today it excludes specs and the
-  whole `__tests__/` folder (test code and helpers), `.d.ts`, `main.ts` (wiring-only entrypoints),
-  `*.interface.ts` and `*.types.ts` (no executable code), and `index.ts` (a folder's public face: re-exports only,
-  the logic lives in the files it names). Excluding a file that holds logic hides exactly what the ratchet
-  protects. If a file is hard to cover, that is usually a design signal: move the logic into a testable module
-  and keep the excluded file thin.
+- **Baixar um limite** em `coverage-thresholds.json`. A graça é que isso seja deliberado e visível. Sugira só com um
+  motivo real e entendido, e mexa só na métrica que a pessoa disser.
+- **Acrescentar uma exclusão** em `coveragePathIgnorePatterns`, no `bunfig.toml`. Hoje ficam de fora: os testes e o
+  que eles criam em pastas temporárias (`test/**`, `../**`), os exemplos (`agents/**`, `guides/**`), as rodadas
+  declaradas e as fixtures delas (`rounds/definitions/**`, `rounds/fixtures/**`) e a configuração do projeto
+  (`config/**`, `choliba.config.ts`). Excluir um arquivo com lógica esconde justamente o que a catraca protege. Se um
+  arquivo é difícil de cobrir, isso costuma ser um sinal de desenho: leve a lógica para um módulo testável.
 
-## Design decisions
+## Decisões de desenho
 
-The thresholds started at 0 and the ratchet raised them to whatever the code reached; no number was carried over
-from anywhere else. A few deliberate choices (failed runs do not overwrite the report, the report is rewritten only
-when coverage really changed, typed parsing instead of `any`, the `esbuild-register` config loader instead of
-ts-node) are explained in `references/details.md`, along with the optional CI step that commits a raised threshold
-back to a PR branch. Read it before editing the teardown script or setting up CI.
+Os limites começaram em 0 e a catraca os subiu até o que o código alcançou. As escolhas (por que o limite não fica
+no `bunfig.toml`, por que a média por arquivo, o arredondamento para baixo, a regravação só quando muda) estão em
+`references/details.md`, junto com o passo opcional de CI. Leia antes de mexer no script.
 
-## Related
+## Relacionado
 
-`quality-gates` for the full `check` pipeline, `add-workspace-package` when a new package needs coverage from
-its first commit (it does automatically: `packages/*/src` and `apps/*/src` are collected).
+`AGENTS.md` para o `bun run check` inteiro (typecheck, lint, formatação e testes com cobertura).

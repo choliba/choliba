@@ -1,44 +1,45 @@
 ---
 name: object-calisthenics
-description: Apply Object Calisthenics — Jeff Bay's 9 constraint-based rules for better OO/TS design (one indentation level per method, no else, wrap primitives, first-class collections, one dot per line, no abbreviations, small classes/files, max two instance fields, no getters/setters) — adapted to this repo's TypeScript style. Use when writing or reviewing non-trivial domain logic, when a function/class is getting hard to follow, when asked to refactor for readability/testability, or when someone asks what "object calisthenics" means here. Not a `bun run check` gate — a discipline to apply deliberately, not an automated lint rule.
-argument-hint: 'The file/function you want reviewed or refactored, or empty to just read the rules.'
+description: Aplica o Object Calisthenics — as 9 regras de restrição de Jeff Bay para um desenho OO/TS melhor (um nível de indentação por método, sem else, embrulhar primitivos, coleções de primeira classe, um ponto por linha, sem abreviações, entidades pequenas, no máximo duas variáveis de instância, sem getters/setters) — adaptadas ao estilo TypeScript deste repositório. Use ao escrever ou revisar lógica de domínio não trivial, quando uma função ou classe está difícil de seguir, ao refatorar por legibilidade ou testabilidade, ou quando perguntarem o que "object calisthenics" quer dizer aqui. Não é um gate do `bun run check`: é uma disciplina para aplicar de propósito, não uma regra de lint.
+argument-hint: 'O arquivo ou a função a revisar ou refatorar; vazio para só ler as regras.'
 user-invocable: true
 disable-model-invocation: false
 ---
 
 # Object Calisthenics
 
-Nine rules from Jeff Bay's original exercise (via
-[devdojo-it/workshop-object-calisthenics](https://github.com/devdojo-it/workshop-object-calisthenics)), restated
-for this codebase's actual style: mostly functions, interfaces and small modules, not classes with instance
-state. They exist to **train judgment**, not to pass automatically — nothing here is wired into `bun run check`
-(see the `quality-gates` skill for what is). Apply them on purpose when writing or reviewing logic that will be
-read and changed often; do not chase all nine on a one-line script.
+Nove regras do exercício original de Jeff Bay (via
+[devdojo-it/workshop-object-calisthenics](https://github.com/devdojo-it/workshop-object-calisthenics)), reescritas
+para o estilo real deste código: sobretudo funções, interfaces e módulos pequenos, não classes com estado de instância.
+Elas existem para **treinar o julgamento**, não para passar sozinhas: nada aqui está ligado ao `bun run check` (o
+`AGENTS.md` diz o que está). Aplique de propósito ao escrever ou revisar lógica que será lida e mudada com frequência;
+não persiga as nove num script de uma linha.
 
-## The 9 rules, adapted to TypeScript
+## As 9 regras, adaptadas ao TypeScript
 
-| # | Rule (original) | What it means here |
-|---|---|---|
-| 1 | One level of indentation per method | One level of nesting per function. A second `if`/`for` inside a block means extract a function or return early — see `agent-loader.ts`'s `fail()` helper and `agent-validation.ts`'s early `return` guards for the pattern already in use. |
-| 2 | Don't use `else` | Guard clauses and early `return`/`throw` instead of `if/else` chains. Ternaries for a single value are fine; a ternary that hides a second branch of logic is not. |
-| 3 | Wrap all primitives and strings | A bare `string`/`number` that carries meaning (an agent name, a tag name, a path) becomes a named type or a validating function at the boundary, not a naked primitive passed around — e.g. `isValidAgentName`/`NAME_PATTERN` in `agent-loader.ts`, not a raw string trusted everywhere. |
-| 4 | First-class collections | An array with its own rules (dedup, sort order, "must not be empty") gets a function that owns those rules next to it, instead of every caller re-implementing them — e.g. `listAppFiles`/`parseInstructionSections`'s grouping-into-array logic in `commands/agent.ts`, not inline `.push`/`.sort` scattered at each call site. |
-| 5 | One dot per line | No `a.b.c.d` chains reaching into another object's internals (Law of Demeter). One property/method access per expression; if you need the third level down, that's a missing method on the middle object. |
-| 6 | Don't abbreviate | `agentsDir`, not `aDir`; `resolveTicketContext`, not `rslvTktCtx`. This repo already does this — keep it that way in Portuguese prose and English identifiers alike. |
-| 7 | Keep all entities small | A function that needs `offset`/`limit` comments to stay readable is too long — split it. As a rough ceiling: a function over ~30 lines or a file over ~200 lines is a signal to look for a seam, not a hard limit to enforce mechanically. |
-| 8 | No more than two instance variables per class | Rare here since most logic is functions/modules, not classes — when a class or a config object *does* accumulate fields, two-plus that all vary together is a sign it should split into two smaller collaborators instead of one that does two jobs. |
-| 9 | No getters/setters/properties | Tell, don't ask. Prefer a function that performs the behavior (`validateAgentYaml(text)`) over exposing raw state for the caller to inspect and branch on. A plain data-carrying `interface` (like `AgentDefinition`) is fine — it's not hiding behavior behind an accessor, it *is* the data. |
+| # | Regra (original) | O que significa aqui |
+| --- | --- | --- |
+| 1 | Um nível de indentação por método | Um nível de aninhamento por função. Um segundo `if`/`for` dentro de um bloco pede uma função extraída ou um retorno antecipado: veja `validateCommandPattern` em `src/policy/command.ts`, que recusa cada caso inválido com um `throw` logo no começo. |
+| 2 | Não use `else` | Cláusulas de guarda e `return`/`throw` antecipados em vez de cadeias `if/else`. Ternário para um valor só vale; um ternário que esconde um segundo ramo de lógica não. |
+| 3 | Embrulhe todos os primitivos e strings | Um `string`/`number` solto que carrega significado (um padrão de comando, um caminho) vira um tipo com nome ou uma função que valida na borda, e não um primitivo nu passado por aí: `validateCommandPattern` e `validateWildmatch` (`src/policy`) validam o padrão uma vez, em vez de cada chamador confiar numa string crua. |
+| 4 | Coleções de primeira classe | Um array com regras próprias (sem repetição, ordem, "não pode estar vazio") ganha uma função que é dona dessas regras, ao lado dele, em vez de cada chamador reimplementá-las com `.push`/`.sort` espalhados. |
+| 5 | Um ponto por linha | Nada de cadeias `a.b.c.d` que alcançam o interior de outro objeto (Lei de Demeter). Um acesso por expressão; se você precisa do terceiro nível, falta um método no objeto do meio. |
+| 6 | Não abrevie | `agentsDir`, não `aDir`; `resolveTicketContext`, não `rslvTktCtx`. O repositório já faz isso: mantenha, tanto em prosa em português quanto em identificadores em inglês. |
+| 7 | Mantenha todas as entidades pequenas | Uma função que precisa de comentários para continuar legível é longa demais: divida. Como teto aproximado, uma função com mais de ~30 linhas ou um arquivo com mais de ~200 é um sinal para procurar uma emenda, não um limite a impor por máquina. |
+| 8 | No máximo duas variáveis de instância por classe | Raro aqui, porque a maior parte da lógica é função ou módulo, não classe. Quando uma classe ou um objeto de configuração *acumula* campos, dois ou mais que variam juntos são o sinal de que ele deve virar dois colaboradores menores, em vez de um que faz dois trabalhos. |
+| 9 | Sem getters/setters/propriedades | Diga, não pergunte. Prefira uma função que executa o comportamento a expor o estado cru para o chamador inspecionar e ramificar. Uma `interface` que só carrega dados (como as de `src/agent/types.ts`) vale: ela não esconde comportamento atrás de um acessor, ela *é* o dado. |
 
-## When to apply this
+## Quando aplicar
 
-- **Reviewing a PR or writing new domain logic** (validation, parsing, anything with real branching) — read the
-  function against this table before calling it done.
-- **A function is hard to follow** — work through rules 1, 2 and 7 first; they catch most of the actual pain.
-- **Not** for one-off scripts, test fixtures, or glue code whose whole job is to call one library function.
-- Conflicts with an existing house rule lose to the house rule — e.g. this repo's own conventions in `AGENTS.md`
-  and the `quality-gates` skill (no `any`, strict TypeScript) always win over calisthenics phrasing.
+- **Revisando um PR ou escrevendo lógica de domínio nova** (validação, parsing, qualquer coisa com ramificação de
+  verdade): leia a função contra esta tabela antes de dá-la por pronta.
+- **Uma função está difícil de seguir:** passe primeiro pelas regras 1, 2 e 7; elas pegam a maior parte da dor real.
+- **Não** para scripts descartáveis, fixtures de teste ou código de cola cujo trabalho todo é chamar uma função de
+  biblioteca.
+- Um conflito com uma regra da casa perde para a regra da casa: as convenções do `AGENTS.md` e os gates do
+  `bun run check` (sem `any`, TypeScript estrito, oxlint) valem mais que a redação do calisthenics.
 
-## Related
+## Relacionado
 
-`quality-gates` — the mechanically enforced gates (`bun run check`). This skill is a complement, not an
-overlap: calisthenics is about *shape* (readability, cohesion), quality-gates is about *correctness and typing*.
+`AGENTS.md`: as regras do repositório e os gates do `bun run check`. Esta skill é um complemento, não uma sobreposição:
+o calisthenics trata da *forma* (legibilidade, coesão); os gates tratam de *correção e tipagem*.

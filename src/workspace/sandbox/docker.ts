@@ -1,0 +1,548 @@
+import { randomUUID } from 'node:crypto';
+import { homedir } from 'node:os';
+
+import { isDirectory, pathExists } from '../../filesystem/index';
+import { currentUser, environment, runProgram } from '../../execute/process';
+import type { ProgramCommand } from '../../execute/types';
+import { UsageError } from '../../errors';
+import { isDebug } from '../../logger/index';
+import { log } from '../../logger/index';
+import { logSandbox } from './debug';
+import { hostStateDirs } from './host-state';
+import { protectedMasks } from './protect';
+import type { NetworkExit, Sandbox } from './types';
+import type { SandboxHost } from './host-access';
+import { bubblewrapReadonlyBinds } from './bubblewrap';
+import { wrapCommand } from './wrap-command';
+import type { FilesystemAccess } from '../../policy/index';
+import { DEFAULT_DOCKER_IMAGE } from '../constants';
+
+export interface DockerSandboxOptions {
+  /**
+   * `FROM nome:tag` comes from the registry (Docker Hub) when missing here;
+   * `nome:tag` alone is an image built on this machine, never pulled.
+   */
+  readonly image: string;
+  readonly root: string;
+  readonly env?: NodeJS.ProcessEnv;
+  readonly writable?: readonly string[];
+}
+
+export { DEFAULT_DOCKER_IMAGE } from '../constants';
+
+const HOST_ROOT = '/host';
+const FROM_IMAGE = /^FROM\s+(\S+)$/i;
+const LOCAL_IMAGE = /^\S+$/;
+
+interface DockerImage {
+  readonly name: string;
+  /** `docker run --pull`: from the registry, or only what is here. */
+  readonly pull: 'missing' | 'never';
+}
+
+/**
+ * Jails the host executable inside the image: the host filesystem is read-only,
+ * except for the workspace root and generic CLI state directories.
+ */
+export class DockerSandbox implements Sandbox {
+  private readonly image: DockerImage;
+  private readonly root: string;
+  private readonly env: NodeJS.ProcessEnv;
+  private readonly writable: readonly string[];
+  private containerName: string | undefined;
+  private filesystem: FilesystemAccess | undefined;
+  private protectedPaths: readonly string[] = [];
+  private network: NetworkExit | undefined;
+  private host: SandboxHost | undefined;
+
+  public constructor({
+    image,
+    root,
+    env = environment(),
+    writable = [],
+  }: DockerSandboxOptions) {
+    this.image = readDockerImage(image);
+    this.root = root;
+    this.env = env;
+    this.writable = writable;
+  }
+
+  public configureFilesystem(access: FilesystemAccess): void {
+    this.filesystem = access;
+  }
+
+  public protect(paths: readonly string[]): void {
+    this.protectedPaths = [...this.protectedPaths, ...paths];
+  }
+
+  /**
+   * The container gets no network (`--network none`): each one starts with
+   * the bridge to Choliba's proxy, which then runs the command.
+   */
+  public useHost(host: SandboxHost): void {
+    this.host = host;
+  }
+
+  public isolateNetwork(exit: NetworkExit): void {
+    this.network = exit;
+  }
+
+  public async prepare(command: ProgramCommand): Promise<ProgramCommand> {
+    const network = this.network;
+    const launcher = network === undefined ? [] : await network.launcher();
+    const host = this.host;
+    // With a host share, only its variables reach the container; the docker
+    // client keeps its own (DOCKER_HOST…) without passing them in.
+    const passed = host?.env ?? this.env;
+    const envNames = Object.keys(passed)
+      .filter((name) => passed[name] !== undefined)
+      .toSorted();
+    const envArgs = envNames.flatMap((name) => ['-e', name]);
+    const innerRoot = `${HOST_ROOT}${this.root}`;
+    const writable = [
+      ...(host?.state ?? hostStateDirs(this.env)),
+      ...this.writable,
+      ...(this.filesystem?.writable ?? []),
+      // The bridge finds the proxy's socket there and creates the
+      // published ports' sockets.
+      ...(network === undefined ? [] : [network.sandboxDir()]),
+    ];
+    const described = describeMounts(
+      this.root,
+      innerRoot,
+      writable,
+      {
+        workspaceAccess: this.filesystem?.workspaceAccess ?? 'readwrite',
+        writable: this.filesystem?.writable ?? [],
+        masks: [
+          ...(this.filesystem?.masks ?? []),
+          ...protectedMasks(this.protectedPaths),
+          // Logins the provider does not use: not in the container.
+          ...(host?.hidden ?? []).map((path) => ({
+            path,
+            access: 'hidden' as const,
+          })),
+        ],
+      },
+      host === undefined ? undefined : homeOf(this.env),
+    );
+    // The CLI's installation, read-only; the workspace's home, writable, with
+    // the CLI's login read-only inside it. Docker mounts the shorter paths
+    // first, so the home is there even inside a hidden path.
+    const mounts = [
+      ...described,
+      ...(host?.programs ?? [])
+        // Inside the CLI's state (`share`): already there, writable.
+        .filter(
+          (path) =>
+            pathExists(path) &&
+            !writable.some(
+              (mount) => path === mount || path.startsWith(`${mount}/`),
+            ),
+        )
+        .map((path) => ({
+          type: 'bind',
+          source: path,
+          destination: `${HOST_ROOT}${path}`,
+          mode: 'ro',
+        })),
+      ...(host?.home === undefined
+        ? []
+        : [
+            {
+              type: 'bind',
+              source: host.home,
+              destination: `${HOST_ROOT}${host.home}`,
+              mode: 'rw',
+            },
+            ...host.credentials.map(({ source, destination }) => ({
+              type: 'bind',
+              source,
+              destination: `${HOST_ROOT}${destination}`,
+              mode: 'ro',
+            })),
+          ]),
+    ];
+    const containerName = `choliba-${randomUUID().slice(0, 8)}`;
+    this.containerName = containerName;
+    const { uid, gid } = currentUser();
+
+    logSandbox('docker', command, {
+      isolation: true,
+      image: this.image.name,
+      pull: this.image.pull,
+      container: { name: containerName, autoRemove: true, interactive: true },
+      network: { mode: network === undefined ? 'host' : 'none' },
+      workingDir: innerRoot,
+      mounts,
+      volumes: mounts
+        .filter((mount) => mount.type === 'bind')
+        .map(
+          (mount) =>
+            `${mount.source}:${mount.destination}:${mount.mode ?? 'rw'}`,
+        ),
+      capabilities: ['SYS_CHROOT'],
+      user: { uid, gid },
+      env: envNames,
+      chroot: HOST_ROOT,
+      chdir: this.root,
+    });
+
+    const prepared = wrapCommand(
+      'docker',
+      [
+        'run',
+        '--rm',
+        '-i',
+        '--name',
+        containerName,
+        '--network',
+        network === undefined ? 'host' : 'none',
+        '--cap-add',
+        'SYS_CHROOT',
+        ...volumeArgs(mounts),
+        '-w',
+        innerRoot,
+        ...envArgs,
+        '--pull',
+        this.image.pull,
+        this.image.name,
+        'chroot',
+        HOST_ROOT,
+        ...innerUserCommand(),
+        '/usr/bin/env',
+        `--chdir=${this.root}`,
+        ...(network?.environment() ?? []),
+        ...launcher,
+      ],
+      command,
+    );
+    // The docker client gets only what goes in, plus its own settings.
+    return host === undefined
+      ? prepared
+      : { ...prepared, env: { ...dockerClientEnv(this.env), ...host.env } };
+  }
+
+  /** Removes the last container; killing `docker run` does not always stop it. */
+  public async close(): Promise<void> {
+    const name = this.containerName;
+    this.containerName = undefined;
+
+    if (name === undefined) {
+      return;
+    }
+
+    await runProgram('docker', ['rm', '--force', name], {
+      timeoutMs: 10_000,
+    }).catch(() => undefined);
+  }
+
+  public async started(pid: number | undefined): Promise<void> {
+    if (!isDebug()) {
+      return;
+    }
+
+    log.debug({
+      type: 'sandbox',
+      sandbox: 'docker',
+      phase: 'process',
+      pid,
+      container: { name: this.containerName },
+    });
+
+    if (this.containerName === undefined) {
+      return;
+    }
+
+    const inspect = await inspectContainer(this.containerName);
+
+    log.debug({
+      type: 'sandbox',
+      sandbox: 'docker',
+      phase: 'inspect',
+      container: { name: this.containerName },
+      ...(inspect ?? { error: 'container não encontrado' }),
+    });
+  }
+}
+
+interface Mount {
+  readonly type: string;
+  readonly source?: string;
+  readonly destination: string;
+  readonly mode?: string;
+  /** tmpfs options (e.g. `mode=755`). */
+  readonly options?: string;
+}
+
+function describeMounts(
+  root: string,
+  innerRoot: string,
+  extra: readonly string[],
+  filesystem?: FilesystemAccess,
+  /** Hidden behind an empty tmpfs; only the tools and `extra` come back. */
+  home?: string,
+): Mount[] {
+  const mounts: Mount[] = [
+    { type: 'bind', source: '/', destination: HOST_ROOT, mode: 'ro' },
+    ...(home === undefined ? [] : hiddenHome(home)),
+    {
+      type: 'bind',
+      source: root,
+      destination: innerRoot,
+      mode: filesystem?.workspaceAccess === 'readonly' ? 'ro' : 'rw',
+    },
+  ];
+  const seen = new Set([root]);
+
+  for (const path of extra) {
+    if (seen.has(path) || !pathExists(path)) {
+      continue;
+    }
+
+    seen.add(path);
+    mounts.push({
+      type: 'bind',
+      source: path,
+      destination: `${HOST_ROOT}${path}`,
+      mode: 'rw',
+    });
+  }
+
+  mounts.push({ type: 'tmpfs', destination: `${HOST_ROOT}/tmp` });
+
+  for (const mask of filesystem?.masks ?? []) {
+    const destination = `${HOST_ROOT}${mask.path}`;
+
+    if (mask.access === 'readonly') {
+      mounts.push({
+        type: 'bind',
+        source: mask.path,
+        destination,
+        mode: 'ro',
+      });
+    } else if (isDirectory(mask.path)) {
+      mounts.push({ type: 'tmpfs', destination });
+    } else {
+      mounts.push({
+        type: 'bind',
+        source: '/dev/null',
+        destination,
+        mode: 'ro',
+      });
+    }
+  }
+  return mounts;
+}
+
+/**
+ * The host home as an empty tmpfs (no ~/.config, no browser profiles, no
+ * other logins), with the tools the agent runs (bun, ~/.local/bin, PATH
+ * entries under it) mounted back read-only.
+ */
+function hiddenHome(home: string): Mount[] {
+  const tools = bubblewrapReadonlyBinds().filter((path) =>
+    path.startsWith(`${home}/`),
+  );
+  return [
+    // Traversable: the paths mounted back inside are reached through it.
+    { type: 'tmpfs', destination: `${HOST_ROOT}${home}`, options: 'mode=755' },
+    ...tools.map((path) => ({
+      type: 'bind',
+      source: path,
+      destination: `${HOST_ROOT}${path}`,
+      mode: 'ro',
+    })),
+  ];
+}
+
+/** What the docker client itself reads (DOCKER_HOST…): never passed in. */
+function dockerClientEnv(env: NodeJS.ProcessEnv): Record<string, string> {
+  const client: Record<string, string> = {};
+  for (const [name, value] of Object.entries(env)) {
+    if (value !== undefined && name.startsWith('DOCKER_')) client[name] = value;
+  }
+  return client;
+}
+
+function homeOf(env: NodeJS.ProcessEnv): string {
+  return env['HOME'] ?? homedir();
+}
+
+function volumeArgs(mounts: readonly Mount[]): string[] {
+  const args: string[] = [];
+
+  for (const mount of mounts) {
+    if (mount.type === 'tmpfs') {
+      args.push(
+        '--tmpfs',
+        mount.options === undefined
+          ? mount.destination
+          : `${mount.destination}:${mount.options}`,
+      );
+      continue;
+    }
+
+    if (mount.source === undefined) {
+      continue;
+    }
+
+    const spec =
+      mount.mode === 'ro'
+        ? `${mount.source}:${mount.destination}:ro`
+        : `${mount.source}:${mount.destination}`;
+    args.push('-v', spec);
+  }
+
+  return args;
+}
+
+function innerUserCommand(): readonly string[] {
+  const { uid, gid } = currentUser();
+
+  if (uid === undefined || gid === undefined || uid === 0) {
+    return [];
+  }
+
+  return [
+    '/usr/bin/setpriv',
+    `--reuid=${uid}`,
+    `--regid=${gid}`,
+    '--init-groups',
+    '--',
+  ];
+}
+
+function readDockerImage(image: string): DockerImage {
+  const value = image.trim();
+  const remote = FROM_IMAGE.exec(value)?.[1];
+  if (remote !== undefined) return { name: remote, pull: 'missing' };
+  // `FROM` without a name is a mistake, not an image called FROM.
+  if (LOCAL_IMAGE.test(value) && !/^FROM$/i.test(value)) {
+    return { name: value, pull: 'never' };
+  }
+
+  throw new UsageError(
+    `A imagem do workspace Docker deve ser FROM <imagem> (do Docker Hub) ou <imagem> (construída nesta máquina). Exemplo:\n\n  ${DEFAULT_DOCKER_IMAGE}`,
+  );
+}
+
+async function inspectContainer(
+  name: string,
+): Promise<Record<string, unknown> | undefined> {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    try {
+      const stdout = await runProgram('docker', ['inspect', name], {
+        timeoutMs: 1000,
+      });
+      const parsed: unknown = JSON.parse(stdout);
+
+      if (Array.isArray(parsed)) {
+        return readInspect(parsed[0]);
+      }
+    } catch {
+      await delay(60);
+    }
+  }
+
+  return undefined;
+}
+
+function readInspect(value: unknown): Record<string, unknown> | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const state = isRecord(value['State']) ? value['State'] : {};
+  const host = isRecord(value['HostConfig']) ? value['HostConfig'] : {};
+  const config = isRecord(value['Config']) ? value['Config'] : {};
+  const net = isRecord(value['NetworkSettings'])
+    ? value['NetworkSettings']
+    : {};
+  const networks = isRecord(net['Networks']) ? net['Networks'] : {};
+
+  return {
+    id: value['Id'],
+    name: value['Name'],
+    created: value['Created'],
+    image: value['Image'],
+    platform: value['Platform'],
+    driver: value['Driver'],
+    path: value['Path'],
+    args: value['Args'],
+    state: {
+      status: state['Status'],
+      running: state['Running'],
+      pid: state['Pid'],
+      error: state['Error'],
+      startedAt: state['StartedAt'],
+    },
+    config: {
+      hostname: config['Hostname'],
+      user: config['User'],
+      image: config['Image'],
+      workingDir: config['WorkingDir'],
+    },
+    host: {
+      networkMode: host['NetworkMode'],
+      binds: host['Binds'],
+      capAdd: host['CapAdd'],
+      privileged: host['Privileged'],
+      autoRemove: host['AutoRemove'],
+      tmpfs: host['Tmpfs'],
+      runtime: host['Runtime'],
+      pidMode: host['PidMode'],
+      ipcMode: host['IpcMode'],
+    },
+    mounts: Array.isArray(value['Mounts'])
+      ? value['Mounts'].map(readMount)
+      : [],
+    network: {
+      mode: host['NetworkMode'],
+      sandboxId: net['SandboxID'],
+      ipAddress: net['IPAddress'],
+      gateway: net['Gateway'],
+      macAddress: net['MacAddress'],
+      networks: Object.fromEntries(
+        Object.entries(networks).map(([networkName, network]) => [
+          networkName,
+          isRecord(network)
+            ? {
+                networkId: network['NetworkID'],
+                ipAddress: network['IPAddress'],
+                gateway: network['Gateway'],
+                macAddress: network['MacAddress'],
+              }
+            : {},
+        ]),
+      ),
+    },
+  };
+}
+
+function readMount(value: unknown): Record<string, unknown> {
+  if (!isRecord(value)) {
+    return {};
+  }
+
+  return {
+    type: value['Type'],
+    name: value['Name'],
+    source: value['Source'],
+    destination: value['Destination'],
+    driver: value['Driver'],
+    mode: value['Mode'],
+    rw: value['RW'],
+    propagation: value['Propagation'],
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}

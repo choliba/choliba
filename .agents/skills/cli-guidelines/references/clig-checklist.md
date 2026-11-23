@@ -1,134 +1,135 @@
-# clig.dev checklist
+# Checklist do clig.dev
 
-A condensed version of the [Command Line Interface Guidelines](https://clig.dev/), section by section. Read the
-original for the reasoning; `SKILL.md` says which rules choliba applies and how.
+Uma versão condensada das [Command Line Interface Guidelines](https://clig.dev/), seção por seção. Leia o original
+para o raciocínio; o `SKILL.md` diz quais regras o Choliba aplica e como.
 
-## Contents
+## Conteúdo
 
-- Philosophy
-- Basics
-- Help and documentation
-- Output
-- Errors
-- Arguments and flags
-- Interactivity
-- Subcommands
-- Robustness
-- Future-proofing
-- Signals
-- Configuration and environment variables
-- Naming, distribution, analytics
+- Filosofia
+- O básico
+- Ajuda e documentação
+- Saída
+- Erros
+- Argumentos e opções
+- Interatividade
+- Subcomandos
+- Robustez
+- Compatibilidade futura
+- Sinais
+- Configuração e variáveis de ambiente
+- Nome, distribuição e análise de uso
 
-## Philosophy
+## Filosofia
 
-Human-first design; simple parts that compose (stdin/stdout/stderr, exit codes, signals, plain text, JSON);
-consistency with existing conventions; say just enough; ease of discovery; the CLI as a conversation (suggest
-corrections, confirm risky steps, show state); robustness, both real and perceived; empathy; break a rule only
-with a clear reason.
+Desenho pensado em gente primeiro; peças simples que se compõem (stdin/stdout/stderr, códigos de saída, sinais, texto
+simples, JSON); coerência com as convenções existentes; diga só o bastante; fácil de descobrir; a CLI como conversa
+(sugira correções, confirme passos arriscados, mostre o estado); robustez, a real e a percebida; empatia; quebre uma
+regra só com um motivo claro.
 
-## Basics
+## O básico
 
-- Use an argument parsing library.
-- Exit 0 on success, non-zero on failure.
-- Primary output to stdout; logs, errors and messages to stderr.
+- Use uma biblioteca de análise de argumentos.
+- Saída 0 em sucesso, diferente de 0 em falha.
+- Saída principal no stdout; logs, erros e mensagens no stderr.
 
-## Help and documentation
+## Ajuda e documentação
 
-- `-h` and `--help` show help; `help` and `help <subcommand>` too in git-like tools. Help ignores other flags.
-- A command missing required arguments shows concise help: description, one or two examples, main flags, a
-  pointer to `--help`.
-- Full help leads with examples and the most used flags; links to web docs and to where to get support.
-- Suggest a correction for a likely typo, but do not run the corrected command silently.
-- A command that reads stdin and finds a TTY shows help instead of hanging.
-- Provide web docs; terminal docs (`help`) are a plus.
+- `-h` e `--help` mostram a ajuda; `help` e `help <subcomando>` também em ferramentas no estilo do git. A ajuda ignora
+  as outras opções.
+- Um comando sem os argumentos obrigatórios mostra uma ajuda concisa: descrição, um ou dois exemplos, as opções
+  principais e um aponte para `--help`.
+- A ajuda completa abre com exemplos e com as opções mais usadas; liga para a documentação na web e para onde pedir
+  suporte.
+- Sugira uma correção para um erro de digitação provável, mas não rode o comando corrigido em silêncio.
+- Um comando que lê o stdin e acha um TTY mostra a ajuda em vez de travar.
+- Tenha documentação na web; a do terminal (`help`) é um bônus.
 
-## Output
+## Saída
 
-- Human-readable first; detect a TTY to know whether a human is reading.
-- Machine-readable where it costs nothing: `--plain` (one record per line), `--json`.
-- On success, print something brief; `-q`/`--quiet` silences the non-essential.
-- After a state change, say what happened and the new state; make the current state easy to see; suggest the
-  next command.
-- Make crossing the program's boundary explicit (reading files not passed in, network calls).
-- Color with intention. Disable it when stdout/stderr is not a TTY, `NO_COLOR` is set and non-empty,
-  `TERM=dumb`, or `--no-color` is passed (optionally a `MYAPP_NO_COLOR`).
-- No animations when stdout is not a TTY.
-- Symbols and emoji only where they add structure.
-- No developer-only debug output by default; stderr is not a log file (no level prefixes unless verbose).
-- Page long output (`less -FIRX`) when stdout is a TTY.
+- Primeiro legível por gente; detecte um TTY para saber se uma pessoa está lendo.
+- Legível por máquina quando não custa nada: `--plain` (um registro por linha), `--json`.
+- Em sucesso, imprima algo breve; `-q`/`--quiet` silencia o não essencial.
+- Depois de mudar estado, diga o que aconteceu e o novo estado; deixe fácil ver o estado atual; sugira o próximo
+  comando.
+- Torne explícito quando o programa cruza a própria fronteira (lê arquivo que não recebeu, chama a rede).
+- Cor com intenção. Desligue quando o stdout/stderr não é um TTY, quando `NO_COLOR` está definida e não vazia, com
+  `TERM=dumb` ou com `--no-color`.
+- Sem animação quando o stdout não é um TTY.
+- Símbolos e emoji só onde dão estrutura.
+- Sem saída de depuração por padrão; o stderr não é um arquivo de log (sem prefixo de nível, a menos que seja verboso).
+- Pagine saída longa (`less -FIRX`) quando o stdout é um TTY.
 
-## Errors
+## Erros
 
-- Catch expected errors and rewrite them for humans, with how to fix them.
-- High signal-to-noise: group repeated errors under one header; the most important information last; red only
-  where it matters.
-- For unexpected errors: debug info (ideally in a file) and how to report the bug, made easy.
+- Capture os erros esperados e reescreva-os para gente, com como corrigir.
+- Boa relação sinal/ruído: agrupe erros repetidos sob um título; a informação mais importante por último; vermelho só
+  onde importa.
+- Para erros inesperados: informação de depuração (de preferência num arquivo) e como reportar o bug, de forma fácil.
 
-## Arguments and flags
+## Argumentos e opções
 
-- Prefer flags to positional arguments; several positionals only for the same kind of thing (`rm a b c`) or a
-  very common two-argument form (`cp src dst`).
-- Every flag has a long form; one-letter flags only for the most common.
-- Standard names: `-a/--all`, `-d/--debug`, `-f/--force`, `--json`, `-h/--help` (only help), `-n/--dry-run`,
-  `--no-input`, `-o/--output`, `-p/--port`, `-q/--quiet`, `-u/--user`, `--version`; avoid `-v` (verbose or
-  version?).
-- Make the default right for most users.
-- Prompt for missing input, but never require prompting; skip prompts when stdin is not a TTY.
-- Confirm danger by severity: mild (maybe), moderate (prompt, offer `--dry-run`), severe (type the name or pass
-  `--confirm=<name>`).
-- Accept `-` for stdin/stdout where files are expected.
-- A special word (`none`) for "no value" instead of an empty value.
-- Order-independent flags and subcommands where possible.
-- Never read secrets from flags; use a file (`--password-file`) or stdin.
+- Prefira opções a argumentos posicionais; vários posicionais só para o mesmo tipo de coisa (`rm a b c`) ou a forma
+  comum de dois (`cp origem destino`).
+- Toda opção tem forma longa; as de uma letra só para as mais comuns.
+- Nomes padrão: `-a/--all`, `-d/--debug`, `-f/--force`, `--json`, `-h/--help` (só ajuda), `-n/--dry-run`, `--no-input`,
+  `-o/--output`, `-p/--port`, `-q/--quiet`, `-u/--user`, `--version`; evite `-v` (verboso ou versão?).
+- Faça o padrão certo para a maioria de quem usa.
+- Pergunte o que falta, mas nunca exija a pergunta; pule as perguntas quando o stdin não é um TTY.
+- Confirme o perigo pela gravidade: leve (talvez), moderado (pergunte, ofereça `--dry-run`), grave (digite o nome ou
+  passe `--confirm=<nome>`).
+- Aceite `-` para stdin/stdout onde se esperam arquivos.
+- Uma palavra especial (`none`) para "sem valor", em vez de um valor vazio.
+- Opções e subcomandos independentes da ordem, quando der.
+- Nunca leia segredos de opções; use um arquivo (`--password-file`) ou o stdin.
 
-## Interactivity
+## Interatividade
 
-- Prompt only when stdin is a TTY; with `--no-input`, never prompt and fail naming the flag.
-- No echo for passwords.
-- Make escaping obvious; Ctrl-C must work.
+- Pergunte só quando o stdin é um TTY; com `--no-input`, nunca pergunte e falhe nomeando a opção.
+- Sem eco para senhas.
+- Deixe óbvio como sair; o Ctrl-C precisa funcionar.
 
-## Subcommands
+## Subcomandos
 
-- Same flag names and output style across subcommands.
-- One naming order for nested commands (noun verb or verb noun), used everywhere.
-- No confusingly similar names (`update` and `upgrade`).
+- Os mesmos nomes de opção e o mesmo estilo de saída em todos.
+- Uma ordem de nomes para comandos aninhados (substantivo verbo ou verbo substantivo), usada em todo lugar.
+- Sem nomes parecidos demais (`update` e `upgrade`).
 
-## Robustness
+## Robustez
 
-- Validate input early.
-- Responsive over fast: print something within ~100 ms, especially before network calls.
-- Show progress for long work; be careful with parallel output.
-- Time out network operations.
-- Recoverable: re-running after an interruption continues.
-- Crash-only: little cleanup on exit, deferred to the next run.
-- Expect misuse: scripts, bad networks, many instances, odd environments.
+- Valide a entrada cedo.
+- Responsivo mais que rápido: imprima algo em até ~100 ms, sobretudo antes de chamar a rede.
+- Mostre progresso em trabalho longo; cuidado com a saída em paralelo.
+- Dê tempo limite às operações de rede.
+- Recuperável: rodar de novo depois de uma interrupção continua de onde parou.
+- Só cair (crash-only): pouca limpeza na saída, adiada para a próxima execução.
+- Espere o mau uso: scripts, redes ruins, muitas instâncias, ambientes estranhos.
 
-## Future-proofing
+## Compatibilidade futura
 
-- Keep changes additive; warn before non-additive ones, saying how to migrate.
-- Human output may change; scripts should use `--plain`/`--json`.
-- No catch-all subcommand; no implicit abbreviations of subcommands (explicit aliases only).
-- No time bombs: no hard dependency on services that may disappear; no blocking analytics.
+- Mantenha as mudanças aditivas; avise antes das não aditivas, dizendo como migrar.
+- O texto para gente pode mudar; scripts devem usar `--plain`/`--json`.
+- Sem subcomando coringa; sem abreviação implícita de subcomandos (só aliases explícitos).
+- Sem bomba-relógio: nenhuma dependência dura de um serviço que pode sumir; nenhuma análise de uso que bloqueie.
 
-## Signals
+## Sinais
 
-- On Ctrl-C, say something immediately and exit as soon as possible; bound cleanup with a timeout.
-- On a second Ctrl-C during cleanup, skip the rest and say so.
+- No Ctrl-C, diga algo na hora e saia o quanto antes; limite a limpeza com um tempo.
+- Num segundo Ctrl-C durante a limpeza, pule o resto e diga isso.
 
-## Configuration and environment variables
+## Configuração e variáveis de ambiente
 
-- Per-invocation settings: flags (and maybe env vars). Per-user/project settings: flags and env vars (maybe
-  `.env`). Project settings under version control: a config file.
-- Precedence: flags > shell environment > project config (`.env`) > user config > system config.
-- Follow XDG (`~/.config`). Ask before modifying config the program does not own; prefer a separate file.
-- Env var names: uppercase letters, digits, underscores; single-line values; avoid POSIX names.
-- Honour general-purpose vars: `NO_COLOR`, `FORCE_COLOR`, `DEBUG`, `EDITOR`, `HTTP(S)_PROXY`, `NO_PROXY`,
-  `SHELL`, `TERM`, `TMPDIR`, `HOME`, `PAGER`, `LINES`, `COLUMNS`.
-- `.env` is fine for local project settings but not a substitute for a config file.
-- Do not read secrets from environment variables; use files, pipes or a secrets manager.
+- Ajustes por execução: opções (e talvez variáveis de ambiente). Por usuário ou projeto: opções e variáveis (talvez
+  `.env`). Ajustes do projeto sob controle de versão: um arquivo de configuração.
+- Precedência: opções > ambiente do shell > configuração do projeto (`.env`) > do usuário > do sistema.
+- Siga o XDG (`~/.config`). Pergunte antes de alterar configuração que o programa não é dono; prefira outro arquivo.
+- Variáveis: maiúsculas, dígitos e sublinhado; valor de uma linha; evite nomes do POSIX.
+- Respeite as de uso geral: `NO_COLOR`, `FORCE_COLOR`, `DEBUG`, `EDITOR`, `HTTP(S)_PROXY`, `NO_PROXY`, `SHELL`, `TERM`,
+  `TMPDIR`, `HOME`, `PAGER`, `LINES`, `COLUMNS`.
+- `.env` serve para ajustes locais do projeto, não substitui um arquivo de configuração.
+- Não leia segredos de variáveis de ambiente; use arquivos, pipes ou um cofre de segredos.
 
-## Naming, distribution, analytics
+## Nome, distribuição e análise de uso
 
-- Name: a short, memorable, lowercase word (dashes allowed), easy to type, not generic.
-- Distribute as a single binary or a native package; document uninstall.
-- No telemetry without consent; be explicit about what is collected; prefer opt-in.
+- Nome: uma palavra curta, memorável, em minúsculas (hífen vale), fácil de digitar, não genérica.
+- Distribua como um binário ou um pacote nativo; documente a desinstalação.
+- Sem telemetria sem consentimento; seja explícito sobre o que se coleta; prefira a adesão voluntária.
