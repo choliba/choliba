@@ -1,14 +1,14 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 23/11/2026 02:10:12: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 23/11/2026 02:22:11: não edite à mão.
 
-Limites (coverage-thresholds.json, só sobem): funções 92.44%, linhas 94.78%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
+Limites (coverage-thresholds.json, só sobem): funções 92.49%, linhas 94.78%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
 ## Resumo
 
 Status|Módulo|% Funcs|% Lines
 --|--|--|--
-🟢|**Total**|92.45|94.79
+🟢|**Total**|92.49|94.79
 🟢|[scripts](scripts)|100.00|98.61
 🟢|[src/adapters](src/adapters)|90.84|97.80
 🟢|[src/agent](src/agent)|96.70|95.59
@@ -25,7 +25,7 @@ Status|Módulo|% Funcs|% Lines
 🟢|[src/interaction](src/interaction)|97.22|99.47
 🟢|[src/logger](src/logger)|95.71|96.50
 🟢|[src/mcp](src/mcp)|76.61|93.74
-🟢|[src/network](src/network)|93.29|97.39
+🟢|[src/network](src/network)|94.03|97.39
 🟡|[src/output](src/output)|52.94|54.87
 🟢|[src/policy](src/policy)|99.55|99.28
 🟢|[src/providers](src/providers)|94.67|98.98
@@ -237,7 +237,7 @@ Status|Arquivo|% Funcs|% Lines
 🟢|[gate.ts](src/network/gate.ts)|90.48|100.00
 🟢|[index.ts](src/network/index.ts)|89.66|96.15
 🟢|[proxy.ts](src/network/proxy.ts)|72.09|88.40
-🟢|[publish.ts](src/network/publish.ts)|94.12|100.00
+🟢|[publish.ts](src/network/publish.ts)|100.00|100.00
 🟢|[rewrite.ts](src/network/rewrite.ts)|100.00|100.00
 🟢|[rules.ts](src/network/rules.ts)|100.00|94.57
 🟢|[types.ts](src/network/types.ts)|100.00|100.00
