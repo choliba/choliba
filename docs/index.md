@@ -3,6 +3,9 @@ layout: home
 hero:
   name: Choliba
   text: Agentes de código, sempre numa sandbox
+  image:
+    src: /owl-logo-choliba.svg
+    alt: A coruja do choliba
   tagline: Claude Code, Codex, Cursor e modelos locais pelo Ollama, a partir de scripts TypeScript, com a mesma política, a mesma conversa e o mesmo log.
   actions:
     - theme: brand
@@ -14,10 +17,18 @@ hero:
 features:
   - title: Uma sandbox sempre
     details: O agente roda isolado (bubblewrap ou Docker). Não há modo sem sandbox, e o gate de execução falha fechado.
+    link: /guias/workspace
+    linkText: Ver o curso
   - title: Uma política só
     details: A AgentPolicy vale igual para todo provider. O que um provider não sabe aplicar é recusado ao criar o agente.
+    link: /guias/policy
+    linkText: Ver o curso
   - title: Um contrato para todas as CLIs
     details: O mesmo agente, a mesma conversa e o mesmo log; troque só o provider.
+    link: /guias/providers
+    linkText: Ver o curso
   - title: Rodadas
     details: Compare agentes com fatos, não com impressões, e veja o resultado em páginas próprias.
+    link: /guias/rounds
+    linkText: Ver o curso
 ---
