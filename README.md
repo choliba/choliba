@@ -59,7 +59,7 @@ bun add github:choliba/choliba
 ```
 
 Ou gere o pacote aqui (`bun pm pack`, que também gera as páginas das rodadas) e instale o arquivo lá
-(`bun add ./choliba-0.1.0.tgz`).
+(`bun add ./choliba-0.1.1.tgz`).
 
 No outro projeto, a biblioteca vem de `choliba` (e `choliba/rounds`, `choliba/config`), e o comando `choliba` roda as
 rodadas e serve as páginas:

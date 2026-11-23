@@ -137,7 +137,7 @@ ruleset), e atualizar a página costuma limpar o aviso. Nunca use "Update branch
 sem um PR.
 
 Até a versão 1.0, cada release é uma pré-release do GitHub com a tag `v<versão>`, onde `<versão>` é a `version` do
-`package.json` (hoje `0.1.0`), com o pacote como arquivo, `choliba-<versão>.tgz` (`bun pm pack`). O merge na `master`
+`package.json` (hoje `0.1.1`), com o pacote como arquivo, `choliba-<versão>.tgz` (`bun pm pack`). O merge na `master`
 roda `.github/workflows/release.yml`: monta o pacote e cria a release dessa tag ou, se ela já existe, troca o `.tgz` e
 as notas e move a tag para o novo commit (`git push --force` da tag, a única exceção a "sem force-push", que é sobre
 branches). As notas são refeitas do git a cada vez por `scripts/release-notes.ts` (`bun run release:notes` para
