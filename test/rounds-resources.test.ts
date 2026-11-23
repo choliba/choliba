@@ -1,6 +1,11 @@
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { expect, test } from 'bun:test';
 
 import {
+  beginResources,
   cpuPercent,
   parseCpuTimes,
   parseCpuinfo,
@@ -133,4 +138,47 @@ test('summarizeWithin: só as amostras dentro da janela do agente', () => {
   ]);
   expect(summary.cpu).toEqual({ avgPct: 30, peakPct: 30 });
   expect(summary.mem).toEqual({ avgMb: 300, peakMb: 300 });
+});
+
+/** A folder with an `nvidia-smi` that answers like the real one, put first in PATH while `run` runs. */
+async function withFakeNvidiaSmi(run: () => Promise<void>): Promise<void> {
+  const dir = mkdtempSync(join(tmpdir(), 'choliba-nvidia-'));
+  const script = [
+    '#!/bin/sh',
+    'case "$1" in',
+    '  *name,memory.total*) echo "Placa de Teste, 8192, 550.10" ;;',
+    '  *) echo "42, 1024, 100.5, 60" ;;',
+    'esac',
+    '',
+  ].join('\n');
+  writeFileSync(join(dir, 'nvidia-smi'), script, { mode: 0o755 });
+  const original = process.env['PATH'];
+  process.env['PATH'] = `${dir}:${original ?? ''}`;
+  try {
+    await run();
+  } finally {
+    process.env['PATH'] = original;
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test('beginResources: com uma GPU, a máquina a descreve e cada amostra a mede', async () => {
+  await withFakeNvidiaSmi(async () => {
+    const sampler = await beginResources({ intervalMs: 5 });
+    await Bun.sleep(60);
+    const samples = await sampler.stop();
+
+    expect(sampler.machine.gpu).toEqual({
+      name: 'Placa de Teste',
+      memTotalMb: 8192,
+      driver: '550.10',
+    });
+    expect(samples.length).toBeGreaterThan(0);
+    expect(samples[0]?.gpu).toEqual({
+      utilPct: 42,
+      memUsedMb: 1024,
+      powerW: 100.5,
+      tempC: 60,
+    });
+  });
 });
