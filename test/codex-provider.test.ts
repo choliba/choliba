@@ -6,6 +6,7 @@ import {
   readlinkSync,
   rmSync,
   writeFileSync,
+  symlinkSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -91,6 +92,43 @@ describe('CodexProvider', () => {
       // Nada do Choliba no ~/.codex do host.
       expect(readFileSync(join(hostHome, '.codex', 'hooks.json'), 'utf8')).toBe(
         'hook-do-usuario',
+      );
+    } finally {
+      rmSync(base, { recursive: true, force: true });
+    }
+  });
+
+  test('share na sandbox: os links apontam para onde a sandbox vê o estado do host, e trocam os antigos', () => {
+    const provider = new CodexProvider({ model: 'modelo' });
+    const base = mkdtempSync(join(tmpdir(), 'choliba-codex-share-'));
+    const hostHome = join(base, 'host');
+    const home = join(base, 'workspace-home');
+    const own = join(home, '.codex-share');
+    mkdirSync(join(hostHome, '.codex', 'sessions'), { recursive: true });
+    writeFileSync(join(hostHome, '.codex', 'auth.json'), 'login');
+    // A link from before, to the host's path.
+    mkdirSync(own, { recursive: true });
+    symlinkSync(join(hostHome, '.codex', 'auth.json'), join(own, 'auth.json'));
+    const inside = (path: string): string =>
+      path.replace(hostHome, '/opt/choliba/user');
+
+    try {
+      provider.applyPolicy(
+        { default: 'deny' },
+        {
+          hookCommand: ['/bun', '/gate/hook', '/gate.sock'],
+          root: '/workspace',
+          home,
+          sharedHome: hostHome,
+          inside,
+        },
+      );
+
+      expect(readlinkSync(join(own, 'auth.json'))).toBe(
+        '/opt/choliba/user/.codex/auth.json',
+      );
+      expect(readlinkSync(join(own, 'sessions'))).toBe(
+        '/opt/choliba/user/.codex/sessions',
       );
     } finally {
       rmSync(base, { recursive: true, force: true });

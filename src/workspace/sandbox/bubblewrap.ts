@@ -3,6 +3,7 @@ import { homedir } from 'node:os';
 import {
   isDirectory,
   isSymlink,
+  listDirectory,
   pathExists,
   readLink,
   join,
@@ -26,11 +27,18 @@ import type { SandboxHost } from './host-access';
 import { wrapCommand } from './wrap-command';
 import type { FilesystemAccess, FilesystemMask } from '../../policy/index';
 import { protectedMasks } from './protect';
+import { SandboxPaths } from './path-map';
+import { SANDBOX_SUPPORT_DIR } from '../constants';
 
 export interface BubblewrapSandboxOptions {
   readonly root: string;
   readonly env?: NodeJS.ProcessEnv;
   readonly writable?: readonly string[];
+  /**
+   * Where each host path is seen in the jail (the root at `/home/choliba`);
+   * by default, from `root` and the `HOME` of `env`.
+   */
+  readonly paths?: SandboxPaths;
 }
 
 /**
@@ -43,7 +51,9 @@ const JAIL_COMMAND = ['cat'] as const;
 /**
  * Jails the host executable: only system dirs, the workspace root and CLI
  * state are visible. The rest of the host (including the parent of `root`)
- * is not mounted.
+ * is not mounted. The root is seen at `/home/choliba` (see `SandboxPaths`),
+ * the only thing in the jail's `/home`; what it needs from the host's homes
+ * is mounted under `/opt/choliba`.
  *
  * The bwrap process lives for the workspace, not for each CLI invocation.
  * Commands enter that jail with nsenter, so the pid in the debug log remains
@@ -53,6 +63,7 @@ export class BubblewrapSandbox implements Sandbox {
   private readonly root: string;
   private readonly env: NodeJS.ProcessEnv;
   private readonly writable: readonly string[];
+  private paths: SandboxPaths;
   private keeper: Helper | undefined;
   private jailPid: number | undefined;
   private starting: Promise<number> | undefined;
@@ -65,10 +76,13 @@ export class BubblewrapSandbox implements Sandbox {
     root,
     env = environment(),
     writable = [],
+    paths,
   }: BubblewrapSandboxOptions) {
     this.root = root;
     this.env = env;
     this.writable = writable;
+    this.paths =
+      paths ?? new SandboxPaths({ root, hostHome: env['HOME'] ?? homedir() });
   }
 
   public configureFilesystem(access: FilesystemAccess): void {
@@ -97,6 +111,8 @@ export class BubblewrapSandbox implements Sandbox {
     }
 
     this.host = host;
+    // The CLI's home, wherever the host share put it.
+    if (host.home !== undefined) this.paths = this.paths.withHome(host.home);
   }
 
   public isolateNetwork(exit: NetworkExit): void {
@@ -110,18 +126,20 @@ export class BubblewrapSandbox implements Sandbox {
   public async prepare(command: ProgramCommand): Promise<ProgramCommand> {
     const pid = await this.ensureJail();
     const network = this.network;
+    const passed = this.host?.env ?? this.env;
+    const inner = this.paths.insideCommand(command, passed['PATH']);
 
     const prepared = wrapCommand(
       'nsenter',
-      bubblewrapNsenterArgs(pid, this.root, network !== undefined),
+      bubblewrapNsenterArgs(pid, this.paths.agentRoot, network !== undefined),
       network === undefined
-        ? command
-        : wrapCommand('env', network.environment(), command),
+        ? inner
+        : wrapCommand('env', network.environment(), inner),
     );
-    // nsenter hands its environment to the CLI: only what was let in.
-    return this.host === undefined
-      ? prepared
-      : { ...prepared, env: this.host.env };
+    // nsenter hands its environment to the CLI: only what was let in (all
+    // of Choliba's without a host share), with the paths as the jail sees
+    // them.
+    return { ...prepared, env: this.paths.insideEnv(passed) };
   }
 
   public async started(pid: number | undefined): Promise<void> {
@@ -135,7 +153,7 @@ export class BubblewrapSandbox implements Sandbox {
       phase: 'command',
       pid,
       childPid: this.jailPid,
-      enter: bubblewrapEnterCommand(this.jailPid, this.root),
+      enter: bubblewrapEnterCommand(this.jailPid, this.paths.agentRoot),
     });
   }
 
@@ -188,8 +206,9 @@ export class BubblewrapSandbox implements Sandbox {
         writable,
         readonly,
         this.network === undefined,
+        this.paths,
       ),
-      ...bubblewrapMaskArgs([
+      ...bubblewrapMaskArgs(this.paths, [
         ...(this.filesystem?.masks ?? []),
         // Logins the provider does not use, and the other homes: not in
         // the jail.
@@ -200,10 +219,10 @@ export class BubblewrapSandbox implements Sandbox {
       ]),
       // The workspace's home, after the masks (it may be inside a hidden
       // path), and the CLI's login, read-only, inside it.
-      ...homeArgs(this.host),
+      ...homeArgs(this.paths, this.host),
       // Last: a later mount would cover them (the gate's hook lives in the
       // workspace's home).
-      ...bubblewrapMaskArgs(protectedMasks(this.protectedPaths)),
+      ...bubblewrapMaskArgs(this.paths, protectedMasks(this.protectedPaths)),
     ];
 
     logSandbox(
@@ -215,12 +234,12 @@ export class BubblewrapSandbox implements Sandbox {
           this.network === undefined
             ? { unshare: 'all', share: ['net'] }
             : { unshare: 'all', exit: 'proxy' },
-        workingDir: this.root,
+        workingDir: this.paths.agentRoot,
         mounts: [
           ...readonly.map((path) => ({
             type: 'bind',
             source: path,
-            destination: path,
+            destination: this.paths.inside(path),
             mode: 'ro',
           })),
           { type: 'dev', destination: '/dev' },
@@ -229,7 +248,7 @@ export class BubblewrapSandbox implements Sandbox {
           ...writable.map((path) => ({
             type: 'bind',
             source: path,
-            destination: path,
+            destination: this.paths.inside(path),
             mode: 'rw',
           })),
           ...(this.host?.home === undefined
@@ -238,18 +257,20 @@ export class BubblewrapSandbox implements Sandbox {
                 {
                   type: 'bind',
                   source: this.host.home,
-                  destination: this.host.home,
+                  destination: this.paths.inside(this.host.home),
                   mode: 'rw',
                 },
                 ...this.host.credentials.map(({ source, destination }) => ({
                   type: 'bind',
                   source,
-                  destination,
+                  destination: this.paths.inside(destination),
                   mode: 'ro',
                 })),
               ]),
         ],
-        volumes: writable.map((path) => `${path}:${path}:rw`),
+        volumes: writable.map(
+          (path) => `${path}:${this.paths.inside(path)}:rw`,
+        ),
         dieWithParent: true,
       },
     );
@@ -274,7 +295,7 @@ export class BubblewrapSandbox implements Sandbox {
     }
 
     const pid = await resolveBubblewrapPid(parentPid, {
-      cwd: this.root,
+      cwd: this.paths.agentRoot,
       command: JAIL_COMMAND[0],
     });
 
@@ -301,7 +322,7 @@ export class BubblewrapSandbox implements Sandbox {
         phase: 'process',
         pid: parentPid,
         childPid: pid,
-        enter: bubblewrapEnterCommand(pid, this.root),
+        enter: bubblewrapEnterCommand(pid, this.paths.agentRoot),
       });
     }
 
@@ -310,7 +331,6 @@ export class BubblewrapSandbox implements Sandbox {
 }
 
 const OPTIONAL_SYSTEM_DIRS = [
-  '/opt',
   '/nix/store',
   '/snap',
   '/run/systemd/resolve',
@@ -326,6 +346,7 @@ export function bubblewrapReadonlyBinds(
   const candidates = [
     '/usr',
     '/etc',
+    ...hostOptEntries(),
     ...OPTIONAL_SYSTEM_DIRS,
     join(home, '.local/bin'),
     join(home, '.bun'),
@@ -354,18 +375,34 @@ export function bubblewrapReadonlyBinds(
   return paths;
 }
 
+/**
+ * What the host has in `/opt`, one entry at a time: the sandbox's own
+ * `/opt/choliba` lives next to them (a host entry with that name is left
+ * out).
+ */
+export function hostOptEntries(): string[] {
+  if (!isDirectory('/opt')) return [];
+  return listDirectory('/opt')
+    .map((name) => join('/opt', name))
+    .filter((path) => path !== SANDBOX_SUPPORT_DIR);
+}
+
 export function bubblewrapJailArgs(
   root: string,
   writable: readonly string[],
   readonlyBinds: readonly string[] = bubblewrapReadonlyBinds(),
   shareNet = true,
+  paths: SandboxPaths = new SandboxPaths({
+    root,
+    hostHome: environment()['HOME'] ?? homedir(),
+  }),
 ): string[] {
   return [
     '--die-with-parent',
     '--unshare-all',
     // Without it, the jail has only its own loopback.
     ...(shareNet ? ['--share-net'] : []),
-    ...readonlyBinds.flatMap((path) => ['--ro-bind', path, path]),
+    ...readonlyBinds.flatMap((path) => ['--ro-bind', path, paths.inside(path)]),
     ...rootSymlinkArgs(),
     '--dev',
     '/dev',
@@ -373,9 +410,9 @@ export function bubblewrapJailArgs(
     '/proc',
     '--tmpfs',
     '/tmp',
-    ...writable.flatMap((path) => ['--bind', path, path]),
+    ...writable.flatMap((path) => ['--bind', path, paths.inside(path)]),
     '--chdir',
-    root,
+    paths.agentRoot,
   ];
 }
 
@@ -540,25 +577,32 @@ function writableBinds(
   return paths;
 }
 
-function homeArgs(host: SandboxHost | undefined): string[] {
+function homeArgs(
+  paths: SandboxPaths,
+  host: SandboxHost | undefined,
+): string[] {
   if (host?.home === undefined) return [];
   return [
     '--bind',
     host.home,
-    host.home,
+    paths.inside(host.home),
     ...host.credentials.flatMap(({ source, destination }) => [
       '--ro-bind',
       source,
-      destination,
+      paths.inside(destination),
     ]),
   ];
 }
 
-function bubblewrapMaskArgs(masks: readonly FilesystemMask[]): string[] {
+function bubblewrapMaskArgs(
+  paths: SandboxPaths,
+  masks: readonly FilesystemMask[],
+): string[] {
   return masks.flatMap(({ path, access }) => {
-    if (access === 'readonly') return ['--ro-bind', path, path];
+    const destination = paths.inside(path);
+    if (access === 'readonly') return ['--ro-bind', path, destination];
     return isDirectory(path)
-      ? ['--tmpfs', path]
-      : ['--ro-bind', '/dev/null', path];
+      ? ['--tmpfs', destination]
+      : ['--ro-bind', '/dev/null', destination];
   });
 }

@@ -1,17 +1,17 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 23/11/2026 02:57:49: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 23/11/2026 09:15:06: não edite à mão.
 
-Limites (coverage-thresholds.json, só sobem): funções 92.54%, linhas 94.82%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
+Limites (coverage-thresholds.json, só sobem): funções 92.65%, linhas 94.96%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
 ## Resumo
 
 Status|Módulo|% Funcs|% Lines
 --|--|--|--
-🟢|**Total**|92.55|94.82
+🟢|**Total**|92.66|94.97
 🟢|[scripts](scripts)|100.00|98.89
 🟢|[src/adapters](src/adapters)|90.84|97.80
-🟢|[src/agent](src/agent)|96.70|95.59
+🟢|[src/agent](src/agent)|96.94|96.65
 🟢|[src/approval](src/approval)|84.96|87.88
 🟢|[src/cli](src/cli)|100.00|100.00
 🟢|[src/command](src/command)|94.44|99.64
@@ -28,10 +28,10 @@ Status|Módulo|% Funcs|% Lines
 🟢|[src/network](src/network)|94.03|97.39
 🟡|[src/output](src/output)|52.94|54.87
 🟢|[src/policy](src/policy)|99.55|99.28
-🟢|[src/providers](src/providers)|94.67|98.98
+🟢|[src/providers](src/providers)|94.71|99.00
 🟢|[src/rounds](src/rounds)|93.94|96.71
 🟢|[src/store](src/store)|95.71|94.09
-🟢|[src/workspace](src/workspace)|97.06|96.61
+🟢|[src/workspace](src/workspace)|97.73|97.17
 
 ## Por módulo
 
@@ -66,14 +66,14 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/agent</b>: 95.59% das linhas, 11 arquivos</summary>
+<summary>🟢 <b>src/agent</b>: 96.65% das linhas, 11 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[abort.ts](src/agent/abort.ts)|100.00|97.44
 🟢|[agent.ts](src/agent/agent.ts)|88.00|92.40
 🟢|[constants.ts](src/agent/constants.ts)|100.00|100.00
-🟡|[enforce.ts](src/agent/enforce.ts)|82.35|74.29
+🟢|[enforce.ts](src/agent/enforce.ts)|85.00|85.87
 🟢|[events.ts](src/agent/events.ts)|100.00|100.00
 🟢|[input.ts](src/agent/input.ts)|93.33|98.78
 🟢|[lock.ts](src/agent/lock.ts)|100.00|100.00
@@ -269,13 +269,13 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/providers</b>: 98.98% das linhas, 11 arquivos</summary>
+<summary>🟢 <b>src/providers</b>: 99.00% das linhas, 11 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[claude/claude-provider.ts](src/providers/claude/claude-provider.ts)|88.89|98.23
 🟢|[claude/policy.ts](src/providers/claude/policy.ts)|89.66|98.05
-🟢|[codex/codex-provider.ts](src/providers/codex/codex-provider.ts)|85.71|95.55
+🟢|[codex/codex-provider.ts](src/providers/codex/codex-provider.ts)|86.11|95.73
 🟢|[codex/policy.ts](src/providers/codex/policy.ts)|97.30|100.00
 🟢|[constants.ts](src/providers/constants.ts)|100.00|100.00
 🟢|[cursor/cursor-provider.ts](src/providers/cursor/cursor-provider.ts)|87.50|98.05
@@ -338,7 +338,7 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/workspace</b>: 96.61% das linhas, 10 arquivos</summary>
+<summary>🟢 <b>src/workspace</b>: 97.17% das linhas, 11 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
@@ -346,10 +346,11 @@ Status|Arquivo|% Funcs|% Lines
 🟢|[index.ts](src/workspace/index.ts)|100.00|100.00
 🟢|[sandbox/bubblewrap.ts](src/workspace/sandbox/bubblewrap.ts)|100.00|100.00
 🟢|[sandbox/debug.ts](src/workspace/sandbox/debug.ts)|100.00|100.00
-🟡|[sandbox/docker.ts](src/workspace/sandbox/docker.ts)|70.59|66.11
+🟡|[sandbox/docker.ts](src/workspace/sandbox/docker.ts)|75.00|68.92
 🟢|[sandbox/host-access.ts](src/workspace/sandbox/host-access.ts)|100.00|100.00
 🟢|[sandbox/host-state.ts](src/workspace/sandbox/host-state.ts)|100.00|100.00
 🟢|[sandbox/index.ts](src/workspace/sandbox/index.ts)|100.00|100.00
+🟢|[sandbox/path-map.ts](src/workspace/sandbox/path-map.ts)|100.00|100.00
 🟢|[sandbox/protect.ts](src/workspace/sandbox/protect.ts)|100.00|100.00
 🟢|[sandbox/wrap-command.ts](src/workspace/sandbox/wrap-command.ts)|100.00|100.00
 

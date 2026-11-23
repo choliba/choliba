@@ -130,8 +130,11 @@ export {
   bubblewrapEnterCommand,
   DEFAULT_DOCKER_IMAGE,
   DockerSandbox,
+  SandboxPaths,
   type Sandbox,
+  type SandboxPathsOptions,
 } from './workspace/sandbox/index';
+export { AGENT_ROOT } from './workspace/constants';
 export { CodexProvider } from './providers/codex/codex-provider';
 export { CursorProvider } from './providers/cursor/cursor-provider';
 export {

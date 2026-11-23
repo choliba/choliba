@@ -12,3 +12,4 @@ export {
   resolveBubblewrapPid,
   type BubblewrapSandboxOptions,
 } from './bubblewrap';
+export { SandboxPaths, type SandboxPathsOptions } from './path-map';
