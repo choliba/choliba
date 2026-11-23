@@ -26,6 +26,13 @@ O site publica o que está em `guides/`: **uma mudança no curso é uma mudança
 edite à mão as páginas geradas (`docs/guias/`, `docs/comandos.md`); mude a fonte e rode `bun run docs:pages`. O
 `bun run docs:build` roda no CI de todo PR, então um link quebrado ou uma página velha reprova o PR, não só o site.
 
+O build também escreve o que os buscadores e os links compartilhados leem (`scripts/docs-seo.ts`, ligado em
+`docs/.vitepress/config.ts`): `sitemap.xml`, `robots.txt`, o Google Analytics (só nas páginas buildadas), o arquivo de
+verificação do Search Console (`docs/public/google*.html`, que não se reformata), o cartão de compartilhamento de cada
+página (`og:*`, `twitter:card`, `canonical`) e a `<meta name="description">`, que é a citação (`> …`) logo abaixo do
+título da página. A imagem do cartão é `docs/public/og-choliba.png`, gerada do `docs/.vitepress/og-image.svg` (o comando
+`inkscape` está no comentário do SVG); mude o SVG e gere o PNG de novo.
+
 ## Roteiro
 
 1. **Comece pela mudança, não pelos documentos.** Identifique o que mudou para quem usa o projeto: um comando, uma

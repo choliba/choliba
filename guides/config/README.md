@@ -2,6 +2,8 @@
 
 # Módulo config: para que ele existe
 
+> O módulo `config` encontra o `choliba.config.ts` do projeto, confere o que ele diz, completa com os padrões e entrega tudo resolvido, com caminhos absolutos.
+
 Um projeto que usa o Choliba tem **um arquivo de configuração**, o `choliba.config.ts`. Ele define o log, o banco, os workspaces (a raiz padrão e os homes isolados deles), onde as rodadas rodam e as variáveis de ambiente.
 
 | Opção        | O que é                                                                                                                                                                              | Sem ela                                                                                     |

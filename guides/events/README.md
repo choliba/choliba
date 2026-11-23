@@ -1,5 +1,7 @@
 # Módulo events: para que ele existe
 
+> O módulo `events` liga as partes do Choliba sem que uma conheça a outra: o produtor avisa o que aconteceu com o próprio nome e o consumidor assina os que quer.
+
 Dentro do Choliba, uma parte do sistema faz algo (um agente recebe uma entrada, gera uma saída, "pensa", erra) e outras partes precisam saber disso. O módulo `events` liga essas partes **sem que uma conheça a outra**:
 
 - o **produtor** avisa o que aconteceu, com o próprio nome;

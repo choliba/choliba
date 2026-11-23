@@ -98,7 +98,7 @@ export function guidesIndexPage(guides: readonly Guide[]): string {
   return [
     '# Cursos',
     '',
-    'Cada módulo do Choliba tem um curso, com exemplos completos que rodam como estão.',
+    '> Cada módulo do Choliba tem um curso, com exemplos completos que rodam como estão e passam pelo `bun run check`. Comece pelo módulo que você vai usar.',
     '',
     ...guides.map((guide) => `- [${guideTitle(guide)}](./${guide.module}.md)`),
     '',
@@ -122,7 +122,7 @@ export function commandsPage(
   return [
     '# Comandos',
     '',
-    'O pacote instala o comando `choliba`. Cada comando lê o `choliba.config.ts` do projeto, da pasta atual para cima, e aceita `--help`.',
+    '> O pacote instala o comando `choliba`. Cada comando lê o `choliba.config.ts` do projeto, da pasta atual para cima, e aceita `--help`.',
     '',
     '| Comando | O que faz |',
     '| --- | --- |',

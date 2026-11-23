@@ -2,6 +2,8 @@
 
 # Módulo interaction: para que ele existe
 
+> O módulo `interaction` é a conversa do agente: pergunta, ouve, pede uma escolha e mostra o que pensou, sem saber se passa por um terminal, uma tela ou um chat.
+
 Um agente **conversa**: pergunta, ouve a resposta, ouve o que a pessoa digita enquanto ele trabalha, pede uma escolha de uma tecla, mostra o que pensou e o que respondeu. O módulo `interaction` é **a conversa**, e ela não sabe por onde passa: um terminal, a tela cheia do TUI, um arquivo, um chat web.
 
 O que é de cada forma de conversar fica **na frente**, num **adapter**, que traduz nos dois sentidos. A conversa recebe eventos que já não dizem de onde vieram, e mostra numa `Output`:

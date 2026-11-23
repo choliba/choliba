@@ -2,6 +2,8 @@
 
 # Módulo rounds: comparar agentes com fatos
 
+> Uma rodada é um experimento repetível com agentes: quem participa, em que ordem age, de onde todos partem e o que se confere no fim, para comparar com fatos.
+
 Uma **rodada** é um experimento repetível com agentes: quem participa (provider, workspace, política), em que ordem
 cada um age, de onde todos partem e o que se confere no fim. Ela existe para responder perguntas como "o qwen3.5:4b
 cria o arquivo pedido?", "o Codex respeita a política melhor que o Claude Code?" ou "trocar o prompt melhorou ou só

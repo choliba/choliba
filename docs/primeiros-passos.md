@@ -1,6 +1,6 @@
 # Primeiros passos
 
-Instale o Choliba, escreva um agente de dez linhas e rode-o dentro de uma sandbox.
+> Instale o Choliba, escreva um agente de dez linhas e rode-o dentro de uma sandbox. Você precisa do Bun, de Linux com bwrap ou do Docker e da CLI do agente.
 
 ## Antes de começar
 
@@ -21,7 +21,7 @@ bun add github:choliba/choliba
 Ou baixe o `choliba-<versão>.tgz` da [última release](https://github.com/choliba/choliba/releases) e instale o arquivo:
 
 ```bash
-bun add ./choliba-0.1.0.tgz
+bun add ./choliba-0.1.1.tgz
 ```
 
 ## Configure o projeto

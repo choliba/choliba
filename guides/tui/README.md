@@ -2,6 +2,8 @@
 
 # TUI: a conversa em tela cheia
 
+> O TUI é um adapter: mais uma forma de conversar, em tela cheia, que recebe as teclas, desenha a conversa e devolve só eventos, sem que a conversa saiba disso.
+
 O TUI é **um adapter**: mais uma forma de conversar, como o stdio (linha a linha) e o arquivo JSONL (veja o curso de [adapters](../adapters/README.md)). A [conversa](../interaction/README.md) é a mesma `Conversation` de sempre: ela não sabe que está numa tela cheia. O `TuiAdapter` recebe as teclas, desenha a conversa e devolve só eventos.
 
 A tela tem três partes:

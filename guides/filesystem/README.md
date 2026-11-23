@@ -2,6 +2,8 @@
 
 # Módulo filesystem: para que ele existe
 
+> Tudo o que o Choliba faz no disco passa pelo módulo `filesystem`: ninguém mais importa `node:fs` nem `node:path`, então há um só lugar para testar e trocar.
+
 Tudo o que o Choliba faz no disco passa por aqui: ler e escrever arquivos, criar e apagar pastas, perguntar se um caminho existe, seguir um link simbólico. **Ninguém mais importa `node:fs`.** E os caminhos também: montar `pasta/arquivo`, resolver um relativo, descobrir o diretório pai. **Ninguém mais importa `node:path`.**
 
 São funções pequenas, quase sempre uma linha sobre o Node. O valor não está nelas uma a uma, e sim em serem **o único lugar**:

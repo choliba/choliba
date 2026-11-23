@@ -2,6 +2,8 @@
 
 # Adapters: cada forma de conversar
 
+> O adapter fica na frente da conversa, colado à fonte (terminal, tela cheia, arquivo, chat), e traduz nos dois sentidos: eventos que entram, `Output` que sai.
+
 A [conversa](../interaction/README.md) não sabe por onde passa. Quem sabe é o **adapter**: uma peça por forma de conversar, que fica **na frente**, colada à fonte, e traduz nos dois sentidos. O que chega vira **eventos** (`message`, `choice`, `interrupt`, `command`); o que a conversa mostra sai pela **`Output`** do adapter. Tudo o que é da forma (teclas, eco, a linha sendo digitada, uma tela, um arquivo) fica dentro dele.
 
 ```

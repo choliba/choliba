@@ -2,6 +2,8 @@
 
 # Módulo mcp: ferramentas do projeto para os agentes
 
+> O módulo `mcp` é como o projeto dá ferramentas próprias, como consultar uma tabela ou abrir uma página, ao agente que roda dentro de uma CLI como Claude Code.
+
 Um agente do Choliba roda dentro de um CLI (Claude Code, Codex) que já sabe ler arquivos, escrever e rodar comandos.
 Às vezes ele precisa de algo que só o projeto tem: consultar um preço numa tabela, abrir uma página com um navegador de
 verdade, gravar numa pasta específica. O módulo `mcp` é como o projeto dá essas **ferramentas próprias** ao agente.
