@@ -34,6 +34,9 @@ formulário, `_No response_` para um campo opcional deixado vazio e `- [X]` / `-
 gh issue create --repo choliba/choliba --title '[bug] …' --label bug --body-file body.md
 ```
 
+Ou ponha o título e os rótulos num frontmatter no topo do arquivo (`title`, `labels` e, se quiser, `repo`) e rode
+`bun run issue <arquivo>`: o script cria os rótulos que faltam e abre a issue; com `--dry`, só mostra o que criaria.
+
 Um problema por issue. Quando uma issue precisa de outra antes, comente `Depende de #N` nela.
 
 ## Estado

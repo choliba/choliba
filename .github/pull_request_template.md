@@ -1,6 +1,6 @@
 ## O que muda e por quê
 
-<!-- O título do PR vira a mensagem do commit no merge: use Conventional Commits, ex.: feat(providers): add toolOutput -->
+<!-- O título do PR vira a mensagem do commit no merge: use Conventional Commits, em português, ex.: feat(providers): acrescenta o toolOutput -->
 
 Closes #
 

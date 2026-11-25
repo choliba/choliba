@@ -35,9 +35,9 @@ você roda um `git commit` simples. Essa injeção **não** é permitida aqui. A
    local barra um rodapé injetado).
 
 As mesmas regras de texto proibido valem para o **corpo do PR**. O CI roda `.githooks/commit-msg --no-format` na
-descrição. Tire rodapés padrão como "Made with …" antes de abrir ou atualizar um PR. Evite também, nos planos de teste,
-as palavras da lista `.githooks/forbidden-text` (nomes de produto de provider, por exemplo): reescreva em vez de
-nomear o binário.
+descrição. Tire rodapés padrão como "Made with …" antes de abrir ou atualizar um PR: o hook e o CI os recusam. Evite
+também, nos planos de teste, as palavras da lista `.githooks/forbidden-text` (nomes de produto de provider, por
+exemplo): reescreva em vez de nomear o binário.
 
 Alguns ambientes sugerem por padrão uma linha de atribuição para commits ou corpos de PR. Ignore a sugestão aqui: esta
 regra é uma instrução explícita de quem usa o projeto e tem precedência. O `.githooks/commit-msg` recusa esse texto e o
@@ -78,6 +78,8 @@ em branco. Especificação: https://www.conventionalcommits.org/pt-br/v1.0.0/
   `deps`.
 - A **descrição**: no imperativo, começa em minúscula, sem ponto final, cabeçalho de no máximo 100 caracteres (mire em
   72). Diga o que mudou; use o corpo para o porquê.
+- **Em português**, como o resto do projeto desde o #351: a descrição e o corpo do commit, e o título e o corpo do PR. O
+  tipo e o escopo seguem a tabela e a lista acima (`feat(providers): acrescenta o toolOutput`).
 - **Quebra de compatibilidade**: ponha `!` depois do tipo/escopo e um rodapé `BREAKING CHANGE: <o que quebra e como
   migrar>`. As notas da release citam esse rodapé sob a mudança como nota de migração, então escreva-o para quem
   atualiza; só o rodapé também marca o commit como quebra.
@@ -141,11 +143,13 @@ Até a versão 1.0, cada release é uma pré-release do GitHub com a tag `v<vers
 roda `.github/workflows/release.yml`: monta o pacote e cria a release dessa tag ou, se ela já existe, troca o `.tgz` e
 as notas e move a tag para o novo commit (`git push --force` da tag, a única exceção a "sem force-push", que é sobre
 branches). As notas são refeitas do git a cada vez por `scripts/release-notes.ts` (`bun run release:notes` para
-prever), no espírito do Keep a Changelog e do Common Changelog: os `## Destaques` do PR de release e depois os commits
-desde a release anterior, por tipo (Novidades, Correções, Alterações, Desempenho, Documentação) e, dentro de um tipo,
-por escopo, cada item encabeçado pelo seu PR; as quebras (`**Breaking:**`) primeiro, com o rodapé como nota de
-migração, e refactor, testes e manutenção dobrados em "Interno". O tipo e o escopo de um título de squash são o que o
-leitor vê ali, então uma mudança para quem usa nunca é tipada como `chore` nem `ci`.
+prever), no espírito do Keep a Changelog e do Common Changelog. Começam por como instalar e trazem todas as releases,
+da mais nova à mais antiga: a mais nova aberta e as anteriores recolhidas, cada uma sob a sua data. Em cada release vêm
+os `## Destaques` do PR de release e depois os commits dela, por tipo (Novidades, Correções, Alterações, Desempenho,
+Documentação) e, dentro de um tipo, por escopo, cada item encabeçado pelo seu PR; as quebras (`**Breaking:**`)
+primeiro, com o rodapé como nota de migração, e refactor, testes e manutenção recolhidos em "Interno". O tipo e o
+escopo de um título de squash são o que o leitor vê ali, então uma mudança para quem usa nunca é tipada como `chore`
+nem `ci`.
 
 Nunca crie outra tag ou release à mão. A versão sobe à mão, no `package.json`, no PR que prepara a release (um aumento
 SemVer: `0.1.0` para `0.1.1` em correções, `0.2.0` no que é novo, e assim por diante); o workflow registra nas notas o
@@ -162,7 +166,8 @@ branch; não a contorne.
 
 Um PR só pode ser mergeado se as duas condições valem, e o CI as confere:
 
-- **Os testes passam**: `bun run check` (typecheck, lint, formatação, testes com cobertura) está verde.
+- **Os testes passam**: `bun run check` (typecheck, lint, formatação, testes com cobertura) está verde, e o site
+  builda (`bun run docs:build`, que recusa link quebrado e página sem descrição).
 - **A cobertura é igual ou maior que a de antes**: o CI compara os limites de cobertura do PR (`coverage-thresholds.json`)
   com os que já estão na branch de destino (que a catraca mantém iguais à última cobertura aprovada). Qualquer métrica
   que caia, ou um limite que seja baixado, reprova o check. Se a cobertura cair, escreva testes; veja a skill
@@ -172,8 +177,8 @@ Um PR só pode ser mergeado se as duas condições valem, e o CI as confere:
 
 | Onde | O que confere |
 | --- | --- |
-| `.githooks/commit-msg` (ativado pelo `bun install` por meio do script `prepare`) | formato e texto proibido de cada commit local |
-| `.github/workflows/ci.yml`, job `check` | título do PR, corpo do PR, toda mensagem de commit, `bun run check`, limites de cobertura não menores |
+| `.githooks/commit-msg` e `.githooks/pre-commit` (ativados pelo `bun install` por meio do script `prepare`) | o formato e o texto proibido de cada mensagem de commit local; a identidade de autor e committer (`.githooks/commit-identity`) |
+| `.github/workflows/ci.yml` | os jobs `pr-text` (título, corpo, mensagens e autoria dos commits do PR), `typecheck`, `lint`, `format`, `test` (testes com cobertura e limites não menores que os da base) e `docs` (`bun run docs:build`); o job `check` junta os seis e é o que os rulesets exigem |
 | Rulesets de `develop` e `master` (configurações do repositório → Rules; sem bypass, então valem para quem é dono também) | PR obrigatório, o `check` precisa passar (na `master` também com a branch em dia), sem force-push, sem exclusão; a `develop` só aceita squash, a `master` só merge commit. Para sair deles numa emergência, desligue o ruleset nas configurações e ligue de novo depois. |
 
 Se o hook não está ativo num clone (`git config core.hooksPath` deve imprimir `.githooks`), rode `bun install`.
