@@ -6,60 +6,54 @@ body:
   - type: markdown
     attributes:
       value: >-
-        Uma issue por erro. Não cole tokens, credenciais, `.env`, `.env.json`, prompts nem dados pessoais. Para algo
-        que não é uma execução de agente, use o template "Relatar um bug".
+        Uma issue por erro. Não cole tokens, credenciais, o `.env`, prompts nem dados pessoais. Para algo que não é uma
+        execução de agente, use o template "Relatar um bug".
   - type: input
-    id: key
+    id: session
     attributes:
-      label: Execução
-      description: O log da execução, em `.cache/logs/<agente>/`, relativo à pasta de trabalho.
-      placeholder: .cache/logs/test-writer/2026-10-24T10-00-00.000Z-12345-1.log
+      label: Sessão
+      description: >-
+        O log da sessão (JSONL), na pasta `logger.dir` do `choliba.config.ts` (`.choliba/logs` por padrão), relativo à
+        raiz do projeto.
+      placeholder: .choliba/logs/2026-11-25T10-00-00.000Z.jsonl
   - type: dropdown
-    id: phase
+    id: stage
     attributes:
-      label: Fase
+      label: Onde falhou
       options:
-        - preparation
-        - provider
-        - guard
-        - step-after
-        - gate-red
-        - gate-green
-    validations:
-      required: true
-  - type: input
-    id: agent
-    attributes:
-      label: Agente e versão
-      placeholder: test-writer 1.1.3
+        - ao criar o agente (opção ou política recusada)
+        - workspace (bubblewrap ou Docker)
+        - provider (a CLI do agente)
+        - gate de execução (comando negado ou pendente)
+        - rede (destino negado)
+        - ferramenta do projeto (mcp)
+        - conversa (terminal, tela cheia ou arquivo)
+        - rodada (critério ou limite)
+        - não sei
     validations:
       required: true
   - type: input
     id: provider
     attributes:
-      label: Provider, modelo e modo
-      placeholder: codex · gpt-6.1-sol · execute
+      label: Provider e modelo
+      placeholder: codex · gpt-6.1-sol
     validations:
       required: true
   - type: dropdown
-    id: sandbox
+    id: workspace
     attributes:
-      label: Sandbox
+      label: Workspace
       options:
-        - local
+        - bubblewrap
         - docker
     validations:
       required: true
   - type: input
-    id: target
-    attributes:
-      label: Projeto e ticket
-      placeholder: app · app-1
-  - type: input
     id: version
     attributes:
-      label: Versão do choliba e commit da pasta de trabalho
-      placeholder: 0.1.0 · 1a2b3c4
+      label: Versão do choliba
+      description: O `version` do `package.json` instalado (`bun pm ls choliba`) ou, no código-fonte, `git rev-parse --short HEAD`.
+      placeholder: 0.3.0
     validations:
       required: true
   - type: input
@@ -70,20 +64,20 @@ body:
     id: symptom
     attributes:
       label: Sintoma
-      description: A mensagem sanitizada e o que foi observado.
+      description: A mensagem, sem segredos, e o que foi observado.
     validations:
       required: true
   - type: textarea
     id: reproduction
     attributes:
       label: Reprodução
-      description: O comando e a configuração relevante, sem credenciais.
+      description: O script ou o comando, com as opções do `Agent` e do `Workspace` e as chaves do `choliba.config.ts` que importam, sem credenciais.
       render: text
   - type: textarea
     id: evidence
     attributes:
       label: Evidências
-      description: Caminhos relativos à pasta de trabalho (log da run, red.md/green.md, trace).
+      description: Trechos do log da sessão, sem segredos, e caminhos relativos à raiz do projeto.
   - type: textarea
     id: expected
     attributes:
