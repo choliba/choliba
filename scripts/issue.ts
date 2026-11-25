@@ -31,7 +31,7 @@ await runCommand(
     description:
       'Abre uma issue no GitHub a partir de um Markdown com frontmatter (title, labels, repo).',
     args: {
-      arquivo: { description: 'Markdown do plano', required: true },
+      arquivo: { description: 'Markdown da issue', required: true },
     },
     options: {
       repo: {

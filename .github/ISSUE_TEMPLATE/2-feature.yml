@@ -14,7 +14,7 @@ body:
     id: proposal
     attributes:
       label: A proposta
-      description: Como deveria funcionar (o comando, a flag, o campo do agent.yaml…).
+      description: Como deveria funcionar (o comando, a opção do `Agent` ou do `Workspace`, a chave do `choliba.config.ts`…).
     validations:
       required: true
   - type: textarea

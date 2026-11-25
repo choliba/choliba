@@ -19,10 +19,12 @@ comportamento já existe, e apague a linha quando ela fechar.
 
 ## Onde mora a CLI
 
-- `bin/choliba.ts`: a tabela `COMMANDS` (nome, `run`, `summary`), a ajuda geral e a recusa de comando desconhecido.
-- `src/cli/<comando>.ts`: um comando por arquivo (`approvals`, `clear`, `rounds`), definido com `defineCommand` e
-  executado por `runCommand` (`src/command`). A declaração (descrição, argumentos, opções) gera o `--help` e o parser;
-  o `run` recebe `args`, `options`, `signal` (abortado no Ctrl+C) e `output`.
+- `src/cli/commands.ts`: a tabela `COMMANDS`, em que a chave é o nome do comando e os campos são `run` e `summary`. O
+  `bin/choliba.ts` e a página de comandos do site (`scripts/docs-pages.ts`) a leem.
+- `bin/choliba.ts`: a ajuda geral, montada da tabela, e a recusa de comando desconhecido.
+- `src/cli/<comando>.ts`: os comandos (`approvals`, `clear`, `rounds`, este com o `rounds:web`), cada um definido com
+  `defineCommand` e executado por `runCommand` (`src/command`). A declaração (descrição, argumentos, opções) gera o
+  `--help` e o parser; o `run` recebe `args`, `options`, `signal` (abortado no Ctrl+C) e `output`.
 - `scripts/*.ts` seguem a mesma forma (`issue`, `git:clean`, `release:notes`).
 - Tudo o que o comando mostra ou pergunta passa por `output` (`src/interaction`) ou por `src/output`; nunca `console`
   nem `process.stdout` (o lint recusa). Ver `AGENTS.md`, "Cada capacidade tem um dono".
@@ -73,7 +75,7 @@ Cada um de propósito, com o motivo. O que não está aqui, o clig.dev manda.
 | Use uma biblioteca de análise de argumentos | `defineCommand` e `parseCommandLine` (`src/command`) | Uma declaração dá a ajuda e o parser, sem dependência |
 | Mensagens no idioma de quem usa | Ajuda, mensagens e erros em português | Quem usa o Choliba lê português |
 | Não leia segredos de variáveis de ambiente | As credenciais dos providers vêm do ambiente ou do `.env` (`CLAUDE_CODE_OAUTH_TOKEN`, `CURSOR_API_KEY`…) | É como as CLIs dos providers as leem; o Choliba só as repassa |
-| Distribua um binário só | Um pacote Bun (`choliba-<versão>.tgz`) instalado no projeto | O projeto fixa a versão, e as rodadas precisam do Puppeteer ao lado |
+| Distribua um binário só | Um pacote Bun (`choliba-<versão>.tgz`) instalado no projeto | O Choliba também é biblioteca: os scripts do projeto importam `choliba`, e o projeto fixa a versão no `package.json` |
 
 ## Checklist para um comando novo ou alterado
 
@@ -86,4 +88,5 @@ Cada um de propósito, com o motivo. O que não está aqui, o clig.dev manda.
 - [ ] erros dizem o quê, onde e como corrigir, em português, como `UsageError`
 - [ ] nenhum segredo vem de uma opção; nada é escrito com `console` nem `process`
 - [ ] um desvio novo do clig.dev foi decidido com quem usa e entrou em "Onde o Choliba se afasta do clig.dev"
-- [ ] a tabela `COMMANDS` de `bin/choliba.ts` e o README (seção da CLI) estão em dia (skill `documentation`)
+- [ ] a tabela `COMMANDS` de `src/cli/commands.ts` e o README (seção da CLI) estão em dia; a página de comandos do site
+  sai da tabela (skill `documentation`)
