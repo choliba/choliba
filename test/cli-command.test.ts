@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -47,14 +47,20 @@ function parseError(argv: string[]): unknown {
   }
 }
 
-/** An output that keeps what is written. */
-function recorder(): { written: string[]; output: Interaction } {
+/** An output that keeps what is written and what is shown as an error. */
+function recorder(): {
+  written: string[];
+  errors: string[];
+  output: Interaction;
+} {
   const written: string[] = [];
+  const errors: string[] = [];
   const output: Interaction = {
     ask: () => Promise.resolve(''),
     write: (value) => written.push(value),
+    error: (value) => errors.push(value),
   };
-  return { written, output };
+  return { written, errors, output };
 }
 
 describe('parseCommandLine', () => {
@@ -147,8 +153,8 @@ describe('runCommand', () => {
     expect(written.join('\n')).toContain('Uso: bun x');
   });
 
-  test('erro de uso é mostrado e encerra como falha, sem rodar', async () => {
-    const { written, output } = recorder();
+  test('erro de uso é mostrado como erro e encerra como falha, sem rodar', async () => {
+    const { written, errors, output } = recorder();
     let failures = 0;
 
     await runCommand(issue, {
@@ -160,7 +166,81 @@ describe('runCommand', () => {
     });
 
     expect(failures).toBe(1);
-    expect(written.join('\n')).toContain('Falta o argumento <arquivo>.');
+    expect(errors.join('\n')).toContain('Falta o argumento <arquivo>.');
+    expect(written).toEqual([]);
+  });
+
+  test('sem onFailure, o erro de uso põe o código de saída 1', async () => {
+    const { errors, output } = recorder();
+    const before = process.exitCode;
+    try {
+      await runCommand(issue, { argv: [], output });
+      expect(process.exitCode).toBe(1);
+    } finally {
+      // Bun keeps the last code when given undefined.
+      process.exitCode = before ?? 0;
+    }
+    expect(errors.join('\n')).toContain('Falta o argumento <arquivo>.');
+  });
+
+  test('uma config recusada encerra como falha, uma vez só', async () => {
+    const cwd = mkdtempSync(join(tmpdir(), 'choliba-command-'));
+    writeFileSync(
+      join(cwd, 'choliba.config.ts'),
+      'export default { nada: 1 };\n',
+    );
+    const { errors, output } = recorder();
+    let failures = 0;
+
+    try {
+      await runCommand(
+        defineCommand({ name: 'x', description: 'X.', run: () => undefined }),
+        {
+          argv: [],
+          output,
+          config: { cwd },
+          onFailure: () => {
+            failures += 1;
+          },
+        },
+      );
+    } finally {
+      rmSync(cwd, { recursive: true, force: true });
+    }
+
+    expect(failures).toBe(1);
+    expect(errors.join('\n')).toContain('Opção desconhecida "nada"');
+  });
+
+  test('um UsageError do run encerra como falha, uma vez só', async () => {
+    const cwd = mkdtempSync(join(tmpdir(), 'choliba-command-'));
+    const { errors, output } = recorder();
+    let failures = 0;
+
+    try {
+      await runCommand(
+        defineCommand({
+          name: 'x',
+          description: 'X.',
+          run: () => {
+            throw new UsageError('valor fora do esperado');
+          },
+        }),
+        {
+          argv: [],
+          output,
+          config: { cwd },
+          onFailure: () => {
+            failures += 1;
+          },
+        },
+      );
+    } finally {
+      rmSync(cwd, { recursive: true, force: true });
+    }
+
+    expect(failures).toBe(1);
+    expect(errors).toEqual(['valor fora do esperado']);
   });
 
   test('roda com os valores tipados', async () => {

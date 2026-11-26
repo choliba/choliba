@@ -60,12 +60,12 @@ No `run`, um argumento obrigatório é sempre `string`, e um opcional, `string |
 
 `runCommand(declaração, opções?)` roda o comando como um script. As opções (`RunCommandOptions`):
 
-| Opção       | O que é                                                                                             |
-| ----------- | --------------------------------------------------------------------------------------------------- |
-| `argv`      | a linha de comando; a do processo por padrão                                                        |
-| `onFailure` | como uma falha termina o programa; com o código de saída 1, por padrão                              |
-| `output`    | onde as mensagens aparecem; o stdout, por padrão                                                    |
-| `config`    | qual `choliba.config.ts` carregar (`{ cwd?, path? }`); o achado a partir da pasta atual, por padrão |
+| Opção       | O que é                                                                                                                                |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `argv`      | a linha de comando; a do processo por padrão                                                                                           |
+| `onFailure` | como uma falha termina o programa; com o código de saída 1, por padrão                                                                 |
+| `output`    | onde as mensagens aparecem: a ajuda e o que o `run` escreve no `write` (o stdout, por padrão), e os erros de uso no `error` (o stderr) |
+| `config`    | qual `choliba.config.ts` carregar (`{ cwd?, path? }`); o achado a partir da pasta atual, por padrão                                    |
 
 ### Peças que dá para usar sozinhas
 
@@ -81,12 +81,13 @@ No `run`, um argumento obrigatório é sempre `string`, e um opcional, `string |
 
 1. **A linha primeiro.** O `runCommand` confere a linha contra a declaração (`parseCommandLine`) antes de qualquer
    coisa. Com `--help` ou `-h`, mostra a ajuda e termina. Uma linha que não bate (falta um argumento obrigatório, uma
-   opção não existe, falta o valor de uma opção) mostra o erro, a linha de uso e como pedir a ajuda, e termina pelo
-   `onFailure`. Nada disso carrega a config nem abre o log.
+   opção não existe, falta o valor de uma opção) mostra no stderr o erro, a linha de uso e como pedir a ajuda, e termina
+   pelo `onFailure`. Nada disso carrega a config nem abre o log.
 2. **Depois, o script.** Uma linha válida roda dentro do `runScript`: a config é carregada, o log é aberto, e o Ctrl+C
-   aborta o `signal`.
+   aborta o `signal`. Uma config recusada também é um erro de uso: aparece no stderr e termina pelo `onFailure`.
 3. **O `run`.** Recebe os `args` e as `options` já tipados, o `signal` e o `output`. Um erro de uso que só ele sabe
-   conferir (um valor fora do esperado) é um `UsageError`: a mensagem aparece, e o programa termina pelo `onFailure`.
+   conferir (um valor fora do esperado) é um `UsageError`: a mensagem aparece no stderr, e o programa termina pelo
+   `onFailure`.
    Qualquer outro erro é inesperado e sobe.
 
 [↑ topo](#topo)
@@ -300,7 +301,7 @@ $ bun saudar Ana --vezes duas
 - **Uma declaração, tudo dela.** O parser, a ajuda e os tipos do `run` saem da mesma declaração: não escreva a ajuda à
   mão nem leia o `argv` por fora.
 - **A linha antes de tudo.** Um erro de uso aparece antes de carregar a config ou abrir o log.
-- **Erros de uso são `UsageError`**, em português, dizendo o que fazer; terminam pelo `onFailure`.
+- **Erros de uso são `UsageError`**, em português, dizendo o que fazer; aparecem no stderr e terminam pelo `onFailure`.
 - **O `run` só fala pelo `output`.** Nada de `console` nem de `process.stdout`: o lint recusa.
 - O desenho de cada comando (nomes de opções, ajuda, saídas) segue a skill
   [`cli-guidelines`](../../.agents/skills/cli-guidelines/SKILL.md).

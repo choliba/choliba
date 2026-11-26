@@ -76,8 +76,14 @@ function entries(folder: string): string[] {
 async function clear(
   argv: string[],
   answer = '',
-): Promise<{ written: string; asked: number; failed: boolean }> {
+): Promise<{
+  written: string;
+  errors: string;
+  asked: number;
+  failed: boolean;
+}> {
   const lines: string[] = [];
+  const errors: string[] = [];
   let asked = 0;
   let failed = false;
   const output: Interaction = {
@@ -86,6 +92,7 @@ async function clear(
       return Promise.resolve(answer);
     },
     write: (value) => lines.push(value),
+    error: (value) => errors.push(value),
   };
   await clearCommand(argv, {
     output,
@@ -94,7 +101,12 @@ async function clear(
       failed = true;
     },
   });
-  return { written: lines.join('\n'), asked, failed };
+  return {
+    written: lines.join('\n'),
+    errors: errors.join('\n'),
+    asked,
+    failed,
+  };
 }
 
 describe('choliba clear', () => {
@@ -104,7 +116,7 @@ describe('choliba clear', () => {
     const result = await clear([]);
 
     expect(result.failed).toBe(true);
-    expect(result.written).toContain(
+    expect(result.errors).toContain(
       'Diga o que apagar: --logs, --workspaces, --homes, --rounds ou --all.',
     );
   });
@@ -195,6 +207,6 @@ describe('choliba clear', () => {
     const result = await clear(['--rounds']);
 
     expect(result.failed).toBe(true);
-    expect(result.written).toContain('rounds.dir');
+    expect(result.errors).toContain('rounds.dir');
   });
 });

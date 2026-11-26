@@ -1,25 +1,25 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 26/11/2026 08:26:22: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 26/11/2026 09:44:11: não edite à mão.
 
-Limites (coverage-thresholds.json, só sobem): funções 92.78%, linhas 95.08%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
+Limites (coverage-thresholds.json, só sobem): funções 92.97%, linhas 95.10%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
 ## Resumo
 
 Status|Módulo|% Funcs|% Lines
 --|--|--|--
-🟢|**Total**|92.79|95.09
+🟢|**Total**|92.98|95.10
 🟢|[scripts](scripts)|100.00|98.89
 🟢|[src/adapters](src/adapters)|91.14|97.86
 🟢|[src/agent](src/agent)|96.94|96.65
 🟢|[src/approval](src/approval)|84.96|87.88
 🟢|[src/cli](src/cli)|100.00|100.00
-🟢|[src/command](src/command)|94.44|99.64
+🟢|[src/command](src/command)|100.00|99.64
 🟢|[src/config](src/config)|99.29|97.70
 🟢|[src/context](src/context)|100.00|100.00
-🟢|[src](src)|93.33|93.33
+🟢|[src](src)|95.24|93.94
 🟢|[src/events](src/events)|100.00|100.00
-🟢|[src/execute](src/execute)|91.23|90.38
+🟢|[src/execute](src/execute)|91.92|90.51
 🟢|[src/filesystem](src/filesystem)|97.83|94.05
 🔴|[src/input](src/input)|0.00|6.93
 🟢|[src/interaction](src/interaction)|97.22|99.47
@@ -113,7 +113,7 @@ Status|Arquivo|% Funcs|% Lines
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[help.ts](src/command/help.ts)|100.00|100.00
-🟢|[index.ts](src/command/index.ts)|83.33|100.00
+🟢|[index.ts](src/command/index.ts)|100.00|100.00
 🟢|[parse.ts](src/command/parse.ts)|100.00|98.91
 
 </details>
@@ -139,13 +139,13 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src</b>: 93.33% das linhas, 3 arquivos</summary>
+<summary>🟢 <b>src</b>: 93.94% das linhas, 3 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[errors.ts](src/errors.ts)|100.00|100.00
 🟢|[index.ts](src/index.ts)|100.00|100.00
-🟢|[usage.ts](src/usage.ts)|80.00|80.00
+🟢|[usage.ts](src/usage.ts)|85.71|81.82
 
 </details>
 
@@ -159,14 +159,14 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/execute</b>: 90.38% das linhas, 5 arquivos</summary>
+<summary>🟢 <b>src/execute</b>: 90.51% das linhas, 5 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[constants.ts](src/execute/constants.ts)|100.00|100.00
 🟢|[index.ts](src/execute/index.ts)|95.65|100.00
 🟢|[interrupt.ts](src/execute/interrupt.ts)|100.00|93.75
-🟡|[process.ts](src/execute/process.ts)|65.52|58.17
+🟡|[process.ts](src/execute/process.ts)|68.97|58.82
 🟢|[stream.ts](src/execute/stream.ts)|95.00|100.00
 
 </details>
