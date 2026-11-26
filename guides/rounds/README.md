@@ -239,8 +239,8 @@ interface FileCriterion {
 - `changed` vem do git (`git status`): sem `start`, a rodada não tem git, e nada aparece como mudado.
 - `contains` ignora maiúsculas e minúsculas; `matches` e `equals`, não (use a flag `i`, como em `/goiaba/i`).
 - No registro, uma `RegExp` vira o texto dela (`/z+/` fica `'z+'`) e, com flags, um `PatternData`
-  (`/goiaba/i` fica `{ source: 'goiaba', flags: 'i' }`): a definição copiada (**Copiar definição**) a traz como `/goiaba/i`. Um
-  `PatternData` também vale na declaração.
+  (`/goiaba/i` fica `{ source: 'goiaba', flags: 'i' }`): a definição copiada (**Copiar definição**) a traz como
+  `/goiaba/i`. Um `PatternData` também vale na declaração.
 - `{{input:nome}}` em `name`, `contains`, `matches` (como texto), `equals` ou na condição vira a resposta da pergunta
   `nome` de `inputs`. Um `{{input:…}}` sem a pergunta é recusado pelo `defineRound`.
 - O registro guarda só o veredito (o que foi conferido, se cumpriu, por quê), nunca o conteúdo do arquivo.
@@ -616,11 +616,11 @@ ponto é um agente numa rodada e abre um cartão com links para o teste, a rodad
 
 ## Exemplos
 
-Os exemplos estão em `guides/rounds/exemplos/` e rodam como estão (`bun guides/rounds/exemplos/<arquivo>.ts`). Os que
-rodam agentes usam um provider de mentira, em que a "CLI" é o próprio bun: rodam sem modelo nem rede, mas passam pelo
-mesmo caminho de um agente de verdade (sandbox bubblewrap, eventos, git). Eles usam a fixture `site-vazio` do curso
-(`guides/rounds/fixtures`, pela opção `fixtures` do `runRound`) e uma pasta temporária no cache do Choliba no lugar
-do `rounds.dir`, apagada no fim. Nas saídas, o home aparece como `/home/dev`.
+Os exemplos estão em `guides/rounds/exemplos/` e rodam como estão (`bun guides/rounds/exemplos/<arquivo>.ts`). Do 2 ao
+7, os agentes usam um provider de mentira, em que a "CLI" é o próprio bun: rodam sem modelo nem rede, mas passam pelo
+mesmo caminho de um agente de verdade (sandbox bubblewrap, eventos, git); o 8 usa um modelo de verdade. Eles usam a
+fixture `site-vazio` do curso (`guides/rounds/fixtures`, pela opção `fixtures` do `runRound`) e uma pasta temporária
+no cache do Choliba no lugar do `rounds.dir`, apagada no fim. Nas saídas, o home aparece como `/home/dev`.
 
 ### 1. Declarar uma rodada
 
@@ -1776,13 +1776,218 @@ Na nota (scoreRound):
 
 ### 8. Rodadas de verdade
 
-As rodadas com modelos de verdade ficam fora deste repositório, na pasta de `rounds.definitions` de quem as roda, e
-rodam com `bun run rounds <id>`. Precisam das quatro pastas de `rounds` configuradas e, conforme o provider, do Ollama
-rodando com o modelo baixado ou das credenciais da CLI. Uma rodada grande, como um rodízio de agentes (analista, dev,
+Uma rodada de verdade troca o provider de mentira por um modelo. Esta parte da mesma fixture `site-vazio` e põe um
+modelo local do Ollama, pela CLI do Claude Code, para cumprir o ticket dela. Ela precisa:
+
+- do Ollama rodando com o modelo do arquivo. O `qwen3.5:4b-64k` é o `qwen3.5:4b` com uma janela de 64 mil tokens: rode
+  `ollama pull qwen3.5:4b` e crie a variante com um `Modelfile` de duas linhas, `FROM qwen3.5:4b` e
+  `PARAMETER num_ctx 65536`, e `ollama create qwen3.5:4b-64k -f Modelfile`;
+- da CLI `claude` instalada.
+
+Ela leva minutos, e cada execução dá outra saída: o que o modelo diz, o que ele faz e as notas mudam.
+
+`guides/rounds/exemplos/8-rodada-de-verdade.ts`
+
+```ts
+/**
+ * Exemplo 8 do curso de rounds: uma rodada de verdade. Um agente num modelo
+ * local do Ollama, pela CLI do Claude Code, parte da fixture `site-vazio`,
+ * lê o ticket e troca o título do index.html. Os critérios conferem o título
+ * novo e que o ticket não mudou, e a rubrica dá as notas. Precisa do Ollama
+ * rodando com o modelo do arquivo e da CLI claude instalada.
+ */
+import { randomUUID } from 'node:crypto';
+
+import { environment } from '../../../src/execute/process';
+import {
+  cholibaCacheDir,
+  ensureDirectory,
+  join,
+  readText,
+  removePath,
+  resolve,
+} from '../../../src/filesystem/index';
+import { OllamaProvider, type AgentPolicy } from '../../../src/index';
+import { writeOut } from '../../../src/output/stdio';
+import {
+  defineRound,
+  noQuestions,
+  runRound,
+  scoreRound,
+  validateRound,
+} from '../../../src/rounds/index';
+import { runScript } from '../../../src/usage';
+
+/** O modelo: troque por um que o seu Ollama tenha (`ollama list`). */
+const MODEL = 'qwen3.5:4b-64k';
+/**
+ * A janela do modelo, em tokens: a CLI resume a conversa perto dela, e com a
+ * janela padrão (32 mil) ela resumiria antes de o agente começar.
+ */
+const CONTEXT_WINDOW = 65_536;
+
+/**
+ * Lê e escreve só na pasta da rodada, e roda só comandos de leitura. O resto
+ * é negado: numa rodada, ninguém responde a um pedido de aprovação.
+ */
+const politica: AgentPolicy = {
+  default: 'deny',
+  allow: {
+    filesystem: [{ operations: ['read', 'write'], paths: ['/workspace/**'] }],
+    execution: [{ commands: ['ls', 'ls *', 'cat *', 'pwd'] }],
+  },
+};
+
+const project = resolve(import.meta.dir, '../../..');
+/** As fixtures do curso: a site-vazio fica ao lado dos exemplos. */
+const fixtures = join(project, 'guides', 'rounds', 'fixtures');
+const scratch = join(
+  cholibaCacheDir(environment()),
+  'rounds-exemplo',
+  randomUUID(),
+);
+const roundsDir = join(scratch, 'rodadas');
+const records = join(scratch, 'registros');
+ensureDirectory(roundsDir);
+ensureDirectory(records);
+
+const id = 'titulo-goiaba';
+
+await runScript(async () => {
+  try {
+    const [file = ''] = await runRound(
+      defineRound({
+        id,
+        goal: 'Um modelo local cumpre um ticket pequeno no index.html?',
+        start: { fixture: 'site-vazio' },
+        actors: {
+          dev: {
+            provider: new OllamaProvider({
+              cli: 'claude',
+              model: MODEL,
+              contextWindow: CONTEXT_WINDOW,
+            }),
+            workspace: { type: 'bubblewrap', root: join(roundsDir, id) },
+            policy: politica,
+          },
+        },
+        flow: [
+          {
+            actor: 'dev',
+            prompt: () => [
+              'Leia o ticket.txt e faça no index.html a alteração que ele pede.',
+              'Use as ferramentas de arquivo da CLI para editar.',
+            ],
+          },
+        ],
+        criteria: {
+          dev: [
+            // "faça no index.html a alteração que ele pede": o título novo.
+            {
+              file: {
+                name: 'index.html',
+                changed: true,
+                matches: [/<h1>[^<]*Goiaba<\/h1>/],
+              },
+            },
+            // O ticket só é lido.
+            { file: { name: 'ticket.txt', changed: false } },
+            // Um modelo pequeno, nesta máquina: até 10 minutos.
+            { limit: { time: '10min' } },
+          ],
+        },
+        rules: [noQuestions()],
+      }),
+      { dir: records, project, roundsDir, fixtures },
+    );
+
+    const record = validateRound(JSON.parse(readText(file)));
+    const changed = record.steps.flatMap((step) => step.changed);
+    const dev = scoreRound(record, []).actors['dev'];
+    const lines = [
+      '',
+      `alterou: ${changed.join(', ') || 'nada'}`,
+      `nota ${String(dev.final)} · eficácia ${String(dev.effectiveness.score)} · eficiência ${String(dev.efficiency.score)}`,
+    ];
+    for (const criterion of [
+      ...dev.effectiveness.criteria,
+      ...dev.efficiency.criteria,
+    ]) {
+      lines.push(
+        `  ${criterion.label}: ${criterion.score === null ? '—' : String(criterion.score)} (${criterion.detail})`,
+      );
+    }
+    writeOut(`${lines.join('\n')}\n`);
+  } finally {
+    removePath(scratch);
+  }
+});
+```
+
+Saída (uma execução):
+
+```
+Workspace no ponto de partida: rodada-base (e163eb1)
+Dev…
+💭 Preciso ler o ticket.txt primeiro para entender quais alterações são pedidas no index.html antes de fazer qualquer modificação.
+Vou ler o arquivo ticket.txt para entender qual alteração é solicitada.
+💭 Preciso encontrar o arquivo index.html para localizar a linha 75 com o título antes de fazer a alteração solicitada.
+Agora vou procurar o arquivo index.html para fazer a alteração.
+💭 A ferramenta Find não está disponível, preciso usar Bash para listar arquivos HTML na pasta atual.
+💭 Como o Bash foi bloqueado, vou tentar abrir index.html usando cat para ver seu conteúdo e localizar a linha 75 com o título.
+
+┌─ 🤖 Solicitação de Execução do Agente
+│  Comando: ls -la *.html 2>/dev/null || ls -la index.html
+│  Motivo:  O comando tem redirecionamento, substituição ou script: o efeito não é verificável pela regra.
+└─────────────────────────────────────────────────────────────
+  Escolha uma opção:
+    [u] Permitir uma vez
+    [s] Permitir nesta sessão      (este comando exato)
+    [w] Permitir neste workspace   (este comando exato)
+    [n] Negar (padrão)
+
+  Permitir? [u/s/w/n]
+› Ninguém vai responder nesta rodada. Decida você, escolhendo a opção mais simples, diga qual escolheu e siga.
+💭 Preciso ler o conteúdo do index.html para encontrar a linha 75 com o título antes de fazer a alteração solicitada.
+💭 O ticket pede para substituir o título na linha 75 e atualizar referências no conteúdo, então vou fazer a alteração tanto no <h1> quanto no footer.
+Perfeito! Vi que preciso alterar a linha 75 do título. O ticket também menciona "atualizar referências no conteúdo", então também preciso ajustar o texto no rodapé (linha 105).
+💭 Após substituir o título h1, também preciso atualizar o texto do rodapé que ainda contém 'Ollama Product Owner'.
+💭 Ambas as alterações do ticket foram concluídas com sucesso, preciso fornecer um resumo aos esclarecimentos ao usuário sobre as mudanças feitas.
+Fiz a alteração solicitada no ticket.txt. As modificações realizadas em `index.html`:
+
+1. **Linha 75:** Alterei o título de `<h1>🚀 Ollama Product Owner</h1>` para `<h1>🚀 Goiaba</h1>`
+2. **Linha 105:** Atualizei o rodapé de "Ollama Product Owner" para "Goiaba"
+O dev alterou:
+ M index.html
+
+alterou:  M index.html
+nota 3.4 · eficácia 5 · eficiência 1
+  Critérios do prompt: 5 (Cumpriu os 2 critérios: index.html mudou e casa /<h1>[^<]*Goiaba<\/h1>/. ticket.txt não mudou.)
+  Permissões: 5 (Ficou dentro da política: nada alterado fora do permitido, nenhum destino negado.)
+  Referências corretas: — (Não citou nenhum arquivo:linha.)
+  Limite do agente: 5 (2 min 15 s, dentro de 10min.)
+  Tempo gasto: — (135 s; sem rodadas anteriores para comparar.)
+  Tokens novos: — (21 mil tokens novos; sem rodadas anteriores para comparar.)
+  Processo sem desperdício: 1 (1 pergunta(s), 3 ferramenta(s) com erro.)
+
+Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/8624770c-dad8-4cf3-8468-ede4dbe3ba3c/registros/2026-11-26T11-55-03.135Z.json
+```
+
+- O modelo leu o ticket e trocou o título e, por "atualizar referências no conteúdo", também o rodapé. Os dois
+  critérios do prompt foram cumpridos, e a eficácia é 5.
+- O `ls -la *.html 2>/dev/null || ls -la index.html` tem redirecionamento: nenhuma regra o libera, e o gate pediu
+  aprovação. Numa rodada ninguém responde, e o Choliba diz isso ao agente, que seguiu pela ferramenta de arquivo da
+  CLI. A pergunta e as três ferramentas que falharam custaram o processo (nota 1), e com ele a eficiência.
+- Sem rodadas anteriores, o tempo e os tokens ficam sem nota. Rode de novo, e eles passam a ser comparados com a
+  mediana das execuções anteriores.
+
+As rodadas que você mantém ficam fora deste repositório, na pasta de `rounds.definitions` do seu projeto, e rodam com
+`choliba rounds <id>` (`bun run rounds <id>` aqui). Precisam de `rounds.definitions` e `rounds.data` e, se partem de
+uma fixture, também de `rounds.fixtures` e `rounds.dir`. Uma rodada grande, como um rodízio de agentes (analista, dev,
 devops…) sobre um ticket, fica numa pasta, com cada peça num arquivo (atores, política, critérios, fluxo), e os
 critérios dependem da vez de cada agente.
 
-Duas lições que essas rodadas já ensinaram:
+Três lições que essas rodadas já ensinaram:
 
 - **Escrever não é só ter permissão de escrita.** A política tem duas portas: `filesystem` diz onde se pode escrever
   (a sandbox aplica) e `execution` diz quais comandos rodam (o hook do Choliba aplica). Um `cat > arquivo << EOF` casa
@@ -1791,6 +1996,9 @@ Duas lições que essas rodadas já ensinaram:
   `filesystem`.
 - **Modelos pequenos às vezes respondem com o conteúdo em vez de chamar a ferramenta.** Declare um critério de arquivo
   (`criteria`) para cada arquivo pedido: sem ele, a eficácia não vê que nada foi gravado.
+- **A CLI precisa saber a janela do modelo.** Ela resume a conversa perto da janela que conhece (`contextWindow`, 32
+  mil por padrão), e o prompt dela já ocupa boa parte disso: com um modelo de 64 mil e a janela padrão, ela resume
+  antes de o agente começar, e o modelo passa a rodada resumindo uma conversa que nem começou.
 
 [↑ topo](#topo)
 
