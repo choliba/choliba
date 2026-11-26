@@ -1,3 +1,4 @@
+import { UsageError } from '../../errors';
 import { log } from '../../logger/index';
 import { userHome } from '../../execute/process';
 import type { ProgramCommand, ProgramOutput } from '../../execute/types';
@@ -42,7 +43,7 @@ export class CursorProvider
     const { executable = 'agent', model } = options;
     this.declared = { ...options };
     if (model.trim().length === 0) {
-      throw new Error('O modelo não pode estar vazio.');
+      throw new UsageError('O modelo não pode estar vazio.');
     }
 
     this.executable = executable;

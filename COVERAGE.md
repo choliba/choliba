@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 26/11/2026 09:44:11: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 26/11/2026 09:47:41: não edite à mão.
 
 Limites (coverage-thresholds.json, só sobem): funções 92.97%, linhas 95.10%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
@@ -278,7 +278,7 @@ Status|Arquivo|% Funcs|% Lines
 🟢|[codex/codex-provider.ts](src/providers/codex/codex-provider.ts)|86.11|95.73
 🟢|[codex/policy.ts](src/providers/codex/policy.ts)|97.30|100.00
 🟢|[constants.ts](src/providers/constants.ts)|100.00|100.00
-🟢|[cursor/cursor-provider.ts](src/providers/cursor/cursor-provider.ts)|87.50|98.05
+🟢|[cursor/cursor-provider.ts](src/providers/cursor/cursor-provider.ts)|87.50|98.06
 🟢|[cursor/policy.ts](src/providers/cursor/policy.ts)|100.00|100.00
 🟢|[ollama/ollama-provider.ts](src/providers/ollama/ollama-provider.ts)|96.67|98.90
 🟢|[ollama/ollama-traffic.ts](src/providers/ollama/ollama-traffic.ts)|95.65|100.00

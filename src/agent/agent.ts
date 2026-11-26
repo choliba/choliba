@@ -162,11 +162,11 @@ export class Agent {
     subscribe = [],
   }: AgentOptions) {
     if (name.trim().length === 0) {
-      throw new Error('O nome do agente não pode estar vazio.');
+      throw new UsageError('O nome do agente não pode estar vazio.');
     }
 
     if (prompt.trim().length === 0) {
-      throw new Error('O prompt do agente não pode estar vazio.');
+      throw new UsageError('O prompt do agente não pode estar vazio.');
     }
 
     this.prompt = prompt;
