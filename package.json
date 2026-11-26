@@ -28,9 +28,9 @@
     "bun": ">=1.4"
   },
   "scripts": {
-    "ollama:codex": "bun guides/agent/exemplos/ollama.codex.ts",
-    "ollama": "bun guides/agent/exemplos/ollama.ts",
-    "tui": "bun guides/agent/exemplos/tui.ts",
+    "ollama:codex": "bun guides/agent/exemplos/7-entradas-e-saidas.ts",
+    "ollama": "bun guides/agent/exemplos/7-ollama.ts",
+    "tui": "bun guides/agent/exemplos/7-tui.ts",
     "rounds": "bun bin/choliba.ts rounds",
     "rounds:web": "bun bin/choliba.ts rounds:web",
     "rounds:build": "bun run --cwd src/rounds/web build",
