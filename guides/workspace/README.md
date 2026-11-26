@@ -58,19 +58,22 @@ Uma opção que o tipo de workspace não tem (`image` sem Docker, um nome errado
 | `Workspace.paths`                              | O `SandboxPaths` do workspace: `paths.inside(caminho)` diz onde o sandbox vê um caminho do host.                                                                  |
 | `Workspace.applyPermissions(policy, network?)` | Compila as permissões de filesystem e, com `network`, monta a fronteira de rede com as regras da política (`networkRulesOf`).                                     |
 | `Workspace.configureNetwork(boundary)`         | Liga uma fronteira de rede montada à mão (`NetworkBoundary`): o sandbox fica sem rede própria. Um sandbox que não sabe isolar a rede recusa.                      |
-| `Workspace.useHost(host)`                      | Passa ao sandbox o conjunto já calculado de montagens e variáveis.                                                                                                |
+| `Workspace.useHost(host)`                      | Passa ao sandbox o conjunto já calculado de montagens e variáveis; sem ele, o `prepare` aplica o `hostState` do workspace antes da primeira execução.             |
 | `Workspace.protect(paths)`                     | Mantém arquivos de configuração e hooks somente para leitura.                                                                                                     |
 | `Workspace.prepare(command)`                   | Prepara o comando com o diretório de trabalho da raiz, criando a raiz se ela não existir.                                                                         |
 | `Workspace.close()`                            | Encerra sandbox e rede.                                                                                                                                           |
 
 `hostState` aceita três valores. `login` é o padrão: a CLI ganha um home por workspace e somente seu arquivo de login entra, montado para leitura. `none` não compartilha arquivos de login e exige uma variável de credencial declarada pelo provider; um provider local sem credenciais continua válido. `share` entrega o estado do provider no host, gravável, incluindo o histórico de outras raízes.
 
-**Sem agente, não há `hostState`.** Quem aplica o modo é o agente: ele passa ao sandbox (`useHost`) só o que o provider
-pede do host. Um `Workspace` usado sozinho, como no [Exemplo 2](#2-rodar-programas-num-workspace-sem-agente), não passa
-por isso: o sandbox monta **graváveis** as pastas de estado do host (`~/.config`, `~/.cache` com o `~/.cache/choliba`,
-`~/.local/share`, `~/.cursor`, `~/.codex`, `~/.claude` e `~/.claude.json`, em `sandbox/host-state.ts`) e repassa o
-ambiente inteiro de quem roda o programa. Um programa nesse workspace lê, por exemplo, o arquivo de login da CLI e grava
-no cache do host.
+**Sem agente, o `Workspace` aplica o próprio `hostState`.** Num agente, quem aplica o modo é o agente: ele passa ao
+sandbox (`useHost`) só o que o provider pede do host. Um `Workspace` usado sozinho, como no
+[Exemplo 2](#2-rodar-programas-num-workspace-sem-agente), aplica o dele antes da primeira execução (no `prepare`), como
+para um provider que não declara nada: um home próprio, nenhum login e só as variáveis de sistema do ambiente (`PATH`,
+`LANG`, `TERM`…), com o `HOME` e os `XDG_*` apontando para o home. `none` vale como `login`, porque não há login para
+esconder. Com `share`, o sandbox monta **graváveis** as pastas de estado do host (`~/.config`, `~/.cache` com o
+`~/.cache/choliba`, `~/.local/share`, `~/.cursor`, `~/.codex`, `~/.claude` e `~/.claude.json`, em
+`sandbox/host-state.ts`) e repassa o ambiente inteiro de quem roda o programa: um programa lê o arquivo de login da CLI
+e grava no cache do host. Use `share` só quando o programa precisar disso.
 
 Com `type: 'docker'`, a opção `image` diz de onde vem a imagem: `FROM nome:tag` baixa a imagem do registro (o Docker
 Hub) quando ela falta na máquina, e `nome:tag` sozinho usa uma imagem construída na máquina, sem nunca baixar (sem
@@ -104,7 +107,7 @@ No Docker, `/home` e `/opt` são tmpfs vazios (as entradas do `/opt` do host vol
 do host é somente leitura, e o Docker não consegue criar pontos de montagem nele. Por isso o workspace Docker precisa
 da pasta `/opt` no host.
 
-Num workspace de agente, o cache do Choliba (`~/.cache/choliba`) também fica fora do sandbox, em qualquer `hostState`: lá ficam os gates dos outros agentes e homes antigos de CLIs. Do cache, o sandbox vê só o que é do próprio agente: o diretório do gate de execução, somente leitura, e o da saída de rede. Num `Workspace` sozinho, o cache entra com o resto do `~/.cache`, gravável.
+Num workspace de agente, o cache do Choliba (`~/.cache/choliba`) também fica fora do sandbox, em qualquer `hostState`: lá ficam os gates dos outros agentes e homes antigos de CLIs. Do cache, o sandbox vê só o que é do próprio agente: o diretório do gate de execução, somente leitura, e o da saída de rede. Num `Workspace` sozinho, o cache fica fora também; só com `share` ele entra com o resto do `~/.cache`, gravável.
 
 ### Programas visíveis: `programs`
 
@@ -138,7 +141,7 @@ lista vazia (`programs: []`) mostra só a base.
 
 1. `Workspace` valida a raiz e `hostState`, depois cria o sandbox adequado.
 2. `home()` calcula um identificador estável a partir do caminho resolvido da raiz. O home guarda sessões e configuração da CLI entre execuções.
-3. O agente consulta `provider.hostAccess()` e prepara o acesso conforme `hostState`. O sandbox recebe o resultado por `useHost`. Sem agente, ninguém chama `useHost`, e o sandbox monta as pastas de estado do host.
+3. O agente consulta `provider.hostAccess()` e prepara o acesso conforme `hostState`. O sandbox recebe o resultado por `useHost`. Sem agente, o `Workspace` faz o mesmo antes da primeira execução, como para um provider que não declara nada; com `share`, o sandbox monta as pastas de estado do host.
 4. O agente passa as permissões, os caminhos protegidos e a rede por operações de `Workspace`.
    Com `programs`, o sandbox confere os programas ao subir (antes de qualquer comando) e esvazia as pastas de programas.
 5. `prepare` define `cwd` como a raiz e delega ao sandbox, que traduz o comando para os caminhos de dentro
