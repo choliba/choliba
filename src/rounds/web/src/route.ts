@@ -1,8 +1,8 @@
 /**
  * Where the reader is, in the hash: `#/` the index, `#/teste/<key>` a test,
  * `#/rodada/<id>` a round (`?agente=<nome>` opens that agent as it ran),
- * `#/criar` the form that writes a new round's declaration. A hash keeps the pages static: dist/ opens from
- * a file or any folder.
+ * `#/criar` the form that writes a new round's declaration. A hash keeps the pages static: dist/ works
+ * under any path, served next to the rounds.json it fetches (choliba rounds:web).
  */
 
 import { useEffect, useState } from 'react';

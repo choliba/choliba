@@ -1,7 +1,7 @@
 /**
  * A round's declaration back from data (`RoundDeclaration`, captured by
  * `captureDeclaration` when it ran) to the source of
- * `rounds/definitions/<id>.ts`, and one actor back to an agent at the project's root.
+ * `<rounds.definitions>/<id>.ts`, and one actor back to an agent at the project's root.
  * A piece of the pages (they copy it); pure and only on the record's types.
  * The code comes out in the project's style (source.ts): no prettier needed.
  */
@@ -197,7 +197,7 @@ function criteriaValue(criteria: RoundCriteria): Record<string, unknown[]> {
 }
 
 /**
- * The declaration as the source of `rounds/definitions/<id>.ts`, ready to
+ * The declaration as the source of `<rounds.definitions>/<id>.ts`, ready to
  * paste. A project's tool among `projectTools` comes out as its import. A
  * rule or provider this file does not know
  * comes out as a comment saying so; a prompt that could not be read, as a

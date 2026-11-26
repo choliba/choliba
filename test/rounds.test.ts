@@ -182,6 +182,20 @@ test.each<[string, Partial<RoundDefinition>, string]>([
     'start.fixture deve ser o nome de uma pasta',
   ],
   [
+    'trecho vazio num critério de arquivo',
+    { criteria: { analista: [{ file: { name: 'a.txt', contains: [' '] } }] } },
+    'criteria.analista.file.contains tem um trecho vazio',
+  ],
+  [
+    'trecho vazio numa condição',
+    {
+      criteria: {
+        analista: [{ if: { name: 'a.txt', contains: [''] }, check: [] }],
+      },
+    },
+    'criteria.analista.if.contains tem um trecho vazio',
+  ],
+  [
     'critério de arquivo com caminho absoluto',
     { criteria: { analista: [{ file: { name: '/etc/passwd' } }] } },
     'caminho relativo à raiz do workspace',

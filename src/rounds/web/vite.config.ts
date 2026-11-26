@@ -62,7 +62,8 @@ function records(): Plugin {
 }
 
 // The pages of the rounds: static, the records fetched when they open.
-// `base: './'` keeps every path relative, so dist/ is served from anywhere.
+// `base: './'` keeps every path relative, so dist/ works under any path,
+// next to the rounds.json it fetches (choliba rounds:web serves both).
 export default defineConfig({
   root: fileURLToPath(new URL('.', import.meta.url)),
   base: './',
