@@ -248,3 +248,104 @@ export function pagesWithoutOneMain(
 export function mainLandmarkMessage(paths: readonly string[]): string {
   return `Página sem exatamente um <main> (landmark-one-main): ${paths.join(', ')}.`;
 }
+
+/** A link of a built page to an anchor its target page does not have. */
+export interface BrokenAnchor {
+  /** The page with the link, by its path in `outDir`. */
+  readonly page: string;
+  /** The link, as written in the page. */
+  readonly href: string;
+}
+
+/** The content of a page: the theme's own links (outline, menu) come from the same ids. */
+const MAIN_CONTENT = /<main\b[\s\S]*<\/main>/;
+const ANCHOR_LINK = /\shref="([^"]*#[^"]+)"/g;
+const ELEMENT_ID = /\sid="([^"]+)"/g;
+const ENTITIES: Readonly<Record<string, string>> = {
+  '&amp;': '&',
+  '&lt;': '<',
+  '&gt;': '>',
+  '&quot;': '"',
+  '&#39;': "'",
+};
+
+/** An attribute's value as the browser reads it: entities decoded. */
+function attributeText(value: string): string {
+  return value.replace(
+    /&(?:amp|lt|gt|quot|#39);/g,
+    (entity) => ENTITIES[entity] ?? entity,
+  );
+}
+
+/** An anchor as the browser compares it with the ids: percent-decoded, when it can be. */
+function decodedAnchor(anchor: string): string {
+  try {
+    return decodeURIComponent(anchor);
+  } catch {
+    return anchor;
+  }
+}
+
+/**
+ * The built page a link of `from` leads to (`#x`, `/guias/x#y`, `./x#y`,
+ * `x.html#y`), or `undefined` when it leaves the site or the page does not
+ * exist, which VitePress already refuses (`ignoreDeadLinks`).
+ */
+function targetPage(
+  from: string,
+  target: string,
+  paths: ReadonlySet<string>,
+): string | undefined {
+  if (target === '') return from;
+  if (/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(target)) return undefined;
+  const folder = from.slice(0, from.lastIndexOf('/') + 1);
+  const joined = target.startsWith('/') ? target.slice(1) : folder + target;
+  const parts: string[] = [];
+  for (const part of joined.split('?')[0]?.split('/') ?? []) {
+    if (part === '..') parts.pop();
+    else if (part !== '.' && part !== '') parts.push(part);
+  }
+  const path = parts.join('/').replace(/\.(?:md|html)$/, '');
+  return [
+    `${path}.html`,
+    path === '' ? 'index.html' : `${path}/index.html`,
+  ].find((candidate) => paths.has(candidate));
+}
+
+/**
+ * The links in the content of the built pages to an anchor (`#x`) that the
+ * target page, the same or another page of the site, has no `id` for: on the
+ * site, they lead nowhere.
+ */
+export function brokenAnchors(
+  pages: readonly BuiltPage[],
+): readonly BrokenAnchor[] {
+  const ids = new Map(
+    pages.map(({ path, html }) => [
+      path,
+      new Set(
+        [...html.matchAll(ELEMENT_ID)].map(([, id = '']) => attributeText(id)),
+      ),
+    ]),
+  );
+  const paths = new Set(ids.keys());
+  return pages.flatMap(({ path, html }) =>
+    [...(MAIN_CONTENT.exec(html)?.[0] ?? '').matchAll(ANCHOR_LINK)].flatMap(
+      ([, href = '']) => {
+        const link = attributeText(href);
+        const hash = link.indexOf('#');
+        const page = targetPage(path, link.slice(0, hash), paths);
+        const anchor = decodedAnchor(link.slice(hash + 1));
+        return page === undefined || ids.get(page)?.has(anchor) === true
+          ? []
+          : [{ page: path, href }];
+      },
+    ),
+  );
+}
+
+/** Why the build stopped, naming each page and link. */
+export function brokenAnchorsMessage(broken: readonly BrokenAnchor[]): string {
+  const links = broken.map(({ page, href }) => `${page} → ${href}`);
+  return `Âncora sem destino (${String(broken.length)}): ${links.join(', ')}.`;
+}

@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitepress';
 
 import {
+  brokenAnchors,
+  brokenAnchorsMessage,
   type BuiltPage,
   checkDescription,
   faviconLink,
@@ -88,10 +90,14 @@ export default defineConfig({
   transformHead() {
     return googleAnalyticsTags(GOOGLE_ANALYTICS);
   },
-  // Toda página tem um só landmark main, para leitores de tela: uma sem ele reprova o build. E o robots.txt.
+  // Toda página tem um só landmark main, para leitores de tela, e todo link para uma âncora (#x) acha o id dela: uma
+  // página sem isso reprova o build. E o robots.txt.
   buildEnd(siteConfig) {
-    const missing = pagesWithoutOneMain(builtPages(siteConfig.outDir));
+    const pages = builtPages(siteConfig.outDir);
+    const missing = pagesWithoutOneMain(pages);
     if (missing.length > 0) throw new Error(mainLandmarkMessage(missing));
+    const broken = brokenAnchors(pages);
+    if (broken.length > 0) throw new Error(brokenAnchorsMessage(broken));
     writeFileSync(
       path.join(siteConfig.outDir, 'robots.txt'),
       robotsTxt(SITE_URL),
