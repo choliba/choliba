@@ -4,7 +4,7 @@
 
 > Os comandos que o Choliba oferece a quem o usa, como o `approvals`, a tela onde você vê o que o gate negou e decide o que aprovar, valem para qualquer projeto.
 
-O `src/cli` guarda **os comandos que o Choliba oferece a quem o usa**: programas prontos, rodados com `bun run <nome>`, que fazem parte do produto. Hoje há um só, o **`approvals`**: a tela onde você vê os comandos e destinos que o gate negou e decide quais aprovar.
+O `src/cli` guarda **os comandos que o Choliba oferece a quem o usa**: programas prontos, que fazem parte do produto. Num projeto que instalou o pacote, eles rodam como `choliba <comando>` (`bunx choliba approvals`); neste repositório, também como `bun run <nome>`. São quatro, na tabela `COMMANDS` de `src/cli/commands.ts`: `rounds` (roda uma rodada), `rounds:web` (as páginas das rodadas), `clear` (apaga logs, workspaces, homes e rodadas) e o **`approvals`**, a tela onde você vê os comandos e destinos que o gate negou e decide quais aprovar. Este curso ensina o `approvals`; as rodadas estão no curso de [rounds](../rounds/README.md).
 
 Eles são diferentes de `scripts/`, que são ferramentas de desenvolvimento **deste repositório** (abrir uma issue, limpar o log, gerar os cursos). Um comando do `cli` vale para qualquer projeto que use o Choliba.
 
@@ -40,7 +40,7 @@ bun run approvals ──▶ runCommand (src/command)   lê os argumentos, carreg
 
 - **O que é:** a tela de aprovações como um programa. Ela lista os pedidos negados pelo gate (comandos e destinos de rede), deixa marcar quais aprovar e salva a decisão.
 - **Quando usar:** quando um agente parou esperando uma aprovação ("aguarda a aprovação de uma pessoa (pedido #N)"), ou para revisar o que foi negado.
-- **Como chamar:** `bun run approvals`, ou `bun run approvals --root <dir>` para ver só um workspace.
+- **Como chamar:** `bunx choliba approvals` num projeto que instalou o pacote, ou `bun run approvals` neste repositório; `--root <dir>` mostra só um workspace.
 - **Dentro de um agente rodando:** `Ctrl+A` abre a mesma tela, no mesmo terminal.
 - **Depois de aprovar:** um agente rodando continua sozinho; um parado retoma a tarefa de onde parou quando for rodado de novo.
 
@@ -48,9 +48,12 @@ bun run approvals ──▶ runCommand (src/command)   lê os argumentos, carreg
 
 ## Os arquivos
 
-| Arquivo        | Papel                                                                                                 |
-| -------------- | ----------------------------------------------------------------------------------------------------- |
-| `approvals.ts` | O comando `approvals`: declara a opção `--root`, abre o banco do projeto e roda a tela de aprovações. |
+| Arquivo        | Papel                                                                                                                            |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `approvals.ts` | O comando `approvals`: declara a opção `--root`, abre o banco do projeto e roda a tela de aprovações.                            |
+| `commands.ts`  | A tabela `COMMANDS`: o nome de cada comando, o que ele roda (`run`) e a linha que a ajuda geral mostra (`summary`).              |
+| `rounds.ts`    | Os comandos `rounds` e `rounds:web` (veja o curso de [rounds](../rounds/README.md)).                                             |
+| `clear.ts`     | O comando `clear`: lista o que há nas pastas do Choliba (logs, workspaces, homes, rodadas), pergunta e apaga; `--dry` só mostra. |
 
 O que ele usa, e de onde:
 
@@ -71,6 +74,8 @@ O que ele usa, e de onde:
 ```
 bun run approvals [--root <dir>]
 ```
+
+Num projeto que instalou o pacote, o mesmo comando é `bunx choliba approvals [--root <dir>]`.
 
 | Opção          | O que faz                                                                                |
 | -------------- | ---------------------------------------------------------------------------------------- |
@@ -165,7 +170,7 @@ for await (const { chunk } of new Executor().run({
 Saída real:
 
 ```
-Uso: bun run approvals [opções]
+Uso: choliba approvals [opções]
 
 Lista os comandos negados pelo gate e deixa selecionar e aprovar.
 
@@ -411,11 +416,11 @@ ainda pendente: npm install left-pad
 
 **Só o módulo pode:**
 
-- Ser um comando do produto: o que vai em `bun run <nome>` para quem usa o Choliba. Ferramenta do repositório vai em `scripts/`.
+- Ser um comando do produto: o que vai em `choliba <comando>` para quem usa o Choliba, com uma linha na tabela `COMMANDS`. Ferramenta do repositório vai em `scripts/`.
 
 **Ninguém deve:**
 
-- **Pôr lógica num comando.** Um comando junta peças; a tela é do `src/approval`, o banco do `src/store`, os argumentos do `src/command`. Um comando novo segue o mesmo jeito: `defineCommand` + `runCommand`, e o trabalho num módulo.
+- **Pôr lógica num comando.** Um comando junta peças; a tela é do `src/approval`, o banco do `src/store`, os argumentos do `src/command`. Um comando novo segue o mesmo jeito: `defineCommand` + `runCommand`, e o trabalho num módulo. O `clear` só escolhe o que apagar (as pastas da config), mostra e pergunta; quem apaga é o `src/filesystem`.
 - **Ler argumentos, escrever na tela ou abrir o banco por fora** desses módulos.
 - **Abrir a tela de aprovações num segundo leitor do mesmo terminal.** Dentro de um agente, é o `Ctrl+A`.
 
