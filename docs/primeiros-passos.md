@@ -12,17 +12,15 @@ Você precisa de:
 
 ## Instale o pacote
 
-O Choliba é um pacote Bun. Num projeto que já usa o Bun, instale do repositório:
+O Choliba é um pacote Bun, distribuído pelas [releases](https://github.com/choliba/choliba/releases) do GitHub. Num
+projeto que já usa o Bun, instale o `choliba-<versão>.tgz` da última release pelo endereço dele:
 
 ```bash
-bun add github:choliba/choliba
+bun add https://github.com/choliba/choliba/releases/download/v<versão>/choliba-<versão>.tgz
 ```
 
-Ou baixe o `choliba-<versão>.tgz` da [última release](https://github.com/choliba/choliba/releases) e instale o arquivo:
-
-```bash
-bun add ./choliba-0.3.0.tgz
-```
+Também dá para instalar direto do repositório (`bun add github:choliba/choliba`), mas assim o pacote chega sem as
+páginas das rodadas, e o `choliba rounds:web` não funciona.
 
 ## Configure o projeto
 
