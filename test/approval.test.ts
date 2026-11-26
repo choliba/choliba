@@ -381,7 +381,12 @@ describe('proteção na sandbox', () => {
       const state = join(cache, 'choliba', 'protegido');
       mkdirSync(state, { recursive: true });
       writeFileSync(join(state, 'hook'), 'original');
-      const workspace = new Workspace({ type: 'bubblewrap', root });
+      // `share` keeps the host's cache writable: the protection holds inside it.
+      const workspace = new Workspace({
+        type: 'bubblewrap',
+        root,
+        hostState: 'share',
+      });
       workspace.protect([state]);
 
       try {
