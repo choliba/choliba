@@ -52,6 +52,8 @@ export interface LoggerTarget {
   readonly dir: string;
   /** Names this run's files: one log per open. */
   readonly session: string;
+  /** Who writes the log: the package's name and version, for each record's `service`. */
+  readonly service: { readonly name: string; readonly version: string };
 }
 
 /**

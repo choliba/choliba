@@ -17,10 +17,13 @@ const destination = (dest: string) =>
  */
 export const pinoConfig =
   ({ debug }: { readonly debug: boolean }): LoggerFactory =>
-  ({ dir, session }) =>
+  ({ dir, session, service }) =>
     pino(
       {
-        ...ecsFormat({ serviceName: 'choliba', serviceVersion: '0.3.0' }),
+        ...ecsFormat({
+          serviceName: service.name,
+          serviceVersion: service.version,
+        }),
         level: debug ? 'debug' : 'info',
         // Sem pid: process.* descreve o comando de cada evento.
         base: { hostname: hostname() },

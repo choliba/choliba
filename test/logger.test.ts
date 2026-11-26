@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { describe, expect, test } from 'bun:test';
@@ -243,9 +243,16 @@ describe('adaptLogger', () => {
 });
 
 describe('openLogger com o logger da config', () => {
-  test('um pino real grava ECS com o nível de cada registro', async () => {
+  test('um pino real grava ECS com o nível de cada registro e o serviço', async () => {
     // Inside the repo, so the config's `import 'pino'` resolves.
     const cwd = mkdtempSync(join(import.meta.dir, 'tmp-logger-'));
+    const manifest: unknown = JSON.parse(
+      readFileSync(join(import.meta.dir, '..', 'package.json'), 'utf8'),
+    );
+    const version =
+      typeof manifest === 'object' && manifest !== null && 'version' in manifest
+        ? manifest.version
+        : undefined;
 
     try {
       writeFileSync(
@@ -258,9 +265,12 @@ const dest = (file: string) =>
 export default {
   logger: {
     dir: 'logs',
-    use: ({ dir, session }) =>
+    use: ({ dir, session, service }) =>
       pino(
-        { ...ecsFormat({ serviceName: 'choliba' }), level: 'debug' },
+        {
+          ...ecsFormat({ serviceName: service.name, serviceVersion: service.version }),
+          level: 'debug',
+        },
         dest(join(dir, session + '.jsonl')),
       ),
   },
@@ -281,6 +291,7 @@ export default {
           'log.level': 'info',
           'ecs.version': expect.any(String),
           'service.name': 'choliba',
+          'service.version': version,
           trace: { id: expect.any(String) },
           event: { name: 'input' },
           message: 'Entrada enviada ao agente',
