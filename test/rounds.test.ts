@@ -671,7 +671,7 @@ test('runRound parte da tag, passa o que cada um disse adiante, confere pelo git
           analista: [
             {
               if: { name: 'zzz.txt', exists: true },
-              check: [{ file: { name: 'zzz.txt', matches: [/z+/] } }],
+              check: [{ file: { name: 'zzz.txt', matches: [/z+/, /Z/i] } }],
             },
           ],
         },
@@ -687,10 +687,18 @@ test('runRound parte da tag, passa o que cada um disse adiante, confere pelo git
 
     expect(round.start?.tag).toBe('rodada-base');
     expect(round.label).toBe('analista só lê');
-    // A RegExp of the declaration is kept as its source, not as `{}`.
+    // A RegExp of the declaration is kept as its source, not as `{}`; one
+    // with flags, as its source and flags.
     expect(round.criteria?.['analista']?.[0]).toEqual({
       if: { name: 'zzz.txt', exists: true },
-      check: [{ file: { name: 'zzz.txt', matches: ['z+'] } }],
+      check: [
+        {
+          file: {
+            name: 'zzz.txt',
+            matches: ['z+', { source: 'Z', flags: 'i' }],
+          },
+        },
+      ],
     });
     // Checked against the workspace at the end of the step: only the verdict.
     expect(round.steps[1]?.criteria).toEqual([
@@ -1312,7 +1320,14 @@ test('a declaração vira dados e volta a ser um arquivo que declara a mesma rod
       },
     ],
     criteria: {
-      analista: [{ file: { name: '*', changed: false } }],
+      analista: [
+        { file: { name: '*', changed: false } },
+        {
+          if: { name: 'notas/resumo.md', exists: true },
+          check: [{ file: { name: 'notas/resumo.md', matches: [/goiaba/i] } }],
+          else: [{ file: { name: 'notas/*', changed: false } }],
+        },
+      ],
       round: [{ limit: { time: '60s' } }],
     },
     rules: [readOnlyRespected(), noQuestions()],
@@ -1357,6 +1372,8 @@ test('a declaração vira dados e volta a ser um arquivo que declara a mesma rod
   expect(source).toContain("cli: 'claude',");
   expect(source).toContain("baseUrl: 'http://127.0.0.1:11435'");
   expect(source).toContain('ports: [5173]');
+  // A RegExp with flags goes back as it was written.
+  expect(source).toContain('matches: [/goiaba/i]');
   // Already in the project's style: prettier changes nothing.
   expect(
     await format(source, { parser: 'typescript', singleQuote: true }),

@@ -14,10 +14,12 @@
 
 import { toolsAt, type ProjectTool } from './project-tools';
 import type { AgentPolicy } from '../../../policy/policy.interface';
+import { patternData } from '../../../rounds/criteria';
 import type {
   DeclaredActor,
   DeclaredOptionValue,
   FileCriterion,
+  PatternData,
   RoundCriterion,
   RoundDeclaration,
 } from '../../../rounds/types';
@@ -353,7 +355,17 @@ const ports = (value: unknown): number[] =>
 /** The flags of a file assertion that are given as true or false. */
 const FILE_FLAGS = ['exists', 'created', 'deleted', 'changed'] as const;
 
-/** A file assertion as data: each field checked, a `matches` RegExp as its source. */
+/** A `matches` entry as data: a RegExp or `{ source, flags }` keeps its flags (`patternData`). */
+function patternOf(value: unknown): string | PatternData {
+  if (value instanceof RegExp) return patternData(value);
+  const source = field(value, 'source');
+  const flags = field(value, 'flags');
+  return typeof source === 'string' && typeof flags === 'string'
+    ? patternData({ source, flags })
+    : text(value);
+}
+
+/** A file assertion as data: each field checked, a `matches` RegExp as its source and flags. */
 function fileData(file: Readonly<Record<string, unknown>>): FileCriterion {
   const flags = Object.fromEntries(
     FILE_FLAGS.flatMap((flag) =>
@@ -368,13 +380,7 @@ function fileData(file: Readonly<Record<string, unknown>>): FileCriterion {
     ...(Array.isArray(file['contains'])
       ? { contains: texts(file['contains']) }
       : {}),
-    ...(Array.isArray(matches)
-      ? {
-          matches: matches.map((m) =>
-            m instanceof RegExp ? m.source : text(m),
-          ),
-        }
-      : {}),
+    ...(Array.isArray(matches) ? { matches: matches.map(patternOf) } : {}),
     ...(typeof file['equals'] === 'string' ? { equals: file['equals'] } : {}),
   };
 }

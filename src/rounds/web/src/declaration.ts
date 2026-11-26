@@ -20,6 +20,9 @@ import type { AgentPolicy } from '../../../policy/policy.interface';
 import type {
   ActorSnapshot,
   DeclaredActor,
+  PatternData,
+  RoundCriteria,
+  RoundCriterion,
   RoundDeclaration,
   RoundRecord,
 } from '../../../rounds/types';
@@ -160,6 +163,40 @@ function providerValue(
 }
 
 /**
+ * A `matches` pattern as code: `{ source, flags }` back as the RegExp literal
+ * it was (through `RegExp`, which escapes a `/` of the source).
+ */
+const patternValue = (pattern: RegExp | string | PatternData): unknown =>
+  typeof pattern === 'string'
+    ? pattern
+    : new Code(String(new RegExp(pattern.source, pattern.flags)));
+
+/** The criteria as code, each `matches` pattern as `patternValue` writes it. */
+function criteriaValue(criteria: RoundCriteria): Record<string, unknown[]> {
+  const one = (criterion: RoundCriterion): unknown => {
+    if ('file' in criterion) {
+      const { matches } = criterion.file;
+      return matches === undefined
+        ? criterion
+        : { file: { ...criterion.file, matches: matches.map(patternValue) } };
+    }
+    if ('if' in criterion) {
+      return {
+        ...criterion,
+        check: criterion.check.map(one),
+        ...(criterion.else === undefined
+          ? {}
+          : { else: criterion.else.map(one) }),
+      };
+    }
+    return criterion;
+  };
+  return Object.fromEntries(
+    Object.entries(criteria).map(([name, list]) => [name, list.map(one)]),
+  );
+}
+
+/**
  * The declaration as the source of `rounds/definitions/<id>.ts`, ready to
  * paste. A project's tool among `projectTools` comes out as its import. A
  * rule or provider this file does not know
@@ -260,7 +297,7 @@ export function declarationSource(
     flow: flowValues,
     ...(declaration.criteria === undefined
       ? {}
-      : { criteria: declaration.criteria }),
+      : { criteria: criteriaValue(declaration.criteria) }),
     ...(declaration.rules.length === 0
       ? {}
       : {

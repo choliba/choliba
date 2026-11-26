@@ -287,6 +287,14 @@ const step = object({
   ),
 });
 
+const patternShape = object({ source: nonEmpty, flags: nonEmpty });
+
+/** A `matches` entry: a regex's source, or `{ source, flags }` for one with flags. */
+const pattern: Check = (value, path) => {
+  if (isObject(value)) patternShape(value, path);
+  else nonEmpty(value, path);
+};
+
 const fileCriterion = object({
   name: nonEmpty,
   'ignore?': list(nonEmpty),
@@ -295,7 +303,7 @@ const fileCriterion = object({
   'deleted?': boolean,
   'changed?': boolean,
   'contains?': list(string),
-  'matches?': list(nonEmpty),
+  'matches?': list(pattern),
   'equals?': string,
 });
 

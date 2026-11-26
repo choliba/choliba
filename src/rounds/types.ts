@@ -352,10 +352,16 @@ export type RoundCriterion =
   | { readonly limit: LimitCriterion }
   | ConditionalCriterion;
 
+/** A RegExp as data: `/goiaba/i` is `{ source: 'goiaba', flags: 'i' }`. */
+export interface PatternData {
+  readonly source: string;
+  readonly flags: string;
+}
+
 /**
  * Assertions about a file (or many, with a wildcard in `name`), all holding
  * together, checked at the end of the step. `matches` is `RegExp` as declared,
- * stored as its source in the record.
+ * stored in the record as its source, or as `PatternData` when it has flags.
  */
 export interface FileCriterion {
   /** Relative to the workspace root; wildcard `*`, `**`, `ticket-*.md`. */
@@ -375,8 +381,11 @@ export interface FileCriterion {
   readonly changed?: boolean;
   /** Contains ALL of these passages (case-insensitive). */
   readonly contains?: readonly string[];
-  /** Matches ALL of these (record: the sources, as strings). */
-  readonly matches?: readonly (RegExp | string)[];
+  /**
+   * Matches ALL of these. A record keeps a RegExp as its source, or as
+   * `PatternData` when it has flags.
+   */
+  readonly matches?: readonly (RegExp | string | PatternData)[];
   /** The content is exactly this. */
   readonly equals?: string;
 }

@@ -223,6 +223,21 @@ test('aceita uma rodada com o que não foi medido como null, e sem objetivo', ()
   expect(() => validateRound(value)).not.toThrow();
 });
 
+/** The round with one file criterion of `matches` for the analyst. */
+const withMatches = (matches: readonly unknown[]): unknown =>
+  changed((r) => {
+    r['criteria'] = { analista: [{ file: { name: 'a.txt', matches } }] };
+  });
+
+test('aceita matches como texto ou como { source, flags }, e recusa sem as flags', () => {
+  expect(() =>
+    validateRound(withMatches(['z+', { source: 'goiaba', flags: 'i' }])),
+  ).not.toThrow();
+  expect(() => validateRound(withMatches([{ source: 'goiaba' }]))).toThrow(
+    '$.criteria.analista[0].file.matches[0].flags: campo obrigatório',
+  );
+});
+
 test.each([
   [
     'outro schema',

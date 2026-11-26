@@ -13,6 +13,7 @@ import type {
   CriterionResult,
   FileCriterion,
   LimitCriterion,
+  PatternData,
   RoundCriterion,
 } from './types';
 
@@ -341,8 +342,24 @@ function conditionHolds(condition: Condition, start: Lookup): boolean {
 
 // --- helpers ---
 
-function asRegExp(pattern: RegExp | string): RegExp {
-  return typeof pattern === 'string' ? new RegExp(pattern) : pattern;
+/**
+ * A new RegExp for each test: one with `g` or `y` starts where the last
+ * test stopped (`lastIndex`), and the next file would be checked from there.
+ */
+function asRegExp(pattern: RegExp | string | PatternData): RegExp {
+  return typeof pattern === 'string'
+    ? new RegExp(pattern)
+    : new RegExp(pattern.source, pattern.flags);
+}
+
+/** A `matches` pattern as a record keeps it: the source, with the flags when it has any. */
+export function patternData(
+  pattern: RegExp | string | PatternData,
+): string | PatternData {
+  if (typeof pattern === 'string') return pattern;
+  return pattern.flags === ''
+    ? pattern.source
+    : { source: pattern.source, flags: pattern.flags };
 }
 
 function hasWildcard(pattern: string): boolean {

@@ -4,6 +4,7 @@
  * the rules by id. `declarationSource` writes it back as a file.
  */
 
+import { patternData } from './criteria';
 import type { RoundActor, RoundDefinition, RoundRepeat } from './define';
 import type {
   DeclaredActor,
@@ -169,21 +170,17 @@ export function captureDeclaration(
   };
 }
 
-/** The criteria as data: each `matches` RegExp becomes its source string. */
+/**
+ * The criteria as data: each `matches` RegExp becomes its source, or
+ * `{ source, flags }` when it has flags (`patternData`).
+ */
 export function serializeCriteria(criteria: RoundCriteria): RoundCriteria {
   const one = (criterion: RoundCriterion): RoundCriterion => {
     if ('file' in criterion) {
       const { matches } = criterion.file;
       return matches === undefined
         ? criterion
-        : {
-            file: {
-              ...criterion.file,
-              matches: matches.map((m) =>
-                typeof m === 'string' ? m : m.source,
-              ),
-            },
-          };
+        : { file: { ...criterion.file, matches: matches.map(patternData) } };
     }
     if ('if' in criterion) {
       return {

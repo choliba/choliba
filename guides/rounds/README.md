@@ -213,7 +213,7 @@ interface FileCriterion {
   deleted?: boolean; // true: existia no início do passo e não existe no fim
   changed?: boolean; // true: o git viu mudar no passo; false: não viu
   contains?: string[]; // tem TODOS os trechos, sem diferenciar maiúsculas
-  matches?: (RegExp | string)[]; // casa TODAS as expressões
+  matches?: (RegExp | string | PatternData)[]; // casa TODAS as expressões
   equals?: string; // o conteúdo é exatamente este
 }
 ```
@@ -226,6 +226,9 @@ interface FileCriterion {
   criou já estava lá quando este começou.
 - `changed` vem do git (`git status`): sem `start`, a rodada não tem git, e nada aparece como mudado.
 - `contains` ignora maiúsculas e minúsculas; `matches` e `equals`, não (use a flag `i`, como em `/goiaba/i`).
+- No registro, uma `RegExp` vira o texto dela (`/z+/` fica `'z+'`) e, com flags, um `PatternData`
+  (`/goiaba/i` fica `{ source: 'goiaba', flags: 'i' }`): **Copiar definição** a escreve de volta como `/goiaba/i`. Um
+  `PatternData` também vale na declaração.
 - `{{input:nome}}` em `name`, `contains`, `matches` (como texto), `equals` ou na condição vira a resposta da pergunta
   `nome` de `inputs`. Um `{{input:…}}` sem a pergunta é recusado pelo `defineRound`.
 - O registro guarda só o veredito (o que foi conferido, se cumpriu, por quê), nunca o conteúdo do arquivo.
