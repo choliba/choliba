@@ -132,7 +132,7 @@ await runScript(async () => {
             // "sem apagar o rodapé"
             { file: { name: 'index.html', contains: ['<footer'] } },
             // "Anote a mudança num arquivo em docs/": todo arquivo de docs/,
-            // menos os .tmp, foi criado e fala do Choliba.
+            // menos os .tmp, foi criado e cita a Goiaba.
             {
               file: {
                 name: 'docs/*',

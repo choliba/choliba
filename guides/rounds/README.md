@@ -239,7 +239,7 @@ interface FileCriterion {
 - `changed` vem do git (`git status`): sem `start`, a rodada não tem git, e nada aparece como mudado.
 - `contains` ignora maiúsculas e minúsculas; `matches` e `equals`, não (use a flag `i`, como em `/goiaba/i`).
 - No registro, uma `RegExp` vira o texto dela (`/z+/` fica `'z+'`) e, com flags, um `PatternData`
-  (`/goiaba/i` fica `{ source: 'goiaba', flags: 'i' }`): **Copiar definição** a escreve de volta como `/goiaba/i`. Um
+  (`/goiaba/i` fica `{ source: 'goiaba', flags: 'i' }`): a definição copiada (**Copiar definição**) a traz como `/goiaba/i`. Um
   `PatternData` também vale na declaração.
 - `{{input:nome}}` em `name`, `contains`, `matches` (como texto), `equals` ou na condição vira a resposta da pergunta
   `nome` de `inputs`. Um `{{input:…}}` sem a pergunta é recusado pelo `defineRound`.
@@ -493,17 +493,18 @@ rodam antes de apagar a pasta, e a 1, depois de criar o repositório novo, que �
 
 ### O que é medido
 
-| Medida            | De onde vem                                                | Onde fica no registro                |
-| ----------------- | ---------------------------------------------------------- | ------------------------------------ |
-| falas e perguntas | os eventos do agente                                       | `steps[i].said`, `steps[i].asked`    |
-| ferramentas       | os eventos do agente (chamada e resultado)                 | `steps[i].tools`                     |
-| tokens e custo    | o que a CLI informa (ou o tráfego do Ollama, com política) | `usage`, `steps[i].totals`, `totals` |
-| tempo             | o relógio, por passo, por agente e da rodada               | `steps[i].span`, `timing`            |
-| o que mudou       | o git, antes e depois de cada passo                        | `steps[i].changed`, `steps[i].diff`  |
-| critérios         | o workspace e o git, no início e no fim do passo           | `steps[i].criteria`                  |
-| referências       | o que o agente disse, contra a tag de partida              | `steps[i].references`                |
-| rede              | as decisões da fronteira de rede de cada agente            | `actors[nome].network.decisions`     |
-| regras            | as `rules` da declaração                                   | `violations`                         |
+| Medida            | De onde vem                                                                                     | Onde fica no registro                |
+| ----------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------ |
+| falas e perguntas | os eventos do agente                                                                            | `steps[i].said`, `steps[i].asked`    |
+| ferramentas       | os eventos do agente (chamada e resultado)                                                      | `steps[i].tools`                     |
+| tokens e custo    | o que a CLI informa (ou o tráfego do Ollama, com política)                                      | `usage`, `steps[i].totals`, `totals` |
+| tempo             | o relógio, por passo, por agente e da rodada                                                    | `steps[i].span`, `timing`            |
+| o que mudou       | o git, antes e depois de cada passo                                                             | `steps[i].changed`, `steps[i].diff`  |
+| critérios         | o workspace e o git, no início e no fim do passo                                                | `steps[i].criteria`                  |
+| referências       | o que o agente disse, contra a tag de partida                                                   | `steps[i].references`                |
+| rede              | as decisões da fronteira de rede de cada agente                                                 | `actors[nome].network.decisions`     |
+| recursos          | amostras de CPU, GPU e memória da máquina, durante a rodada (ficam de fora sem nenhuma amostra) | `resources`                          |
+| regras            | as `rules` da declaração                                                                        | `violations`                         |
 
 O que não foi medido fica `null`, nunca `0`. O Cursor não informa custo; o Ollama só informa tokens quando o agente tem
 política (é ela que dá a fronteira de rede que lê o tráfego).
@@ -528,8 +529,9 @@ início do passo ──▶ agente roda ──▶ fim do passo ──────
    cada `limit`, comparado com o tempo, os tokens e o custo somados dos passos dele. Os limites de `round` entram, como
    **Limite da rodada**, na eficácia da rodada: a média das eficácias dos agentes e desses limites, todos com o mesmo
    peso.
-4. O registro guarda também os critérios como foram declarados (`criteria`, com cada `RegExp` como texto): a página
-   mostra o que foi pedido ao lado do que foi cumprido.
+4. O registro guarda também os critérios como foram declarados (`criteria`; uma `RegExp` vira o texto dela, ou
+   `{ source, flags }` quando tem flags). A página da rodada mostra os vereditos no detalhe das notas (Critérios do
+   prompt, Limite do agente).
 
 Um agente sem critério de arquivo fica com "Critérios do prompt" **não avaliado** (`—`), não `0`. Os critérios de
 `round` são só limites: um `file` ali não é conferido, porque não há um passo da rodada inteira para comparar.
@@ -542,9 +544,9 @@ Um JSON por execução, em `<rounds.data>/<início>.json` (o formato está em `s
 
 O registro também guarda a declaração com que a rodada rodou, em dados (`declaration`): o objetivo, a partida, cada
 agente (provider, CLI, modelo, workspace, política, `readOnly`), o `flow` com os pedidos (com `{{said:analista}}` no
-lugar do que outro agente disse), os critérios, as regras e a repetição. Não é preciso commitar a
-definição a cada mudança: na página da rodada, **Copiar definição** escreve de volta o arquivo de
-`<rounds.definitions>/<id>.ts` (`declarationSource`). Registros anteriores a isso não têm o bloco, e o botão não aparece.
+lugar do que outro agente disse), os critérios, as regras e a repetição. Não é preciso commitar a definição a cada
+mudança: na página da rodada, **Copiar definição** copia o texto do arquivo `<rounds.definitions>/<id>.ts`
+(`declarationSource`), para colar no lugar dele. Registros anteriores a isso não têm o bloco, e o botão não aparece.
 
 Cada passo tem uma chave estável, `agente#n` (o n-ésimo passo daquele agente): é por ela que execuções diferentes são
 comparadas, mesmo que o `flow` mude. Execuções com a mesma configuração (os mesmos agentes, com o mesmo objetivo) têm o
@@ -578,7 +580,7 @@ bun run clear --rounds                                # esvazia o rounds.dir (pe
 choliba clear --rounds                                # o mesmo, num projeto que instalou o pacote
 bun run rounds:web                                    # as páginas, em desenvolvimento
 bun run rounds:web --port 8080                        # em outra porta (5173 por padrão)
-bun run rounds:build                                  # gera src/rounds/web/dist, que abre de qualquer lugar
+bun run rounds:build                                  # gera src/rounds/web/dist, o que vai no pacote
 ```
 
 No fim de `rounds <id>`, num terminal, o comando pergunta "Abrir a página da rodada no navegador? [S/n]". Com Enter,
@@ -590,10 +592,25 @@ exemplo), ele para antes de rodar e diz como instalar o mesmo Choliba no projeto
 No repositório do Choliba, as páginas têm dependências próprias: rode `bun install --cwd src/rounds/web` antes do
 `rounds:web` e do `rounds:build`.
 
-Nas páginas, cada declaração é um **teste** e cada execução, uma **rodada**. O índice filtra por agente, provider, CLI
-e modelo; a página de um teste lista as rodadas, o que mudou entre elas e as médias por configuração; os dois têm um
-gráfico XY (eixos escolhidos entre data, nota, eficácia, eficiência, tempo, tokens, custo, turnos, ferramentas,
-perguntas e arquivos) em que cada ponto abre um cartão com links para o teste e a rodada.
+O `dist` não abre sozinho: ao abrir, a página busca o `rounds.json` (os registros de `rounds.data`), que o
+`choliba rounds:web` monta e serve junto com ela. Num projeto que instalou o pacote, é esse `dist` que ele serve; neste
+repositório, ele roda o Vite das páginas, que monta o `rounds.json` do mesmo jeito.
+
+Nas páginas, cada declaração é um **teste** e cada execução, uma **rodada**:
+
+- o **índice** lista os testes e filtra por teste, agente, provider, CLI e modelo, e por faixas dos números de cada
+  rodada (nota, tempo, tokens, custo…);
+- a página de um **teste** lista as rodadas, o que mudou entre elas e as médias por configuração;
+- a página de uma **rodada** (`#/rodada/<id>`) mostra as medidas, os recursos da máquina, as regras, a configuração de
+  cada agente (e o que mudou desde a execução anterior) e o fluxo. Nela, **Copiar definição** copia o arquivo da
+  declaração, e **Extrair como agente** copia um agente avulso, um `new Agent({…}).run()` com o provider, o workspace e
+  a política com que ele rodou, para colar num arquivo na raiz do projeto;
+- **Criar rodada** (`#/criar`) é um formulário que escreve a declaração enquanto você preenche. Ele abre uma rodada do
+  projeto (de `rounds.definitions`) ou uma definição colada, e só copia: nada roda nem é salvo pela página.
+
+O índice e a página de um teste têm um gráfico XY, com os eixos escolhidos entre data, nota, eficácia, eficiência,
+tempo, tokens, custo, turnos, ferramentas, perguntas, arquivos alterados, CPU média, GPU pico e energia da GPU. Cada
+ponto é um agente numa rodada e abre um cartão com links para o teste, a rodada e o agente como rodou.
 
 [↑ topo](#topo)
 
@@ -833,24 +850,24 @@ await runScript(async () => {
 Saída:
 
 ```
-Workspace no ponto de partida: rodada-base (3fa7beb)
+Workspace no ponto de partida: rodada-base (b4e3207)
 Dev…
 Criei o index.html.
 O dev alterou:
-?? index.html
+ M index.html
 
-Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/94d53153-98de-4e06-bcb8-6d08c5115d0f/registros/2026-11-06T14-19-30.874Z.json
+Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/41d5b502-c598-4de5-858a-339d7dd808f4/registros/2026-11-26T11-46-02.296Z.json
 
-registro: registros/2026-11-06T14-19-30.874Z.json
+registro: registros/2026-11-26T11-46-02.296Z.json
 partida: fixture site-vazio, tag rodada-base
 passo: dev#1
 pedido: Crie um index.html.
 disse: Criei o index.html.
-alterou: ?? index.html
+alterou:  M index.html
 ```
 
 - `dev#1` é a chave do passo: o primeiro passo do agente `dev`.
-- `?? index.html` é a linha do `git status`: um arquivo novo.
+- ` M index.html` é a linha do `git status`: o `index.html` já vinha da fixture, e o dev o reescreveu.
 
 ### 3. Dois agentes, critérios e regras
 
@@ -1027,7 +1044,7 @@ await runScript(async () => {
 Saída:
 
 ```
-Workspace no ponto de partida: rodada-base (c069b77)
+Workspace no ponto de partida: rodada-base (b4e3207)
 Product-owner…
 O ticket está pronto.
 O product-owner alterou:
@@ -1039,7 +1056,7 @@ Basta um <footer></footer>.
 ⚠ O analista alterou arquivos, mesmo com o pedido de não alterar:
 ?? notas.txt
 
-Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/1c7b5974-3bc6-4df2-aceb-2a5e7b5f4756/registros/2026-11-12T19-24-49.567Z.json
+Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/f98ad545-fe61-464c-a520-7acf623c4e27/registros/2026-11-26T11-46-02.470Z.json
 
 product-owner#1
   pedido: Escreva o ticket em tickets/ticket-01.txt.
@@ -1200,29 +1217,29 @@ Saída:
 
 ```
 Rodada tres-vezes: execução 1 de 3
-Workspace no ponto de partida: rodada-base (c069b77)
+Workspace no ponto de partida: rodada-base (b4e3207)
 Dev…
 Pronto.
 O dev alterou:
  M index.html
 
-Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/a55d536c-3d67-4ae5-aeb9-bb3bf9977e8a/registros/2026-11-12T19-24-51.270Z.json
+Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/b2d172eb-ab39-41cb-a9bf-b1b5ff1ae974/registros/2026-11-26T11-46-02.697Z.json
 Rodada tres-vezes: execução 2 de 3
-Workspace no ponto de partida: rodada-base (c069b77)
+Workspace no ponto de partida: rodada-base (b4e3207)
 Dev…
 Pronto.
 O dev alterou:
  M index.html
 
-Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/a55d536c-3d67-4ae5-aeb9-bb3bf9977e8a/registros/2026-11-12T19-24-51.390Z.json
+Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/b2d172eb-ab39-41cb-a9bf-b1b5ff1ae974/registros/2026-11-26T11-46-02.797Z.json
 Rodada tres-vezes: execução 3 de 3
-Workspace no ponto de partida: rodada-base (c069b77)
+Workspace no ponto de partida: rodada-base (b4e3207)
 Dev…
 Pronto.
 O dev alterou:
  M index.html
 
-Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/a55d536c-3d67-4ae5-aeb9-bb3bf9977e8a/registros/2026-11-12T19-24-51.496Z.json
+Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/b2d172eb-ab39-41cb-a9bf-b1b5ff1ae974/registros/2026-11-26T11-46-02.895Z.json
 
 execução 1: nota 5 · eficácia 5 · eficiência 5
   Critérios do prompt: 5 (Cumpriu os 1 critérios: index.html existe.)
@@ -1231,18 +1248,18 @@ execução 1: nota 5 · eficácia 5 · eficiência 5
   Tempo gasto: — (0 s; sem rodadas anteriores para comparar.)
   Tokens novos: — (1 mil tokens novos; sem rodadas anteriores para comparar.)
   Processo sem desperdício: 5 (Nenhum desperdício: sem perguntas nem ferramentas com erro.)
-execução 2: nota 5 · eficácia 5 · eficiência 4.9
+execução 2: nota 4.8 · eficácia 5 · eficiência 4.5
   Critérios do prompt: 5 (Cumpriu os 1 critérios: index.html existe.)
   Permissões: — (Sem política nem readOnly para conferir.)
   Referências corretas: — (Não citou nenhum arquivo:linha.)
-  Tempo gasto: 4.6 (0 s, contra a mediana de 0 s nas rodadas anteriores.)
+  Tempo gasto: 2.8 (0 s, contra a mediana de 0 s nas rodadas anteriores.)
   Tokens novos: 5 (1 mil tokens novos, contra a mediana de 1 mil tokens novos nas rodadas anteriores.)
   Processo sem desperdício: 5 (Nenhum desperdício: sem perguntas nem ferramentas com erro.)
-execução 3: nota 4.5 · eficácia 5 · eficiência 3.8
+execução 3: nota 4.3 · eficácia 5 · eficiência 3.3
   Critérios do prompt: 5 (Cumpriu os 1 critérios: index.html existe.)
   Permissões: — (Sem política nem readOnly para conferir.)
   Referências corretas: — (Não citou nenhum arquivo:linha.)
-  Tempo gasto: 5 (0 s, contra a mediana de 0 s nas rodadas anteriores.)
+  Tempo gasto: 3.2 (0 s, contra a mediana de 0 s nas rodadas anteriores.)
   Tokens novos: 0 (3 mil tokens novos, contra a mediana de 1 mil tokens novos nas rodadas anteriores.)
   Processo sem desperdício: 5 (Nenhum desperdício: sem perguntas nem ferramentas com erro.)
 ```
@@ -1473,11 +1490,11 @@ await runScript(async () => {
 Saída:
 
 ```
-Workspace no ponto de partida: rodada-base (609a96e)
+Workspace no ponto de partida: rodada-base (c59a05d)
 Dev…
 Vejo: app.ts
 
-Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/b489ad69-50d1-4810-b855-2bb2ca9eacb1/registros/2026-11-06T14-19-31.486Z.json
+Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/aac6f1f8-9d90-4b09-90d6-5d818d34f5f0/registros/2026-11-26T11-46-03.097Z.json
 
 partida: tag rodada-base, fixture null
 disse: Vejo: app.ts
@@ -1633,7 +1650,7 @@ await runScript(async () => {
             // "sem apagar o rodapé"
             { file: { name: 'index.html', contains: ['<footer'] } },
             // "Anote a mudança num arquivo em docs/": todo arquivo de docs/,
-            // menos os .tmp, foi criado e fala do Choliba.
+            // menos os .tmp, foi criado e cita a Goiaba.
             {
               file: {
                 name: 'docs/*',
@@ -1711,7 +1728,7 @@ await runScript(async () => {
 Saída:
 
 ```
-Workspace no ponto de partida: rodada-base (c069b77)
+Workspace no ponto de partida: rodada-base (d2d82b8)
 Dev…
 Título trocado.
 O dev alterou:
@@ -1722,7 +1739,7 @@ Revisor…
 Está certo.
 ✓ O revisor não alterou nenhum arquivo.
 
-Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/c6ebbb32-a541-4342-8dac-53000af84746/registros/2026-11-12T19-24-51.625Z.json
+Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/9dab935d-9e26-4562-a6a4-f3b02756c0ac/registros/2026-11-26T11-46-03.267Z.json
 
 No fim de cada passo (step.criteria):
   dev#1
@@ -1737,13 +1754,13 @@ No fim de cada passo (step.criteria):
 Na nota (scoreRound):
   dev: eficácia 2.7
     Critérios do prompt: 3 (Cumpriu 3 de 5. index.html não contém "<footer". ticket.txt não contém "status: done".)
-    Limite do agente: 5 (50 ms, dentro de 1min.)
+    Limite do agente: 5 (59 ms, dentro de 1min.)
     Limite do agente: 0 (tokens não medido.)
   revisor: eficácia 5
     Critérios do prompt: 5 (Cumpriu os 1 critérios: ** não mudou.)
     Permissões: 5 (Ficou dentro da política: nada alterado fora do permitido, nenhum destino negado.)
   rodada: eficácia 4.2
-    Limite da rodada: 5 (152 ms, dentro de 10min.)
+    Limite da rodada: 5 (174 ms, dentro de 10min.)
 ```
 
 - **`dev#1`, cinco vereditos**: os cinco critérios de arquivo (o `if` do ticket valeu, porque o ticket estava
