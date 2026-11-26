@@ -35,7 +35,7 @@ política. Criar um comando com `createCommand` **não inicia** a CLI.
 ## Os arquivos
 
 Cada provider tem a sua pasta. Na raiz de `src/providers/` fica só o que é comum a todos (`types.ts`,
-`provider.interface.ts`, `tools.ts`, `constants.ts`). Quem tem `policy.ts` traduz a política para a sua CLI.
+`provider.interface.ts`, `tools.ts`, `tool-detail.ts`, `constants.ts`). Quem tem `policy.ts` traduz a política para a sua CLI.
 
 | Arquivo                     | Papel                                                                                                                                                                                                             |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -49,10 +49,13 @@ Cada provider tem a sua pasta. Na raiz de `src/providers/` fica só o que é com
 | `cursor/policy.ts`          | Traduz `AgentPolicy` para o que a CLI `agent` entende (`--force` no `--print`) e recusa categorias que ela não aplica (`execution`, `web`, `communication`).                                                      |
 | `ollama/ollama-provider.ts` | Aponta Claude Code ou Codex para um servidor Ollama local, preservando o parser e os recursos da CLI interna. Sem `policy.ts`: quem aplica a política é a CLI que conduz o modelo.                                |
 | `ollama/ollama-traffic.ts`  | Lê o tráfego do Ollama na fronteira de rede: o texto da resposta e o uso de tokens de cada pedido.                                                                                                                |
+| `tool-detail.ts`            | O que um evento de ferramenta leva do conteúdo: por padrão, só os tamanhos; com `toolOutput`, o conteúdo inteiro, que o log nunca guarda (`redactToolDetail`).                                                    |
 
 [↑ topo](#topo)
 
 ## Interface
+
+Do pacote (`choliba`) vêm os quatro providers (`ClaudeProvider`, `CodexProvider`, `CursorProvider`, `OllamaProvider`), os tipos do contrato e dos eventos e as ferramentas (`CHOLIBA_TOOLS`); as funções de tradução de cada `policy.ts` só se importam do módulo.
 
 ### O contrato usado pelo agente
 
@@ -69,33 +72,51 @@ entra como texto e a resposta também.
 | `networkBlocked()`                                 | não         | Endereços que a CLI tenta acessar, mas que não são necessários e devem ser negados.                                          |
 | `hostAccess()`                                     | não         | Estado compartilhado, arquivos e variáveis de credencial e variáveis (`homeEnv`) que apontam para o home isolado.            |
 | `applyPolicy(policy, gate?)`                       | não         | Aplica na CLI categorias que a sandbox não consegue aplicar; pode retornar caminhos que precisam ficar protegidos.           |
+| `declaredOptions()`                                | não         | As opções com que foi criado, como escritas (sem os padrões): o que uma rodada guarda para recriar o provider.               |
+| `readTraffic(...)`                                 | não         | Lê o que um dos `networkEndpoints` devolve numa conexão (o texto da resposta e o uso de cada pedido), onde dá para ler.      |
+| `rewriteRequest(request)`                          | não         | O corpo novo de um pedido da CLI a um dos `networkEndpoints` (uma opção que o modelo aceita e a CLI não manda).              |
+| `createLiveTurn(input, sessionId?)`                | não         | O comando do turno com o stdin da CLI aberto: o que se digita durante o turno vai para o mesmo processo.                     |
+| `ownTools()`                                       | não         | As ferramentas registradas do projeto que o `tools` dele nomeia (`choliba/<nome>`).                                          |
+| `applyTools(server)`                               | não         | Liga à CLI o servidor MCP dessas ferramentas; um provider sem ele recusa ferramentas registradas.                            |
 
-`ProviderOptions` recebe `model` e, opcionalmente, `executable`. Cada provider pode acrescentar suas opções. Claude,
-Codex e Cursor validam que o modelo não esteja vazio. Ollama também valida URL e janela de contexto.
+`ProviderOptions` recebe `model` e, opcionalmente, `executable`. Claude, Codex e Cursor validam que o modelo não esteja
+vazio. Ollama também valida URL e janela de contexto. Cada provider acrescenta as suas opções:
+
+| Provider         | Opções além de `model` e `executable`                                                                                                                                                                                 |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ClaudeProvider` | `tools` (as capacidades que o modelo vê, no vocabulário do Choliba; `[]` deixa nenhuma), `rulesOnce` (as regras só na primeira mensagem), `appendSystemPrompt`, `toolOutput` (o conteúdo das ferramentas nos eventos) |
+| `CodexProvider`  | `login` (o login do Codex chega à CLI; padrão `true`), `rulesOnce`, `tools` (só as do projeto, `choliba/<nome>`)                                                                                                      |
+| `CursorProvider` | nenhuma                                                                                                                                                                                                               |
+| `OllamaProvider` | `cli` (`claude` ou `codex`, obrigatória), `baseUrl`, `contextWindow`, `compactAt` (só com `codex`), `tools`, `think`, `appendSystemPrompt` e `toolOutput` (os três só com `claude`)                                   |
 
 ### Os tipos dos eventos
 
 `ProviderEvent<TOutput>` é o formato comum da saída:
 
-| Evento    | Campos            | Significado                                                  |
-| --------- | ----------------- | ------------------------------------------------------------ |
-| `output`  | `value`           | Texto que o agente mostra.                                   |
-| `ask`     | `question`        | Pergunta que espera resposta antes de continuar.             |
-| `session` | `id`              | Identificador para retomar a conversa na próxima chamada.    |
-| `tool`    | `phase`, `detail` | Chamada, resultado ou erro de ferramenta reportado pela CLI. |
+| Evento      | Campos             | Significado                                                                                                |
+| ----------- | ------------------ | ---------------------------------------------------------------------------------------------------------- |
+| `output`    | `value`            | Texto que o agente mostra.                                                                                 |
+| `ask`       | `question`         | Pergunta que espera resposta antes de continuar.                                                           |
+| `session`   | `id`               | Identificador para retomar a conversa na próxima chamada.                                                  |
+| `tool`      | `phase`, `detail`  | Chamada, resultado ou erro de ferramenta reportado pela CLI.                                               |
+| `partial`   | `text`             | Um pedaço do texto do modelo, enquanto ele escreve; a mensagem inteira vem depois, como `output` ou `ask`. |
+| `reasoning` | `text`             | O que o modelo pensou antes de responder, quando a CLI informa.                                            |
+| `stderr`    | `text`             | O que a própria CLI escreveu no stderr (um aviso, um erro dela).                                           |
+| `usage`     | `usage`, `action?` | Os tokens de um pedido ao modelo e, quando a CLI diz, o que ele fez (as ferramentas chamadas).             |
+| `cost`      | `usd`              | O que a CLI diz que a execução custou até ali, em dólares, além do que já informou.                        |
 
 Uma CLI pode enviar a resposta em várias partes. O parser deve montar os pedaços antes de produzir os eventos comuns.
-`ProgramOutput` identifica se cada parte veio de `stdout` ou `stderr`; mensagens de diagnóstico em `stderr` também
-podem virar `output`.
+`ProgramOutput` identifica se cada parte veio de `stdout` ou `stderr`. O que a CLI escreve no `stderr` vira o evento
+`stderr`: aparece e vai para o log, mas nunca conta como o que o modelo disse.
 
 ### O contrato de provider em construção
 
 `provider.interface.ts` declara outro `Provider<TInput, TOutput, TNative>` e tipos para a tradução tipada da
-política (`PolicyTranslation`, `UnsupportedRule`). Claude e Codex já implementam esse contrato e expõem
+política (`PolicyTranslation`, `UnsupportedRule`). Claude, Codex e Cursor já implementam esse contrato e expõem
 `translatePolicy`. Ele permite listar regras não expressas e dizer se a tradução fica mais restritiva ou mais
 permissiva.
 
-O agente ainda usa `Provider` de `types.ts`; Cursor e Ollama ainda não implementam o contrato mais amplo. Ao criar
+O agente ainda usa `Provider` de `types.ts`; o Ollama ainda não implementa o contrato mais amplo. Ao criar
 uma integração, use a interface atual do agente e confira os métodos opcionais que ele consulta. Não trate a nova
 interface como substituta já concluída.
 
@@ -151,7 +172,7 @@ da nuvem.
 `homeEnv` associa variáveis que a CLI usa para encontrar sua configuração a caminhos relativos ao home do workspace. Claude recebe `CLAUDE_CONFIG_DIR=.claude`; Codex recebe `CODEX_HOME=.codex`. O workspace transforma esses valores em caminhos absolutos. Assim, sessão, histórico e configuração persistem por raiz sem ler o estado de outra CLI no host.
 
 `networkEndpoints` lista destinos necessários. O agente permite esses destinos pela fronteira de rede do
-workspace. O Cursor declara `api2.cursor.sh:443`. `networkBlocked` lista domínios supérfluos que uma CLI ainda tenta acessar; por exemplo, o provider
+workspace. O Cursor declara `api2.cursor.sh:443` e `agentn.global.api5.cursor.sh:443`. `networkBlocked` lista domínios supérfluos que uma CLI ainda tenta acessar; por exemplo, o provider
 Ollama bloqueia os endpoints da nuvem do Claude ou do Codex. O proxy continua controlando os outros destinos pela
 política de rede.
 
@@ -263,10 +284,10 @@ const policy: AgentPolicy = {
   },
 };
 
-const translated = translateClaudePolicy(policy);
+const claude = translateClaudePolicy(policy);
 
-writeOut(`permitidas: ${translated.native.allow.join(', ')}\n`);
-writeOut(`não expressas: ${translated.unsupported.length}\n`);
+writeOut(`permitidas: ${claude.native.allow.join(', ')}\n`);
+writeOut(`não expressas: ${claude.unsupported.length}\n`);
 ```
 
 ```text

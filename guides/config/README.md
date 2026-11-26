@@ -49,9 +49,11 @@ choliba.config.ts  ──loadConfig()──▶  ResolvedCholibaConfig  ──get
 
 ## Os arquivos
 
-| Arquivo    | Papel                                                                                                                            |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `index.ts` | O módulo inteiro: os tipos, `defineConfig`, `loadConfig` (procura, importa, confere e resolve), `getConfig`, `getEnv` e o cache. |
+| Arquivo        | Papel                                                                                                                                                                                                                                                |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.ts`     | O módulo inteiro: os tipos, `defineConfig`, `loadConfig` (procura, importa, confere e resolve), `getConfig`, `getEnv` e o cache.                                                                                                                     |
+| `env.ts`       | `env`: lê uma variável de ambiente num arquivo de config (e no que ele importa) como texto, número, boolean ou lista; vazia conta como ausente, e `required` recusa com um `UsageError` que diz o que definir.                                       |
+| `constants.ts` | Os padrões: as pastas (`DEFAULT_LOG_DIR`, `DEFAULT_DATABASE_DIR`, `DEFAULT_WORKSPACES_DIR`, `DEFAULT_HOMES_DIR`), o nome do banco (`DEFAULT_DATABASE_NAME`) e as palavras de verdadeiro e falso das variáveis (`ENV_TRUE_WORDS`, `ENV_FALSE_WORDS`). |
 
 [↑ topo](#topo)
 
@@ -89,7 +91,8 @@ export default defineConfig({
 | Tipo                      | Forma                                                                                                                                                                                          |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `CholibaConfig`           | `{ debug?, logger?, database?, workspaces?, rounds?, envs? }`                                                                                                                                  |
-| `CholibaLoggerConfig`     | `{ dir?: string, use?: LoggerFactory }`                                                                                                                                                        |
+| `CholibaLoggerConfig`     | `{ dir?: string, use?: LoggerFactory, logrotate?: CholibaLogRotateConfig }`                                                                                                                    |
+| `CholibaLogRotateConfig`  | `{ maxFileSize?: string, days?: number, maxTotalSize?: string, compress?: boolean }`: como os logs são guardados ([logger.logrotate](#loggerlogrotate-como-os-logs-são-guardados))             |
 | `LoggerFactory`           | `(target: { dir, session, service }) => object`: cria a instância do pacote de log; `service` é `{ name, version }` do Choliba                                                                 |
 | `CholibaDatabaseConfig`   | `{ dir?: string, name?: string }`: `name` é só o nome do arquivo, sem barras                                                                                                                   |
 | `CholibaWorkspacesConfig` | `{ dir?: string, homes?: string, programs?: string[] }`: a raiz padrão e a pasta dos homes, relativos ao arquivo ou `~/…`; os nomes dos programas que o agente vê                              |
@@ -159,7 +162,7 @@ Com `path`, usa exatamente esse arquivo (e falha se ele não existir). Sem arqui
    - opção desconhecida é erro, com a dica da opção certa para os enganos comuns (`databasePath` → `database: { dir, name }`, `logDir` → `logger: { dir }`, `env` → `envs`);
    - cada opção com o tipo certo (`debug` boolean, `database.name` sem barras, `envs` array…).
 3. **Resolve**:
-   - caminhos relativos são relativos **ao arquivo de config**, não ao diretório de onde você rodou; `workspaces.dir` e `workspaces.homes` também aceitam `~/…`;
+   - caminhos relativos são relativos **ao arquivo de config**, não ao diretório de onde você rodou; toda pasta (`logger.dir`, `database.dir`, as de `workspaces` e as de `rounds`) também aceita `~/…`;
    - o que faltar recebe o padrão;
    - duas variáveis de ambiente valem mais que o arquivo: `CHOLIBA_DEBUG` (`1`, `true`, `yes`, `on` ou `0`, `false`, `no`, `off`) e `CHOLIBA_LOG_DIR`.
 4. **Aplica o env ativo**: as variáveis de texto do primeiro env entram no ambiente do processo, **só as que ainda não existem**.
@@ -597,8 +600,6 @@ envs: 1, variáveis do env ativo: CURSOR_API_KEY, CLAUDE_CODE_OAUTH_TOKEN
 ```
 
 Nenhuma chamada a `loadConfig`: o import de `src/index` já procurou o arquivo a partir da raiz, carregou e pôs no processo as variáveis do env. É por isso que um agente pode usar `getConfig().workspaces.dir` (a pasta onde ele trabalha) ou `process.env.CURSOR_API_KEY` logo na primeira linha.
-
-[↑ topo](#topo)
 
 ### 7. Homes dos workspaces
 
