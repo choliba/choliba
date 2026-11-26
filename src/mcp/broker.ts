@@ -9,7 +9,7 @@
 import { randomUUID } from 'node:crypto';
 import { createServer, type Server, type Socket } from 'node:net';
 
-import { UsageError } from '../errors';
+import { bundleHelper } from '../execute/bundle';
 import { currentPid, environment, runtimeExecutable } from '../execute/process';
 import {
   besideModule,
@@ -243,15 +243,10 @@ function serve(
  * bundled (with what it imports) into one file in the broker's directory.
  */
 async function bundleServer(dir: string): Promise<void> {
-  const result = await Bun.build({
-    entrypoints: [besideModule(import.meta.url, './server-main.ts')],
-    outdir: dir,
-    naming: SERVER_FILE,
-    target: 'bun',
+  await bundleHelper({
+    entry: besideModule(import.meta.url, './server-main.ts'),
+    dir,
+    file: SERVER_FILE,
+    what: 'o servidor das ferramentas',
   });
-  if (!result.success) {
-    throw new UsageError(
-      `Não foi possível preparar o servidor das ferramentas: ${result.logs.map(String).join('; ')}`,
-    );
-  }
 }
