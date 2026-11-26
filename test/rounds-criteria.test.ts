@@ -95,6 +95,19 @@ test('file sem asserção confere que o arquivo existe, como exists: true', () =
   );
 });
 
+test('file matches: a flag g não passa de um arquivo ao outro, e { source, flags } vale como a RegExp', () => {
+  const ctx = files({ end: { 'a.txt': 'Goiaba', 'b.txt': 'Goiaba' } });
+  const results = checkFiles(
+    [
+      { file: { name: '*.txt', matches: [/Goiaba/g] } },
+      { file: { name: 'a.txt', matches: [{ source: 'goiaba', flags: 'i' }] } },
+    ],
+    ctx,
+  );
+  expect(results.map((result) => result.met)).toEqual([true, true]);
+  expect(results[1]?.description).toBe('a.txt casa /goiaba/i');
+});
+
 test('file curinga + ignore: nenhum outro arquivo mudou', () => {
   const unchanged = files({
     end: { 'ticket.md': 'x', 'index.html': 'y' },

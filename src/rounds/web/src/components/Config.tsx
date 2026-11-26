@@ -57,6 +57,10 @@ export function ActorConfigs({
                   ? ''
                   : ` · ${actor.workspace.image}`}
                 {` · estado do host: ${actor.workspace.hostState}`}
+                {actor.workspace.agentRoot !== undefined &&
+                  ` · raiz do agente: ${actor.workspace.agentRoot}`}
+                {actor.workspace.programs !== undefined &&
+                  ` · programas: ${actor.workspace.programs.join(', ') || 'nenhum'}`}
               </dd>
               <dt>Rede</dt>
               <dd>

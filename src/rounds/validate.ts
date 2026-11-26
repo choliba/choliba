@@ -216,6 +216,8 @@ const actor = object({
     writable: list(string),
     hostState: oneOf(HOST_STATES),
     ports: list(count),
+    'agentRoot?': nonEmpty,
+    'programs?': list(nonEmpty),
   }),
   network: object({
     rules: nullable(anyObject),
@@ -287,6 +289,14 @@ const step = object({
   ),
 });
 
+const patternShape = object({ source: nonEmpty, flags: nonEmpty });
+
+/** A `matches` entry: a regex's source, or `{ source, flags }` for one with flags. */
+const pattern: Check = (value, path) => {
+  if (isObject(value)) patternShape(value, path);
+  else nonEmpty(value, path);
+};
+
 const fileCriterion = object({
   name: nonEmpty,
   'ignore?': list(nonEmpty),
@@ -295,7 +305,7 @@ const fileCriterion = object({
   'deleted?': boolean,
   'changed?': boolean,
   'contains?': list(string),
-  'matches?': list(nonEmpty),
+  'matches?': list(pattern),
   'equals?': string,
 });
 
@@ -359,6 +369,8 @@ const declaredActor = object({
     'writable?': list(nonEmpty),
     'ports?': list(positive),
     'homes?': nonEmpty,
+    'agentRoot?': nonEmpty,
+    'programs?': list(nonEmpty),
   }),
   // Its shape is the policy module's to check.
   policy: nullable(anyObject),

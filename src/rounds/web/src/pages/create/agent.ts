@@ -631,6 +631,14 @@ export function agentFromDeclaration(
       `as ferramentas ${unknownTools.join(', ')} não estão no formulário (nem no CLI, nem em tools/).`,
     );
   }
+  if (
+    declared.workspace.agentRoot !== undefined ||
+    declared.workspace.programs !== undefined
+  ) {
+    said(
+      'o workspace usa agentRoot ou programs, que o formulário ainda não mostra.',
+    );
+  }
 
   const given = declared.provider.options ?? {};
   const known = new Set([
