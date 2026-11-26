@@ -71,8 +71,25 @@ const HELP = [
   '  /clear     limpa a tela (a conversa continua)',
   '  /exit      encerra (o mesmo que Ctrl+C)',
   '  /help      esta ajuda',
-  'Ctrl+A abre as aprovações.',
 ].join('\n');
+
+/** `/help`: the commands, then each shortcut this screen was given (Ctrl+A for the approvals, in an agent). */
+function helpText(shortcuts: Readonly<Record<string, string>>): string {
+  const keys = Object.entries(shortcuts).map(([key, command]) =>
+    command === 'approvals'
+      ? `${keyName(key)} abre as aprovações.`
+      : `${keyName(key)} manda o comando ${command}.`,
+  );
+  return [HELP, ...keys].join('\n');
+}
+
+/** `Ctrl+A` for `\u0001` (the control keys `\u0001` to `\u001a`); any other key as it is. */
+function keyName(key: string): string {
+  const code = key.length === 1 ? key.charCodeAt(0) : 0;
+  return code >= 1 && code <= 26
+    ? `Ctrl+${String.fromCharCode(64 + code)}`
+    : key;
+}
 
 /**
  * The conversation on a full screen: the messages on top, a status line and
@@ -88,6 +105,8 @@ export class TuiAdapter implements InteractionAdapter {
   private readonly screen: TuiScreen;
   private readonly source: StdioSource;
   private readonly frameDelayMs: number;
+  /** What `/help` shows: the commands and this screen's shortcuts. */
+  private readonly help: string;
   private readonly reading = new AbortController();
   private readonly incoming = new OutputStream<InputEvent>();
   private readonly typing: Typing;
@@ -115,6 +134,7 @@ export class TuiAdapter implements InteractionAdapter {
     this.screen = screen;
     this.source = source;
     this.frameDelayMs = frameDelayMs;
+    this.help = helpText(shortcuts ?? {});
     this.typing = new Typing({
       shortcuts,
       emit: (event) => {
@@ -208,7 +228,7 @@ export class TuiAdapter implements InteractionAdapter {
     const name = line.split(/\s+/, 1)[0];
     switch (name) {
       case '/help':
-        this.add({ kind: 'note', text: HELP, open: false });
+        this.add({ kind: 'note', text: this.help, open: false });
         return;
       case '/thinking':
         this.showReasoning = !this.showReasoning;

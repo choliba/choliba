@@ -104,6 +104,21 @@ describe('TuiAdapter', () => {
     expect(screen.lines()).toContain('Comando desconhecido: /xyz. Veja /help.');
   });
 
+  test('a ajuda cita o Ctrl+A só quando o atalho das aprovações existe', async () => {
+    const without = setup();
+    void without.tui.ask('').catch(() => undefined);
+    without.type('/help\r');
+    await tick();
+    const withShortcut = setup({ '\u0001': 'approvals' });
+    void withShortcut.tui.ask('').catch(() => undefined);
+    withShortcut.type('/help\r');
+    await tick();
+
+    expect(without.screen.lines()).toContain('  /help      esta ajuda');
+    expect(without.screen.lines()).not.toContain('Ctrl+A abre as aprovações.');
+    expect(withShortcut.screen.lines()).toContain('Ctrl+A abre as aprovações.');
+  });
+
   test('o que se digita aparece na linha de entrada, com o apagar', async () => {
     const { tui, screen, type } = setup();
     void tui.ask('').catch(() => undefined);
@@ -184,7 +199,7 @@ describe('TuiAdapter', () => {
 });
 
 /** A TUI conversation on a fake 8×40 screen; `type` sends keys. */
-function setup(): {
+function setup(shortcuts?: Readonly<Record<string, string>>): {
   tui: Conversation & { readonly source: StdioSource };
   screen: FakeScreen;
   type: (keys: string) => void;
@@ -193,9 +208,10 @@ function setup(): {
   const keys = new OutputStream<string>();
   const source: StdioSource = { tty: true, read: () => keys };
   const tui = Object.assign(
-    new Conversation(new TuiAdapter({ screen, source, frameDelayMs: 0 }), {
-      onInterrupt: () => undefined,
-    }),
+    new Conversation(
+      new TuiAdapter({ screen, source, frameDelayMs: 0, shortcuts }),
+      { onInterrupt: () => undefined },
+    ),
     { source },
   );
   return {
