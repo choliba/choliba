@@ -1,6 +1,6 @@
 /**
  * Exemplo 7 do curso do agente: um `subscribe` que mostra o "pensando" do
- * modelo (os eventos `thinking`: início, a cada segundo e fim). Precisa do
+ * modelo (os eventos `thinking`: início, a cada 2 s e fim). Precisa do
  * Ollama rodando com o modelo do arquivo e da CLI do Codex instalada.
  *
  *   bun guides/agent/exemplos/7-pensando.ts

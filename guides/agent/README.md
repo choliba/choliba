@@ -10,7 +10,7 @@ Um **agente** é uma CLI de código (Claude Code, Codex, Cursor, um modelo local
 | ------------- | --------------------------------------------- | ----------------------------------------- |
 | `provider`    | [`src/providers`](../providers/README.md)     | qual CLI roda, e como ler o que ela diz   |
 | `workspace`   | [`src/workspace`](../workspace/README.md)     | onde ela roda (bubblewrap ou Docker)      |
-| `permissions` | [`src/policy`](../policy/README.md)           | o que ela pode fazer                      |
+| `policy`      | [`src/policy`](../policy/README.md)           | o que ela pode fazer                      |
 | `interaction` | [`src/interaction`](../interaction/README.md) | com quem ela conversa                     |
 | `store`       | `src/store`                                   | o que fica lembrado (sessões, aprovações) |
 
@@ -54,40 +54,51 @@ mensagem ─▶ provider.createCommand ─▶ Executor (na sandbox) ─▶ provi
 
 ## Os arquivos
 
-| Arquivo           | Papel                                                                                     |
-| ----------------- | ----------------------------------------------------------------------------------------- |
-| `agent.ts`        | a classe `Agent`, `agentConversation`, `AGENT_SHORTCUTS`, `listenInput` e `watchThinking` |
-| `types.ts`        | `AgentOptions`, `AgentStatus`, `AgentProvider`, `AgentSubscriber`                         |
-| `output.ts`       | `AgentOutput`: um evento do agente, como o `subscribe` o recebe                           |
-| `run-provider.ts` | `runProvider`: um turno do provider no `Executor`                                         |
-| `lock.ts`         | `WorkspaceLock`: um agente por workspace                                                  |
-| `constants.ts`    | `APPROVAL_POLL_MS`, `THINKING_TICK_MS`                                                    |
+| Arquivo           | Papel                                                                                                                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `agent.ts`        | a classe `Agent`; reexporta `agentConversation`, `AGENT_SHORTCUTS`, `listenInput` e `watchThinking`                                                                            |
+| `types.ts`        | `AgentOptions`, `AgentStatus`, `AgentProvider`, `AgentSubscriber`, `AgentAsk`                                                                                                  |
+| `output.ts`       | `AgentOutput`: um evento do agente, como o `subscribe` o recebe                                                                                                                |
+| `run-provider.ts` | `runProvider` e `ProviderRun`: um turno do provider no `Executor`                                                                                                              |
+| `input.ts`        | o que se digita durante um turno (`listenInput`), o Ctrl+A (`AGENT_SHORTCUTS`) e a conversa padrão (`agentConversation`)                                                       |
+| `thinking.ts`     | `watchThinking`: as fases de "pensando" enquanto o modelo trabalha calado                                                                                                      |
+| `enforce.ts`      | a política de uma execução: a sandbox, os gates do Choliba (execução, rede, o broker das ferramentas) e o que cada provider traduz; recusa o que ninguém aplica (`UNENFORCED`) |
+| `events.ts`       | os eventos do agente para o `subscribe` e para o log (`agentEvents`, `publish`)                                                                                                |
+| `messages.ts`     | o que o agente escreve além da resposta do modelo: a espera por aprovações, as aprovações dadas, as linhas de status                                                           |
+| `abort.ts`        | esperas que respeitam o `signal` (`delay`, `anySignal`, `abortable`, `isAbortError`)                                                                                           |
+| `lock.ts`         | `WorkspaceLock`: um agente por workspace                                                                                                                                       |
+| `constants.ts`    | `APPROVAL_POLL_MS`, `THINKING_TICK_MS`                                                                                                                                         |
 
 [↑ topo](#topo)
 
 ## Interface
 
+Do pacote (`choliba`) vêm `Agent`, `agentConversation`, `AGENT_SHORTCUTS`, `AgentOutput` e os tipos `AgentOptions`,
+`AgentProvider`, `AgentStatus`, `AgentSubscriber` e `AgentAsk`. O resto do módulo só se importa dos arquivos de
+`src/agent`, como fazem os exemplos.
+
 ### `Agent`: as opções
 
 `new Agent(options)`:
 
-| Opção            | Obrigatória | O que é                                                                                        |
-| ---------------- | ----------- | ---------------------------------------------------------------------------------------------- |
-| `name`           | sim         | o nome do agente: vai em todo registro de log e evento                                         |
-| `prompt`         | sim         | a tarefa, mandada no primeiro turno                                                            |
-| `provider`       | sim         | qual CLI roda                                                                                  |
-| `workspace`      | sim         | onde ela roda                                                                                  |
-| `permissions`    | não         | a política (`AgentPolicy`); sem ela, a sandbox sem regras extras                               |
-| `interaction`    | não         | com quem conversa; `agentConversation()` (o stdio, com Ctrl+A) por padrão                      |
-| `approve`        | não         | quem decide os comandos que a política deixa em aberto; pergunta na conversa por padrão        |
-| `signal`         | não         | para o agente; o do `runScript` (o Ctrl+C) por padrão                                          |
-| `conversation`   | não         | `true` (padrão): espera a próxima mensagem depois de cada turno; `false`: uma tarefa só        |
-| `resume`         | não         | `true` (padrão): continua sozinho uma tarefa interrompida ou com algo aprovado para ela        |
-| `store`          | não         | onde ficam sessões, decisões e aprovações; o banco do `choliba.config.ts` por padrão           |
-| `subscribe`      | não         | funções que recebem cada evento do agente, na hora                                             |
-| `executor`       | não         | um `Executor` próprio (ou `output`, um `OutputDispatcher` para os eventos crus; nunca os dois) |
-| `approvalPollMs` | não         | de quanto em quanto tempo procura aprovações novas; `APPROVAL_POLL_MS` (1000)                  |
-| `thinkingTickMs` | não         | o intervalo dos eventos `thinking` enquanto o modelo está calado; `THINKING_TICK_MS` (2000)    |
+| Opção            | Obrigatória | O que é                                                                                                                                 |
+| ---------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`           | sim         | o nome do agente: vai em todo registro de log e evento                                                                                  |
+| `prompt`         | sim         | a tarefa, mandada no primeiro turno                                                                                                     |
+| `provider`       | sim         | qual CLI roda                                                                                                                           |
+| `workspace`      | sim         | onde ela roda                                                                                                                           |
+| `policy`         | não         | a política (`AgentPolicy`); sem ela, a sandbox sem regras extras                                                                        |
+| `interaction`    | não         | com quem conversa; `agentConversation()` (o stdio, com Ctrl+A) por padrão                                                               |
+| `approve`        | não         | quem decide os comandos que a política deixa em aberto; pergunta na conversa por padrão                                                 |
+| `signal`         | não         | para o agente; o do `runScript` (o Ctrl+C) por padrão                                                                                   |
+| `conversation`   | não         | `true` (padrão): espera a próxima mensagem depois de cada turno; `false`: uma tarefa só                                                 |
+| `awaitApprovals` | não         | `true` (padrão): depois de um turno com comandos negados, espera alguém aprová-los e continua; `false`: termina, e o negado fica negado |
+| `resume`         | não         | `true` (padrão): continua sozinho uma tarefa interrompida ou com algo aprovado para ela                                                 |
+| `store`          | não         | onde ficam sessões, decisões e aprovações; o banco do `choliba.config.ts` por padrão                                                    |
+| `subscribe`      | não         | funções que recebem cada evento do agente, na hora                                                                                      |
+| `executor`       | não         | um `Executor` próprio (ou `output`, um `OutputDispatcher` para os eventos crus; nunca os dois)                                          |
+| `approvalPollMs` | não         | de quanto em quanto tempo procura aprovações novas; `APPROVAL_POLL_MS` (1000)                                                           |
+| `thinkingTickMs` | não         | o intervalo dos eventos `thinking` enquanto o modelo está calado; `THINKING_TICK_MS` (2000)                                             |
 
 Uma categoria da política que o provider não sabe aplicar é recusada **ao criar** o agente, com um `UsageError` ([Exemplo 6](#6-uma-política-que-o-provider-não-aplica)).
 
@@ -106,13 +117,13 @@ E as propriedades `name`, `prompt`, `provider` e `workspace`.
 
 ### `AgentOutput`: o que `subscribe` recebe
 
-| Método     | O que devolve                                                                                                                   |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `type()`   | o que aconteceu: `input`, `session`, `output`, `ask`, `answer`, `message`, `status`, `thinking`, `reasoning`, `usage`, `error`… |
-| `data()`   | o que veio com o evento                                                                                                         |
-| `ts()`     | quando, em ISO                                                                                                                  |
-| `agent()`  | o próprio agente (`name`, `prompt`, `provider`, `workspace`…)                                                                   |
-| `toJSON()` | o evento inteiro                                                                                                                |
+| Método     | O que devolve                                                                                                                           |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `type()`   | o que aconteceu: `input`, `session`, `turn`, `output`, `ask`, `answer`, `message`, `status`, `thinking`, `reasoning`, `usage`, `error`… |
+| `data()`   | o que veio com o evento                                                                                                                 |
+| `ts()`     | quando, em ISO                                                                                                                          |
+| `agent()`  | o próprio agente (`name`, `prompt`, `provider`, `workspace`…)                                                                           |
+| `toJSON()` | o evento inteiro                                                                                                                        |
 
 ### A conversa do agente: `agentConversation`
 
@@ -125,12 +136,14 @@ agentConversation(new JsonlAdapter({ path: 'conversa.jsonl' })); // um arquivo
 
 ### Peças que dá para usar sozinhas
 
-| Peça                                 | O que faz                                                                         |
-| ------------------------------------ | --------------------------------------------------------------------------------- |
-| `runProvider(provider, executor, …)` | um turno: monta o comando, roda no `Executor` e devolve os eventos do provider    |
-| `listenInput(listen, signal, map?)`  | ouve o que se digita durante um turno, guardando o que chega até alguém esperar   |
-| `watchThinking(onPhase, options?)`   | as fases de "pensando" (`start`, `tick`, `end`) enquanto o modelo trabalha calado |
-| `WorkspaceLock`                      | o lock de um workspace (veja [Um agente por workspace](#um-agente-por-workspace)) |
+Não vêm do pacote: importe-as dos arquivos de `src/agent`.
+
+| Peça                                                       | O que faz                                                                                                                    |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `runProvider(provider, { executor, workspace, input, … })` | um turno: monta o comando, a sandbox o embrulha, o `Executor` o roda, e os eventos do provider chegam conforme a CLI escreve |
+| `listenInput(listen, signal, map?)`                        | ouve o que se digita durante um turno, guardando o que chega até alguém esperar                                              |
+| `watchThinking(onPhase, options?)`                         | as fases de "pensando" (`start`, `tick`, `end`) enquanto o modelo trabalha calado                                            |
+| `WorkspaceLock`                                            | o lock de um workspace (veja [Um agente por workspace](#um-agente-por-workspace))                                            |
 
 [↑ topo](#topo)
 
@@ -145,7 +158,7 @@ agentConversation(new JsonlAdapter({ path: 'conversa.jsonl' })); // um arquivo
 
 ### Tarefa ou conversa
 
-Com `conversation: false`, o agente termina quando a CLI termina e não pergunta nada. Com `conversation: true` (o padrão), depois de cada turno ele espera a próxima mensagem; termina quando a entrada acaba (Ctrl+D, o fim de um pipe ou de uma lista) ou quando é parado. Numa conversa, o provider precisa dizer qual é a sessão (um evento `session`): o turno seguinte continua nela.
+Com `conversation: false`, o agente termina quando a CLI termina e não pergunta nada, a não ser que a política tenha negado algum comando nesse turno: com `awaitApprovals` (o padrão), ele avisa quantos esperam e aguarda alguém aprová-los (`bun run approvals`, Ctrl+A); depois continua a mesma sessão. Com `awaitApprovals: false`, termina, e o negado fica negado: é o que serve a uma execução que ninguém acompanha, como uma rodada. Com `conversation: true` (o padrão), depois de cada turno ele espera a próxima mensagem; termina quando a entrada acaba (Ctrl+D, o fim de um pipe ou de uma lista) ou quando é parado. Numa conversa, o provider precisa dizer qual é a sessão (um evento `session`): o turno seguinte continua nela.
 
 ### Sessão e retomada
 
@@ -169,7 +182,7 @@ O que se digita enquanto a CLI trabalha não se perde: vai para o próximo turno
 
 ### Permissões e aprovações
 
-A política vai em `permissions`. O agente a passa ao workspace (o que a sandbox aplica: arquivos e rede) e ao provider (o que a CLI aplica: execução, web). Um comando que a política deixa em aberto (`require_approval`) é decidido pelo `approve`, que por padrão pergunta na conversa (`[u/s/w/n]`). Os detalhes estão no curso de [policy](../policy/README.md).
+A política vai em `policy`, e cada parte dela tem quem a aplique (`enforce.ts`): a sandbox aplica os arquivos, o módulo network a rede, o gate de comandos do Choliba a execução (por um hook na CLI), o broker das ferramentas do projeto as regras `choliba/<nome>`, e a CLI do provider o que só ela sabe aplicar (web, comunicação). Uma parte que ninguém aplica é recusada ao criar o agente. Um comando que a política deixa em aberto (`requireApproval`) é decidido pelo `approve`, que por padrão pergunta na conversa (`[u/s/w/n]`). Os detalhes estão no curso de [policy](../policy/README.md).
 
 ### Parar
 
@@ -373,7 +386,7 @@ Saída real:
 
 ```
 "oi" tem 2 letras
-› choliba
+› goiaba
 "goiaba" tem 6 letras
 › tudo bem?
 "tudo bem?" tem 9 letras
@@ -475,13 +488,15 @@ Saída real:
 [eco] status   {"text":"⏳ pensando…"}
 [eco] message  {"text":"⏳ pensando…"}
 [eco] thinking {"phase":"start","seconds":0}
+[eco] turn     {"phase":"start","turn":1}
 [eco] output   {"value":"eco: olá"}
 [eco] status   {"text":null}
 [eco] thinking {"phase":"end","seconds":0}
 [eco] message  {"text":"eco: olá"}
+[eco] turn     {"phase":"end","turn":1}
 ```
 
-Esta conversa não tem linha de status, então o "pensando" virou uma mensagem; numa conversa com status (a de um terminal), ele só reescreve a linha.
+Esta conversa não tem linha de status, então o "pensando" virou uma mensagem; numa conversa com status (a de um terminal), ele só reescreve a linha. Os eventos `turn` marcam o começo e o fim de cada turno, com o número dele.
 
 ### 4. A resposta em pedaços
 
@@ -762,7 +777,7 @@ try {
     prompt: 'rode os testes',
     provider: new PlainProvider(),
     workspace: new Workspace({ type: 'bubblewrap', root }),
-    permissions: {
+    policy: {
       default: 'deny',
       allow: {
         filesystem: [{ operations: ['read'], paths: ['/workspace/**'] }],
@@ -788,9 +803,15 @@ recusado: O provider simples não aplica a categoria execution.
 ### 7. Agentes de verdade
 
 Com um modelo, o agente é o mesmo: só o provider muda. Os exemplos abaixo rodam com um modelo de verdade, então não
-têm saída fixa. Cada um declara a própria política: lê e escreve só no workspace, pergunta antes de cada comando e nega
-o resto (a rede inclusive). Precisam do que o provider pede: o Ollama rodando com o modelo do arquivo e a CLI escolhida
-instalada, ou o login da CLI na nuvem. O `7-tui.ts` precisa também de um terminal.
+têm saída fixa; no `bun run check`, eles só passam pelo typecheck e pelo lint. Todos, menos o `7-api.ts`, declaram a
+própria política: lê e escreve só no workspace, pergunta antes de cada comando e nega o resto (a rede inclusive). Os
+agentes do `7-api.ts` não têm política: rodam só com a sandbox. Cada exemplo precisa do que o provider pede:
+
+- os de modelo local (`7-ollama.ts`, `7-tui.ts`, `7-entradas-e-saidas.ts`, `7-pensando.ts`, `7-api.ts`): o Ollama
+  rodando com o modelo do arquivo e a CLI escolhida instalada; o `7-tui.ts`, também um terminal;
+- o `7-claude.ts` e o `7-codex.ts`: o login da CLI e o Docker, com uma imagem local `choliba-agent:latest` que tenha a
+  CLI instalada. O repositório não traz essa imagem, e o workspace não a baixa: o curso de
+  [workspace](../workspace/README.md) explica o `image`.
 
 | Arquivo                     | O que mostra                                                                                                                  |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
@@ -799,7 +820,7 @@ instalada, ou o login da CLI na nuvem. O `7-tui.ts` precisa também de um termin
 | `7-entradas-e-saidas.ts`    | um agente com cada entrada e saída explicada (`ask`, `listen`, `choose`, `approve`, `signal`…); `bun run ollama:codex`        |
 | `7-claude.ts`, `7-codex.ts` | a mesma montagem, num modelo na nuvem (Claude Code, Codex)                                                                    |
 | `7-pensando.ts`             | um `subscribe` que mostra o "pensando" do modelo                                                                              |
-| `7-api.ts`                  | vários agentes numa API HTTP, com eventos ao vivo                                                                             |
+| `7-api.ts`                  | vários agentes numa API HTTP, com eventos ao vivo, sem política                                                               |
 
 ```
 bun guides/agent/exemplos/7-ollama.ts claude
@@ -812,7 +833,7 @@ bun guides/agent/exemplos/7-tui.ts codex
 
 - **O agente junta, não faz.** Processos rodam pelo `Executor`, a conversa passa pela `Interaction`, as permissões vêm da `AgentPolicy`, a sandbox é do `Workspace`: o agente não toca no terminal, no `process` nem no disco por conta própria.
 - **Nada aplicado pela metade.** Uma categoria da política que o provider não aplica é recusada ao criar o agente.
-- **Quem observa não age.** Uma função de `subscribe` só observa: chamar `run()` nela começaria o agente de novo a cada evento.
+- **Quem observa não age.** Uma função de `subscribe` só observa. Um `run()` chamado nela enquanto o agente roda devolve a mesma execução e não muda nada; um chamado depois do fim começa outra. Para fazer algo quando o agente termina, espere o `run()` de quem o começou.
 
 [↑ topo](#topo)
 

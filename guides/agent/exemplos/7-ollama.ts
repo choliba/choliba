@@ -1,3 +1,8 @@
+/**
+ * Exemplo 7 do curso do agente: um agente num modelo local do Ollama, pela CLI
+ * escolhida no argumento (claude ou codex), com a rede montada à mão. Precisa
+ * do Ollama rodando com o modelo do arquivo e da CLI escolhida instalada.
+ */
 import {
   agentConversation,
   Agent,

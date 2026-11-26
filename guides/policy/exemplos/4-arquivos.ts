@@ -29,7 +29,7 @@ const project: AgentPolicy = {
   },
 };
 
-// Lê tudo, escreve só em guides/ (como o Instructor).
+// Lê tudo, escreve só em guides/ (como um agente que só mexe nos cursos).
 const guidesOnly: AgentPolicy = {
   default: 'deny',
   allow: {

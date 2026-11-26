@@ -1,10 +1,12 @@
 /**
- * A rede de uma sandbox passando pelo gate, no bubblewrap ou no docker, sem
- * modelo nenhum: o que sai da sandbox é um `curl`, e um consumidor do
- * produtor `network` mostra cada decisão.
+ * Exemplo 1 do curso de network: a rede de uma sandbox passando pelo gate, no
+ * bubblewrap ou no docker, sem modelo nenhum: o que sai da sandbox é um
+ * `curl`, e um consumidor do produtor `network` mostra cada decisão (o
+ * Exemplo 2). Precisa do bubblewrap e de internet; o docker, da imagem
+ * oven/bun:latest (baixada na primeira vez).
  *
- *   bun guides/network/exemplos/network.ts bubblewrap
- *   bun guides/network/exemplos/network.ts docker
+ *   bun guides/network/exemplos/1-sandbox.ts bubblewrap
+ *   bun guides/network/exemplos/1-sandbox.ts docker
  *
  * O que muda entre as duas é só a sandbox: o gate e o proxy rodam aqui, no
  * host. No bubblewrap, o bridge sobe uma vez para a jaula; no docker, entra

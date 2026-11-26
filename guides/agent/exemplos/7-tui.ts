@@ -1,3 +1,8 @@
+/**
+ * Exemplo 7 do curso do agente: o agente do 7-ollama.ts em tela cheia (o TUI).
+ * Precisa de um terminal, do Ollama rodando com o modelo do arquivo e da CLI
+ * escolhida no argumento (claude ou codex) instalada.
+ */
 import {
   Agent,
   ensureDirectory,

@@ -9,7 +9,7 @@ Uma **`AgentPolicy`** é um objeto que descreve permissões: o que pode, o que p
 O módulo `policy` é o dono desse objeto. Ele define **a forma** (o tipo `AgentPolicy`) e **o significado**: dada uma política e uma ação, qual é a decisão.
 
 ```ts
-import { PolicyEngine, type AgentPolicy } from '../src/policy/index';
+import { PolicyEngine, type AgentPolicy } from 'choliba';
 
 // 1. Uma política: só dados.
 const policy: AgentPolicy = {
@@ -62,22 +62,28 @@ checkCommand     → montagens da      → regras de rede     provider traduz)
   - [4. A política de arquivos vira montagens da sandbox](#4-a-política-de-arquivos-vira-montagens-da-sandbox)
   - [5. O que fica para o provider](#5-o-que-fica-para-o-provider)
   - [6. A mesma política num agente](#6-a-mesma-política-num-agente)
-  - [7. Tools](#7-tools)
-    - [A política](#a-política-das-ferramentas)
-    - [O formato de uma ferramenta](#o-formato-de-uma-ferramenta)
-    - [Ferramenta: ler email (`email/read`)](#ferramenta-ler-email-emailread)
-    - [Ferramenta: enviar email (`email/send`)](#ferramenta-enviar-email-emailsend)
-    - [Ferramenta: ler arquivo (`files/read`)](#ferramenta-ler-arquivo-filesread)
-    - [O registro e a chamada](#o-registro-e-a-chamada)
-    - [Rodando](#rodando)
+  - [7. Ferramentas](#7-ferramentas)
 - [Regras do módulo](#regras-do-módulo)
 - [Exercícios](#exercícios)
 
 ## AgentPolicy em uma página
 
-Uma política completa, lida em voz alta:
+Uma política completa, lida em voz alta, e as respostas dela a algumas ações. `guides/policy/exemplos/0-uma-pagina.ts`:
 
 ```ts
+/**
+ * Seção "AgentPolicy em uma página" do curso de policy: uma política completa,
+ * lida em voz alta, e as respostas dela a algumas ações.
+ *
+ *   bun guides/policy/exemplos/0-uma-pagina.ts
+ */
+import { writeOut } from '../../../src/output/stdio';
+import {
+  PolicyEngine,
+  type AgentAction,
+  type AgentPolicy,
+} from '../../../src/policy/index';
+
 const policy: AgentPolicy = {
   // O que nenhuma regra cobre: aqui, nega.
   default: 'deny',
@@ -112,6 +118,43 @@ const policy: AgentPolicy = {
     network: [{ operations: ['*'], hosts: ['169.254.169.254'] }],
   },
 };
+
+const questions: readonly (readonly [string, AgentAction])[] = [
+  ['rodar bun test', { category: 'execution', command: 'bun test' }],
+  ['rodar rm build.log', { category: 'execution', command: 'rm build.log' }],
+  ['rodar rm -rf dist', { category: 'execution', command: 'rm -rf dist' }],
+  ['rodar curl x.com', { category: 'execution', command: 'curl x.com' }],
+  [
+    'ler NODE_ENV',
+    { category: 'secrets', operation: 'read', secret: 'NODE_ENV' },
+  ],
+  [
+    'ler GITHUB_TOKEN',
+    { category: 'secrets', operation: 'read', secret: 'GITHUB_TOKEN' },
+  ],
+  [
+    'conectar em api.github.com',
+    { category: 'network', operation: 'connect', host: 'api.github.com' },
+  ],
+];
+
+const engine = new PolicyEngine(policy);
+for (const [question, action] of questions) {
+  const { policy: decision, source } = engine.check(action);
+  writeOut(`${question.padEnd(28)} ${decision} (${source})\n`);
+}
+```
+
+Saída real:
+
+```
+rodar bun test               allow (allow)
+rodar rm build.log           require_approval (requireApproval)
+rodar rm -rf dist            deny (deny)
+rodar curl x.com             deny (default)
+ler NODE_ENV                 allow (allow)
+ler GITHUB_TOKEN             deny (default)
+conectar em api.github.com   allow (allow)
 ```
 
 - **Quatro chaves, sempre as mesmas:** `default` e os três grupos (`allow`, `requireApproval`, `deny`). Cada grupo é opcional.
@@ -119,17 +162,17 @@ const policy: AgentPolicy = {
 - **Cada regra tem a mesma forma:** o que fazer (`operations`), sobre o quê (os alvos: `paths`, `commands`, `hosts`…) e o que fica de fora (`ignores`).
 - **Quem vence** quando mais de uma regra casa: `deny`, depois `requireApproval`, depois `allow`; sem nenhuma, o `default`.
 
-Algumas perguntas a esta política, e as respostas:
+Por que cada resposta é a que é:
 
-| Ação                             | Decisão            | Por quê                                |
-| -------------------------------- | ------------------ | -------------------------------------- |
-| rodar `bun test`                 | `allow`            | `bun *` em `allow.execution`           |
-| rodar `rm build.log`             | `require_approval` | `rm *` em `requireApproval`            |
-| rodar `rm -rf dist`              | `deny`             | `rm -rf *` em `deny`, que vence `rm *` |
-| rodar `curl x.com`               | `deny` (`default`) | nenhuma regra de `execution` casa      |
-| ler `NODE_ENV`                   | `allow`            | `allow.secrets`                        |
-| ler `GITHUB_TOKEN`               | `deny` (`default`) | não está em nenhuma regra de `secrets` |
-| conectar em `api.github.com:443` | `allow`            | `*.github.com` em `allow.network`      |
+| Ação                         | Decisão            | Por quê                                |
+| ---------------------------- | ------------------ | -------------------------------------- |
+| rodar `bun test`             | `allow`            | `bun *` em `allow.execution`           |
+| rodar `rm build.log`         | `require_approval` | `rm *` em `requireApproval`            |
+| rodar `rm -rf dist`          | `deny`             | `rm -rf *` em `deny`, que vence `rm *` |
+| rodar `curl x.com`           | `deny` (`default`) | nenhuma regra de `execution` casa      |
+| ler `NODE_ENV`               | `allow`            | `allow.secrets`                        |
+| ler `GITHUB_TOKEN`           | `deny` (`default`) | não está em nenhuma regra de `secrets` |
+| conectar em `api.github.com` | `allow`            | `*.github.com` em `allow.network`      |
 
 A política é a mesma não importa quem a lê: o motor responde igual para um agente, um teste ou um script.
 
@@ -148,7 +191,7 @@ A política é a mesma não importa quem a lê: o motor responde igual para um a
 
 ## Interface
 
-O que `src/policy/index.ts` exporta.
+O que `src/policy/index.ts` exporta. O pacote (`choliba`) traz o `PolicyEngine`, o `wildmatch` e os tipos da política (`AgentPolicy`, as regras de cada categoria, `AgentAction`, `PolicyDecision`…); o resto, como `compileFilesystemAccess`, `delegatedCategories` e `suggestPattern`, só se importa do módulo.
 
 ### O modelo: `AgentPolicy`
 
@@ -172,14 +215,14 @@ interface PolicyGroups {
 }
 ```
 
-Toda regra tem a mesma forma: `operations` (o que fazer), os **alvos** (o campo da categoria) e `ignores` para tirar alvos da regra. A exceção é `execution`, que só tem `commands`: nenhuma CLI sabe a intenção de um comando, então não há operação.
+Toda regra tem a mesma forma: `operations` (o que fazer), os **alvos** (o campo da categoria) e `ignores` para tirar alvos da regra. Em `execution`, `operations` é opcional e só tem `run`: nenhuma CLI sabe a intenção de um comando, então a regra fala dos comandos (`commands`).
 
 | Categoria       | Alvos                           | Operações                                                           |
 | --------------- | ------------------------------- | ------------------------------------------------------------------- |
 | `filesystem`    | `paths`                         | `read`, `write`                                                     |
 | `web`           | `domains`                       | `search`, `read_text`, `interact`, `form_submit`, `login`, `browse` |
 | `network`       | `hosts`                         | `connect`                                                           |
-| `execution`     | `commands`                      | —                                                                   |
+| `execution`     | `commands`                      | `run` (opcional)                                                    |
 | `tools`         | `tools` (`servidor/ferramenta`) | `call`                                                              |
 | `agents`        | `agents` (nome ou modelo)       | `spawn`                                                             |
 | `communication` | `channels`                      | `send_email`, `post_social_media`, `send_logs`                      |
@@ -193,7 +236,7 @@ Toda regra tem a mesma forma: `operations` (o que fazer), os **alvos** (o campo 
 | ------------------------------------------ | ---------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | `new PolicyEngine(policy)`                 | uma `AgentPolicy` (validada aqui)                    | o motor                                                                                |
 | `engine.check(action)`                     | uma `AgentAction`                                    | `PolicyDecision`: `{ policy, source, rule?, reason }`                                  |
-| `engine.checkCommand(line, { approved? })` | uma linha de shell e, opcional, padrões já aprovados | `PolicyDecision` da linha inteira                                                      |
+| `engine.checkCommand(line, { approved? })` | uma linha de shell e, opcional, padrões já aprovados | `CommandPolicyDecision`: a decisão da linha inteira, com `part` e `complex`            |
 | `engine.authorize(action, approve?)`       | uma ação e quem pergunta (`ApprovalHandler`)         | `Promise<boolean>`: decide e, só em `require_approval`, pergunta                       |
 | `compileFilesystemAccess(policy, root)`    | a política e a raiz do workspace                     | `FilesystemAccess`: como a sandbox monta os arquivos                                   |
 | `delegatedCategories(policy)`              | a política                                           | as categorias com regra que só o provider aplica (`web`, `execution`, `communication`) |
@@ -203,13 +246,14 @@ Toda regra tem a mesma forma: `operations` (o que fazer), os **alvos** (o campo 
 
 ### Tipos
 
-| Tipo               | Forma                                                                                                                                                       |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AgentAction`      | uma ação, por categoria: `{ category: 'execution', command }`, `{ category: 'filesystem', operation, path }`, `{ category: 'secrets', operation, secret }`… |
-| `PolicyDecision`   | `{ policy: 'allow' \| 'deny' \| 'require_approval', source: 'allow' \| 'requireApproval' \| 'deny' \| 'default' \| 'approved', rule?, reason }`             |
-| `FilesystemAccess` | `{ workspaceAccess: 'readonly' \| 'readwrite', writable: string[], masks: FilesystemMask[] }`                                                               |
-| `FilesystemMask`   | `{ path, access: 'readonly' \| 'hidden' }`                                                                                                                  |
-| `PolicyCategory`   | o nome de uma das oito categorias                                                                                                                           |
+| Tipo                    | Forma                                                                                                                                                                       |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AgentAction`           | uma ação, por categoria: `{ category: 'execution', command }`, `{ category: 'filesystem', operation, path }`, `{ category: 'secrets', operation, secret }`…                 |
+| `PolicyDecision`        | `{ policy: 'allow' \| 'deny' \| 'require_approval', source: 'allow' \| 'requireApproval' \| 'deny' \| 'default' \| 'approved', rule?, reason }`                             |
+| `CommandPolicyDecision` | uma `PolicyDecision` e mais `part` (o comando simples que decidiu) e `complex` (redirecionamento, substituição, heredoc ou script: uma linha liberada ainda pede aprovação) |
+| `FilesystemAccess`      | `{ workspaceAccess: 'readonly' \| 'readwrite', writable: string[], masks: FilesystemMask[] }`                                                                               |
+| `FilesystemMask`        | `{ path, access: 'readonly' \| 'hidden' }`                                                                                                                                  |
+| `PolicyCategory`        | o nome de uma das oito categorias                                                                                                                                           |
 
 [↑ topo](#topo)
 
@@ -260,14 +304,15 @@ Os caminhos usam `/workspace` como apelido da raiz (o caminho real também é ac
 
 ### Quem aplica cada categoria
 
-| Categoria              | Quem aplica                         | Como                                                   |
-| ---------------------- | ----------------------------------- | ------------------------------------------------------ |
-| `filesystem`           | a sandbox                           | `compileFilesystemAccess` → montagens e máscaras       |
-| `network`              | o módulo `network`                  | `networkRulesOf` → gate e proxy                        |
-| `execution`            | o gate de comandos (`src/approval`) | `checkCommand`, por um hook na CLI                     |
-| `secrets`              | o agente, ao montar a sandbox       | `check` em cada variável: só as liberadas entram       |
-| `web`, `communication` | a CLI do provider                   | `delegatedCategories` → cada provider traduz ou recusa |
-| `tools`, `agents`      | ninguém, ainda                      | o agente recusa a política se tiver essas regras       |
+| Categoria                | Quem aplica                          | Como                                                                   |
+| ------------------------ | ------------------------------------ | ---------------------------------------------------------------------- |
+| `filesystem`             | a sandbox                            | `compileFilesystemAccess` → montagens e máscaras                       |
+| `network`                | o módulo `network`                   | `networkRulesOf` → gate e proxy                                        |
+| `execution`              | o gate de comandos (`src/approval`)  | `checkCommand`, por um hook na CLI                                     |
+| `secrets`                | o agente, ao montar a sandbox        | `check` em cada variável: só as liberadas entram                       |
+| `web`, `communication`   | a CLI do provider                    | `delegatedCategories` → cada provider traduz ou recusa                 |
+| `tools` (`choliba/…`)    | o broker das ferramentas (`src/mcp`) | o `ToolBroker` decide cada chamada; `requireApproval` vale como `deny` |
+| outras `tools`, `agents` | ninguém, ainda                       | o agente recusa a política se tiver essas regras                       |
 
 [↑ topo](#topo)
 
@@ -548,7 +593,7 @@ const project: AgentPolicy = {
   },
 };
 
-// Lê tudo, escreve só em guides/ (como o Instructor).
+// Lê tudo, escreve só em guides/ (como um agente que só mexe nos cursos).
 const guidesOnly: AgentPolicy = {
   default: 'deny',
   allow: {
@@ -643,7 +688,7 @@ Saída real:
 
 ### 6. A mesma política num agente
 
-A política da seção [AgentPolicy em uma página](#agentpolicy-em-uma-página) não muda para ser usada por um agente: ela vai em `permissions`. `guides/policy/exemplos/6-agente.ts` (precisa do Ollama com o modelo e de um `.env` na raiz):
+A política da seção [AgentPolicy em uma página](#agentpolicy-em-uma-página) não muda para ser usada por um agente: ela vai em `policy`. `guides/policy/exemplos/6-agente.ts` (precisa do Ollama com o modelo e de um `.env` na raiz):
 
 ```ts
 /**
@@ -688,7 +733,7 @@ const agent = new Agent({
   prompt: 'rode os testes e corrija o que falhar',
   provider: new OllamaProvider({ cli: 'claude', model: 'qwen3.5:4b' }),
   workspace: new Workspace({ type: 'bubblewrap', root: currentDirectory() }),
-  permissions: policy, // o mesmo objeto que um PolicyEngine leria
+  policy: policy, // o mesmo objeto que um PolicyEngine leria
   conversation: false,
 });
 
@@ -697,36 +742,52 @@ await agent.run();
 
 O agente não decide nada sozinho: ele entrega cada parte da política a quem sabe aplicá-la, ao ser criado.
 
-| Parte da política      | O que o agente faz                                                  | Quem aplica                                                                                                  |
-| ---------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `tools`, `agents`      | recusa a política inteira, com erro                                 | ninguém, ainda                                                                                               |
-| `filesystem`           | `workspace.applyPermissions(policy, …)` → `compileFilesystemAccess` | a sandbox: workspace gravável, `.env` escondido (ele precisa existir ao iniciar: só se esconde o que existe) |
-| `network`              | o workspace tira `networkRulesOf(policy)` e monta a fronteira       | o gate de rede                                                                                               |
-| `execution`            | cria o gate de comandos e liga o hook na CLI                        | o gate, com `checkCommand` a cada linha                                                                      |
-| `secrets`              | `check` em cada variável do ambiente                                | a sandbox nasce com o básico (`PATH`, `HOME`…) e, das outras variáveis, só `NODE_ENV`                        |
-| `web`, `communication` | `delegatedCategories` → o provider traduz                           | a CLI do provider                                                                                            |
+| Parte da política        | O que o agente faz                                                  | Quem aplica                                                                                                  |
+| ------------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `tools` (`choliba/…`)    | entrega as ferramentas do projeto à CLI por um servidor MCP         | o `ToolBroker`, a cada chamada (curso de [mcp](../mcp/README.md))                                            |
+| outras `tools`, `agents` | recusa a política inteira, com erro                                 | ninguém, ainda                                                                                               |
+| `filesystem`             | `workspace.applyPermissions(policy, …)` → `compileFilesystemAccess` | a sandbox: workspace gravável, `.env` escondido (ele precisa existir ao iniciar: só se esconde o que existe) |
+| `network`                | o workspace tira `networkRulesOf(policy)` e monta a fronteira       | o gate de rede                                                                                               |
+| `execution`              | cria o gate de comandos e liga o hook na CLI                        | o gate, com `checkCommand` a cada linha                                                                      |
+| `secrets`                | `check` em cada variável do ambiente                                | a sandbox nasce com o básico (`PATH`, `HOME`…) e, das outras variáveis, só `NODE_ENV`                        |
+| `web`, `communication`   | `delegatedCategories` → o provider traduz                           | a CLI do provider                                                                                            |
 
 Durante a execução, as perguntas são as mesmas da tabela daquela seção, feitas por outros: quando a CLI tenta `rm build.log`, o gate pergunta ao `PolicyEngine`, recebe `require_approval` e chama quem aprova. A política, o motor e a resposta são os mesmos de um script; o agente só os ligou às peças que fazem valer.
 
-### 7. Tools
+### 7. Ferramentas
 
-O Choliba não tem um registro de ferramentas: uma ferramenta é **uma função sua**, e a política só responde se ela pode rodar. Quem liga o nome à função e pergunta à política antes de rodar é o seu código. O arquivo completo, que roda como está, é `guides/policy/exemplos/tools.ts`.
+As ferramentas que o agente dá à CLI (`choliba/<nome>`) o módulo `mcp` registra, e o broker decide cada chamada pela política (curso de [mcp](../mcp/README.md)). Este exemplo é outro caso: ferramentas **suas**, chamadas pelo seu código, com o mesmo `PolicyEngine` perguntado antes. Quem liga o nome à função e pergunta à política antes de rodar é o código do exemplo.
 
-Cada chamada passa por **duas perguntas**: `tools` (esta ferramenta pode ser chamada?) e a categoria do que ela toca (`communication` para o destinatário de um email, `filesystem` para o arquivo lido).
+Cada chamada passa por **duas perguntas**: `tools` (esta ferramenta pode ser chamada?) e a categoria do que ela toca (`communication` para o destinatário de um email, `filesystem` para o arquivo lido). Uma ferramenta recebe argumentos com nome e devolve um texto, que é o que o modelo, ou quem chamou, lê de volta. O `ask` é um `ApprovalHandler`, como o do Exemplo 2b: mostra o motivo e espera `s` ou `n`.
 
-Exemplos abaixo:
-
-- [A política](#a-política-das-ferramentas)
-- [O formato de uma ferramenta](#o-formato-de-uma-ferramenta)
-- [Ferramenta: ler email (`email/read`)](#ferramenta-ler-email-emailread)
-- [Ferramenta: enviar email (`email/send`)](#ferramenta-enviar-email-emailsend)
-- [Ferramenta: ler arquivo (`files/read`)](#ferramenta-ler-arquivo-filesread)
-- [O registro e a chamada](#o-registro-e-a-chamada)
-- [Rodando](#rodando)
-
-#### A política das ferramentas
+`guides/policy/exemplos/7-ferramentas.ts`:
 
 ```ts
+/**
+ * Exemplo 7 do curso de policy: ferramentas suas, governadas por uma
+ * AgentPolicy: ler email, enviar email e ler arquivo. As ferramentas que o
+ * agente dá à CLI (choliba/<nome>) o módulo mcp registra e o broker decide;
+ * aqui, quem liga o nome à função e consulta a política antes de rodar é este
+ * código.
+ *
+ *   bun guides/policy/exemplos/7-ferramentas.ts   (responda s às duas perguntas)
+ *
+ * Duas perguntas por chamada:
+ * 1. `tools`: esta ferramenta pode ser chamada?
+ * 2. a categoria do que ela toca: `communication` (o destinatário de um
+ *    email) ou `filesystem` (o arquivo lido).
+ */
+
+import { currentDirectory } from '../../../src/execute/process';
+import { join, readText } from '../../../src/filesystem/index';
+import { StdioAdapter } from '../../../src/adapters/stdio/index';
+import { Conversation } from '../../../src/interaction/index';
+import {
+  PolicyEngine,
+  type AgentAction,
+  type ApprovalRequest,
+} from '../../../src/policy/index';
+
 const policy = new PolicyEngine({
   default: 'deny',
   allow: {
@@ -748,36 +809,23 @@ const policy = new PolicyEngine({
     filesystem: [{ operations: ['*'], paths: ['.env', '**/*.key'] }],
   },
 });
-```
 
-#### O formato de uma ferramenta
-
-Uma ferramenta recebe argumentos com nome e devolve um texto, que é o que o modelo, ou quem chamou, lê de volta:
-
-```ts
 type Args = Readonly<Record<string, string>>;
 type Tool = (args: Args) => Promise<string>;
-```
 
-Cada uma confere, antes de agir, **o recurso que vai tocar**. A ferramenta em si já foi liberada por `tools` (veja [O registro e a chamada](#o-registro-e-a-chamada)).
+const terminal = new Conversation(new StdioAdapter());
 
-#### Ferramenta: ler email (`email/read`)
+// --- As ferramentas -------------------------------------------------------
 
-Não toca em nenhum recurso que a política descreva além da própria ferramenta: `tools` liberou, ela lê.
-
-```ts
 /** Lê a caixa de entrada (aqui, uma de mentira). */
 const readEmail: Tool = () =>
   Promise.resolve(
-    '1. de chefe@empresa.exemplo: reunião às 10h\n2. de cliente@fora.exemplo: proposta',
+    [
+      '1. de chefe@empresa.exemplo: reunião às 10h',
+      '2. de cliente@fora.exemplo: proposta',
+    ].join('\n'),
   );
-```
 
-#### Ferramenta: enviar email (`email/send`)
-
-O destinatário é um **canal** de `communication`: a ferramenta pergunta à política por ele, com a operação `send_email`.
-
-```ts
 /** Envia um email, se o destinatário for permitido (aqui, só simula). */
 const sendEmail: Tool = async ({ to = '', subject = '' }) => {
   const allowed = await policy.authorize(
@@ -787,13 +835,7 @@ const sendEmail: Tool = async ({ to = '', subject = '' }) => {
   if (!allowed) return `Destinatário não permitido: ${to}.`;
   return `Enviado para ${to}: "${subject}" (simulado).`;
 };
-```
 
-#### Ferramenta: ler arquivo (`files/read`)
-
-O arquivo é um **caminho** de `filesystem`: a ferramenta pergunta à política pela leitura dele antes de abrir.
-
-```ts
 /** Lê um arquivo do projeto, se o caminho for permitido. */
 const readFile: Tool = async ({ path = '' }) => {
   const allowed = await policy.authorize(
@@ -804,19 +846,22 @@ const readFile: Tool = async ({ path = '' }) => {
   const [firstLine = ''] = readText(join(currentDirectory(), path)).split('\n');
   return `${path}: ${firstLine}`;
 };
-```
 
-#### O registro e a chamada
-
-O nome que a política conhece aponta para a função, e `callTool` pergunta à política antes de qualquer coisa:
-
-```ts
+/** O registro: o nome que a política conhece → a função. */
 const tools = new Map<string, Tool>([
   ['email/read', readEmail],
   ['email/send', sendEmail],
   ['files/read', readFile],
 ]);
 
+/** Pergunta no terminal, com uma tecla: s ou n. */
+async function ask({ action, decision }: ApprovalRequest): Promise<boolean> {
+  terminal.write(`    ${decision.reason}`);
+  terminal.write(`    Permitir ${describe(action)}? [s/n]`);
+  return (await terminal.choose(['s', 'n'])) === 's';
+}
+
+/** Chama uma ferramenta pelo nome: primeiro a política, depois a função. */
 async function callTool(name: string, args: Args = {}): Promise<string> {
   const tool = tools.get(name);
   const allowed = await policy.authorize(
@@ -827,15 +872,38 @@ async function callTool(name: string, args: Args = {}): Promise<string> {
   if (tool === undefined) return `Ferramenta desconhecida: ${name}.`;
   return tool(args);
 }
+
+// --- As chamadas ----------------------------------------------------------
+
+const calls: readonly [string, Args][] = [
+  ['email/read', {}],
+  ['files/read', { path: 'README.md' }],
+  ['files/read', { path: '.env' }],
+  ['email/send', { to: 'colega@empresa.exemplo', subject: 'Ata da reunião' }],
+  ['email/send', { to: 'cliente@fora.exemplo', subject: 'Proposta' }],
+  ['slack/send', { text: 'oi' }],
+];
+
+for (const [name, args] of calls) {
+  terminal.write(`\n${name} ${JSON.stringify(args)}`);
+  terminal.write(`  ${(await callTool(name, args)).replaceAll('\n', '\n  ')}`);
+}
+
+terminal.close();
+
+function describe(action: AgentAction): string {
+  if (action.category === 'tools') return `a ferramenta ${action.tool}`;
+  if (action.category === 'communication')
+    return `email para ${action.channel}`;
+  if (action.category === 'filesystem') return `ler ${action.path}`;
+  return JSON.stringify(action);
+}
 ```
 
-`ask` é o mesmo `ApprovalHandler` do Exemplo 2b: mostra o motivo e espera `s` ou `n`.
-
-#### Rodando
-
-`bun guides/policy/exemplos/tools.ts`, respondendo `s` às duas perguntas (saída real):
+Rodado na raiz do repositório, respondendo `s` às duas perguntas (saída real):
 
 ```
+
 email/read {}
   1. de chefe@empresa.exemplo: reunião às 10h
   2. de cliente@fora.exemplo: proposta
@@ -876,7 +944,7 @@ Duas coisas para notar:
 - **Aprovar a ferramenta não libera tudo o que ela faz.** Você disse `s` para `email/send` nas duas vezes; quem barrou o email para fora foi a regra de `communication`.
 - **A política vem antes do registro.** `slack/send` não existe no `Map`, mas a resposta é "não permitida", não "desconhecida": a pergunta à política é a primeira coisa que `callTool` faz.
 
-> Num agente, as regras de `tools` fazem a política ser recusada (a categoria ainda não é aplicada às ferramentas da CLI). Este padrão é para ferramentas **suas**, chamadas pelo seu código.
+> Num agente, as regras de `tools` valem para as ferramentas `choliba/<nome>`, que o broker aplica; uma regra para outra ferramenta faz a política ser recusada. Este padrão é para ferramentas **suas**, chamadas pelo seu código.
 
 [↑ topo](#topo)
 
@@ -894,7 +962,7 @@ Duas coisas para notar:
 - **Usar `requireApproval` em arquivos.** É recusado: não há interceptor seguro.
 - **Escrever um padrão de comando com `?`, `[` ou `\`.** É recusado; só texto e `*`.
 - **Esperar que uma aprovação vença um `deny`.** O `deny` escrito é o "nunca" da política.
-- **Escrever regras de `tools` ou `agents`.** Ainda não são aplicadas: o agente recusa a política em vez de fingir que vale.
+- **Escrever regras de `agents`, ou de `tools` fora do `choliba/…`.** Ninguém as aplica ainda: o agente recusa a política em vez de fingir que vale. As ferramentas do próprio projeto (`choliba/<nome>`) o broker aplica.
 
 [↑ topo](#topo)
 
