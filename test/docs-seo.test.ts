@@ -3,6 +3,8 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 
 import { commandsPage, guidePage, guidesIndexPage } from '../scripts/docs';
 import {
+  brokenAnchors,
+  brokenAnchorsMessage,
   checkDescription,
   DESCRIPTION_MAX,
   DESCRIPTION_MIN,
@@ -280,6 +282,89 @@ describe('mainLandmarkMessage', () => {
   test('lista as páginas', () => {
     expect(mainLandmarkMessage(['index.html', '404.html'])).toBe(
       'Página sem exatamente um <main> (landmark-one-main): index.html, 404.html.',
+    );
+  });
+});
+
+/** A page the build wrote, with `main` as its content. */
+const builtPage = (path: string, main: string) => ({
+  path,
+  html: `<div id="app"><main class="main">${main}</main></div>`,
+});
+
+describe('brokenAnchors', () => {
+  test('passa o link para um id da própria página ou de outra página do site', () => {
+    expect(
+      brokenAnchors([
+        builtPage(
+          'guias/a.html',
+          '<h2 id="exercícios">E</h2><a href="#exercícios">e</a><a href="#exerc%C3%ADcios">e</a>' +
+            '<a href="/guias/b#1-regras">b</a><a href="./b#1-regras">b</a><a href="b.html#1-regras">b</a>',
+        ),
+        builtPage('guias/b.html', '<h2 id="1-regras">1. Regras</h2>'),
+        builtPage(
+          'index.html',
+          '<a href="/guias/a#exercícios">a</a><a href="/#topo">t</a><a id="topo"></a>',
+        ),
+      ]),
+    ).toEqual([]);
+  });
+
+  test('lê o atributo como o navegador: entidades decodificadas e a consulta fora do caminho', () => {
+    expect(
+      brokenAnchors([
+        builtPage(
+          'guias/a.html',
+          '<a href="/guias/b?de=a&amp;para=b#p&amp;d">b</a><a href="#r&amp;d">r</a><h2 id="r&amp;d">R</h2>',
+        ),
+        builtPage('guias/b.html', '<h2 id="p&amp;d">P</h2>'),
+      ]),
+    ).toEqual([]);
+  });
+
+  test('nomeia a página e o link de cada âncora sem destino', () => {
+    expect(
+      brokenAnchors([
+        builtPage(
+          'guias/a.html',
+          '<h2 id="exercicios">E</h2><a href="#exercícios">e</a><a href="/guias/b#nada">b</a>' +
+            // Um % que não forma um código: a âncora fica como está, e não há esse id.
+            '<a href="#50%">p</a>',
+        ),
+        builtPage('guias/b.html', '<h2 id="regras">R</h2>'),
+      ]),
+    ).toEqual([
+      { page: 'guias/a.html', href: '#exercícios' },
+      { page: 'guias/a.html', href: '/guias/b#nada' },
+      { page: 'guias/a.html', href: '#50%' },
+    ]);
+  });
+
+  test('deixa de fora o link que sai do site, o de uma página que não existe e o que está fora do main', () => {
+    expect(
+      brokenAnchors([
+        {
+          path: 'a.html',
+          html:
+            '<div id="app"><nav><a href="#menu">m</a></nav><main>' +
+            '<a href="https://github.com/choliba/choliba#readme">g</a>' +
+            '<a href="mailto:x@exemplo.com#y">e</a><a href="/outra#x">o</a>' +
+            '</main></div>',
+        },
+      ]),
+    ).toEqual([]);
+  });
+});
+
+describe('brokenAnchorsMessage', () => {
+  test('lista a página e o link de cada uma', () => {
+    expect(
+      brokenAnchorsMessage([
+        { page: 'guias/a.html', href: '#exercícios' },
+        { page: 'guias/a.html', href: '/guias/b#nada' },
+      ]),
+    ).toBe(
+      'Âncora sem destino (2): guias/a.html → #exercícios, guias/a.html → /guias/b#nada.',
     );
   });
 });

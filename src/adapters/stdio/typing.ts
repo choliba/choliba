@@ -148,7 +148,7 @@ export class Typing {
     this.show(key);
   }
 
-  /** Ctrl+C interrupts, Ctrl+D is the default; other keys outside wait. */
+  /** Ctrl+C interrupts, Ctrl+D is the default; a key outside `keys` is dropped, and the choice goes on waiting. */
   private answerChoice(raw: string, keys: readonly string[]): void {
     const key = raw.toLowerCase();
     if (key === CTRL_C) {

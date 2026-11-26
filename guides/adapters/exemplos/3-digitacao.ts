@@ -38,7 +38,7 @@ keys.publish('\u0001');
 const third = await command;
 
 const choice = conversation.choose(['s', 'n']);
-keys.publish('x'); // fora da escolha: espera
+keys.publish('x'); // fora da escolha: descartada
 keys.publish('S');
 const fourth = await choice;
 conversation.close();

@@ -107,7 +107,7 @@ export class Agent {
   private readonly networkLedger: StoreNetworkLedger | undefined;
   /** One running agent per workspace, across programs. */
   private readonly lock: WorkspaceLock;
-  /** A session to continue on the next run (resume(), CHOLIBA_RESUME_SESSION). */
+  /** A session to continue on the next run, named by `CHOLIBA_RESUME_SESSION`. */
   private forced: string | undefined;
   private readonly conversation: boolean;
   /** Continues an interrupted task on its own (`resume`). */
@@ -830,7 +830,7 @@ export class Agent {
       throw error;
     } finally {
       if (ownsLogger) closeLogger();
-      // Paused: the sandbox and the gate wait for resume().
+      // Paused: the sandbox and the gate stay open for the next run().
       if (!this.keepOpen) await this.closeResources();
       // Releases the terminal; it is taken again on the next run.
       this.output.close?.();

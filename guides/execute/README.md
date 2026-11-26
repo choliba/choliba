@@ -58,13 +58,14 @@ Além do `Executor`, o módulo tem o **processo atual** e os **programas auxilia
 
 ## Os arquivos
 
-| Arquivo        | Papel                                                                                                                                                                                    |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `types.ts`     | `ProgramCommand` (o que rodar) e `ProgramOutput` (um pedaço da saída).                                                                                                                   |
-| `index.ts`     | `Executor`, `ProgramExecutionError` e o log de cada execução (`command`, em `debug`: fases `spawn` e `exit`).                                                                            |
-| `stream.ts`    | `OutputStream` (uma fila lida com `for await`) e `OutputDispatcher` (uma sequência por execução, e quem acompanha todas).                                                                |
-| `process.ts`   | O único lugar que toca em `process`: argumentos, ambiente, diretório, pid, código de saída, erros não capturados e os programas auxiliares (`runProgram`, `startHelper`, `runAttached`). |
-| `interrupt.ts` | `listenForInterrupt`: o primeiro Ctrl+C aborta um `AbortSignal`; um segundo força a saída.                                                                                               |
+| Arquivo        | Papel                                                                                                                                                                                                                                                                                         |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `types.ts`     | `ProgramCommand` (o que rodar) e `ProgramOutput` (um pedaço da saída).                                                                                                                                                                                                                        |
+| `index.ts`     | `Executor`, `ProgramExecutionError` e o log de cada execução (`command`, em `debug`: fases `spawn` e `exit`).                                                                                                                                                                                 |
+| `stream.ts`    | `OutputStream` (uma fila lida com `for await`) e `OutputDispatcher` (uma sequência por execução, e quem acompanha todas).                                                                                                                                                                     |
+| `process.ts`   | Um dos três lugares que tocam em `process` (os outros são o `src/output/stdio.ts` e o `src/input`): argumentos, ambiente, diretório, pid, código de saída, erros não capturados, a limpeza na saída (`onProgramExit`) e os programas auxiliares (`runProgram`, `startHelper`, `runAttached`). |
+| `interrupt.ts` | `listenForInterrupt`: o primeiro Ctrl+C aborta um `AbortSignal`; um segundo força a saída. Dois em até 500 ms (`SAME_KEYPRESS_MS`) contam como um: sob o `bun run`, um Ctrl+C chega duas vezes.                                                                                               |
+| `constants.ts` | Os padrões: `KILL_GRACE_MS` (o tempo entre o `SIGTERM` e o `SIGKILL` num abort), `SAME_KEYPRESS_MS` e `HELPER_MAX_OUTPUT_BYTES` (o máximo que um programa curto pode imprimir).                                                                                                               |
 
 O módulo depende só do **logger**, que registra cada execução. Inspecionar outros processos pelo `/proc` e o diretório de cache do Choliba (`cholibaCacheDir`) são do `filesystem`.
 
@@ -72,23 +73,26 @@ O módulo depende só do **logger**, que registra cada execução. Inspecionar o
 
 ## Interface
 
+Do pacote (`choliba`) vêm o `Executor`, o `ProgramExecutionError`, o `OutputStream`, o `OutputDispatcher` e os tipos (`ProgramCommand`, `ProgramOutput`, `RunOptions`, `ExecutorOptions`…); as funções do processo atual e o `listenForInterrupt` só se importam do módulo.
+
 ### O Executor
 
-| Membro                                                | O que faz                                                                                                               |
-| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `new Executor({ createExecutionId?, spawnProcess? })` | `createExecutionId`: o id de cada execução no log (padrão: UUID); `spawnProcess`: como iniciar o processo (para testes) |
-| `run(command, options?)`                              | inicia o programa e devolve um `AsyncGenerator<ProgramOutput>`                                                          |
-| `ProgramExecutionError`                               | o programa terminou com código diferente de zero, ou por sinal: `executable`, `code`, `signal`                          |
+| Membro                                                              | O que faz                                                                                                                                                                                                         |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `new Executor({ createExecutionId?, spawnProcess?, killGraceMs? })` | `createExecutionId`: o id de cada execução no log (padrão: UUID); `spawnProcess`: como iniciar o processo (para testes); `killGraceMs`: o tempo entre o `SIGTERM` e o `SIGKILL` num abort (`KILL_GRACE_MS`, 2000) |
+| `run(command, options?)`                                            | inicia o programa e devolve um `AsyncGenerator<ProgramOutput>`                                                                                                                                                    |
+| `ProgramExecutionError`                                             | o programa terminou com código diferente de zero, ou por sinal: `executable`, `code`, `signal`                                                                                                                    |
 
 `command` (`ProgramCommand`):
 
-| Campo        | O que é                                                         |
-| ------------ | --------------------------------------------------------------- |
-| `executable` | o programa                                                      |
-| `arguments?` | os argumentos, cada um como está (sem shell)                    |
-| `cwd?`       | o diretório onde ele roda                                       |
-| `input?`     | o que vai para o stdin                                          |
-| `env?`       | o ambiente **inteiro** do programa; sem ele, herda o do Choliba |
+| Campo          | O que é                                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `executable`   | o programa                                                                                                                                        |
+| `arguments?`   | os argumentos, cada um como está (sem shell)                                                                                                      |
+| `cwd?`         | o diretório onde ele roda                                                                                                                         |
+| `input?`       | o que vai para o stdin                                                                                                                            |
+| `inputStream?` | no lugar de `input`: o stdin fica aberto, cada pedaço é escrito quando chega, e o stdin fecha quando o stream acaba (uma conversa com o programa) |
+| `env?`         | o ambiente **inteiro** do programa; sem ele, herda o do Choliba                                                                                   |
 
 `options` (`RunOptions`):
 
@@ -112,17 +116,22 @@ Para quando várias execuções correm ao mesmo tempo e alguém quer ver todas:
 
 ### O processo atual e programas auxiliares
 
-| Função                                                          | O que é                                                                                       |
-| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `programArguments()`                                            | os argumentos do programa, sem o runtime e o script                                           |
-| `environment()`, `setEnvironmentDefault(nome, valor)`           | o ambiente; o segundo só define se ainda não existir                                          |
-| `currentDirectory()`, `currentPid()`, `parentPid()`             | o processo atual                                                                              |
-| `exitProgram(code)`, `setExitCode(code)`, `onUncaughtError(fn)` | como o programa termina                                                                       |
-| `runProgram(exe, args, { timeoutMs })`                          | roda um programa **curto** e devolve o stdout inteiro                                         |
-| `startHelper(exe, args, { cwd })`                               | inicia um programa **de longa duração** (o guardião da jaula, o bridge de rede), com `stop()` |
-| `runAttached(exe, args)`                                        | passa o terminal a outro programa e devolve o código dele                                     |
-| `listenForInterrupt()`                                          | Ctrl+C como `{ signal, dispose() }`                                                           |
-| `interruptProgram()`                                            | manda o Ctrl+C para este programa (o terminal em modo raw não manda)                          |
+| Função                                                          | O que é                                                                                                                                  |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `programArguments()`                                            | os argumentos do programa, sem o runtime e o script                                                                                      |
+| `runtimeExecutable()`, `currentProcessCommand()`                | o runtime que roda o Choliba (o `bun`), para iniciar programas auxiliares com ele; o comando para rodar este script de novo              |
+| `userHome()`, `currentUser()`                                   | o home de quem roda (o `HOME` de agora) e o `uid`/`gid`                                                                                  |
+| `environment()`, `setEnvironmentDefault(nome, valor)`           | o ambiente; o segundo só define se ainda não existir                                                                                     |
+| `currentDirectory()`, `currentPid()`, `parentPid()`             | o processo atual                                                                                                                         |
+| `exitProgram(code)`, `setExitCode(code)`, `onUncaughtError(fn)` | como o programa termina                                                                                                                  |
+| `onProgramExit(fn)`                                             | roda `fn` uma vez quando o programa termina, como quer que termine: para desfazer o que foi feito fora (um terminal deixado em modo raw) |
+| `onInterruptSignal(fn)`                                         | roda `fn` a cada Ctrl+C (SIGINT), no lugar de encerrar; devolve como parar                                                               |
+| `openInBrowser(url)`                                            | abre o endereço no navegador do sistema, sem esperar; recusa sem quem abra (num servidor)                                                |
+| `runProgram(exe, args, { timeoutMs })`                          | roda um programa **curto** e devolve o stdout inteiro                                                                                    |
+| `startHelper(exe, args, { cwd })`                               | inicia um programa **de longa duração** (o guardião da jaula, o bridge de rede), com `stop()`                                            |
+| `runAttached(exe, args)`                                        | passa o terminal a outro programa e devolve o código dele                                                                                |
+| `listenForInterrupt()`                                          | Ctrl+C como `{ signal, dispose() }`                                                                                                      |
+| `interruptProgram()`                                            | manda o Ctrl+C para este programa (o terminal em modo raw não manda)                                                                     |
 
 [↑ topo](#topo)
 
@@ -147,7 +156,7 @@ Para quando várias execuções correm ao mesmo tempo e alguém quer ver todas:
 
 ### Cancelar
 
-Com `signal`, abortar faz o Executor mandar `SIGTERM` ao processo, `SIGKILL` 2 segundos depois se ele não sair, e chamar `onAbort`. O `for await` termina com **o motivo** do abort, não com um `ProgramExecutionError`, mesmo que o programa tenha morrido por sinal.
+Com `signal`, abortar faz o Executor mandar `SIGTERM` ao processo, `SIGKILL` 2 segundos depois se ele não sair (o `killGraceMs`), e chamar `onAbort`. O `for await` termina com **o motivo** do abort, não com um `ProgramExecutionError`, mesmo que o programa tenha morrido por sinal.
 
 ### Composição: sandbox e provider
 
@@ -258,7 +267,7 @@ programa-que-nao-existe
   Error: Executable not found in $PATH: "programa-que-nao-existe"
 ```
 
-- `ls nao-existe`: a mensagem do `ls` chegou (em **dois** pedaços), e só depois o `ProgramExecutionError`, com o nome do programa e o código.
+- `ls nao-existe`: a mensagem do `ls` chegou pelo stderr, e só depois o `ProgramExecutionError`, com o nome do programa e o código.
 - `programa-que-nao-existe`: não chega a rodar; é o erro do sistema, não um `ProgramExecutionError`.
 
 ### 3. Cancelar
@@ -419,7 +428,7 @@ Saída real:
 
 ```
 o que roda de fato: nsenter 13 argumentos
-dentro: <raiz>
+dentro: /home/choliba
 /home
 ```
 

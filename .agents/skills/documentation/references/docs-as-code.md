@@ -39,7 +39,7 @@ Rode o que o projeto já roda:
 | Verificação | O que pega | No Choliba |
 | --- | --- | --- |
 | Formatação | Markdown e tabelas inconsistentes | `bun run format:check` (Prettier) |
-| Links | links internos quebrados e âncoras erradas | `bun run docs:build` (o VitePress recusa link morto) |
+| Links | links internos quebrados e âncoras erradas | `bun run docs:build`: o VitePress recusa link morto, e o `buildEnd` (`brokenAnchors`, em `scripts/docs-seo.ts`), âncora sem destino. Os ids seguem o slug do GitHub (`githubSlug`), então um índice que funciona no GitHub funciona no site |
 | Exemplos | comandos e trechos que não rodam mais | os exemplos de `guides/` rodam e passam pelo `bun run check` |
 | Páginas geradas | `docs/guias/` e `docs/comandos.md` fora de dia com a fonte | `bun run docs:pages` antes do `docs:build` |
 

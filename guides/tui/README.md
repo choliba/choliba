@@ -41,7 +41,7 @@ O TUI não lê o stdin nem escreve na tela por conta própria: as teclas chegam 
   - [2. Uma conversa numa tela de texto](#2-uma-conversa-numa-tela-de-texto)
   - [3. Os comandos e a rolagem ficam no TUI](#3-os-comandos-e-a-rolagem-ficam-no-tui)
   - [4. Um agente no TUI](#4-um-agente-no-tui)
-- [Regras](#regras)
+- [Regras do módulo](#regras-do-módulo)
 - [Exercícios](#exercícios)
 
 ## Os arquivos
@@ -56,6 +56,8 @@ Em `src/adapters/tui/`:
 [↑ topo](#topo)
 
 ## Interface
+
+Do pacote (`choliba`) vêm o `TuiAdapter`, o `ttyScreen` e os tipos `TuiAdapterOptions` e `TuiScreen`; o cálculo da tela (`layout.ts`) só se importa do módulo.
 
 ### `TuiAdapter`
 
@@ -91,6 +93,8 @@ Um agente no TUI: `agentConversation(new TuiAdapter({ shortcuts: AGENT_SHORTCUTS
 | `displayWidth(text)`      | quantas colunas o texto ocupa (emoji e caracteres largos ocupam duas)            |
 | `transcript(entries)`     | a conversa como texto simples, para o terminal depois de sair da tela            |
 
+Uma `Entry` é uma coisa da conversa como a tela a mostra: `{ kind, text, open }`, com `kind` igual a `user`, `text`, `reasoning` ou `note`, e `open` verdadeiro enquanto ela ainda está sendo escrita (o próximo pedaço se junta a ela).
+
 [↑ topo](#topo)
 
 ## Como funciona
@@ -121,14 +125,14 @@ Enquanto a tela está rolada, o status mostra quantas linhas há abaixo. Ao mand
 
 Uma linha começando com `/` é do TUI, não da conversa:
 
-| Comando     | O que faz                                       |
-| ----------- | ----------------------------------------------- |
-| `/help`     | lista os comandos                               |
-| `/thinking` | mostra ou esconde o raciocínio                  |
-| `/clear`    | limpa a tela (a conversa com o modelo continua) |
-| `/exit`     | encerra, como Ctrl+C (um `interrupt`)           |
+| Comando     | O que faz                                                                                   |
+| ----------- | ------------------------------------------------------------------------------------------- |
+| `/help`     | lista os comandos e os atalhos que o TUI recebeu (num agente, `Ctrl+A abre as aprovações.`) |
+| `/thinking` | mostra ou esconde o raciocínio; escondido, ele aparece como `💭 pensou (/thinking mostra)`  |
+| `/clear`    | limpa a tela (a conversa com o modelo continua)                                             |
+| `/exit`     | encerra, como Ctrl+C (um `interrupt`)                                                       |
 
-Um comando desconhecido é recusado, com a ajuda, e não vai à conversa.
+Um comando desconhecido é recusado com uma nota que aponta a ajuda (`Comando desconhecido: /xyz. Veja /help.`) e não vai à conversa.
 
 ### Entrar e sair da tela
 
@@ -340,6 +344,7 @@ Saída real:
 ```
 a conversa recebeu: "olá"
 --- depois dos comandos
+|Comando desconhecido: /xyz. Veja /help.
 |
 |Comandos:
 |  /thinking  mostra ou esconde o raciocínio do
@@ -347,7 +352,6 @@ a conversa recebeu: "olá"
 |  /clear     limpa a tela (a conversa continua)
 |  /exit      encerra (o mesmo que Ctrl+C)
 |  /help      esta ajuda
-|Ctrl+A abre as aprovações.
 |
 |› olá
 |                                             /help
@@ -363,7 +367,7 @@ a conversa recebeu: "olá"
 |  /thinking  mostra ou esconde o raciocínio do
 |modelo
 |  /clear     limpa a tela (a conversa continua)
-|↓ 5 linha(s) abaixo (End volta ao fim)       /help
+|↓ 4 linha(s) abaixo (End volta ao fim)       /help
 |›
 ```
 
@@ -376,17 +380,97 @@ bun guides/agent/exemplos/7-tui.ts claude
 bun guides/agent/exemplos/7-tui.ts codex
 ```
 
-A parte que monta a conversa:
+`guides/agent/exemplos/7-tui.ts`:
 
 ```ts
-const tui = agentConversation(new TuiAdapter({ shortcuts: AGENT_SHORTCUTS }));
+/**
+ * Exemplo 7 do curso do agente: o agente do 7-ollama.ts em tela cheia (o TUI).
+ * Precisa de um terminal, do Ollama rodando com o modelo do arquivo e da CLI
+ * escolhida no argumento (claude ou codex) instalada.
+ */
+import {
+  Agent,
+  ensureDirectory,
+  humanApprover,
+  join,
+  OllamaProvider,
+  runScript,
+  AGENT_SHORTCUTS,
+  agentConversation,
+  TuiAdapter,
+  UsageError,
+  Workspace,
+  type OllamaCli,
+  type AgentPolicy,
+} from '../../../src/index';
+import {
+  currentDirectory,
+  programArguments,
+} from '../../../src/execute/process';
+
+/**
+ * The policy: reads and writes only in the workspace, every command asks
+ * first, and anything else (the network included) is denied.
+ */
+const politica: AgentPolicy = {
+  default: 'deny',
+  allow: {
+    filesystem: [{ operations: ['read', 'write'], paths: ['/workspace/**'] }],
+  },
+  requireApproval: { execution: [{ commands: ['*'] }] },
+};
+
+/**
+ * The local Ollama agent on a full screen (the TUI): the messages on top,
+ * the status line and what you type at the bottom. Only the CLI changes:
+ *
+ *   bun guides/agent/exemplos/7-tui.ts claude
+ *   bun guides/agent/exemplos/7-tui.ts codex
+ *
+ * /help lists the TUI's commands; Ctrl+A opens the approvals; Ctrl+C ends it.
+ */
+const MODEL = 'llama3.2:latest';
+
+/** Which CLI: the first argument. */
+function chosenCli(): OllamaCli {
+  const cli = programArguments().at(0);
+  if (cli === 'claude' || cli === 'codex') return cli;
+  throw new UsageError(
+    `CLI desconhecida: ${cli ?? '(nenhuma)'}. Use: bun guides/agent/exemplos/7-tui.ts claude|codex`,
+  );
+}
+
+await runScript(async ({ signal }) => {
+  const cli = chosenCli();
+  const root = join(
+    currentDirectory(),
+    'storage',
+    'workspaces',
+    `agente-tui-${cli}`,
+  );
+  ensureDirectory(root);
+  const tui = agentConversation(new TuiAdapter({ shortcuts: AGENT_SHORTCUTS }));
+
+  await new Agent({
+    resume: false,
+    name: `agente-tui-${cli}`,
+    prompt: 'Diga oi em uma linha e pergunte em que pode ajudar.',
+    provider: new OllamaProvider({ cli, model: MODEL }),
+    workspace: new Workspace({ type: 'bubblewrap', root }),
+    policy: politica,
+    interaction: tui,
+    approve: humanApprover(tui, signal),
+    signal,
+    conversation: true,
+  }).run();
+});
 ```
 
 Precisa de um terminal (sem ele, o `ttyScreen` recusa) e do Ollama rodando com o modelo do arquivo.
 
 [↑ topo](#topo)
 
-## Regras
+## Regras do módulo
 
 **Ninguém deve:**
 

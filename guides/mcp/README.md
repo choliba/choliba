@@ -68,7 +68,7 @@ modelo ── CLI (Claude Code, Codex) ──stdio/MCP──▶ servidor MCP ─
 
 ## Interface
 
-Tudo sai de `src/mcp/index.ts`, menos o `serveTools`, que sai de `src/mcp/server.ts`.
+Tudo sai de `src/mcp/index.ts`, menos o `serveTools`, que sai de `src/mcp/server.ts`. Do pacote (`choliba`) vêm o `registerTool`, o `tool` e os tipos (`AgentTool`, `JsonSchema`, `ToolInputSchema`, `ToolOutput`); o resto só se importa do módulo.
 
 ### `AgentTool`, `tool` e `registerTool`
 
@@ -747,8 +747,8 @@ http://127.0.0.1:<porta>/precos
   ok: {"status":404,"titulo":null,"bytes":9}
 https://exemplo.com/
   erro: Esta ferramenta não acessa exemplo.com.
-choliba
-  erro: Endereço inválido: choliba.
+goiaba
+  erro: Endereço inválido: goiaba.
 ```
 
 - Uma página que responde 404 não é erro da ferramenta: o status vai na resposta, e o modelo decide.
@@ -1027,7 +1027,7 @@ const CONSULTAR_PRECO = registerTool({
   input: {
     type: 'object',
     properties: {
-      produto: { type: 'string', description: 'O produto, como choliba.' },
+      produto: { type: 'string', description: 'O produto, como goiaba.' },
     },
     required: ['produto'],
     additionalProperties: false,
@@ -1072,20 +1072,13 @@ await runScript(async () => {
 });
 ```
 
-Saída:
+Saída de uma execução (vinda de um modelo, ela muda a cada vez):
 
 ```
-💭 The user wants me to:
-1. Use the ferramenta consultar_preco to find the price per kilo of choliba (guava)
-2. Tell them how much 2 kilos cost
-3. Respond in one sentence
-4. If I need any information from the user, ask only ONE direct question that ends with "?"
-5. End the turn immediately after asking the question and do not continue with the task
+💭 The user wants me to use the consultar_preco tool to find the price per kilo for goiaba (guava) and tell them how much 2 kilos would cost. They want me to respond in one sentence.
 
-Let me start by using the consultar_preco tool to get the price per kilo of choliba.The price per kilo of choliba is 7.9 (presumably in some currency). So 2 kilos would cost 7.9 * 2 = 15.8.
-
-Now I can respond in one sentence as requested. The user wants me to use the ferramenta consultar_preco to find the price and tell them how much 2 kilos cost, all in one sentence.
-A choliba custa R$ 7,90 por quilo, logo 2 quilos custam R$ 15,80.
+Let me use the tool to get the price first, then I can calculate the cost for 2 kilos.The tool returned that goiaba costs R$ 7,90 per kilo. So 2 kilos would be R$ 7,90 × 2 = R$ 15,80. Let me respond in one sentence as requested.
+A goiaba custa R$ 7,90 por quilo, então 2 quilos seriam R$ 15,80.
 ```
 
 - O `💭` é o que o modelo pensou antes de responder. O R$ 7,90 veio da ferramenta.

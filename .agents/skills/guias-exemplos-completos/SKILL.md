@@ -51,4 +51,6 @@ que não rodava copiado. Quem lê o curso precisa poder copiar o exemplo e ver a
   o módulo exporta: classes, funções, tipos; quando o pacote, `choliba`, `choliba/rounds` ou `choliba/config`, exporta
   menos que o módulo, diga o que vem dele e o que fica só no módulo), **Como funciona**, **Exemplos** (do mais simples
   ao mais completo; o agente pode aparecer como um dos usos, não como o centro), **Regras do módulo**, **Exercícios**.
-- Antes de entregar: conferir que nenhum link do índice está quebrado e rodar o `prettier` no arquivo.
+- Antes de entregar: rodar o `prettier` no arquivo e o `bun run docs:build`, que recusa link e âncora sem destino. Os
+  ids dos títulos seguem o slug do GitHub (minúsculas, sem pontuação, com os acentos e o número do começo): o índice
+  escrito para o GitHub funciona igual no site.
