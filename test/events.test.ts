@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test';
 
 import { runAs } from '../src/context/index';
+import { UsageError } from '../src/errors';
 import {
   ALL_SOURCES,
   createConsumer,
@@ -114,6 +115,7 @@ test('o evento leva ts, o agente que rodava e a origem do produtor', () => {
 });
 
 test('recusa produtor sem nome ou com o nome reservado', () => {
+  expect(() => createProducer('')).toThrow(UsageError);
   expect(() => createProducer('')).toThrow('Nome de produtor inválido');
   expect(() => createProducer(ALL_SOURCES)).toThrow(
     'Nome de produtor inválido',

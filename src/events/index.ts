@@ -13,6 +13,7 @@
  */
 
 import { currentContext, type RunContext } from '../context/index';
+import { UsageError } from '../errors';
 
 /** One event, as consumers get it. */
 export interface CholibaEvent extends RunContext {
@@ -58,7 +59,9 @@ const consumers = new Map<string, Set<EventListener>>();
 /** A producer named `source`: what it emits reaches its subscribers. */
 export function createProducer(source: string): Producer {
   if (source.length === 0 || source === ALL_SOURCES) {
-    throw new Error(`Nome de produtor inválido: "${source}".`);
+    throw new UsageError(
+      `Nome de produtor inválido: "${source}". Use um nome não vazio e diferente de "${ALL_SOURCES}", que assina todos.`,
+    );
   }
 
   return {

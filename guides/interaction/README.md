@@ -115,7 +115,7 @@ O agente monta a dele com `agentConversation(adapter?)` (em `src/agent`): o adap
 ### Três fluxos
 
 1. **Pedido e resposta:** `ask` e `choose` pedem ao adapter e esperam o evento certo.
-2. **O que chega sem ter sido pedido:** o que se digita enquanto o agente trabalha. Vai para uma fila, e o próximo `ask` ou `listen` o recebe.
+2. **O que chega sem ter sido pedido:** o que se digita enquanto o agente trabalha. Vai para uma fila, e o próximo `ask` ou `listen` o recebe (num pipe ou num arquivo, também o próximo `choose`).
 3. **O que sai:** `write`, `stream`, `reasoning`, `status` e `error`, pela `Output` do adapter.
 
 A resposta a um pedido chega pelo mesmo canal dos eventos não pedidos: é a `Conversation` que liga uma coisa à outra, do mesmo jeito para qualquer adapter.
@@ -128,9 +128,11 @@ As linhas esperam na ordem em que chegaram. Duas coisas passam à frente: uma li
 
 Num adapter que sabe pedir uma tecla (o stdio num terminal, o TUI), a escolha toma a próxima tecla, à frente da linha que está sendo digitada, e o adapter mostra a resposta. Num adapter que só tem linhas (um pipe, um arquivo), a primeira letra da próxima linha é a escolha, e a `Conversation` mostra a resposta.
 
+Num adapter que só tem linhas, uma linha que chegou antes da escolha, e esperava na fila, também a responde: é assim que um pipe responde a várias perguntas (`printf 's\nn\n' | bun …`). Um comando na fila (`:approvals`) não vira escolha. Num terminal, uma linha digitada antes é uma mensagem, e fica para quem lê linhas.
+
 ### Desistir de uma pergunta
 
-O `signal` de um `ask` cancela **só a espera** daquele pedido: a fonte continua aberta, e o que chegar depois fica para o próximo. Cancelar uma pergunta nunca fecha o teclado. Já o fim da fonte (EOF, Ctrl+D) recusa quem espera e quem vier depois.
+O `signal` de um `ask` cancela **só a espera** daquele pedido: a fonte continua aberta, e o que chegar depois fica para o próximo. Cancelar uma pergunta nunca fecha o teclado. Já o fim da fonte (EOF, Ctrl+D) recusa quem espera e, depois de entregar o que ficou na fila, quem vier depois.
 
 ### Pedidos que ninguém responde
 

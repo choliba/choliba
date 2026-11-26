@@ -1,7 +1,7 @@
 import { loadConfig, type LoadConfigOptions } from './config/index';
 import { UsageError } from './errors';
 import { listenForInterrupt } from './execute/interrupt';
-import { exitProgram, onUncaughtError } from './execute/process';
+import { exitProgram, onUncaughtError, setExitCode } from './execute/process';
 import { closeLogger, log, openLogger } from './logger/index';
 import { writeErr } from './output/stdio';
 import { StdioAdapter } from './adapters/stdio/index';
@@ -15,10 +15,15 @@ export interface ScriptContext {
 }
 
 export interface RunScriptOptions {
-  /** Where usage errors are shown; defaults to stdout. */
+  /**
+   * Where usage errors are shown, as errors (`error`; stderr without it): a
+   * conversation on stdio by default, whose errors go to stderr.
+   */
   readonly output?: Interaction;
   /** Which choliba.config to load; defaults to the one found from the cwd. */
   readonly config?: LoadConfigOptions;
+  /** How a usage error ends the program; with exit code 1 by default. */
+  readonly onFailure?: () => void;
 }
 
 let current: AbortSignal | undefined;
@@ -33,6 +38,7 @@ export async function runScript(
   {
     output = new Conversation(new StdioAdapter()),
     config = {},
+    onFailure = () => setExitCode(1),
   }: RunScriptOptions = {},
 ): Promise<void> {
   const interrupt = listenForInterrupt();
@@ -47,7 +53,8 @@ export async function runScript(
     log.failure(error);
 
     if (error instanceof UsageError) {
-      output.write(error.message);
+      showUsageError(output, error.message);
+      onFailure();
       return;
     }
 
@@ -57,6 +64,16 @@ export async function runScript(
     interrupt.dispose();
     current = undefined;
   }
+}
+
+/**
+ * A usage error where errors go: the interaction's `error` (stderr, on
+ * stdio), or stderr itself when it has none. Never stdout: that is the
+ * program's result.
+ */
+export function showUsageError(output: Interaction, message: string): void {
+  if (output.error === undefined) writeErr(`${message}\n`);
+  else output.error(message);
 }
 
 let handling = false;

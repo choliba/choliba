@@ -25,19 +25,37 @@ afterEach(() => {
   rmSync(cwd, { recursive: true, force: true });
 });
 
-test('runScript mostra UsageError pelo output, registra e não relança', async () => {
+/** An output that keeps what is written and what is shown as an error. */
+function recorder(): {
+  written: string[];
+  errors: string[];
+  output: Interaction;
+} {
   const written: string[] = [];
+  const errors: string[] = [];
   const output: Interaction = {
     ask: () => Promise.resolve(''),
     write: (value) => written.push(value),
+    error: (value) => errors.push(value),
   };
+  return { written, errors, output };
+}
+
+test('runScript mostra UsageError como erro, termina pelo onFailure, registra e não relança', async () => {
+  const { written, errors, output } = recorder();
+  let failures = 0;
 
   await runScript(() => Promise.reject(new UsageError('use docker build')), {
     output,
     config: { cwd },
+    onFailure: () => {
+      failures += 1;
+    },
   });
 
-  expect(written).toEqual(['use docker build']);
+  expect(errors).toEqual(['use docker build']);
+  expect(written).toEqual([]);
+  expect(failures).toBe(1);
   expect(errorRecords(join(cwd, 'logs'))).toEqual([
     expect.objectContaining({
       'log.level': 'error',
@@ -46,6 +64,50 @@ test('runScript mostra UsageError pelo output, registra e não relança', async 
       error: { message: 'use docker build' },
     }),
   ]);
+});
+
+test('runScript termina pelo onFailure também quando a config é recusada', async () => {
+  writeFileSync(
+    join(cwd, 'choliba.config.ts'),
+    `export default { nada: 1 };\n`,
+  );
+  const { errors, output } = recorder();
+  let ran = false;
+  let failures = 0;
+
+  await runScript(
+    () => {
+      ran = true;
+      return Promise.resolve();
+    },
+    {
+      output,
+      config: { cwd },
+      onFailure: () => {
+        failures += 1;
+      },
+    },
+  );
+
+  expect(ran).toBe(false);
+  expect(failures).toBe(1);
+  expect(errors.join('\n')).toContain('Opção desconhecida "nada"');
+});
+
+test('sem onFailure, um erro de uso põe o código de saída 1', async () => {
+  const { errors, output } = recorder();
+  const before = process.exitCode;
+  try {
+    await runScript(() => Promise.reject(new UsageError('use docker build')), {
+      output,
+      config: { cwd },
+    });
+    expect(process.exitCode).toBe(1);
+  } finally {
+    // Bun keeps the last code when given undefined.
+    process.exitCode = before ?? 0;
+  }
+  expect(errors).toEqual(['use docker build']);
 });
 
 test('runScript registra e relança outros erros', async () => {

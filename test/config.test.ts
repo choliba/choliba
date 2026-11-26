@@ -258,6 +258,36 @@ test('loadConfig recusa uma opção desconhecida em workspaces', async () => {
   }
 });
 
+test('loadConfig recusa uma opção desconhecida em database', async () => {
+  const cwd = mkdtempSync(join(tmpdir(), 'choliba-config-'));
+
+  try {
+    writeFileSync(
+      join(cwd, 'choliba.config.ts'),
+      `export default { database: { file: 'x.db' } };\n`,
+    );
+    await expect(loadConfig({ cwd })).rejects.toThrow(
+      'Opção desconhecida "database.file"',
+    );
+  } finally {
+    rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test('loadConfig recusa um valor de tipo errado em envs', async () => {
+  const cwd = mkdtempSync(join(tmpdir(), 'choliba-config-'));
+
+  try {
+    writeFileSync(
+      join(cwd, 'choliba.config.ts'),
+      `export default { envs: [{ A: 'ok', B: { x: 1 } }] };\n`,
+    );
+    await expect(loadConfig({ cwd })).rejects.toThrow('envs[0].B');
+  } finally {
+    rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
 test('loadConfig lê workspaces.programs e recusa o que não é lista de nomes', async () => {
   const cwd = mkdtempSync(join(tmpdir(), 'choliba-config-'));
 

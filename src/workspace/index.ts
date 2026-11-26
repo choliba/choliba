@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 
 import { getConfig } from '../config/index';
 import type { ProgramCommand } from '../execute/types';
-import { UsageError } from '../errors';
+import { rejectUnknownOptions, UsageError } from '../errors';
 import { ensureDirectory, join, resolve } from '../filesystem/index';
 import { compileFilesystemAccess, type AgentPolicy } from '../policy/index';
 import {
@@ -37,6 +37,9 @@ import {
 } from './sandbox/index';
 
 export type WorkspaceType = 'docker' | 'bubblewrap';
+
+/** Every `type` a workspace takes; any other is refused. */
+const WORKSPACE_TYPES: readonly WorkspaceType[] = ['docker', 'bubblewrap'];
 
 /** What both kinds of workspace take. */
 interface CommonWorkspaceOptions {
@@ -93,6 +96,29 @@ export type WorkspaceOptions =
   DockerWorkspaceOptions | BubblewrapWorkspaceOptions;
 
 /**
+ * Every option of each kind of workspace: a key not there is refused (an
+ * `image` without Docker too). Typed by the options, so the typecheck keeps
+ * them equal.
+ */
+const COMMON_OPTIONS = {
+  type: true,
+  root: true,
+  writable: true,
+  hostState: true,
+  homes: true,
+  agentRoot: true,
+  programs: true,
+  ports: true,
+} as const;
+const OPTIONS_OF: {
+  readonly docker: Readonly<Record<keyof DockerWorkspaceOptions, true>>;
+  readonly bubblewrap: Readonly<Record<keyof BubblewrapWorkspaceOptions, true>>;
+} = {
+  docker: { ...COMMON_OPTIONS, image: true },
+  bubblewrap: COMMON_OPTIONS,
+};
+
+/**
  * What the network needs besides its rules, which come from the policy:
  * who asks about what the rules leave open, where approvals and decisions
  * are kept, and the destinations always allowed or denied (an agent's
@@ -124,6 +150,16 @@ export class Workspace {
   private network: NetworkBoundary | undefined;
 
   public constructor(options: WorkspaceOptions) {
+    if (!WORKSPACE_TYPES.includes(options.type)) {
+      throw new UsageError(
+        `type desconhecido: ${options.type}. Use ${WORKSPACE_TYPES.join(', ')}.`,
+      );
+    }
+    rejectUnknownOptions(
+      options,
+      OPTIONS_OF[options.type],
+      `no workspace ${options.type}`,
+    );
     if (options.root.trim().length === 0) {
       throw new UsageError('A raiz do workspace não pode estar vazia.');
     }

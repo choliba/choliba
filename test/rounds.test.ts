@@ -196,6 +196,16 @@ test.each<[string, Partial<RoundDefinition>, string]>([
     'criteria.analista.if.contains tem um trecho vazio',
   ],
   [
+    'created: false num critério de arquivo',
+    { criteria: { analista: [{ file: { name: 'a.txt', created: false } }] } },
+    'criteria.analista.file.created só aceita true',
+  ],
+  [
+    'deleted: false num critério de arquivo',
+    { criteria: { analista: [{ file: { name: 'a.txt', deleted: false } }] } },
+    'criteria.analista.file.deleted só aceita true',
+  ],
+  [
     'critério de arquivo com caminho absoluto',
     { criteria: { analista: [{ file: { name: '/etc/passwd' } }] } },
     'caminho relativo à raiz do workspace',

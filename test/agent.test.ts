@@ -13,6 +13,7 @@ import type { LiveTurn, Provider } from '../src/providers/types';
 import type { ProviderEvent } from '../src/providers/types';
 import { Store } from '../src/store/index';
 import { Workspace } from '../src/workspace/index';
+import { UsageError } from '../src/errors';
 
 beforeEach(() => {
   clearConfigCache();
@@ -1297,17 +1298,43 @@ async function unusedAsk(): Promise<string> {
   throw new Error('não deveria perguntar');
 }
 
-test('Agent exige um nome', () => {
-  expect(
-    () =>
-      new Agent({
-        conversation: false,
-        name: ' ',
-        prompt: 'mensagem',
-        provider: new EchoProvider(),
-        workspace: new Workspace({ type: 'bubblewrap', root: process.cwd() }),
-      }),
-  ).toThrow('O nome do agente não pode estar vazio.');
+/** An agent of `name` and `prompt`, for the checks of the constructor. */
+function agentOf(name: string, prompt: string): Agent {
+  return new Agent({
+    conversation: false,
+    name,
+    prompt,
+    provider: new EchoProvider(),
+    workspace: new Workspace({ type: 'bubblewrap', root: process.cwd() }),
+  });
+}
+
+test('Agent recusa uma opção que não existe, dizendo as que existem', () => {
+  // A variable, as a script or a spread passes it: the typecheck does not see it.
+  const options = {
+    conversation: false,
+    name: 'ana',
+    prompt: 'mensagem',
+    provider: new EchoProvider(),
+    workspace: new Workspace({ type: 'bubblewrap', root: process.cwd() }),
+    permissions: { default: 'deny' },
+  };
+  const create = (): Agent => new Agent(options);
+
+  expect(create).toThrow(UsageError);
+  expect(create).toThrow('Opção desconhecida "permissions" no Agent.');
+  expect(create).toThrow('policy');
+});
+
+test('Agent recusa nome ou prompt vazio com um UsageError', () => {
+  expect(() => agentOf(' ', 'mensagem')).toThrow(UsageError);
+  expect(() => agentOf(' ', 'mensagem')).toThrow(
+    'O nome do agente não pode estar vazio.',
+  );
+  expect(() => agentOf('ana', ' ')).toThrow(UsageError);
+  expect(() => agentOf('ana', ' ')).toThrow(
+    'O prompt do agente não pode estar vazio.',
+  );
 });
 
 test('run com o agente rodando devolve a execução em curso', async () => {

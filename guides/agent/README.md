@@ -101,6 +101,9 @@ Do pacote (`choliba`) vêm `Agent`, `agentConversation`, `AGENT_SHORTCUTS`, `Age
 | `thinkingTickMs` | não         | o intervalo dos eventos `thinking` enquanto o modelo está calado; `THINKING_TICK_MS` (2000)                                             |
 
 Uma categoria da política que o provider não sabe aplicar é recusada **ao criar** o agente, com um `UsageError` ([Exemplo 6](#6-uma-política-que-o-provider-não-aplica)).
+Uma opção que não está na tabela (`permissions` no lugar de `policy`, por exemplo) também é recusada ao criar o agente,
+com um `UsageError` que lista as opções que existem. O TypeScript já pega isso num objeto literal, mas não numa
+variável nem num spread.
 
 ### `Agent`: os métodos
 

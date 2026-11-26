@@ -134,7 +134,7 @@ export class ClaudeProvider
     } = options;
     this.declared = { ...options };
     if (model.trim().length === 0) {
-      throw new Error('O modelo não pode estar vazio.');
+      throw new UsageError('O modelo não pode estar vazio.');
     }
     if (
       appendSystemPrompt !== undefined &&
