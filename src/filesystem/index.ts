@@ -18,6 +18,7 @@ import {
 } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 /**
  * Disk access. Nothing else imports `node:fs`: what goes to the disk goes
@@ -40,6 +41,16 @@ export {
   resolve,
   sep,
 } from 'node:path';
+
+/**
+ * The path of a file next to a module, from the module's `import.meta.url`:
+ * `besideModule(import.meta.url, './hook-main.ts')`. Decoded, unlike a URL's
+ * `pathname`, which keeps a space as `%20` and an accent as `%C3%81`, so a
+ * project in "Área de Trabalho" is found.
+ */
+export function besideModule(moduleUrl: string, relativePath: string): string {
+  return fileURLToPath(new URL(relativePath, moduleUrl));
+}
 
 export function pathExists(path: string): boolean {
   return existsSync(path);
