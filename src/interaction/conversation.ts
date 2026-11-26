@@ -76,13 +76,20 @@ export class Conversation implements Interaction {
     return this.line(signal, []);
   }
 
-  /** One of `keys`; the adapter shows the answer its own way. */
+  /**
+   * One of `keys`; the adapter shows the answer its own way. Where lines are
+   * the answers (an adapter that cannot ask for a key, as a pipe, or input
+   * that is over), a line that arrived before the question answers it, as
+   * `ask` takes one. In a terminal, a line typed before stays for whoever
+   * reads lines: a message to the agent is never a choice.
+   */
   public choose(
     keys: readonly string[],
     signal?: AbortSignal,
   ): Promise<string> {
     return this.wait(this.choices, { type: 'choice', keys }, signal, {
       cancelled: 'A escolha foi cancelada.',
+      ahead: () => this.queuedChoice(),
     });
   }
 
@@ -127,14 +134,29 @@ export class Conversation implements Interaction {
     });
   }
 
-  /** Asks the adapter and waits for the answer, or for `signal`. */
+  /**
+   * Asks the adapter and waits for the answer, or for `signal`. `ahead`, an
+   * answer that already arrived, is taken when the adapter cannot ask or the
+   * input is over.
+   */
   private wait(
     waiters: Waiter[],
     request: InteractionRequest,
     signal: AbortSignal | undefined,
-    { cancelled }: { readonly cancelled: string },
+    {
+      cancelled,
+      ahead,
+    }: {
+      readonly cancelled: string;
+      readonly ahead?: () => string | undefined;
+    },
   ): Promise<string> {
-    if (this.ended !== undefined) return Promise.reject(this.ended);
+    if (this.ended !== undefined) {
+      const early = ahead?.();
+      return early === undefined
+        ? Promise.reject(this.ended)
+        : Promise.resolve(early);
+    }
     if (signal?.aborted === true) {
       return Promise.reject(abortError(cancelled));
     }
@@ -145,6 +167,12 @@ export class Conversation implements Interaction {
       pending = this.requestOf(request);
     } catch (error) {
       return Promise.reject(error);
+    }
+    const early = pending === undefined ? ahead?.() : undefined;
+    if (early !== undefined) {
+      // It came: the request was answered.
+      this.unanswered = 0;
+      return Promise.resolve(early);
     }
 
     return new Promise<string>((resolve, reject) => {
@@ -218,7 +246,7 @@ export class Conversation implements Interaction {
         // first character is the choice.
         // That adapter shows no key, so the answer is shown here.
         if (this.choices.length > 0) {
-          const key = event.text.trim().toLowerCase().charAt(0);
+          const key = keyOf(event.text);
           this.choices[0]?.resolve(key);
           this.write(key);
           return;
@@ -247,6 +275,20 @@ export class Conversation implements Interaction {
     }
     if (first) this.queued.unshift(line);
     else this.queued.push(line);
+  }
+
+  /**
+   * The first queued line that is not a command (`:name`, for whoever reads
+   * lines) as a choice: its first character, shown here, since an adapter
+   * that answers with lines shows no key.
+   */
+  private queuedChoice(): string | undefined {
+    const index = this.queued.findIndex((line) => !line.startsWith(':'));
+    if (index < 0) return undefined;
+    const [line = ''] = this.queued.splice(index, 1);
+    const key = keyOf(line);
+    this.write(key);
+    return key;
   }
 
   /** No more input: whoever waits gets `reason`, and so will anyone else. */
@@ -295,6 +337,11 @@ export class Conversation implements Interaction {
     this.streaming?.pieces.close();
     this.streaming = undefined;
   }
+}
+
+/** A line as a choice: its first character, without spaces, in lower case. */
+function keyOf(line: string): string {
+  return line.trim().toLowerCase().charAt(0);
 }
 
 function remove<T>(values: T[], value: T): void {
