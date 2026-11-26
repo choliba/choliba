@@ -32,7 +32,7 @@ quem precisa do disco ──▶ filesystem ──▶ node:fs / node:path / node:
 - [Como funciona](#como-funciona)
   - [O que lança e o que não lança](#o-que-lança-e-o-que-não-lança)
   - [O `mode` só vale ao criar](#o-mode-só-vale-ao-criar)
-  - [Texto, não bytes](#texto-não-bytes)
+  - [Texto e bytes](#texto-e-bytes)
 - [Exemplos](#exemplos)
   - [1. Escrever, ler, listar e apagar](#1-escrever-ler-listar-e-apagar)
   - [2. Perguntar sobre um caminho](#2-perguntar-sobre-um-caminho)
@@ -55,40 +55,48 @@ quem precisa do disco ──▶ filesystem ──▶ node:fs / node:path / node:
 
 ## Interface
 
+Do pacote (`choliba`) vêm `join`, `resolve`, `relative`, `dirname`, `isAbsolute`, `pathExists`, `readText` e `ensureDirectory`; o resto só se importa do módulo.
+
 ### Arquivos e pastas
 
-| Função                             | O que faz                                                                                                                   |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `readText(path)`                   | o conteúdo do arquivo, em UTF-8                                                                                             |
-| `readDescriptor(fd)`               | tudo o que der para ler de um descritor aberto, como texto: `0` é o stdin (é assim que o `input` lê uma entrada canalizada) |
-| `writeText(path, content, mode?)`  | escreve (cria ou substitui)                                                                                                 |
-| `appendText(path, content, mode?)` | acrescenta no fim (cria se não existir)                                                                                     |
-| `listDirectory(path)`              | os nomes dentro da pasta (sem o caminho, sem ordem garantida)                                                               |
-| `ensureDirectory(path, mode?)`     | cria a pasta e as que faltarem no caminho; se já existe, nada                                                               |
-| `removePath(path)`                 | apaga arquivo ou pasta inteira; se não existe, nada                                                                         |
-| `createSymlink(target, path)`      | cria em `path` um link para `target`                                                                                        |
+| Função                             | O que faz                                                                                                                |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `readText(path)`                   | o conteúdo do arquivo, em UTF-8                                                                                          |
+| `readDescriptor(fd)`               | tudo o que der para ler de um descritor aberto, como texto (o stdin, o `src/input` lê pelo próprio leitor, não por aqui) |
+| `writeText(path, content, mode?)`  | escreve (cria ou substitui)                                                                                              |
+| `appendText(path, content, mode?)` | acrescenta no fim (cria se não existir)                                                                                  |
+| `readBytes(path)`                  | o conteúdo do arquivo em bytes (arquivos compactados, binários)                                                          |
+| `writeBytes(path, bytes, mode?)`   | escreve bytes (cria ou substitui)                                                                                        |
+| `setModifiedAt(path, ms)`          | muda a data de modificação, em milissegundos (uma cópia guarda a idade do original)                                      |
+| `copyDirectory(from, to)`          | copia uma árvore de pastas para `to`, criada se faltar                                                                   |
+| `listDirectory(path)`              | os nomes dentro da pasta (sem o caminho, sem ordem garantida)                                                            |
+| `ensureDirectory(path, mode?)`     | cria a pasta e as que faltarem no caminho; se já existe, nada                                                            |
+| `removePath(path)`                 | apaga arquivo ou pasta inteira; se não existe, nada                                                                      |
+| `createSymlink(target, path)`      | cria em `path` um link para `target`                                                                                     |
 
 ### Perguntar sobre um caminho
 
-| Função              | Responde                                        | Se o caminho não existe |
-| ------------------- | ----------------------------------------------- | ----------------------- |
-| `pathExists(path)`  | existe?                                         | `false`                 |
-| `canOpen(path)`     | este processo consegue abrir para ler?          | `false`                 |
-| `isDirectory(path)` | é uma pasta? (segue links)                      | **lança**               |
-| `isSymlink(path)`   | é um link simbólico? (não segue)                | **lança**               |
-| `modifiedAt(path)`  | quando mudou por último, em milissegundos       | **lança**               |
-| `readLink(path)`    | para onde o link aponta                         | **lança**               |
-| `realPath(path)`    | o caminho absoluto, com todos os links seguidos | **lança**               |
+| Função                    | Responde                                                                                                                      | Se o caminho não existe |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `pathExists(path)`        | existe?                                                                                                                       | `false`                 |
+| `canOpen(path)`           | este processo consegue abrir para ler?                                                                                        | `false`                 |
+| `isDirectory(path)`       | é uma pasta? (segue links)                                                                                                    | **lança**               |
+| `isSymlink(path)`         | é um link simbólico? (não segue)                                                                                              | **lança**               |
+| `modifiedAt(path)`        | quando mudou por último, em milissegundos                                                                                     | **lança**               |
+| `readLink(path)`          | para onde o link aponta                                                                                                       | **lança**               |
+| `realPath(path)`          | o caminho absoluto, com todos os links seguidos                                                                               | **lança**               |
+| `fileSize(path)`          | o tamanho, em bytes                                                                                                           | **lança**               |
+| `realPathOfNearest(path)` | o `realPath` de um caminho que talvez ainda não exista: o ancestral existente mais próximo, resolvido, mais o resto como está | não lança               |
 
 ### Caminhos como texto
 
-Reexportados de `node:path`, **sem tocar no disco**: `join`, `resolve`, `relative`, `dirname`, `isAbsolute`, `normalize`, `sep`.
+Reexportados de `node:path`, **sem tocar no disco**: `join`, `resolve`, `relative`, `dirname`, `isAbsolute`, `normalize`, `sep`. E `isWithin(path, dir)`: se `path` é `dir` ou está dentro dela, pelo texto dos dois (absolutos).
 
 ### O cache do Choliba
 
-| Função                 | O que é                                                                                                                                      |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cholibaCacheDir(env)` | `$XDG_CACHE_HOME/choliba`, ou `~/.cache/choliba`. `env` é o ambiente de onde ler a variável: `environment()`, do `execute`, ou um objeto seu |
+| Função                 | O que é                                                                                                                                                                                                                |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cholibaCacheDir(env)` | `$XDG_CACHE_HOME/choliba`, ou `~/.cache/choliba`. `env` é o ambiente de onde ler o `XDG_CACHE_HOME`: `environment()`, do `execute`, ou outro. Sem ela, o `~` é o home do sistema (`homedir()`), não o `HOME` do `env`. |
 
 ### Outros processos: `proc.ts`
 
@@ -118,9 +126,9 @@ As funções de `proc.ts` seguem a primeira família: um processo que não exist
 
 `ensureDirectory`, `writeText` e `appendText` aceitam um `mode` (as permissões, como `0o600`). Ele só vale **quando a pasta ou o arquivo é criado**: num que já existe, não muda nada. O Choliba usa `0o700` e `0o600` para o que só o dono deve ler: o log, o cache, o diretório do gate.
 
-### Texto, não bytes
+### Texto e bytes
 
-`readText`, `writeText` e `appendText` trabalham com texto UTF-8. O Choliba lê e escreve configuração, JSON, logs e Markdown; não há função para bytes.
+`readText`, `writeText` e `appendText` trabalham com texto UTF-8. O Choliba lê e escreve configuração, JSON, logs e Markdown; para o resto (arquivos compactados, binários), há `readBytes` e `writeBytes`.
 
 [↑ topo](#topo)
 
@@ -541,7 +549,7 @@ O lock do agente usa `processAlive` e `processName` para saber se o agente que p
 
 **Só o módulo pode:**
 
-- **Importar `node:fs`, `node:path`** (e o `homedir` de `node:os`). Quem precisa do disco ou de um caminho importa daqui.
+- **Importar `node:fs`, `node:path`.** Quem precisa do disco ou de um caminho importa daqui. (O `homedir` de `node:os` não é exclusivo: o `execute/process.ts` e o workspace também o usam.)
 
 **Ninguém deve:**
 

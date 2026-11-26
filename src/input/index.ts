@@ -15,7 +15,7 @@ export interface ReadStreamOptions {
    * stream ends, however it ends.
    */
   readonly raw?: boolean;
-  /** Ends the stream: it stops reading and the reader gets an `AbortError`. */
+  /** Ends the stream: it stops reading, and the reader gets the signal's reason (an `AbortError` unless another was given). */
   readonly signal?: AbortSignal;
 }
 

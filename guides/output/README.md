@@ -50,6 +50,8 @@ O `output` **só mostra**. Ele não pergunta nem ouve ninguém: a conversa é do
 
 ## Interface
 
+Do pacote (`choliba`) vêm o `stdioOutput`, o `completeOutput`, o `DEFAULT_LINE_LENGTH` e os tipos `Output` e `PartialOutput`; o resto do módulo só se importa de `src/output`.
+
 ### O contrato: `Output`
 
 Todos os modos existem e se esperam com `await`: quem escreve escolhe o modo que tem, nunca confere qual existe.

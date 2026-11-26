@@ -1,16 +1,16 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 23/11/2026 10:29:38: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 25/11/2026 23:18:54: não edite à mão.
 
-Limites (coverage-thresholds.json, só sobem): funções 92.73%, linhas 95.02%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
+Limites (coverage-thresholds.json, só sobem): funções 92.75%, linhas 95.02%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
 ## Resumo
 
 Status|Módulo|% Funcs|% Lines
 --|--|--|--
-🟢|**Total**|92.74|95.02
+🟢|**Total**|92.76|95.03
 🟢|[scripts](scripts)|100.00|98.89
-🟢|[src/adapters](src/adapters)|90.84|97.80
+🟢|[src/adapters](src/adapters)|91.14|97.86
 🟢|[src/agent](src/agent)|96.94|96.65
 🟢|[src/approval](src/approval)|84.96|87.88
 🟢|[src/cli](src/cli)|100.00|100.00
@@ -49,7 +49,7 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/adapters</b>: 97.80% das linhas, 9 arquivos</summary>
+<summary>🟢 <b>src/adapters</b>: 97.86% das linhas, 9 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
@@ -60,7 +60,7 @@ Status|Arquivo|% Funcs|% Lines
 🟢|[stdio/line.ts](src/adapters/stdio/line.ts)|83.33|100.00
 🟢|[stdio/records.ts](src/adapters/stdio/records.ts)|100.00|100.00
 🟢|[stdio/typing.ts](src/adapters/stdio/typing.ts)|92.31|95.61
-🟢|[tui/index.ts](src/adapters/tui/index.ts)|70.00|88.63
+🟢|[tui/index.ts](src/adapters/tui/index.ts)|72.73|89.24
 🟢|[tui/layout.ts](src/adapters/tui/layout.ts)|100.00|100.00
 
 </details>

@@ -36,7 +36,7 @@ Este curso trata do **stdio** (`src/adapters/stdio`) e do **JSONL** (`src/adapte
   - [3. A digitação, sem terminal](#3-a-digitação-sem-terminal)
   - [4. A conversa por um arquivo](#4-a-conversa-por-um-arquivo)
   - [5. Num terminal de verdade](#5-num-terminal-de-verdade)
-- [Regras](#regras)
+- [Regras do módulo](#regras-do-módulo)
 - [Exercícios](#exercícios)
 
 ## Os arquivos
@@ -55,6 +55,8 @@ Este curso trata do **stdio** (`src/adapters/stdio`) e do **JSONL** (`src/adapte
 [↑ topo](#topo)
 
 ## Interface
+
+Do pacote (`choliba`) vêm o `StdioAdapter` e o `JsonlAdapter`, com os tipos das opções e o `StdioSource`, e duas das constantes (veja abaixo); a `Typing`, o `KeyDecoder` e o resto só se importam do módulo.
 
 ### `StdioAdapter`
 
@@ -99,6 +101,8 @@ Um `StdioSource` é `{ tty, read({ raw, signal }) }`: troque-o (e o `echo`) para
 | `DEFAULT_POLL_MS`          | 500   | a leitura de um arquivo de conversa                   |
 | `DEFAULT_FRAME_DELAY_MS`   | 16    | o intervalo entre redesenhos do TUI                   |
 
+O pacote (`choliba`) exporta os dois primeiros; o `DEFAULT_FRAME_DELAY_MS` só se importa do módulo.
+
 [↑ topo](#topo)
 
 ## Como funciona
@@ -114,18 +118,18 @@ O `StdioAdapter` decide pela fonte:
 
 A `Typing` transforma teclas em eventos, do mesmo jeito para o stdio e o TUI:
 
-| Tecla                                  | O que acontece                                                                |
-| -------------------------------------- | ----------------------------------------------------------------------------- |
-| letras, acentos, emoji                 | entram na linha sendo digitada                                                |
-| Backspace                              | apaga o último caractere como se vê                                           |
-| texto colado                           | entra inteiro, com as quebras de linha; só um Enter **digitado** envia        |
-| Enter                                  | `message` com a linha                                                         |
-| uma tecla de `instant`, na linha vazia | `message` com a tecla, sem Enter                                              |
-| durante uma escolha                    | a próxima tecla das `keys` é a `choice` (as outras esperam); Enter é o padrão |
-| um atalho (`shortcuts`)                | `command` com o nome                                                          |
-| Ctrl+C                                 | `interrupt`                                                                   |
-| Ctrl+D                                 | fim da entrada (numa escolha, é o padrão)                                     |
-| setas, PageUp e outras sequências      | nunca viram texto; vão para quem as quer (o TUI rola a tela)                  |
+| Tecla                                  | O que acontece                                                                                                               |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| letras, acentos, emoji                 | entram na linha sendo digitada                                                                                               |
+| Backspace                              | apaga o último caractere como se vê                                                                                          |
+| texto colado                           | entra inteiro, com as quebras de linha; só um Enter **digitado** envia                                                       |
+| Enter                                  | `message` com a linha                                                                                                        |
+| uma tecla de `instant`, na linha vazia | `message` com a tecla, sem Enter                                                                                             |
+| durante uma escolha                    | a próxima tecla das `keys` é a `choice`; uma tecla fora delas é descartada, e a escolha continua esperando; Enter é o padrão |
+| um atalho (`shortcuts`)                | `command` com o nome                                                                                                         |
+| Ctrl+C                                 | `interrupt`                                                                                                                  |
+| Ctrl+D                                 | fim da entrada (numa escolha, é o padrão)                                                                                    |
+| setas, PageUp e outras sequências      | nunca viram texto; vão para quem as quer (o TUI rola a tela)                                                                 |
 
 ### Registros e o limite de bytes
 
@@ -288,7 +292,7 @@ keys.publish('\u0001');
 const third = await command;
 
 const choice = conversation.choose(['s', 'n']);
-keys.publish('x'); // fora da escolha: espera
+keys.publish('x'); // fora da escolha: descartada
 keys.publish('S');
 const fourth = await choice;
 conversation.close();
@@ -435,7 +439,7 @@ recebeu "s"
 
 [↑ topo](#topo)
 
-## Regras
+## Regras do módulo
 
 - **Tudo o que é da forma fica no adapter.** Teclas, eco, telas, arquivos: nada disso chega à conversa, só eventos.
 - **Um adapter desfaz o que fez**, inclusive quando o programa termina no meio.
