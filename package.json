@@ -42,7 +42,7 @@
     "check": "bun run typecheck && bun run lint && bun run format:check && bun run test:cov",
     "approvals": "bun src/cli/approvals.ts",
     "issue": "bun scripts/issue.ts",
-    "prepare": "git config core.hooksPath .githooks || true",
+    "prepare": "[ \"$(git rev-parse --show-toplevel 2>/dev/null)\" = \"$(pwd -P)\" ] && git config core.hooksPath .githooks || true",
     "git:clean": "bun scripts/git-clean.ts",
     "release:notes": "bun scripts/release-notes.ts",
     "docs:pages": "bun scripts/docs-pages.ts",
