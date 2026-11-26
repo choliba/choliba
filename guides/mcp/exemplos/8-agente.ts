@@ -34,7 +34,7 @@ const CONSULTAR_PRECO = registerTool({
   input: {
     type: 'object',
     properties: {
-      produto: { type: 'string', description: 'O produto, como choliba.' },
+      produto: { type: 'string', description: 'O produto, como goiaba.' },
     },
     required: ['produto'],
     additionalProperties: false,
