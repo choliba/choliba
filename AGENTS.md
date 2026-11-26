@@ -20,6 +20,7 @@ Tudo o que o Choliba faz com o mundo de fora passa por **um módulo só**. Ningu
 | a conversa em tela cheia                                                                                                        | `src/adapters/tui` (`TuiAdapter`, um `InteractionAdapter`)                                                               | desenha uma tela cheia por conta própria                                                  |
 | a conversa por um arquivo (JSONL)                                                                                               | `src/adapters/jsonl` (`JsonlAdapter`, um `InteractionAdapter`)                                                           | conversa por arquivo por conta própria                                                    |
 | log                                                                                                                             | `src/logger`                                                                                                             | grava log por conta própria                                                               |
+| o banco do Choliba (sessões, decisões, aprovações)                                                                              | `src/store` (`Store`; o `bun:sqlite` fica atrás dele)                                                                    | importa `bun:sqlite`                                                                      |
 | configuração do projeto                                                                                                         | `src/config`                                                                                                             | lê o `choliba.config.ts`                                                                  |
 | eventos dentro do processo                                                                                                      | `src/events`                                                                                                             | cria outro barramento                                                                     |
 | o MCP: as ferramentas próprias dos agentes (registrar, servir ao CLI por um servidor MCP, executar)                             | `src/mcp` (`registerTool`, `choliba/<nome>`, `serveTools`; o SDK oficial `@modelcontextprotocol/server` fica atrás dele) | serve ferramentas ao CLI ou fala o protocolo MCP por conta própria                        |
@@ -31,6 +32,13 @@ ela garante. Um leitor do terminal a mais já travou um agente (as teclas iam pa
 Um pacote de terceiros fica **atrás** do dono, nunca espalhado: o logger aceita pino, winston ou LogTape pelo
 `logger.use` do `choliba.config.ts`, e só o `src/logger` sabe disso. Scripts (`scripts/`), ferramentas (`tools/`) e o
 próprio `choliba.config.ts` seguem a mesma regra.
+
+Duas exceções estão registradas:
+
+- **O Puppeteer**, em `tools/fetch-web-content.ts`, abre o Chromium por conta própria: a biblioteca só sabe iniciar o
+  navegador ela mesma.
+- **O site** (`docs/`) é um programa à parte, que o VitePress roda no Node: o `docs/.vitepress/config.ts` lê o disco
+  por `node:fs`.
 
 ## Módulos desacoplados
 
@@ -103,21 +111,34 @@ mudança que afeta quem usa atualiza o texto no mesmo PR. A linha de comando seg
 
 O `.oxlintrc.json` tem a regra `no-restricted-imports`:
 
-| Import                                     | Só em            |
-| ------------------------------------------ | ---------------- |
-| `node:fs`, `node:fs/promises`, `node:path` | `src/filesystem` |
-| `node:child_process`                       | `src/execute`    |
-| `node:readline`                            | `src/input`      |
-| `@modelcontextprotocol/server`             | `src/mcp`        |
+| Import                                     | Só em                                                        |
+| ------------------------------------------ | ------------------------------------------------------------ |
+| `node:fs`, `node:fs/promises`, `node:path` | `src/filesystem`                                             |
+| `node:child_process`                       | `src/execute`                                                |
+| `node:readline`                            | `src/input`                                                  |
+| `node:process`                             | `src/execute/process.ts`, `src/output/stdio.ts`, `src/input` |
+| `@modelcontextprotocol/server`             | `src/mcp`                                                    |
+| `bun:sqlite`                               | `src/store`                                                  |
+| `bun` (o módulo)                           | em lugar nenhum: use os donos                                |
 
-A regra barra também os nomes sem o prefixo `node:` (`fs`, `fs/promises`, `path`, `child_process`, `readline`).
+A regra barra também os nomes sem o prefixo `node:` (`fs`, `fs/promises`, `path`, `child_process`, `readline`,
+`process`) e os subcaminhos (`node:path/posix`, `node:readline/promises`).
 
-E duas regras de I/O:
+E três regras de I/O:
 
-| Regra                                        | Só em                                                        |
-| -------------------------------------------- | ------------------------------------------------------------ |
-| `no-console` (`console.*`)                   | em lugar nenhum: a saída passa pelo `src/output`             |
-| `no-restricted-globals` (o `process` global) | `src/execute/process.ts`, `src/output/stdio.ts`, `src/input` |
+| Regra                                                                           | Só em                                                        |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `no-console` (`console.*`)                                                      | em lugar nenhum: a saída passa pelo `src/output`             |
+| `no-restricted-globals` (o `process` global)                                    | `src/execute/process.ts`, `src/output/stdio.ts`, `src/input` |
+| `no-restricted-properties` (`globalThis.process`)                               | os mesmos três                                               |
+| `no-restricted-properties` (`Bun.write`, `Bun.file`)                            | `src/filesystem`                                             |
+| `no-restricted-properties` (`Bun.spawn`, `Bun.spawnSync`, `Bun.$`, `Bun.build`) | `src/execute`                                                |
+| `no-restricted-properties` (`Bun.stdin`)                                        | `src/input`                                                  |
+| `no-restricted-properties` (`Bun.stdout`, `Bun.stderr`)                         | `src/output/stdio.ts`                                        |
+
+O resto do `Bun` (`serve`, `resolveSync`, `sleep`, `version`) não toca disco nem processo e fica livre. Como cada
+override substitui a configuração da regra inteira, o de cada dono repete as restrições dos outros: uma restrição nova
+entra na base e em todos eles.
 
 As regras valem para tudo o que o `bun run lint` confere: `src/`, `bin/`, `tools/`, `scripts/`, `config/`, o
 `choliba.config.ts` e os exemplos dos cursos (`guides/`). Os testes (`test/`) passam pelo lint, mas fora destas
