@@ -39,6 +39,20 @@ export function editLinkOf({
   return `${repository}/edit/${branch}/${source}`;
 }
 
+/** What GitHub drops from a heading to make its id: everything but letters, marks, digits, `_`, `-` and spaces. */
+const NOT_IN_SLUG = /[^\p{L}\p{M}\p{N}\p{Pc}\- ]/gu;
+
+/**
+ * The id GitHub gives a heading (the `markdown.anchor.slugify` of the site),
+ * so the index of a course leads to the same place on GitHub and on the site:
+ * lower case, without punctuation, with the accents and the leading number
+ * kept, each space a hyphen. The anchor plugin adds `-1`, `-2`… to a repeated
+ * heading, as GitHub does.
+ */
+export function githubSlug(heading: string): string {
+  return heading.toLowerCase().replace(NOT_IN_SLUG, '').replaceAll(' ', '-');
+}
+
 export interface Guide {
   /** The module: the folder in `guides/` and the name of the page. */
   readonly module: string;

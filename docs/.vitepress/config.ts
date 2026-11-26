@@ -20,7 +20,7 @@ import {
   SITE_URL,
   websiteJsonLd,
 } from '../../scripts/docs-seo';
-import { editLinkOf } from '../../scripts/docs';
+import { editLinkOf, githubSlug } from '../../scripts/docs';
 import guides from './generated/guides-sidebar.json';
 
 /** The `docs/` folder, this config's parent. */
@@ -119,6 +119,9 @@ export default defineConfig({
   },
   // Um link quebrado reprova o build: é para isso que o CI roda o docs:build.
   ignoreDeadLinks: false,
+  // O id de cada título é o que o GitHub dá, com acentos e o número do começo: o índice de um curso funciona igual
+  // lá e aqui (scripts/docs.ts).
+  markdown: { anchor: { slugify: githubSlug } },
   // Os cursos de docs/guias/ e docs/comandos.md são gerados (bun run docs:pages).
   themeConfig: {
     logo: '/owl-logo-choliba.svg',
