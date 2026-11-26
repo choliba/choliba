@@ -155,10 +155,13 @@ await runCommand(
     },
     run: async ({ args }) => {
       const env = environment();
+      const commit = args.commit ?? 'HEAD';
+      // Out of the CI there is no TAG: the release's tag follows the version at that commit.
+      const tag = env['TAG'] ?? `v${(await versionAt(commit)) ?? '0.0.0'}`;
       const notes = await main(
-        args.commit ?? 'HEAD',
+        commit,
         env['GITHUB_REPOSITORY'] ?? 'choliba/choliba',
-        env['TAG'] ?? 'v0.1.0',
+        tag,
         (text) => writeErr(`${text}\n`),
       );
       writeOut(notes);
