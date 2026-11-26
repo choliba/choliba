@@ -24,7 +24,8 @@ A ideia é simples: **a sandbox fica sem rede nenhuma**. A única saída é um p
 - [Os arquivos](#os-arquivos)
 - [Interface](#interface)
   - [Classes](#classes)
-  - [Opções do gate e da fronteira (`NetworkGateOptions`)](#opções-do-gate-e-da-fronteira-networkgateoptions)
+  - [Opções do gate (`NetworkGateOptions`)](#opções-do-gate-networkgateoptions)
+  - [Opções da fronteira (`NetworkBoundaryOptions`)](#opções-da-fronteira-networkboundaryoptions)
   - [Regras (`rules.ts`)](#regras-rulests)
   - [Tipos](#tipos)
   - [Constantes e utilitários](#constantes-e-utilitários)
@@ -57,6 +58,8 @@ A ideia é simples: **a sandbox fica sem rede nenhuma**. A única saída é um p
 | `proxy.ts`       | host                  | `NetworkProxy`: um proxy HTTP num **socket unix**. Pedidos comuns e túneis `CONNECT` (HTTPS); pergunta ao gate e responde `403` com o motivo, ou repassa.                                                                                                                                                    |
 | `bridge-main.ts` | **dentro da sandbox** | O que escuta no loopback da sandbox: o proxy em `127.0.0.1:3128`, os `--forward` (endereços locais do host, como o Ollama) e os `--publish` (portas da sandbox abertas para o host). Vai empacotado para o diretório da fronteira: a sandbox o roda sem ver o código do Choliba.                             |
 | `publish.ts`     | host                  | `PublishedPorts`: o caminho de entrada. Abre no `127.0.0.1` do host as portas do workspace (`ports`) e as liga à sandbox pelo bridge.                                                                                                                                                                        |
+| `rewrite.ts`     | host                  | `RequestRewriteStream`: muda o corpo das requisições HTTP/1.1 de uma conexão enquanto passam (um túnel HTTP a um modelo local); o que não dá para ler com certeza passa intacto.                                                                                                                             |
+| `constants.ts`   | —                     | Os padrões da fronteira: a porta do proxy (`PROXY_PORT`), os tempos do bridge, os limites de observação e de reescrita e os códigos HTTP (`FORBIDDEN`, `BAD_GATEWAY`).                                                                                                                                       |
 | `index.ts`       | host                  | `NetworkBoundary`: junta tudo. Cria gate e proxy, monta os argumentos do bridge, dá as variáveis de ambiente (`HTTP_PROXY`…) e liga/desliga.                                                                                                                                                                 |
 
 [↑ topo](#topo)
@@ -65,15 +68,17 @@ A ideia é simples: **a sandbox fica sem rede nenhuma**. A única saída é um p
 
 O que `src/network/index.ts` exporta. Tudo o mais (o bridge, as portas publicadas por dentro) é detalhe do módulo.
 
+O pacote (`choliba`) não exporta o `network`: quem usa o pacote chega à rede pela `policy` do agente e pelas opções do `Workspace` (`ports`). Importar de `src/network`, como fazem os exemplos, só funciona dentro do repositório.
+
 ### Classes
 
-| Classe            | Para que                                          | Principais membros                                                                                                                                                                                                                                                                                                                                                                                          |
-| ----------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NetworkBoundary` | a fronteira inteira: gate, proxy, bridge e portas | `new NetworkBoundary(options: NetworkGateOptions)`<br>`publish(ports)`: as portas do workspace<br>`environment()`: `HTTP_PROXY`… para a sandbox<br>`attach(enter)`: sobe o bridge numa jaula (bubblewrap)<br>`launcher()`: argv que abre a saída e roda um comando (docker)<br>`sandboxDir()`: o diretório da fronteira (socket do proxy, ponte, portas), o único do cache que a sandbox monta<br>`close()` |
-| `NetworkGate`     | só decide um destino                              | `new NetworkGate(options: NetworkGateOptions)`<br>`decide(request: NetworkRequest): Promise<NetworkDecision>`                                                                                                                                                                                                                                                                                               |
-| `NetworkProxy`    | o proxy HTTP no socket unix                       | `new NetworkProxy(gate)`, `start(socketPath)`, `close()`                                                                                                                                                                                                                                                                                                                                                    |
+| Classe            | Para que                                          | Principais membros                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NetworkBoundary` | a fronteira inteira: gate, proxy, bridge e portas | `new NetworkBoundary(options: NetworkBoundaryOptions)`<br>`observe(observer)`: lê também o tráfego de um destino<br>`rewrite(rewriter)`: muda também o que um destino recebe<br>`publish(ports)`: as portas do workspace<br>`environment()`: `HTTP_PROXY`… para a sandbox<br>`attach(enter)`: sobe o bridge numa jaula (bubblewrap)<br>`launcher()`: argv que abre a saída e roda um comando (docker)<br>`sandboxDir()`: o diretório da fronteira (socket do proxy, ponte, portas), o único do cache que a sandbox monta<br>`close()` |
+| `NetworkGate`     | só decide um destino                              | `new NetworkGate(options: NetworkGateOptions)`<br>`decide(request: NetworkRequest): Promise<NetworkDecision>`                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `NetworkProxy`    | o proxy HTTP no socket unix                       | `new NetworkProxy(gate, observers?, maxObservedBytes?, rewriters?, maxRewriteBodyBytes?)`, `start(socketPath)`, `observe(observer)`, `rewrite(rewriter)`, `close()`                                                                                                                                                                                                                                                                                                                                                                   |
 
-### Opções do gate e da fronteira (`NetworkGateOptions`)
+### Opções do gate (`NetworkGateOptions`)
 
 | Opção         | Tipo              | Obrigatória | O que é                                                   |
 | ------------- | ----------------- | ----------- | --------------------------------------------------------- |
@@ -82,6 +87,21 @@ O que `src/network/index.ts` exporta. Tudo o mais (o bridge, as portas publicada
 | `ledger`      | `NetworkLedger`   | não         | onde ficam aprovações e decisões; sem ele, nada é gravado |
 | `alwaysAllow` | `string[]`        | não         | `host:porta` sempre liberados                             |
 | `alwaysDeny`  | `string[]`        | não         | `host:porta` sempre negados                               |
+
+### Opções da fronteira (`NetworkBoundaryOptions`)
+
+As do gate e mais estas, todas opcionais:
+
+| Opção                 | Tipo                | O que é                                                                             |
+| --------------------- | ------------------- | ----------------------------------------------------------------------------------- |
+| `observe`             | `TrafficObserver[]` | quem lê o tráfego de um destino (o uso de um modelo local, por exemplo)             |
+| `rewrite`             | `RequestRewriter[]` | quem muda o que um destino recebe (uma opção que o modelo aceita e a CLI não manda) |
+| `proxyPort`           | `number`            | onde a CLI acha o proxy dentro da sandbox; `PROXY_PORT` por padrão                  |
+| `readyTimeoutMs`      | `number`            | quanto o bridge tem para subir; `READY_TIMEOUT_MS` por padrão                       |
+| `maxObservedBytes`    | `number`            | quanto a cópia de um observador pode atrasar; `MAX_OBSERVED_BYTES` por padrão       |
+| `maxRewriteBodyBytes` | `number`            | o maior corpo que um rewriter recebe; `MAX_REWRITE_BODY_BYTES` por padrão           |
+
+Observar e reescrever não mudam as decisões: um destino negado continua negado.
 
 ### Regras (`rules.ts`)
 
@@ -95,31 +115,38 @@ O que `src/network/index.ts` exporta. Tudo o mais (o bridge, as portas publicada
 
 ### Tipos
 
-| Tipo                  | Forma                                                                                                  |
-| --------------------- | ------------------------------------------------------------------------------------------------------ |
-| `NetworkRule`         | `{ operations: ('connect' \| '*')[], hosts: string[], ignores?: { hosts?: string[] } }`                |
-| `NetworkRules`        | `{ default: 'allow' \| 'deny' \| 'require_approval', allow?, requireApproval?, deny?: NetworkRule[] }` |
-| `NetworkRequest`      | `{ hostname, port, protocol: 'http' \| 'https' }`                                                      |
-| `NetworkDecision`     | `{ decision: 'allow' \| 'deny', reason }`: o que o proxy usa                                           |
-| `NetworkApprover`     | `(request: NetworkApprovalRequest) => Promise<'once' \| 'session' \| 'workspace' \| 'deny'>`           |
-| `NetworkLedger`       | `approval(destination)`, `remember(destination, scope)`, `record(entry): number \| undefined`          |
-| `NetworkDecisionData` | os dados do evento `decision`: destino, `decision`, `reason`, `decidedBy`                              |
+| Tipo                     | Forma                                                                                                       |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `NetworkRule`            | `{ operations: ('connect' \| '*')[], hosts: string[], ignores?: { hosts?: string[] } }`                     |
+| `NetworkRules`           | `{ default: 'allow' \| 'deny' \| 'require_approval', allow?, requireApproval?, deny?: NetworkRule[] }`      |
+| `NetworkRequest`         | `{ hostname, port, protocol: 'http' \| 'https' }`                                                           |
+| `NetworkDecision`        | `{ decision: 'allow' \| 'deny', reason }`: o que o proxy usa                                                |
+| `NetworkApprover`        | `(request: NetworkApprovalRequest) => Promise<'once' \| 'session' \| 'workspace' \| 'deny'>`                |
+| `NetworkLedger`          | `approval(destination)`, `remember(destination, scope)`, `record(entry): number \| undefined`               |
+| `NetworkDecisionData`    | os dados do evento `decision`: destino, `decision`, `reason`, `decidedBy`                                   |
+| `NetworkApprovalRequest` | o `NetworkRequest` e mais `reason` e `pattern`: o que chega a quem aprova                                   |
+| `TrafficObserver`        | `{ destination, observe(traffic) }`: `traffic` traz o que foi (`requests`) e o que voltou (`responses`)     |
+| `RequestRewriter`        | `{ destination, rewrite(request) }`: recebe `{ method, path, body }` e devolve o corpo novo, ou `undefined` |
 
 ### Constantes e utilitários
 
-| Nome                   | O que é                                                   |
-| ---------------------- | --------------------------------------------------------- |
-| `NETWORK_SOURCE`       | `'network'`: o nome do produtor, para assinar as decisões |
-| `PROXY_PORT`           | `3128`: onde a CLI encontra o proxy, dentro da sandbox    |
-| `validatePorts(ports)` | recusa porta fora de 1 a 65535                            |
+| Nome                       | O que é                                                   |
+| -------------------------- | --------------------------------------------------------- |
+| `NETWORK_SOURCE`           | `'network'`: o nome do produtor, para assinar as decisões |
+| `PROXY_PORT`               | `3128`: onde a CLI encontra o proxy, dentro da sandbox    |
+| `READY_TIMEOUT_MS`         | `5000`: quanto o bridge tem para mostrar o socket         |
+| `MAX_OBSERVED_BYTES`       | 1 MiB: o atraso máximo da cópia de um observador          |
+| `MAX_REWRITE_BODY_BYTES`   | 32 MiB: o maior corpo que um rewriter recebe              |
+| `FORBIDDEN`, `BAD_GATEWAY` | `403` e `502`: as respostas do proxy                      |
+| `validatePorts(ports)`     | recusa porta fora de 1 a 65535                            |
 
 ### Quem está do outro lado
 
-| Onde                          | O quê                                                                                                      |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `src/workspace/index.ts`      | `applyPermissions(permissions, network?: WorkspaceNetworkOptions)`: monta a fronteira com `networkRulesOf` |
-| `src/store/network-ledger.ts` | `networkLedger(store, { root, provider })`: o `NetworkLedger` com o banco, mais `setSession(id)`           |
-| `src/agent/agent.ts`          | `networkOptions(…)`: o approver, o ledger e os endereços do provider; não importa o `network`              |
+| Onde                          | O quê                                                                                                                                                                 |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/workspace/index.ts`      | `applyPermissions(policy, network?: WorkspaceNetworkOptions)`: monta a fronteira com `networkRulesOf`; `configureNetwork(boundary)`: liga uma fronteira montada à mão |
+| `src/store/network-ledger.ts` | `networkLedger(store, { root, provider })`: o `NetworkLedger` com o banco, mais `setSession(id)`                                                                      |
+| `src/agent/enforce.ts`        | `networkOptions(…)`: o approver, o ledger e os endereços do provider; o agente não monta a fronteira                                                                  |
 
 [↑ topo](#topo)
 
@@ -132,7 +159,7 @@ O `network` **não recebe a política inteira**: recebe só as regras dele, num 
 Você escreve a política como sempre, com a rede dentro de cada grupo:
 
 ```ts
-permissions: {
+policy: {
   default: 'deny',
   allow: {
     filesystem: [{ operations: ['read'], paths: ['/workspace/**'] }],
@@ -147,7 +174,7 @@ permissions: {
 `networkRulesOf` (em `rules.ts`) tira de cada grupo só a lista `network` e leva o `default` junto. Nada mais da política passa:
 
 ```ts
-networkRulesOf(permissions);
+networkRulesOf(policy);
 // {
 //   default: 'deny',
 //   allow: [{ operations: ['connect'], hosts: ['github.com'] }],
@@ -159,12 +186,13 @@ networkRulesOf(permissions);
 É isso que o gate e a fronteira recebem, na opção `rules`. Quem faz a transformação é o **workspace**, ao aplicar a política (`src/workspace/index.ts`):
 
 ```ts
-public applyPermissions(permissions: AgentPolicy, network?: WorkspaceNetworkOptions): void {
-  this.sandbox.configureFilesystem(compileFilesystemAccess(permissions, this.root));
+public applyPermissions(policy: AgentPolicy, network?: WorkspaceNetworkOptions): void {
+  this.sandbox.configureFilesystem(compileFilesystemAccess(policy, this.root));
   if (network === undefined) return;
+  // … (com uma fronteira já ligada, só acrescenta os observadores e os rewriters dela)
 
   this.configureNetwork(
-    new NetworkBoundary({ rules: networkRulesOf(permissions), ...network }),
+    new NetworkBoundary({ rules: networkRulesOf(policy), ...network }),
   );
 }
 ```
@@ -182,7 +210,7 @@ A partir daí, o `network` decide sozinho (`decideByRules`), sem perguntar à po
 
 ### Quando o módulo entra em ação
 
-Para **todo agente com política** (`permissions`), o agente chama `workspace.applyPermissions(permissions, networkOptions(…))`, e o workspace monta a fronteira. Com política, a rede segue a política inteira: as regras de `network`, se houver, e o `default` para o que nenhuma regra cobre. Uma política sem regra de rede e com `default: 'deny'` fecha a rede (menos os endereços do provider).
+Para **todo agente com política** (`policy`), o agente chama `workspace.applyPermissions(policy, networkOptions(…))`, e o workspace monta a fronteira. Com política, a rede segue a política inteira: as regras de `network`, se houver, e o `default` para o que nenhuma regra cobre. Uma política sem regra de rede e com `default: 'deny'` fecha a rede (menos os endereços do provider).
 
 Sem política nenhuma, não há `NetworkBoundary`: a sandbox usa a rede do host (`--share-net` no bubblewrap). É o mesmo de todo o resto sem política: só a sandbox limita.
 
@@ -237,74 +265,178 @@ E o contrário, chegar **do host** a um serviço da sandbox (um dev server que o
 
 ## Exemplos
 
-Do mais simples ao mais completo. Os exemplos 1 e 2 rodam como estão: estão em `guides/network/exemplos/network.ts`.
+Do mais simples ao mais completo. Cada exemplo é um arquivo de `guides/network/exemplos/`. Os exemplos 1, 2, 4, 5 e 6 rodam como estão; o 1 precisa do bubblewrap e de internet (e, na variante docker, do Docker com a imagem `oven/bun:latest`, baixada na primeira vez). O 3 precisa de um modelo.
 
 ### 1. Uma sandbox com a rede passando pelo gate (bubblewrap e docker)
 
-Sem agente e sem modelo: uma sandbox, uma política e um `curl` lá dentro. É o menor uso completo do módulo.
+Sem agente e sem modelo: uma sandbox, as regras de rede e um `curl` lá dentro. É o menor uso completo do módulo. Sem agente, quem liga a fronteira à sandbox é o `configureNetwork`; com uma política inteira, o mesmo passo seria `workspace.applyPermissions(policy, { approve })`, como num agente.
+
+`guides/network/exemplos/1-sandbox.ts`:
 
 ```ts
-import { NetworkBoundary } from '../../src/network/index';
-import { Workspace } from '../../src/workspace/index';
+/**
+ * Exemplo 1 do curso de network: a rede de uma sandbox passando pelo gate, no
+ * bubblewrap ou no docker, sem modelo nenhum: o que sai da sandbox é um
+ * `curl`, e um consumidor do produtor `network` mostra cada decisão (o
+ * Exemplo 2). Precisa do bubblewrap e de internet; o docker, da imagem
+ * oven/bun:latest (baixada na primeira vez).
+ *
+ *   bun guides/network/exemplos/1-sandbox.ts bubblewrap
+ *   bun guides/network/exemplos/1-sandbox.ts docker
+ *
+ * O que muda entre as duas é só a sandbox: o gate e o proxy rodam aqui, no
+ * host. No bubblewrap, o bridge sobe uma vez para a jaula; no docker, entra
+ * como lançador de cada comando, com o container em `--network none`.
+ */
 
-// 1. A sandbox. A única linha que muda entre as duas:
-const workspace = new Workspace({ type: 'bubblewrap', root });
-// const workspace = new Workspace({ type: 'docker', root, image: 'FROM oven/bun:latest' });
+import { defineCommand, runCommand } from '../../../src/command/index';
+import { createConsumer } from '../../../src/events/index';
+import { currentDirectory, runProgram } from '../../../src/execute/process';
+import {
+  NETWORK_SOURCE,
+  NetworkBoundary,
+  type NetworkRules,
+} from '../../../src/network/index';
+import { Workspace } from '../../../src/workspace/index';
 
-// 2. A rede dela passa a ser só o proxy, que pergunta ao gate. Com uma política
-//    inteira (que também precisa de `read /workspace/**`), este passo é
-//    workspace.applyPermissions(policy, { approve }), como num agente.
-workspace.configureNetwork(
-  new NetworkBoundary({
-    // Só as regras de rede (num agente: networkRulesOf(permissions)).
-    rules: {
-      default: 'deny',
-      allow: [{ operations: ['connect'], hosts: ['example.com'] }],
-      deny: [{ operations: ['*'], hosts: ['169.254.169.254'] }],
+/**
+ * Só as regras de rede: o que esta sandbox pode acessar. Num agente, elas
+ * vêm da política por `networkRulesOf(policy)`; aqui, escritas direto.
+ * Qualquer outro destino: o `default`.
+ */
+const rules: NetworkRules = {
+  default: 'deny',
+  allow: [{ operations: ['connect'], hosts: ['example.com'] }],
+  // Os metadados da nuvem: nunca, nem com aprovação.
+  deny: [{ operations: ['*'], hosts: ['169.254.169.254'] }],
+};
+
+/** Cada `curl` e o que se espera dele. */
+const attempts = [
+  {
+    url: 'https://example.com',
+    expected: '200: allow da política (pelo proxy)',
+  },
+  {
+    url: 'https://www.wikipedia.org',
+    expected: '403: nenhuma regra, o default nega',
+  },
+  {
+    url: 'http://169.254.169.254',
+    expected: '403: uma regra deny',
+  },
+  {
+    url: 'https://example.com',
+    noProxy: true,
+    expected: '000: ignorando o proxy, a sandbox não tem rede',
+  },
+] as const;
+
+await runCommand(
+  defineCommand({
+    name: 'network',
+    description:
+      'Mostra a rede de uma sandbox passando pelo gate (bubblewrap ou docker).',
+    args: {
+      sandbox: { description: 'bubblewrap ou docker', required: true },
     },
-    approve: () => Promise.resolve('deny'), // ninguém aprova nada aqui
-    // sem ledger: nada é gravado; num agente, o store guarda as decisões
+    run: async ({ args, output }) => {
+      const root = currentDirectory();
+      const workspace = createWorkspace(args.sandbox, root);
+
+      // A sandbox fica sem rede própria: só sai pelo proxy, que pergunta ao gate.
+      workspace.configureNetwork(
+        new NetworkBoundary({
+          rules,
+          // Ninguém aprova nada neste exemplo.
+          approve: () => Promise.resolve('deny'),
+        }),
+      );
+
+      // Um consumidor das decisões do gate: de qualquer sandbox, aqui no host.
+      const decisions = createConsumer((event) => {
+        if (event.type !== 'decision') return;
+        output.write(
+          `   gate: ${String(event['hostname'])}:${String(event['port'])} → ${String(event['decision'])} (${String(event['decidedBy'])})`,
+        );
+      });
+      decisions.subscribe(NETWORK_SOURCE);
+
+      try {
+        output.write(`Sandbox: ${args.sandbox}\n`);
+        for (const { url, expected, ...rest } of attempts) {
+          const noProxy = 'noProxy' in rest;
+          output.write(`curl ${noProxy ? '--noproxy "*" ' : ''}${url}`);
+          const code = await curl(workspace, url, noProxy);
+          output.write(`   resposta: ${code}  (esperado ${expected})\n`);
+        }
+      } finally {
+        decisions.unsubscribeAll();
+        await workspace.close();
+      }
+    },
   }),
 );
 
-// 3. Qualquer comando preparado pelo workspace já sai pelo proxy.
-const curl = await workspace.prepare({
-  executable: 'curl',
-  arguments: [
-    '-s',
-    '-o',
-    '/dev/null',
-    '-w',
-    '%{http_code}',
-    'https://example.com',
-  ],
-});
-// … roda `curl` (o exemplo usa runProgram) …
+function createWorkspace(sandbox: string, root: string): Workspace {
+  if (sandbox === 'bubblewrap')
+    return new Workspace({ type: 'bubblewrap', root });
+  if (sandbox === 'docker') {
+    // Do Docker Hub, se ainda não estiver na máquina (veja image no curso de workspace).
+    return new Workspace({
+      type: 'docker',
+      root,
+      image: 'FROM oven/bun:latest',
+    });
+  }
+  throw new Error(
+    `Sandbox desconhecida: ${sandbox}. Use bubblewrap ou docker.`,
+  );
+}
 
-await workspace.close(); // derruba proxy, bridge e sandbox
+/**
+ * O código HTTP do `curl` rodando dentro da sandbox; `000` sem conexão. Em
+ * HTTPS, uma negação é a resposta do proxy ao CONNECT (`%{http_connect}`),
+ * não a do destino (`%{http_code}`, que fica 000).
+ */
+async function curl(
+  workspace: Workspace,
+  url: string,
+  noProxy: boolean,
+): Promise<string> {
+  const flags = noProxy ? '--noproxy "*"' : '';
+  // `; true`: sem conexão o curl falha, mas o código (000) já foi impresso.
+  const prepared = await workspace.prepare({
+    executable: 'sh',
+    arguments: [
+      '-c',
+      `curl -s -o /dev/null -w '%{http_code} %{http_connect}' --max-time 10 ${flags} ${url}; true`,
+    ],
+  });
+  const [code = '000', connect = '000'] = (
+    await runProgram(prepared.executable, prepared.arguments ?? [], {
+      timeoutMs: 30_000,
+    })
+  ).split(' ');
+  return code === '000' && connect !== '000' ? connect : code;
+}
 ```
 
-Rodando:
+`bun guides/network/exemplos/1-sandbox.ts bubblewrap` (saída real; com `docker`, só a primeira linha muda):
 
 ```
-bun guides/network/exemplos/network.ts bubblewrap
-bun guides/network/exemplos/network.ts docker
-```
-
-A saída é **igual nas duas** (saída real, docker):
-
-```
+Sandbox: bubblewrap
 curl https://example.com
    gate: example.com:443 → allow (policy)
-   resposta: 200
+   resposta: 200  (esperado 200: allow da política (pelo proxy))
 curl https://www.wikipedia.org
    gate: www.wikipedia.org:443 → deny (default)
-   resposta: 403
+   resposta: 403  (esperado 403: nenhuma regra, o default nega)
 curl http://169.254.169.254
    gate: 169.254.169.254:80 → deny (policy)
-   resposta: 403
+   resposta: 403  (esperado 403: uma regra deny)
 curl --noproxy "*" https://example.com
-   resposta: 000
+   resposta: 000  (esperado 000: ignorando o proxy, a sandbox não tem rede)
 ```
 
 | Tentativa           | Quem decidiu               | Resposta                       |
@@ -320,44 +452,126 @@ A última linha é a garantia do módulo: **sem o proxy, não há caminho**. Nã
 
 ### 2. Ouvir as decisões
 
-O gate é o produtor `network`. As linhas `gate: …` do Exemplo 1 vêm deste consumidor, que roda aqui, no host, e por isso vale igual para bubblewrap e docker:
+O gate é o produtor `network`. As linhas `gate: …` do Exemplo 1 vêm de um consumidor como este, que roda aqui, no host, e por isso vale igual para bubblewrap e docker. Aqui o gate decide sozinho, sem sandbox nem rede.
+
+`guides/network/exemplos/2-decisoes.ts`:
 
 ```ts
-import { createConsumer } from '../../src/events/index';
-import { NETWORK_SOURCE } from '../../src/network/index';
+/**
+ * Exemplo 2 do curso de network: ouvir as decisões do gate. O gate é o
+ * produtor `network`, e um consumidor recebe cada decisão (o destino, a
+ * decisão, quem decidiu e o motivo) aqui no host, venha a conexão de qualquer
+ * sandbox. Sem sandbox nem rede: o gate decide três destinos, e só.
+ *
+ *   bun guides/network/exemplos/2-decisoes.ts
+ */
+import { createConsumer } from '../../../src/events/index';
+import { NETWORK_SOURCE, NetworkGate } from '../../../src/network/index';
+import { writeOut } from '../../../src/output/stdio';
 
-const decisoes = createConsumer((event) => {
-  if (event.type !== 'decision') return;
-  // event.hostname, event.port, event.decision, event.decidedBy, event.reason
-  // event.agent e event.run, se a conexão veio de um agente
+const gate = new NetworkGate({
+  rules: {
+    default: 'deny',
+    allow: [{ operations: ['connect'], hosts: ['example.com'] }],
+    deny: [{ operations: ['*'], hosts: ['169.254.169.254'] }],
+  },
+  // Ninguém aprova nada neste exemplo.
+  approve: () => Promise.resolve('deny'),
 });
-decisoes.subscribe(NETWORK_SOURCE);
+
+const decisions = createConsumer((event) => {
+  if (event.type !== 'decision') return;
+  writeOut(
+    `${String(event['hostname'])}:${String(event['port'])} → ${String(event['decision'])} (${String(event['decidedBy'])})\n` +
+      `   ${String(event['reason'])}\n`,
+  );
+});
+decisions.subscribe(NETWORK_SOURCE);
+
 try {
-  // … a sandbox trabalha …
+  for (const hostname of [
+    'example.com',
+    'www.wikipedia.org',
+    '169.254.169.254',
+  ]) {
+    await gate.decide({ hostname, port: 443, protocol: 'https' });
+  }
 } finally {
-  decisoes.unsubscribeAll();
+  decisions.unsubscribeAll();
 }
+```
+
+`bun guides/network/exemplos/2-decisoes.ts` (saída real):
+
+```
+example.com:443 → allow (policy)
+   A ação corresponde a policy.allow.network.
+www.wikipedia.org:443 → deny (default)
+   Negado: este destino aguarda a aprovação de uma pessoa. Não tente de novo nem outro caminho para ele; continue com outra parte da tarefa ou termine o turno e espere.
+169.254.169.254:443 → deny (policy)
+   A ação corresponde a policy.deny.network.
 ```
 
 `decidedBy` diz qual etapa decidiu: `provider` (`alwaysAllow`/`alwaysDeny`), `policy`, `saved`, `default` ou `human`. O gate também grava o log (`network_decision`) por conta própria: o consumidor é para quem quer reagir, não para registrar.
 
 ### 3. Num agente: só a política
 
-Num agente, não se monta `NetworkBoundary` nem `configureNetwork`: **o workspace faz isso sozinho, sempre que há `permissions`**, entregando ao `network` só `networkRulesOf(permissions)`. Basta escrever a política:
+Num agente, você não monta o `NetworkBoundary` nem chama o `configureNetwork` (o caminho para montar a rede à mão, como no Exemplo 1): **o workspace faz isso sozinho, sempre que há `policy`**, entregando ao `network` só `networkRulesOf(policy)`. Basta escrever a política. O exemplo precisa do Ollama rodando com o modelo do arquivo e da CLI do Claude Code instalada; no `bun run check`, ele só passa pelo typecheck e pelo lint.
+
+`guides/network/exemplos/3-agente.ts`:
 
 ```ts
-new Agent({
-  name: 'assistente',
-  prompt: '…',
-  provider: new OllamaProvider({ cli: 'claude', model: 'qwen3.5:4b' }),
-  workspace: new Workspace({ type: 'bubblewrap', root }), // ou docker
-  permissions: {
-    default: 'deny',
-    allow: {
-      filesystem: [{ operations: ['read', 'write'], paths: ['/workspace/**'] }],
-      network: [{ operations: ['connect'], hosts: ['registry.npmjs.org'] }],
-    },
-  },
+/**
+ * Exemplo 3 do curso de network: num agente, a rede é só a política. Com
+ * `policy`, o workspace monta a fronteira sozinho (`applyPermissions`): as
+ * regras de rede saem de `networkRulesOf(policy)`, e os endereços do provider
+ * (aqui, o Ollama) passam sempre. Precisa do Ollama rodando com o modelo do
+ * arquivo e da CLI do Claude Code instalada.
+ *
+ *   bun guides/network/exemplos/3-agente.ts
+ */
+import { randomUUID } from 'node:crypto';
+
+import {
+  Agent,
+  ensureDirectory,
+  join,
+  OllamaProvider,
+  runScript,
+  Workspace,
+} from '../../../src/index';
+import { environment } from '../../../src/execute/process';
+import { cholibaCacheDir, removePath } from '../../../src/filesystem/index';
+
+const root = join(
+  cholibaCacheDir(environment()),
+  'network-exemplo',
+  randomUUID(),
+);
+ensureDirectory(root);
+
+await runScript(async () => {
+  try {
+    await new Agent({
+      name: 'assistente',
+      prompt:
+        'Consulte https://registry.npmjs.org/left-pad e diga a versão mais recente.',
+      provider: new OllamaProvider({ cli: 'claude', model: 'qwen3.5:4b' }),
+      workspace: new Workspace({ type: 'bubblewrap', root }), // ou docker
+      policy: {
+        default: 'deny',
+        allow: {
+          filesystem: [
+            { operations: ['read', 'write'], paths: ['/workspace/**'] },
+          ],
+          network: [{ operations: ['connect'], hosts: ['registry.npmjs.org'] }],
+        },
+      },
+      conversation: false,
+    }).run();
+  } finally {
+    removePath(root);
+  }
 });
 ```
 
@@ -487,45 +701,149 @@ como o `localhost:*` aqui.
 
 Para entender só a ordem de decisão, sem sandbox (como em `test/network.test.ts`):
 
+`guides/network/exemplos/5-gate.ts`:
+
 ```ts
+/**
+ * Exemplo 5 do curso de network: o gate sozinho, sem sandbox nem rede, para
+ * ver a ordem das decisões. Cada linha diz o que o gate respondeu e quem
+ * decidiu (o `decidedBy` do evento). Sem ledger, as aprovações valem só para
+ * este gate, e nada é gravado.
+ *
+ *   bun guides/network/exemplos/5-gate.ts
+ */
+import { createConsumer } from '../../../src/events/index';
+import {
+  decideByRules,
+  NETWORK_SOURCE,
+  NetworkGate,
+  type NetworkRules,
+} from '../../../src/network/index';
+import { writeOut } from '../../../src/output/stdio';
+
 const rules: NetworkRules = {
   default: 'deny',
   allow: [{ operations: ['connect'], hosts: ['registry.npmjs.org'] }],
   requireApproval: [{ operations: ['connect'], hosts: ['*.example.com'] }],
 };
+
 const gate = new NetworkGate({
   rules,
+  // Num agente, os endereços do provider: aqui, a API do modelo.
   alwaysAllow: ['api.anthropic.com:443'],
+  // Quem aprova responde "nesta sessão" a tudo que perguntam.
   approve: () => Promise.resolve('session'),
-  // sem ledger: as aprovações valem só para este gate, e nada é gravado
 });
 
-const https = (hostname: string) => ({
-  hostname,
-  port: 443,
-  protocol: 'https' as const,
+let decidedBy = '';
+const decisions = createConsumer((event) => {
+  if (event.type === 'decision') decidedBy = String(event['decidedBy']);
 });
-await gate.decide(https('api.anthropic.com')); // allow  (provider: está em alwaysAllow)
-await gate.decide(https('registry.npmjs.org')); // allow  (policy)
-await gate.decide(https('a.example.com')); // allow  (human: perguntou, respondeu 'session')
-await gate.decide(https('a.example.com')); // allow  (saved: já aprovado nesta sessão)
-await gate.decide(https('outro.com')); // deny   (default)
+decisions.subscribe(NETWORK_SOURCE);
+
+try {
+  for (const hostname of [
+    'api.anthropic.com',
+    'registry.npmjs.org',
+    'a.example.com',
+    'a.example.com',
+    'outro.com',
+  ]) {
+    const { decision } = await gate.decide({
+      hostname,
+      port: 443,
+      protocol: 'https',
+    });
+    writeOut(`${hostname.padEnd(20)} ${decision.padEnd(5)} (${decidedBy})\n`);
+  }
+} finally {
+  decisions.unsubscribeAll();
+}
+
+writeOut('\nSó as regras, sem o gate:\n');
+for (const destination of ['registry.npmjs.org:443', 'outro.com:443']) {
+  const { policy, source } = decideByRules(rules, destination);
+  writeOut(`${destination.padEnd(22)} ${policy.padEnd(5)} (${source})\n`);
+}
 ```
 
-O que está entre parênteses é o `decidedBy` de cada evento (saída real). Com um ledger no store (`ledger: networkLedger(store, { root, provider })`), a negação de `outro.com` ficaria **pendente**, com número de pedido, e a aprovação `session` seria guardada por ele. Só as regras, sem o gate, também respondem:
+`bun guides/network/exemplos/5-gate.ts` (saída real):
 
-```ts
-decideByRules(rules, 'registry.npmjs.org:443'); // { policy: 'allow', source: 'allow', … }
-decideByRules(rules, 'outro.com:443'); // { policy: 'deny', source: 'default', … }
 ```
+api.anthropic.com    allow (provider)
+registry.npmjs.org   allow (policy)
+a.example.com        allow (human)
+a.example.com        allow (saved)
+outro.com            deny  (default)
+
+Só as regras, sem o gate:
+registry.npmjs.org:443 allow (allow)
+outro.com:443          deny  (default)
+```
+
+O que está entre parênteses é o `decidedBy` de cada decisão: `provider` (está em `alwaysAllow`), `policy`, `human` (perguntou, e a resposta foi `session`), `saved` (já aprovado nesta sessão) e `default`. Com um ledger no store (`ledger: networkLedger(store, { root, provider })`), a negação de `outro.com` ficaria **pendente**, com número de pedido, e a aprovação `session` seria guardada por ele. As duas últimas linhas são só as regras, sem o gate (`decideByRules`).
 
 ### 6. Quem aprova
 
-A rede usa **o mesmo `approve` dos comandos**, para a pessoa ter uma fila só. O pedido chega com o destino como texto (`exemplo.com:443`) e `category: 'network'`, e o approver pode tratá-lo à parte, como o `sandboxApprover` do Instructor:
+A rede usa **o mesmo `approve` dos comandos**, para a pessoa ter uma fila só. Num agente, o pedido chega com o destino como texto (`exemplo.com:443`) e `category: 'network'`, e o approver pode tratá-lo à parte. Este nega toda a rede e libera cada comando uma vez; o gate o consulta como o agente faz.
+
+`guides/network/exemplos/6-quem-aprova.ts`:
 
 ```ts
-export const sandboxApprover: CommandApprover = ({ category }) =>
+/**
+ * Exemplo 6 do curso de network: quem aprova. A rede usa o mesmo `approve`
+ * dos comandos, para a pessoa ter uma fila só: num agente, cada pedido de
+ * rede chega a ele como o "comando" `host:porta`, com `category: 'network'`.
+ * Este approver nega toda a rede e libera cada comando uma vez; o gate o
+ * consulta como o agente faz (`networkOptions`, em src/agent/enforce.ts).
+ *
+ *   bun guides/network/exemplos/6-quem-aprova.ts
+ */
+import type { CommandApprover } from '../../../src/approval/gate';
+import { NetworkGate } from '../../../src/network/index';
+import { writeOut } from '../../../src/output/stdio';
+
+/** Nega a rede; libera cada comando uma vez. */
+const approver: CommandApprover = ({ category }) =>
   Promise.resolve(category === 'network' ? 'deny' : 'once');
+
+const gate = new NetworkGate({
+  rules: {
+    default: 'deny',
+    requireApproval: [{ operations: ['connect'], hosts: ['*'] }],
+  },
+  // Como o agente liga o approver à rede: o destino vira o comando.
+  approve: (request) =>
+    approver({
+      command: `${request.hostname}:${String(request.port)}`,
+      pattern: request.pattern,
+      reason: request.reason,
+      provider: 'exemplo',
+      category: 'network',
+    }),
+});
+
+const network = await gate.decide({
+  hostname: 'exemplo.com',
+  port: 443,
+  protocol: 'https',
+});
+writeOut(`rede, exemplo.com:443 → ${network.decision}\n`);
+
+const command = await approver({
+  command: 'bun test',
+  pattern: 'bun test',
+  reason: 'A ação corresponde a policy.requireApproval.execution.',
+  provider: 'exemplo',
+});
+writeOut(`comando, bun test → ${command}\n`);
+```
+
+`bun guides/network/exemplos/6-quem-aprova.ts` (saída real):
+
+```
+rede, exemplo.com:443 → deny
+comando, bun test → once
 ```
 
 Só chega ao approver o que cai em `requireApproval`. Uma negação pelo `default` não pergunta: fica pendente para a tela de aprovações.
@@ -538,7 +856,7 @@ O proxy responde `403` com o motivo. Para uma negação pelo `default`:
 Negado: este destino aguarda a aprovação de uma pessoa (pedido #42). Não tente de novo nem outro caminho para ele; continue com outra parte da tarefa ou termine o turno e espere.
 ```
 
-A frase é escrita para o modelo: diz para não insistir e dá o número do pedido que aparece em `bun approvals`.
+A frase é escrita para o modelo: diz para não insistir e dá o número do pedido que aparece em `bun run approvals` (num projeto que instalou o pacote, `bunx choliba approvals`).
 
 [↑ topo](#topo)
 
@@ -551,7 +869,7 @@ A frase é escrita para o modelo: diz para não insistir e dá o número do pedi
 
 **Ninguém deve:**
 
-- **Esquecer que, sem política, a rede é do host.** Um agente sem `permissions` não passa pelo gate. Com qualquer política, o `default` já vale para a rede.
+- **Esquecer que, sem política, a rede é do host.** Um agente sem `policy` não passa pelo gate. Com qualquer política, o `default` já vale para a rede.
 - **Escrever URL em `hosts`.** O gate recusa na criação: `exemplo.com` ou `exemplo.com:443`.
 - **Esperar que `localhost:*` abra o host.** Só porta exata vira túnel.
 - **Pôr a mesma porta em `ports` e em `localhost:<porta>`.** Uma é da sandbox, a outra é do host; o módulo recusa.
@@ -563,7 +881,7 @@ A frase é escrita para o modelo: diz para não insistir e dá o número do pedi
 
 1. **Simples.** Com a política do Exemplo 4, o que acontece com `gist.github.com:443`, `api.npmjs.org:443` e `localhost:8080`? Para cada um, diga a regra que decidiu.
 
-2. **Intermediário.** Um agente tem `default: 'deny'` e nenhuma regra de `network`. A CLI dele roda `curl https://exemplo.com`. A conexão passa pelo gate? Qual `decidedBy` aparece no evento, em que nível vai para o log, e o que a CLI recebe? E se o mesmo agente não tivesse `permissions`?
+2. **Intermediário.** Um agente tem `default: 'deny'` e nenhuma regra de `network`. A CLI dele roda `curl https://exemplo.com`. A conexão passa pelo gate? Qual `decidedBy` aparece no evento, em que nível vai para o log, e o que a CLI recebe? E se o mesmo agente não tivesse `policy`?
 
 3. **Difícil.** Três conexões simultâneas para `a.example.com:443` chegam ao gate, e o destino está em `requireApproval`. Seguindo `decide`, `asking` e `enqueue`, explique quantas vezes a pessoa é perguntada e o que cada conexão recebe se ela responder `once`. Depois diga o que mudaria se a resposta fosse `session`.
 
