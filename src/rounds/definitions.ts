@@ -1,5 +1,5 @@
 /**
- * Where a round's declaration lives in `rounds/definitions`: one file,
+ * Where a round's declaration lives in `rounds.definitions`: one file,
  * `<id>.ts`, or a folder of its own, `<id>/<id>.ts`, whose other files are
  * pieces the declaration imports (a policy, the prompts), not rounds.
  */

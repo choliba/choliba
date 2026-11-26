@@ -2,7 +2,7 @@
  * The rubric: how a round is scored, from what its record holds. Pure and
  * without other modules' runtime code, so the pages score with it too.
  *
- * Per agent, 0 to 5 (rounds/README.md):
+ * Per agent, 0 to 5 (guides/rounds/rubrica.md):
  * - effectiveness (what): did it do what its prompt asked, within its
  *   policy, whatever it cost;
  * - efficiency (how): what it spent and wasted to get there, scaled by the
@@ -29,7 +29,7 @@ export const RUBRIC_VERSION = '3';
 /** One criterion's score, and why. */
 export interface CriterionScore {
   readonly id: string;
-  /** In the user's language: `Completude`. */
+  /** In the user's language: `Critérios do prompt`. */
   readonly label: string;
   /** 0 to 5; `null` when there was nothing to measure. */
   readonly score: number | null;
@@ -53,7 +53,7 @@ export interface ActorScore {
    * base`; `null` without effectiveness.
    */
   readonly final: number | null;
-  /** The eliminatory rules it broke; any makes both scores 0. */
+  /** The eliminatory rules it broke; any makes the three scores 0. */
   readonly eliminated: readonly string[];
   readonly effectiveness: DimensionScore;
   readonly efficiency: EfficiencyScore;

@@ -235,7 +235,7 @@ export interface RoundStart {
   /** Its short commit. */
   readonly commit: string;
   /**
-   * The fixture (`rounds/fixtures/<name>`) the round's folder was created
+   * The fixture (`<rounds.fixtures>/<name>`) the round's folder was created
    * from; `null` from a repository that already existed. Absent in records
    * from before fixtures.
    */

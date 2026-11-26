@@ -88,7 +88,7 @@ export interface RoundStartGit {
 
 /**
  * Where every run starts from:
- * - `fixture`: a folder of `rounds/fixtures`, copied into the round's own
+ * - `fixture`: a folder of `rounds.fixtures`, copied into the round's own
  *   folder (`roundDir(id)`, in `rounds.dir`) with a fresh repository;
  * - `git`: a tag in a repository that already exists (a real project).
  * Either way the folder must be the top of its own repository, apart from
@@ -115,7 +115,7 @@ export interface RoundDefinition {
   /**
    * The criteria of a good round, by actor name (and `round` for the whole
    * round): file assertions, limits, and conditionals. Score whether it did
-   * what it was asked (see rounds/README.md).
+   * what it was asked (see guides/rounds/README.md).
    */
   readonly criteria?: RoundCriteria;
   /**

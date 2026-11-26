@@ -1,6 +1,6 @@
 /**
  * The form that writes a new round's declaration: what you fill in becomes
- * the file `rounds/definitions/<id>.ts`, shown as you type, ready to copy.
+ * the file `<rounds.definitions>/<id>.ts`, shown as you type, ready to copy.
  * The pages only read: nothing runs or is saved from here. The round has
  * its agents (one at a time on screen), the steps that choose among them,
  * and limits for the whole round; pasting a definition, or opening a round
@@ -155,7 +155,7 @@ async function loadProjectRound(
     notes: pieces
       ? [
           ...notes,
-          `A rodada ${definition.id} está numa pasta (rounds/definitions/${definition.id}/): a declaração abaixo sai num arquivo só, com o que ela importa das outras peças dentro dela.`,
+          `A rodada ${definition.id} está numa pasta (${definition.id}/, dentro de rounds.definitions): a declaração abaixo sai num arquivo só, com o que ela importa das outras peças dentro dela.`,
         ]
       : notes,
   };
@@ -600,8 +600,8 @@ export function CreatePage(): ReactNode {
       <header>
         <h1>Criar rodada</h1>
         <p className="note">
-          Preencha a rodada e copie a declaração: salve-a em{' '}
-          <code>rounds/definitions/{id}.ts</code> e rode{' '}
+          Preencha a rodada e copie a declaração: salve-a como{' '}
+          <code>{id}.ts</code> na pasta <code>rounds.definitions</code> e rode{' '}
           <code>bun run rounds {id}</code>. Nada roda nem é salvo por esta
           página.
         </p>
@@ -647,9 +647,9 @@ export function CreatePage(): ReactNode {
             </label>
             {!knownFixtures.includes(fixture) && fixture.trim().length > 0 && (
               <p className="note">
-                Fixture nova: crie a pasta{' '}
-                <code>rounds/fixtures/{fixture}</code> com os arquivos de
-                partida da rodada.
+                Fixture nova: crie a pasta <code>{fixture}</code> em{' '}
+                <code>rounds.fixtures</code> com os arquivos de partida da
+                rodada.
               </p>
             )}
             <div className="step-row-who">
@@ -994,7 +994,7 @@ export function CreatePage(): ReactNode {
 
         <section className="create-output" aria-labelledby="declaracao">
           <div className="tool-list-head">
-            <h2 id="declaracao">rounds/definitions/{id}.ts</h2>
+            <h2 id="declaracao">&lt;rounds.definitions&gt;/{id}.ts</h2>
             {!editing && projectRounds.length > 0 && (
               <select
                 className="create-open-round"
@@ -1055,12 +1055,12 @@ export function CreatePage(): ReactNode {
               />
               <p className="muted">
                 Cole o conteúdo de um{' '}
-                <code>rounds/definitions/&lt;id&gt;.ts</code> (num arquivo só,
-                importando só do Choliba). Ao colar, o formulário é preenchido
-                com ela, e a declaração deve sair igual. Uma rodada em pasta (
-                <code>&lt;id&gt;/&lt;id&gt;.ts</code> e as peças que ela
-                importa) abre pela lista Abrir uma rodada do projeto, ou colando
-                qualquer arquivo dela.
+                <code>&lt;rounds.definitions&gt;/&lt;id&gt;.ts</code> (num
+                arquivo só, importando só do Choliba). Ao colar, o formulário é
+                preenchido com ela, e a declaração deve sair igual. Uma rodada
+                em pasta (<code>&lt;id&gt;/&lt;id&gt;.ts</code> e as peças que
+                ela importa) abre pela lista Abrir uma rodada do projeto, ou
+                colando qualquer arquivo dela.
               </p>
               <div className="create-paste-actions">
                 <button

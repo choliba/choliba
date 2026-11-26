@@ -1,5 +1,5 @@
 /**
- * A round's definition, pasted as source (`rounds/definitions/<id>.ts`),
+ * A round's definition, pasted as source (`<rounds.definitions>/<id>.ts`),
  * read back as data (`RoundDeclaration`) to fill the "Criar rodada" form.
  * A round in a folder (`<id>/<id>.ts` and its pieces) comes as all its
  * files (`definitions.json`). The source is the reader's own, run in this
@@ -433,7 +433,7 @@ const isPolicy = (value: unknown): value is AgentPolicy =>
 function declarationOf(definition: unknown): RoundDeclaration {
   if (!isRecord(definition)) {
     throw new Error(
-      'A definição precisa exportar a rodada por padrão: export default defineRound({ … }). Se este arquivo é uma peça de uma rodada em pasta, a rodada fica em rounds/definitions/<id>/<id>.ts: abra-a pela lista Abrir uma rodada do projeto.',
+      'A definição precisa exportar a rodada por padrão: export default defineRound({ … }). Se este arquivo é uma peça de uma rodada em pasta, a rodada fica em <rounds.definitions>/<id>/<id>.ts: abra-a pela lista Abrir uma rodada do projeto.',
     );
   }
   const actors = field(definition, 'actors');

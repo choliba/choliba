@@ -223,7 +223,7 @@ export default defineRound({ id: 'x', actors: {}, flow: [], extra: nada });`;
 
 test('uma peça colada sozinha diz que a rodada fica em <id>/<id>.ts', async () => {
   await expect(declarationFromSource(PIECE, [])).rejects.toThrow(
-    'a rodada fica em rounds/definitions/<id>/<id>.ts',
+    'a rodada fica em <rounds.definitions>/<id>/<id>.ts',
   );
 });
 

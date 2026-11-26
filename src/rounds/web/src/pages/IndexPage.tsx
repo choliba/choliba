@@ -57,9 +57,9 @@ export function IndexPage(): ReactNode {
         <span className="eyebrow">bun run rounds · rounds.data</span>
         <h1>Testes</h1>
         <p>
-          Um teste é uma declaração em <code>rounds/definitions</code>. Cada vez
-          que ela roda é uma rodada, e cada rodada diz o que mudou desde a
-          anterior: modelo, CLI, política, pedidos.
+          Um teste é uma declaração na pasta <code>rounds.definitions</code>.
+          Cada vez que ela roda é uma rodada, e cada rodada diz o que mudou
+          desde a anterior: modelo, CLI, política, pedidos.
         </p>
       </header>
 

@@ -13,6 +13,7 @@ import type {
 } from '../../../../rounds/score';
 import { RUBRIC } from '../../../../rounds/constants';
 import type { RoundRecord, ToolRecord } from '../../../../rounds/types';
+import { RUBRIC_URL } from '../constants';
 import { NOT_MEASURED, title } from '../format';
 import { Modal } from './Modal';
 import { Badge, statusOf, type Status } from './Status';
@@ -312,8 +313,11 @@ export function Scores({
         </div>
       </section>
       <p className="note round-rubric">
-        Rubrica {score.version}: os critérios e os números de cada um estão em
-        rounds/README.md.
+        Rubrica {score.version}: os critérios e os números de cada um estão na{' '}
+        <a href={RUBRIC_URL} target="_blank" rel="noreferrer">
+          rubrica das rodadas
+        </a>
+        .
       </p>
     </section>
   );
