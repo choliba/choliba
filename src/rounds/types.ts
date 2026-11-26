@@ -200,6 +200,10 @@ export interface DeclaredActor {
     readonly ports?: readonly number[];
     /** Where the workspaces' homes are kept, as declared. */
     readonly homes?: string;
+    /** Where the agent sees the root, as declared. */
+    readonly agentRoot?: string;
+    /** The programs the agent sees, as declared. */
+    readonly programs?: readonly string[];
   };
   readonly policy: AgentPolicy | null;
   readonly readOnly: boolean;
@@ -311,6 +315,13 @@ export interface WorkspaceSnapshot {
   readonly writable: readonly string[];
   readonly hostState: RoundHostState;
   readonly ports: readonly number[];
+  /** Where the agent saw the root; absent when it was `/home/choliba`, the default. */
+  readonly agentRoot?: string;
+  /**
+   * The programs the agent saw (the workspace's `programs`, or the config's
+   * `workspaces.programs`); absent when it saw every program of the host.
+   */
+  readonly programs?: readonly string[];
 }
 
 export interface NetworkSnapshot {

@@ -443,6 +443,41 @@ test('snapshotActor copia as peças e o hash muda só com a configuração', () 
   );
 });
 
+/** An actor's pieces with a bubblewrap workspace of `options`, for the hashes. */
+const piecesWith = (options: { programs?: string[]; agentRoot?: string }) => ({
+  role: 'dev',
+  provider: fakeProvider,
+  workspace: new Workspace({
+    type: 'bubblewrap',
+    root: '/projeto/ws',
+    ...options,
+  }),
+  policy: undefined,
+  readOnly: false,
+});
+
+test('snapshotActor guarda os programas e a raiz do agente, e o hash muda com eles', () => {
+  const plain = snapshotActor(piecesWith({}));
+  const chosen = snapshotActor(
+    piecesWith({ programs: ['bash'], agentRoot: '/home/outro' }),
+  );
+
+  expect(chosen.workspace).toMatchObject({
+    programs: ['bash'],
+    agentRoot: '/home/outro',
+  });
+  expect(chosen.configHash).not.toBe(plain.configHash);
+  expect(snapshotActor(piecesWith({ programs: ['bash'] })).configHash).not.toBe(
+    plain.configHash,
+  );
+  // The defaults stay out, so a default configuration keeps its old hash.
+  expect(Object.keys(plain.workspace)).not.toContain('programs');
+  expect(Object.keys(plain.workspace)).not.toContain('agentRoot');
+  expect(
+    snapshotActor(piecesWith({ agentRoot: '/home/choliba' })).configHash,
+  ).toBe(plain.configHash);
+});
+
 test('readOnlyRespected e noQuestions julgam cada passo', () => {
   const input = {
     steps: [
@@ -1286,6 +1321,8 @@ test('a declaração vira dados e volta a ser um arquivo que declara a mesma rod
           hostState: 'none',
           writable: ['/tmp/rodada/notas'],
           ports: [5173],
+          agentRoot: '/home/analista',
+          programs: ['bash', 'git'],
         },
         policy: {
           default: 'deny',
@@ -1367,11 +1404,15 @@ test('a declaração vira dados e volta a ser um arquivo que declara a mesma rod
   expect(declaration.actors['analista']?.workspace).toMatchObject({
     writable: ['/tmp/rodada/notas'],
     ports: [5173],
+    agentRoot: '/home/analista',
+    programs: ['bash', 'git'],
   });
   const source = declarationSource(known);
   expect(source).toContain("cli: 'claude',");
   expect(source).toContain("baseUrl: 'http://127.0.0.1:11435'");
   expect(source).toContain('ports: [5173]');
+  expect(source).toContain("agentRoot: '/home/analista'");
+  expect(source).toContain("programs: ['bash', 'git']");
   // A RegExp with flags goes back as it was written.
   expect(source).toContain('matches: [/goiaba/i]');
   // Already in the project's style: prettier changes nothing.
@@ -1416,6 +1457,8 @@ test('agentSource gera um agente da raiz do projeto com provider, workspace, pol
       image: null,
       root: '<projeto>/x',
       hostState: 'none',
+      agentRoot: '/home/po',
+      programs: ['bun', 'git'],
     },
     policy: {
       default: 'deny',
@@ -1440,6 +1483,8 @@ test('agentSource gera um agente da raiz do projeto com provider, workspace, pol
   expect(source).toContain("name: 'product-owner'");
   // O workspace aponta para a pasta configurada, não a da rodada.
   expect(source).toContain('root: getConfig().workspaces.dir');
+  expect(source).toContain("agentRoot: '/home/po'");
+  expect(source).toContain("programs: ['bun', 'git']");
   expect(source).toContain('}).run();');
   // Already in the project's style: prettier changes nothing.
   expect(

@@ -238,6 +238,45 @@ test('aceita matches como texto ou como { source, flags }, e recusa sem as flags
   );
 });
 
+/** A declaration of the analyst alone, with `workspace` as declared. */
+const declarationWith = (workspace: Record<string, unknown>) => ({
+  id: 'analise',
+  goal: 'O analista não altera arquivos',
+  start: null,
+  actors: {
+    analista: {
+      provider: { name: 'claude', cli: null, model: null },
+      workspace: {
+        type: 'bubblewrap',
+        image: null,
+        root: 'x',
+        hostState: null,
+        ...workspace,
+      },
+      policy: null,
+      readOnly: true,
+    },
+  },
+  flow: [{ actor: 'analista', by: null, prompt: ['Analise.'] }],
+  rules: [],
+  repeat: 1,
+});
+
+test('aceita os programas e a raiz do agente no snapshot e na declaração, e recusa outro tipo', () => {
+  const chosen = { programs: ['bash'], agentRoot: '/home/outro' };
+  const value = changed((r) => {
+    Object.assign(at(r, 'actors', 'analista', 'workspace'), chosen);
+    r['declaration'] = declarationWith(chosen);
+  });
+  expect(() => validateRound(value)).not.toThrow();
+  const wrong = changed((r) => {
+    at(r, 'actors', 'analista', 'workspace')['programs'] = 'bash';
+  });
+  expect(() => validateRound(wrong)).toThrow(
+    '$.actors.analista.workspace.programs: esperava uma lista, veio "bash"',
+  );
+});
+
 test.each([
   [
     'outro schema',

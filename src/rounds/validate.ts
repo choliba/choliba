@@ -216,6 +216,8 @@ const actor = object({
     writable: list(string),
     hostState: oneOf(HOST_STATES),
     ports: list(count),
+    'agentRoot?': nonEmpty,
+    'programs?': list(nonEmpty),
   }),
   network: object({
     rules: nullable(anyObject),
@@ -367,6 +369,8 @@ const declaredActor = object({
     'writable?': list(nonEmpty),
     'ports?': list(positive),
     'homes?': nonEmpty,
+    'agentRoot?': nonEmpty,
+    'programs?': list(nonEmpty),
   }),
   // Its shape is the policy module's to check.
   policy: nullable(anyObject),

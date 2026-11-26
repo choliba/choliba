@@ -253,6 +253,12 @@ export function declarationSource(
             ...(workspace.homes === undefined
               ? {}
               : { homes: workspace.homes }),
+            ...(workspace.agentRoot === undefined
+              ? {}
+              : { agentRoot: workspace.agentRoot }),
+            ...(workspace.programs === undefined
+              ? {}
+              : { programs: workspace.programs }),
           },
           ...(actor.policy === null
             ? {}
@@ -364,6 +370,12 @@ export function agentSource(
     ...(workspace.image === null ? {} : { image: workspace.image }),
     root: new Code('getConfig().workspaces.dir'),
     ...(workspace.hostState === null ? {} : { hostState: workspace.hostState }),
+    ...(workspace.agentRoot === undefined
+      ? {}
+      : { agentRoot: workspace.agentRoot }),
+    ...(workspace.programs === undefined
+      ? {}
+      : { programs: workspace.programs }),
   };
   const workspaceHead = '    workspace: new Workspace(';
 

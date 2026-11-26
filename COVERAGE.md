@@ -1,8 +1,8 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 26/11/2026 07:11:31: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 26/11/2026 08:05:21: não edite à mão.
 
-Limites (coverage-thresholds.json, só sobem): funções 92.78%, linhas 95.07%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
+Limites (coverage-thresholds.json, só sobem): funções 92.78%, linhas 95.08%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
 ## Resumo
 
@@ -29,7 +29,7 @@ Status|Módulo|% Funcs|% Lines
 🟡|[src/output](src/output)|52.94|54.87
 🟢|[src/policy](src/policy)|99.55|99.28
 🟢|[src/providers](src/providers)|94.71|99.00
-🟢|[src/rounds](src/rounds)|94.07|96.92
+🟢|[src/rounds](src/rounds)|94.07|96.94
 🟢|[src/store](src/store)|95.71|94.09
 🟢|[src/workspace](src/workspace)|98.26|97.60
 
@@ -288,11 +288,11 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/rounds</b>: 96.92% das linhas, 32 arquivos</summary>
+<summary>🟢 <b>src/rounds</b>: 96.94% das linhas, 32 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
-🟢|[capture.ts](src/rounds/capture.ts)|94.44|95.80
+🟢|[capture.ts](src/rounds/capture.ts)|94.44|95.97
 🟢|[constants.ts](src/rounds/constants.ts)|100.00|100.00
 🟢|[criteria.ts](src/rounds/criteria.ts)|100.00|97.19
 🟢|[define.ts](src/rounds/define.ts)|100.00|90.95
@@ -314,8 +314,8 @@ Status|Arquivo|% Funcs|% Lines
 🟢|[snapshot.ts](src/rounds/snapshot.ts)|100.00|100.00
 🟢|[totals.ts](src/rounds/totals.ts)|100.00|100.00
 🟢|[types.ts](src/rounds/types.ts)|100.00|100.00
-🟢|[validate.ts](src/rounds/validate.ts)|95.56|95.98
-🟢|[web/src/declaration.ts](src/rounds/web/src/declaration.ts)|94.29|89.72
+🟢|[validate.ts](src/rounds/validate.ts)|95.56|96.02
+🟢|[web/src/declaration.ts](src/rounds/web/src/declaration.ts)|94.29|90.09
 🟢|[web/src/filters.ts](src/rounds/web/src/filters.ts)|96.30|100.00
 🟢|[web/src/format.ts](src/rounds/web/src/format.ts)|100.00|100.00
 🟢|[web/src/load-definition.ts](src/rounds/web/src/load-definition.ts)|90.28|100.00

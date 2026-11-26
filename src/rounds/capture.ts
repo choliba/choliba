@@ -149,6 +149,12 @@ export function captureDeclaration(
             ...(workspace.homes === undefined
               ? {}
               : { homes: workspace.homes }),
+            ...(workspace.agentRoot === undefined
+              ? {}
+              : { agentRoot: workspace.agentRoot }),
+            ...(workspace.programs === undefined
+              ? {}
+              : { programs: workspace.programs }),
           },
           policy: actor.policy ?? null,
           readOnly: actor.readOnly ?? false,

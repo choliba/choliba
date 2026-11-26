@@ -9,6 +9,7 @@ import { createHash } from 'node:crypto';
 import type { AgentProvider } from '../agent/types';
 import { networkRulesOf } from '../network/rules';
 import type { AgentPolicy } from '../policy/policy.interface';
+import { AGENT_ROOT } from '../workspace/constants';
 import type { Workspace } from '../workspace/index';
 import type { ActorSnapshot, Prompt, RoundDefinitionRef } from './types';
 
@@ -77,6 +78,13 @@ export function snapshotActor(
       writable: (options.writable ?? []).map(clean),
       hostState: workspace.hostState,
       ports: options.ports ?? [],
+      // The defaults stay out: a default configuration keeps its hash.
+      ...(workspace.paths.agentRoot === AGENT_ROOT
+        ? {}
+        : { agentRoot: workspace.paths.agentRoot }),
+      ...(workspace.programs === undefined
+        ? {}
+        : { programs: workspace.programs }),
     },
     network: {
       rules: policy === undefined ? null : networkRulesOf(policy),
