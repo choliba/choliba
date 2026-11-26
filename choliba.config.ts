@@ -24,7 +24,7 @@ export default defineConfig({
   },
   database: {
     dir: join(dirStorage, 'db'), // relativo a este arquivo
-    name: 'batata.db',
+    name: 'choliba.db',
   },
   workspaces: {
     // A raiz padrão dos workspaces: a pasta onde o agente trabalha
@@ -35,9 +35,9 @@ export default defineConfig({
     homes: join(dirStorage, 'homes'),
   },
   rounds: {
-    // As suas rodadas ficam fora deste repositório, em ~/dev/minhas-rodadas:
-    // as declarações, as fixtures e os registros. Rodando daqui, o Choliba usa
-    // essas pastas (bun run rounds <id>, bun run rounds:web).
+    // As rodadas ficam fora deste repositório: as declarações, as fixtures e os
+    // registros. Rodando daqui, o Choliba usa essas pastas (bun run rounds <id>,
+    // bun run rounds:web).
     // Onde as rodadas rodam: uma pasta por rodada (<dir>/<id>), recriada a
     // partir da fixture a cada execução. O `bun run clear --rounds` a esvazia.
     // As quatro pastas vêm do .env (CHOLIBA_ROUNDS_*). Sem elas a config

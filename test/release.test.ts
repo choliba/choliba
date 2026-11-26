@@ -186,8 +186,10 @@ describe('releaseNotes', () => {
     ).toBe(true);
     expect(notes).toContain('O `choliba-0.1.0.tgz` em **Assets**');
     expect(notes).toContain(
-      `bun add --trust ${REPO}/releases/download/v0.1.0/choliba-0.1.0.tgz`,
+      `bun add ${REPO}/releases/download/v0.1.0/choliba-0.1.0.tgz`,
     );
+    expect(notes).not.toContain('--trust');
+    expect(notes).not.toContain('não muda');
     expect(outline).toEqual([
       '## 2026-11-23',
       '### [0.2.0+bbbbbbb]',

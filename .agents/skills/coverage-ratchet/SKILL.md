@@ -38,16 +38,16 @@ porcentagem: eles sobem o limite sem proteger nada, e a catraca trava esse núme
 - **Baixar um limite** em `coverage-thresholds.json`. A graça é que isso seja deliberado e visível. Sugira só com um
   motivo real e entendido, e mexa só na métrica que a pessoa disser.
 - **Acrescentar uma exclusão** em `coveragePathIgnorePatterns`, no `bunfig.toml`. Hoje ficam de fora: os testes e o
-  que eles criam em pastas temporárias (`test/**`, `../**`), os exemplos (`agents/**`, `guides/**`), as rodadas
-  declaradas e as fixtures delas (`rounds/definitions/**`, `rounds/fixtures/**`) e a configuração do projeto
-  (`config/**`, `choliba.config.ts`). Excluir um arquivo com lógica esconde justamente o que a catraca protege. Se um
-  arquivo é difícil de cobrir, isso costuma ser um sinal de desenho: leve a lógica para um módulo testável.
+  que eles criam em pastas temporárias (`test/**`, `../**`), os exemplos dos cursos (`guides/**`), as ferramentas dos
+  agentes do projeto (`tools/**`) e a configuração do projeto (`config/**`, `choliba.config.ts`). Excluir um arquivo
+  com lógica esconde justamente o que a catraca protege. Se um arquivo é difícil de cobrir, isso costuma ser um sinal
+  de desenho: leve a lógica para um módulo testável.
 
 ## Decisões de desenho
 
 Os limites começaram em 0 e a catraca os subiu até o que o código alcançou. As escolhas (por que o limite não fica
 no `bunfig.toml`, por que a média por arquivo, o arredondamento para baixo, a regravação só quando muda) estão em
-`references/details.md`, junto com o passo opcional de CI. Leia antes de mexer no script.
+`references/details.md`, junto com o que o job `test` do CI confere. Leia antes de mexer no script.
 
 ## Relacionado
 

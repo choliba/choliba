@@ -55,4 +55,4 @@ estas regras cobrem as lacunas.
 > Rode os testes com `bun run test`.
 
 > ~~É possível configurar o provider por uma variável de ambiente, se desejado.~~
-> Para escolher o provider, passe `provider: 'claude'` ou `'codex'` na configuração do agente.
+> Para escolher o provider, passe uma instância dele ao agente: `provider: new CodexProvider({ model: '<modelo>' })`.

@@ -6,8 +6,8 @@ body:
   - type: markdown
     attributes:
       value: >-
-        Não cole tokens, credenciais, `.env`, `.env.json` nem dados pessoais. Para um erro de uma execução de agente,
-        use o template "Erro de execução de agente".
+        Não cole tokens, credenciais, o `.env` nem dados pessoais. Para um erro de uma execução de agente, use o
+        template "Erro de execução de agente".
   - type: textarea
     id: what-happened
     attributes:
@@ -26,7 +26,7 @@ body:
     attributes:
       label: Como reproduzir
       placeholder: |
-        1. bun choliba …
+        1. bunx choliba …
         2. …
       render: text
     validations:

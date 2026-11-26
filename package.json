@@ -1,7 +1,7 @@
 {
   "name": "choliba",
-  "version": "0.3.0",
-  "description": "Agentes de IA rodando em sandbox, com uma política de permissões única, e rodadas que medem o que cada agente fez.",
+  "version": "0.4.0",
+  "description": "Roda agentes de código (Claude Code, Codex, Cursor, Ollama) em sandbox, com uma política só e rodadas que os comparam.",
   "license": "MIT",
   "type": "module",
   "packageManager": "bun@1.4.2",
@@ -28,9 +28,9 @@
     "bun": ">=1.4"
   },
   "scripts": {
-    "ollama:codex": "bun guides/agent/exemplos/ollama.codex.ts",
-    "ollama": "bun guides/agent/exemplos/ollama.ts",
-    "tui": "bun guides/agent/exemplos/tui.ts",
+    "ollama:codex": "bun guides/agent/exemplos/7-entradas-e-saidas.ts",
+    "ollama": "bun guides/agent/exemplos/7-ollama.ts",
+    "tui": "bun guides/agent/exemplos/7-tui.ts",
     "rounds": "bun bin/choliba.ts rounds",
     "rounds:web": "bun bin/choliba.ts rounds:web",
     "rounds:build": "bun run --cwd src/rounds/web build",
@@ -42,7 +42,7 @@
     "check": "bun run typecheck && bun run lint && bun run format:check && bun run test:cov",
     "approvals": "bun src/cli/approvals.ts",
     "issue": "bun scripts/issue.ts",
-    "prepare": "git config core.hooksPath .githooks || true",
+    "prepare": "[ \"$(git rev-parse --show-toplevel 2>/dev/null)\" = \"$(pwd -P)\" ] && git config core.hooksPath .githooks || true",
     "git:clean": "bun scripts/git-clean.ts",
     "release:notes": "bun scripts/release-notes.ts",
     "docs:pages": "bun scripts/docs-pages.ts",
@@ -56,10 +56,12 @@
     "prepack": "bun run rounds:build"
   },
   "devDependencies": {
+    "@elastic/ecs-pino-format": "^1.5.0",
     "@types/bun": "^1.4.4",
     "@types/node": "^26.6.5",
     "oxlint": "1.89.0",
     "oxlint-tsgolint": "7.0.2005",
+    "pino": "^10.4.0",
     "prettier": "3.9.10",
     "puppeteer": "^25.17.0",
     "puppeteer-extra": "^3.3.6",
@@ -68,9 +70,6 @@
     "vitepress": "^1.6.4"
   },
   "dependencies": {
-    "@elastic/ecs-pino-format": "^1.5.0",
-    "@modelcontextprotocol/server": "^2.4.0",
-    "ollama": "^0.6.4",
-    "pino": "^10.4.0"
+    "@modelcontextprotocol/server": "^2.4.0"
   }
 }

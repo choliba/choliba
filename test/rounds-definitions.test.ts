@@ -306,7 +306,7 @@ test('servePages: sem as páginas geradas, diz o que rodar; serve o dist e nada 
   const dist = join(dir, 'dist');
   const data = join(dir, 'data');
   expect(() => servePages({ dist, data, definitions: dir, port: 0 })).toThrow(
-    'rode bun run rounds:build',
+    'Instale o Choliba pelo .tgz da release, que já as traz; no repositório do Choliba, rode bun run rounds:build',
   );
 
   mkdirSync(dist);

@@ -20,6 +20,7 @@ import {
   SITE_URL,
   websiteJsonLd,
 } from '../../scripts/docs-seo';
+import { editLinkOf } from '../../scripts/docs';
 import guides from './generated/guides-sidebar.json';
 
 /** The `docs/` folder, this config's parent. */
@@ -132,8 +133,9 @@ export default defineConfig({
       { text: 'Cursos', link: '/guias/', items: guides },
     ],
     socialLinks: [{ icon: 'github', link: REPOSITORY }],
+    // Um curso é gerado do README do módulo: o link edita esse arquivo (scripts/docs.ts).
     editLink: {
-      pattern: `${REPOSITORY}/edit/develop/docs/:path`,
+      pattern: editLinkOf,
       text: 'Editar esta página no GitHub',
     },
     outline: { label: 'Nesta página' },

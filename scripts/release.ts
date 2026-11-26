@@ -279,10 +279,10 @@ export function releaseNotes(
         ];
   const intro = [
     ...current,
-    'Pré-release atualizada a cada merge na `master`; o endereço de instalação não muda e traz sempre a versão atual:',
+    'Instale esta versão pelo endereço do pacote dela (cada versão tem o seu):',
     '',
     '```',
-    `bun add --trust ${context.repoUrl}/releases/download/${context.tag}/${asset}`,
+    `bun add ${context.repoUrl}/releases/download/${context.tag}/${asset}`,
     '```',
   ].join('\n');
   const sections = [

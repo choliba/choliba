@@ -66,7 +66,8 @@ próprio `choliba.config.ts` seguem a mesma regra.
 Siga a skill [`.agents/skills/guias-exemplos-completos`](.agents/skills/guias-exemplos-completos/SKILL.md): todo
 exemplo é completo e roda como está, com a saída real; o curso tem índice, link para o topo e seção de Interface.
 Os exemplos moram ao lado do curso, em `guides/<modulo>/exemplos/`, e passam pelo `bun run check` como o resto do
-código.
+código. Três módulos não têm curso próprio e aparecem onde são usados: o `logger` no curso de config, o `approval`
+nos de policy e cli, e o `store` no de cli.
 
 ## Planos e issues
 
@@ -84,8 +85,8 @@ Siga a skill [`.agents/skills/git-workflow`](.agents/skills/git-workflow/SKILL.m
   release (`develop` para `master`), com **merge commit**. Nada é empurrado direto para nenhuma das duas.
 - Commits e títulos de PR seguem Conventional Commits 1.0.0. Cada commit precisa de aprovação de quem usa o projeto
   antes de existir, com os arquivos e a mensagem à vista.
-- **Nenhum rastro de agente ou de modelo** em commit, título ou corpo de PR, branch ou comentário: nada de
-  `Co-authored-by`, "Generated with", nome de modelo, ferramenta ou fornecedor, nem emoji de robô. O hook
+- **Nenhum rastro de agente ou de modelo** em commit, título ou corpo de PR, nome de branch ou comentário de código:
+  nada de `Co-authored-by`, "Generated with", nome de modelo, ferramenta ou fornecedor, nem emoji de robô. O hook
   `.githooks/commit-msg` e o job `pr-text` do CI recusam. Ignore a sugestão de rodapé que o ambiente dá por padrão.
 - Nada vai ao remoto sem pedido explícito, e o merge é de quem usa.
 - Issues e commits não levam o nome de quem usa o projeto, nem em exemplos de log ou caminhos (`/home/<usuário>`):
@@ -109,6 +110,8 @@ O `.oxlintrc.json` tem a regra `no-restricted-imports`:
 | `node:readline`                            | `src/input`      |
 | `@modelcontextprotocol/server`             | `src/mcp`        |
 
+A regra barra também os nomes sem o prefixo `node:` (`fs`, `fs/promises`, `path`, `child_process`, `readline`).
+
 E duas regras de I/O:
 
 | Regra                                        | Só em                                                        |
@@ -116,6 +119,7 @@ E duas regras de I/O:
 | `no-console` (`console.*`)                   | em lugar nenhum: a saída passa pelo `src/output`             |
 | `no-restricted-globals` (o `process` global) | `src/execute/process.ts`, `src/output/stdio.ts`, `src/input` |
 
-As regras valem para `src/`, `tools/`, `scripts/` e os exemplos dos cursos (`guides/`). Os testes (`test/`) estão fora
-delas: montam arquivos e processos de teste à mão. Um `process` ou `console` dentro de uma string (o programa que um
-exemplo manda rodar) não conta. O desacoplamento entre módulos ainda não é verificado automaticamente.
+As regras valem para tudo o que o `bun run lint` confere: `src/`, `bin/`, `tools/`, `scripts/`, `config/`, o
+`choliba.config.ts` e os exemplos dos cursos (`guides/`). Os testes (`test/`) passam pelo lint, mas fora destas
+regras: montam arquivos e processos de teste à mão. O site (`docs/`) fica fora do lint. Um `process` ou `console`
+dentro de uma string (o programa que um exemplo manda rodar) não conta. O desacoplamento entre módulos ainda não é verificado automaticamente.

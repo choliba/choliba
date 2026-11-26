@@ -1,7 +1,12 @@
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { expect, test } from 'bun:test';
 
 import {
   commandsPage,
+  editLinkOf,
   guidePage,
   guidesIndexPage,
   guidesSidebar,
@@ -105,4 +110,43 @@ test('a página de comandos tem uma linha por comando', () => {
   expect(page).toContain('| `choliba clear` | apaga tudo |');
   // O texto solto do Markdown que parece uma tag quebra a página: o `<` sai como entidade.
   expect(page).toContain('| `choliba show` | mostra: choliba show &lt;id> |');
+});
+
+test('o link de edição de um curso leva ao README do módulo; o de outra página, ao docs/', () => {
+  expect(editLinkOf({ filePath: 'guias/policy.md' })).toBe(
+    `${REPOSITORY_URL}/edit/develop/guides/policy/README.md`,
+  );
+  expect(editLinkOf({ filePath: 'primeiros-passos.md' })).toBe(
+    `${REPOSITORY_URL}/edit/develop/docs/primeiros-passos.md`,
+  );
+});
+
+test('o link de edição funciona refeito do texto da função, como o VitePress faz no navegador', async () => {
+  // O VitePress guarda o texto da função e a refaz no navegador, longe deste
+  // módulo: num arquivo só com ela, ela precisa dar o mesmo link.
+  const dir = mkdtempSync(join(tmpdir(), 'choliba-edit-link-'));
+  try {
+    const file = join(dir, 'edit-link.js');
+    writeFileSync(file, `export default ${editLinkOf.toString()}\n`);
+    const loaded: unknown = await import(file);
+    const rebuilt =
+      typeof loaded === 'object' && loaded !== null && 'default' in loaded
+        ? loaded.default
+        : undefined;
+    if (typeof rebuilt !== 'function') throw new Error('não é uma função');
+
+    expect(
+      Reflect.apply(rebuilt, undefined, [{ filePath: 'guias/policy.md' }]),
+    ).toBe(`${REPOSITORY_URL}/edit/develop/guides/policy/README.md`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('o índice dos cursos e a página de comandos, gerados, não têm link de edição', () => {
+  const noEditLink = '---\neditLink: false\n---\n\n# ';
+
+  expect(guidesIndexPage([GUIDE]).startsWith(noEditLink)).toBe(true);
+  expect(commandsPage({}).startsWith(noEditLink)).toBe(true);
+  expect(guidePage(GUIDE)).not.toContain('editLink');
 });

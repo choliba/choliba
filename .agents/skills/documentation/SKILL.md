@@ -19,7 +19,7 @@ antiga envelhece) ou o texto que se afastou do código. O roteiro abaixo existe 
 | --- | --- | --- |
 | `guides/<modulo>/README.md` | o curso do módulo, com exemplos completos em `guides/<modulo>/exemplos/` que rodam como estão e passam pelo `bun run check` | à mão, seguindo a skill [`guias-exemplos-completos`](../guias-exemplos-completos/SKILL.md) |
 | `README.md` | a porta de entrada: o que é, como instalar e rodar em minutos, para onde ir | à mão |
-| `docs/` | o site https://choliba.github.io/ (VitePress). `docs/index.md`, `docs/primeiros-passos.md` e a ordem do menu são à mão; as páginas dos cursos (`docs/guias/`) e a dos comandos (`docs/comandos.md`) são **geradas** por `bun run docs:pages` a partir de `guides/` e de `bin/choliba.ts` | à mão e por script |
+| `docs/` | o site https://choliba.github.io/ (VitePress). `docs/index.md`, `docs/primeiros-passos.md` e a ordem do menu são à mão; as páginas dos cursos (`docs/guias/`) e a dos comandos (`docs/comandos.md`) são **geradas** por `bun run docs:pages` a partir de `guides/` e da tabela de comandos (`src/cli/commands.ts`) | à mão e por script |
 | `AGENTS.md` e `.agents/skills/` | o que agentes e pessoas leem antes de mexer no código | à mão |
 
 O site publica o que está em `guides/`: **uma mudança no curso é uma mudança no site**, não há texto para copiar. Não
@@ -89,8 +89,8 @@ Mais regras e exemplos: `references/style.md`.
   "depois" é texto que se afasta.
 - Automatize o que dá para conferir: formatação, links quebrados, exemplos que rodam (os de `guides/` rodam no `check`).
 - Remova ou reescreva o que deixou de ser verdade. Texto velho é pior que texto nenhum, porque o leitor confia nele.
-- O que dá para gerar se gera: o `--help` e a lista de comandos saem de `bin/choliba.ts`, e as páginas dos cursos saem
-  de `guides/`.
+- O que dá para gerar se gera: o `--help` de cada comando sai da declaração dele (`defineCommand`), a lista de
+  comandos sai de `src/cli/commands.ts`, e as páginas dos cursos saem de `guides/`.
 
 Verificações e ferramentas: `references/docs-as-code.md`.
 

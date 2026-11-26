@@ -50,7 +50,7 @@ export function servePages({
 }): PagesServer {
   if (!pathExists(join(dist, 'index.html'))) {
     throw new UsageError(
-      `As páginas das rodadas não foram geradas em ${dist}. No repositório do Choliba, rode bun run rounds:build.`,
+      `As páginas das rodadas não foram geradas em ${dist}. Instale o Choliba pelo .tgz da release, que já as traz; no repositório do Choliba, rode bun run rounds:build.`,
     );
   }
   const server = Bun.serve({

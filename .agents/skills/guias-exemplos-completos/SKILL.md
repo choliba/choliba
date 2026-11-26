@@ -42,9 +42,13 @@ que não rodava copiado. Quem lê o curso precisa poder copiar o exemplo e ver a
   pasta, sem precisar de um clique.
 
 - `<a id="topo"></a>` no início e um **[↑ topo](#topo)** no fim de cada seção `##` (não logo depois do índice).
+- Logo abaixo do título, uma citação (`> …`) que diz para que o módulo serve. Ela é a descrição da página no site (a
+  `<meta name="description">` e o cartão de compartilhamento) e precisa ter de 100 a 160 caracteres, contados sem as
+  marcas do Markdown; sem ela, ou fora disso, o `bun run docs:build` reprova (`scripts/docs-seo.ts`).
 - **Índice** logo depois da abertura, com todas as seções e subseções. Exemplos com várias partes ganham índice
   próprio, repetido no começo do exemplo.
 - Seções: abertura (o conceito central do módulo, não um cenário de agente), **Os arquivos**, **Interface** (o que
-  o módulo exporta: classes, funções, tipos), **Como funciona**, **Exemplos** (do mais simples ao mais completo; o
-  agente pode aparecer como um dos usos, não como o centro), **Regras do módulo**, **Exercícios**.
+  o módulo exporta: classes, funções, tipos; quando o pacote, `choliba`, `choliba/rounds` ou `choliba/config`, exporta
+  menos que o módulo, diga o que vem dele e o que fica só no módulo), **Como funciona**, **Exemplos** (do mais simples
+  ao mais completo; o agente pode aparecer como um dos usos, não como o centro), **Regras do módulo**, **Exercícios**.
 - Antes de entregar: conferir que nenhum link do índice está quebrado e rodar o `prettier` no arquivo.
