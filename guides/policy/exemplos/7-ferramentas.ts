@@ -1,9 +1,11 @@
 /**
- * Ferramentas suas, governadas por uma AgentPolicy: ler email, enviar email
- * e ler arquivo. O Choliba não tem um registro de ferramentas: quem liga o
- * nome à função e consulta a política antes de rodar é este código.
+ * Exemplo 7 do curso de policy: ferramentas suas, governadas por uma
+ * AgentPolicy: ler email, enviar email e ler arquivo. As ferramentas que o
+ * agente dá à CLI (choliba/<nome>) o módulo mcp registra e o broker decide;
+ * aqui, quem liga o nome à função e consulta a política antes de rodar é este
+ * código.
  *
- *   bun guides/policy/exemplos/tools.ts
+ *   bun guides/policy/exemplos/7-ferramentas.ts   (responda s às duas perguntas)
  *
  * Duas perguntas por chamada:
  * 1. `tools`: esta ferramenta pode ser chamada?
