@@ -43,6 +43,8 @@ O módulo não depende de nenhum outro para ler. Usa o `execute/process.ts` (o d
 
 ## Interface
 
+O pacote (`choliba`) não exporta o `input`: quem lê o stdin são as peças do Choliba (os adapters, o gate); importe de `src/input` dentro do repositório.
+
 | Função                    | O que faz                                                                   |
 | ------------------------- | --------------------------------------------------------------------------- |
 | `read(): Promise<string>` | tudo o que o stdin tem, quando ele acaba (EOF)                              |
@@ -51,10 +53,10 @@ O módulo não depende de nenhum outro para ler. Usa o `execute/process.ts` (o d
 
 As opções do `readStream`:
 
-| Opção    | O que faz                                                                                                   |
-| -------- | ----------------------------------------------------------------------------------------------------------- |
-| `raw`    | num terminal, cada tecla na hora, sem o eco nem a edição de linha do terminal; ignorada fora de um terminal |
-| `signal` | encerra o stream: a leitura para, o stdin é devolvido e quem lê recebe um `AbortError`                      |
+| Opção    | O que faz                                                                                                                                            |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `raw`    | num terminal, cada tecla na hora, sem o eco nem a edição de linha do terminal; ignorada fora de um terminal                                          |
+| `signal` | encerra o stream: a leitura para, o stdin é devolvido e quem lê recebe o motivo do `signal` (`signal.reason`): um `AbortError`, se ninguém deu outro |
 
 [↑ topo](#topo)
 
