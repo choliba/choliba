@@ -5,6 +5,7 @@ import { UsageError } from '../errors';
 import { processAlive } from '../filesystem/proc';
 import { currentPid, runtimeExecutable, environment } from '../execute/process';
 import {
+  besideModule,
   ensureDirectory,
   listDirectory,
   modifiedAt,
@@ -206,7 +207,7 @@ function readCommand(line: string): string | undefined {
  */
 async function bundleHook(dir: string): Promise<void> {
   const result = await Bun.build({
-    entrypoints: [new URL('./hook-main.ts', import.meta.url).pathname],
+    entrypoints: [besideModule(import.meta.url, './hook-main.ts')],
     outdir: dir,
     naming: HOOK_FILE,
     target: 'bun',

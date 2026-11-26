@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { userInfo } from 'node:os';
 
 import {
+  besideModule,
   ensureDirectory,
   fileSize,
   join,
@@ -210,7 +211,7 @@ function defaultSink(
 function serviceVersion(): string {
   try {
     const manifest: unknown = JSON.parse(
-      readText(new URL('../../package.json', import.meta.url).pathname),
+      readText(besideModule(import.meta.url, '../../package.json')),
     );
     const version =
       typeof manifest === 'object' && manifest !== null && 'version' in manifest

@@ -12,6 +12,7 @@ import { createServer, type Server, type Socket } from 'node:net';
 import { UsageError } from '../errors';
 import { currentPid, environment, runtimeExecutable } from '../execute/process';
 import {
+  besideModule,
   ensureDirectory,
   cholibaCacheDir,
   join,
@@ -243,7 +244,7 @@ function serve(
  */
 async function bundleServer(dir: string): Promise<void> {
   const result = await Bun.build({
-    entrypoints: [new URL('./server-main.ts', import.meta.url).pathname],
+    entrypoints: [besideModule(import.meta.url, './server-main.ts')],
     outdir: dir,
     naming: SERVER_FILE,
     target: 'bun',

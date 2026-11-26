@@ -9,6 +9,7 @@ import {
   environment,
 } from '../execute/process';
 import {
+  besideModule,
   ensureDirectory,
   join,
   pathExists,
@@ -234,7 +235,7 @@ export class NetworkBoundary {
 
 async function bundleBridge(dir: string): Promise<void> {
   const result = await Bun.build({
-    entrypoints: [new URL('./bridge-main.ts', import.meta.url).pathname],
+    entrypoints: [besideModule(import.meta.url, './bridge-main.ts')],
     outdir: dir,
     naming: BRIDGE_FILE,
     target: 'bun',
