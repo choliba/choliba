@@ -6,8 +6,7 @@
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 [![cobertura](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/choliba/choliba/develop/.github/badges/coverage.json&style=flat-square)](COVERAGE.md)
 
-Roda agentes de código (Claude Code, Codex, Cursor e modelos locais pelo Ollama) a partir de scripts TypeScript,
-sempre dentro de uma sandbox.
+Roda agentes de código (Claude Code, Codex, Cursor, Ollama) em sandbox, com uma política só e rodadas que os comparam.
 
 Um agente junta um **provider** (qual CLI roda), um **workspace** (a sandbox onde ela roda), uma **política** (o que
 ela pode fazer) e uma **conversa** (com quem ela fala: o terminal, uma tela cheia ou um arquivo). Cada peça é um
@@ -46,33 +45,43 @@ mesmo log, trocando só o provider.
 Precisa do [Bun](https://bun.sh), de Linux com `bwrap` e `nsenter` (para o workspace `bubblewrap`) ou do Docker, e
 da CLI que o agente vai usar (`claude`, `codex`, `agent` ou o [Ollama](https://ollama.com)).
 
-```bash
-bun install
-```
+### Num projeto seu
 
-### Em outro projeto
-
-O Choliba é um pacote: dá para instalá-lo em qualquer projeto que use o Bun. Do repositório, sem publicar:
+O Choliba é um pacote Bun, distribuído pelas [releases](https://github.com/choliba/choliba/releases) do GitHub, não
+pelo npm. Instale o `choliba-<versão>.tgz` da última release pelo endereço dele:
 
 ```bash
-bun add github:choliba/choliba
+bun add https://github.com/choliba/choliba/releases/download/v<versão>/choliba-<versão>.tgz
 ```
 
-Ou gere o pacote aqui (`bun pm pack`, que também gera as páginas das rodadas) e instale o arquivo lá
-(`bun add ./choliba-0.3.0.tgz`).
+Também dá para instalar direto do repositório (`bun add github:choliba/choliba`), mas assim o pacote chega sem as
+páginas das rodadas, e o `choliba rounds:web` para, dizendo que elas não foram geradas.
 
-No outro projeto, a biblioteca vem de `choliba` (e `choliba/rounds`, `choliba/config`), e o comando `choliba` roda as
-rodadas e serve as páginas:
+A biblioteca vem de `choliba` (e `choliba/rounds`, `choliba/config`), e o comando `choliba` roda as rodadas, serve as
+páginas, revisa as aprovações e limpa o que o Choliba guarda:
 
 ```bash
 bunx choliba rounds <id>      # roda uma rodada declarada em rounds.definitions
 bunx choliba rounds:web       # as páginas das rodadas, com os registros de rounds.data
 bunx choliba approvals        # revisa os comandos negados pelo gate
+bunx choliba clear            # apaga logs, workspaces, homes e rodadas
 ```
 
-Cada comando lê o `choliba.config.ts` do projeto. As rodadas precisam das quatro pastas de `rounds` na config: `dir`
-(onde rodam, fora do projeto), `definitions` (as declarações), `fixtures` (os pontos de partida) e `data` (os
-registros). Sem elas, a config carrega igual, e só os comandos das rodadas param, dizendo o que falta.
+Cada comando lê o `choliba.config.ts` do projeto. O `rounds` e o `rounds:web` precisam de `rounds.definitions` (as
+declarações) e `rounds.data` (os registros); uma rodada que parte de uma fixture precisa também de `rounds.fixtures`
+(os pontos de partida) e `rounds.dir` (onde ela roda, fora do projeto). Sem elas, a config carrega igual, e só os
+comandos das rodadas param, dizendo o que falta.
+
+### No repositório do Choliba
+
+Para contribuir, instale as dependências do projeto e as das páginas das rodadas, que o typecheck e o pacote usam:
+
+```bash
+bun install
+bun install --cwd src/rounds/web
+```
+
+O `bun pm pack` gera o `choliba-<versão>.tgz`, já com as páginas das rodadas.
 
 ## Uso
 
@@ -80,11 +89,10 @@ registros). Sem elas, a config carrega igual, e só os comandos das rodadas para
 import {
   Agent,
   ClaudeProvider,
-  join,
+  getConfig,
   runScript,
   Workspace,
-} from '../src/index';
-import { currentDirectory } from '../src/execute/process';
+} from 'choliba';
 
 await runScript(async () => {
   await new Agent({
@@ -93,14 +101,15 @@ await runScript(async () => {
     provider: new ClaudeProvider({ model: 'claude-sonnet-5-5' }),
     workspace: new Workspace({
       type: 'bubblewrap',
-      root: join(currentDirectory(), 'storage', 'workspace'),
+      root: getConfig().workspaces.dir,
     }),
   }).run();
 });
 ```
 
-No terminal, **Ctrl+A** abre as aprovações, **Ctrl+C** para o agente e **Ctrl+D** encerra a conversa. Agentes com
-um modelo de verdade estão no [curso do agente](guides/agent/README.md#7-agentes-de-verdade):
+No terminal, **Ctrl+A** abre as aprovações, **Ctrl+C** para o agente e **Ctrl+D** encerra a conversa. O passo a passo,
+com o `choliba.config.ts`, está nos [primeiros passos](https://choliba.github.io/primeiros-passos). Agentes com um
+modelo de verdade estão no [curso do agente](guides/agent/README.md#7-agentes-de-verdade); no repositório do Choliba:
 
 ```bash
 bun run ollama claude   # um agente num modelo local, pela CLI do Claude Code
@@ -121,6 +130,7 @@ Cada módulo tem um curso em `guides/<modulo>/README.md`, com exemplos que rodam
 | [providers](guides/providers/README.md)     | as CLIs: comandos, eventos, permissões                |
 | [policy](guides/policy/README.md)           | a política: regras, decisões, aprovações              |
 | [network](guides/network/README.md)         | a rede da sandbox                                     |
+| [mcp](guides/mcp/README.md)                 | as ferramentas do projeto para os agentes             |
 | [workspace](guides/workspace/README.md)     | a sandbox: bubblewrap e Docker                        |
 | [interaction](guides/interaction/README.md) | a conversa                                            |
 | [adapters](guides/adapters/README.md)       | as formas de conversar: stdio e arquivo JSONL         |

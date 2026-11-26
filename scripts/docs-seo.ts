@@ -18,7 +18,7 @@ export const SITE_URL = 'https://choliba.github.io';
 
 /** What the site is: the description of its home, and the one of the pages that have none. */
 export const SITE_DESCRIPTION =
-  'Roda agentes de código (Claude Code, Codex, Cursor e modelos locais pelo Ollama) a partir de scripts TypeScript, sempre dentro de uma sandbox.';
+  'Roda agentes de código (Claude Code, Codex, Cursor, Ollama) em sandbox, com uma política só e rodadas que os comparam.';
 
 /** Who writes the site, for `article:author` and `<meta name="author">`. */
 const AUTHOR = 'choliba';

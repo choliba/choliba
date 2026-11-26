@@ -90,12 +90,17 @@ export default defineConfig({
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `CholibaConfig`           | `{ debug?, logger?, database?, workspaces?, rounds?, envs? }`                                                                                                                                  |
 | `CholibaLoggerConfig`     | `{ dir?: string, use?: LoggerFactory }`                                                                                                                                                        |
-| `LoggerFactory`           | `(target: { dir, session }) => object`: cria a instância do pacote de log                                                                                                                      |
+| `LoggerFactory`           | `(target: { dir, session, service }) => object`: cria a instância do pacote de log; `service` é `{ name, version }` do Choliba                                                                 |
 | `CholibaDatabaseConfig`   | `{ dir?: string, name?: string }`: `name` é só o nome do arquivo, sem barras                                                                                                                   |
 | `CholibaWorkspacesConfig` | `{ dir?: string, homes?: string, programs?: string[] }`: a raiz padrão e a pasta dos homes, relativos ao arquivo ou `~/…`; os nomes dos programas que o agente vê                              |
 | `CholibaRoundsConfig`     | `{ dir?, definitions?, fixtures?, data? }`: onde as rodadas rodam (recusado dentro do projeto) e onde ficam as declarações, os pontos de partida e os registros; relativos ao arquivo ou `~/…` |
 | `CholibaEnv`              | `{ [nome]: string \| boolean \| number \| undefined }`                                                                                                                                         |
 | `CholibaConfigFactory`    | um `CholibaConfig` ou uma função (até `async`) que o devolve                                                                                                                                   |
+
+O `use` cria a instância do pacote de log que você escolher (pino, winston, LogTape…) e recebe, além da pasta e da
+sessão, o nome e a versão do Choliba em `service`, para gravar em cada registro. O pacote é do seu projeto: o Choliba
+não traz nenhum, então instale o que usar, como `bun add pino @elastic/ecs-pino-format` para um `use` igual ao
+`config/pino.config.ts` deste repositório.
 
 ### O resultado: `ResolvedCholibaConfig`
 
@@ -584,7 +589,7 @@ isConfigLoaded(): true
 configPath: <raiz>/choliba.config.ts
 logger.dir: <raiz>/storage/logs
 logger.use: sim (pino)
-databasePath: <raiz>/storage/db/batata.db
+databasePath: <raiz>/storage/db/choliba.db
 workspaces.dir: <raiz>/storage/workspaces
 workspaces.homes: <raiz>/storage/homes
 debug: true

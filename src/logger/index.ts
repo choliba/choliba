@@ -8,7 +8,7 @@ import {
   pathExists,
   readText,
 } from '../filesystem/index';
-import { getConfig, isConfigLoaded } from '../config/index';
+import { getConfig, isConfigLoaded, type LoggerTarget } from '../config/index';
 import { UsageError } from '../errors';
 import { currentContext } from '../context/index';
 import { adaptLogger, type LogSink } from './adapt';
@@ -96,13 +96,14 @@ export function openLogger(): void {
   const env: Record<string, string> = {};
   for (const { vars } of config.envs) Object.assign(env, vars);
   const maxFileBytes = logrotate?.maxFileBytes;
+  const service = { name: SERVICE_NAME, version: serviceVersion() };
 
   /** The sink of one part of the session: `<sessão>.jsonl`, `<sessão>.2.jsonl`… */
   const sinkOf = (part: number): LogSink => {
     const name = partSession(session, part);
     return use === undefined
-      ? defaultSink(dir, name)
-      : adaptLogger(use({ dir, session: name }));
+      ? defaultSink(dir, name, service)
+      : adaptLogger(use({ dir, session: name, service }));
   };
   let part = 1;
   /** Bytes sent to this part, as far as the logger can tell. */
@@ -198,13 +199,12 @@ function ensureLogDir(dir: string): void {
   }
 }
 
-function defaultSink(dir: string, session: string): LogSink {
-  return createJsonlSink({
-    dir,
-    session,
-    debug: getConfig().debug,
-    service: { name: SERVICE_NAME, version: serviceVersion() },
-  });
+function defaultSink(
+  dir: string,
+  session: string,
+  service: LoggerTarget['service'],
+): LogSink {
+  return createJsonlSink({ dir, session, debug: getConfig().debug, service });
 }
 
 function serviceVersion(): string {
