@@ -1,3 +1,11 @@
+/**
+ * Exemplo 7 do curso do agente: vários agentes numa API HTTP, com eventos ao
+ * vivo. Os agentes não declaram política: rodam só com a sandbox. Precisa do
+ * Ollama rodando com o modelo do arquivo e da CLI do Codex instalada; serve na
+ * porta API_PORT (3001 por padrão).
+ *
+ *   bun guides/agent/exemplos/7-api.ts
+ */
 import {
   getConfig,
   Conversation,

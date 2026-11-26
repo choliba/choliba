@@ -1,3 +1,11 @@
+/**
+ * Exemplo 7 do curso do agente: a montagem do 7-entradas-e-saidas.ts num
+ * modelo na nuvem, pela CLI do Claude Code, num workspace Docker. Precisa do
+ * login da CLI e do Docker, com uma imagem local choliba-agent:latest que
+ * tenha a CLI instalada (o repositório não a traz).
+ *
+ *   bun guides/agent/exemplos/7-claude.ts
+ */
 import {
   getConfig,
   agentConversation,

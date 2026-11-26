@@ -1,3 +1,10 @@
+/**
+ * Exemplo 7 do curso do agente: um agente com cada entrada e saída explicada
+ * (ask, listen, choose, approve, signal…). Precisa do Ollama rodando com o
+ * modelo do arquivo e da CLI do Codex instalada.
+ *
+ *   bun guides/agent/exemplos/7-entradas-e-saidas.ts
+ */
 import {
   getConfig,
   agentConversation,
