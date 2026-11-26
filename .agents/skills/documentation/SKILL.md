@@ -24,7 +24,8 @@ antiga envelhece) ou o texto que se afastou do código. O roteiro abaixo existe 
 
 O site publica o que está em `guides/`: **uma mudança no curso é uma mudança no site**, não há texto para copiar. Não
 edite à mão as páginas geradas (`docs/guias/`, `docs/comandos.md`); mude a fonte e rode `bun run docs:pages`. O
-`bun run docs:build` roda no CI de todo PR, então um link quebrado ou uma página velha reprova o PR, não só o site.
+`bun run docs:build` roda no CI de todo PR, então um link quebrado, uma âncora sem destino ou uma página velha reprova o
+PR, não só o site.
 
 O build também escreve o que os buscadores e os links compartilhados leem (`scripts/docs-seo.ts`, ligado em
 `docs/.vitepress/config.ts`): `sitemap.xml`, `robots.txt`, o Google Analytics (só nas páginas buildadas), o arquivo de

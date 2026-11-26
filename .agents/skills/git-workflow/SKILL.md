@@ -167,7 +167,7 @@ branch; não a contorne.
 Um PR só pode ser mergeado se as duas condições valem, e o CI as confere:
 
 - **Os testes passam**: `bun run check` (typecheck, lint, formatação, testes com cobertura) está verde, e o site
-  builda (`bun run docs:build`, que recusa link quebrado e página sem descrição).
+  builda (`bun run docs:build`, que recusa link quebrado, âncora sem destino e página sem descrição).
 - **A cobertura é igual ou maior que a de antes**: o CI compara os limites de cobertura do PR (`coverage-thresholds.json`)
   com os que já estão na branch de destino (que a catraca mantém iguais à última cobertura aprovada). Qualquer métrica
   que caia, ou um limite que seja baixado, reprova o check. Se a cobertura cair, escreva testes; veja a skill

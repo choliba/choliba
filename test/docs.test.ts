@@ -7,6 +7,7 @@ import { expect, test } from 'bun:test';
 import {
   commandsPage,
   editLinkOf,
+  githubSlug,
   guidePage,
   guidesIndexPage,
   guidesSidebar,
@@ -149,4 +150,21 @@ test('o índice dos cursos e a página de comandos, gerados, não têm link de e
   expect(guidesIndexPage([GUIDE]).startsWith(noEditLink)).toBe(true);
   expect(commandsPage({}).startsWith(noEditLink)).toBe(true);
   expect(guidePage(GUIDE)).not.toContain('editLink');
+});
+
+test('o id de um título é o do GitHub: com acentos e o número do começo, sem pontuação', () => {
+  expect(githubSlug('Exercícios')).toBe('exercícios');
+  expect(githubSlug('1. Declarar uma rodada')).toBe('1-declarar-uma-rodada');
+  // O texto do título chega sem as crases: `rounds.dir` vira rounds.dir.
+  expect(githubSlug('Onde a rodada roda: rounds.dir')).toBe(
+    'onde-a-rodada-roda-roundsdir',
+  );
+  expect(githubSlug('5. As referências arquivo:linha')).toBe(
+    '5-as-referências-arquivolinha',
+  );
+  expect(githubSlug('Linha de comando, limpeza e páginas')).toBe(
+    'linha-de-comando-limpeza-e-páginas',
+  );
+  expect(githubSlug('Comandos — e o resto')).toBe('comandos--e-o-resto');
+  expect(githubSlug('snake_case e kebab-case')).toBe('snake_case-e-kebab-case');
 });
