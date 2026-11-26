@@ -362,7 +362,10 @@ export interface FileCriterion {
   readonly name: string;
   /** With a wildcard in `name`: paths to leave out. */
   readonly ignore?: readonly string[];
-  /** At the end: `true` must exist, `false` must not. */
+  /**
+   * At the end: `true` must exist, `false` must not. With no assertion at
+   * all (only `name`), the criterion checks `true`.
+   */
   readonly exists?: boolean;
   /** Changed vs. the start (needs a git start): came to exist. */
   readonly created?: boolean;

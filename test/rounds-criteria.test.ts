@@ -72,6 +72,29 @@ test('file: created, deleted e changed usam início vs fim', () => {
   ).toEqual([true, true, true, false]);
 });
 
+test('file sem asserção confere que o arquivo existe, como exists: true', () => {
+  const ctx = files({
+    start: { 'velho.html': 'a' },
+    end: { 'a.txt': 'x' },
+    changed: ['velho.html'],
+  });
+  expect(
+    fileVerdicts(
+      [
+        { file: { name: 'a.txt' } },
+        { file: { name: 'ausente.txt' } },
+        { file: { name: '*.txt' } },
+        { file: { name: '*.md' } }, // nenhum arquivo casa
+        { file: { name: '*.html' } }, // velho.html foi apagado no passo
+      ],
+      ctx,
+    ),
+  ).toEqual([true, false, true, false, false]);
+  expect(checkFiles([{ file: { name: 'ausente.txt' } }], ctx)[0]?.detail).toBe(
+    'ausente.txt não existe.',
+  );
+});
+
 test('file curinga + ignore: nenhum outro arquivo mudou', () => {
   const unchanged = files({
     end: { 'ticket.md': 'x', 'index.html': 'y' },
