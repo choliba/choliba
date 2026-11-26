@@ -97,6 +97,10 @@ export default defineConfig({
 | `CholibaEnv`              | `{ [nome]: string \| boolean \| number \| undefined }`                                                                                                                                         |
 | `CholibaConfigFactory`    | um `CholibaConfig` ou uma função (até `async`) que o devolve                                                                                                                                   |
 
+O `use` cria a instância do pacote de log que você escolher (pino, winston, LogTape…). O pacote é do seu projeto: o
+Choliba não traz nenhum, então instale o que usar, como `bun add pino @elastic/ecs-pino-format` para um `use` igual
+ao `config/pino.config.ts` deste repositório.
+
 ### O resultado: `ResolvedCholibaConfig`
 
 O que `loadConfig` e `getConfig` devolvem. Tudo já decidido, com caminhos absolutos; só as pastas das rodadas podem faltar.
