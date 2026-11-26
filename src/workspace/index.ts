@@ -38,6 +38,9 @@ import {
 
 export type WorkspaceType = 'docker' | 'bubblewrap';
 
+/** Every `type` a workspace takes; any other is refused. */
+const WORKSPACE_TYPES: readonly WorkspaceType[] = ['docker', 'bubblewrap'];
+
 /** What both kinds of workspace take. */
 interface CommonWorkspaceOptions {
   readonly root: string;
@@ -124,6 +127,11 @@ export class Workspace {
   private network: NetworkBoundary | undefined;
 
   public constructor(options: WorkspaceOptions) {
+    if (!WORKSPACE_TYPES.includes(options.type)) {
+      throw new UsageError(
+        `type desconhecido: ${options.type}. Use ${WORKSPACE_TYPES.join(', ')}.`,
+      );
+    }
     if (options.root.trim().length === 0) {
       throw new UsageError('A raiz do workspace não pode estar vazia.');
     }

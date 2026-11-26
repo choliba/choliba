@@ -82,6 +82,17 @@ describe('Workspace', () => {
     ).toThrow('A raiz do workspace não pode estar vazia.');
   });
 
+  test('rejeita um type desconhecido, em vez de cair no bubblewrap', () => {
+    const options = { type: 'Docker', root };
+    // @ts-expect-error: um type que não existe, de propósito, para a recusa.
+    const create = (): Workspace => new Workspace(options);
+
+    expect(create).toThrow(UsageError);
+    expect(create).toThrow(
+      'type desconhecido: Docker. Use docker, bubblewrap.',
+    );
+  });
+
   test('rejeita imagem Docker inválida e sugere um exemplo', () => {
     const message = `A imagem do workspace Docker deve ser FROM <imagem> (do Docker Hub) ou <imagem> (construída nesta máquina). Exemplo:\n\n  ${DEFAULT_DOCKER_IMAGE}`;
 

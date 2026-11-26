@@ -420,6 +420,7 @@ function normalizeLogger(
 }
 
 const LOGGER_OPTIONS: readonly string[] = ['dir', 'use', 'logrotate'];
+const DATABASE_OPTIONS: readonly string[] = ['dir', 'name'];
 
 const LOGROTATE_SIZES = ['maxFileSize', 'maxTotalSize'] as const;
 
@@ -495,6 +496,15 @@ function normalizeDatabase(
 
   if (!isRecord(database)) {
     throw new UsageError(`database em ${configPath} deve ser um objeto.`);
+  }
+
+  const unknown = Object.keys(database).find(
+    (key) => !DATABASE_OPTIONS.includes(key),
+  );
+  if (unknown !== undefined) {
+    throw new UsageError(
+      `Opção desconhecida "database.${unknown}" em ${configPath}. Opções: ${DATABASE_OPTIONS.join(', ')}.`,
+    );
   }
 
   const { dir, name } = database;
@@ -724,22 +734,33 @@ function normalizeEnvs(envs: unknown, configPath: string): CholibaEnv[] {
       );
     }
 
-    return readEnvEntry(entry);
+    return readEnvEntry(entry, `envs[${String(index)}]`, configPath);
   });
 }
 
-function readEnvEntry(entry: Record<string, unknown>): CholibaEnv {
+/** A value an env entry may hold: text, a number, a boolean, or nothing. */
+const isEnvValue = (
+  value: unknown,
+): value is string | boolean | number | undefined =>
+  value === undefined ||
+  typeof value === 'string' ||
+  typeof value === 'boolean' ||
+  typeof value === 'number';
+
+function readEnvEntry(
+  entry: Record<string, unknown>,
+  where: string,
+  configPath: string,
+): CholibaEnv {
   const env: Record<string, string | boolean | number | undefined> = {};
 
   for (const [key, value] of Object.entries(entry)) {
-    if (
-      value === undefined ||
-      typeof value === 'string' ||
-      typeof value === 'boolean' ||
-      typeof value === 'number'
-    ) {
-      env[key] = value;
+    if (!isEnvValue(value)) {
+      throw new UsageError(
+        `${where}.${key} em ${configPath} deve ser um texto, um número ou um boolean.`,
+      );
     }
+    env[key] = value;
   }
 
   return env;

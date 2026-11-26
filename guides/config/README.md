@@ -159,8 +159,8 @@ Com `path`, usa exatamente esse arquivo (e falha se ele não existir). Sem arqui
 
 1. **Importa** o arquivo e pega o `export default`. Se for uma função, chama (e espera, se for `async`).
 2. **Confere**:
-   - opção desconhecida é erro, com a dica da opção certa para os enganos comuns (`databasePath` → `database: { dir, name }`, `logDir` → `logger: { dir }`, `env` → `envs`);
-   - cada opção com o tipo certo (`debug` boolean, `database.name` sem barras, `envs` array…).
+   - opção desconhecida é erro, em qualquer nível (`database.file`, `workspaces.home`), com a dica da opção certa para os enganos comuns (`databasePath` → `database: { dir, name }`, `logDir` → `logger: { dir }`, `env` → `envs`);
+   - cada opção com o tipo certo (`debug` boolean, `database.name` sem barras, `envs` uma lista de objetos cujos valores são texto, número ou boolean…).
 3. **Resolve**:
    - caminhos relativos são relativos **ao arquivo de config**, não ao diretório de onde você rodou; toda pasta (`logger.dir`, `database.dir`, as de `workspaces` e as de `rounds`) também aceita `~/…`;
    - o que faltar recebe o padrão;

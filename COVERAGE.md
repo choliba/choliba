@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 26/11/2026 09:47:41: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 26/11/2026 09:54:20: não edite à mão.
 
 Limites (coverage-thresholds.json, só sobem): funções 92.97%, linhas 95.10%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
@@ -8,14 +8,14 @@ Limites (coverage-thresholds.json, só sobem): funções 92.97%, linhas 95.10%. 
 
 Status|Módulo|% Funcs|% Lines
 --|--|--|--
-🟢|**Total**|92.98|95.10
+🟢|**Total**|92.98|95.11
 🟢|[scripts](scripts)|100.00|98.89
 🟢|[src/adapters](src/adapters)|91.14|97.86
 🟢|[src/agent](src/agent)|96.94|96.65
 🟢|[src/approval](src/approval)|84.96|87.88
 🟢|[src/cli](src/cli)|100.00|100.00
 🟢|[src/command](src/command)|100.00|99.64
-🟢|[src/config](src/config)|99.29|97.70
+🟢|[src/config](src/config)|99.32|97.77
 🟢|[src/context](src/context)|100.00|100.00
 🟢|[src](src)|95.24|93.94
 🟢|[src/events](src/events)|100.00|100.00
@@ -29,7 +29,7 @@ Status|Módulo|% Funcs|% Lines
 🟡|[src/output](src/output)|52.94|54.87
 🟢|[src/policy](src/policy)|99.55|99.28
 🟢|[src/providers](src/providers)|94.71|99.00
-🟢|[src/rounds](src/rounds)|94.07|96.96
+🟢|[src/rounds](src/rounds)|94.07|96.97
 🟢|[src/store](src/store)|95.71|94.09
 🟢|[src/workspace](src/workspace)|98.26|97.60
 
@@ -119,13 +119,13 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/config</b>: 97.70% das linhas, 3 arquivos</summary>
+<summary>🟢 <b>src/config</b>: 97.77% das linhas, 3 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[constants.ts](src/config/constants.ts)|100.00|100.00
 🟢|[env.ts](src/config/env.ts)|100.00|100.00
-🟢|[index.ts](src/config/index.ts)|97.87|93.09
+🟢|[index.ts](src/config/index.ts)|97.96|93.31
 
 </details>
 
@@ -288,14 +288,14 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/rounds</b>: 96.96% das linhas, 32 arquivos</summary>
+<summary>🟢 <b>src/rounds</b>: 96.97% das linhas, 32 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[capture.ts](src/rounds/capture.ts)|94.44|95.97
 🟢|[constants.ts](src/rounds/constants.ts)|100.00|100.00
 🟢|[criteria.ts](src/rounds/criteria.ts)|100.00|97.19
-🟢|[define.ts](src/rounds/define.ts)|100.00|91.53
+🟢|[define.ts](src/rounds/define.ts)|100.00|91.94
 🟢|[definitions.ts](src/rounds/definitions.ts)|100.00|100.00
 🟡|[dir.ts](src/rounds/dir.ts)|0.00|66.67
 🟢|[git.ts](src/rounds/git.ts)|88.24|84.82
