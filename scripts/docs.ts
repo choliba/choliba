@@ -11,6 +11,33 @@ import { join } from '../src/filesystem/index';
 export const REPOSITORY_URL = 'https://github.com/choliba/choliba';
 /** The branch those links point to: the released one. */
 const SOURCE_BRANCH = 'master';
+/** The frontmatter of a generated page with no source of its own to edit: VitePress then shows no edit link. */
+const NO_EDIT_LINK = ['---', 'editLink: false', '---', ''];
+
+/**
+ * Where a page's "Editar esta página no GitHub" leads (the `editLink.pattern`
+ * of the site). A course page is generated from its module's README, so the
+ * link edits that file; any other page is a file in `docs/`. The two generated
+ * pages with no file of their own, the index of the courses and the commands,
+ * have no link at all.
+ *
+ * VitePress runs this function in the browser, rebuilt from its source: it
+ * must use nothing from outside it, so the repository and the branch are
+ * written here.
+ */
+export function editLinkOf({
+  filePath,
+}: {
+  readonly filePath: string;
+}): string {
+  const repository = 'https://github.com/choliba/choliba';
+  // Every change reaches develop by a pull request.
+  const branch = 'develop';
+  const course = /^guias\/(?!index\.md$)([^/]+)\.md$/.exec(filePath)?.[1];
+  const source =
+    course === undefined ? `docs/${filePath}` : `guides/${course}/README.md`;
+  return `${repository}/edit/${branch}/${source}`;
+}
 
 export interface Guide {
   /** The module: the folder in `guides/` and the name of the page. */
@@ -96,6 +123,7 @@ export function guidePage(guide: Guide): string {
 /** The page that lists the courses, in the order given. */
 export function guidesIndexPage(guides: readonly Guide[]): string {
   return [
+    ...NO_EDIT_LINK,
     '# Cursos',
     '',
     '> Cada módulo do Choliba tem um curso, com exemplos completos que rodam como estão e passam pelo `bun run check`. Comece pelo módulo que você vai usar.',
@@ -120,6 +148,7 @@ export function commandsPage(
   commands: Readonly<Record<string, { readonly summary: string }>>,
 ): string {
   return [
+    ...NO_EDIT_LINK,
     '# Comandos',
     '',
     '> O pacote instala o comando `choliba`. Cada comando lê o `choliba.config.ts` do projeto, da pasta atual para cima, e aceita `--help`.',
