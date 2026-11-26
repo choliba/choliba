@@ -14,6 +14,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, test } from 'bun:test';
 
 import { clearConfigCache, loadConfig } from '../src/config/index';
+import { UsageError } from '../src/errors';
 import { closeLogger, openLogger } from '../src/logger/index';
 import { CodexProvider } from '../src/providers/codex/codex-provider';
 import type { ProgramOutput } from '../src/execute/types';
@@ -474,3 +475,7 @@ async function collect<T>(values: AsyncIterable<T>): Promise<T[]> {
 
   return result;
 }
+
+test('CodexProvider recusa um modelo vazio com um UsageError', () => {
+  expect(() => new CodexProvider({ model: ' ' })).toThrow(UsageError);
+});

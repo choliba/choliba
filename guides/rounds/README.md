@@ -221,8 +221,8 @@ interface FileCriterion {
   name: string; // relativo à raiz do workspace; aceita curinga
   ignore?: string[]; // com curinga: o que deixar de fora
   exists?: boolean; // no fim do passo: true existe, false não existe
-  created?: boolean; // true: não existia no início do passo e existe no fim
-  deleted?: boolean; // true: existia no início do passo e não existe no fim
+  created?: boolean; // só true: não existia no início do passo e existe no fim
+  deleted?: boolean; // só true: existia no início do passo e não existe no fim
   changed?: boolean; // true: o git viu mudar no passo; false: não viu
   contains?: string[]; // tem TODOS os trechos, sem diferenciar maiúsculas
   matches?: (RegExp | string | PatternData)[]; // casa TODAS as expressões
@@ -302,6 +302,7 @@ Um critério errado para a rodada antes de qualquer agente rodar, com um `UsageE
 - uma chave de `criteria` que não é um agente de `actors` nem `round`;
 - um `name` (de `file`, `ignore` ou `if`) absoluto ou com `..`;
 - um trecho vazio em `contains`, do arquivo ou da condição;
+- `created` ou `deleted` com `false`, que não conferem nada (a mensagem diz o que usar no lugar);
 - um campo desconhecido em `file`, `limit` ou `if` (`contain` no lugar de `contains`), ou um critério com dois tipos
   (`file` e `limit` no mesmo item);
 - `time` fora do formato (`2 dias`), `tokens` que não é maior que zero, `cost` que não é um valor maior que zero.

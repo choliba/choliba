@@ -44,21 +44,24 @@ Um `Workspace` define a raiz que o agente pode alterar e prepara cada comando pa
 Do pacote (`choliba`) vêm o `Workspace`, os tipos `WorkspaceOptions` e `WorkspaceType`, as duas sandboxes
 (`BubblewrapSandbox`, `DockerSandbox`), o `SandboxPaths`, o `AGENT_ROOT` e o `DEFAULT_DOCKER_IMAGE`.
 
-| Exportação                                     | O que faz                                                                                                                                        |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Workspace`                                    | Representa a raiz e o sandbox escolhido (`bubblewrap` ou `docker`).                                                                              |
-| `WorkspaceOptions`                             | Recebe `type`, `root`, caminhos graváveis, portas, imagem do Docker, `hostState`, `homes`, `agentRoot` e `programs`.                             |
-| `Workspace.programs`                           | Os programas que o agente vê: a opção `programs` ou, sem ela, `workspaces.programs` da config; `undefined`: todos os do host.                    |
-| `Workspace.checkPrograms(names?, searchPath?)` | Diz quais programas (os de `programs`, por padrão) o sandbox acha no `PATH` e onde: `{ found: [{ name, path, file }], missing }`. Não roda nada. |
-| `Workspace.homes`                              | A pasta dos homes: a opção `homes` ou, sem ela, `workspaces.homes` da config.                                                                    |
-| `Workspace.home()`                             | Retorna o home persistente daquela raiz em `homes`; raízes iguais produzem o mesmo caminho.                                                      |
-| `Workspace.paths`                              | O `SandboxPaths` do workspace: `paths.inside(caminho)` diz onde o sandbox vê um caminho do host.                                                 |
-| `Workspace.applyPermissions(policy, network?)` | Compila as permissões de filesystem e, com `network`, monta a fronteira de rede com as regras da política (`networkRulesOf`).                    |
-| `Workspace.configureNetwork(boundary)`         | Liga uma fronteira de rede montada à mão (`NetworkBoundary`): o sandbox fica sem rede própria. Um sandbox que não sabe isolar a rede recusa.     |
-| `Workspace.useHost(host)`                      | Passa ao sandbox o conjunto já calculado de montagens e variáveis.                                                                               |
-| `Workspace.protect(paths)`                     | Mantém arquivos de configuração e hooks somente para leitura.                                                                                    |
-| `Workspace.prepare(command)`                   | Prepara o comando com o diretório de trabalho da raiz, criando a raiz se ela não existir.                                                        |
-| `Workspace.close()`                            | Encerra sandbox e rede.                                                                                                                          |
+Uma opção que o tipo de workspace não tem (`image` sem Docker, um nome errado) é recusada ao criar o workspace, com um
+`UsageError` que lista as opções daquele tipo.
+
+| Exportação                                     | O que faz                                                                                                                                                         |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Workspace`                                    | Representa a raiz e o sandbox escolhido (`bubblewrap` ou `docker`).                                                                                               |
+| `WorkspaceOptions`                             | Recebe `type` (`bubblewrap` ou `docker`; outro é recusado), `root`, caminhos graváveis, portas, imagem do Docker, `hostState`, `homes`, `agentRoot` e `programs`. |
+| `Workspace.programs`                           | Os programas que o agente vê: a opção `programs` ou, sem ela, `workspaces.programs` da config; `undefined`: todos os do host.                                     |
+| `Workspace.checkPrograms(names?, searchPath?)` | Diz quais programas (os de `programs`, por padrão) o sandbox acha no `PATH` e onde: `{ found: [{ name, path, file }], missing }`. Não roda nada.                  |
+| `Workspace.homes`                              | A pasta dos homes: a opção `homes` ou, sem ela, `workspaces.homes` da config.                                                                                     |
+| `Workspace.home()`                             | Retorna o home persistente daquela raiz em `homes`; raízes iguais produzem o mesmo caminho.                                                                       |
+| `Workspace.paths`                              | O `SandboxPaths` do workspace: `paths.inside(caminho)` diz onde o sandbox vê um caminho do host.                                                                  |
+| `Workspace.applyPermissions(policy, network?)` | Compila as permissões de filesystem e, com `network`, monta a fronteira de rede com as regras da política (`networkRulesOf`).                                     |
+| `Workspace.configureNetwork(boundary)`         | Liga uma fronteira de rede montada à mão (`NetworkBoundary`): o sandbox fica sem rede própria. Um sandbox que não sabe isolar a rede recusa.                      |
+| `Workspace.useHost(host)`                      | Passa ao sandbox o conjunto já calculado de montagens e variáveis.                                                                                                |
+| `Workspace.protect(paths)`                     | Mantém arquivos de configuração e hooks somente para leitura.                                                                                                     |
+| `Workspace.prepare(command)`                   | Prepara o comando com o diretório de trabalho da raiz, criando a raiz se ela não existir.                                                                         |
+| `Workspace.close()`                            | Encerra sandbox e rede.                                                                                                                                           |
 
 `hostState` aceita três valores. `login` é o padrão: a CLI ganha um home por workspace e somente seu arquivo de login entra, montado para leitura. `none` não compartilha arquivos de login e exige uma variável de credencial declarada pelo provider; um provider local sem credenciais continua válido. `share` entrega o estado do provider no host, gravável, incluindo o histórico de outras raízes.
 

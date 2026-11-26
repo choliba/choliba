@@ -1,25 +1,25 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 26/11/2026 08:26:22: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 26/11/2026 09:56:41: não edite à mão.
 
-Limites (coverage-thresholds.json, só sobem): funções 92.78%, linhas 95.08%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
+Limites (coverage-thresholds.json, só sobem): funções 92.97%, linhas 95.11%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
 ## Resumo
 
 Status|Módulo|% Funcs|% Lines
 --|--|--|--
-🟢|**Total**|92.79|95.09
+🟢|**Total**|92.98|95.11
 🟢|[scripts](scripts)|100.00|98.89
 🟢|[src/adapters](src/adapters)|91.14|97.86
-🟢|[src/agent](src/agent)|96.94|96.65
+🟢|[src/agent](src/agent)|96.94|96.67
 🟢|[src/approval](src/approval)|84.96|87.88
 🟢|[src/cli](src/cli)|100.00|100.00
-🟢|[src/command](src/command)|94.44|99.64
-🟢|[src/config](src/config)|99.29|97.70
+🟢|[src/command](src/command)|100.00|99.64
+🟢|[src/config](src/config)|99.32|97.77
 🟢|[src/context](src/context)|100.00|100.00
-🟢|[src](src)|93.33|93.33
+🟢|[src](src)|95.24|93.94
 🟢|[src/events](src/events)|100.00|100.00
-🟢|[src/execute](src/execute)|91.23|90.38
+🟢|[src/execute](src/execute)|91.92|90.51
 🟢|[src/filesystem](src/filesystem)|97.83|94.05
 🔴|[src/input](src/input)|0.00|6.93
 🟢|[src/interaction](src/interaction)|97.22|99.47
@@ -29,7 +29,7 @@ Status|Módulo|% Funcs|% Lines
 🟡|[src/output](src/output)|52.94|54.87
 🟢|[src/policy](src/policy)|99.55|99.28
 🟢|[src/providers](src/providers)|94.71|99.00
-🟢|[src/rounds](src/rounds)|94.07|96.96
+🟢|[src/rounds](src/rounds)|94.07|96.97
 🟢|[src/store](src/store)|95.71|94.09
 🟢|[src/workspace](src/workspace)|98.26|97.60
 
@@ -66,12 +66,12 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/agent</b>: 96.65% das linhas, 11 arquivos</summary>
+<summary>🟢 <b>src/agent</b>: 96.67% das linhas, 11 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[abort.ts](src/agent/abort.ts)|100.00|97.44
-🟢|[agent.ts](src/agent/agent.ts)|88.00|92.40
+🟢|[agent.ts](src/agent/agent.ts)|88.00|92.62
 🟢|[constants.ts](src/agent/constants.ts)|100.00|100.00
 🟢|[enforce.ts](src/agent/enforce.ts)|85.00|85.87
 🟢|[events.ts](src/agent/events.ts)|100.00|100.00
@@ -113,19 +113,19 @@ Status|Arquivo|% Funcs|% Lines
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[help.ts](src/command/help.ts)|100.00|100.00
-🟢|[index.ts](src/command/index.ts)|83.33|100.00
+🟢|[index.ts](src/command/index.ts)|100.00|100.00
 🟢|[parse.ts](src/command/parse.ts)|100.00|98.91
 
 </details>
 
 <details open>
-<summary>🟢 <b>src/config</b>: 97.70% das linhas, 3 arquivos</summary>
+<summary>🟢 <b>src/config</b>: 97.77% das linhas, 3 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[constants.ts](src/config/constants.ts)|100.00|100.00
 🟢|[env.ts](src/config/env.ts)|100.00|100.00
-🟢|[index.ts](src/config/index.ts)|97.87|93.09
+🟢|[index.ts](src/config/index.ts)|97.96|93.31
 
 </details>
 
@@ -139,13 +139,13 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src</b>: 93.33% das linhas, 3 arquivos</summary>
+<summary>🟢 <b>src</b>: 93.94% das linhas, 3 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[errors.ts](src/errors.ts)|100.00|100.00
 🟢|[index.ts](src/index.ts)|100.00|100.00
-🟢|[usage.ts](src/usage.ts)|80.00|80.00
+🟢|[usage.ts](src/usage.ts)|85.71|81.82
 
 </details>
 
@@ -159,14 +159,14 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/execute</b>: 90.38% das linhas, 5 arquivos</summary>
+<summary>🟢 <b>src/execute</b>: 90.51% das linhas, 5 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[constants.ts](src/execute/constants.ts)|100.00|100.00
 🟢|[index.ts](src/execute/index.ts)|95.65|100.00
 🟢|[interrupt.ts](src/execute/interrupt.ts)|100.00|93.75
-🟡|[process.ts](src/execute/process.ts)|65.52|58.17
+🟡|[process.ts](src/execute/process.ts)|68.97|58.82
 🟢|[stream.ts](src/execute/stream.ts)|95.00|100.00
 
 </details>
@@ -278,7 +278,7 @@ Status|Arquivo|% Funcs|% Lines
 🟢|[codex/codex-provider.ts](src/providers/codex/codex-provider.ts)|86.11|95.73
 🟢|[codex/policy.ts](src/providers/codex/policy.ts)|97.30|100.00
 🟢|[constants.ts](src/providers/constants.ts)|100.00|100.00
-🟢|[cursor/cursor-provider.ts](src/providers/cursor/cursor-provider.ts)|87.50|98.05
+🟢|[cursor/cursor-provider.ts](src/providers/cursor/cursor-provider.ts)|87.50|98.06
 🟢|[cursor/policy.ts](src/providers/cursor/policy.ts)|100.00|100.00
 🟢|[ollama/ollama-provider.ts](src/providers/ollama/ollama-provider.ts)|96.67|98.90
 🟢|[ollama/ollama-traffic.ts](src/providers/ollama/ollama-traffic.ts)|95.65|100.00
@@ -288,14 +288,14 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/rounds</b>: 96.96% das linhas, 32 arquivos</summary>
+<summary>🟢 <b>src/rounds</b>: 96.97% das linhas, 32 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[capture.ts](src/rounds/capture.ts)|94.44|95.97
 🟢|[constants.ts](src/rounds/constants.ts)|100.00|100.00
 🟢|[criteria.ts](src/rounds/criteria.ts)|100.00|97.19
-🟢|[define.ts](src/rounds/define.ts)|100.00|91.53
+🟢|[define.ts](src/rounds/define.ts)|100.00|91.94
 🟢|[definitions.ts](src/rounds/definitions.ts)|100.00|100.00
 🟡|[dir.ts](src/rounds/dir.ts)|0.00|66.67
 🟢|[git.ts](src/rounds/git.ts)|88.24|84.82

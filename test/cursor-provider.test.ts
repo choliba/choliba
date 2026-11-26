@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 
 import { clearConfigCache, loadConfig } from '../src/config/index';
+import { UsageError } from '../src/errors';
 import { closeLogger, openLogger } from '../src/logger/index';
 import type { ProgramOutput } from '../src/execute/types';
 import { CursorProvider } from '../src/providers/cursor/cursor-provider';
@@ -326,3 +327,7 @@ async function collect<T>(values: AsyncIterable<T>): Promise<T[]> {
 
   return result;
 }
+
+test('CursorProvider recusa um modelo vazio com um UsageError', () => {
+  expect(() => new CursorProvider({ model: ' ' })).toThrow(UsageError);
+});

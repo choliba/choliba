@@ -10,7 +10,12 @@ import { UsageError } from '../errors';
 import type { AgentPolicy } from '../policy/policy.interface';
 import type { WorkspaceOptions } from '../workspace/index';
 import { parseDuration } from './criteria';
-import type { RoundCriteria, RoundCriterion, RuleResult } from './types';
+import type {
+  FileCriterion,
+  RoundCriteria,
+  RoundCriterion,
+  RuleResult,
+} from './types';
 
 /** One agent of the round. */
 export interface RoundActor {
@@ -306,6 +311,7 @@ function checkCriterion(criterion: RoundCriterion, where: string): void {
       checkRelPath(pattern, `${where}.file.ignore`);
     }
     checkPassages(file.contains, `${where}.file.contains`);
+    checkTrueOnly(file, `${where}.file`);
     return;
   }
   if ('limit' in criterion) {
@@ -357,6 +363,23 @@ function checkPassages(
 ): void {
   if ((passages ?? []).some((passage) => passage.trim().length === 0)) {
     throw new UsageError(`${field} tem um trecho vazio.`);
+  }
+}
+
+/**
+ * `created` and `deleted` check something only with `true`: `false` would
+ * check nothing, so it is refused, with what to use instead.
+ */
+function checkTrueOnly(file: FileCriterion, where: string): void {
+  if (file.created === false) {
+    throw new UsageError(
+      `${where}.created só aceita true: ele confere que o arquivo passou a existir no passo. Para um arquivo que não pode aparecer, use exists: false.`,
+    );
+  }
+  if (file.deleted === false) {
+    throw new UsageError(
+      `${where}.deleted só aceita true: ele confere que o arquivo deixou de existir no passo. Para um arquivo que tem que continuar, use exists: true.`,
+    );
   }
 }
 
