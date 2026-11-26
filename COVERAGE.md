@@ -1,8 +1,8 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 26/11/2026 09:56:41: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 26/11/2026 12:11:07: não edite à mão.
 
-Limites (coverage-thresholds.json, só sobem): funções 92.97%, linhas 95.11%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
+Limites (coverage-thresholds.json, só sobem): funções 92.98%, linhas 95.11%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
 ## Resumo
 
@@ -22,7 +22,7 @@ Status|Módulo|% Funcs|% Lines
 🟢|[src/execute](src/execute)|91.92|90.51
 🟢|[src/filesystem](src/filesystem)|97.83|94.05
 🔴|[src/input](src/input)|0.00|6.93
-🟢|[src/interaction](src/interaction)|97.22|99.47
+🟢|[src/interaction](src/interaction)|97.50|99.52
 🟢|[src/logger](src/logger)|95.71|96.50
 🟢|[src/mcp](src/mcp)|76.61|93.74
 🟢|[src/network](src/network)|94.03|97.39
@@ -191,12 +191,12 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/interaction</b>: 99.47% das linhas, 3 arquivos</summary>
+<summary>🟢 <b>src/interaction</b>: 99.52% das linhas, 3 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[constants.ts](src/interaction/constants.ts)|100.00|100.00
-🟢|[conversation.ts](src/interaction/conversation.ts)|91.67|98.40
+🟢|[conversation.ts](src/interaction/conversation.ts)|92.50|98.56
 🟢|[index.ts](src/interaction/index.ts)|100.00|100.00
 
 </details>

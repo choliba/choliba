@@ -148,6 +148,72 @@ describe('Conversation', () => {
     expect(shown).toEqual(['s']);
   });
 
+  test('num pipe, o choose usa a resposta que chegou antes dele', async () => {
+    const { adapter, send, end, shown } = fakeAdapter({ canAsk: false });
+    const conversation = new Conversation(adapter);
+
+    const first = conversation.choose(['s', 'n']);
+    send({ type: 'message', text: 's' });
+    expect(await first).toBe('s');
+    // Nobody waits for it: it stays in the queue.
+    send({ type: 'message', text: 'n' });
+    await tick();
+    const second = conversation.choose(['s', 'n']);
+    end();
+
+    expect(await second).toBe('n');
+    expect(shown).toEqual(['s', 'n']);
+  });
+
+  test('com a entrada já encerrada, o choose ainda usa o que ficou na fila', async () => {
+    const { adapter, send, end } = fakeAdapter({ canAsk: false });
+    const conversation = new Conversation(adapter);
+
+    // The first request starts the reading; nothing is asked yet.
+    const first = conversation.choose(['s', 'n']);
+    send({ type: 'message', text: 's' });
+    send({ type: 'message', text: 'n' });
+    end();
+    await tick();
+
+    expect(await first).toBe('s');
+    expect(await conversation.choose(['s', 'n'])).toBe('n');
+    expect(messageOf(await rejection(conversation.choose(['s', 'n'])))).toBe(
+      'stdin foi fechado.',
+    );
+  });
+
+  test('num terminal, o choose não pega a linha da fila: ela é de quem lê linhas', async () => {
+    const { adapter, send } = fakeAdapter();
+    const conversation = new Conversation(adapter);
+
+    const message = conversation.listen();
+    send({ type: 'message', text: 'primeira' });
+    expect(await message).toBe('primeira');
+    send({ type: 'message', text: 'para o agente' });
+    await tick();
+    const choice = conversation.choose(['s', 'n']);
+    send({ type: 'choice', key: 'n' });
+
+    expect(await choice).toBe('n');
+    expect(await conversation.listen()).toBe('para o agente');
+  });
+
+  test('um comando na fila não vira escolha', async () => {
+    const { adapter, send } = fakeAdapter({ canAsk: false });
+    const conversation = new Conversation(adapter);
+
+    const first = conversation.choose(['s', 'n']);
+    send({ type: 'message', text: 'n' });
+    expect(await first).toBe('n');
+    send({ type: 'command', name: 'approvals' });
+    send({ type: 'message', text: 's' });
+    await tick();
+
+    expect(await conversation.choose(['s', 'n'])).toBe('s');
+    expect(await conversation.listen()).toBe(':approvals');
+  });
+
   test('cancelar a pergunta não fecha a entrada: a linha vai para a próxima', async () => {
     const { adapter, send, closed } = fakeAdapter();
     const conversation = new Conversation(adapter);
