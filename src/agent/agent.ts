@@ -38,7 +38,7 @@ import type {
 } from '../providers/types';
 import { Store, type StoreNetworkLedger } from '../store/index';
 import type { AgentPolicy } from '../policy/index';
-import { UsageError } from '../errors';
+import { rejectUnknownOptions, UsageError } from '../errors';
 import { APPROVAL_POLL_MS, THINKING_TICK_MS } from './constants';
 import type { Interaction } from '../interaction/index';
 import { listenForInterrupt } from '../execute/interrupt';
@@ -83,6 +83,31 @@ export {
   listenInput,
 } from './input';
 export { watchThinking } from './thinking';
+
+/**
+ * Every option of the Agent: a key not here is refused. A
+ * `Record<keyof AgentOptions, true>`, so the typecheck keeps it equal to the
+ * type: an option added there and not here does not compile.
+ */
+const AGENT_OPTIONS: Readonly<Record<keyof AgentOptions, true>> = {
+  name: true,
+  prompt: true,
+  provider: true,
+  workspace: true,
+  executor: true,
+  output: true,
+  interaction: true,
+  policy: true,
+  signal: true,
+  approve: true,
+  store: true,
+  conversation: true,
+  awaitApprovals: true,
+  resume: true,
+  approvalPollMs: true,
+  thinkingTickMs: true,
+  subscribe: true,
+};
 
 export class Agent {
   /** Identifies the agent in its events, logs and sessions. */
@@ -142,25 +167,27 @@ export class Agent {
   /** See `AgentOptions.awaitApprovals`. */
   private readonly awaitApprovals: boolean;
 
-  public constructor({
-    name,
-    prompt,
-    provider,
-    workspace,
-    executor,
-    output,
-    interaction = agentConversation(),
-    policy,
-    signal = scriptSignal(),
-    approve,
-    store,
-    conversation = true,
-    awaitApprovals = true,
-    resume = true,
-    approvalPollMs = APPROVAL_POLL_MS,
-    thinkingTickMs = THINKING_TICK_MS,
-    subscribe = [],
-  }: AgentOptions) {
+  public constructor(options: AgentOptions) {
+    rejectUnknownOptions(options, AGENT_OPTIONS, 'no Agent');
+    const {
+      name,
+      prompt,
+      provider,
+      workspace,
+      executor,
+      output,
+      interaction = agentConversation(),
+      policy,
+      signal = scriptSignal(),
+      approve,
+      store,
+      conversation = true,
+      awaitApprovals = true,
+      resume = true,
+      approvalPollMs = APPROVAL_POLL_MS,
+      thinkingTickMs = THINKING_TICK_MS,
+      subscribe = [],
+    } = options;
     if (name.trim().length === 0) {
       throw new UsageError('O nome do agente não pode estar vazio.');
     }

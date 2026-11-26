@@ -93,6 +93,19 @@ describe('Workspace', () => {
     );
   });
 
+  test('rejeita uma opção que não existe, e a imagem fora do docker', () => {
+    const permissions = { type: 'bubblewrap' as const, root, permissions: {} };
+    const image = { type: 'bubblewrap' as const, root, image: 'oven/bun' };
+
+    expect(() => new Workspace(permissions)).toThrow(UsageError);
+    expect(() => new Workspace(permissions)).toThrow(
+      'Opção desconhecida "permissions" no workspace bubblewrap.',
+    );
+    expect(() => new Workspace(image)).toThrow(
+      'Opção desconhecida "image" no workspace bubblewrap.',
+    );
+  });
+
   test('rejeita imagem Docker inválida e sugere um exemplo', () => {
     const message = `A imagem do workspace Docker deve ser FROM <imagem> (do Docker Hub) ou <imagem> (construída nesta máquina). Exemplo:\n\n  ${DEFAULT_DOCKER_IMAGE}`;
 

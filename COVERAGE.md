@@ -1,8 +1,8 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 26/11/2026 09:54:20: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 26/11/2026 09:56:41: não edite à mão.
 
-Limites (coverage-thresholds.json, só sobem): funções 92.97%, linhas 95.10%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
+Limites (coverage-thresholds.json, só sobem): funções 92.97%, linhas 95.11%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
 ## Resumo
 
@@ -11,7 +11,7 @@ Status|Módulo|% Funcs|% Lines
 🟢|**Total**|92.98|95.11
 🟢|[scripts](scripts)|100.00|98.89
 🟢|[src/adapters](src/adapters)|91.14|97.86
-🟢|[src/agent](src/agent)|96.94|96.65
+🟢|[src/agent](src/agent)|96.94|96.67
 🟢|[src/approval](src/approval)|84.96|87.88
 🟢|[src/cli](src/cli)|100.00|100.00
 🟢|[src/command](src/command)|100.00|99.64
@@ -66,12 +66,12 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/agent</b>: 96.65% das linhas, 11 arquivos</summary>
+<summary>🟢 <b>src/agent</b>: 96.67% das linhas, 11 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[abort.ts](src/agent/abort.ts)|100.00|97.44
-🟢|[agent.ts](src/agent/agent.ts)|88.00|92.40
+🟢|[agent.ts](src/agent/agent.ts)|88.00|92.62
 🟢|[constants.ts](src/agent/constants.ts)|100.00|100.00
 🟢|[enforce.ts](src/agent/enforce.ts)|85.00|85.87
 🟢|[events.ts](src/agent/events.ts)|100.00|100.00

@@ -1309,6 +1309,23 @@ function agentOf(name: string, prompt: string): Agent {
   });
 }
 
+test('Agent recusa uma opção que não existe, dizendo as que existem', () => {
+  // A variable, as a script or a spread passes it: the typecheck does not see it.
+  const options = {
+    conversation: false,
+    name: 'ana',
+    prompt: 'mensagem',
+    provider: new EchoProvider(),
+    workspace: new Workspace({ type: 'bubblewrap', root: process.cwd() }),
+    permissions: { default: 'deny' },
+  };
+  const create = (): Agent => new Agent(options);
+
+  expect(create).toThrow(UsageError);
+  expect(create).toThrow('Opção desconhecida "permissions" no Agent.');
+  expect(create).toThrow('policy');
+});
+
 test('Agent recusa nome ou prompt vazio com um UsageError', () => {
   expect(() => agentOf(' ', 'mensagem')).toThrow(UsageError);
   expect(() => agentOf(' ', 'mensagem')).toThrow(

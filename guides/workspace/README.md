@@ -44,6 +44,9 @@ Um `Workspace` define a raiz que o agente pode alterar e prepara cada comando pa
 Do pacote (`choliba`) vêm o `Workspace`, os tipos `WorkspaceOptions` e `WorkspaceType`, as duas sandboxes
 (`BubblewrapSandbox`, `DockerSandbox`), o `SandboxPaths`, o `AGENT_ROOT` e o `DEFAULT_DOCKER_IMAGE`.
 
+Uma opção que o tipo de workspace não tem (`image` sem Docker, um nome errado) é recusada ao criar o workspace, com um
+`UsageError` que lista as opções daquele tipo.
+
 | Exportação                                     | O que faz                                                                                                                                                         |
 | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Workspace`                                    | Representa a raiz e o sandbox escolhido (`bubblewrap` ou `docker`).                                                                                               |
