@@ -62,7 +62,7 @@ Além do `Executor`, o módulo tem o **processo atual** e os **programas auxilia
 | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `types.ts`     | `ProgramCommand` (o que rodar) e `ProgramOutput` (um pedaço da saída).                                                                                                                                                                                                                        |
 | `index.ts`     | `Executor`, `ProgramExecutionError` e o log de cada execução (`command`, em `debug`: fases `spawn` e `exit`).                                                                                                                                                                                 |
-| `stream.ts`    | `OutputStream` (uma fila lida com `for await`) e `OutputDispatcher` (uma sequência por execução, e quem acompanha todas).                                                                                                                                                                     |
+| `stream.ts`    | `OutputStream` (uma fila lida com `for await`) e `OutputDispatcher` (uma sequência por execução).                                                                                                                                                                                             |
 | `process.ts`   | Um dos três lugares que tocam em `process` (os outros são o `src/output/stdio.ts` e o `src/input`): argumentos, ambiente, diretório, pid, código de saída, erros não capturados, a limpeza na saída (`onProgramExit`) e os programas auxiliares (`runProgram`, `startHelper`, `runAttached`). |
 | `bundle.ts`    | `bundleHelper`: monta num arquivo só um auxiliar que roda onde o projeto não está montado (o hook do gate, o servidor MCP e a ponte da rede, dentro da sandbox), e recusa com um `UsageError` uma montagem que falha.                                                                         |
 | `interrupt.ts` | `listenForInterrupt`: o primeiro Ctrl+C aborta um `AbortSignal`; um segundo força a saída. Dois em até 500 ms (`SAME_KEYPRESS_MS`) contam como um: sob o `bun run`, um Ctrl+C chega duas vezes.                                                                                               |
@@ -106,14 +106,16 @@ Do pacote (`choliba`) vêm o `Executor`, o `ProgramExecutionError`, o `OutputStr
 
 ### Acompanhar execuções: `OutputDispatcher`
 
-Para quando várias execuções correm ao mesmo tempo e alguém quer ver todas:
+Para quando várias execuções correm ao mesmo tempo, cada uma com a sua sequência, sem misturá-las:
 
-| Membro                                   | O que faz                                                                  |
-| ---------------------------------------- | -------------------------------------------------------------------------- |
-| `open(executionId, programId)`           | abre a sequência de uma execução e a devolve                               |
-| `publish(executionId, programId, value)` | entrega `value` a essa sequência **e** a quem assinou                      |
-| `close(...)`, `fail(..., error)`         | termina a sequência, bem ou com erro                                       |
-| `subscribe()`                            | a sequência de **todas** as execuções: `{ executionId, programId, value }` |
+| Membro                                   | O que faz                                    |
+| ---------------------------------------- | -------------------------------------------- |
+| `open(executionId, programId)`           | abre a sequência de uma execução e a devolve |
+| `publish(executionId, programId, value)` | entrega `value` a essa sequência             |
+| `close(...)`, `fail(..., error)`         | termina a sequência, bem ou com erro         |
+
+Quem quer ver todas as execuções assina um produtor de eventos (`src/events`), o único barramento, como no
+[Exemplo 6](#6-acompanhar-várias-execuções).
 
 ### O processo atual e programas auxiliares
 
@@ -443,28 +445,25 @@ O Executor rodou um `nsenter`, sem saber que era uma jaula. Por isso, numa sandb
 ```ts
 /**
  * Exemplo 6 do curso de execute: acompanhar várias execuções. O
- * OutputDispatcher guarda uma sequência por execução e entrega todas a quem
- * assina, com o id da execução e de quem a pediu.
+ * OutputDispatcher guarda uma sequência por execução, e cada um lê só a sua;
+ * quem quer ver todas assina um produtor de eventos (src/events), sem saber
+ * quem roda o quê.
  */
+import { createConsumer, createProducer } from '../../../src/events/index';
 import { Executor, OutputDispatcher } from '../../../src/execute/index';
 import type { ProgramOutput } from '../../../src/execute/types';
 import { writeOut } from '../../../src/output/stdio';
 
 const dispatcher = new OutputDispatcher<ProgramOutput>();
 const executor = new Executor();
+const executions = createProducer('execucoes');
 
-// O observador: assina antes e lê em paralelo, sem saber quem roda o quê.
-void (async () => {
-  for await (const {
-    executionId,
-    programId,
-    value,
-  } of dispatcher.subscribe()) {
-    writeOut(
-      `  [observador] ${executionId} (${programId}): ${value.chunk.trim()}\n`,
-    );
-  }
-})();
+// O observador: assina o produtor e recebe cada pedaço, com a execução e o programa.
+createConsumer((event) => {
+  writeOut(
+    `  [observador] ${String(event['executionId'])} (${String(event['programId'])}): ${String(event['text'])}\n`,
+  );
+}).subscribe('execucoes');
 
 /** Roda e publica cada pedaço; quem chamou lê a sequência da sua execução. */
 async function run(
@@ -474,11 +473,17 @@ async function run(
 ): Promise<void> {
   const own = dispatcher.open(executionId, programId);
   void (async () => {
-    for await (const chunk of executor.run({
+    for await (const output of executor.run({
       executable: 'echo',
       arguments: [text],
     })) {
-      dispatcher.publish(executionId, programId, chunk);
+      dispatcher.publish(executionId, programId, output);
+      executions.emit({
+        type: 'saida',
+        executionId,
+        programId,
+        text: output.chunk.trim(),
+      });
     }
     dispatcher.close(executionId, programId);
   })();
@@ -493,13 +498,13 @@ await run('execucao-2', 'eco', 'segunda');
 Saída real:
 
 ```
-[execucao-1] primeira
   [observador] execucao-1 (eco): primeira
-[execucao-2] segunda
+[execucao-1] primeira
   [observador] execucao-2 (eco): segunda
+[execucao-2] segunda
 ```
 
-Cada pedaço chega a quem pediu a execução **e** ao observador, que sabe de qual execução veio. É o que o agente faz com os eventos do provider (`runProvider`), para quem passar um `output` nas opções dele.
+Cada pedaço chega a quem pediu a execução, pela sequência dela no `OutputDispatcher`, e ao observador, pelo produtor de eventos, que diz de qual execução ele veio. O evento é entregue na hora, por isso a linha do observador sai antes. O agente faz o mesmo com os eventos do provider (`runProvider`): uma sequência por execução, e os eventos para quem assina.
 
 ### 7. O processo atual e o Ctrl+C
 

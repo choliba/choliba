@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 26/11/2026 13:54:35: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 26/11/2026 14:04:08: não edite à mão.
 
 Limites (coverage-thresholds.json, só sobem): funções 93.03%, linhas 95.14%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
@@ -19,7 +19,7 @@ Status|Módulo|% Funcs|% Lines
 🟢|[src/context](src/context)|100.00|100.00
 🟢|[src](src)|95.24|93.94
 🟢|[src/events](src/events)|100.00|100.00
-🟢|[src/execute](src/execute)|93.27|92.10
+🟢|[src/execute](src/execute)|93.18|92.10
 🟢|[src/filesystem](src/filesystem)|97.92|94.10
 🔴|[src/input](src/input)|0.00|6.93
 🟢|[src/interaction](src/interaction)|97.50|99.52
@@ -168,7 +168,7 @@ Status|Arquivo|% Funcs|% Lines
 🟢|[index.ts](src/execute/index.ts)|95.65|100.00
 🟢|[interrupt.ts](src/execute/interrupt.ts)|100.00|93.75
 🟡|[process.ts](src/execute/process.ts)|68.97|58.82
-🟢|[stream.ts](src/execute/stream.ts)|95.00|100.00
+🟢|[stream.ts](src/execute/stream.ts)|94.44|100.00
 
 </details>
 
