@@ -229,9 +229,8 @@ describe('runProvider', () => {
     expect(events.map(readEvent)).toEqual(['stdout:/home/choliba']);
   });
 
-  test('publica execuções simultâneas no despachante sem misturá-las', async () => {
+  test('execuções simultâneas pelo mesmo despachante não se misturam', async () => {
     const dispatcher = new OutputDispatcher<ProviderEvent<string>>();
-    const subscription = dispatcher.subscribe()[Symbol.asyncIterator]();
     const provider = new TestProvider('process.stdin.pipe(process.stdout);');
     const run = (input: string): Promise<ProviderEvent<string>[]> =>
       collect(
@@ -243,30 +242,14 @@ describe('runProvider', () => {
         }),
       );
 
-    const first = run('primeiro');
-    const second = run('segundo');
-    const published = await Promise.all([
-      subscription.next(),
-      subscription.next(),
+    // Each run reads its own execution from the dispatcher both share.
+    const [first, second] = await Promise.all([
+      run('primeiro'),
+      run('segundo'),
     ]);
 
-    expect((await first).map(readEvent)).toEqual(['stdout:primeiro']);
-    expect((await second).map(readEvent)).toEqual(['stdout:segundo']);
-    expect(
-      new Set(
-        published.map((event) =>
-          event.done === true ? undefined : event.value.programId,
-        ),
-      ),
-    ).toEqual(new Set(['test-program']));
-    expect(
-      new Set(
-        published.map((event) =>
-          event.done === true ? undefined : event.value.executionId,
-        ),
-      ).size,
-    ).toBe(2);
-    await subscription.return?.();
+    expect(first.map(readEvent)).toEqual(['stdout:primeiro']);
+    expect(second.map(readEvent)).toEqual(['stdout:segundo']);
   });
 });
 

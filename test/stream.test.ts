@@ -13,25 +13,14 @@ test('OutputStream entrega e encerra uma sequência de valores', async () => {
 });
 
 describe('OutputDispatcher', () => {
-  test('entrega valores genéricos para a execução e assinantes', async () => {
+  test('entrega valores genéricos para a sequência da execução', async () => {
     const output = new OutputDispatcher<{ count: number }>();
     const execution = output.open('execution-1', 'program-1');
-    const subscription = output.subscribe()[Symbol.asyncIterator]();
 
     output.publish('execution-1', 'program-1', { count: 1 });
     output.close('execution-1', 'program-1');
 
     expect(await collect(execution)).toEqual([{ count: 1 }]);
-    expect(await subscription.next()).toEqual({
-      done: false,
-      value: {
-        executionId: 'execution-1',
-        programId: 'program-1',
-        value: { count: 1 },
-      },
-    });
-
-    await subscription.return?.();
   });
 
   test('uma falha encerra somente a execução correspondente', async () => {

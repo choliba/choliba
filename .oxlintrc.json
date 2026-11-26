@@ -78,8 +78,34 @@
             "message": "Só src/input importa readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
           },
           {
+            "name": "node:process",
+            "message": "Só src/execute/process.ts toca no processo atual (argumentos, ambiente, sinais, saída); stdout/stderr são do src/output/stdio.ts e o stdin do src/input. Veja AGENTS.md."
+          },
+          {
+            "name": "process",
+            "message": "Só src/execute/process.ts toca no processo atual (argumentos, ambiente, sinais, saída); stdout/stderr são do src/output/stdio.ts e o stdin do src/input. Veja AGENTS.md."
+          },
+          {
             "name": "@modelcontextprotocol/server",
             "message": "Só src/mcp importa o SDK do MCP: servidores MCP passam pelo src/mcp (serveTools). Veja AGENTS.md."
+          },
+          {
+            "name": "bun:sqlite",
+            "message": "Só src/store importa bun:sqlite: o banco passa pelo src/store. Veja AGENTS.md."
+          },
+          {
+            "name": "bun",
+            "message": "O módulo bun dá disco e processos por fora dos donos: use o src/filesystem, o src/execute… Veja AGENTS.md."
+          }
+        ],
+        "patterns": [
+          {
+            "group": ["node:path/*", "path/*"],
+            "message": "Só src/filesystem importa node:path/*: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+          },
+          {
+            "group": ["node:readline/*", "readline/*"],
+            "message": "Só src/input importa node:readline/*: o terminal é lido só pelo src/input. Veja AGENTS.md."
           }
         ]
       }
@@ -90,6 +116,59 @@
       {
         "name": "process",
         "message": "Só src/execute/process.ts toca no processo atual (argumentos, ambiente, sinais, saída); stdout/stderr são do src/output/stdio.ts e o stdin do src/input. Veja AGENTS.md."
+      }
+    ],
+    "eslint/no-restricted-properties": [
+      "error",
+      {
+        "object": "globalThis",
+        "property": "process",
+        "message": "Só src/execute/process.ts toca no processo atual (argumentos, ambiente, sinais, saída); stdout/stderr são do src/output/stdio.ts e o stdin do src/input. Veja AGENTS.md."
+      },
+      {
+        "object": "Bun",
+        "property": "write",
+        "message": "Só src/filesystem grava no disco: use writeText, writeBytes… Veja AGENTS.md."
+      },
+      {
+        "object": "Bun",
+        "property": "file",
+        "message": "Só src/filesystem lê o disco: use readText, readBytes… Veja AGENTS.md."
+      },
+      {
+        "object": "Bun",
+        "property": "spawn",
+        "message": "Só src/execute roda programas: use o Executor, runProgram… Veja AGENTS.md."
+      },
+      {
+        "object": "Bun",
+        "property": "spawnSync",
+        "message": "Só src/execute roda programas: use o Executor, runProgram… Veja AGENTS.md."
+      },
+      {
+        "object": "Bun",
+        "property": "$",
+        "message": "Só src/execute roda programas: use o Executor, runProgram… Veja AGENTS.md."
+      },
+      {
+        "object": "Bun",
+        "property": "build",
+        "message": "Só src/execute monta os auxiliares: use o bundleHelper. Veja AGENTS.md."
+      },
+      {
+        "object": "Bun",
+        "property": "stdin",
+        "message": "Só src/input lê o stdin. Veja AGENTS.md."
+      },
+      {
+        "object": "Bun",
+        "property": "stdout",
+        "message": "Só src/output/stdio.ts escreve no stdout. Veja AGENTS.md."
+      },
+      {
+        "object": "Bun",
+        "property": "stderr",
+        "message": "Só src/output/stdio.ts escreve no stderr. Veja AGENTS.md."
       }
     ]
   },
@@ -103,7 +182,105 @@
         "typescript/no-unsafe-assignment": "off",
         "eslint/no-restricted-imports": "off",
         "eslint/no-restricted-globals": "off",
-        "eslint/no-console": "off"
+        "eslint/no-console": "off",
+        "eslint/no-restricted-properties": "off"
+      }
+    },
+    {
+      "files": ["src/filesystem/**/*.ts"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "node:child_process",
+                "message": "Só src/execute importa node:child_process: programas rodam pelo src/execute (Executor, runProgram…). Veja AGENTS.md."
+              },
+              {
+                "name": "child_process",
+                "message": "Só src/execute importa child_process: programas rodam pelo src/execute (Executor, runProgram…). Veja AGENTS.md."
+              },
+              {
+                "name": "node:readline",
+                "message": "Só src/input importa node:readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "readline",
+                "message": "Só src/input importa readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "node:process",
+                "message": "Só src/execute/process.ts toca no processo atual (argumentos, ambiente, sinais, saída); stdout/stderr são do src/output/stdio.ts e o stdin do src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "process",
+                "message": "Só src/execute/process.ts toca no processo atual (argumentos, ambiente, sinais, saída); stdout/stderr são do src/output/stdio.ts e o stdin do src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "@modelcontextprotocol/server",
+                "message": "Só src/mcp importa o SDK do MCP: servidores MCP passam pelo src/mcp (serveTools). Veja AGENTS.md."
+              },
+              {
+                "name": "bun:sqlite",
+                "message": "Só src/store importa bun:sqlite: o banco passa pelo src/store. Veja AGENTS.md."
+              },
+              {
+                "name": "bun",
+                "message": "O módulo bun dá disco e processos por fora dos donos: use o src/filesystem, o src/execute… Veja AGENTS.md."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["node:readline/*", "readline/*"],
+                "message": "Só src/input importa node:readline/*: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              }
+            ]
+          }
+        ],
+        "eslint/no-restricted-properties": [
+          "error",
+          {
+            "object": "globalThis",
+            "property": "process",
+            "message": "Só src/execute/process.ts toca no processo atual (argumentos, ambiente, sinais, saída); stdout/stderr são do src/output/stdio.ts e o stdin do src/input. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "spawn",
+            "message": "Só src/execute roda programas: use o Executor, runProgram… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "spawnSync",
+            "message": "Só src/execute roda programas: use o Executor, runProgram… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "$",
+            "message": "Só src/execute roda programas: use o Executor, runProgram… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "build",
+            "message": "Só src/execute monta os auxiliares: use o bundleHelper. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "stdin",
+            "message": "Só src/input lê o stdin. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "stdout",
+            "message": "Só src/output/stdio.ts escreve no stdout. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "stderr",
+            "message": "Só src/output/stdio.ts escreve no stderr. Veja AGENTS.md."
+          }
+        ]
       }
     },
     {
@@ -146,42 +323,69 @@
                 "message": "Só src/input importa readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
               },
               {
+                "name": "node:process",
+                "message": "Só src/execute/process.ts toca no processo atual (argumentos, ambiente, sinais, saída); stdout/stderr são do src/output/stdio.ts e o stdin do src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "process",
+                "message": "Só src/execute/process.ts toca no processo atual (argumentos, ambiente, sinais, saída); stdout/stderr são do src/output/stdio.ts e o stdin do src/input. Veja AGENTS.md."
+              },
+              {
                 "name": "@modelcontextprotocol/server",
                 "message": "Só src/mcp importa o SDK do MCP: servidores MCP passam pelo src/mcp (serveTools). Veja AGENTS.md."
+              },
+              {
+                "name": "bun:sqlite",
+                "message": "Só src/store importa bun:sqlite: o banco passa pelo src/store. Veja AGENTS.md."
+              },
+              {
+                "name": "bun",
+                "message": "O módulo bun dá disco e processos por fora dos donos: use o src/filesystem, o src/execute… Veja AGENTS.md."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["node:path/*", "path/*"],
+                "message": "Só src/filesystem importa node:path/*: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+              },
+              {
+                "group": ["node:readline/*", "readline/*"],
+                "message": "Só src/input importa node:readline/*: o terminal é lido só pelo src/input. Veja AGENTS.md."
               }
             ]
           }
-        ]
-      }
-    },
-    {
-      "files": ["src/filesystem/**/*.ts"],
-      "rules": {
-        "eslint/no-restricted-imports": [
+        ],
+        "eslint/no-restricted-properties": [
           "error",
           {
-            "paths": [
-              {
-                "name": "node:child_process",
-                "message": "Só src/execute importa node:child_process: programas rodam pelo src/execute (Executor, runProgram…). Veja AGENTS.md."
-              },
-              {
-                "name": "child_process",
-                "message": "Só src/execute importa child_process: programas rodam pelo src/execute (Executor, runProgram…). Veja AGENTS.md."
-              },
-              {
-                "name": "node:readline",
-                "message": "Só src/input importa node:readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
-              },
-              {
-                "name": "readline",
-                "message": "Só src/input importa readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
-              },
-              {
-                "name": "@modelcontextprotocol/server",
-                "message": "Só src/mcp importa o SDK do MCP: servidores MCP passam pelo src/mcp (serveTools). Veja AGENTS.md."
-              }
-            ]
+            "object": "globalThis",
+            "property": "process",
+            "message": "Só src/execute/process.ts toca no processo atual (argumentos, ambiente, sinais, saída); stdout/stderr são do src/output/stdio.ts e o stdin do src/input. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "write",
+            "message": "Só src/filesystem grava no disco: use writeText, writeBytes… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "file",
+            "message": "Só src/filesystem lê o disco: use readText, readBytes… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "stdin",
+            "message": "Só src/input lê o stdin. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "stdout",
+            "message": "Só src/output/stdio.ts escreve no stdout. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "stderr",
+            "message": "Só src/output/stdio.ts escreve no stderr. Veja AGENTS.md."
           }
         ]
       }
@@ -228,8 +432,65 @@
               {
                 "name": "@modelcontextprotocol/server",
                 "message": "Só src/mcp importa o SDK do MCP: servidores MCP passam pelo src/mcp (serveTools). Veja AGENTS.md."
+              },
+              {
+                "name": "bun:sqlite",
+                "message": "Só src/store importa bun:sqlite: o banco passa pelo src/store. Veja AGENTS.md."
+              },
+              {
+                "name": "bun",
+                "message": "O módulo bun dá disco e processos por fora dos donos: use o src/filesystem, o src/execute… Veja AGENTS.md."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["node:path/*", "path/*"],
+                "message": "Só src/filesystem importa node:path/*: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
               }
             ]
+          }
+        ],
+        "eslint/no-restricted-properties": [
+          "error",
+          {
+            "object": "Bun",
+            "property": "write",
+            "message": "Só src/filesystem grava no disco: use writeText, writeBytes… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "file",
+            "message": "Só src/filesystem lê o disco: use readText, readBytes… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "spawn",
+            "message": "Só src/execute roda programas: use o Executor, runProgram… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "spawnSync",
+            "message": "Só src/execute roda programas: use o Executor, runProgram… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "$",
+            "message": "Só src/execute roda programas: use o Executor, runProgram… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "build",
+            "message": "Só src/execute monta os auxiliares: use o bundleHelper. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "stdout",
+            "message": "Só src/output/stdio.ts escreve no stdout. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "stderr",
+            "message": "Só src/output/stdio.ts escreve no stderr. Veja AGENTS.md."
           }
         ]
       }
@@ -280,8 +541,424 @@
               {
                 "name": "readline",
                 "message": "Só src/input importa readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "node:process",
+                "message": "Só src/execute/process.ts toca no processo atual (argumentos, ambiente, sinais, saída); stdout/stderr são do src/output/stdio.ts e o stdin do src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "process",
+                "message": "Só src/execute/process.ts toca no processo atual (argumentos, ambiente, sinais, saída); stdout/stderr são do src/output/stdio.ts e o stdin do src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "bun:sqlite",
+                "message": "Só src/store importa bun:sqlite: o banco passa pelo src/store. Veja AGENTS.md."
+              },
+              {
+                "name": "bun",
+                "message": "O módulo bun dá disco e processos por fora dos donos: use o src/filesystem, o src/execute… Veja AGENTS.md."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["node:path/*", "path/*"],
+                "message": "Só src/filesystem importa node:path/*: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+              },
+              {
+                "group": ["node:readline/*", "readline/*"],
+                "message": "Só src/input importa node:readline/*: o terminal é lido só pelo src/input. Veja AGENTS.md."
               }
             ]
+          }
+        ],
+        "eslint/no-restricted-properties": [
+          "error",
+          {
+            "object": "globalThis",
+            "property": "process",
+            "message": "Só src/execute/process.ts toca no processo atual (argumentos, ambiente, sinais, saída); stdout/stderr são do src/output/stdio.ts e o stdin do src/input. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "write",
+            "message": "Só src/filesystem grava no disco: use writeText, writeBytes… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "file",
+            "message": "Só src/filesystem lê o disco: use readText, readBytes… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "spawn",
+            "message": "Só src/execute roda programas: use o Executor, runProgram… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "spawnSync",
+            "message": "Só src/execute roda programas: use o Executor, runProgram… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "$",
+            "message": "Só src/execute roda programas: use o Executor, runProgram… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "build",
+            "message": "Só src/execute monta os auxiliares: use o bundleHelper. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "stdin",
+            "message": "Só src/input lê o stdin. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "stdout",
+            "message": "Só src/output/stdio.ts escreve no stdout. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "stderr",
+            "message": "Só src/output/stdio.ts escreve no stderr. Veja AGENTS.md."
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/store/**/*.ts"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "node:fs",
+                "message": "Só src/filesystem importa node:fs: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "fs",
+                "message": "Só src/filesystem importa fs: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "node:fs/promises",
+                "message": "Só src/filesystem importa node:fs/promises: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "fs/promises",
+                "message": "Só src/filesystem importa fs/promises: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "node:path",
+                "message": "Só src/filesystem importa node:path: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+              },
+              {
+                "name": "path",
+                "message": "Só src/filesystem importa path: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+              },
+              {
+                "name": "node:child_process",
+                "message": "Só src/execute importa node:child_process: programas rodam pelo src/execute (Executor, runProgram…). Veja AGENTS.md."
+              },
+              {
+                "name": "child_process",
+                "message": "Só src/execute importa child_process: programas rodam pelo src/execute (Executor, runProgram…). Veja AGENTS.md."
+              },
+              {
+                "name": "node:readline",
+                "message": "Só src/input importa node:readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "readline",
+                "message": "Só src/input importa readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "node:process",
+                "message": "Só src/execute/process.ts toca no processo atual (argumentos, ambiente, sinais, saída); stdout/stderr são do src/output/stdio.ts e o stdin do src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "process",
+                "message": "Só src/execute/process.ts toca no processo atual (argumentos, ambiente, sinais, saída); stdout/stderr são do src/output/stdio.ts e o stdin do src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "@modelcontextprotocol/server",
+                "message": "Só src/mcp importa o SDK do MCP: servidores MCP passam pelo src/mcp (serveTools). Veja AGENTS.md."
+              },
+              {
+                "name": "bun",
+                "message": "O módulo bun dá disco e processos por fora dos donos: use o src/filesystem, o src/execute… Veja AGENTS.md."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["node:path/*", "path/*"],
+                "message": "Só src/filesystem importa node:path/*: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+              },
+              {
+                "group": ["node:readline/*", "readline/*"],
+                "message": "Só src/input importa node:readline/*: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              }
+            ]
+          }
+        ],
+        "eslint/no-restricted-properties": [
+          "error",
+          {
+            "object": "globalThis",
+            "property": "process",
+            "message": "Só src/execute/process.ts toca no processo atual (argumentos, ambiente, sinais, saída); stdout/stderr são do src/output/stdio.ts e o stdin do src/input. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "write",
+            "message": "Só src/filesystem grava no disco: use writeText, writeBytes… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "file",
+            "message": "Só src/filesystem lê o disco: use readText, readBytes… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "spawn",
+            "message": "Só src/execute roda programas: use o Executor, runProgram… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "spawnSync",
+            "message": "Só src/execute roda programas: use o Executor, runProgram… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "$",
+            "message": "Só src/execute roda programas: use o Executor, runProgram… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "build",
+            "message": "Só src/execute monta os auxiliares: use o bundleHelper. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "stdin",
+            "message": "Só src/input lê o stdin. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "stdout",
+            "message": "Só src/output/stdio.ts escreve no stdout. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "stderr",
+            "message": "Só src/output/stdio.ts escreve no stderr. Veja AGENTS.md."
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/execute/process.ts"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "node:fs",
+                "message": "Só src/filesystem importa node:fs: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "fs",
+                "message": "Só src/filesystem importa fs: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "node:fs/promises",
+                "message": "Só src/filesystem importa node:fs/promises: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "fs/promises",
+                "message": "Só src/filesystem importa fs/promises: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "node:path",
+                "message": "Só src/filesystem importa node:path: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+              },
+              {
+                "name": "path",
+                "message": "Só src/filesystem importa path: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+              },
+              {
+                "name": "node:readline",
+                "message": "Só src/input importa node:readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "readline",
+                "message": "Só src/input importa readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "@modelcontextprotocol/server",
+                "message": "Só src/mcp importa o SDK do MCP: servidores MCP passam pelo src/mcp (serveTools). Veja AGENTS.md."
+              },
+              {
+                "name": "bun:sqlite",
+                "message": "Só src/store importa bun:sqlite: o banco passa pelo src/store. Veja AGENTS.md."
+              },
+              {
+                "name": "bun",
+                "message": "O módulo bun dá disco e processos por fora dos donos: use o src/filesystem, o src/execute… Veja AGENTS.md."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["node:path/*", "path/*"],
+                "message": "Só src/filesystem importa node:path/*: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+              },
+              {
+                "group": ["node:readline/*", "readline/*"],
+                "message": "Só src/input importa node:readline/*: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              }
+            ]
+          }
+        ],
+        "eslint/no-restricted-properties": [
+          "error",
+          {
+            "object": "Bun",
+            "property": "write",
+            "message": "Só src/filesystem grava no disco: use writeText, writeBytes… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "file",
+            "message": "Só src/filesystem lê o disco: use readText, readBytes… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "stdin",
+            "message": "Só src/input lê o stdin. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "stdout",
+            "message": "Só src/output/stdio.ts escreve no stdout. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "stderr",
+            "message": "Só src/output/stdio.ts escreve no stderr. Veja AGENTS.md."
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/output/stdio.ts"],
+      "rules": {
+        "eslint/no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "node:fs",
+                "message": "Só src/filesystem importa node:fs: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "fs",
+                "message": "Só src/filesystem importa fs: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "node:fs/promises",
+                "message": "Só src/filesystem importa node:fs/promises: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "fs/promises",
+                "message": "Só src/filesystem importa fs/promises: o disco passa pelo src/filesystem. Veja AGENTS.md."
+              },
+              {
+                "name": "node:path",
+                "message": "Só src/filesystem importa node:path: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+              },
+              {
+                "name": "path",
+                "message": "Só src/filesystem importa path: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+              },
+              {
+                "name": "node:child_process",
+                "message": "Só src/execute importa node:child_process: programas rodam pelo src/execute (Executor, runProgram…). Veja AGENTS.md."
+              },
+              {
+                "name": "child_process",
+                "message": "Só src/execute importa child_process: programas rodam pelo src/execute (Executor, runProgram…). Veja AGENTS.md."
+              },
+              {
+                "name": "node:readline",
+                "message": "Só src/input importa node:readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "readline",
+                "message": "Só src/input importa readline: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              },
+              {
+                "name": "@modelcontextprotocol/server",
+                "message": "Só src/mcp importa o SDK do MCP: servidores MCP passam pelo src/mcp (serveTools). Veja AGENTS.md."
+              },
+              {
+                "name": "bun:sqlite",
+                "message": "Só src/store importa bun:sqlite: o banco passa pelo src/store. Veja AGENTS.md."
+              },
+              {
+                "name": "bun",
+                "message": "O módulo bun dá disco e processos por fora dos donos: use o src/filesystem, o src/execute… Veja AGENTS.md."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["node:path/*", "path/*"],
+                "message": "Só src/filesystem importa node:path/*: caminhos vêm do src/filesystem (join, resolve…). Veja AGENTS.md."
+              },
+              {
+                "group": ["node:readline/*", "readline/*"],
+                "message": "Só src/input importa node:readline/*: o terminal é lido só pelo src/input. Veja AGENTS.md."
+              }
+            ]
+          }
+        ],
+        "eslint/no-restricted-properties": [
+          "error",
+          {
+            "object": "Bun",
+            "property": "write",
+            "message": "Só src/filesystem grava no disco: use writeText, writeBytes… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "file",
+            "message": "Só src/filesystem lê o disco: use readText, readBytes… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "spawn",
+            "message": "Só src/execute roda programas: use o Executor, runProgram… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "spawnSync",
+            "message": "Só src/execute roda programas: use o Executor, runProgram… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "$",
+            "message": "Só src/execute roda programas: use o Executor, runProgram… Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "build",
+            "message": "Só src/execute monta os auxiliares: use o bundleHelper. Veja AGENTS.md."
+          },
+          {
+            "object": "Bun",
+            "property": "stdin",
+            "message": "Só src/input lê o stdin. Veja AGENTS.md."
           }
         ]
       }

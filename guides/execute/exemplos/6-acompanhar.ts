@@ -1,27 +1,24 @@
 /**
  * Exemplo 6 do curso de execute: acompanhar várias execuções. O
- * OutputDispatcher guarda uma sequência por execução e entrega todas a quem
- * assina, com o id da execução e de quem a pediu.
+ * OutputDispatcher guarda uma sequência por execução, e cada um lê só a sua;
+ * quem quer ver todas assina um produtor de eventos (src/events), sem saber
+ * quem roda o quê.
  */
+import { createConsumer, createProducer } from '../../../src/events/index';
 import { Executor, OutputDispatcher } from '../../../src/execute/index';
 import type { ProgramOutput } from '../../../src/execute/types';
 import { writeOut } from '../../../src/output/stdio';
 
 const dispatcher = new OutputDispatcher<ProgramOutput>();
 const executor = new Executor();
+const executions = createProducer('execucoes');
 
-// O observador: assina antes e lê em paralelo, sem saber quem roda o quê.
-void (async () => {
-  for await (const {
-    executionId,
-    programId,
-    value,
-  } of dispatcher.subscribe()) {
-    writeOut(
-      `  [observador] ${executionId} (${programId}): ${value.chunk.trim()}\n`,
-    );
-  }
-})();
+// O observador: assina o produtor e recebe cada pedaço, com a execução e o programa.
+createConsumer((event) => {
+  writeOut(
+    `  [observador] ${String(event['executionId'])} (${String(event['programId'])}): ${String(event['text'])}\n`,
+  );
+}).subscribe('execucoes');
 
 /** Roda e publica cada pedaço; quem chamou lê a sequência da sua execução. */
 async function run(
@@ -31,11 +28,17 @@ async function run(
 ): Promise<void> {
   const own = dispatcher.open(executionId, programId);
   void (async () => {
-    for await (const chunk of executor.run({
+    for await (const output of executor.run({
       executable: 'echo',
       arguments: [text],
     })) {
-      dispatcher.publish(executionId, programId, chunk);
+      dispatcher.publish(executionId, programId, output);
+      executions.emit({
+        type: 'saida',
+        executionId,
+        programId,
+        text: output.chunk.trim(),
+      });
     }
     dispatcher.close(executionId, programId);
   })();

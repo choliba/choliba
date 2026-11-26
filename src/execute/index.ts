@@ -15,7 +15,7 @@ import { OutputStream } from './stream';
 import type { ProgramCommand, ProgramOutput } from './types';
 
 export * from './constants';
-export { OutputDispatcher, OutputStream, type OutputEvent } from './stream';
+export { OutputDispatcher, OutputStream } from './stream';
 
 /** Starts a process with piped stdio; injectable for tests. */
 export type SpawnProcess = (
