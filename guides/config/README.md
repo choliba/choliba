@@ -589,7 +589,7 @@ isConfigLoaded(): true
 configPath: <raiz>/choliba.config.ts
 logger.dir: <raiz>/storage/logs
 logger.use: sim (pino)
-databasePath: <raiz>/storage/db/batata.db
+databasePath: <raiz>/storage/db/choliba.db
 workspaces.dir: <raiz>/storage/workspaces
 workspaces.homes: <raiz>/storage/homes
 debug: true
