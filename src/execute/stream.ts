@@ -1,20 +1,14 @@
 /**
  * Async sequences for executions: `OutputStream`, a queue read with
- * `for await`, and `OutputDispatcher`, which keeps one stream per execution
- * and lets anyone follow them all (`subscribe`).
+ * `for await`, and `OutputDispatcher`, which keeps one stream per execution.
+ * Following them all is for events (`src/events`), the one bus.
  */
-
-export interface OutputEvent<T> {
-  readonly executionId: string;
-  readonly programId: string;
-  readonly value: T;
-}
 
 interface OutputQueue<T> {
   push(value: T): void;
   close(): void;
   fail(error: Error): void;
-  read(onReturn?: () => void): AsyncIterable<T>;
+  read(): AsyncIterable<T>;
 }
 
 export class OutputStream<T> implements AsyncIterable<T> {
@@ -44,7 +38,6 @@ interface Execution<T> {
 
 export class OutputDispatcher<T> {
   private readonly executions = new Map<string, Execution<T>>();
-  private readonly subscribers = new Set<OutputQueue<OutputEvent<T>>>();
 
   public open(executionId: string, programId: string): AsyncIterable<T> {
     if (this.executions.has(executionId)) {
@@ -57,14 +50,7 @@ export class OutputDispatcher<T> {
   }
 
   public publish(executionId: string, programId: string, value: T): void {
-    const execution = this.getExecution(executionId, programId);
-    const event = { executionId, programId, value };
-
-    execution.queue.push(value);
-
-    for (const subscriber of this.subscribers) {
-      subscriber.push(event);
-    }
+    this.getExecution(executionId, programId).queue.push(value);
   }
 
   public close(executionId: string, programId: string): void {
@@ -77,12 +63,6 @@ export class OutputDispatcher<T> {
     const execution = this.getExecution(executionId, programId);
     this.executions.delete(executionId);
     execution.queue.fail(error);
-  }
-
-  public subscribe(): AsyncIterable<OutputEvent<T>> {
-    const queue = createQueue<OutputEvent<T>>();
-    this.subscribers.add(queue);
-    return queue.read(() => this.subscribers.delete(queue));
   }
 
   private getExecution(executionId: string, programId: string): Execution<T> {
@@ -133,27 +113,23 @@ function createQueue<T>(): OutputQueue<T> {
         wake();
       }
     },
-    async *read(onReturn): AsyncGenerator<T> {
-      try {
-        for (;;) {
-          const next = values.shift();
+    async *read(): AsyncGenerator<T> {
+      for (;;) {
+        const next = values.shift();
 
-          if (next !== undefined) {
-            yield next.value;
-          } else if (ended) {
-            break;
-          } else {
-            await new Promise<void>((resolve) => {
-              waiting = resolve;
-            });
-          }
+        if (next !== undefined) {
+          yield next.value;
+        } else if (ended) {
+          break;
+        } else {
+          await new Promise<void>((resolve) => {
+            waiting = resolve;
+          });
         }
+      }
 
-        if (failure !== undefined) {
-          throw failure;
-        }
-      } finally {
-        onReturn?.();
+      if (failure !== undefined) {
+        throw failure;
       }
     },
   };

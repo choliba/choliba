@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { createServer, type Server, type Socket } from 'node:net';
 
-import { UsageError } from '../errors';
 import { processAlive } from '../filesystem/proc';
+import { bundleHelper } from '../execute/bundle';
 import { currentPid, runtimeExecutable, environment } from '../execute/process';
 import {
   besideModule,
@@ -206,16 +206,10 @@ function readCommand(line: string): string | undefined {
  * it (and what it imports) into one file in the gate's directory.
  */
 async function bundleHook(dir: string): Promise<void> {
-  const result = await Bun.build({
-    entrypoints: [besideModule(import.meta.url, './hook-main.ts')],
-    outdir: dir,
-    naming: HOOK_FILE,
-    target: 'bun',
+  await bundleHelper({
+    entry: besideModule(import.meta.url, './hook-main.ts'),
+    dir,
+    file: HOOK_FILE,
+    what: 'o hook de execução',
   });
-
-  if (!result.success) {
-    throw new UsageError(
-      `Não foi possível preparar o hook de execução: ${result.logs.map(String).join('; ')}`,
-    );
-  }
 }

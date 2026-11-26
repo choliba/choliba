@@ -54,7 +54,6 @@ export {
 } from './execute/index';
 export type {
   ExecutorOptions,
-  OutputEvent,
   RunOptions,
   SpawnProcess,
 } from './execute/index';

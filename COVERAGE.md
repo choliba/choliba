@@ -1,14 +1,14 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 26/11/2026 12:21:06: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 26/11/2026 14:04:08: não edite à mão.
 
-Limites (coverage-thresholds.json, só sobem): funções 92.98%, linhas 95.11%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
+Limites (coverage-thresholds.json, só sobem): funções 93.03%, linhas 95.14%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
 ## Resumo
 
 Status|Módulo|% Funcs|% Lines
 --|--|--|--
-🟢|**Total**|92.98|95.11
+🟢|**Total**|93.03|95.15
 🟢|[scripts](scripts)|100.00|98.89
 🟢|[src/adapters](src/adapters)|91.14|97.86
 🟢|[src/agent](src/agent)|96.94|96.67
@@ -19,13 +19,13 @@ Status|Módulo|% Funcs|% Lines
 🟢|[src/context](src/context)|100.00|100.00
 🟢|[src](src)|95.24|93.94
 🟢|[src/events](src/events)|100.00|100.00
-🟢|[src/execute](src/execute)|91.92|90.51
+🟢|[src/execute](src/execute)|93.18|92.10
 🟢|[src/filesystem](src/filesystem)|97.92|94.10
 🔴|[src/input](src/input)|0.00|6.93
 🟢|[src/interaction](src/interaction)|97.50|99.52
 🟢|[src/logger](src/logger)|95.71|96.50
 🟢|[src/mcp](src/mcp)|76.61|93.74
-🟢|[src/network](src/network)|94.03|97.39
+🟢|[src/network](src/network)|94.03|97.38
 🟡|[src/output](src/output)|52.94|54.87
 🟢|[src/policy](src/policy)|99.55|99.28
 🟢|[src/providers](src/providers)|94.71|99.00
@@ -159,15 +159,16 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/execute</b>: 90.51% das linhas, 5 arquivos</summary>
+<summary>🟢 <b>src/execute</b>: 92.10% das linhas, 6 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
+🟢|[bundle.ts](src/execute/bundle.ts)|100.00|100.00
 🟢|[constants.ts](src/execute/constants.ts)|100.00|100.00
 🟢|[index.ts](src/execute/index.ts)|95.65|100.00
 🟢|[interrupt.ts](src/execute/interrupt.ts)|100.00|93.75
 🟡|[process.ts](src/execute/process.ts)|68.97|58.82
-🟢|[stream.ts](src/execute/stream.ts)|95.00|100.00
+🟢|[stream.ts](src/execute/stream.ts)|94.44|100.00
 
 </details>
 
@@ -230,13 +231,13 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/network</b>: 97.39% das linhas, 8 arquivos</summary>
+<summary>🟢 <b>src/network</b>: 97.38% das linhas, 8 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[constants.ts](src/network/constants.ts)|100.00|100.00
 🟢|[gate.ts](src/network/gate.ts)|90.48|100.00
-🟢|[index.ts](src/network/index.ts)|89.66|96.15
+🟢|[index.ts](src/network/index.ts)|89.66|96.05
 🟢|[proxy.ts](src/network/proxy.ts)|72.09|88.40
 🟢|[publish.ts](src/network/publish.ts)|100.00|100.00
 🟢|[rewrite.ts](src/network/rewrite.ts)|100.00|100.00

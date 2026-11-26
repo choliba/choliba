@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { UsageError } from '../errors';
+import { bundleHelper } from '../execute/bundle';
 import type { ProgramCommand } from '../execute/types';
 import {
   runtimeExecutable,
@@ -234,18 +235,12 @@ export class NetworkBoundary {
 }
 
 async function bundleBridge(dir: string): Promise<void> {
-  const result = await Bun.build({
-    entrypoints: [besideModule(import.meta.url, './bridge-main.ts')],
-    outdir: dir,
-    naming: BRIDGE_FILE,
-    target: 'bun',
+  await bundleHelper({
+    entry: besideModule(import.meta.url, './bridge-main.ts'),
+    dir,
+    file: BRIDGE_FILE,
+    what: 'a saída de rede da sandbox',
   });
-
-  if (!result.success) {
-    throw new UsageError(
-      `Não foi possível preparar a saída de rede da sandbox: ${result.logs.map(String).join('; ')}`,
-    );
-  }
 }
 
 function portOf(address: string): number {
