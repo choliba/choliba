@@ -127,7 +127,11 @@ export function fillInputs(
 
 // --- files ---
 
-function checkFile(file: FileCriterion, context: FileContext): CriterionResult {
+function checkFile(
+  criterion: FileCriterion,
+  context: FileContext,
+): CriterionResult {
+  const file = withDefaultAssertion(criterion);
   const targets = targetsOf(file, context);
   const description = describeFile(file);
 
@@ -149,6 +153,27 @@ function checkFile(file: FileCriterion, context: FileContext): CriterionResult {
     }
   }
   return { description, met: true, detail: `${description}.` };
+}
+
+/** The fields of a file criterion that assert something about the file. */
+const ASSERTIONS = [
+  'exists',
+  'created',
+  'deleted',
+  'changed',
+  'contains',
+  'matches',
+  'equals',
+] as const;
+
+/**
+ * The criterion as checked: with no assertion at all (only `name`), it
+ * checks that the file exists, as its description says.
+ */
+function withDefaultAssertion(file: FileCriterion): FileCriterion {
+  return ASSERTIONS.some((field) => file[field] !== undefined)
+    ? file
+    : { ...file, exists: true };
 }
 
 /** The first assertion a target breaks, in words; `undefined` when it holds. */
