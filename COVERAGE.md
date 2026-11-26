@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 26/11/2026 08:05:21: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 26/11/2026 08:26:22: não edite à mão.
 
 Limites (coverage-thresholds.json, só sobem): funções 92.78%, linhas 95.08%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
@@ -8,7 +8,7 @@ Limites (coverage-thresholds.json, só sobem): funções 92.78%, linhas 95.08%. 
 
 Status|Módulo|% Funcs|% Lines
 --|--|--|--
-🟢|**Total**|92.79|95.08
+🟢|**Total**|92.79|95.09
 🟢|[scripts](scripts)|100.00|98.89
 🟢|[src/adapters](src/adapters)|91.14|97.86
 🟢|[src/agent](src/agent)|96.94|96.65
@@ -29,7 +29,7 @@ Status|Módulo|% Funcs|% Lines
 🟡|[src/output](src/output)|52.94|54.87
 🟢|[src/policy](src/policy)|99.55|99.28
 🟢|[src/providers](src/providers)|94.71|99.00
-🟢|[src/rounds](src/rounds)|94.07|96.94
+🟢|[src/rounds](src/rounds)|94.07|96.96
 🟢|[src/store](src/store)|95.71|94.09
 🟢|[src/workspace](src/workspace)|98.26|97.60
 
@@ -288,14 +288,14 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/rounds</b>: 96.94% das linhas, 32 arquivos</summary>
+<summary>🟢 <b>src/rounds</b>: 96.96% das linhas, 32 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[capture.ts](src/rounds/capture.ts)|94.44|95.97
 🟢|[constants.ts](src/rounds/constants.ts)|100.00|100.00
 🟢|[criteria.ts](src/rounds/criteria.ts)|100.00|97.19
-🟢|[define.ts](src/rounds/define.ts)|100.00|90.95
+🟢|[define.ts](src/rounds/define.ts)|100.00|91.53
 🟢|[definitions.ts](src/rounds/definitions.ts)|100.00|100.00
 🟡|[dir.ts](src/rounds/dir.ts)|0.00|66.67
 🟢|[git.ts](src/rounds/git.ts)|88.24|84.82

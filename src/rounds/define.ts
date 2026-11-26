@@ -305,11 +305,7 @@ function checkCriterion(criterion: RoundCriterion, where: string): void {
     for (const pattern of file.ignore ?? []) {
       checkRelPath(pattern, `${where}.file.ignore`);
     }
-    for (const passage of file.contains ?? []) {
-      if (passage.trim().length === 0) {
-        throw new UsageError(`${where}.file.contains tem um trecho vazio.`);
-      }
-    }
+    checkPassages(file.contains, `${where}.file.contains`);
     return;
   }
   if ('limit' in criterion) {
@@ -339,6 +335,7 @@ function checkCriterion(criterion: RoundCriterion, where: string): void {
   if ('if' in criterion) {
     checkFields(criterion.if, CRITERION_FIELDS.if, `${where}.if`);
     checkRelPath(criterion.if.name, `${where}.if.name`);
+    checkPassages(criterion.if.contains, `${where}.if.contains`);
     for (const inner of criterion.check) {
       checkCriterion(inner, `${where}.check`);
     }
@@ -348,6 +345,19 @@ function checkCriterion(criterion: RoundCriterion, where: string): void {
     return;
   }
   throw new UsageError(`${where}: um critério precisa ter file, limit ou if.`);
+}
+
+/**
+ * The passages of a `contains`: one of only spaces is in every file, so the
+ * check (or the condition) would always hold.
+ */
+function checkPassages(
+  passages: readonly string[] | undefined,
+  field: string,
+): void {
+  if ((passages ?? []).some((passage) => passage.trim().length === 0)) {
+    throw new UsageError(`${field} tem um trecho vazio.`);
+  }
 }
 
 /** A path relative to the workspace root (a wildcard is allowed). */
