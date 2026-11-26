@@ -70,7 +70,7 @@ export async function assertOwnRepository(root: string): Promise<void> {
 }
 
 /**
- * A fresh folder for a round from `rounds/fixtures/<name>`: the old one
+ * A fresh folder for a round from `<rounds.fixtures>/<name>`: the old one
  * deleted, the fixture copied, its own repository created and tagged. Only
  * a direct child of `roundsDir` is ever deleted. The short commit.
  */

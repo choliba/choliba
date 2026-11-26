@@ -13,6 +13,7 @@ import type {
   CriterionResult,
   FileCriterion,
   LimitCriterion,
+  PatternData,
   RoundCriterion,
 } from './types';
 
@@ -127,7 +128,11 @@ export function fillInputs(
 
 // --- files ---
 
-function checkFile(file: FileCriterion, context: FileContext): CriterionResult {
+function checkFile(
+  criterion: FileCriterion,
+  context: FileContext,
+): CriterionResult {
+  const file = withDefaultAssertion(criterion);
   const targets = targetsOf(file, context);
   const description = describeFile(file);
 
@@ -149,6 +154,27 @@ function checkFile(file: FileCriterion, context: FileContext): CriterionResult {
     }
   }
   return { description, met: true, detail: `${description}.` };
+}
+
+/** The fields of a file criterion that assert something about the file. */
+const ASSERTIONS = [
+  'exists',
+  'created',
+  'deleted',
+  'changed',
+  'contains',
+  'matches',
+  'equals',
+] as const;
+
+/**
+ * The criterion as checked: with no assertion at all (only `name`), it
+ * checks that the file exists, as its description says.
+ */
+function withDefaultAssertion(file: FileCriterion): FileCriterion {
+  return ASSERTIONS.some((field) => file[field] !== undefined)
+    ? file
+    : { ...file, exists: true };
 }
 
 /** The first assertion a target breaks, in words; `undefined` when it holds. */
@@ -316,8 +342,24 @@ function conditionHolds(condition: Condition, start: Lookup): boolean {
 
 // --- helpers ---
 
-function asRegExp(pattern: RegExp | string): RegExp {
-  return typeof pattern === 'string' ? new RegExp(pattern) : pattern;
+/**
+ * A new RegExp for each test: one with `g` or `y` starts where the last
+ * test stopped (`lastIndex`), and the next file would be checked from there.
+ */
+function asRegExp(pattern: RegExp | string | PatternData): RegExp {
+  return typeof pattern === 'string'
+    ? new RegExp(pattern)
+    : new RegExp(pattern.source, pattern.flags);
+}
+
+/** A `matches` pattern as a record keeps it: the source, with the flags when it has any. */
+export function patternData(
+  pattern: RegExp | string | PatternData,
+): string | PatternData {
+  if (typeof pattern === 'string') return pattern;
+  return pattern.flags === ''
+    ? pattern.source
+    : { source: pattern.source, flags: pattern.flags };
 }
 
 function hasWildcard(pattern: string): boolean {

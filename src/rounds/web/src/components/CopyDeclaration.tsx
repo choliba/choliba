@@ -1,6 +1,6 @@
 /**
  * The declaration a round ran with, as the file that declares it: a button
- * copies it, ready to paste in `rounds/definitions/<id>.ts`, and the code
+ * copies it, ready to paste in `<rounds.definitions>/<id>.ts`, and the code
  * opens below to read. Only for records that kept their declaration.
  */
 
@@ -37,7 +37,7 @@ export function CopyDeclaration({
       <span className="muted" aria-live="polite">
         {state === 'failed'
           ? 'O navegador não deixou copiar: selecione o código abaixo.'
-          : `Cole em rounds/definitions/${declaration.id}.ts.`}
+          : `Cole em ${declaration.id}.ts, na pasta rounds.definitions.`}
       </span>
       <details>
         <summary>Ver a definição</summary>

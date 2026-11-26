@@ -72,6 +72,42 @@ test('file: created, deleted e changed usam início vs fim', () => {
   ).toEqual([true, true, true, false]);
 });
 
+test('file sem asserção confere que o arquivo existe, como exists: true', () => {
+  const ctx = files({
+    start: { 'velho.html': 'a' },
+    end: { 'a.txt': 'x' },
+    changed: ['velho.html'],
+  });
+  expect(
+    fileVerdicts(
+      [
+        { file: { name: 'a.txt' } },
+        { file: { name: 'ausente.txt' } },
+        { file: { name: '*.txt' } },
+        { file: { name: '*.md' } }, // nenhum arquivo casa
+        { file: { name: '*.html' } }, // velho.html foi apagado no passo
+      ],
+      ctx,
+    ),
+  ).toEqual([true, false, true, false, false]);
+  expect(checkFiles([{ file: { name: 'ausente.txt' } }], ctx)[0]?.detail).toBe(
+    'ausente.txt não existe.',
+  );
+});
+
+test('file matches: a flag g não passa de um arquivo ao outro, e { source, flags } vale como a RegExp', () => {
+  const ctx = files({ end: { 'a.txt': 'Goiaba', 'b.txt': 'Goiaba' } });
+  const results = checkFiles(
+    [
+      { file: { name: '*.txt', matches: [/Goiaba/g] } },
+      { file: { name: 'a.txt', matches: [{ source: 'goiaba', flags: 'i' }] } },
+    ],
+    ctx,
+  );
+  expect(results.map((result) => result.met)).toEqual([true, true]);
+  expect(results[1]?.description).toBe('a.txt casa /goiaba/i');
+});
+
 test('file curinga + ignore: nenhum outro arquivo mudou', () => {
   const unchanged = files({
     end: { 'ticket.md': 'x', 'index.html': 'y' },

@@ -223,7 +223,7 @@ export default defineRound({ id: 'x', actors: {}, flow: [], extra: nada });`;
 
 test('uma peça colada sozinha diz que a rodada fica em <id>/<id>.ts', async () => {
   await expect(declarationFromSource(PIECE, [])).rejects.toThrow(
-    'a rodada fica em rounds/definitions/<id>/<id>.ts',
+    'a rodada fica em <rounds.definitions>/<id>/<id>.ts',
   );
 });
 
@@ -399,7 +399,7 @@ export default defineRound({
   criteria: {
     round: [{ limit: { time: '1min', tokens: 10, cost: '$1' } }],
     leitor: [
-      { file: { name: 'a.txt', exists: true, created: false, ignore: ['*.log'], matches: [/^a+$/, 'b'], equals: 'aaa' } },
+      { file: { name: 'a.txt', exists: true, created: false, ignore: ['*.log'], matches: [/^a+$/, 'b', /c/i], equals: 'aaa' } },
       {
         if: { name: 'b.txt', exists: true, contains: ['x'] },
         check: [{ limit: { time: '1min' } }, { desconhecido: 1 }],
@@ -469,7 +469,7 @@ test('declarationFromSource lê todos os campos que o formulário mostra', async
           exists: true,
           created: false,
           ignore: ['*.log'],
-          matches: ['^a+$', 'b'],
+          matches: ['^a+$', 'b', { source: 'c', flags: 'i' }],
           equals: 'aaa',
         },
       },

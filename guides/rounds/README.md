@@ -69,30 +69,42 @@ declaração ──▶ runRound ──▶ pasta da rodada (fixture ou tag) ─�
 
 ## Os arquivos
 
-O motor fica em `src/rounds`; o que é de cada rodada fica em `rounds/`, versionado no projeto.
+O motor fica em `src/rounds`, e os comandos, em `src/cli`. O que é de cada rodada fica nas pastas de `rounds` do
+`choliba.config.ts` (veja [Onde a rodada roda](#onde-a-rodada-roda-roundsdir)), versionadas no projeto de quem as roda.
 
-| Arquivo                    | Papel                                                                                                                                                         |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/rounds/index.ts`      | O que o módulo exporta.                                                                                                                                       |
-| `src/rounds/define.ts`     | `defineRound` e os tipos da declaração (`RoundDefinition`, `RoundActor`, `RoundFlowStep`, `RoundRule`).                                                       |
-| `src/rounds/run.ts`        | `runRound`: prepara a partida, roda os passos, mede, confere e grava.                                                                                         |
-| `src/rounds/git.ts`        | O git da rodada: `prepareFixture`, `resetTo`, as travas (`assertOwnRepository`, `assertApart`), o diff.                                                       |
-| `src/rounds/dir.ts`        | `roundDir(id)`: a pasta de uma rodada dentro do `rounds.dir`.                                                                                                 |
-| `src/rounds/criteria.ts`   | Confere os `criteria`: os de arquivo no fim de cada passo, os limites contra o que foi medido.                                                                |
-| `src/rounds/rules.ts`      | As regras prontas: `readOnlyRespected`, `noQuestions`, `noToolCallAsText`.                                                                                    |
-| `src/rounds/references.ts` | Tira as citações `arquivo:linha` do que o agente disse e confere cada uma.                                                                                    |
-| `src/rounds/measures.ts`   | `StepRecorder`: ouve os eventos de um passo (falas, perguntas, ferramentas, tokens).                                                                          |
-| `src/rounds/record.ts`     | Monta e grava o registro, tirando segredos e o caminho do projeto.                                                                                            |
-| `src/rounds/score.ts`      | A rubrica: `scoreRound`, as notas de eficácia, eficiência e a final.                                                                                          |
-| `src/rounds/validate.ts`   | `validateRound`: confere um registro lido do disco, campo a campo.                                                                                            |
-| `src/rounds/types.ts`      | O formato do registro (`RoundRecord`, `schema: 4`).                                                                                                           |
-| `src/rounds/constants.ts`  | Os valores do módulo: a rubrica, os caminhos fixos, a tag das fixtures.                                                                                       |
-| `<definitions>/<id>.ts`    | As rodadas declaradas, uma por arquivo, com o nome do `id`; ou, se quiser separar as peças em arquivos, uma pasta `<id>/` com a declaração em `<id>/<id>.ts`. |
-| `<fixtures>/<nome>/`       | Os pontos de partida, copiados para a pasta da rodada a cada execução.                                                                                        |
-| `<data>/<início>.json`     | Um registro por execução, gravado pelo `runRound`.                                                                                                            |
-| `rounds/run.ts`            | A linha de comando: `bun run rounds <id>`.                                                                                                                    |
-| `src/rounds/web/`          | As páginas (React), geradas a partir dos registros.                                                                                                           |
-| `rubrica.md` (este curso)  | A referência da rubrica: cada critério, cada número e o motivo dele.                                                                                          |
+| Arquivo                      | Papel                                                                                                                                                         |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/rounds/index.ts`        | O que o módulo exporta.                                                                                                                                       |
+| `src/rounds/define.ts`       | `defineRound` e os tipos da declaração (`RoundDefinition`, `RoundActor`, `RoundFlowStep`, `RoundRule`).                                                       |
+| `src/rounds/run.ts`          | `runRound`: prepara a partida, roda os passos, mede, confere e grava.                                                                                         |
+| `src/rounds/git.ts`          | O git da rodada: `prepareFixture`, `resetTo`, as travas (`assertOwnRepository`, `assertApart`), o diff.                                                       |
+| `src/rounds/dir.ts`          | `roundDir(id)`: a pasta de uma rodada dentro do `rounds.dir`.                                                                                                 |
+| `src/rounds/criteria.ts`     | Confere os `criteria`: os de arquivo no fim de cada passo, os limites contra o que foi medido.                                                                |
+| `src/rounds/rules.ts`        | As regras prontas: `readOnlyRespected`, `noQuestions`, `noToolCallAsText`.                                                                                    |
+| `src/rounds/references.ts`   | Tira as citações `arquivo:linha` do que o agente disse e confere cada uma.                                                                                    |
+| `src/rounds/measures.ts`     | `StepRecorder`: ouve os eventos de um passo (falas, perguntas, ferramentas, tokens).                                                                          |
+| `src/rounds/record.ts`       | Monta e grava o registro, tirando segredos e o caminho do projeto.                                                                                            |
+| `src/rounds/score.ts`        | A rubrica: `scoreRound`, as notas de eficácia, eficiência e a final.                                                                                          |
+| `src/rounds/validate.ts`     | `validateRound`: confere um registro lido do disco, campo a campo.                                                                                            |
+| `src/rounds/types.ts`        | O formato do registro (`RoundRecord`, `schema: 4`).                                                                                                           |
+| `src/rounds/constants.ts`    | Os valores do módulo: a rubrica, a tag das fixtures, os nomes e os prazos das páginas.                                                                        |
+| `src/rounds/capture.ts`      | `captureDeclaration`: a declaração como dados, com os pedidos e os critérios, para o registro e para **Copiar definição**.                                    |
+| `src/rounds/snapshot.ts`     | O retrato de cada agente como rodou e os hashes que dizem se duas execuções tiveram a mesma configuração (`configHash`).                                      |
+| `src/rounds/definitions.ts`  | `findDefinition` e `listDefinitions`: onde mora a declaração de cada rodada, num arquivo ou numa pasta.                                                       |
+| `src/rounds/same-choliba.ts` | Recusa uma declaração que importa outro Choliba, com código diferente do que roda a rodada.                                                                   |
+| `src/rounds/permissions.ts`  | `writableOf`: onde uma política deixa escrever, como as regras e a rubrica leem.                                                                              |
+| `src/rounds/resources.ts`    | Amostra a máquina durante a rodada: CPU, GPU e memória, da rodada e de cada agente.                                                                           |
+| `src/rounds/totals.ts`       | As somas dos registros de uso (tokens, tokens novos, custo).                                                                                                  |
+| `src/rounds/compat.ts`       | Confere, no typecheck, que os tipos que o registro copia (para as páginas) continuam iguais aos originais.                                                    |
+| `src/rounds/pages.ts`        | `servePages`: serve as páginas geradas, com o `rounds.json` e o `definitions.json`.                                                                           |
+| `src/rounds/payload.ts`      | Monta o `rounds.json` (os registros de `rounds.data`) e o `definitions.json` (os arquivos de `rounds.definitions`).                                           |
+| `<definitions>/<id>.ts`      | As rodadas declaradas, uma por arquivo, com o nome do `id`; ou, se quiser separar as peças em arquivos, uma pasta `<id>/` com a declaração em `<id>/<id>.ts`. |
+| `<fixtures>/<nome>/`         | Os pontos de partida, copiados para a pasta da rodada a cada execução.                                                                                        |
+| `<data>/<início>.json`       | Um registro por execução, gravado pelo `runRound`.                                                                                                            |
+| `src/cli/rounds.ts`          | Os comandos `rounds <id>` e `rounds:web`.                                                                                                                     |
+| `src/cli/clear.ts`           | O `clear --rounds`, que esvazia o `rounds.dir` (com as pastas do logger e dos workspaces).                                                                    |
+| `src/rounds/web/`            | As páginas (React), geradas a partir dos registros.                                                                                                           |
+| `rubrica.md` (este curso)    | A referência da rubrica: cada critério, cada número e o motivo dele.                                                                                          |
 
 [↑ topo](#topo)
 
@@ -213,7 +225,7 @@ interface FileCriterion {
   deleted?: boolean; // true: existia no início do passo e não existe no fim
   changed?: boolean; // true: o git viu mudar no passo; false: não viu
   contains?: string[]; // tem TODOS os trechos, sem diferenciar maiúsculas
-  matches?: (RegExp | string)[]; // casa TODAS as expressões
+  matches?: (RegExp | string | PatternData)[]; // casa TODAS as expressões
   equals?: string; // o conteúdo é exatamente este
 }
 ```
@@ -226,6 +238,9 @@ interface FileCriterion {
   criou já estava lá quando este começou.
 - `changed` vem do git (`git status`): sem `start`, a rodada não tem git, e nada aparece como mudado.
 - `contains` ignora maiúsculas e minúsculas; `matches` e `equals`, não (use a flag `i`, como em `/goiaba/i`).
+- No registro, uma `RegExp` vira o texto dela (`/z+/` fica `'z+'`) e, com flags, um `PatternData`
+  (`/goiaba/i` fica `{ source: 'goiaba', flags: 'i' }`): a definição copiada (**Copiar definição**) a traz como
+  `/goiaba/i`. Um `PatternData` também vale na declaração.
 - `{{input:nome}}` em `name`, `contains`, `matches` (como texto), `equals` ou na condição vira a resposta da pergunta
   `nome` de `inputs`. Um `{{input:…}}` sem a pergunta é recusado pelo `defineRound`.
 - O registro guarda só o veredito (o que foi conferido, se cumpriu, por quê), nunca o conteúdo do arquivo.
@@ -286,10 +301,12 @@ Um critério errado para a rodada antes de qualquer agente rodar, com um `UsageE
 
 - uma chave de `criteria` que não é um agente de `actors` nem `round`;
 - um `name` (de `file`, `ignore` ou `if`) absoluto ou com `..`;
-- um trecho vazio em `contains`;
+- um trecho vazio em `contains`, do arquivo ou da condição;
+- um campo desconhecido em `file`, `limit` ou `if` (`contain` no lugar de `contains`), ou um critério com dois tipos
+  (`file` e `limit` no mesmo item);
 - `time` fora do formato (`2 dias`), `tokens` que não é maior que zero, `cost` que não é um valor maior que zero.
 
-Um campo com nome errado (`contain` no lugar de `contains`) quem pega é o typecheck: declare as rodadas em `.ts`.
+Declare as rodadas em `.ts`: o typecheck pega um campo com nome errado antes mesmo do `defineRound`.
 
 ### Do pedido ao critério
 
@@ -351,15 +368,17 @@ O `RuleInput` traz, de cada passo, `actor`, `said`, `changed` (as linhas do `git
 
 `runRound(definition, options)` roda todas as repetições, em ordem, e devolve os caminhos dos registros.
 
-| Opção       | Tipo                                | O que é                                                                                                  |
-| ----------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `dir`       | `string`                            | Onde gravar os registros, um `<início>.json` por execução.                                               |
-| `project`   | `string`                            | O projeto do Choliba: tem as fixtures, vira `<projeto>` nos registros e nenhuma rodada roda dentro dele. |
-| `roundsDir` | `string?`                           | Onde as rodadas de fixture rodam. Por padrão, o `rounds.dir` do `choliba.config.ts`.                     |
-| `screen`    | `Interaction?`                      | Onde os agentes mostram o que fazem. Por padrão, a conversa no terminal.                                 |
-| `signal`    | `AbortSignal?`                      | Para a rodada. Por padrão, o Ctrl+C do `runScript`.                                                      |
-| `label`     | `string?`                           | O que mudou nesta execução; vale mais que o `label` da declaração.                                       |
-| `price`     | `(model, tokens) => number \| null` | O custo de um pedido que a CLI não informa. Por padrão, nenhum (`null`).                                 |
+| Opção       | Tipo                                | O que é                                                                                                               |
+| ----------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `dir`       | `string`                            | Onde gravar os registros, um `<início>.json` por execução.                                                            |
+| `project`   | `string`                            | O projeto: vira `<projeto>` nos registros, e nenhuma rodada roda dentro dele.                                         |
+| `fixtures`  | `string?`                           | Os pontos de partida. Por padrão, o `rounds.fixtures`; obrigatório para uma rodada que parte de uma fixture.          |
+| `roundsDir` | `string?`                           | Onde as rodadas de fixture rodam. Por padrão, o `rounds.dir` do `choliba.config.ts`.                                  |
+| `screen`    | `Interaction?`                      | Onde os agentes mostram o que fazem. Por padrão, a conversa no terminal.                                              |
+| `signal`    | `AbortSignal?`                      | Para a rodada. Por padrão, o Ctrl+C do `runScript`.                                                                   |
+| `label`     | `string?`                           | O que mudou nesta execução; vale mais que o `label` da declaração.                                                    |
+| `inputs`    | `Record<string, string>?`           | As respostas às perguntas de `inputs` da declaração; o que falta é perguntado em `screen` antes da primeira execução. |
+| `price`     | `(model, tokens) => number \| null` | O custo de um pedido que a CLI não informa. Por padrão, nenhum (`null`).                                              |
 
 Uma falha antes do primeiro agente (declaração, fixture que não existe, trava) não grava registro.
 
@@ -375,14 +394,18 @@ const root = roundDir(id); // o workspace de todo agente da rodada
 
 ### Ler e avaliar registros
 
-| Função                        | O que faz                                                                                                      |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `validateRound(value, file?)` | Confere um registro lido do disco (campos, tipos, totais) e o devolve tipado como `RoundRecord`.               |
-| `scoreRound(record, history)` | As notas de um registro; `history` são as execuções anteriores do mesmo teste, a referência de tempo e tokens. |
-| `RUBRIC_VERSION`              | A versão da rubrica (hoje `'3'`). Mudou um critério, a versão sobe e tudo é reavaliado do mesmo jeito.         |
+| Função                                  | O que faz                                                                                                        |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `validateRound(value, file?)`           | Confere um registro lido do disco (campos, tipos, totais) e o devolve tipado como `RoundRecord`.                 |
+| `scoreRound(record, history)`           | As notas de um registro; `history` são as execuções anteriores do mesmo teste, a referência de tempo e tokens.   |
+| `RUBRIC_VERSION`                        | A versão da rubrica (hoje `'3'`). Mudou um critério, a versão sobe e tudo é reavaliado do mesmo jeito.           |
+| `listDefinitions(dir)`                  | Os `id` das rodadas declaradas em `dir`, em ordem.                                                               |
+| `findDefinition(dir, id)`               | O arquivo da rodada `id` em `dir` (`<id>.ts` ou `<id>/<id>.ts`); nenhum dos dois, ou os dois, é um `UsageError`. |
+| `captureDeclaration(definition, label)` | A declaração como dados (`RoundDeclaration`), como o registro a guarda.                                          |
 
 `scoreRound` devolve, por agente (`actors`), `final`, `eliminated`, `effectiveness` e `efficiency`, cada dimensão com
-os seus critérios (`id`, `label`, `score` de 0 a 5 ou `null`, `detail`); e o mesmo para a rodada (`round`).
+os seus critérios (`id`, `label`, `score` de 0 a 5 ou `null`, `detail`). Para a rodada (`round`), devolve `final`,
+`effectiveness`, com os critérios de limite da rodada, e `efficiency`, só com a nota.
 
 ### Peças que dá para usar sozinhas
 
@@ -437,8 +460,13 @@ Dentro do projeto, uma pasta sem `.git` próprio faz o git subir até o reposit�
 `rounds: { definitions, fixtures, data }`, relativos ao arquivo de configuração. Não há padrão: a config carrega sem
 elas, e só os comandos das rodadas (`choliba rounds`, `rounds:web`, `clear --rounds`) param, dizendo quais faltam
 (`requireRounds`). Uma declaração importa as ferramentas do projeto como `../../tools/…`, então a pasta de
-`definitions` fica dois níveis abaixo da raiz (como `rounds/definitions`). Num projeto que instalou o Choliba como
-pacote, é assim que `choliba rounds <id>` acha as rodadas dele, e `choliba rounds:web` mostra os registros dele.
+`definitions` fica dois níveis abaixo da raiz do projeto (como `rodadas/definicoes`). Num projeto que instalou o
+Choliba como pacote, é assim que `choliba rounds <id>` acha as rodadas dele, e `choliba rounds:web` mostra os registros
+dele.
+
+Neste repositório, o `choliba.config.ts` lê as quatro pastas do `.env` (`config/rounds.config.ts`):
+`CHOLIBA_ROUNDS_DIR`, `CHOLIBA_ROUNDS_DEFINITIONS`, `CHOLIBA_ROUNDS_FIXTURES` e `CHOLIBA_ROUNDS_DATA`, como no
+`.env.example`. É por isso que a mensagem do `requireRounds` cita essas variáveis.
 
 ### Fixture ou repositório, e as travas
 
@@ -453,7 +481,8 @@ pacote, é assim que `choliba rounds <id>` acha as rodadas dele, e `choliba roun
 
 No modo `git`, use uma cópia que só sirva às rodadas: o `clean -fd` apaga o que não está no git.
 
-**As travas** valem nos dois modos e rodam antes de qualquer `checkout`, `clean` ou remoção:
+**As travas** valem nos dois modos e rodam antes de qualquer `checkout` ou `clean`. No modo fixture, as travas 2 e 3
+rodam antes de apagar a pasta, e a 1, depois de criar o repositório novo, que é quando ele existe:
 
 1. **A pasta é a raiz do próprio repositório.** `git rev-parse --show-toplevel` tem que ser a pasta da rodada. Se não
    for, o git subiria até o repositório em volta, e a rodada para.
@@ -464,17 +493,18 @@ No modo `git`, use uma cópia que só sirva às rodadas: o `clean -fd` apaga o q
 
 ### O que é medido
 
-| Medida            | De onde vem                                                | Onde fica no registro                |
-| ----------------- | ---------------------------------------------------------- | ------------------------------------ |
-| falas e perguntas | os eventos do agente                                       | `steps[i].said`, `steps[i].asked`    |
-| ferramentas       | os eventos do agente (chamada e resultado)                 | `steps[i].tools`                     |
-| tokens e custo    | o que a CLI informa (ou o tráfego do Ollama, com política) | `usage`, `steps[i].totals`, `totals` |
-| tempo             | o relógio, por passo, por agente e da rodada               | `steps[i].span`, `timing`            |
-| o que mudou       | o git, antes e depois de cada passo                        | `steps[i].changed`, `steps[i].diff`  |
-| critérios         | o workspace e o git, no início e no fim do passo           | `steps[i].criteria`                  |
-| referências       | o que o agente disse, contra a tag de partida              | `steps[i].references`                |
-| rede              | as decisões da fronteira de rede de cada agente            | `actors[nome].network.decisions`     |
-| regras            | as `rules` da declaração                                   | `violations`                         |
+| Medida            | De onde vem                                                                                     | Onde fica no registro                |
+| ----------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------ |
+| falas e perguntas | os eventos do agente                                                                            | `steps[i].said`, `steps[i].asked`    |
+| ferramentas       | os eventos do agente (chamada e resultado)                                                      | `steps[i].tools`                     |
+| tokens e custo    | o que a CLI informa (ou o tráfego do Ollama, com política)                                      | `usage`, `steps[i].totals`, `totals` |
+| tempo             | o relógio, por passo, por agente e da rodada                                                    | `steps[i].span`, `timing`            |
+| o que mudou       | o git, antes e depois de cada passo                                                             | `steps[i].changed`, `steps[i].diff`  |
+| critérios         | o workspace e o git, no início e no fim do passo                                                | `steps[i].criteria`                  |
+| referências       | o que o agente disse, contra a tag de partida                                                   | `steps[i].references`                |
+| rede              | as decisões da fronteira de rede de cada agente                                                 | `actors[nome].network.decisions`     |
+| recursos          | amostras de CPU, GPU e memória da máquina, durante a rodada (ficam de fora sem nenhuma amostra) | `resources`                          |
+| regras            | as `rules` da declaração                                                                        | `violations`                         |
 
 O que não foi medido fica `null`, nunca `0`. O Cursor não informa custo; o Ollama só informa tokens quando o agente tem
 política (é ela que dá a fronteira de rede que lê o tráfego).
@@ -497,9 +527,11 @@ início do passo ──▶ agente roda ──▶ fim do passo ──────
 3. **Depois da rodada**, `scoreRound` transforma os vereditos em nota. Na eficácia de cada agente entram
    **Critérios do prompt** (todos os vereditos de todos os passos dele) e um **Limite do agente** para cada campo de
    cada `limit`, comparado com o tempo, os tokens e o custo somados dos passos dele. Os limites de `round` entram, como
-   **Limite da rodada**, na eficácia da rodada: a média das eficácias dos agentes e desses limites, todos com o mesmo peso.
-4. O registro guarda também os critérios como foram declarados (`criteria`, com cada `RegExp` como texto): a página
-   mostra o que foi pedido ao lado do que foi cumprido.
+   **Limite da rodada**, na eficácia da rodada: a média das eficácias dos agentes e desses limites, todos com o mesmo
+   peso.
+4. O registro guarda também os critérios como foram declarados (`criteria`; uma `RegExp` vira o texto dela, ou
+   `{ source, flags }` quando tem flags). A página da rodada mostra os vereditos no detalhe das notas (Critérios do
+   prompt, Limite do agente).
 
 Um agente sem critério de arquivo fica com "Critérios do prompt" **não avaliado** (`—`), não `0`. Os critérios de
 `round` são só limites: um `file` ali não é conferido, porque não há um passo da rodada inteira para comparar.
@@ -512,9 +544,9 @@ Um JSON por execução, em `<rounds.data>/<início>.json` (o formato está em `s
 
 O registro também guarda a declaração com que a rodada rodou, em dados (`declaration`): o objetivo, a partida, cada
 agente (provider, CLI, modelo, workspace, política, `readOnly`), o `flow` com os pedidos (com `{{said:analista}}` no
-lugar do que outro agente disse), os critérios, as regras e a repetição. Não é preciso commitar a
-definição a cada mudança: na página da rodada, **Copiar definição** escreve de volta o arquivo de
-`<rounds.definitions>/<id>.ts` (`declarationSource`). Registros anteriores a isso não têm o bloco, e o botão não aparece.
+lugar do que outro agente disse), os critérios, as regras e a repetição. Não é preciso commitar a definição a cada
+mudança: na página da rodada, **Copiar definição** copia o texto do arquivo `<rounds.definitions>/<id>.ts`
+(`declarationSource`), para colar no lugar dele. Registros anteriores a isso não têm o bloco, e o botão não aparece.
 
 Cada passo tem uma chave estável, `agente#n` (o n-ésimo passo daquele agente): é por ela que execuções diferentes são
 comparadas, mesmo que o `flow` mude. Execuções com a mesma configuração (os mesmos agentes, com o mesmo objetivo) têm o
@@ -535,9 +567,9 @@ nota final = 60% × eficácia + 40% × base da eficiência
   gasta pouco e não entrega fica com zero.
 - **Eliminatórias** zeram as três: violar `readOnlyRespected` ou `noToolCallAsText`, ou terminar sem entregar nada.
 
-Um critério sem o que medir fica **não avaliado** (`—`), não `0`. Sem nenhum critério de eficácia (critério de
-arquivo, política, `readOnly`, referência ou limite), não há eficácia, e sem ela não há nota final. Cada critério, cada número e
-o motivo dele estão em [`rubrica.md`](rubrica.md).
+Um critério sem o que medir fica **não avaliado** (`—`), não `0`; a exceção é um limite, que, sem a medida, vale `0`.
+Sem nenhum critério de eficácia (critério de arquivo, política, `readOnly`, referência ou limite), não há eficácia, e
+sem ela não há nota final. Cada critério, cada número e o motivo dele estão em [`rubrica.md`](rubrica.md).
 
 ### Linha de comando, limpeza e páginas
 
@@ -547,23 +579,48 @@ bun run rounds kanban --label "qwen3.5"               # com o que mudou nesta ex
 bun run clear --rounds                                # esvazia o rounds.dir (pergunta antes; -y não pergunta)
 choliba clear --rounds                                # o mesmo, num projeto que instalou o pacote
 bun run rounds:web                                    # as páginas, em desenvolvimento
-bun run rounds:build                                  # gera src/rounds/web/dist, que abre de qualquer lugar
+bun run rounds:web --port 8080                        # em outra porta (5173 por padrão)
+bun run rounds:build                                  # gera src/rounds/web/dist, o que vai no pacote
 ```
 
-Nas páginas, cada declaração é um **teste** e cada execução, uma **rodada**. O índice filtra por agente, provider, CLI
-e modelo; a página de um teste lista as rodadas, o que mudou entre elas e as médias por configuração; os dois têm um
-gráfico XY (eixos escolhidos entre data, nota, eficácia, eficiência, tempo, tokens, custo, turnos, ferramentas,
-perguntas e arquivos) em que cada ponto abre um cartão com links para o teste e a rodada.
+No fim de `rounds <id>`, num terminal, o comando pergunta "Abrir a página da rodada no navegador? [S/n]". Com Enter,
+ele sobe as páginas (se ainda não estão no ar) e abre a rodada, e elas ficam no ar até o Ctrl+C. Com `n`, ou sem
+terminal, ele só mostra o endereço. Antes de importar a declaração, o comando confere que ela importa o mesmo Choliba
+que roda a rodada: com outra cópia, de código diferente (o pacote instalado no projeto e o deste repositório, por
+exemplo), ele para antes de rodar e diz como instalar o mesmo Choliba no projeto.
+
+No repositório do Choliba, as páginas têm dependências próprias: rode `bun install --cwd src/rounds/web` antes do
+`rounds:web` e do `rounds:build`.
+
+O `dist` não abre sozinho: ao abrir, a página busca o `rounds.json` (os registros de `rounds.data`), que o
+`choliba rounds:web` monta e serve junto com ela. Num projeto que instalou o pacote, é esse `dist` que ele serve; neste
+repositório, ele roda o Vite das páginas, que monta o `rounds.json` do mesmo jeito.
+
+Nas páginas, cada declaração é um **teste** e cada execução, uma **rodada**:
+
+- o **índice** lista os testes e filtra por teste, agente, provider, CLI e modelo, e por faixas dos números de cada
+  rodada (nota, tempo, tokens, custo…);
+- a página de um **teste** lista as rodadas, o que mudou entre elas e as médias por configuração;
+- a página de uma **rodada** (`#/rodada/<id>`) mostra as medidas, os recursos da máquina, as regras, a configuração de
+  cada agente (e o que mudou desde a execução anterior) e o fluxo. Nela, **Copiar definição** copia o arquivo da
+  declaração, e **Extrair como agente** copia um agente avulso, um `new Agent({…}).run()` com o provider, o workspace e
+  a política com que ele rodou, para colar num arquivo na raiz do projeto;
+- **Criar rodada** (`#/criar`) é um formulário que escreve a declaração enquanto você preenche. Ele abre uma rodada do
+  projeto (de `rounds.definitions`) ou uma definição colada, e só copia: nada roda nem é salvo pela página.
+
+O índice e a página de um teste têm um gráfico XY, com os eixos escolhidos entre data, nota, eficácia, eficiência,
+tempo, tokens, custo, turnos, ferramentas, perguntas, arquivos alterados, CPU média, GPU pico e energia da GPU. Cada
+ponto é um agente numa rodada e abre um cartão com links para o teste, a rodada e o agente como rodou.
 
 [↑ topo](#topo)
 
 ## Exemplos
 
-Os exemplos estão em `guides/rounds/exemplos/` e rodam como estão (`bun guides/rounds/exemplos/<arquivo>.ts`). Os que
-rodam agentes usam um provider de mentira, em que a "CLI" é o próprio bun: rodam sem modelo nem rede, mas passam pelo
-mesmo caminho de um agente de verdade (sandbox bubblewrap, eventos, git). Eles usam a fixture `site-vazio` do curso
-(`guides/rounds/fixtures`, pela opção `fixtures` do `runRound`) e uma pasta temporária no cache do Choliba no lugar do `rounds.dir`, apagada no fim. Nas saídas, o home aparece como
-`/home/dev`.
+Os exemplos estão em `guides/rounds/exemplos/` e rodam como estão (`bun guides/rounds/exemplos/<arquivo>.ts`). Do 2 ao
+7, os agentes usam um provider de mentira, em que a "CLI" é o próprio bun: rodam sem modelo nem rede, mas passam pelo
+mesmo caminho de um agente de verdade (sandbox bubblewrap, eventos, git); o 8 usa um modelo de verdade. Eles usam a
+fixture `site-vazio` do curso (`guides/rounds/fixtures`, pela opção `fixtures` do `runRound`) e uma pasta temporária
+no cache do Choliba no lugar do `rounds.dir`, apagada no fim. Nas saídas, o home aparece como `/home/dev`.
 
 ### 1. Declarar uma rodada
 
@@ -793,24 +850,24 @@ await runScript(async () => {
 Saída:
 
 ```
-Workspace no ponto de partida: rodada-base (3fa7beb)
+Workspace no ponto de partida: rodada-base (b4e3207)
 Dev…
 Criei o index.html.
 O dev alterou:
-?? index.html
+ M index.html
 
-Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/94d53153-98de-4e06-bcb8-6d08c5115d0f/registros/2026-11-06T14-19-30.874Z.json
+Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/41d5b502-c598-4de5-858a-339d7dd808f4/registros/2026-11-26T11-46-02.296Z.json
 
-registro: registros/2026-11-06T14-19-30.874Z.json
+registro: registros/2026-11-26T11-46-02.296Z.json
 partida: fixture site-vazio, tag rodada-base
 passo: dev#1
 pedido: Crie um index.html.
 disse: Criei o index.html.
-alterou: ?? index.html
+alterou:  M index.html
 ```
 
 - `dev#1` é a chave do passo: o primeiro passo do agente `dev`.
-- `?? index.html` é a linha do `git status`: um arquivo novo.
+- ` M index.html` é a linha do `git status`: o `index.html` já vinha da fixture, e o dev o reescreveu.
 
 ### 3. Dois agentes, critérios e regras
 
@@ -987,7 +1044,7 @@ await runScript(async () => {
 Saída:
 
 ```
-Workspace no ponto de partida: rodada-base (c069b77)
+Workspace no ponto de partida: rodada-base (b4e3207)
 Product-owner…
 O ticket está pronto.
 O product-owner alterou:
@@ -999,7 +1056,7 @@ Basta um <footer></footer>.
 ⚠ O analista alterou arquivos, mesmo com o pedido de não alterar:
 ?? notas.txt
 
-Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/1c7b5974-3bc6-4df2-aceb-2a5e7b5f4756/registros/2026-11-12T19-24-49.567Z.json
+Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/f98ad545-fe61-464c-a520-7acf623c4e27/registros/2026-11-26T11-46-02.470Z.json
 
 product-owner#1
   pedido: Escreva o ticket em tickets/ticket-01.txt.
@@ -1020,7 +1077,7 @@ regras:
 ### 4. As notas
 
 A mesma rodada três vezes (`repeat: 3`). A primeira não tem com o que comparar tempo e tokens; a segunda gasta menos
-tokens que a primeira (nota 5); a terceira, quase o triplo da mediana (nota 0).
+tokens que a primeira (nota 5); a terceira, mais que o triplo da mediana (nota 0).
 
 `guides/rounds/exemplos/4-notas.ts`
 
@@ -1160,29 +1217,29 @@ Saída:
 
 ```
 Rodada tres-vezes: execução 1 de 3
-Workspace no ponto de partida: rodada-base (c069b77)
+Workspace no ponto de partida: rodada-base (b4e3207)
 Dev…
 Pronto.
 O dev alterou:
  M index.html
 
-Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/a55d536c-3d67-4ae5-aeb9-bb3bf9977e8a/registros/2026-11-12T19-24-51.270Z.json
+Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/b2d172eb-ab39-41cb-a9bf-b1b5ff1ae974/registros/2026-11-26T11-46-02.697Z.json
 Rodada tres-vezes: execução 2 de 3
-Workspace no ponto de partida: rodada-base (c069b77)
+Workspace no ponto de partida: rodada-base (b4e3207)
 Dev…
 Pronto.
 O dev alterou:
  M index.html
 
-Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/a55d536c-3d67-4ae5-aeb9-bb3bf9977e8a/registros/2026-11-12T19-24-51.390Z.json
+Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/b2d172eb-ab39-41cb-a9bf-b1b5ff1ae974/registros/2026-11-26T11-46-02.797Z.json
 Rodada tres-vezes: execução 3 de 3
-Workspace no ponto de partida: rodada-base (c069b77)
+Workspace no ponto de partida: rodada-base (b4e3207)
 Dev…
 Pronto.
 O dev alterou:
  M index.html
 
-Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/a55d536c-3d67-4ae5-aeb9-bb3bf9977e8a/registros/2026-11-12T19-24-51.496Z.json
+Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/b2d172eb-ab39-41cb-a9bf-b1b5ff1ae974/registros/2026-11-26T11-46-02.895Z.json
 
 execução 1: nota 5 · eficácia 5 · eficiência 5
   Critérios do prompt: 5 (Cumpriu os 1 critérios: index.html existe.)
@@ -1191,18 +1248,18 @@ execução 1: nota 5 · eficácia 5 · eficiência 5
   Tempo gasto: — (0 s; sem rodadas anteriores para comparar.)
   Tokens novos: — (1 mil tokens novos; sem rodadas anteriores para comparar.)
   Processo sem desperdício: 5 (Nenhum desperdício: sem perguntas nem ferramentas com erro.)
-execução 2: nota 5 · eficácia 5 · eficiência 4.9
+execução 2: nota 4.8 · eficácia 5 · eficiência 4.5
   Critérios do prompt: 5 (Cumpriu os 1 critérios: index.html existe.)
   Permissões: — (Sem política nem readOnly para conferir.)
   Referências corretas: — (Não citou nenhum arquivo:linha.)
-  Tempo gasto: 4.6 (0 s, contra a mediana de 0 s nas rodadas anteriores.)
+  Tempo gasto: 2.8 (0 s, contra a mediana de 0 s nas rodadas anteriores.)
   Tokens novos: 5 (1 mil tokens novos, contra a mediana de 1 mil tokens novos nas rodadas anteriores.)
   Processo sem desperdício: 5 (Nenhum desperdício: sem perguntas nem ferramentas com erro.)
-execução 3: nota 4.5 · eficácia 5 · eficiência 3.8
+execução 3: nota 4.3 · eficácia 5 · eficiência 3.3
   Critérios do prompt: 5 (Cumpriu os 1 critérios: index.html existe.)
   Permissões: — (Sem política nem readOnly para conferir.)
   Referências corretas: — (Não citou nenhum arquivo:linha.)
-  Tempo gasto: 5 (0 s, contra a mediana de 0 s nas rodadas anteriores.)
+  Tempo gasto: 3.2 (0 s, contra a mediana de 0 s nas rodadas anteriores.)
   Tokens novos: 0 (3 mil tokens novos, contra a mediana de 1 mil tokens novos nas rodadas anteriores.)
   Processo sem desperdício: 5 (Nenhum desperdício: sem perguntas nem ferramentas com erro.)
 ```
@@ -1433,11 +1490,11 @@ await runScript(async () => {
 Saída:
 
 ```
-Workspace no ponto de partida: rodada-base (609a96e)
+Workspace no ponto de partida: rodada-base (c59a05d)
 Dev…
 Vejo: app.ts
 
-Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/b489ad69-50d1-4810-b855-2bb2ca9eacb1/registros/2026-11-06T14-19-31.486Z.json
+Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/aac6f1f8-9d90-4b09-90d6-5d818d34f5f0/registros/2026-11-26T11-46-03.097Z.json
 
 partida: tag rodada-base, fixture null
 disse: Vejo: app.ts
@@ -1593,7 +1650,7 @@ await runScript(async () => {
             // "sem apagar o rodapé"
             { file: { name: 'index.html', contains: ['<footer'] } },
             // "Anote a mudança num arquivo em docs/": todo arquivo de docs/,
-            // menos os .tmp, foi criado e fala do Choliba.
+            // menos os .tmp, foi criado e cita a Goiaba.
             {
               file: {
                 name: 'docs/*',
@@ -1671,7 +1728,7 @@ await runScript(async () => {
 Saída:
 
 ```
-Workspace no ponto de partida: rodada-base (c069b77)
+Workspace no ponto de partida: rodada-base (d2d82b8)
 Dev…
 Título trocado.
 O dev alterou:
@@ -1682,7 +1739,7 @@ Revisor…
 Está certo.
 ✓ O revisor não alterou nenhum arquivo.
 
-Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/c6ebbb32-a541-4342-8dac-53000af84746/registros/2026-11-12T19-24-51.625Z.json
+Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/9dab935d-9e26-4562-a6a4-f3b02756c0ac/registros/2026-11-26T11-46-03.267Z.json
 
 No fim de cada passo (step.criteria):
   dev#1
@@ -1697,13 +1754,13 @@ No fim de cada passo (step.criteria):
 Na nota (scoreRound):
   dev: eficácia 2.7
     Critérios do prompt: 3 (Cumpriu 3 de 5. index.html não contém "<footer". ticket.txt não contém "status: done".)
-    Limite do agente: 5 (50 ms, dentro de 1min.)
+    Limite do agente: 5 (59 ms, dentro de 1min.)
     Limite do agente: 0 (tokens não medido.)
   revisor: eficácia 5
     Critérios do prompt: 5 (Cumpriu os 1 critérios: ** não mudou.)
     Permissões: 5 (Ficou dentro da política: nada alterado fora do permitido, nenhum destino negado.)
   rodada: eficácia 4.2
-    Limite da rodada: 5 (152 ms, dentro de 10min.)
+    Limite da rodada: 5 (174 ms, dentro de 10min.)
 ```
 
 - **`dev#1`, cinco vereditos**: os cinco critérios de arquivo (o `if` do ticket valeu, porque o ticket estava
@@ -1719,13 +1776,218 @@ Na nota (scoreRound):
 
 ### 8. Rodadas de verdade
 
-As rodadas com modelos de verdade ficam fora deste repositório, na pasta de `rounds.definitions` de quem as roda, e
-rodam com `bun run rounds <id>`. Precisam das quatro pastas de `rounds` configuradas e, conforme o provider, do Ollama
-rodando com o modelo baixado ou das credenciais da CLI. Uma rodada grande, como um rodízio de agentes (analista, dev,
+Uma rodada de verdade troca o provider de mentira por um modelo. Esta parte da mesma fixture `site-vazio` e põe um
+modelo local do Ollama, pela CLI do Claude Code, para cumprir o ticket dela. Ela precisa:
+
+- do Ollama rodando com o modelo do arquivo. O `qwen3.5:4b-64k` é o `qwen3.5:4b` com uma janela de 64 mil tokens: rode
+  `ollama pull qwen3.5:4b` e crie a variante com um `Modelfile` de duas linhas, `FROM qwen3.5:4b` e
+  `PARAMETER num_ctx 65536`, e `ollama create qwen3.5:4b-64k -f Modelfile`;
+- da CLI `claude` instalada.
+
+Ela leva minutos, e cada execução dá outra saída: o que o modelo diz, o que ele faz e as notas mudam.
+
+`guides/rounds/exemplos/8-rodada-de-verdade.ts`
+
+```ts
+/**
+ * Exemplo 8 do curso de rounds: uma rodada de verdade. Um agente num modelo
+ * local do Ollama, pela CLI do Claude Code, parte da fixture `site-vazio`,
+ * lê o ticket e troca o título do index.html. Os critérios conferem o título
+ * novo e que o ticket não mudou, e a rubrica dá as notas. Precisa do Ollama
+ * rodando com o modelo do arquivo e da CLI claude instalada.
+ */
+import { randomUUID } from 'node:crypto';
+
+import { environment } from '../../../src/execute/process';
+import {
+  cholibaCacheDir,
+  ensureDirectory,
+  join,
+  readText,
+  removePath,
+  resolve,
+} from '../../../src/filesystem/index';
+import { OllamaProvider, type AgentPolicy } from '../../../src/index';
+import { writeOut } from '../../../src/output/stdio';
+import {
+  defineRound,
+  noQuestions,
+  runRound,
+  scoreRound,
+  validateRound,
+} from '../../../src/rounds/index';
+import { runScript } from '../../../src/usage';
+
+/** O modelo: troque por um que o seu Ollama tenha (`ollama list`). */
+const MODEL = 'qwen3.5:4b-64k';
+/**
+ * A janela do modelo, em tokens: a CLI resume a conversa perto dela, e com a
+ * janela padrão (32 mil) ela resumiria antes de o agente começar.
+ */
+const CONTEXT_WINDOW = 65_536;
+
+/**
+ * Lê e escreve só na pasta da rodada, e roda só comandos de leitura. O resto
+ * é negado: numa rodada, ninguém responde a um pedido de aprovação.
+ */
+const politica: AgentPolicy = {
+  default: 'deny',
+  allow: {
+    filesystem: [{ operations: ['read', 'write'], paths: ['/workspace/**'] }],
+    execution: [{ commands: ['ls', 'ls *', 'cat *', 'pwd'] }],
+  },
+};
+
+const project = resolve(import.meta.dir, '../../..');
+/** As fixtures do curso: a site-vazio fica ao lado dos exemplos. */
+const fixtures = join(project, 'guides', 'rounds', 'fixtures');
+const scratch = join(
+  cholibaCacheDir(environment()),
+  'rounds-exemplo',
+  randomUUID(),
+);
+const roundsDir = join(scratch, 'rodadas');
+const records = join(scratch, 'registros');
+ensureDirectory(roundsDir);
+ensureDirectory(records);
+
+const id = 'titulo-goiaba';
+
+await runScript(async () => {
+  try {
+    const [file = ''] = await runRound(
+      defineRound({
+        id,
+        goal: 'Um modelo local cumpre um ticket pequeno no index.html?',
+        start: { fixture: 'site-vazio' },
+        actors: {
+          dev: {
+            provider: new OllamaProvider({
+              cli: 'claude',
+              model: MODEL,
+              contextWindow: CONTEXT_WINDOW,
+            }),
+            workspace: { type: 'bubblewrap', root: join(roundsDir, id) },
+            policy: politica,
+          },
+        },
+        flow: [
+          {
+            actor: 'dev',
+            prompt: () => [
+              'Leia o ticket.txt e faça no index.html a alteração que ele pede.',
+              'Use as ferramentas de arquivo da CLI para editar.',
+            ],
+          },
+        ],
+        criteria: {
+          dev: [
+            // "faça no index.html a alteração que ele pede": o título novo.
+            {
+              file: {
+                name: 'index.html',
+                changed: true,
+                matches: [/<h1>[^<]*Goiaba<\/h1>/],
+              },
+            },
+            // O ticket só é lido.
+            { file: { name: 'ticket.txt', changed: false } },
+            // Um modelo pequeno, nesta máquina: até 10 minutos.
+            { limit: { time: '10min' } },
+          ],
+        },
+        rules: [noQuestions()],
+      }),
+      { dir: records, project, roundsDir, fixtures },
+    );
+
+    const record = validateRound(JSON.parse(readText(file)));
+    const changed = record.steps.flatMap((step) => step.changed);
+    const dev = scoreRound(record, []).actors['dev'];
+    const lines = [
+      '',
+      `alterou: ${changed.join(', ') || 'nada'}`,
+      `nota ${String(dev.final)} · eficácia ${String(dev.effectiveness.score)} · eficiência ${String(dev.efficiency.score)}`,
+    ];
+    for (const criterion of [
+      ...dev.effectiveness.criteria,
+      ...dev.efficiency.criteria,
+    ]) {
+      lines.push(
+        `  ${criterion.label}: ${criterion.score === null ? '—' : String(criterion.score)} (${criterion.detail})`,
+      );
+    }
+    writeOut(`${lines.join('\n')}\n`);
+  } finally {
+    removePath(scratch);
+  }
+});
+```
+
+Saída (uma execução):
+
+```
+Workspace no ponto de partida: rodada-base (e163eb1)
+Dev…
+💭 Preciso ler o ticket.txt primeiro para entender quais alterações são pedidas no index.html antes de fazer qualquer modificação.
+Vou ler o arquivo ticket.txt para entender qual alteração é solicitada.
+💭 Preciso encontrar o arquivo index.html para localizar a linha 75 com o título antes de fazer a alteração solicitada.
+Agora vou procurar o arquivo index.html para fazer a alteração.
+💭 A ferramenta Find não está disponível, preciso usar Bash para listar arquivos HTML na pasta atual.
+💭 Como o Bash foi bloqueado, vou tentar abrir index.html usando cat para ver seu conteúdo e localizar a linha 75 com o título.
+
+┌─ 🤖 Solicitação de Execução do Agente
+│  Comando: ls -la *.html 2>/dev/null || ls -la index.html
+│  Motivo:  O comando tem redirecionamento, substituição ou script: o efeito não é verificável pela regra.
+└─────────────────────────────────────────────────────────────
+  Escolha uma opção:
+    [u] Permitir uma vez
+    [s] Permitir nesta sessão      (este comando exato)
+    [w] Permitir neste workspace   (este comando exato)
+    [n] Negar (padrão)
+
+  Permitir? [u/s/w/n]
+› Ninguém vai responder nesta rodada. Decida você, escolhendo a opção mais simples, diga qual escolheu e siga.
+💭 Preciso ler o conteúdo do index.html para encontrar a linha 75 com o título antes de fazer a alteração solicitada.
+💭 O ticket pede para substituir o título na linha 75 e atualizar referências no conteúdo, então vou fazer a alteração tanto no <h1> quanto no footer.
+Perfeito! Vi que preciso alterar a linha 75 do título. O ticket também menciona "atualizar referências no conteúdo", então também preciso ajustar o texto no rodapé (linha 105).
+💭 Após substituir o título h1, também preciso atualizar o texto do rodapé que ainda contém 'Ollama Product Owner'.
+💭 Ambas as alterações do ticket foram concluídas com sucesso, preciso fornecer um resumo aos esclarecimentos ao usuário sobre as mudanças feitas.
+Fiz a alteração solicitada no ticket.txt. As modificações realizadas em `index.html`:
+
+1. **Linha 75:** Alterei o título de `<h1>🚀 Ollama Product Owner</h1>` para `<h1>🚀 Goiaba</h1>`
+2. **Linha 105:** Atualizei o rodapé de "Ollama Product Owner" para "Goiaba"
+O dev alterou:
+ M index.html
+
+alterou:  M index.html
+nota 3.4 · eficácia 5 · eficiência 1
+  Critérios do prompt: 5 (Cumpriu os 2 critérios: index.html mudou e casa /<h1>[^<]*Goiaba<\/h1>/. ticket.txt não mudou.)
+  Permissões: 5 (Ficou dentro da política: nada alterado fora do permitido, nenhum destino negado.)
+  Referências corretas: — (Não citou nenhum arquivo:linha.)
+  Limite do agente: 5 (2 min 15 s, dentro de 10min.)
+  Tempo gasto: — (135 s; sem rodadas anteriores para comparar.)
+  Tokens novos: — (21 mil tokens novos; sem rodadas anteriores para comparar.)
+  Processo sem desperdício: 1 (1 pergunta(s), 3 ferramenta(s) com erro.)
+
+Rodada guardada em /home/dev/.cache/choliba/rounds-exemplo/8624770c-dad8-4cf3-8468-ede4dbe3ba3c/registros/2026-11-26T11-55-03.135Z.json
+```
+
+- O modelo leu o ticket e trocou o título e, por "atualizar referências no conteúdo", também o rodapé. Os dois
+  critérios do prompt foram cumpridos, e a eficácia é 5.
+- O `ls -la *.html 2>/dev/null || ls -la index.html` tem redirecionamento: nenhuma regra o libera, e o gate pediu
+  aprovação. Numa rodada ninguém responde, e o Choliba diz isso ao agente, que seguiu pela ferramenta de arquivo da
+  CLI. A pergunta e as três ferramentas que falharam custaram o processo (nota 1), e com ele a eficiência.
+- Sem rodadas anteriores, o tempo e os tokens ficam sem nota. Rode de novo, e eles passam a ser comparados com a
+  mediana das execuções anteriores.
+
+As rodadas que você mantém ficam fora deste repositório, na pasta de `rounds.definitions` do seu projeto, e rodam com
+`choliba rounds <id>` (`bun run rounds <id>` aqui). Precisam de `rounds.definitions` e `rounds.data` e, se partem de
+uma fixture, também de `rounds.fixtures` e `rounds.dir`. Uma rodada grande, como um rodízio de agentes (analista, dev,
 devops…) sobre um ticket, fica numa pasta, com cada peça num arquivo (atores, política, critérios, fluxo), e os
 critérios dependem da vez de cada agente.
 
-Duas lições que essas rodadas já ensinaram:
+Três lições que essas rodadas já ensinaram:
 
 - **Escrever não é só ter permissão de escrita.** A política tem duas portas: `filesystem` diz onde se pode escrever
   (a sandbox aplica) e `execution` diz quais comandos rodam (o hook do Choliba aplica). Um `cat > arquivo << EOF` casa
@@ -1734,6 +1996,9 @@ Duas lições que essas rodadas já ensinaram:
   `filesystem`.
 - **Modelos pequenos às vezes respondem com o conteúdo em vez de chamar a ferramenta.** Declare um critério de arquivo
   (`criteria`) para cada arquivo pedido: sem ele, a eficácia não vê que nada foi gravado.
+- **A CLI precisa saber a janela do modelo.** Ela resume a conversa perto da janela que conhece (`contextWindow`, 32
+  mil por padrão), e o prompt dela já ocupa boa parte disso: com um modelo de 64 mil e a janela padrão, ela resume
+  antes de o agente começar, e o modelo passa a rodada resumindo uma conversa que nem começou.
 
 [↑ topo](#topo)
 
@@ -1745,7 +2010,8 @@ Duas lições que essas rodadas já ensinaram:
   numerado pela ordem dos arquivos: um teste é o seu `id`, uma configuração é o começo do `configHash`.
 - **Não medido é `null`, nunca `0`.** Um critério sem o que medir fica fora da média.
 - **A pasta da rodada fica fora do projeto e tem o próprio git.** As travas não se desligam.
-- **Caminhos do repositório são fixos; o que depende da máquina é configuração.** Só o `rounds.dir` é opção.
+- **Nenhuma pasta de rodada é fixa.** As quatro (`rounds.dir`, `definitions`, `fixtures` e `data`) são opções do
+  `choliba.config.ts`, sem padrão, e cada comando pede as que usa.
 - **Mudou a rubrica, sobe `RUBRIC_VERSION`.** Os números ficam em `RUBRIC`, em `src/rounds/constants.ts`, cada um com o
   motivo.
 
@@ -1753,9 +2019,9 @@ Duas lições que essas rodadas já ensinaram:
 
 ## Exercícios
 
-1. Copie o [Exemplo 2](#2-a-primeira-rodada) e acrescente `criteria: { dev: [{ file: { name: 'index.html', contains:
-['Olá'] } }] }`. Rode e veja `step.criteria` no registro e "Critérios do prompt" em `scoreRound`. Troque `'Olá'` por
-   `'Tchau'`: o que muda?
+1. Copie o [Exemplo 2](#2-a-primeira-rodada) e acrescente
+   `criteria: { dev: [{ file: { name: 'index.html', contains: ['Olá'] } }] }`. Rode e veja `step.criteria` no registro e
+   "Critérios do prompt" em `scoreRound`. Troque `'Olá'` por `'Tchau'`: o que muda?
 2. No [Exemplo 3](#3-dois-agentes-critérios-e-regras), dê ao analista `policy` com escrita só em `notas/**`
    (`{ operations: ['write'], paths: ['/workspace/notas/**'] }`, junto do `read` em `/workspace/**`) e faça-o gravar
    em `notas/rascunho.txt`. A regra `readOnlyRespected` continua violada? Por quê?
@@ -1763,9 +2029,10 @@ Duas lições que essas rodadas já ensinaram:
    Exemplo 2 com uma resposta curta.
 4. No [Exemplo 4](#4-as-notas), mude os tokens para `[1000, 1000, 1000]`. Que nota "Tokens novos" recebe a terceira
    execução, e por quê (veja a tabela da referência em [`rubrica.md`](rubrica.md))?
-5. Crie uma fixture `meu-site/` (na pasta de `rounds.fixtures`) com um `index.html` e uma rodada (em `rounds.definitions`) que peça para
-   o agente acrescentar um rodapé, com o critério `{ file: { name: 'index.html', changed: true, contains: ['<footer']
-} }`. Rode com `bun run rounds <id>` e abra a rodada nas páginas.
+5. Crie uma fixture `meu-site/` (na pasta de `rounds.fixtures`) com um `index.html` e uma rodada (em
+   `rounds.definitions`) que peça para o agente acrescentar um rodapé, com o critério
+   `{ file: { name: 'index.html', changed: true, contains: ['<footer'] } }`. Rode com `bun run rounds <id>` e abra a
+   rodada nas páginas.
 6. No [Exemplo 7](#7-os-critérios), faça o dev cumprir os cinco critérios (devolva o rodapé e marque o ticket como
    `status: done`). Depois troque `name: '**'` por `name: '*'` no `else` do revisor e faça-o gravar `docs/nota.md`: o
    critério percebe? Por quê?

@@ -200,6 +200,10 @@ export interface DeclaredActor {
     readonly ports?: readonly number[];
     /** Where the workspaces' homes are kept, as declared. */
     readonly homes?: string;
+    /** Where the agent sees the root, as declared. */
+    readonly agentRoot?: string;
+    /** The programs the agent sees, as declared. */
+    readonly programs?: readonly string[];
   };
   readonly policy: AgentPolicy | null;
   readonly readOnly: boolean;
@@ -231,7 +235,7 @@ export interface RoundStart {
   /** Its short commit. */
   readonly commit: string;
   /**
-   * The fixture (`rounds/fixtures/<name>`) the round's folder was created
+   * The fixture (`<rounds.fixtures>/<name>`) the round's folder was created
    * from; `null` from a repository that already existed. Absent in records
    * from before fixtures.
    */
@@ -311,6 +315,13 @@ export interface WorkspaceSnapshot {
   readonly writable: readonly string[];
   readonly hostState: RoundHostState;
   readonly ports: readonly number[];
+  /** Where the agent saw the root; absent when it was `/home/choliba`, the default. */
+  readonly agentRoot?: string;
+  /**
+   * The programs the agent saw (the workspace's `programs`, or the config's
+   * `workspaces.programs`); absent when it saw every program of the host.
+   */
+  readonly programs?: readonly string[];
 }
 
 export interface NetworkSnapshot {
@@ -352,17 +363,26 @@ export type RoundCriterion =
   | { readonly limit: LimitCriterion }
   | ConditionalCriterion;
 
+/** A RegExp as data: `/goiaba/i` is `{ source: 'goiaba', flags: 'i' }`. */
+export interface PatternData {
+  readonly source: string;
+  readonly flags: string;
+}
+
 /**
  * Assertions about a file (or many, with a wildcard in `name`), all holding
  * together, checked at the end of the step. `matches` is `RegExp` as declared,
- * stored as its source in the record.
+ * stored in the record as its source, or as `PatternData` when it has flags.
  */
 export interface FileCriterion {
   /** Relative to the workspace root; wildcard `*`, `**`, `ticket-*.md`. */
   readonly name: string;
   /** With a wildcard in `name`: paths to leave out. */
   readonly ignore?: readonly string[];
-  /** At the end: `true` must exist, `false` must not. */
+  /**
+   * At the end: `true` must exist, `false` must not. With no assertion at
+   * all (only `name`), the criterion checks `true`.
+   */
   readonly exists?: boolean;
   /** Changed vs. the start (needs a git start): came to exist. */
   readonly created?: boolean;
@@ -372,8 +392,11 @@ export interface FileCriterion {
   readonly changed?: boolean;
   /** Contains ALL of these passages (case-insensitive). */
   readonly contains?: readonly string[];
-  /** Matches ALL of these (record: the sources, as strings). */
-  readonly matches?: readonly (RegExp | string)[];
+  /**
+   * Matches ALL of these. A record keeps a RegExp as its source, or as
+   * `PatternData` when it has flags.
+   */
+  readonly matches?: readonly (RegExp | string | PatternData)[];
   /** The content is exactly this. */
   readonly equals?: string;
 }

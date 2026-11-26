@@ -12,13 +12,13 @@ export interface ProjectTool {
   readonly name: string;
   /** `FETCH_WEB_CONTENT`: the export a definition imports. */
   readonly binding: string;
-  /** `../../tools/fetch-web-content`: the import, from rounds/definitions. */
+  /** `../../tools/fetch-web-content`: the import, from a definition in `rounds.definitions`. */
   readonly from: string;
   /** What the tool says it does: its own `description`. */
   readonly description: string;
 }
 
-/** Where a definition (rounds/definitions/<id>.ts) imports the tools from. */
+/** Where a definition (`<rounds.definitions>/<id>.ts`, two levels below the project's root) imports the tools from. */
 const FROM_DEFINITIONS = '../../tools/';
 
 /** `export const X = registerTool({ name: 'y'`, and the description after it. */

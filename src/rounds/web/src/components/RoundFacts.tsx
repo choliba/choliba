@@ -38,7 +38,8 @@ function Start({ record }: { readonly record: RoundRecord }): ReactNode {
             </>
           ) : (
             <>
-              da pasta <code>rounds/fixtures/{fixture}</code> do projeto
+              da fixture <code>{fixture}</code>, na pasta{' '}
+              <code>rounds.fixtures</code>
             </>
           )}
         </dd>

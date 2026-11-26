@@ -1,5 +1,5 @@
 /**
- * A round's definition, pasted as source (`rounds/definitions/<id>.ts`),
+ * A round's definition, pasted as source (`<rounds.definitions>/<id>.ts`),
  * read back as data (`RoundDeclaration`) to fill the "Criar rodada" form.
  * A round in a folder (`<id>/<id>.ts` and its pieces) comes as all its
  * files (`definitions.json`). The source is the reader's own, run in this
@@ -14,10 +14,12 @@
 
 import { toolsAt, type ProjectTool } from './project-tools';
 import type { AgentPolicy } from '../../../policy/policy.interface';
+import { patternData } from '../../../rounds/criteria';
 import type {
   DeclaredActor,
   DeclaredOptionValue,
   FileCriterion,
+  PatternData,
   RoundCriterion,
   RoundDeclaration,
 } from '../../../rounds/types';
@@ -353,7 +355,17 @@ const ports = (value: unknown): number[] =>
 /** The flags of a file assertion that are given as true or false. */
 const FILE_FLAGS = ['exists', 'created', 'deleted', 'changed'] as const;
 
-/** A file assertion as data: each field checked, a `matches` RegExp as its source. */
+/** A `matches` entry as data: a RegExp or `{ source, flags }` keeps its flags (`patternData`). */
+function patternOf(value: unknown): string | PatternData {
+  if (value instanceof RegExp) return patternData(value);
+  const source = field(value, 'source');
+  const flags = field(value, 'flags');
+  return typeof source === 'string' && typeof flags === 'string'
+    ? patternData({ source, flags })
+    : text(value);
+}
+
+/** A file assertion as data: each field checked, a `matches` RegExp as its source and flags. */
 function fileData(file: Readonly<Record<string, unknown>>): FileCriterion {
   const flags = Object.fromEntries(
     FILE_FLAGS.flatMap((flag) =>
@@ -368,13 +380,7 @@ function fileData(file: Readonly<Record<string, unknown>>): FileCriterion {
     ...(Array.isArray(file['contains'])
       ? { contains: texts(file['contains']) }
       : {}),
-    ...(Array.isArray(matches)
-      ? {
-          matches: matches.map((m) =>
-            m instanceof RegExp ? m.source : text(m),
-          ),
-        }
-      : {}),
+    ...(Array.isArray(matches) ? { matches: matches.map(patternOf) } : {}),
     ...(typeof file['equals'] === 'string' ? { equals: file['equals'] } : {}),
   };
 }
@@ -427,7 +433,7 @@ const isPolicy = (value: unknown): value is AgentPolicy =>
 function declarationOf(definition: unknown): RoundDeclaration {
   if (!isRecord(definition)) {
     throw new Error(
-      'A definição precisa exportar a rodada por padrão: export default defineRound({ … }). Se este arquivo é uma peça de uma rodada em pasta, a rodada fica em rounds/definitions/<id>/<id>.ts: abra-a pela lista Abrir uma rodada do projeto.',
+      'A definição precisa exportar a rodada por padrão: export default defineRound({ … }). Se este arquivo é uma peça de uma rodada em pasta, a rodada fica em <rounds.definitions>/<id>/<id>.ts: abra-a pela lista Abrir uma rodada do projeto.',
     );
   }
   const actors = field(definition, 'actors');

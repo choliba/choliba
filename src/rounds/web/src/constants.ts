@@ -136,3 +136,10 @@ export const COMMAND_GROUPS: readonly {
     ],
   },
 ];
+
+/**
+ * The rubric, on GitHub: the pages also run from a project that installed
+ * the package, which has no guides/.
+ */
+export const RUBRIC_URL =
+  'https://github.com/choliba/choliba/blob/master/guides/rounds/rubrica.md';
