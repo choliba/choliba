@@ -21,20 +21,28 @@ Um `Workspace` define a raiz que o agente pode alterar e prepara cada comando pa
 
 ## Os arquivos
 
-| Arquivo                                | Papel                                                                                                                           |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `src/workspace/index.ts`               | `Workspace`: valida opções, escolhe sandbox, fixa diretório de trabalho, calcula o home por raiz e encaminha permissões e rede. |
-| `src/workspace/sandbox/types.ts`       | Contratos de `Sandbox` e da saída de rede.                                                                                      |
-| `src/workspace/sandbox/bubblewrap.ts`  | Montagens, jaula persistente e comandos que entram com `nsenter`.                                                               |
-| `src/workspace/sandbox/docker.ts`      | Contêineres, montagens, ambiente e rede do Docker.                                                                              |
-| `src/workspace/sandbox/host-access.ts` | Traduz o contrato do provider e `hostState` em home, credenciais, ambiente e caminhos visíveis.                                 |
-| `src/workspace/sandbox/host-state.ts`  | Caminhos genéricos de estado que o sandbox compartilha quando não recebe um contrato de host.                                   |
-| `src/workspace/sandbox/path-map.ts`    | `SandboxPaths`: onde o sandbox vê cada caminho do host (a raiz em `/home/choliba`, o resto de `/home` em `/opt/choliba`).       |
-| `src/workspace/sandbox/programs.ts`    | Os programas visíveis: acha cada nome no `PATH` como o sandbox, a base e as pastas de programas que o sandbox esvazia.          |
+| Arquivo                                 | Papel                                                                                                                           |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `src/workspace/index.ts`                | `Workspace`: valida opções, escolhe sandbox, fixa diretório de trabalho, calcula o home por raiz e encaminha permissões e rede. |
+| `src/workspace/sandbox/types.ts`        | Contratos de `Sandbox` e da saída de rede.                                                                                      |
+| `src/workspace/sandbox/bubblewrap.ts`   | Montagens, jaula persistente e comandos que entram com `nsenter`.                                                               |
+| `src/workspace/sandbox/docker.ts`       | Contêineres, montagens, ambiente e rede do Docker.                                                                              |
+| `src/workspace/sandbox/host-access.ts`  | Traduz o contrato do provider e `hostState` em home, credenciais, ambiente e caminhos visíveis.                                 |
+| `src/workspace/sandbox/host-state.ts`   | Caminhos genéricos de estado que o sandbox compartilha quando não recebe um contrato de host.                                   |
+| `src/workspace/sandbox/path-map.ts`     | `SandboxPaths`: onde o sandbox vê cada caminho do host (a raiz em `/home/choliba`, o resto de `/home` em `/opt/choliba`).       |
+| `src/workspace/sandbox/programs.ts`     | Os programas visíveis: acha cada nome no `PATH` como o sandbox, a base e as pastas de programas que o sandbox esvazia.          |
+| `src/workspace/sandbox/protect.ts`      | `protectedMasks`: as máscaras somente leitura dos caminhos protegidos; um caminho que não existe não tem o que proteger.        |
+| `src/workspace/sandbox/wrap-command.ts` | `wrapCommand`: põe o comando atrás do lançador da sandbox, com os argumentos dele.                                              |
+| `src/workspace/sandbox/debug.ts`        | `logSandbox`: grava no log (em `debug`) o comando que a sandbox roda.                                                           |
+| `src/workspace/sandbox/index.ts`        | O que o resto do Choliba importa das sandboxes: `BubblewrapSandbox`, `DockerSandbox` e o tipo `Sandbox`.                        |
+| `src/workspace/constants.ts`            | Os valores do workspace: `AGENT_ROOT`, `DEFAULT_DOCKER_IMAGE`, as pastas de programas e a base que sempre aparece.              |
 
 [↑ topo](#topo)
 
 ## Interface
+
+Do pacote (`choliba`) vêm o `Workspace`, os tipos `WorkspaceOptions` e `WorkspaceType`, as duas sandboxes
+(`BubblewrapSandbox`, `DockerSandbox`), o `SandboxPaths`, o `AGENT_ROOT` e o `DEFAULT_DOCKER_IMAGE`.
 
 | Exportação                                     | O que faz                                                                                                                                        |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -45,7 +53,8 @@ Um `Workspace` define a raiz que o agente pode alterar e prepara cada comando pa
 | `Workspace.homes`                              | A pasta dos homes: a opção `homes` ou, sem ela, `workspaces.homes` da config.                                                                    |
 | `Workspace.home()`                             | Retorna o home persistente daquela raiz em `homes`; raízes iguais produzem o mesmo caminho.                                                      |
 | `Workspace.paths`                              | O `SandboxPaths` do workspace: `paths.inside(caminho)` diz onde o sandbox vê um caminho do host.                                                 |
-| `Workspace.applyPermissions(policy)`           | Compila as permissões de filesystem e configura a fronteira de rede opcional.                                                                    |
+| `Workspace.applyPermissions(policy, network?)` | Compila as permissões de filesystem e, com `network`, monta a fronteira de rede com as regras da política (`networkRulesOf`).                    |
+| `Workspace.configureNetwork(boundary)`         | Liga uma fronteira de rede montada à mão (`NetworkBoundary`): o sandbox fica sem rede própria. Um sandbox que não sabe isolar a rede recusa.     |
 | `Workspace.useHost(host)`                      | Passa ao sandbox o conjunto já calculado de montagens e variáveis.                                                                               |
 | `Workspace.protect(paths)`                     | Mantém arquivos de configuração e hooks somente para leitura.                                                                                    |
 | `Workspace.prepare(command)`                   | Prepara o comando com o diretório de trabalho da raiz, criando a raiz se ela não existir.                                                        |
@@ -59,6 +68,10 @@ por isso: o sandbox monta **graváveis** as pastas de estado do host (`~/.config
 `~/.local/share`, `~/.cursor`, `~/.codex`, `~/.claude` e `~/.claude.json`, em `sandbox/host-state.ts`) e repassa o
 ambiente inteiro de quem roda o programa. Um programa nesse workspace lê, por exemplo, o arquivo de login da CLI e grava
 no cache do host.
+
+Com `type: 'docker'`, a opção `image` diz de onde vem a imagem: `FROM nome:tag` baixa a imagem do registro (o Docker
+Hub) quando ela falta na máquina, e `nome:tag` sozinho usa uma imagem construída na máquina, sem nunca baixar (sem
+`image`, vale o `DEFAULT_DOCKER_IMAGE`).
 
 O diretório dos homes é a opção `homes` do `Workspace`; sem ela, vale `workspaces.homes` do `choliba.config.ts`, cujo padrão é `.choliba/homes`. O diretório que contém todos os homes fica oculto dentro do sandbox se estiver dentro da raiz do workspace.
 
