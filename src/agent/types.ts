@@ -67,7 +67,8 @@ export interface AgentOptions {
   /**
    * Continues on its own a task interrupted before (same prompt, stopped
    * with Ctrl+C) or with something approved for it since. Default `true`;
-   * `false` starts every run anew. `resume()` still continues.
+   * `false` starts every run anew, unless `CHOLIBA_RESUME_SESSION` names the
+   * session to continue.
    */
   readonly resume?: boolean;
   /** See `APPROVAL_POLL_MS`. */
