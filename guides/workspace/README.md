@@ -53,6 +53,13 @@ Um `Workspace` define a raiz que o agente pode alterar e prepara cada comando pa
 
 `hostState` aceita três valores. `login` é o padrão: a CLI ganha um home por workspace e somente seu arquivo de login entra, montado para leitura. `none` não compartilha arquivos de login e exige uma variável de credencial declarada pelo provider; um provider local sem credenciais continua válido. `share` entrega o estado do provider no host, gravável, incluindo o histórico de outras raízes.
 
+**Sem agente, não há `hostState`.** Quem aplica o modo é o agente: ele passa ao sandbox (`useHost`) só o que o provider
+pede do host. Um `Workspace` usado sozinho, como no [Exemplo 2](#2-rodar-programas-num-workspace-sem-agente), não passa
+por isso: o sandbox monta **graváveis** as pastas de estado do host (`~/.config`, `~/.cache` com o `~/.cache/choliba`,
+`~/.local/share`, `~/.cursor`, `~/.codex`, `~/.claude` e `~/.claude.json`, em `sandbox/host-state.ts`) e repassa o
+ambiente inteiro de quem roda o programa. Um programa nesse workspace lê, por exemplo, o arquivo de login da CLI e grava
+no cache do host.
+
 O diretório dos homes é a opção `homes` do `Workspace`; sem ela, vale `workspaces.homes` do `choliba.config.ts`, cujo padrão é `.choliba/homes`. O diretório que contém todos os homes fica oculto dentro do sandbox se estiver dentro da raiz do workspace.
 
 ### O que o agente vê: `/home/choliba`
@@ -81,7 +88,7 @@ No Docker, `/home` e `/opt` são tmpfs vazios (as entradas do `/opt` do host vol
 do host é somente leitura, e o Docker não consegue criar pontos de montagem nele. Por isso o workspace Docker precisa
 da pasta `/opt` no host.
 
-O cache do Choliba (`~/.cache/choliba`) também fica fora do sandbox, em qualquer `hostState`: lá ficam os gates dos outros agentes e homes antigos de CLIs. Do cache, o sandbox vê só o que é do próprio agente: o diretório do gate de execução, somente leitura, e o da saída de rede.
+Num workspace de agente, o cache do Choliba (`~/.cache/choliba`) também fica fora do sandbox, em qualquer `hostState`: lá ficam os gates dos outros agentes e homes antigos de CLIs. Do cache, o sandbox vê só o que é do próprio agente: o diretório do gate de execução, somente leitura, e o da saída de rede. Num `Workspace` sozinho, o cache entra com o resto do `~/.cache`, gravável.
 
 ### Programas visíveis: `programs`
 
@@ -115,7 +122,7 @@ lista vazia (`programs: []`) mostra só a base.
 
 1. `Workspace` valida a raiz e `hostState`, depois cria o sandbox adequado.
 2. `home()` calcula um identificador estável a partir do caminho resolvido da raiz. O home guarda sessões e configuração da CLI entre execuções.
-3. O agente consulta `provider.hostAccess()` e prepara o acesso conforme `hostState`. O sandbox recebe o resultado por `useHost`.
+3. O agente consulta `provider.hostAccess()` e prepara o acesso conforme `hostState`. O sandbox recebe o resultado por `useHost`. Sem agente, ninguém chama `useHost`, e o sandbox monta as pastas de estado do host.
 4. O agente passa as permissões, os caminhos protegidos e a rede por operações de `Workspace`.
    Com `programs`, o sandbox confere os programas ao subir (antes de qualquer comando) e esvazia as pastas de programas.
 5. `prepare` define `cwd` como a raiz e delega ao sandbox, que traduz o comando para os caminhos de dentro
@@ -282,6 +289,8 @@ falhou (código 127)
 - `checkPrograms` achou o `php` sem rodar nada.
 - No segundo workspace, `/usr/bin` tem só o `php` e a base. O `git` está instalado no host, mas não foi escolhido: lá
   dentro ele não existe. Com `type: 'docker'` a saída é a mesma, com `setpriv` a mais na base.
+- Os dois workspaces não têm agente, então não há `hostState`: os programas lá dentro veem e gravam as pastas de estado
+  do host (veja a [Interface](#interface)).
 
 [↑ topo](#topo)
 

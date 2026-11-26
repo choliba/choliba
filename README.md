@@ -30,7 +30,9 @@ o agente. Comandos em aberto são perguntados a você, e o gate de execução fa
 Por padrão, cada raiz usa seu próprio home persistente dentro de `workspaces.homes` (`.choliba/homes`); só o arquivo de
 login do provider entra nesse home e fica somente para leitura. Configure `hostState: 'none'` para não compartilhar
 o arquivo de login (e fornecer uma credencial de ambiente), ou `hostState: 'share'` para compartilhar o estado do
-host, gravável e com histórico de outros projetos. Segredos não chegam ao log. Veja os cursos de
+host, gravável e com histórico de outros projetos. Esses modos são aplicados pelo agente: um `Workspace` usado sozinho,
+sem agente, monta graváveis as pastas de estado do host (`~/.config`, `~/.cache`, `~/.claude`…) e repassa o ambiente
+inteiro de quem o roda. Segredos não chegam ao log. Veja os cursos de
 [policy](guides/policy/README.md), [network](guides/network/README.md), [workspace](guides/workspace/README.md) e
 [config](guides/config/README.md).
 
