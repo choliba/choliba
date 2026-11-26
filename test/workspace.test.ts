@@ -125,10 +125,12 @@ describe('Workspace', () => {
 
   test('docker envolve o comando em docker run', async () => {
     const image = 'choliba-agent:latest';
+    // Without an agent, only `share` hands over the whole environment.
     const workspace = new Workspace({
       type: 'docker',
       root,
       image: `FROM ${image}`,
+      hostState: 'share',
     });
     const prepared = await workspace.prepare(command);
     const args = prepared.arguments ?? [];
@@ -183,6 +185,29 @@ describe('Workspace', () => {
       if (process.env[name] !== undefined) {
         expect(envNames).toContain(name);
       }
+    }
+  });
+
+  test('docker sem agente não repassa um segredo do ambiente', async () => {
+    const before = process.env['SEGREDO'];
+    process.env['SEGREDO'] = 'valor-secreto';
+    try {
+      const workspace = new Workspace({
+        type: 'docker',
+        root,
+        image: 'FROM choliba-agent:latest',
+        homes: join(root, '.homes'),
+      });
+      const args = (await workspace.prepare(command)).arguments ?? [];
+      // `-e NAME` or `-e NAME=value`: the names handed to the container.
+      const names = args.flatMap((arg, index) =>
+        args[index - 1] === '-e' ? [arg.split('=', 1)[0]] : [],
+      );
+
+      expect(names).toContain('PATH');
+      expect(names).not.toContain('SEGREDO');
+    } finally {
+      restoreEnv('SEGREDO', before);
     }
   });
 
@@ -398,6 +423,29 @@ describe('Workspace', () => {
       } finally {
         await workspace.close();
         rmSync(parent, { recursive: true, force: true });
+      }
+    },
+  );
+
+  test.skipIf(Bun.which('bwrap') === null || Bun.which('nsenter') === null)(
+    'bubblewrap sozinho isola o host: sem os segredos do ambiente nem as pastas de estado; com share, como antes',
+    async () => {
+      const scratch = mkdtempSync(join(tmpdir(), 'choliba-sozinho-'));
+      const config = join(scratch, 'xdg-config');
+      mkdirSync(config);
+      mkdirSync(join(scratch, 'app'));
+
+      try {
+        expect(await aloneSees(scratch, config)).toEqual([
+          'SEGREDO=ausente',
+          'config=nao-gravou',
+        ]);
+        expect(await aloneSees(scratch, config, 'share')).toEqual([
+          'SEGREDO=valor-secreto',
+          'config=gravou',
+        ]);
+      } finally {
+        rmSync(scratch, { recursive: true, force: true });
       }
     },
   );
@@ -644,6 +692,58 @@ describe('Workspace', () => {
     },
   );
 });
+
+/**
+ * What a program in a workspace without an agent sees of the host: a secret
+ * of the environment and the config folder (`XDG_CONFIG_HOME`, outside
+ * `/home`), whether it can write there.
+ */
+async function aloneSees(
+  scratch: string,
+  config: string,
+  hostState?: 'share',
+): Promise<string[]> {
+  const before = {
+    secret: process.env['SEGREDO'],
+    config: process.env['XDG_CONFIG_HOME'],
+  };
+  process.env['SEGREDO'] = 'valor-secreto';
+  process.env['XDG_CONFIG_HOME'] = config;
+  const workspace = new Workspace({
+    type: 'bubblewrap',
+    root: join(scratch, 'app'),
+    homes: join(scratch, 'homes'),
+    ...(hostState === undefined ? {} : { hostState }),
+  });
+  try {
+    const prepared = await workspace.prepare({
+      executable: 'sh',
+      arguments: [
+        '-c',
+        `echo "SEGREDO=\${SEGREDO:-ausente}"; touch ${config}/marca 2>/dev/null && echo config=gravou || echo config=nao-gravou; rm -f ${config}/marca`,
+      ],
+    });
+    const result = spawnSync(
+      prepared.executable,
+      [...(prepared.arguments ?? [])],
+      {
+        cwd: prepared.cwd,
+        encoding: 'utf8',
+        ...(prepared.env === undefined ? {} : { env: prepared.env }),
+      },
+    );
+    return result.stdout.trim().split('\n');
+  } finally {
+    await workspace.close();
+    restoreEnv('SEGREDO', before.secret);
+    restoreEnv('XDG_CONFIG_HOME', before.config);
+  }
+}
+
+function restoreEnv(name: string, value: string | undefined): void {
+  if (value === undefined) delete process.env[name];
+  else process.env[name] = value;
+}
 
 function nsenterTarget(args: readonly string[]): number {
   const index = args.indexOf('-t');

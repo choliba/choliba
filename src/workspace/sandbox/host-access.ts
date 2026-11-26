@@ -105,6 +105,16 @@ function knownCredentials(home: string): readonly string[] {
  * with `share`, its state on the host), its credentials and nothing else;
  * plus the variables the policy lets it read (`secrets`).
  */
+/**
+ * The host share of a provider that declares nothing, and of a workspace
+ * without an agent: a home of its own, with no login, state or credential.
+ */
+export const EMPTY_HOST_ACCESS: HostAccess = {
+  credentialFiles: [],
+  credentialEnv: [],
+  sharedState: [],
+};
+
 export function sandboxHost(
   access: HostAccess,
   source: NodeJS.ProcessEnv,
