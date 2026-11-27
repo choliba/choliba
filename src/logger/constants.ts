@@ -8,9 +8,17 @@
 export const MAX_ERROR_LENGTH = 4000;
 
 /**
- * The shortest value of a sensitive env that is masked wherever it appears
- * (`maskRecord`, argument `minSecretLength`). Shorter values (`1`, `true`)
- * would mask unrelated text.
+ * Names of environment variables whose value is a secret, hidden wherever
+ * it appears (`envSecrets`): in the log, the config's envs; in a round's
+ * record, the whole environment. Broad on purpose: hiding a value that was
+ * not a secret costs a placeholder in the text, and missing one leaks it.
+ */
+export const SECRET_ENV_NAME = /key|token|secret|pass|auth|credential|cookie/i;
+
+/**
+ * The shortest value of such a variable that is hidden (`envSecrets`,
+ * argument `minSecretLength`). Shorter values (`1`, `true`) would hide
+ * unrelated text.
  */
 export const MIN_SECRET_LENGTH = 8;
 

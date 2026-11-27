@@ -21,6 +21,7 @@ import { maskRecord } from './mask';
 import { toLogRecord, type LogContext, type LogEntry } from './record';
 
 export * from './constants';
+export { envSecrets } from './mask';
 
 export type { LogSink } from './adapt';
 export type { LogEntry, LogLevel, LogRecord } from './record';

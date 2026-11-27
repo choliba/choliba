@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 27/11/2026 18:56:59: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 27/11/2026 19:00:07: não edite à mão.
 
 Limites (coverage-thresholds.json, só sobem): funções 93.18%, linhas 95.34%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
@@ -23,7 +23,7 @@ Status|Módulo|% Funcs|% Lines
 🟢|[src/filesystem](src/filesystem)|100.00|96.90
 🔴|[src/input](src/input)|0.00|6.93
 🟢|[src/interaction](src/interaction)|97.50|99.52
-🟢|[src/logger](src/logger)|95.71|96.51
+🟢|[src/logger](src/logger)|95.71|96.52
 🟢|[src/mcp](src/mcp)|76.61|93.74
 🟢|[src/network](src/network)|94.03|97.38
 🟡|[src/output](src/output)|52.94|54.87
@@ -204,13 +204,13 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/logger</b>: 96.51% das linhas, 8 arquivos</summary>
+<summary>🟢 <b>src/logger</b>: 96.52% das linhas, 8 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[adapt.ts](src/logger/adapt.ts)|80.00|100.00
 🟢|[constants.ts](src/logger/constants.ts)|100.00|100.00
-🟢|[index.ts](src/logger/index.ts)|100.00|91.67
+🟢|[index.ts](src/logger/index.ts)|100.00|91.72
 🟢|[jsonl.ts](src/logger/jsonl.ts)|100.00|91.89
 🟢|[mask.ts](src/logger/mask.ts)|100.00|100.00
 🟢|[record.ts](src/logger/record.ts)|85.71|88.52

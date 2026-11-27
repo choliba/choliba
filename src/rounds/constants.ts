@@ -29,12 +29,6 @@ export const RESOURCE_SAMPLE_MS = 1000;
  */
 export const NVIDIA_SMI_TIMEOUT_MS = 2000;
 
-/** Environment variables whose value is a secret, by name. */
-export const CREDENTIAL_NAME = /KEY|TOKEN|SECRET|PASS|AUTH|CREDENTIAL/i;
-
-/** Values shorter than this are not replaced: they would match common text. */
-export const MIN_SECRET_LENGTH = 12;
-
 /**
  * What an agent gets when it asks something during a round: nobody answers
  * there. Shown to the agent, so in the user's language.

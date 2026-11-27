@@ -435,7 +435,9 @@ os seus critérios (`id`, `label`, `score` de 0 a 5 ou `null`, `detail`). Para a
      disse, contra a tag.
    - Se o agente terminou sem dizer nada, a rodada para ali.
 3. **As regras** olham todos os passos.
-4. **O registro** é montado, sem segredos nem o caminho do projeto, conferido pelo `validateRound` e gravado.
+4. **O registro** é montado, sem segredos nem o caminho do projeto, conferido pelo `validateRound` e gravado. Os
+   segredos seguem a regra do log (`envSecrets`): o valor de cada variável do ambiente com `key`, `token`, `secret`,
+   `pass`, `auth`, `credential` ou `cookie` no nome, a partir de 8 caracteres, vira o nome dela (`<CURSOR_API_KEY>`).
 
 Com `repeat`, tudo isso se repete, cada vez a partir do zero.
 
