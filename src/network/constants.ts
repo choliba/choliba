@@ -9,11 +9,16 @@ export const PROXY_PORT = 3128;
 
 /**
  * Milliseconds the bridge has to show its socket before starting it failed
- * (`NetworkBoundary`, option `readyTimeoutMs`).
+ * (`NetworkBoundary`, option `readyTimeoutMs`). The bridge starts in tens of
+ * milliseconds; five seconds only give up on one that will never start (a
+ * missing runtime, a broken bundle).
  */
 export const READY_TIMEOUT_MS = 5000;
 
-/** How often, in milliseconds, the bridge's socket is looked for. */
+/**
+ * How often, in milliseconds, the bridge's socket is looked for: the start
+ * is barely delayed, and each look is only a question to the disk.
+ */
 export const READY_POLL_MS = 20;
 
 /**

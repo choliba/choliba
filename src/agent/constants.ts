@@ -2,7 +2,8 @@
 
 /**
  * How often, in milliseconds, an agent waiting on approvals looks for new
- * ones (`Agent`, option `approvalPollMs`).
+ * ones (`Agent`, option `approvalPollMs`). A person who just answered does
+ * not notice a second; looking more often only queries the database.
  */
 export const APPROVAL_POLL_MS = 1000;
 

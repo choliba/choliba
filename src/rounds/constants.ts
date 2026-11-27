@@ -1,4 +1,8 @@
-/** Values of the rounds. */
+/**
+ * Values of the rounds. Where a round's pieces live (declarations, fixtures,
+ * records) is not here: it is the config's `rounds.definitions`,
+ * `rounds.fixtures` and `rounds.data`.
+ */
 
 /**
  * How far, in USD, a total cost may differ from the sum of its usage records
@@ -56,11 +60,6 @@ export const RUBRIC = {
   wastePenalty: 1,
   weights: { effectiveness: 0.6, efficiency: 0.4 },
 } as const;
-
-/**
- * Where a round's pieces live (declarations, fixtures, records) is the
- * config's `rounds.definitions`, `rounds.fixtures` and `rounds.data`.
- */
 
 /**
  * The tag a fixture's repository is created with: the point every run of a
@@ -125,7 +124,10 @@ export const ROUNDS_DEFINITIONS_ENV = 'CHOLIBA_ROUNDS_DEFINITIONS';
  */
 export const ROUNDS_WEB_START_MS = 15_000;
 
-/** Milliseconds between checks while the pages' server starts. */
+/**
+ * Milliseconds between checks while the pages' server starts: a quarter of
+ * a second adds little to Vite's one, without asking it all the time.
+ */
 export const ROUNDS_WEB_POLL_MS = 250;
 
 /** HTTP status for a path the pages do not have. Fixed: protocol. */

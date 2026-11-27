@@ -1,6 +1,9 @@
 /** Defaults of the output. */
 
-/** Marks the model's reasoning where it is shown as text. */
+/**
+ * Marks the model's reasoning where it is shown as text: a thought
+ * balloon, told apart from the answer at a glance and in any language.
+ */
 export const REASONING_MARK = '💭';
 
 /**
