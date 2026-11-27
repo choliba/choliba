@@ -20,6 +20,8 @@ import { homedir } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { CHOLIBA_CACHE_NAME, XDG_DEFAULTS } from './constants.ts';
+
 /**
  * Disk access. Nothing else imports `node:fs`: what goes to the disk goes
  * through here, the same way processes go through `execute` and messages to
@@ -180,18 +182,32 @@ export function removePath(path: string): void {
   rmSync(path, { recursive: true, force: true });
 }
 
+/** An environment to read paths from: `environment()`, or one made by hand. */
+type PathEnv = Readonly<Record<string, string | undefined>>;
+
+/** The XDG base directories `xdgDir` knows. */
+export type XdgDirName = keyof typeof XDG_DEFAULTS;
+
+/** The user's home in `env`: its `HOME`, or the system's when unset. */
+export function homeOf(env: PathEnv): string {
+  return env['HOME'] ?? homedir();
+}
+
 /**
- * Choliba's cache directory: `$XDG_CACHE_HOME/choliba`, or `~/.cache/choliba`.
- * `env` is the environment to read `XDG_CACHE_HOME` from (`environment()`).
+ * An XDG base directory in `env`: the variable, or its default under the
+ * home (`homeOf`) when unset or empty, as the specification says.
  */
-export function cholibaCacheDir(
-  env: Readonly<Record<string, string | undefined>>,
-): string {
-  const cache = env['XDG_CACHE_HOME'];
-  return join(
-    cache === undefined || cache.length === 0
-      ? join(homedir(), '.cache')
-      : cache,
-    'choliba',
-  );
+export function xdgDir(env: PathEnv, name: XdgDirName): string {
+  const value = env[name];
+  return value === undefined || value.length === 0
+    ? join(homeOf(env), XDG_DEFAULTS[name])
+    : value;
+}
+
+/**
+ * Choliba's cache directory: `$XDG_CACHE_HOME/choliba`, or
+ * `$HOME/.cache/choliba`, both read from `env` (`environment()`).
+ */
+export function cholibaCacheDir(env: PathEnv): string {
+  return join(xdgDir(env, 'XDG_CACHE_HOME'), CHOLIBA_CACHE_NAME);
 }

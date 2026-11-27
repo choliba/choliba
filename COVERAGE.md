@@ -1,14 +1,14 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 26/11/2026 17:21:57: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 27/11/2026 17:36:00: não edite à mão.
 
-Limites (coverage-thresholds.json, só sobem): funções 93.03%, linhas 95.14%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
+Limites (coverage-thresholds.json, só sobem): funções 93.08%, linhas 95.17%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
 ## Resumo
 
 Status|Módulo|% Funcs|% Lines
 --|--|--|--
-🟢|**Total**|93.03|95.14
+🟢|**Total**|93.08|95.18
 🟢|[scripts](scripts)|100.00|98.89
 🟢|[src/adapters](src/adapters)|91.14|97.86
 🟢|[src/agent](src/agent)|96.94|96.64
@@ -20,7 +20,7 @@ Status|Módulo|% Funcs|% Lines
 🟢|[src](src)|95.24|93.94
 🟢|[src/events](src/events)|100.00|100.00
 🟢|[src/execute](src/execute)|93.18|92.10
-🟢|[src/filesystem](src/filesystem)|97.92|94.10
+🟢|[src/filesystem](src/filesystem)|98.72|96.07
 🔴|[src/input](src/input)|0.00|6.93
 🟢|[src/interaction](src/interaction)|97.50|99.52
 🟢|[src/logger](src/logger)|95.71|96.50
@@ -173,11 +173,12 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/filesystem</b>: 94.10% das linhas, 2 arquivos</summary>
+<summary>🟢 <b>src/filesystem</b>: 96.07% das linhas, 3 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
-🟢|[index.ts](src/filesystem/index.ts)|95.83|97.50
+🟢|[constants.ts](src/filesystem/constants.ts)|100.00|100.00
+🟢|[index.ts](src/filesystem/index.ts)|96.15|97.50
 🟢|[proc.ts](src/filesystem/proc.ts)|100.00|90.70
 
 </details>
