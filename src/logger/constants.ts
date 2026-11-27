@@ -15,12 +15,6 @@ export const MAX_ERROR_LENGTH = 4000;
 export const MIN_SECRET_LENGTH = 8;
 
 /**
- * Permissions of a log file: only its owner reads it. Fixed: logs may hold
- * what the agent saw, and no option should open them to others.
- */
-export const LOG_FILE_MODE = 0o600;
-
-/**
  * `logger.logrotate.maxFileSize`, a size with its unit (src/logger/size.ts):
  * past it, the session goes on in a new file (`<sessão>.2.jsonl`). A soft
  * limit: the record being written ends where it is, so a file can pass it

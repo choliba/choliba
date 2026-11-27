@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 27/11/2026 18:03:04: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 27/11/2026 18:05:49: não edite à mão.
 
 Limites (coverage-thresholds.json, só sobem): funções 93.10%, linhas 95.19%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
@@ -23,7 +23,7 @@ Status|Módulo|% Funcs|% Lines
 🟢|[src/filesystem](src/filesystem)|100.00|96.90
 🔴|[src/input](src/input)|0.00|6.93
 🟢|[src/interaction](src/interaction)|97.50|99.52
-🟢|[src/logger](src/logger)|95.71|96.50
+🟢|[src/logger](src/logger)|95.71|96.51
 🟢|[src/mcp](src/mcp)|76.61|93.74
 🟢|[src/network](src/network)|94.03|97.38
 🟡|[src/output](src/output)|52.94|54.87
@@ -204,13 +204,13 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/logger</b>: 96.50% das linhas, 8 arquivos</summary>
+<summary>🟢 <b>src/logger</b>: 96.51% das linhas, 8 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[adapt.ts](src/logger/adapt.ts)|80.00|100.00
 🟢|[constants.ts](src/logger/constants.ts)|100.00|100.00
-🟢|[index.ts](src/logger/index.ts)|100.00|91.61
+🟢|[index.ts](src/logger/index.ts)|100.00|91.67
 🟢|[jsonl.ts](src/logger/jsonl.ts)|100.00|91.89
 🟢|[mask.ts](src/logger/mask.ts)|100.00|100.00
 🟢|[record.ts](src/logger/record.ts)|85.71|88.52
@@ -238,7 +238,7 @@ Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[constants.ts](src/network/constants.ts)|100.00|100.00
 🟢|[gate.ts](src/network/gate.ts)|90.48|100.00
-🟢|[index.ts](src/network/index.ts)|89.66|96.05
+🟢|[index.ts](src/network/index.ts)|89.66|96.08
 🟢|[proxy.ts](src/network/proxy.ts)|72.09|88.40
 🟢|[publish.ts](src/network/publish.ts)|100.00|100.00
 🟢|[rewrite.ts](src/network/rewrite.ts)|100.00|100.00
@@ -277,7 +277,7 @@ Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[claude/claude-provider.ts](src/providers/claude/claude-provider.ts)|88.89|98.23
 🟢|[claude/policy.ts](src/providers/claude/policy.ts)|89.66|98.05
-🟢|[codex/codex-provider.ts](src/providers/codex/codex-provider.ts)|86.11|95.73
+🟢|[codex/codex-provider.ts](src/providers/codex/codex-provider.ts)|86.11|95.79
 🟢|[codex/policy.ts](src/providers/codex/policy.ts)|97.30|100.00
 🟢|[constants.ts](src/providers/constants.ts)|100.00|100.00
 🟢|[cursor/cursor-provider.ts](src/providers/cursor/cursor-provider.ts)|87.50|98.06

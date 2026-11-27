@@ -9,6 +9,7 @@ import {
   pathExists,
   readText,
 } from '../filesystem/index';
+import { PRIVATE_DIR_MODE } from '../filesystem/constants';
 import { getConfig, isConfigLoaded, type LoggerTarget } from '../config/index';
 import { UsageError } from '../errors';
 import { currentContext } from '../context/index';
@@ -193,7 +194,7 @@ export function truncateError(
 
 function ensureLogDir(dir: string): void {
   try {
-    ensureDirectory(dir, 0o700);
+    ensureDirectory(dir, PRIVATE_DIR_MODE);
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     throw new UsageError(`Não foi possível criar ${dir}: ${reason}`);

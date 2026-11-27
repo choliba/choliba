@@ -1,7 +1,7 @@
 import { appendText, join } from '../filesystem/index';
 import { UsageError } from '../errors';
 import type { LogSink } from './adapt';
-import { LOG_FILE_MODE } from './constants';
+import { PRIVATE_FILE_MODE } from '../filesystem/constants';
 import type { LogRecord } from './record';
 
 export interface JsonlSinkOptions {
@@ -54,7 +54,7 @@ function ecsLine(
 
 function append(file: string, line: string): void {
   try {
-    appendText(file, line, LOG_FILE_MODE);
+    appendText(file, line, PRIVATE_FILE_MODE);
   } catch (writeError) {
     const reason =
       writeError instanceof Error ? writeError.message : String(writeError);

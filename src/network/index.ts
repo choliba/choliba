@@ -17,6 +17,7 @@ import {
   removePath,
   cholibaCacheDir,
 } from '../filesystem/index';
+import { PRIVATE_DIR_MODE } from '../filesystem/constants';
 import { localPorts } from './rules';
 import { NetworkGate, type NetworkGateOptions } from './gate';
 import type { RequestRewriter, TrafficObserver } from './types';
@@ -199,7 +200,7 @@ export class NetworkBoundary {
   }
 
   private async startProxy(): Promise<void> {
-    ensureDirectory(this.portsDir(), 0o700);
+    ensureDirectory(this.portsDir(), PRIVATE_DIR_MODE);
     if (!this.bundled) {
       await bundleBridge(this.dir);
       this.bundled = true;

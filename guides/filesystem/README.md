@@ -46,11 +46,11 @@ quem precisa do disco ──▶ filesystem ──▶ node:fs / node:path / node:
 
 ## Os arquivos
 
-| Arquivo        | Papel                                                                                                                                                          |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.ts`     | O disco (ler, escrever, listar, apagar, links), os caminhos como texto (reexportados de `node:path`), o home, as pastas XDG e o diretório de cache do Choliba. |
-| `proc.ts`      | Outros processos, lidos do `/proc` (Linux): nome, diretório, filhos, namespaces, se está vivo.                                                                 |
-| `constants.ts` | Os valores do módulo: os padrões das pastas XDG (`XDG_DEFAULTS`) e o nome da pasta de cache (`CHOLIBA_CACHE_NAME`).                                            |
+| Arquivo        | Papel                                                                                                                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `index.ts`     | O disco (ler, escrever, listar, apagar, links), os caminhos como texto (reexportados de `node:path`), o home, as pastas XDG e o diretório de cache do Choliba.                                   |
+| `proc.ts`      | Outros processos, lidos do `/proc` (Linux): nome, diretório, filhos, namespaces, se está vivo.                                                                                                   |
+| `constants.ts` | Os valores do módulo: as permissões do que só o dono lê (`PRIVATE_DIR_MODE`, `PRIVATE_FILE_MODE`), os padrões das pastas XDG (`XDG_DEFAULTS`) e o nome da pasta de cache (`CHOLIBA_CACHE_NAME`). |
 
 [↑ topo](#topo)
 
@@ -131,7 +131,7 @@ As funções de `proc.ts` seguem a primeira família: um processo que não exist
 
 ### O `mode` só vale ao criar
 
-`ensureDirectory`, `writeText` e `appendText` aceitam um `mode` (as permissões, como `0o600`). Ele só vale **quando a pasta ou o arquivo é criado**: num que já existe, não muda nada. O Choliba usa `0o700` e `0o600` para o que só o dono deve ler: o log, o cache, o diretório do gate.
+`ensureDirectory`, `writeText` e `appendText` aceitam um `mode` (as permissões, como `0o600`). Ele só vale **quando a pasta ou o arquivo é criado**: num que já existe, não muda nada. O Choliba usa `PRIVATE_DIR_MODE` (`0o700`) e `PRIVATE_FILE_MODE` (`0o600`), do `constants.ts`, para o que só o dono deve ler: o log, o cache, o diretório do gate.
 
 ### Texto e bytes
 
@@ -418,13 +418,18 @@ Pelo caminho, `atalho.txt` está dentro do workspace; pelo arquivo de verdade (`
 ```ts
 /**
  * Exemplo 5 do curso de filesystem: o `mode` de pastas e arquivos. Vale só
- * quando o arquivo ou a pasta é criado. O Choliba usa 0o700 e 0o600 para o
- * que só o dono deve ler (o log, o cache). Para mostrar o mode, o exemplo
- * pergunta ao `stat` (um programa auxiliar, pelo execute).
+ * quando o arquivo ou a pasta é criado. O Choliba usa PRIVATE_DIR_MODE
+ * (0o700) e PRIVATE_FILE_MODE (0o600), do constants.ts, para o que só o dono
+ * deve ler (o log, o cache). Para mostrar o mode, o exemplo pergunta ao
+ * `stat` (um programa auxiliar, pelo execute).
  */
 import { randomUUID } from 'node:crypto';
 
 import { environment, runProgram } from '../../../src/execute/process';
+import {
+  PRIVATE_DIR_MODE,
+  PRIVATE_FILE_MODE,
+} from '../../../src/filesystem/constants';
 import {
   appendText,
   ensureDirectory,
@@ -441,11 +446,11 @@ const mode = async (path: string): Promise<string> =>
   (await runProgram('stat', ['-c', '%a', path], { timeoutMs: 5000 })).trim();
 
 try {
-  ensureDirectory(join(dir, 'privada'), 0o700);
-  writeText(join(dir, 'privada', 'log.jsonl'), '{}\n', 0o600);
+  ensureDirectory(join(dir, 'privada'), PRIVATE_DIR_MODE);
+  writeText(join(dir, 'privada', 'log.jsonl'), '{}\n', PRIVATE_FILE_MODE);
   writeText(join(dir, 'publico.txt'), 'oi\n');
   // Já existe: o mode passado agora não muda nada.
-  appendText(join(dir, 'publico.txt'), 'de novo\n', 0o600);
+  appendText(join(dir, 'publico.txt'), 'de novo\n', PRIVATE_FILE_MODE);
 
   writeOut(`privada/          ${await mode(join(dir, 'privada'))}\n`);
   writeOut(
@@ -465,7 +470,7 @@ privada/log.jsonl 600
 publico.txt       664
 ```
 
-`publico.txt` foi criado sem `mode` (o padrão do sistema, `664`); o `0o600` do `appendText` depois não mudou nada, porque o arquivo já existia.
+`publico.txt` foi criado sem `mode` (o padrão do sistema, `664`); o `PRIVATE_FILE_MODE` do `appendText` depois não mudou nada, porque o arquivo já existia.
 
 ### 6. O cache do Choliba
 

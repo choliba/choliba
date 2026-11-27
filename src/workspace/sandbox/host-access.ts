@@ -1,5 +1,5 @@
 import { UsageError } from '../../errors';
-import { XDG_DEFAULTS } from '../../filesystem/constants';
+import { PRIVATE_DIR_MODE, XDG_DEFAULTS } from '../../filesystem/constants';
 import {
   ensureDirectory,
   homeOf,
@@ -139,7 +139,7 @@ export function sandboxHost(
     );
     // The workspace's home too, with HOME left on the host's: what Choliba
     // keeps for the CLI (the gate's hook) never goes into the host's state.
-    ensureDirectory(options.home, 0o700);
+    ensureDirectory(options.home, PRIVATE_DIR_MODE);
     return {
       state,
       programs: access.programs ?? [],
@@ -151,7 +151,7 @@ export function sandboxHost(
   }
 
   const { home } = options;
-  ensureDirectory(home, 0o700);
+  ensureDirectory(home, PRIVATE_DIR_MODE);
   const credentials =
     options.hostState === 'login'
       ? loginBinds(access.credentialFiles, hostHome, home)
@@ -221,7 +221,7 @@ function homeEnv(
   }
   for (const [name, path] of Object.entries(extra)) {
     const destination = join(home, path);
-    ensureDirectory(destination, 0o700);
+    ensureDirectory(destination, PRIVATE_DIR_MODE);
     env[name] = destination;
   }
   return env;
@@ -238,7 +238,7 @@ function loginBinds(
     const relative = relativeTo(hostHome, source);
     if (relative === undefined || !pathExists(source)) continue;
     const destination = join(home, relative);
-    ensureDirectory(join(destination, '..'), 0o700);
+    ensureDirectory(join(destination, '..'), PRIVATE_DIR_MODE);
     binds.push({ source, destination });
   }
   return binds;

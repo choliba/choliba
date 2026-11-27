@@ -12,6 +12,7 @@ import {
   join,
   cholibaCacheDir,
 } from '../filesystem/index';
+import { PRIVATE_DIR_MODE, PRIVATE_FILE_MODE } from '../filesystem/constants';
 
 interface LockOwner {
   readonly pid: number;
@@ -50,7 +51,10 @@ export class WorkspaceLock {
       );
     }
 
-    ensureDirectory(join(cholibaCacheDir(environment()), 'agents'), 0o700);
+    ensureDirectory(
+      join(cholibaCacheDir(environment()), 'agents'),
+      PRIVATE_DIR_MODE,
+    );
     const lock: LockOwner = {
       pid: currentPid(),
       command: processName(currentPid()),
@@ -58,7 +62,7 @@ export class WorkspaceLock {
       root: this.root,
       startedAt: new Date().toISOString(),
     };
-    writeText(this.path, `${JSON.stringify(lock)}\n`, 0o600);
+    writeText(this.path, `${JSON.stringify(lock)}\n`, PRIVATE_FILE_MODE);
     this.held = true;
   }
 

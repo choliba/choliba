@@ -12,6 +12,7 @@ import {
   join,
   cholibaCacheDir,
 } from '../../filesystem/index';
+import { PRIVATE_FILE_MODE } from '../../filesystem/constants';
 import { environment, userHome } from '../../execute/process';
 import type { ProgramCommand, ProgramOutput } from '../../execute/types';
 import { truncateError } from '../../logger/index';
@@ -497,7 +498,11 @@ function codexHomeFor(root: string): string {
 /** Wires Codex's PreToolUse hook to the gate; returns the hooks.json path. */
 function writeHooks(home: string, hookCommand: readonly string[]): string {
   const hooks = join(home, 'hooks.json');
-  writeText(hooks, `${JSON.stringify(codexHooks(hookCommand))}\n`, 0o600);
+  writeText(
+    hooks,
+    `${JSON.stringify(codexHooks(hookCommand))}\n`,
+    PRIVATE_FILE_MODE,
+  );
   return hooks;
 }
 

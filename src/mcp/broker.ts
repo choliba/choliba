@@ -19,6 +19,7 @@ import {
   removePath,
   writeText,
 } from '../filesystem/index';
+import { PRIVATE_DIR_MODE } from '../filesystem/constants';
 import type { AgentPolicy } from '../policy/policy.interface';
 import { wildmatch } from '../policy/wildmatch';
 import { TOOL_SERVER } from './constants';
@@ -92,7 +93,7 @@ export class ToolBroker {
   }
 
   private createDir(): void {
-    ensureDirectory(this.dir, 0o700);
+    ensureDirectory(this.dir, PRIVATE_DIR_MODE);
     writeText(join(this.dir, OWNER_FILE), String(currentPid()));
   }
 
