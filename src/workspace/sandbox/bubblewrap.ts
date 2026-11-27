@@ -27,7 +27,12 @@ import { wrapCommand } from './wrap-command';
 import type { FilesystemAccess, FilesystemMask } from '../../policy/index';
 import { protectedMasks } from './protect';
 import { SandboxPaths } from './path-map';
-import { BASE_PROGRAMS, SANDBOX_SUPPORT_DIR } from '../constants';
+import {
+  BASE_PROGRAMS,
+  JAIL_READY_ATTEMPTS,
+  JAIL_READY_POLL_MS,
+  SANDBOX_SUPPORT_DIR,
+} from '../constants';
 import { programDirs, visiblePrograms, type FoundProgram } from './programs';
 
 export interface BubblewrapSandboxOptions {
@@ -576,7 +581,7 @@ export async function resolveBubblewrapPid(
 ): Promise<number | undefined> {
   const hostUser = processNamespace(parentPid, 'user');
 
-  for (let attempt = 0; attempt < 50; attempt += 1) {
+  for (let attempt = 0; attempt < JAIL_READY_ATTEMPTS; attempt += 1) {
     for (const pid of processChildren(parentPid)) {
       const user = processNamespace(pid, 'user');
 
@@ -590,7 +595,7 @@ export async function resolveBubblewrapPid(
       }
     }
 
-    await delay(20);
+    await delay(JAIL_READY_POLL_MS);
   }
 
   return undefined;

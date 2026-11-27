@@ -1,14 +1,14 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 27/11/2026 18:55:00: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 27/11/2026 18:56:59: não edite à mão.
 
-Limites (coverage-thresholds.json, só sobem): funções 93.13%, linhas 95.30%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
+Limites (coverage-thresholds.json, só sobem): funções 93.18%, linhas 95.34%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
 ## Resumo
 
 Status|Módulo|% Funcs|% Lines
 --|--|--|--
-🟢|**Total**|93.13|95.31
+🟢|**Total**|93.18|95.34
 🟢|[scripts](scripts)|100.00|98.89
 🟢|[src/adapters](src/adapters)|91.14|97.86
 🟢|[src/agent](src/agent)|96.94|96.64
@@ -30,7 +30,7 @@ Status|Módulo|% Funcs|% Lines
 🟢|[src/policy](src/policy)|99.55|99.28
 🟢|[src/providers](src/providers)|94.71|99.00
 🟢|[src/rounds](src/rounds)|94.07|96.97
-🟢|[src/store](src/store)|95.71|94.09
+🟢|[src/store](src/store)|97.14|96.09
 🟢|[src/workspace](src/workspace)|98.21|97.59
 
 ## Por módulo
@@ -330,11 +330,12 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/store</b>: 94.09% das linhas, 2 arquivos</summary>
+<summary>🟢 <b>src/store</b>: 96.09% das linhas, 3 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
-🟢|[index.ts](src/store/index.ts)|91.43|92.63
+🟢|[constants.ts](src/store/constants.ts)|100.00|100.00
+🟢|[index.ts](src/store/index.ts)|91.43|92.71
 🟢|[network-ledger.ts](src/store/network-ledger.ts)|100.00|95.56
 
 </details>

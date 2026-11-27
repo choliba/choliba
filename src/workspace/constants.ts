@@ -52,3 +52,37 @@ export const BASE_PROGRAMS: readonly string[] = ['env', 'cat', 'sh', 'bash'];
 
 /** Besides `BASE_PROGRAMS`, in a Docker sandbox: it drops root after `chroot`. */
 export const DOCKER_BASE_PROGRAMS: readonly string[] = ['setpriv'];
+
+/**
+ * Milliseconds removing the last container may take (`DockerSandbox.close`):
+ * `docker rm --force` usually answers in under a second; ten cover a busy
+ * daemon, and a stuck one does not hold the end of the run.
+ */
+export const DOCKER_REMOVE_TIMEOUT_MS = 10_000;
+
+/**
+ * Times `docker inspect` is tried for the debug log (`started`): right
+ * after `docker run`, the container may not exist yet. With
+ * `DOCKER_INSPECT_RETRY_MS`, half a second for it to appear; only the log
+ * waits.
+ */
+export const DOCKER_INSPECT_ATTEMPTS = 8;
+
+/** Milliseconds between two tries of `docker inspect`. */
+export const DOCKER_INSPECT_RETRY_MS = 60;
+
+/**
+ * Milliseconds one `docker inspect` may take: it answers in tens of
+ * milliseconds; more is a stuck daemon, and the log gives up on it.
+ */
+export const DOCKER_INSPECT_TIMEOUT_MS = 1000;
+
+/**
+ * Times the jail is looked for before entering it (`resolveBubblewrapPid`).
+ * With `JAIL_READY_POLL_MS`, one second: bwrap sets the jail up in tens of
+ * milliseconds, and entering it earlier makes nsenter fail.
+ */
+export const JAIL_READY_ATTEMPTS = 50;
+
+/** Milliseconds between two looks for the jail. */
+export const JAIL_READY_POLL_MS = 20;
