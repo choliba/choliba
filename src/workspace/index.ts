@@ -193,7 +193,7 @@ export class Workspace {
     this.paths = new SandboxPaths({
       root: options.root,
       home: this.home(),
-      hostHome: environment()['HOME'] ?? userHome(),
+      hostHome: userHome(),
       ...(options.agentRoot === undefined
         ? {}
         : { agentRoot: options.agentRoot }),

@@ -560,7 +560,7 @@ O lock do agente usa `processAlive` e `processName` para saber se o agente que p
 
 **Só o módulo pode:**
 
-- **Importar `node:fs`, `node:path`.** Quem precisa do disco ou de um caminho importa daqui. (O `homedir` de `node:os` não é exclusivo: o `execute/process.ts` e o workspace também o usam.)
+- **Importar `node:fs`, `node:path`.** Quem precisa do disco ou de um caminho importa daqui. (O `homedir` de `node:os` não é exclusivo: o `execute/process.ts` também o usa, no `userHome()`. Quem precisa do home de um ambiente usa o `homeOf(env)` daqui.)
 
 **Ninguém deve:**
 

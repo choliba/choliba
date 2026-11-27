@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { homedir } from 'node:os';
 
-import { isDirectory, pathExists } from '../../filesystem/index';
+import { homeOf, isDirectory, pathExists } from '../../filesystem/index';
 import { currentUser, environment, runProgram } from '../../execute/process';
 import type { ProgramCommand } from '../../execute/types';
 import { UsageError } from '../../errors';
@@ -459,10 +458,6 @@ function dockerClientEnv(env: NodeJS.ProcessEnv): Record<string, string> {
     if (value !== undefined && name.startsWith('DOCKER_')) client[name] = value;
   }
   return client;
-}
-
-function homeOf(env: NodeJS.ProcessEnv): string {
-  return env['HOME'] ?? homedir();
 }
 
 function volumeArgs(mounts: readonly Mount[]): string[] {

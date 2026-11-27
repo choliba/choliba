@@ -1,6 +1,5 @@
-import { homedir } from 'node:os';
-
 import {
+  homeOf,
   isDirectory,
   isSymlink,
   listDirectory,
@@ -90,8 +89,7 @@ export class BubblewrapSandbox implements Sandbox {
     this.env = env;
     this.writable = writable;
     this.programs = programs;
-    this.paths =
-      paths ?? new SandboxPaths({ root, hostHome: env['HOME'] ?? homedir() });
+    this.paths = paths ?? new SandboxPaths({ root, hostHome: homeOf(env) });
   }
 
   public configureFilesystem(access: FilesystemAccess): void {
@@ -179,7 +177,7 @@ export class BubblewrapSandbox implements Sandbox {
     if (this.programs === undefined) return { dirs: [], visible: [] };
     const searchPath = (this.host?.env ?? this.env)['PATH'];
     return {
-      dirs: programDirs(searchPath, this.env['HOME'] ?? homedir(), writable),
+      dirs: programDirs(searchPath, homeOf(this.env), writable),
       visible: visiblePrograms(this.programs, searchPath, BASE_PROGRAMS),
     };
   }
@@ -399,7 +397,7 @@ export function bubblewrapReadonlyBinds(
   env: NodeJS.ProcessEnv = environment(),
   writable: readonly string[] = [],
 ): string[] {
-  const home = env['HOME'] ?? homedir();
+  const home = homeOf(env);
   const candidates = [
     '/usr',
     '/etc',
@@ -451,7 +449,7 @@ export function bubblewrapJailArgs(
   shareNet = true,
   paths: SandboxPaths = new SandboxPaths({
     root,
-    hostHome: environment()['HOME'] ?? homedir(),
+    hostHome: homeOf(environment()),
   }),
 ): string[] {
   return [

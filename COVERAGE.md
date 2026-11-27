@@ -1,14 +1,14 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 27/11/2026 17:36:00: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 27/11/2026 18:03:04: não edite à mão.
 
-Limites (coverage-thresholds.json, só sobem): funções 93.08%, linhas 95.17%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
+Limites (coverage-thresholds.json, só sobem): funções 93.10%, linhas 95.19%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
 ## Resumo
 
 Status|Módulo|% Funcs|% Lines
 --|--|--|--
-🟢|**Total**|93.08|95.18
+🟢|**Total**|93.11|95.20
 🟢|[scripts](scripts)|100.00|98.89
 🟢|[src/adapters](src/adapters)|91.14|97.86
 🟢|[src/agent](src/agent)|96.94|96.64
@@ -20,7 +20,7 @@ Status|Módulo|% Funcs|% Lines
 🟢|[src](src)|95.24|93.94
 🟢|[src/events](src/events)|100.00|100.00
 🟢|[src/execute](src/execute)|93.18|92.10
-🟢|[src/filesystem](src/filesystem)|98.72|96.07
+🟢|[src/filesystem](src/filesystem)|100.00|96.90
 🔴|[src/input](src/input)|0.00|6.93
 🟢|[src/interaction](src/interaction)|97.50|99.52
 🟢|[src/logger](src/logger)|95.71|96.50
@@ -31,7 +31,7 @@ Status|Módulo|% Funcs|% Lines
 🟢|[src/providers](src/providers)|94.71|99.00
 🟢|[src/rounds](src/rounds)|94.07|96.97
 🟢|[src/store](src/store)|95.71|94.09
-🟢|[src/workspace](src/workspace)|98.26|97.60
+🟢|[src/workspace](src/workspace)|98.21|97.59
 
 ## Por módulo
 
@@ -173,12 +173,12 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/filesystem</b>: 96.07% das linhas, 3 arquivos</summary>
+<summary>🟢 <b>src/filesystem</b>: 96.90% das linhas, 3 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[constants.ts](src/filesystem/constants.ts)|100.00|100.00
-🟢|[index.ts](src/filesystem/index.ts)|96.15|97.50
+🟢|[index.ts](src/filesystem/index.ts)|100.00|100.00
 🟢|[proc.ts](src/filesystem/proc.ts)|100.00|90.70
 
 </details>
@@ -340,7 +340,7 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/workspace</b>: 97.60% das linhas, 12 arquivos</summary>
+<summary>🟢 <b>src/workspace</b>: 97.59% das linhas, 12 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
@@ -348,7 +348,7 @@ Status|Arquivo|% Funcs|% Lines
 🟢|[index.ts](src/workspace/index.ts)|100.00|100.00
 🟢|[sandbox/bubblewrap.ts](src/workspace/sandbox/bubblewrap.ts)|100.00|100.00
 🟢|[sandbox/debug.ts](src/workspace/sandbox/debug.ts)|100.00|100.00
-🟡|[sandbox/docker.ts](src/workspace/sandbox/docker.ts)|79.07|71.25
+🟡|[sandbox/docker.ts](src/workspace/sandbox/docker.ts)|78.57|71.07
 🟢|[sandbox/host-access.ts](src/workspace/sandbox/host-access.ts)|100.00|100.00
 🟢|[sandbox/host-state.ts](src/workspace/sandbox/host-state.ts)|100.00|100.00
 🟢|[sandbox/index.ts](src/workspace/sandbox/index.ts)|100.00|100.00

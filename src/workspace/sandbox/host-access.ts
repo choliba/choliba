@@ -1,7 +1,8 @@
 import { UsageError } from '../../errors';
-import { userHome } from '../../execute/process';
+import { XDG_DEFAULTS } from '../../filesystem/constants';
 import {
   ensureDirectory,
+  homeOf,
   join,
   pathExists,
   readText,
@@ -121,7 +122,7 @@ export function sandboxHost(
   allowSecret: (name: string) => boolean,
   options: HostOptions,
 ): SandboxHost {
-  const hostHome = source['HOME'] ?? userHome();
+  const hostHome = homeOf(source);
   const env = allowedEnv(access, source, allowSecret);
 
   if (options.hostState === 'none') {
@@ -214,12 +215,10 @@ function homeEnv(
   home: string,
   extra: Readonly<Record<string, string>>,
 ): Record<string, string> {
-  const env: Record<string, string> = {
-    HOME: home,
-    XDG_CONFIG_HOME: join(home, '.config'),
-    XDG_CACHE_HOME: join(home, '.cache'),
-    XDG_DATA_HOME: join(home, '.local/share'),
-  };
+  const env: Record<string, string> = { HOME: home };
+  for (const [name, path] of Object.entries(XDG_DEFAULTS)) {
+    env[name] = join(home, path);
+  }
   for (const [name, path] of Object.entries(extra)) {
     const destination = join(home, path);
     ensureDirectory(destination, 0o700);

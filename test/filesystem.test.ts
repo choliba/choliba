@@ -1,13 +1,22 @@
-import { readFileSync } from 'node:fs';
-import { homedir } from 'node:os';
+import {
+  closeSync,
+  mkdtempSync,
+  openSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
 import {
   besideModule,
+  canOpen,
   cholibaCacheDir,
   homeOf,
+  readDescriptor,
   xdgDir,
 } from '../src/filesystem/index';
 
@@ -63,4 +72,19 @@ test('xdgDir usa a variável, ou o padrão sob o home quando ela falta ou está 
 test('homeOf usa o HOME do ambiente, ou o do sistema sem ele', () => {
   expect(homeOf({ HOME: '/home/dev' })).toBe('/home/dev');
   expect(homeOf({})).toBe(homedir());
+});
+
+test('readDescriptor lê tudo de um descritor aberto, e canOpen diz se dá para abrir', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'choliba-fs-'));
+  const file = join(dir, 'entrada.txt');
+  writeFileSync(file, 'linha 1\nlinha 2\n');
+  const descriptor = openSync(file, 'r');
+  try {
+    expect(readDescriptor(descriptor)).toBe('linha 1\nlinha 2\n');
+    expect(canOpen(file)).toBe(true);
+    expect(canOpen(join(dir, 'nao-existe.txt'))).toBe(false);
+  } finally {
+    closeSync(descriptor);
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
