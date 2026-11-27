@@ -28,9 +28,7 @@ import {
   runAttached,
 } from '../execute/process';
 import { removePath, writeText } from '../filesystem/index';
-import { PARENT_CHECK_MS } from './constants';
-
-const HEADER_END = '\r\n\r\n';
+import { HEADER_END, PARENT_CHECK_MS, TUNNEL_OPEN } from './constants';
 
 interface BridgeArguments {
   readonly socketPath: string;
@@ -144,7 +142,7 @@ function tunnel(client: Socket, socketPath: string, authority: string): void {
     if (end === -1) return;
 
     upstream.off('data', onData);
-    if (!response.subarray(0, end).toString().startsWith('HTTP/1.1 200')) {
+    if (!response.subarray(0, end).toString().startsWith(TUNNEL_OPEN)) {
       client.destroy();
       upstream.destroy();
       return;

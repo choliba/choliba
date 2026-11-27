@@ -30,7 +30,7 @@ import type {
 } from '../provider.interface';
 import { wrapCommand } from '../../workspace/sandbox/wrap-command';
 import { UsageError } from '../../errors';
-import { CODEX_BACKGROUND_ENDPOINTS } from '../constants';
+import { CODEX_BACKGROUND_ENDPOINTS, CODEX_CACHE_DIR } from '../constants';
 import type { ToolServer } from '../../mcp/broker';
 import { cliTools, isOwnTool, type AgentToolName } from '../tools';
 import type {
@@ -492,7 +492,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  */
 function codexHomeFor(root: string): string {
   const id = createHash('sha256').update(root).digest('hex').slice(0, 16);
-  return join(cholibaCacheDir(environment()), 'codex', id);
+  return join(cholibaCacheDir(environment()), CODEX_CACHE_DIR, id);
 }
 
 /** Wires Codex's PreToolUse hook to the gate; returns the hooks.json path. */

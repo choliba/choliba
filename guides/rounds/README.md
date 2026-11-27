@@ -87,7 +87,7 @@ O motor fica em `src/rounds`, e os comandos, em `src/cli`. O que é de cada roda
 | `src/rounds/score.ts`        | A rubrica: `scoreRound`, as notas de eficácia, eficiência e a final.                                                                                          |
 | `src/rounds/validate.ts`     | `validateRound`: confere um registro lido do disco, campo a campo.                                                                                            |
 | `src/rounds/types.ts`        | O formato do registro (`RoundRecord`, `schema: 4`).                                                                                                           |
-| `src/rounds/constants.ts`    | Os valores do módulo: a rubrica, a tag das fixtures, os nomes e os prazos das páginas.                                                                        |
+| `src/rounds/constants.ts`    | Os valores do módulo: a rubrica, a tag das fixtures, os nomes, os prazos e o 404 das páginas.                                                                 |
 | `src/rounds/capture.ts`      | `captureDeclaration`: a declaração como dados, com os pedidos e os critérios, para o registro e para **Copiar definição**.                                    |
 | `src/rounds/snapshot.ts`     | O retrato de cada agente como rodou e os hashes que dizem se duas execuções tiveram a mesma configuração (`configHash`).                                      |
 | `src/rounds/definitions.ts`  | `findDefinition` e `listDefinitions`: onde mora a declaração de cada rodada, num arquivo ou numa pasta.                                                       |

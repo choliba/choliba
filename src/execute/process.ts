@@ -3,7 +3,7 @@ import { once } from 'node:events';
 import { constants, homedir } from 'node:os';
 import { promisify } from 'node:util';
 
-import { HELPER_MAX_OUTPUT_BYTES } from './constants.ts';
+import { HELPER_MAX_OUTPUT_BYTES, SIGNAL_EXIT_BASE } from './constants.ts';
 
 /**
  * The current process and the programs Choliba starts besides the agent's CLI
@@ -275,7 +275,10 @@ export function runAttached(
   return new Promise<number>((resolve, reject) => {
     child.once('error', reject);
     child.once('exit', (code, signal) => {
-      resolve(code ?? 128 + (signal === null ? 0 : constants.signals[signal]));
+      resolve(
+        code ??
+          SIGNAL_EXIT_BASE + (signal === null ? 0 : constants.signals[signal]),
+      );
     });
   }).finally(() => {
     for (const signal of FORWARDED_SIGNALS) process.off(signal, forward);

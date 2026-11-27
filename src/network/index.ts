@@ -21,7 +21,12 @@ import { PRIVATE_DIR_MODE } from '../filesystem/constants';
 import { localPorts } from './rules';
 import { NetworkGate, type NetworkGateOptions } from './gate';
 import type { RequestRewriter, TrafficObserver } from './types';
-import { PROXY_PORT, READY_POLL_MS, READY_TIMEOUT_MS } from './constants';
+import {
+  NETWORK_CACHE_DIR,
+  PROXY_PORT,
+  READY_POLL_MS,
+  READY_TIMEOUT_MS,
+} from './constants';
 import { NetworkProxy } from './proxy';
 import { PublishedPorts, socketFor } from './publish';
 
@@ -68,7 +73,7 @@ export class NetworkBoundary {
   private readonly proxy: NetworkProxy;
   private readonly dir = join(
     cholibaCacheDir(environment()),
-    'network',
+    NETWORK_CACHE_DIR,
     randomUUID().slice(0, 8),
   );
   private readonly forwards: readonly string[];

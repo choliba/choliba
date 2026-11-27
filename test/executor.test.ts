@@ -8,6 +8,7 @@ import {
   OutputDispatcher,
   ProgramExecutionError,
 } from '../src/execute/index';
+import { runAttached } from '../src/execute/process';
 import type { ProgramCommand, ProgramOutput } from '../src/execute/types';
 import type { Provider, ProviderEvent } from '../src/providers/types';
 import { Workspace } from '../src/workspace/index';
@@ -288,3 +289,16 @@ async function collect<T>(values: AsyncIterable<T>): Promise<T[]> {
 
   return result;
 }
+
+test('runAttached devolve o código do programa, ou 128 + o sinal que o encerrou', async () => {
+  expect(await runAttached(process.execPath, ['-e', 'process.exit(3)'])).toBe(
+    3,
+  );
+  expect(
+    await runAttached('sh', ['-c', 'exit "$CODIGO"'], {
+      env: { CODIGO: '7' },
+    }),
+  ).toBe(7);
+  // SIGTERM is 15: 128 + 15, as a shell reports it.
+  expect(await runAttached('sh', ['-c', 'kill -TERM $$'])).toBe(143);
+});

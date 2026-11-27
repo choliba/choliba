@@ -27,3 +27,10 @@ export const HOOK_WAIT_MS = 55 * 60 * 1000;
  * Fixed: it must stay above `HOOK_WAIT_MS`.
  */
 export const HOOK_TIMEOUT_SECONDS = 3600;
+
+/**
+ * The folder of Choliba's cache with a gate per running agent (its hook and
+ * its owner). Gates only, so what a dead run left behind is found and
+ * removed without looking at anything else.
+ */
+export const GATE_CACHE_DIR = 'gate';

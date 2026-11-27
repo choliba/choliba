@@ -22,7 +22,7 @@ import {
   type CommandDecision,
   type CommandGateOptions,
 } from './gate';
-import { UNOWNED_GRACE_MS } from './constants';
+import { GATE_CACHE_DIR, UNOWNED_GRACE_MS } from './constants';
 
 export {
   type CommandApprovalRequest,
@@ -102,7 +102,7 @@ export class ApprovalBroker {
 }
 
 function gatesDir(): string {
-  return join(cholibaCacheDir(environment()), 'gate');
+  return join(cholibaCacheDir(environment()), GATE_CACHE_DIR);
 }
 
 /** Gate directories whose owner process is gone (it died without closing). */

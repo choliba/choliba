@@ -37,6 +37,16 @@ export const BAD_GATEWAY = 502;
 export const FORBIDDEN = 403;
 
 /**
+ * The start of the proxy's answer when a CONNECT opened the tunnel: the
+ * proxy writes it, and the bridge waits for it before passing bytes on.
+ * Fixed: protocol.
+ */
+export const TUNNEL_OPEN = 'HTTP/1.1 200';
+
+/** Where an HTTP head ends: the empty line after the headers. Fixed: protocol. */
+export const HEADER_END = '\r\n\r\n';
+
+/**
  * The largest request body, in bytes, a rewriter gets to change
  * (`NetworkBoundary`, option `maxRewriteBodyBytes`): a model request with a
  * full context is a few hundred KB; past this the request goes on as it
@@ -50,3 +60,9 @@ export const MAX_REWRITE_BODY_BYTES = 32 * 1024 * 1024;
  * Fixed: a limit of the parsing, not a choice.
  */
 export const MAX_REQUEST_HEAD_BYTES = 64 * 1024;
+
+/**
+ * The folder of Choliba's cache with a folder per boundary: the bridge,
+ * bundled, and the sockets it listens on.
+ */
+export const NETWORK_CACHE_DIR = 'network';

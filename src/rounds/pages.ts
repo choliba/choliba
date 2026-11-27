@@ -16,7 +16,7 @@ import {
   readText,
   resolve,
 } from '../filesystem/index';
-import { ROUNDS_DEFINITIONS_JSON, ROUNDS_JSON } from './constants';
+import { NOT_FOUND, ROUNDS_DEFINITIONS_JSON, ROUNDS_JSON } from './constants';
 import { definitionsPayload, roundsPayload } from './payload';
 
 /** The media types the built pages use. */
@@ -70,7 +70,7 @@ export function servePages({
       }
       const file = resolve(dist, `.${path === '/' ? '/index.html' : path}`);
       if (!isWithin(file, dist) || !pathExists(file)) {
-        return new Response('Não encontrado.', { status: 404 });
+        return new Response('Não encontrado.', { status: NOT_FOUND });
       }
       return new Response(readText(file), {
         headers: {

@@ -133,3 +133,6 @@ export const ROUNDS_WEB_START_MS = 15_000;
 
 /** Milliseconds between checks while the pages' server starts. */
 export const ROUNDS_WEB_POLL_MS = 250;
+
+/** HTTP status for a path the pages do not have. Fixed: protocol. */
+export const NOT_FOUND = 404;

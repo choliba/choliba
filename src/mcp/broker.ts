@@ -22,7 +22,7 @@ import {
 import { PRIVATE_DIR_MODE } from '../filesystem/constants';
 import type { AgentPolicy } from '../policy/policy.interface';
 import { wildmatch } from '../policy/wildmatch';
-import { TOOL_SERVER } from './constants';
+import { TOOL_CACHE_DIR, TOOL_SERVER } from './constants';
 import type { AgentTool } from './index';
 import { inputProblem, isRecord } from './schema';
 
@@ -86,7 +86,7 @@ export class ToolBroker {
     this.policy = policy;
     this.dir = join(
       cholibaCacheDir(environment()),
-      'tools',
+      TOOL_CACHE_DIR,
       randomUUID().slice(0, 8),
     );
     this.createDir();

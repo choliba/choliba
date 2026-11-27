@@ -1,14 +1,14 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 27/11/2026 18:05:49: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 27/11/2026 18:55:00: não edite à mão.
 
-Limites (coverage-thresholds.json, só sobem): funções 93.10%, linhas 95.19%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
+Limites (coverage-thresholds.json, só sobem): funções 93.13%, linhas 95.30%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
 ## Resumo
 
 Status|Módulo|% Funcs|% Lines
 --|--|--|--
-🟢|**Total**|93.11|95.20
+🟢|**Total**|93.13|95.31
 🟢|[scripts](scripts)|100.00|98.89
 🟢|[src/adapters](src/adapters)|91.14|97.86
 🟢|[src/agent](src/agent)|96.94|96.64
@@ -19,7 +19,7 @@ Status|Módulo|% Funcs|% Lines
 🟢|[src/context](src/context)|100.00|100.00
 🟢|[src](src)|95.24|93.94
 🟢|[src/events](src/events)|100.00|100.00
-🟢|[src/execute](src/execute)|93.18|92.10
+🟢|[src/execute](src/execute)|93.80|94.74
 🟢|[src/filesystem](src/filesystem)|100.00|96.90
 🔴|[src/input](src/input)|0.00|6.93
 🟢|[src/interaction](src/interaction)|97.50|99.52
@@ -159,7 +159,7 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/execute</b>: 92.10% das linhas, 6 arquivos</summary>
+<summary>🟢 <b>src/execute</b>: 94.74% das linhas, 6 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
@@ -167,7 +167,7 @@ Status|Arquivo|% Funcs|% Lines
 🟢|[constants.ts](src/execute/constants.ts)|100.00|100.00
 🟢|[index.ts](src/execute/index.ts)|95.65|100.00
 🟢|[interrupt.ts](src/execute/interrupt.ts)|100.00|93.75
-🟡|[process.ts](src/execute/process.ts)|68.97|58.82
+🟡|[process.ts](src/execute/process.ts)|72.73|74.67
 🟢|[stream.ts](src/execute/stream.ts)|94.44|100.00
 
 </details>
