@@ -1,6 +1,6 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 27/11/2026 19:06:33: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 27/11/2026 21:58:22: não edite à mão.
 
 Limites (coverage-thresholds.json, só sobem): funções 93.18%, linhas 95.34%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
@@ -11,7 +11,7 @@ Status|Módulo|% Funcs|% Lines
 🟢|**Total**|93.18|95.34
 🟢|[scripts](scripts)|100.00|98.89
 🟢|[src/adapters](src/adapters)|91.14|97.86
-🟢|[src/agent](src/agent)|96.94|96.62
+🟢|[src/agent](src/agent)|96.92|96.61
 🟢|[src/approval](src/approval)|84.96|87.88
 🟢|[src/cli](src/cli)|100.00|100.00
 🟢|[src/command](src/command)|100.00|99.64
@@ -30,7 +30,7 @@ Status|Módulo|% Funcs|% Lines
 🟢|[src/policy](src/policy)|99.55|99.28
 🟢|[src/providers](src/providers)|94.71|99.00
 🟢|[src/rounds](src/rounds)|94.07|96.97
-🟢|[src/store](src/store)|97.14|96.09
+🟢|[src/store](src/store)|97.22|96.14
 🟢|[src/workspace](src/workspace)|98.21|97.59
 
 ## Por módulo
@@ -66,12 +66,12 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/agent</b>: 96.62% das linhas, 11 arquivos</summary>
+<summary>🟢 <b>src/agent</b>: 96.61% das linhas, 11 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[abort.ts](src/agent/abort.ts)|100.00|97.44
-🟢|[agent.ts](src/agent/agent.ts)|88.00|92.63
+🟢|[agent.ts](src/agent/agent.ts)|87.84|92.60
 🟢|[constants.ts](src/agent/constants.ts)|100.00|100.00
 🟢|[enforce.ts](src/agent/enforce.ts)|85.00|85.56
 🟢|[events.ts](src/agent/events.ts)|100.00|100.00
@@ -330,12 +330,12 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/store</b>: 96.09% das linhas, 3 arquivos</summary>
+<summary>🟢 <b>src/store</b>: 96.14% das linhas, 3 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[constants.ts](src/store/constants.ts)|100.00|100.00
-🟢|[index.ts](src/store/index.ts)|91.43|92.71
+🟢|[index.ts](src/store/index.ts)|91.67|92.88
 🟢|[network-ledger.ts](src/store/network-ledger.ts)|100.00|95.56
 
 </details>
