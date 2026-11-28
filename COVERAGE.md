@@ -1,17 +1,17 @@
 # Cobertura de testes
 
-Gerado automaticamente por `bun run test:cov` em 26/11/2026 14:04:08: não edite à mão.
+Gerado automaticamente por `bun run test:cov` em 27/11/2026 21:58:22: não edite à mão.
 
-Limites (coverage-thresholds.json, só sobem): funções 93.03%, linhas 95.14%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
+Limites (coverage-thresholds.json, só sobem): funções 93.18%, linhas 95.34%. O Bun mede funções e linhas; o total é a média por arquivo, como o "All files" dele.
 
 ## Resumo
 
 Status|Módulo|% Funcs|% Lines
 --|--|--|--
-🟢|**Total**|93.03|95.15
+🟢|**Total**|93.18|95.34
 🟢|[scripts](scripts)|100.00|98.89
 🟢|[src/adapters](src/adapters)|91.14|97.86
-🟢|[src/agent](src/agent)|96.94|96.67
+🟢|[src/agent](src/agent)|96.92|96.61
 🟢|[src/approval](src/approval)|84.96|87.88
 🟢|[src/cli](src/cli)|100.00|100.00
 🟢|[src/command](src/command)|100.00|99.64
@@ -19,19 +19,19 @@ Status|Módulo|% Funcs|% Lines
 🟢|[src/context](src/context)|100.00|100.00
 🟢|[src](src)|95.24|93.94
 🟢|[src/events](src/events)|100.00|100.00
-🟢|[src/execute](src/execute)|93.18|92.10
-🟢|[src/filesystem](src/filesystem)|97.92|94.10
+🟢|[src/execute](src/execute)|93.80|94.74
+🟢|[src/filesystem](src/filesystem)|100.00|96.90
 🔴|[src/input](src/input)|0.00|6.93
 🟢|[src/interaction](src/interaction)|97.50|99.52
-🟢|[src/logger](src/logger)|95.71|96.50
+🟢|[src/logger](src/logger)|95.71|96.52
 🟢|[src/mcp](src/mcp)|76.61|93.74
 🟢|[src/network](src/network)|94.03|97.38
 🟡|[src/output](src/output)|52.94|54.87
 🟢|[src/policy](src/policy)|99.55|99.28
 🟢|[src/providers](src/providers)|94.71|99.00
 🟢|[src/rounds](src/rounds)|94.07|96.97
-🟢|[src/store](src/store)|95.71|94.09
-🟢|[src/workspace](src/workspace)|98.26|97.60
+🟢|[src/store](src/store)|97.22|96.14
+🟢|[src/workspace](src/workspace)|98.21|97.59
 
 ## Por módulo
 
@@ -66,18 +66,18 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/agent</b>: 96.67% das linhas, 11 arquivos</summary>
+<summary>🟢 <b>src/agent</b>: 96.61% das linhas, 11 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[abort.ts](src/agent/abort.ts)|100.00|97.44
-🟢|[agent.ts](src/agent/agent.ts)|88.00|92.62
+🟢|[agent.ts](src/agent/agent.ts)|87.84|92.60
 🟢|[constants.ts](src/agent/constants.ts)|100.00|100.00
-🟢|[enforce.ts](src/agent/enforce.ts)|85.00|85.87
+🟢|[enforce.ts](src/agent/enforce.ts)|85.00|85.56
 🟢|[events.ts](src/agent/events.ts)|100.00|100.00
 🟢|[input.ts](src/agent/input.ts)|93.33|98.78
 🟢|[lock.ts](src/agent/lock.ts)|100.00|100.00
-🟢|[messages.ts](src/agent/messages.ts)|100.00|88.64
+🟢|[messages.ts](src/agent/messages.ts)|100.00|88.37
 🟢|[output.ts](src/agent/output.ts)|100.00|100.00
 🟢|[run-provider.ts](src/agent/run-provider.ts)|100.00|100.00
 🟢|[thinking.ts](src/agent/thinking.ts)|100.00|100.00
@@ -159,7 +159,7 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/execute</b>: 92.10% das linhas, 6 arquivos</summary>
+<summary>🟢 <b>src/execute</b>: 94.74% das linhas, 6 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
@@ -167,17 +167,18 @@ Status|Arquivo|% Funcs|% Lines
 🟢|[constants.ts](src/execute/constants.ts)|100.00|100.00
 🟢|[index.ts](src/execute/index.ts)|95.65|100.00
 🟢|[interrupt.ts](src/execute/interrupt.ts)|100.00|93.75
-🟡|[process.ts](src/execute/process.ts)|68.97|58.82
+🟡|[process.ts](src/execute/process.ts)|72.73|74.67
 🟢|[stream.ts](src/execute/stream.ts)|94.44|100.00
 
 </details>
 
 <details open>
-<summary>🟢 <b>src/filesystem</b>: 94.10% das linhas, 2 arquivos</summary>
+<summary>🟢 <b>src/filesystem</b>: 96.90% das linhas, 3 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
-🟢|[index.ts](src/filesystem/index.ts)|95.83|97.50
+🟢|[constants.ts](src/filesystem/constants.ts)|100.00|100.00
+🟢|[index.ts](src/filesystem/index.ts)|100.00|100.00
 🟢|[proc.ts](src/filesystem/proc.ts)|100.00|90.70
 
 </details>
@@ -203,13 +204,13 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/logger</b>: 96.50% das linhas, 8 arquivos</summary>
+<summary>🟢 <b>src/logger</b>: 96.52% das linhas, 8 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[adapt.ts](src/logger/adapt.ts)|80.00|100.00
 🟢|[constants.ts](src/logger/constants.ts)|100.00|100.00
-🟢|[index.ts](src/logger/index.ts)|100.00|91.61
+🟢|[index.ts](src/logger/index.ts)|100.00|91.72
 🟢|[jsonl.ts](src/logger/jsonl.ts)|100.00|91.89
 🟢|[mask.ts](src/logger/mask.ts)|100.00|100.00
 🟢|[record.ts](src/logger/record.ts)|85.71|88.52
@@ -237,7 +238,7 @@ Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[constants.ts](src/network/constants.ts)|100.00|100.00
 🟢|[gate.ts](src/network/gate.ts)|90.48|100.00
-🟢|[index.ts](src/network/index.ts)|89.66|96.05
+🟢|[index.ts](src/network/index.ts)|89.66|96.08
 🟢|[proxy.ts](src/network/proxy.ts)|72.09|88.40
 🟢|[publish.ts](src/network/publish.ts)|100.00|100.00
 🟢|[rewrite.ts](src/network/rewrite.ts)|100.00|100.00
@@ -276,7 +277,7 @@ Status|Arquivo|% Funcs|% Lines
 --|--|--|--
 🟢|[claude/claude-provider.ts](src/providers/claude/claude-provider.ts)|88.89|98.23
 🟢|[claude/policy.ts](src/providers/claude/policy.ts)|89.66|98.05
-🟢|[codex/codex-provider.ts](src/providers/codex/codex-provider.ts)|86.11|95.73
+🟢|[codex/codex-provider.ts](src/providers/codex/codex-provider.ts)|86.11|95.79
 🟢|[codex/policy.ts](src/providers/codex/policy.ts)|97.30|100.00
 🟢|[constants.ts](src/providers/constants.ts)|100.00|100.00
 🟢|[cursor/cursor-provider.ts](src/providers/cursor/cursor-provider.ts)|87.50|98.06
@@ -329,17 +330,18 @@ Status|Arquivo|% Funcs|% Lines
 </details>
 
 <details open>
-<summary>🟢 <b>src/store</b>: 94.09% das linhas, 2 arquivos</summary>
+<summary>🟢 <b>src/store</b>: 96.14% das linhas, 3 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
-🟢|[index.ts](src/store/index.ts)|91.43|92.63
+🟢|[constants.ts](src/store/constants.ts)|100.00|100.00
+🟢|[index.ts](src/store/index.ts)|91.67|92.88
 🟢|[network-ledger.ts](src/store/network-ledger.ts)|100.00|95.56
 
 </details>
 
 <details open>
-<summary>🟢 <b>src/workspace</b>: 97.60% das linhas, 12 arquivos</summary>
+<summary>🟢 <b>src/workspace</b>: 97.59% das linhas, 12 arquivos</summary>
 
 Status|Arquivo|% Funcs|% Lines
 --|--|--|--
@@ -347,7 +349,7 @@ Status|Arquivo|% Funcs|% Lines
 🟢|[index.ts](src/workspace/index.ts)|100.00|100.00
 🟢|[sandbox/bubblewrap.ts](src/workspace/sandbox/bubblewrap.ts)|100.00|100.00
 🟢|[sandbox/debug.ts](src/workspace/sandbox/debug.ts)|100.00|100.00
-🟡|[sandbox/docker.ts](src/workspace/sandbox/docker.ts)|79.07|71.25
+🟡|[sandbox/docker.ts](src/workspace/sandbox/docker.ts)|78.57|71.07
 🟢|[sandbox/host-access.ts](src/workspace/sandbox/host-access.ts)|100.00|100.00
 🟢|[sandbox/host-state.ts](src/workspace/sandbox/host-state.ts)|100.00|100.00
 🟢|[sandbox/index.ts](src/workspace/sandbox/index.ts)|100.00|100.00

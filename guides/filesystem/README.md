@@ -12,7 +12,7 @@ São funções pequenas, quase sempre uma linha sobre o Node. O valor não está
 - para saber o que o Choliba toca no disco, basta procurar quem importa este módulo;
 - a mesma regra vale para o resto do projeto: processos pelo `execute`, mensagens ao usuário pelo `output`.
 
-O módulo **não depende de nenhum outro** do Choliba. Nem do `process`: quando precisa do ambiente (o diretório de cache), recebe como parâmetro.
+O módulo **não depende de nenhum outro** do Choliba. Nem do `process`: quando precisa do ambiente (o home, as pastas XDG, o diretório de cache), recebe como parâmetro.
 
 ```
 quem precisa do disco ──▶ filesystem ──▶ node:fs / node:path / node:os
@@ -27,7 +27,7 @@ quem precisa do disco ──▶ filesystem ──▶ node:fs / node:path / node:
   - [Arquivos e pastas](#arquivos-e-pastas)
   - [Perguntar sobre um caminho](#perguntar-sobre-um-caminho)
   - [Caminhos como texto](#caminhos-como-texto)
-  - [O cache do Choliba](#o-cache-do-choliba)
+  - [O home e o cache do Choliba](#o-home-e-o-cache-do-choliba)
   - [Outros processos: `proc.ts`](#outros-processos-procts)
 - [Como funciona](#como-funciona)
   - [O que lança e o que não lança](#o-que-lança-e-o-que-não-lança)
@@ -46,10 +46,11 @@ quem precisa do disco ──▶ filesystem ──▶ node:fs / node:path / node:
 
 ## Os arquivos
 
-| Arquivo    | Papel                                                                                                                                   |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.ts` | O disco (ler, escrever, listar, apagar, links), os caminhos como texto (reexportados de `node:path`) e o diretório de cache do Choliba. |
-| `proc.ts`  | Outros processos, lidos do `/proc` (Linux): nome, diretório, filhos, namespaces, se está vivo.                                          |
+| Arquivo        | Papel                                                                                                                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `index.ts`     | O disco (ler, escrever, listar, apagar, links), os caminhos como texto (reexportados de `node:path`), o home, as pastas XDG e o diretório de cache do Choliba.                                   |
+| `proc.ts`      | Outros processos, lidos do `/proc` (Linux): nome, diretório, filhos, namespaces, se está vivo.                                                                                                   |
+| `constants.ts` | Os valores do módulo: as permissões do que só o dono lê (`PRIVATE_DIR_MODE`, `PRIVATE_FILE_MODE`), os padrões das pastas XDG (`XDG_DEFAULTS`) e o nome da pasta de cache (`CHOLIBA_CACHE_NAME`). |
 
 [↑ topo](#topo)
 
@@ -92,11 +93,17 @@ Do pacote (`choliba`) vêm `join`, `resolve`, `relative`, `dirname`, `isAbsolute
 
 Reexportados de `node:path`, **sem tocar no disco**: `join`, `resolve`, `relative`, `dirname`, `isAbsolute`, `normalize`, `sep`. E `isWithin(path, dir)`: se `path` é `dir` ou está dentro dela, pelo texto dos dois (absolutos).
 
-### O cache do Choliba
+E `besideModule(import.meta.url, './x.ts')`: o caminho de um arquivo ao lado de um módulo, decodificado (o `pathname` de uma URL guarda um espaço como `%20`), para o Choliba achar os próprios arquivos numa pasta com espaço ou acento.
 
-| Função                 | O que é                                                                                                                                                                                                                |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cholibaCacheDir(env)` | `$XDG_CACHE_HOME/choliba`, ou `~/.cache/choliba`. `env` é o ambiente de onde ler o `XDG_CACHE_HOME`: `environment()`, do `execute`, ou outro. Sem ela, o `~` é o home do sistema (`homedir()`), não o `HOME` do `env`. |
+### O home e o cache do Choliba
+
+O ambiente entra como parâmetro (`environment()`, do `execute`, ou um montado à mão): o módulo não lê o processo.
+
+| Função                 | O que é                                                                                                                                                                        |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `homeOf(env)`          | o `HOME` do `env`, ou o home do sistema (`homedir()`) quando ele falta                                                                                                         |
+| `xdgDir(env, nome)`    | uma pasta XDG (`XDG_CONFIG_HOME`, `XDG_CACHE_HOME`, `XDG_DATA_HOME`): a variável, ou o padrão dela sob o home (`.config`, `.cache`, `.local/share`) quando falta ou está vazia |
+| `cholibaCacheDir(env)` | `$XDG_CACHE_HOME/choliba`, ou `$HOME/.cache/choliba`, os dois lidos do `env`                                                                                                   |
 
 ### Outros processos: `proc.ts`
 
@@ -124,7 +131,7 @@ As funções de `proc.ts` seguem a primeira família: um processo que não exist
 
 ### O `mode` só vale ao criar
 
-`ensureDirectory`, `writeText` e `appendText` aceitam um `mode` (as permissões, como `0o600`). Ele só vale **quando a pasta ou o arquivo é criado**: num que já existe, não muda nada. O Choliba usa `0o700` e `0o600` para o que só o dono deve ler: o log, o cache, o diretório do gate.
+`ensureDirectory`, `writeText` e `appendText` aceitam um `mode` (as permissões, como `0o600`). Ele só vale **quando a pasta ou o arquivo é criado**: num que já existe, não muda nada. O Choliba usa `PRIVATE_DIR_MODE` (`0o700`) e `PRIVATE_FILE_MODE` (`0o600`), do `constants.ts`, para o que só o dono deve ler: o log, o cache, o diretório do gate.
 
 ### Texto e bytes
 
@@ -411,13 +418,18 @@ Pelo caminho, `atalho.txt` está dentro do workspace; pelo arquivo de verdade (`
 ```ts
 /**
  * Exemplo 5 do curso de filesystem: o `mode` de pastas e arquivos. Vale só
- * quando o arquivo ou a pasta é criado. O Choliba usa 0o700 e 0o600 para o
- * que só o dono deve ler (o log, o cache). Para mostrar o mode, o exemplo
- * pergunta ao `stat` (um programa auxiliar, pelo execute).
+ * quando o arquivo ou a pasta é criado. O Choliba usa PRIVATE_DIR_MODE
+ * (0o700) e PRIVATE_FILE_MODE (0o600), do constants.ts, para o que só o dono
+ * deve ler (o log, o cache). Para mostrar o mode, o exemplo pergunta ao
+ * `stat` (um programa auxiliar, pelo execute).
  */
 import { randomUUID } from 'node:crypto';
 
 import { environment, runProgram } from '../../../src/execute/process';
+import {
+  PRIVATE_DIR_MODE,
+  PRIVATE_FILE_MODE,
+} from '../../../src/filesystem/constants';
 import {
   appendText,
   ensureDirectory,
@@ -434,11 +446,11 @@ const mode = async (path: string): Promise<string> =>
   (await runProgram('stat', ['-c', '%a', path], { timeoutMs: 5000 })).trim();
 
 try {
-  ensureDirectory(join(dir, 'privada'), 0o700);
-  writeText(join(dir, 'privada', 'log.jsonl'), '{}\n', 0o600);
+  ensureDirectory(join(dir, 'privada'), PRIVATE_DIR_MODE);
+  writeText(join(dir, 'privada', 'log.jsonl'), '{}\n', PRIVATE_FILE_MODE);
   writeText(join(dir, 'publico.txt'), 'oi\n');
   // Já existe: o mode passado agora não muda nada.
-  appendText(join(dir, 'publico.txt'), 'de novo\n', 0o600);
+  appendText(join(dir, 'publico.txt'), 'de novo\n', PRIVATE_FILE_MODE);
 
   writeOut(`privada/          ${await mode(join(dir, 'privada'))}\n`);
   writeOut(
@@ -458,7 +470,7 @@ privada/log.jsonl 600
 publico.txt       664
 ```
 
-`publico.txt` foi criado sem `mode` (o padrão do sistema, `664`); o `0o600` do `appendText` depois não mudou nada, porque o arquivo já existia.
+`publico.txt` foi criado sem `mode` (o padrão do sistema, `664`); o `PRIVATE_FILE_MODE` do `appendText` depois não mudou nada, porque o arquivo já existia.
 
 ### 6. O cache do Choliba
 
@@ -483,7 +495,10 @@ writeOut(
   `com XDG_CACHE_HOME=/var/cache: ${cholibaCacheDir({ XDG_CACHE_HOME: '/var/cache' })}\n`,
 );
 writeOut(
-  `com XDG_CACHE_HOME vazio:     ${hide(cholibaCacheDir({ XDG_CACHE_HOME: '' }))}\n`,
+  `com XDG_CACHE_HOME vazio:      ${hide(cholibaCacheDir({ XDG_CACHE_HOME: '' }))}\n`,
+);
+writeOut(
+  `com HOME=/home/dev:            ${cholibaCacheDir({ HOME: '/home/dev' })}\n`,
 );
 ```
 
@@ -492,10 +507,11 @@ Saída real:
 ```
 com o ambiente do processo: ~/.cache/choliba
 com XDG_CACHE_HOME=/var/cache: /var/cache/choliba
-com XDG_CACHE_HOME vazio:     ~/.cache/choliba
+com XDG_CACHE_HOME vazio:      ~/.cache/choliba
+com HOME=/home/dev:            /home/dev/.cache/choliba
 ```
 
-Como o ambiente é parâmetro, dá para perguntar "onde seria o cache com este ambiente" sem mudar o processo, que é o que um teste faz.
+Sem `XDG_CACHE_HOME`, o cache fica sob o `HOME` do ambiente recebido, como manda o XDG; sem `HOME` também, sob o home do sistema. Como o ambiente é parâmetro, dá para perguntar "onde seria o cache com este ambiente" sem mudar o processo, que é o que um teste faz.
 
 ### 7. Outros processos pelo /proc
 
@@ -549,7 +565,7 @@ O lock do agente usa `processAlive` e `processName` para saber se o agente que p
 
 **Só o módulo pode:**
 
-- **Importar `node:fs`, `node:path`.** Quem precisa do disco ou de um caminho importa daqui. (O `homedir` de `node:os` não é exclusivo: o `execute/process.ts` e o workspace também o usam.)
+- **Importar `node:fs`, `node:path`.** Quem precisa do disco ou de um caminho importa daqui. (O `homedir` de `node:os` não é exclusivo: o `execute/process.ts` também o usa, no `userHome()`. Quem precisa do home de um ambiente usa o `homeOf(env)` daqui.)
 
 **Ninguém deve:**
 

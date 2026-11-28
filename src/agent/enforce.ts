@@ -21,7 +21,10 @@ import { UsageError } from '../errors';
 import type { Workspace, WorkspaceNetworkOptions } from '../workspace/index';
 import type { RequestRewriter, TrafficObserver } from '../network/index';
 import { environment, userHome } from '../execute/process';
-import { sandboxHost } from '../workspace/sandbox/host-access';
+import {
+  EMPTY_HOST_ACCESS,
+  sandboxHost,
+} from '../workspace/sandbox/host-access';
 
 /**
  * Filesystem goes to the sandbox; execution to Choliba's own gate, the same for
@@ -177,11 +180,7 @@ export function shareHost(
   provider: AgentProvider,
   policy: AgentPolicy | undefined,
 ): void {
-  const access = provider.hostAccess?.() ?? {
-    credentialFiles: [],
-    credentialEnv: [],
-    sharedState: [],
-  };
+  const access = provider.hostAccess?.() ?? EMPTY_HOST_ACCESS;
 
   const engine = policy === undefined ? undefined : new PolicyEngine(policy);
   // `requireApproval` cannot ask when the variable is read: not let in.

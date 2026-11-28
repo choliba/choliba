@@ -38,3 +38,10 @@ export const COMPACT_AT = 0.8;
  * subscriber.
  */
 export const TOOL_OUTPUT_MAX_CHARS = 4_000;
+
+/**
+ * The folder of Choliba's cache with a `CODEX_HOME` per workspace: the gate's
+ * hook cannot live in the user's ~/.codex, whose rules and config could
+ * loosen the policy.
+ */
+export const CODEX_CACHE_DIR = 'codex';

@@ -4,11 +4,12 @@ import { ecsFormat } from '@elastic/ecs-pino-format';
 import pino from 'pino';
 
 import type { LoggerFactory } from '../src/config';
+import { PRIVATE_FILE_MODE } from '../src/filesystem/constants';
 import { join } from '../src/filesystem/index';
 
 /** O destino do log: síncrono, criando a pasta, só o dono lê. */
 const destination = (dest: string) =>
-  pino.destination({ dest, sync: true, mkdir: true, mode: 0o600 });
+  pino.destination({ dest, sync: true, mkdir: true, mode: PRIVATE_FILE_MODE });
 
 /**
  * O `logger.use` com pino e ECS. Recebe o `debug` de quem chama (o

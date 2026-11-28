@@ -1,7 +1,8 @@
 import { UsageError } from '../../errors';
-import { userHome } from '../../execute/process';
+import { PRIVATE_DIR_MODE, XDG_DEFAULTS } from '../../filesystem/constants';
 import {
   ensureDirectory,
+  homeOf,
   join,
   pathExists,
   readText,
@@ -105,13 +106,23 @@ function knownCredentials(home: string): readonly string[] {
  * with `share`, its state on the host), its credentials and nothing else;
  * plus the variables the policy lets it read (`secrets`).
  */
+/**
+ * The host share of a provider that declares nothing, and of a workspace
+ * without an agent: a home of its own, with no login, state or credential.
+ */
+export const EMPTY_HOST_ACCESS: HostAccess = {
+  credentialFiles: [],
+  credentialEnv: [],
+  sharedState: [],
+};
+
 export function sandboxHost(
   access: HostAccess,
   source: NodeJS.ProcessEnv,
   allowSecret: (name: string) => boolean,
   options: HostOptions,
 ): SandboxHost {
-  const hostHome = source['HOME'] ?? userHome();
+  const hostHome = homeOf(source);
   const env = allowedEnv(access, source, allowSecret);
 
   if (options.hostState === 'none') {
@@ -128,7 +139,7 @@ export function sandboxHost(
     );
     // The workspace's home too, with HOME left on the host's: what Choliba
     // keeps for the CLI (the gate's hook) never goes into the host's state.
-    ensureDirectory(options.home, 0o700);
+    ensureDirectory(options.home, PRIVATE_DIR_MODE);
     return {
       state,
       programs: access.programs ?? [],
@@ -140,7 +151,7 @@ export function sandboxHost(
   }
 
   const { home } = options;
-  ensureDirectory(home, 0o700);
+  ensureDirectory(home, PRIVATE_DIR_MODE);
   const credentials =
     options.hostState === 'login'
       ? loginBinds(access.credentialFiles, hostHome, home)
@@ -204,15 +215,13 @@ function homeEnv(
   home: string,
   extra: Readonly<Record<string, string>>,
 ): Record<string, string> {
-  const env: Record<string, string> = {
-    HOME: home,
-    XDG_CONFIG_HOME: join(home, '.config'),
-    XDG_CACHE_HOME: join(home, '.cache'),
-    XDG_DATA_HOME: join(home, '.local/share'),
-  };
+  const env: Record<string, string> = { HOME: home };
+  for (const [name, path] of Object.entries(XDG_DEFAULTS)) {
+    env[name] = join(home, path);
+  }
   for (const [name, path] of Object.entries(extra)) {
     const destination = join(home, path);
-    ensureDirectory(destination, 0o700);
+    ensureDirectory(destination, PRIVATE_DIR_MODE);
     env[name] = destination;
   }
   return env;
@@ -229,7 +238,7 @@ function loginBinds(
     const relative = relativeTo(hostHome, source);
     if (relative === undefined || !pathExists(source)) continue;
     const destination = join(home, relative);
-    ensureDirectory(join(destination, '..'), 0o700);
+    ensureDirectory(join(destination, '..'), PRIVATE_DIR_MODE);
     binds.push({ source, destination });
   }
   return binds;

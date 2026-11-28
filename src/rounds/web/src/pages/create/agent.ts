@@ -6,7 +6,10 @@
  */
 
 import type { AgentPolicy } from '../../../../../policy/policy.interface';
-import { OLLAMA_CLIS } from '../../../../../providers/constants';
+import {
+  DEFAULT_CONTEXT_WINDOW,
+  OLLAMA_CLIS,
+} from '../../../../../providers/constants';
 import { CHOLIBA_TOOLS } from '../../../../../providers/tools';
 import type {
   DeclaredActor,
@@ -93,9 +96,6 @@ export type Sandbox = keyof typeof SANDBOXES;
 
 export const isSandbox = (value: string): value is Sandbox =>
   value in SANDBOXES;
-
-/** What `ollama ps` usually shows a model loaded with, in tokens. */
-export const DEFAULT_CONTEXT_WINDOW = '32768';
 
 /** A whole positive number typed in a field; `undefined` when it is not one. */
 export function wholeNumber(value: string): number | undefined {
@@ -342,7 +342,7 @@ export const newAgent = (key: number, name: string): AgentForm => ({
   provider: 'ollama',
   model: PROVIDERS.ollama.model,
   cli: OLLAMA_CLIS[0],
-  contextWindow: DEFAULT_CONTEXT_WINDOW,
+  contextWindow: String(DEFAULT_CONTEXT_WINDOW),
   think: false,
   executable: '',
   baseUrl: '',

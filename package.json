@@ -1,6 +1,6 @@
 {
   "name": "choliba",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Roda agentes de código (Claude Code, Codex, Cursor, Ollama) em sandbox, com uma política só e rodadas que os comparam.",
   "license": "MIT",
   "type": "module",

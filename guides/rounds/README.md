@@ -87,7 +87,7 @@ O motor fica em `src/rounds`, e os comandos, em `src/cli`. O que é de cada roda
 | `src/rounds/score.ts`        | A rubrica: `scoreRound`, as notas de eficácia, eficiência e a final.                                                                                          |
 | `src/rounds/validate.ts`     | `validateRound`: confere um registro lido do disco, campo a campo.                                                                                            |
 | `src/rounds/types.ts`        | O formato do registro (`RoundRecord`, `schema: 4`).                                                                                                           |
-| `src/rounds/constants.ts`    | Os valores do módulo: a rubrica, a tag das fixtures, os nomes e os prazos das páginas.                                                                        |
+| `src/rounds/constants.ts`    | Os valores do módulo: a rubrica, a tag das fixtures, os nomes, os prazos e o 404 das páginas.                                                                 |
 | `src/rounds/capture.ts`      | `captureDeclaration`: a declaração como dados, com os pedidos e os critérios, para o registro e para **Copiar definição**.                                    |
 | `src/rounds/snapshot.ts`     | O retrato de cada agente como rodou e os hashes que dizem se duas execuções tiveram a mesma configuração (`configHash`).                                      |
 | `src/rounds/definitions.ts`  | `findDefinition` e `listDefinitions`: onde mora a declaração de cada rodada, num arquivo ou numa pasta.                                                       |
@@ -435,7 +435,9 @@ os seus critérios (`id`, `label`, `score` de 0 a 5 ou `null`, `detail`). Para a
      disse, contra a tag.
    - Se o agente terminou sem dizer nada, a rodada para ali.
 3. **As regras** olham todos os passos.
-4. **O registro** é montado, sem segredos nem o caminho do projeto, conferido pelo `validateRound` e gravado.
+4. **O registro** é montado, sem segredos nem o caminho do projeto, conferido pelo `validateRound` e gravado. Os
+   segredos seguem a regra do log (`envSecrets`): o valor de cada variável do ambiente com `key`, `token`, `secret`,
+   `pass`, `auth`, `credential` ou `cookie` no nome, a partir de 8 caracteres, vira o nome dela (`<CURSOR_API_KEY>`).
 
 Com `repeat`, tudo isso se repete, cada vez a partir do zero.
 

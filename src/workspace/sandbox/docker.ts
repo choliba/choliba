@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { homedir } from 'node:os';
 
-import { isDirectory, pathExists } from '../../filesystem/index';
+import { homeOf, isDirectory, pathExists } from '../../filesystem/index';
 import { currentUser, environment, runProgram } from '../../execute/process';
 import type { ProgramCommand } from '../../execute/types';
 import { UsageError } from '../../errors';
@@ -20,6 +19,10 @@ import {
   BASE_PROGRAMS,
   DEFAULT_DOCKER_IMAGE,
   DOCKER_BASE_PROGRAMS,
+  DOCKER_INSPECT_ATTEMPTS,
+  DOCKER_INSPECT_RETRY_MS,
+  DOCKER_INSPECT_TIMEOUT_MS,
+  DOCKER_REMOVE_TIMEOUT_MS,
   HOST_HOMES,
   SANDBOX_SUPPORT_DIR,
 } from '../constants';
@@ -315,7 +318,7 @@ export class DockerSandbox implements Sandbox {
     }
 
     await runProgram('docker', ['rm', '--force', name], {
-      timeoutMs: 10_000,
+      timeoutMs: DOCKER_REMOVE_TIMEOUT_MS,
     }).catch(() => undefined);
   }
 
@@ -461,10 +464,6 @@ function dockerClientEnv(env: NodeJS.ProcessEnv): Record<string, string> {
   return client;
 }
 
-function homeOf(env: NodeJS.ProcessEnv): string {
-  return env['HOME'] ?? homedir();
-}
-
 function volumeArgs(mounts: readonly Mount[]): string[] {
   const args: string[] = [];
 
@@ -526,10 +525,10 @@ function readDockerImage(image: string): DockerImage {
 async function inspectContainer(
   name: string,
 ): Promise<Record<string, unknown> | undefined> {
-  for (let attempt = 0; attempt < 8; attempt += 1) {
+  for (let attempt = 0; attempt < DOCKER_INSPECT_ATTEMPTS; attempt += 1) {
     try {
       const stdout = await runProgram('docker', ['inspect', name], {
-        timeoutMs: 1000,
+        timeoutMs: DOCKER_INSPECT_TIMEOUT_MS,
       });
       const parsed: unknown = JSON.parse(stdout);
 
@@ -537,7 +536,7 @@ async function inspectContainer(
         return readInspect(parsed[0]);
       }
     } catch {
-      await delay(60);
+      await delay(DOCKER_INSPECT_RETRY_MS);
     }
   }
 

@@ -783,6 +783,52 @@ test('com comando negado pendente, espera a aprovação e continua sozinho', asy
   ]);
 });
 
+test('espera a aprovação da sessão mesmo com 50 recusas mais novas de outra sessão no workspace', async () => {
+  const store = Store.memory();
+  const root = process.cwd();
+  const recordDenial = (session: string, command: string): number =>
+    store.recordDecision({
+      session,
+      provider: 'session',
+      root,
+      command,
+      decision: 'deny',
+      source: 'default',
+      reason: 'Nenhuma regra corresponde à ação.',
+    });
+  const pending = recordDenial('sx', 'mkdir src/pages');
+  for (let i = 0; i < 50; i += 1) {
+    recordDenial('outra', `curl https://exemplo.com/${String(i)}`);
+  }
+  const provider = new SessionProvider('sx');
+  const written: string[] = [];
+
+  setTimeout(() => {
+    store.saveApproval({
+      root,
+      pattern: 'mkdir src/pages',
+      kind: 'once',
+      session: 'sx',
+      decisionId: pending,
+    });
+  }, 800);
+
+  await new Agent({
+    conversation: false,
+    name: 'teste',
+    prompt: 'crie as páginas',
+    provider,
+    workspace: new Workspace({ type: 'bubblewrap', root }),
+    interaction: { ask: unusedAsk, write: (value) => written.push(value) },
+    store,
+  }).run();
+
+  expect(written.some((value) => value.includes('Aguardando aprovação'))).toBe(
+    true,
+  );
+  expect(provider.calls.map((call) => call.session)).toEqual([undefined, 'sx']);
+});
+
 test('por padrão o agente conversa: depois da resposta espera a próxima mensagem', async () => {
   const provider = new SessionProvider('s1');
   const stop = new AbortController();

@@ -16,12 +16,13 @@ import {
   join,
   cholibaCacheDir,
 } from '../filesystem/index';
+import { PRIVATE_DIR_MODE } from '../filesystem/constants';
 import {
   CommandGate,
   type CommandDecision,
   type CommandGateOptions,
 } from './gate';
-import { UNOWNED_GRACE_MS } from './constants';
+import { GATE_CACHE_DIR, UNOWNED_GRACE_MS } from './constants';
 
 export {
   type CommandApprovalRequest,
@@ -59,7 +60,7 @@ export class ApprovalBroker {
 
   /** The gate's directory; again on every start, since close removes it. */
   private createDir(): void {
-    ensureDirectory(this.dir, 0o700);
+    ensureDirectory(this.dir, PRIVATE_DIR_MODE);
     // Who owns this gate, so a later run can clean it up if this one dies
     // without closing (SIGKILL, a forced exit).
     writeText(join(this.dir, OWNER_FILE), String(currentPid()));
@@ -101,7 +102,7 @@ export class ApprovalBroker {
 }
 
 function gatesDir(): string {
-  return join(cholibaCacheDir(environment()), 'gate');
+  return join(cholibaCacheDir(environment()), GATE_CACHE_DIR);
 }
 
 /** Gate directories whose owner process is gone (it died without closing). */

@@ -41,6 +41,7 @@ import type { AgentPolicy } from '../policy/index';
 import { rejectUnknownOptions, UsageError } from '../errors';
 import { APPROVAL_POLL_MS, THINKING_TICK_MS } from './constants';
 import type { Interaction } from '../interaction/index';
+import { REASONING_MARK } from '../output/constants';
 import { listenForInterrupt } from '../execute/interrupt';
 import { scriptSignal } from '../usage';
 import type { Workspace } from '../workspace/index';
@@ -69,7 +70,6 @@ import {
   FORGOTTEN_SESSION_MESSAGE,
   LIVE_DELIVERED_MESSAGE,
   LIVE_KEPT_MESSAGE,
-  REASONING_MARK,
   THINKING_MESSAGE,
   waitingMessage,
 } from './messages';
@@ -882,11 +882,7 @@ export class Agent {
 
   /** Commands denied in this session that nobody has approved yet. */
   private pendingDenials(session: string): number {
-    return (
-      this.store
-        ?.deniedDecisions(this.workspace.root)
-        .filter((decision) => decision.session === session).length ?? 0
-    );
+    return this.store?.pendingDenialCount(this.workspace.root, session) ?? 0;
   }
 
   /** Executes terminal-local commands instead of forwarding them to the model. */

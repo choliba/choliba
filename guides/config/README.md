@@ -169,7 +169,7 @@ Com `path`, usa exatamente esse arquivo (e falha se ele não existir). Sem arqui
 
 ### envs
 
-`envs` é uma lista, mas **só o primeiro** é o env ativo: é ele que `getEnv()` devolve e que entra no ambiente. Os outros só servem ao logger, que mascara no log os valores de todos.
+`envs` é uma lista, mas **só o primeiro** é o env ativo: é ele que `getEnv()` devolve e que entra no ambiente. Os outros só servem ao logger, que esconde no log os segredos de todos: o valor de cada variável com `key`, `token`, `secret`, `pass`, `auth`, `credential` ou `cookie` no nome, a partir de 8 caracteres, onde quer que apareça (`envSecrets`, do `src/logger`). O registro de uma rodada segue a mesma regra.
 
 De cada env, só entram valores de **texto**. Um número, um boolean ou um `undefined` (por exemplo, `process.env.X` de uma variável que não existe) é descartado sem aviso.
 

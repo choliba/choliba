@@ -13,8 +13,10 @@ import { log } from '../logger/index';
 import {
   BAD_GATEWAY,
   FORBIDDEN,
+  HEADER_END,
   MAX_OBSERVED_BYTES,
   MAX_REWRITE_BODY_BYTES,
+  TUNNEL_OPEN,
 } from './constants';
 import type { NetworkGate } from './gate';
 import { RequestRewriteStream } from './rewrite';
@@ -232,7 +234,7 @@ async function forwardTunnel(
   const upstream = connect(request.port, request.hostname);
   const rewrite = rewriterFor(rewriters, request);
   upstream.once('connect', () => {
-    client.write('HTTP/1.1 200 Connection Established\r\n\r\n');
+    client.write(`${TUNNEL_OPEN} Connection Established${HEADER_END}`);
     upstream.pipe(client);
     if (rewrite === undefined) {
       if (head.length > 0) upstream.write(head);

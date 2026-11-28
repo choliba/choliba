@@ -171,6 +171,22 @@ describe('maskRecord', () => {
       maskRecord(infoRecord({ text: 'true' }), { SOME_TOKEN: 'true' }).fields,
     ).toEqual({ text: 'true' });
   });
+
+  test('mascara o valor de uma env com key, pass ou auth no nome, como a rodada', () => {
+    expect(
+      maskRecord(infoRecord({ text: 'smtp hunter22 e ts tskey-abc123' }), {
+        SMTP_PASS: 'hunter22',
+        TS_AUTHKEY: 'tskey-abc123',
+      }).fields,
+    ).toEqual({ text: `smtp ${REDACTED} e ts ${REDACTED}` });
+  });
+
+  test('os campos e o NOME=valor seguem a lista estreita: passed e GIT_AUTHOR_NAME ficam', () => {
+    expect(
+      maskRecord(infoRecord({ passed: 'sim', text: 'GIT_AUTHOR_NAME=dev' }), {})
+        .fields,
+    ).toEqual({ passed: 'sim', text: 'GIT_AUTHOR_NAME=dev' });
+  });
 });
 
 describe('adaptLogger', () => {

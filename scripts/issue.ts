@@ -12,6 +12,7 @@ import {
   join,
   cholibaCacheDir,
 } from '../src/filesystem/index';
+import { PRIVATE_DIR_MODE } from '../src/filesystem/constants';
 
 /**
  * Opens a GitHub issue from a Markdown file whose frontmatter gives
@@ -73,7 +74,7 @@ await runCommand(
       }
 
       const dir = join(cholibaCacheDir(environment()), 'issue', randomUUID());
-      ensureDirectory(dir, 0o700);
+      ensureDirectory(dir, PRIVATE_DIR_MODE);
       try {
         const bodyFile = join(dir, 'body.md');
         writeText(bodyFile, body);

@@ -23,7 +23,9 @@ import {
   type ProgramCheck,
 } from './sandbox/programs';
 import {
+  EMPTY_HOST_ACCESS,
   HOST_STATES,
+  sandboxHost,
   type HostState,
   type SandboxHost,
 } from './sandbox/host-access';
@@ -148,6 +150,8 @@ export class Workspace {
   /** The programs the agent sees (see `programs`); `undefined`: all of them. */
   public readonly programs: readonly string[] | undefined;
   private network: NetworkBoundary | undefined;
+  /** Whether the host is shared yet: by an agent, or by `shareHost`. */
+  private hostShared = false;
 
   public constructor(options: WorkspaceOptions) {
     if (!WORKSPACE_TYPES.includes(options.type)) {
@@ -189,7 +193,7 @@ export class Workspace {
     this.paths = new SandboxPaths({
       root: options.root,
       home: this.home(),
-      hostHome: environment()['HOME'] ?? userHome(),
+      hostHome: userHome(),
       ...(options.agentRoot === undefined
         ? {}
         : { agentRoot: options.agentRoot }),
@@ -265,9 +269,13 @@ export class Workspace {
     this.network = boundary;
   }
 
-  /** See {@link Sandbox.useHost}; sandboxes without it get the whole host share. */
+  /**
+   * See {@link Sandbox.useHost}: an agent shares its provider's part of the
+   * host. Without one, `prepare` shares the workspace's own (`shareHost`).
+   */
   public useHost(host: SandboxHost): void {
     this.sandbox.useHost?.(host);
+    this.hostShared = true;
   }
 
   /** See {@link Sandbox.protect}. */
@@ -283,6 +291,7 @@ export class Workspace {
     command: ProgramCommand,
   ): ProgramCommand | Promise<ProgramCommand> {
     ensureDirectory(this.root);
+    this.shareHost();
     return this.sandbox.prepare({
       ...command,
       cwd: this.root,
@@ -292,6 +301,27 @@ export class Workspace {
   public async close(): Promise<void> {
     await this.sandbox.close?.();
     await this.network?.close();
+  }
+
+  /**
+   * Before the first run, when no agent shared the host: the workspace's own
+   * `hostState`, as for a provider that declares nothing (a home of its own,
+   * no login, only the system's variables). `share` keeps the host's state
+   * and the whole environment, as before this existed.
+   */
+  private shareHost(): void {
+    if (this.hostShared) return;
+    this.hostShared = true;
+    if (this.hostState === 'share') return;
+    this.sandbox.useHost?.(
+      sandboxHost(EMPTY_HOST_ACCESS, environment(), () => false, {
+        hostState: this.hostState,
+        provider: 'workspace',
+        home: this.home(),
+        homesDir: this.homes,
+        root: this.root,
+      }),
+    );
   }
 }
 

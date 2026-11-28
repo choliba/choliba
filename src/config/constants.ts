@@ -1,12 +1,22 @@
 /** Defaults of the project's configuration (`choliba.config.ts`). */
 
-/** Where the logs go, relative to the project (option `logger.dir`). */
+/**
+ * Where the logs go, relative to the project (option `logger.dir`): under
+ * `.choliba/`, with all Choliba keeps in a project, so one folder holds it
+ * and one line of `.gitignore` leaves it out.
+ */
 export const DEFAULT_LOG_DIR = '.choliba/logs';
 
-/** Where the database lives, relative to the project (option `database.dir`). */
+/**
+ * Where the database lives, relative to the project (option
+ * `database.dir`): in `.choliba/` too, next to the logs.
+ */
 export const DEFAULT_DATABASE_DIR = '.choliba';
 
-/** The database file's name (option `database.name`). */
+/**
+ * The database file's name (option `database.name`): named after Choliba,
+ * so whoever finds the file knows whose it is.
+ */
 export const DEFAULT_DATABASE_NAME = 'choliba.db';
 
 /**
