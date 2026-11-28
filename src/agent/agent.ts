@@ -882,11 +882,7 @@ export class Agent {
 
   /** Commands denied in this session that nobody has approved yet. */
   private pendingDenials(session: string): number {
-    return (
-      this.store
-        ?.deniedDecisions(this.workspace.root)
-        .filter((decision) => decision.session === session).length ?? 0
-    );
+    return this.store?.pendingDenialCount(this.workspace.root, session) ?? 0;
   }
 
   /** Executes terminal-local commands instead of forwarding them to the model. */

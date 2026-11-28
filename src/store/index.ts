@@ -494,6 +494,22 @@ export class Store {
       .map(toDecision);
   }
 
+  /**
+   * How many denials of one session in a workspace still wait for a
+   * decision (as in `deniedDecisions`), all of them: with the table's limit,
+   * a session whose denials are older than the workspace's newest ones would
+   * count none.
+   */
+  public pendingDenialCount(root: string, session: string): number {
+    const row = this.db
+      .query<{ count: number }, [string, string]>(
+        `SELECT COUNT(*) AS count FROM decisions d
+         WHERE d.root = ? AND d.session = ? AND ${PENDING_DENIAL}`,
+      )
+      .get(root, session);
+    return row?.count ?? 0;
+  }
+
   public decision(id: number): StoredDecision | undefined {
     const row = this.db
       .query<DecisionRow, [number]>('SELECT * FROM decisions WHERE id = ?')

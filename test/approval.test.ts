@@ -371,6 +371,33 @@ describe('Store', () => {
     store.markNotified(notices.map((notice) => notice.id));
     expect(store.pendingNotices('/w', 's1')).toEqual([]);
   });
+  test('pendingDenialCount conta todas as recusas pendentes da sessão, sem o limite da tabela', () => {
+    const store = Store.memory();
+    const recordDenial = (session: string, command: string): number =>
+      store.recordDecision({
+        session,
+        provider: 'codex',
+        root: '/w',
+        command,
+        decision: 'deny',
+        source: 'default',
+        reason: 'x',
+      });
+    const pending = recordDenial('a', 'npm install left-pad');
+    for (let i = 0; i < 50; i += 1) {
+      recordDenial('b', `curl https://exemplo.com/${String(i)}`);
+    }
+
+    expect(store.pendingDenialCount('/w', 'a')).toBe(1);
+    store.saveApproval({
+      root: '/w',
+      pattern: 'npm install left-pad',
+      kind: 'once',
+      session: 'a',
+      decisionId: pending,
+    });
+    expect(store.pendingDenialCount('/w', 'a')).toBe(0);
+  });
 });
 
 describe('proteção na sandbox', () => {
