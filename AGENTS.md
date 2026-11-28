@@ -138,8 +138,9 @@ E três regras de I/O:
 | `no-restricted-properties` (`Bun.stdout`, `Bun.stderr`)                         | `src/output/stdio.ts`                                        |
 
 O resto do `Bun` (`serve`, `resolveSync`, `sleep`, `version`) não toca disco nem processo e fica livre. Como cada
-override substitui a configuração da regra inteira, o de cada dono repete as restrições dos outros: uma restrição nova
-entra na base e em todos eles.
+override substitui a configuração da regra inteira, o de cada dono repete as restrições dos outros. Por isso essas
+regras não se escrevem à mão no `.oxlintrc.json`: saem da tabela de `scripts/lint-rules.ts`. Uma restrição ou um dono
+novo entra na tabela, e `bun run lint:owners` regera a base e os overrides; um teste confere que o arquivo está em dia.
 
 As regras valem para tudo o que o `bun run lint` confere: `src/`, `bin/`, `tools/`, `scripts/`, `config/`, o
 `choliba.config.ts` e os exemplos dos cursos (`guides/`). Os testes (`test/`) passam pelo lint, mas fora destas

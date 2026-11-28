@@ -36,6 +36,7 @@
     "rounds:build": "bun run --cwd src/rounds/web build",
     "typecheck": "tsc --noEmit && tsc --noEmit -p src/rounds/web",
     "lint": "oxlint --type-aware src bin test tools scripts guides config choliba.config.ts",
+    "lint:owners": "bun scripts/lint-owners.ts",
     "lint:fix": "oxlint --type-aware --fix src bin test tools scripts guides config choliba.config.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
