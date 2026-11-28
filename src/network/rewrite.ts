@@ -10,10 +10,9 @@
 import { Transform, type TransformCallback } from 'node:stream';
 
 import { log } from '../logger/index';
-import { MAX_REQUEST_HEAD_BYTES } from './constants';
+import { HEADER_END, MAX_REQUEST_HEAD_BYTES } from './constants';
 import type { RewriteRequest } from './types';
 
-const HEAD_END = '\r\n\r\n';
 const LINE_END = '\r\n';
 
 type Chunked =
@@ -46,9 +45,12 @@ function decodeChunked(
       if (buffer.subarray(position, position + 2).toString() === LINE_END) {
         return { body: Buffer.concat(parts), end: position + 2 };
       }
-      const trailersEnd = buffer.indexOf(HEAD_END, position);
+      const trailersEnd = buffer.indexOf(HEADER_END, position);
       if (trailersEnd === -1) return 'wait';
-      return { body: Buffer.concat(parts), end: trailersEnd + HEAD_END.length };
+      return {
+        body: Buffer.concat(parts),
+        end: trailersEnd + HEADER_END.length,
+      };
     }
     total += size;
     if (total > maxBodyBytes) return 'invalid';
@@ -100,7 +102,7 @@ export class RequestRewriteStream extends Transform {
   /** Sends on every whole request held; keeps what is not whole yet. */
   private drain(): void {
     for (;;) {
-      const headEnd = this.pending.indexOf(HEAD_END);
+      const headEnd = this.pending.indexOf(HEADER_END);
       if (headEnd === -1) {
         if (this.pending.length > MAX_REQUEST_HEAD_BYTES) {
           this.passOn('cabeçalho grande demais');
@@ -128,7 +130,7 @@ export class RequestRewriteStream extends Transform {
         this.passOn('pedido com expect ou upgrade');
         return;
       }
-      const bodyStart = headEnd + HEAD_END.length;
+      const bodyStart = headEnd + HEADER_END.length;
       const encoding = header('transfer-encoding');
       let body: Buffer;
       let end: number;
@@ -188,7 +190,10 @@ export class RequestRewriteStream extends Transform {
         `Content-Length: ${String(rewritten.length)}`,
       ].join(LINE_END);
       this.push(
-        Buffer.concat([Buffer.from(`${head}${HEAD_END}`, 'latin1'), rewritten]),
+        Buffer.concat([
+          Buffer.from(`${head}${HEADER_END}`, 'latin1'),
+          rewritten,
+        ]),
       );
     }
   }

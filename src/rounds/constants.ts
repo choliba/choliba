@@ -1,4 +1,8 @@
-/** Values of the rounds. */
+/**
+ * Values of the rounds. Where a round's pieces live (declarations, fixtures,
+ * records) is not here: it is the config's `rounds.definitions`,
+ * `rounds.fixtures` and `rounds.data`.
+ */
 
 /**
  * How far, in USD, a total cost may differ from the sum of its usage records
@@ -29,12 +33,6 @@ export const RESOURCE_SAMPLE_MS = 1000;
  */
 export const NVIDIA_SMI_TIMEOUT_MS = 2000;
 
-/** Environment variables whose value is a secret, by name. */
-export const CREDENTIAL_NAME = /KEY|TOKEN|SECRET|PASS|AUTH|CREDENTIAL/i;
-
-/** Values shorter than this are not replaced: they would match common text. */
-export const MIN_SECRET_LENGTH = 12;
-
 /**
  * What an agent gets when it asks something during a round: nobody answers
  * there. Shown to the agent, so in the user's language.
@@ -62,11 +60,6 @@ export const RUBRIC = {
   wastePenalty: 1,
   weights: { effectiveness: 0.6, efficiency: 0.4 },
 } as const;
-
-/**
- * Where a round's pieces live (declarations, fixtures, records) is the
- * config's `rounds.definitions`, `rounds.fixtures` and `rounds.data`.
- */
 
 /**
  * The tag a fixture's repository is created with: the point every run of a
@@ -131,5 +124,11 @@ export const ROUNDS_DEFINITIONS_ENV = 'CHOLIBA_ROUNDS_DEFINITIONS';
  */
 export const ROUNDS_WEB_START_MS = 15_000;
 
-/** Milliseconds between checks while the pages' server starts. */
+/**
+ * Milliseconds between checks while the pages' server starts: a quarter of
+ * a second adds little to Vite's one, without asking it all the time.
+ */
 export const ROUNDS_WEB_POLL_MS = 250;
+
+/** HTTP status for a path the pages do not have. Fixed: protocol. */
+export const NOT_FOUND = 404;

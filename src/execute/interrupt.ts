@@ -1,4 +1,4 @@
-import { SAME_KEYPRESS_MS } from './constants';
+import { INTERRUPTED_EXIT_CODE, SAME_KEYPRESS_MS } from './constants';
 import { exitProgram, onInterruptSignal } from './process';
 
 /** Ctrl+C of the current process, as an AbortSignal. */
@@ -25,7 +25,7 @@ export function listenForInterrupt({
       abortedAt = Date.now();
       controller.abort();
     } else if (Date.now() - abortedAt > sameKeypressMs) {
-      exitProgram(130);
+      exitProgram(INTERRUPTED_EXIT_CODE);
     }
   };
 

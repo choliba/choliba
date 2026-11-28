@@ -16,5 +16,8 @@ writeOut(
   `com XDG_CACHE_HOME=/var/cache: ${cholibaCacheDir({ XDG_CACHE_HOME: '/var/cache' })}\n`,
 );
 writeOut(
-  `com XDG_CACHE_HOME vazio:     ${hide(cholibaCacheDir({ XDG_CACHE_HOME: '' }))}\n`,
+  `com XDG_CACHE_HOME vazio:      ${hide(cholibaCacheDir({ XDG_CACHE_HOME: '' }))}\n`,
+);
+writeOut(
+  `com HOME=/home/dev:            ${cholibaCacheDir({ HOME: '/home/dev' })}\n`,
 );

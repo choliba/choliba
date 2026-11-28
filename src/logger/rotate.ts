@@ -25,7 +25,7 @@ import {
 } from '../filesystem/index';
 import { currentPid } from '../execute/process';
 import { processAlive } from '../filesystem/proc';
-import { LOG_FILE_MODE } from './constants';
+import { PRIVATE_FILE_MODE } from '../filesystem/constants';
 
 /** What `logger.logrotate` resolves to: every field filled in, sizes in bytes. */
 export interface LogRotation {
@@ -45,7 +45,7 @@ const liveFile = (dir: string, session: string): string =>
 
 /** Marks `session` as being written by this process. */
 export function markLive(dir: string, session: string): void {
-  writeText(liveFile(dir, session), String(currentPid()), LOG_FILE_MODE);
+  writeText(liveFile(dir, session), String(currentPid()), PRIVATE_FILE_MODE);
 }
 
 /** The session is over: nobody writes it any more. */
@@ -137,7 +137,7 @@ export function pruneLogs(
     if (!rotation.compress) continue;
     for (const file of group.files.filter((name) => name.endsWith('.jsonl'))) {
       const modified = modifiedAt(file);
-      writeBytes(`${file}.gz`, gzipSync(readBytes(file)), LOG_FILE_MODE);
+      writeBytes(`${file}.gz`, gzipSync(readBytes(file)), PRIVATE_FILE_MODE);
       // The session's age, not the compression's: it is still as old, and
       // it is not a live session being written.
       setModifiedAt(`${file}.gz`, modified);

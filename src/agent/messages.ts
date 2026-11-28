@@ -72,6 +72,3 @@ export const LIVE_DELIVERED_MESSAGE =
 /** A message typed during a turn, kept for the next one. */
 export const LIVE_KEPT_MESSAGE =
   'Mensagem guardada: vai para o agente quando ele terminar o passo atual.';
-
-/** Before the model's reasoning on screen, apart from its answer. */
-export const REASONING_MARK = '💭';

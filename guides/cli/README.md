@@ -407,6 +407,7 @@ ainda pendente: npm install left-pad
 ```
 
 - A tabela numera os pedidos do mais novo ao mais antigo; o `1` marcou o `curl` (veja o `[x]` na segunda tabela).
+- A tabela mostra até 50 pedidos de uma vez (`DENIED_DECISIONS_LIMIT`, em `src/store/constants.ts`); os mais antigos aparecem à medida que estes são respondidos.
 - Com `w`, o que ficou aprovado foi o **padrão** `curl *`, não o comando exato: no workspace, qualquer `curl` passa daqui em diante.
 - O `npm install left-pad`, que não foi marcado, continua pendente.
 

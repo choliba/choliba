@@ -53,16 +53,16 @@ modelo ── CLI (Claude Code, Codex) ──stdio/MCP──▶ servidor MCP ─
 
 ## Os arquivos
 
-| Arquivo                  | Papel                                                                                                   |
-| ------------------------ | ------------------------------------------------------------------------------------------------------- |
-| `src/mcp/index.ts`       | O que o módulo exporta: `AgentTool`, `tool`, `registerTool`, `toolKey`, `registeredTool`, `ToolBroker`. |
-| `src/mcp/schema.ts`      | `ToolInputSchema` e `inputProblem`: a entrada de uma ferramenta, conferida antes do `run`.              |
-| `src/mcp/broker.ts`      | `ToolBroker`: o lado do Choliba. Prepara o servidor e o socket, aplica a política e chama o `run`.      |
-| `src/mcp/server.ts`      | `serveTools`: um servidor MCP de ferramentas, sobre o SDK oficial.                                      |
-| `src/mcp/transport.ts`   | O transporte stdio do SDK, pelo `src/input` e pelo `src/output`.                                        |
-| `src/mcp/server-main.ts` | O programa que o CLI inicia na sandbox: `serveTools` perguntando ao broker pelo socket.                 |
-| `src/mcp/constants.ts`   | O nome do servidor (`choliba`), o formato do nome de uma ferramenta, o tempo máximo de uma chamada.     |
-| `tools/*.ts`             | As ferramentas registradas do projeto, como `fetch_web_content`.                                        |
+| Arquivo                  | Papel                                                                                                                                     |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/mcp/index.ts`       | O que o módulo exporta: `AgentTool`, `tool`, `registerTool`, `toolKey`, `registeredTool`, `ToolBroker`.                                   |
+| `src/mcp/schema.ts`      | `ToolInputSchema` e `inputProblem`: a entrada de uma ferramenta, conferida antes do `run`.                                                |
+| `src/mcp/broker.ts`      | `ToolBroker`: o lado do Choliba. Prepara o servidor e o socket, aplica a política e chama o `run`.                                        |
+| `src/mcp/server.ts`      | `serveTools`: um servidor MCP de ferramentas, sobre o SDK oficial.                                                                        |
+| `src/mcp/transport.ts`   | O transporte stdio do SDK, pelo `src/input` e pelo `src/output`.                                                                          |
+| `src/mcp/server-main.ts` | O programa que o CLI inicia na sandbox: `serveTools` perguntando ao broker pelo socket.                                                   |
+| `src/mcp/constants.ts`   | O nome do servidor (`choliba`), o formato do nome de uma ferramenta, o tempo máximo de uma chamada e a pasta do cache (`TOOL_CACHE_DIR`). |
+| `tools/*.ts`             | As ferramentas registradas do projeto, como `fetch_web_content`.                                                                          |
 
 [↑ topo](#topo)
 

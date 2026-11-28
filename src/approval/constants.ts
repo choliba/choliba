@@ -2,7 +2,7 @@
 
 /**
  * Milliseconds after which a gate directory with no owner yet is abandoned
- * and removed (`cleanAbandonedGates`, argument `unownedGraceMs`). A gate
+ * and removed (`removeAbandonedGates`, argument `unownedGraceMs`). A gate
  * being created gets its owner in milliseconds; a minute only removes one
  * left behind.
  */
@@ -11,6 +11,8 @@ export const UNOWNED_GRACE_MS = 60_000;
 /**
  * The narrowest the COMMAND column of the approvals table gets, in columns
  * (`ApprovalReview`, option `minCommandWidth`), however narrow the line.
+ * Twenty still show a command's name and the start of its arguments, before
+ * the `…` that cuts the rest; narrower, every command would look alike.
  */
 export const MIN_COMMAND_WIDTH = 20;
 
@@ -27,3 +29,10 @@ export const HOOK_WAIT_MS = 55 * 60 * 1000;
  * Fixed: it must stay above `HOOK_WAIT_MS`.
  */
 export const HOOK_TIMEOUT_SECONDS = 3600;
+
+/**
+ * The folder of Choliba's cache with a gate per running agent (its hook and
+ * its owner). Gates only, so what a dead run left behind is found and
+ * removed without looking at anything else.
+ */
+export const GATE_CACHE_DIR = 'gate';

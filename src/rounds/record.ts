@@ -5,7 +5,7 @@
 
 import { environment, userHome } from '../execute/process';
 import { ensureDirectory, join, writeText } from '../filesystem/index';
-import { CREDENTIAL_NAME, MIN_SECRET_LENGTH } from './constants';
+import { envSecrets } from '../logger/index';
 import type { ActorMeasures, RoundRecord, RoundStep } from './types';
 import { validateRound } from './validate';
 
@@ -23,19 +23,13 @@ export function measuresOf(steps: readonly RoundStep[]): ActorMeasures {
 
 /**
  * The text without the project's path (`<projeto>`), the home of whoever
- * ran it (`~`) or the value of any credential in the environment (its
- * name stays: `<CURSOR_API_KEY>`).
+ * ran it (`~`) or the value of any secret in the environment, by the log's
+ * rule (`envSecrets`); its name stays: `<CURSOR_API_KEY>`.
  */
 export function sanitize(text: string, project: string): string {
   let clean = text;
-  for (const [name, value] of Object.entries(environment())) {
-    if (
-      value !== undefined &&
-      value.length >= MIN_SECRET_LENGTH &&
-      CREDENTIAL_NAME.test(name)
-    ) {
-      clean = clean.replaceAll(value, `<${name}>`);
-    }
+  for (const [name, value] of envSecrets(environment())) {
+    clean = clean.replaceAll(value, `<${name}>`);
   }
   clean = clean.replaceAll(project, '<projeto>');
   return clean.replaceAll(userHome(), '~');

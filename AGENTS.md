@@ -63,7 +63,8 @@ Duas exceções estão registradas:
 - Valores padrão (limites, intervalos, tamanhos, caminhos) moram no `constants.ts` do módulo, cada um com um
   comentário que diz o que é, em que unidade e por que tem aquele valor. Quem cria o objeto pode trocar o valor
   por uma opção (`maxRecordBytes`, `killGraceMs`…); sem a opção, vale o padrão. Valores de protocolo ou de
-  segurança (códigos HTTP, permissão de um arquivo de log) também moram lá, mas sem opção.
+  segurança (códigos HTTP; as permissões do que é privado, no `src/filesystem/constants.ts`) também moram lá,
+  mas sem opção.
 - Antes de entregar: `bun run check` (typecheck, lint, formatação e testes com cobertura) passando; se mexeu em
   `guides/`, `docs/` ou no README, também `bun run docs:build`. A cobertura
   não pode cair: os limites em `coverage-thresholds.json` só sobem (skill

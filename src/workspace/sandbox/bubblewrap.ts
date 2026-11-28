@@ -1,6 +1,5 @@
-import { homedir } from 'node:os';
-
 import {
+  homeOf,
   isDirectory,
   isSymlink,
   listDirectory,
@@ -28,7 +27,12 @@ import { wrapCommand } from './wrap-command';
 import type { FilesystemAccess, FilesystemMask } from '../../policy/index';
 import { protectedMasks } from './protect';
 import { SandboxPaths } from './path-map';
-import { BASE_PROGRAMS, SANDBOX_SUPPORT_DIR } from '../constants';
+import {
+  BASE_PROGRAMS,
+  JAIL_READY_ATTEMPTS,
+  JAIL_READY_POLL_MS,
+  SANDBOX_SUPPORT_DIR,
+} from '../constants';
 import { programDirs, visiblePrograms, type FoundProgram } from './programs';
 
 export interface BubblewrapSandboxOptions {
@@ -90,8 +94,7 @@ export class BubblewrapSandbox implements Sandbox {
     this.env = env;
     this.writable = writable;
     this.programs = programs;
-    this.paths =
-      paths ?? new SandboxPaths({ root, hostHome: env['HOME'] ?? homedir() });
+    this.paths = paths ?? new SandboxPaths({ root, hostHome: homeOf(env) });
   }
 
   public configureFilesystem(access: FilesystemAccess): void {
@@ -179,7 +182,7 @@ export class BubblewrapSandbox implements Sandbox {
     if (this.programs === undefined) return { dirs: [], visible: [] };
     const searchPath = (this.host?.env ?? this.env)['PATH'];
     return {
-      dirs: programDirs(searchPath, this.env['HOME'] ?? homedir(), writable),
+      dirs: programDirs(searchPath, homeOf(this.env), writable),
       visible: visiblePrograms(this.programs, searchPath, BASE_PROGRAMS),
     };
   }
@@ -399,7 +402,7 @@ export function bubblewrapReadonlyBinds(
   env: NodeJS.ProcessEnv = environment(),
   writable: readonly string[] = [],
 ): string[] {
-  const home = env['HOME'] ?? homedir();
+  const home = homeOf(env);
   const candidates = [
     '/usr',
     '/etc',
@@ -451,7 +454,7 @@ export function bubblewrapJailArgs(
   shareNet = true,
   paths: SandboxPaths = new SandboxPaths({
     root,
-    hostHome: environment()['HOME'] ?? homedir(),
+    hostHome: homeOf(environment()),
   }),
 ): string[] {
   return [
@@ -578,7 +581,7 @@ export async function resolveBubblewrapPid(
 ): Promise<number | undefined> {
   const hostUser = processNamespace(parentPid, 'user');
 
-  for (let attempt = 0; attempt < 50; attempt += 1) {
+  for (let attempt = 0; attempt < JAIL_READY_ATTEMPTS; attempt += 1) {
     for (const pid of processChildren(parentPid)) {
       const user = processNamespace(pid, 'user');
 
@@ -592,7 +595,7 @@ export async function resolveBubblewrapPid(
       }
     }
 
-    await delay(20);
+    await delay(JAIL_READY_POLL_MS);
   }
 
   return undefined;

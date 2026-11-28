@@ -67,7 +67,7 @@ mensagem ─▶ provider.createCommand ─▶ Executor (na sandbox) ─▶ provi
 | `messages.ts`     | o que o agente escreve além da resposta do modelo: a espera por aprovações, as aprovações dadas, as linhas de status                                                           |
 | `abort.ts`        | esperas que respeitam o `signal` (`delay`, `anySignal`, `abortable`, `isAbortError`)                                                                                           |
 | `lock.ts`         | `WorkspaceLock`: um agente por workspace                                                                                                                                       |
-| `constants.ts`    | `APPROVAL_POLL_MS`, `THINKING_TICK_MS`                                                                                                                                         |
+| `constants.ts`    | `APPROVAL_POLL_MS`, `THINKING_TICK_MS` e a pasta das travas no cache (`LOCK_CACHE_DIR`)                                                                                        |
 
 [↑ topo](#topo)
 

@@ -25,3 +25,10 @@ export const TOOL_CALL_MS = 120_000;
  * the server's, not the protocol's, which the SDK negotiates with the CLI.
  */
 export const TOOL_SERVER_VERSION = '2';
+
+/**
+ * The folder of Choliba's cache with the tools' server of each running agent
+ * (bundled, with its owner): a folder of its own, apart from the other
+ * modules' ones.
+ */
+export const TOOL_CACHE_DIR = 'tools';

@@ -2,6 +2,8 @@ import { ensureDirectory, dirname } from '../filesystem/index';
 import { NO_RULE_REASON } from '../policy/index';
 import { Database } from 'bun:sqlite';
 
+import { DENIED_DECISIONS_LIMIT } from './constants';
+
 export type ApprovalScope = 'once' | 'session' | 'workspace' | 'deny';
 
 /** What a decision or approval is about: a shell command or a destination. */
@@ -478,7 +480,10 @@ export class Store {
    * allowed later (e.g. answered at the prompt the next time), and not from an
    * abandoned session (nobody waits for it).
    */
-  public deniedDecisions(root?: string, limit = 50): StoredDecision[] {
+  public deniedDecisions(
+    root?: string,
+    limit = DENIED_DECISIONS_LIMIT,
+  ): StoredDecision[] {
     return this.db
       .query<DecisionRow, [string | null, string | null, number]>(
         `SELECT d.* FROM decisions d

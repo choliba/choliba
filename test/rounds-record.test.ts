@@ -28,6 +28,18 @@ test('sanitize: um valor curto demais, ou de uma variável que não é credencia
   }
 });
 
+test('sanitize esconde como o log: a partir de 8 caracteres, e um cookie também', () => {
+  process.env[NAME] = 'segredo8';
+  process.env['ROUNDS_TEST_COOKIE'] = 'biscoito-da-sessao';
+  try {
+    expect(
+      sanitize('chave segredo8 e sessão biscoito-da-sessao', '/x/app'),
+    ).toBe(`chave <${NAME}> e sessão <ROUNDS_TEST_COOKIE>`);
+  } finally {
+    Reflect.deleteProperty(process.env, 'ROUNDS_TEST_COOKIE');
+  }
+});
+
 test('sanitize: o caminho do projeto vira <projeto>', () => {
   expect(sanitize('lê /x/app/src/a.ts', '/x/app')).toBe(
     'lê <projeto>/src/a.ts',
